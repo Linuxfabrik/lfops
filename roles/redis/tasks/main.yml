@@ -22,6 +22,13 @@
     ansible.builtin.set_fact:
       redis__installed_version: '{{ ansible_facts.packages[__redis__package][0]["version"] | regex_search("\d+\.\d+") }}'
 
+  - name: 'Assert that a configuration template for the installed Redis version exists'
+    ansible.builtin.assert:
+      that:
+        - 'redis__installed_version in __redis__supported_versions'
+      quiet: true
+      fail_msg: 'Redis {{ redis__installed_version }} is not supported by this role. Supported versions: {{ __redis__supported_versions | join(", ") }}.'
+
   - name: 'Deploy {{ __redis__config_dir }}/{{ __redis__config_file }} (v{{ redis__installed_version }})'
     ansible.builtin.template:
       backup: true

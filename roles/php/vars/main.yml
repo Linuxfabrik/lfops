@@ -1,0 +1,13 @@
+# PHP versions this role ships an ini template and a vars file for. The installed version is matched
+# against this list so an unsupported one aborts with a clear message instead of a
+# missing-file error. Extend it whenever a version for a new version is added.
+__php__supported_versions:
+  - '7.2'
+  - '7.3'
+  - '7.4'
+  - '8.0'
+  - '8.1'
+  - '8.2'
+  - '8.3'
+  - '8.4'
+  - '8.5'

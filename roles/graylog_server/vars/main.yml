@@ -1,0 +1,9 @@
+# Graylog versions this role ships a configuration template for. The installed version is matched
+# against this list so an unsupported one aborts with a clear message instead of a
+# missing-file error. Extend it whenever a template for a new version is added.
+__graylog_server__supported_versions:
+  - '6.1'
+  - '6.2'
+  - '6.3'
+  - '7.0'
+  - '7.1'

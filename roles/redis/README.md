@@ -228,6 +228,10 @@ redis__conf_supervised: 'auto'
 
 * Not really a problem: the role configures systemd correctly. This can be safely ignored [according to this GitHub issue](https://github.com/redis/redis/issues/8024).
 
+**The run aborts with `Redis X.Y is not supported by this role`**
+
+* The enabled repositories offer a Redis version this role has no configuration template for. Either pin the host to a supported version, or add the matching `roles/redis/templates/etc/redis/<version>-redis.conf.j2` template and list the version in `roles/redis/vars/main.yml`.
+
 
 ## License
 

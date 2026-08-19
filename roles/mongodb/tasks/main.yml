@@ -48,6 +48,14 @@
     ansible.builtin.set_fact:
       mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_replace("\.\d+$", "") }}' # strip the patch version
 
+  # the template name carries the OS family, so the supported versions are per family too
+  - name: 'Assert that a configuration template for the installed MongoDB version exists'
+    ansible.builtin.assert:
+      that:
+        - 'mongodb__installed_version in __mongodb__supported_versions'
+      quiet: true
+      fail_msg: 'MongoDB {{ mongodb__installed_version }} is not supported by this role on {{ ansible_facts["os_family"] }}. Supported versions: {{ __mongodb__supported_versions | join(", ") }}.'
+
   - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
       backup: true

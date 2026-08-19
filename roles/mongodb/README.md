@@ -356,6 +356,13 @@ mongodb__repl_set_members:
 ```
 
 
+## Troubleshooting
+
+**The run aborts with `MongoDB X.Y is not supported by this role on <os_family>`**
+
+* The enabled repositories offer a MongoDB version this role has no configuration template for on this OS family. Either pin the host to a supported version, or add the matching `roles/mongodb/templates/etc/<os_family>-<version>-mongod.conf.j2` template and list the version in `roles/mongodb/vars/main.yml`.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)

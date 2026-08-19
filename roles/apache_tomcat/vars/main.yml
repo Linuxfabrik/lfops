@@ -1,0 +1,5 @@
+# Tomcat versions this role ships configuration templates for. The installed version is matched
+# against this list so an unsupported one aborts with a clear message instead of a
+# missing-file error. Extend it whenever a template set for a new version is added.
+__apache_tomcat__supported_versions:
+  - '9.0'

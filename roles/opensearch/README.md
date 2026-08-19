@@ -583,6 +583,13 @@ opensearch__generate_certs_nodes:
 ```
 
 
+## Troubleshooting
+
+**The run aborts with `OpenSearch X.x is not supported by this role`**
+
+* The enabled repositories offer an OpenSearch major version this role has no configuration template for. Either pin the host to a supported version, or add the matching `roles/opensearch/templates/etc/opensearch/<major>.x-opensearch.yml.j2` template and list the major in `roles/opensearch/vars/main.yml`.
+
+
 ## License
 
 [The Unlicense](https://unlicense.org/)

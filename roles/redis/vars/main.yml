@@ -1,0 +1,10 @@
+# Redis versions this role ships a configuration template for. The installed version is matched
+# against this list so an unsupported one aborts with a clear message instead of a
+# missing-file error. Extend it whenever a template for a new version is added.
+__redis__supported_versions:
+  - '7.0'
+  - '7.2'
+  - '7.4'
+  - '8.0'
+  - '8.2'
+  - '8.8'
