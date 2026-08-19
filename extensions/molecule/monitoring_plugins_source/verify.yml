@@ -32,6 +32,35 @@
           - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stdout"]'
           - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stderr"]'
 
+    # cpu-usage above only needs psutil, and it cannot cover the HTTP dependencies: the library
+    # imports httpx lazily inside `lib.url.fetch()` and answers a missing module with a plain
+    # sentence instead of an exception, so a venv without httpx passes every assertion above
+    # while every check that speaks HTTP is dead. Only a plugin that actually fetches something
+    # reaches that guard.
+    #
+    # nginx-status is used for it because it gets there without any preconditions: it needs no
+    # arguments, its default URL is on localhost, so the host needs no internet access, and it
+    # needs no nginx either. Without a listener the plugin reports a refused connection, which is
+    # the expected result here. Both outcomes are UNKNOWN, so the exit code cannot tell them
+    # apart and the assertion goes by the message.
+    - name: 'Run the nginx-status plugin (reaches lib.url.fetch without arguments)'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/nginx-status'
+      register: '__molecule__nginx_status_run'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the HTTP dependencies of the Linuxfabrik library resolve'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nginx_status_run["rc"] != 127'
+          - '__molecule__nginx_status_run["stdout"] | length > 0'
+          - '"is not installed" not in __molecule__nginx_status_run["stdout"]'
+          - '"Traceback" not in __molecule__nginx_status_run["stderr"]'
+        fail_msg: >-
+          nginx-status answered "{{ __molecule__nginx_status_run["stdout"] | trim }}" instead of
+          reaching the network, so the venv is missing a Python module that lib.url needs and
+          every check that speaks HTTP fails.
+
     # The plugins run as root via sudo, so a plugin, a library module or the venv interpreter
     # that the monitoring user could write would be arbitrary root code execution. Assert the
     # whole sudo-run chain is owned by root.

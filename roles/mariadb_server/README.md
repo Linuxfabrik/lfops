@@ -1430,6 +1430,10 @@ mariadb_server__cnf_wsrep_sst_method: 'mariabackup'
 
 * Check that the user's `priv` is not set to `[]`. The lowest privileges allowed are `['*.*:USAGE']`.
 
+**The run aborts with `MariaDB X.Y is not supported by this role`**
+
+* The enabled repositories offer a MariaDB version this role ships no configuration template and vars file for. Either pin the host to a supported version, or add the matching `roles/mariadb_server/templates/etc/my.cnf.d/<version>-z00-linuxfabrik.cnf.j2` and `roles/mariadb_server/vars/<version>.yml`, and list the version in `roles/mariadb_server/vars/main.yml`.
+
 
 ## License
 

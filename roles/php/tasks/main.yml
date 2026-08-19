@@ -122,6 +122,16 @@
 
 - block:
 
+  # asserted here, not in the 'always' discovery block above: the version-specific files are
+  # only read from this block on, so a consuming role that just needs __php__installed_version
+  # (e.g. nextcloud under its own tags) is not aborted by a version this role cannot template.
+  - name: 'Assert that an ini template for the installed PHP version exists'
+    ansible.builtin.assert:
+      that:
+        - '__php__installed_version in __php__supported_versions'
+      quiet: true
+      fail_msg: 'PHP {{ __php__installed_version }} is not supported by this role. Supported versions: {{ __php__supported_versions | join(", ") }}.'
+
   - name: 'Load default values for {{ __php__installed_version }}'
     ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
 

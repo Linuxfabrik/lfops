@@ -1,9 +1,11 @@
 __monitoring_plugins__icinga_user: 'icinga'
 __monitoring_plugins__package_version_separator: '-'
 # RHEL 9/10 already ship python3 >= 3.9, so no extra interpreter package is needed.
-# RHEL 8 is handled in the more specific vars/RedHat8.yml.
+# RHEL 8 is handled in the more specific vars/RedHat8.yml. python3-packaging is a requirement of
+# `ansible.builtin.pip` on the managed node and is absent from a minimal installation.
 __monitoring_plugins__source_python_interpreter: 'python3'
-__monitoring_plugins__source_python_packages: []
+__monitoring_plugins__source_python_packages:
+  - 'python3-packaging'
 __monitoring_plugins__versionlock_lock_command: 'dnf versionlock add'
 __monitoring_plugins__versionlock_package: 'dnf-command(versionlock)'
 __monitoring_plugins__versionlock_unlock_command: 'dnf versionlock delete'

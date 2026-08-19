@@ -36,6 +36,13 @@
     ansible.builtin.set_fact:
       collabora__installed_version: '{{ ansible_facts["packages"]["coolwsd"][0]["version"] | regex_search("\d+\.\d+\.\d+") }}'
 
+  - name: 'Assert that a coolwsd.xml template for the installed Collabora version exists'
+    ansible.builtin.assert:
+      that:
+        - 'collabora__installed_version in __collabora__supported_versions'
+      quiet: true
+      fail_msg: 'Collabora {{ collabora__use_code | bool | ternary("CODE", "Enterprise") }} {{ collabora__installed_version }} is not supported by this role. Supported versions: {{ __collabora__supported_versions | join(", ") }}.'
+
   - name: 'deploy /etc/coolwsd/coolwsd.xml (v{{ collabora__installed_version }}{{ collabora__use_code | bool | ternary("-code", "") }})'
     ansible.builtin.template:
       backup: true

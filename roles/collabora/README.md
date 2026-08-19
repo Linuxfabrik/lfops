@@ -160,13 +160,13 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 * List of dictionaries containing regex pattern of hostname to allow access to the backend storage. Usually the hostname application that uses Collabora CODE, for example Nextcloud.
 * Type: List of dictionaries.
-* Default: `[]`
+* Default: `localhost`, which can be removed by setting it to `state: 'absent'`.
 
 * Subkeys:
 
     * `name`:
 
-        * Mandatory. Regex pattern.
+        * Mandatory. Regex pattern of the hostname, without a scheme. The role prefixes it with `https://`, which coolwsd requires to parse the hostname out of the entry. The scheme is not used for matching, so it does not have to match how the WOPI host is actually reached.
         * Type: String.
 
     * `state`:
@@ -277,6 +277,13 @@ collabora__service_enabled: true
 collabora__service_state: 'started'
 collabora__use_code: false
 ```
+
+
+## Troubleshooting
+
+**The run aborts with `Collabora CODE X.Y.Z is not supported by this role`**
+
+* The enabled repository offers a Collabora version this role has no `coolwsd.xml` template for. Either pin the host to a supported version, or add the matching `roles/collabora/templates/etc/coolwsd/<version>-coolwsd-code.xml.j2` template (`<version>-coolwsd.xml.j2` for Collabora Enterprise) and list the version in `roles/collabora/vars/main.yml`.
 
 
 ## License
