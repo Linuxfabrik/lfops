@@ -637,6 +637,10 @@ freeipa_server__users__host_var:
 
 ## Troubleshooting
 
+**`Kerberos authentication failed: kinit: Cannot read password while getting initial credentials`**
+
+* Raised by the `ipa*` resource management tasks (groups, users, HBAC rules, etc.) when the password of `freeipa_server__ipa_admin_principal` has expired, which the default FreeIPA password policy does after 90 days. The KDC rejects the authentication as expired, `kinit` switches to its password change dialog and asks for a new password, and the ansible-freeipa modules only hand it the old one, so the login aborts before a ticket is issued. Confirm it on the FreeIPA server with `kinit admin`, which reports `Password expired.  You must change it now.` before prompting. To fix it, log in to the FreeIPA Web UI with that principal, which asks for a new password right at login, or complete the `kinit` prompts on the server. Then set `freeipa_server__ipa_admin_password` to the new password and re-run the playbook.
+
 **`Kerberos authentication failed: kinit: Configuration file does not specify default realm when parsing name admin`**
 
 * Raised by the `ipa*` resource management tasks (groups, users, HBAC rules, etc.) after a previous run aborted partway through `ipaserver_setup_*`. The aborted run did not write `/etc/krb5.conf` and `/etc/ipa/default.conf` with a `default_realm`, and the next run's `ipaserver_setup_*` steps consider the install "already done" and skip. Verify on the target with `cat /etc/ipa/default.conf` and `grep default_realm /etc/krb5.conf`. Reset the partial install with `ipa-server-install --uninstall --unattended` and re-run the playbook. **Caution:** this wipes the LDAP backend; only run it on a host that has no production IPA data.
