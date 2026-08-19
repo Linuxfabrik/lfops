@@ -21,6 +21,14 @@
     ansible.builtin.set_fact:
       __opensearch__installed_version: '{{ ansible_facts["packages"]["opensearch"][0]["version"] | regex_replace("\.\d+$", "") }}'
 
+  # only the major selects the template, so the assert matches on the same expression
+  - name: 'Assert that a configuration template for the installed OpenSearch version exists'
+    ansible.builtin.assert:
+      that:
+        - '__opensearch__installed_version[:1] ~ ".x" in __opensearch__supported_versions'
+      quiet: true
+      fail_msg: 'OpenSearch {{ __opensearch__installed_version[:1] }}.x is not supported by this role. Supported versions: {{ __opensearch__supported_versions | join(", ") }}.'
+
   - name: 'Deploy /etc/opensearch/{{ __opensearch__installed_version[:1] }}.x-opensearch.yml'
     ansible.builtin.template:
       backup: true

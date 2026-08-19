@@ -513,6 +513,10 @@ graylog_server__trusted_proxies:
 
 * You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_server --tags python_venv`
 
+**The run aborts with `Graylog X.Y is not supported by this role`**
+
+* The enabled repositories offer a Graylog version this role has no configuration template for. Either pin the host to a supported version, or add the matching `roles/graylog_server/templates/etc/graylog/server/<version>-server.conf.j2` template and list the version in `roles/graylog_server/vars/main.yml`.
+
 
 ## License
 

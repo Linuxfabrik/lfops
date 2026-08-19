@@ -161,6 +161,10 @@ graylog_datanode__service_state: 'started'
 
 * You either have to run the whole playbook, or python_venv directly: `ansible-playbook --inventory myinv linuxfabrik.lfops.setup_graylog_datanode --tags python_venv`
 
+**The run aborts with `Graylog Data Node X.Y is not supported by this role`**
+
+* The enabled repositories offer a Graylog Data Node version this role has no configuration template for. Either pin the host to a supported version, or add the matching `roles/graylog_datanode/templates/etc/graylog/datanode/<version>-datanode.conf.j2` template and list the version in `roles/graylog_datanode/vars/main.yml`.
+
 
 ## License
 
