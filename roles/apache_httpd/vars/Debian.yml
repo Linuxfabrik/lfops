@@ -115,7 +115,8 @@ apache_httpd__mods__role_var:
     template: 'include'
 
   - filename: 'info'
-    enabled: true
+    # mod_info exposes the full config incl. other modules' credentials
+    enabled: false
     state: 'present'
     template: 'info'
 
