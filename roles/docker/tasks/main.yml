@@ -30,8 +30,8 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/docker/daemon.json'
 
-    tags:
-      - 'docker'
+  tags:
+    - 'docker'
 
 
 - block:
