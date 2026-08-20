@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:collabora**: `collabora__coolwsd_ssl_settings_ssl_verification` and `collabora__coolwsd_welcome_enable` reach the deployed `coolwsd.xml` again. Both were only wired into a few old templates, so on all newer versions the value came from the package instead of from the inventory. Since the packages differ, this changes what some hosts do: SSL verification of the WOPI host was on for hosts running 26.04.2 and is now governed by the variable, which defaults to `false`. Set `collabora__coolwsd_ssl_settings_ssl_verification: true` to keep strict verification.
 * **role:collabora**: Drop support for EOL Collabora 23.05. Upgrade to 24.04 or newer.
 * **role:icingaweb2_module_grafana**: The graph configuration for the Linuxfabrik Monitoring Plugins is only deployed when the role is called with `--tags icingaweb2_module_grafana:monitoring_plugins_graphs`, matching the `icingaweb2_module_director:basket` tag. Run the role with that tag to update `/etc/icingaweb2/modules/grafana/graphs.ini`. The `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` variable is gone; remove it from your inventory.
 

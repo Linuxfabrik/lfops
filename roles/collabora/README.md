@@ -146,9 +146,10 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 `collabora__coolwsd_ssl_settings_ssl_verification`
 
-* Enable or disable SSL verification of hosts remote to coolwsd. If true SSL verification will be strict, otherwise certs of hosts will not be verified.
+* Enable or disable SSL verification of hosts remote to coolwsd. If true SSL verification will be strict, otherwise certs of hosts will not be verified. This covers the connections coolwsd opens itself, above all the ones to the WOPI host (Nextcloud and the like) for reading and writing the documents, and along with them the remote configuration and font downloads and the allowed external data sources. It does not affect the certificate coolwsd presents to browsers, which is `collabora__coolwsd_ssl_enable` and `collabora__coolwsd_ssl_termination`.
 * Type: Bool.
 * Default: `false`
+* Applies to every supported version except 24.04.4, whose `coolwsd.xml` has no such setting.
 
 `collabora__coolwsd_ssl_termination`
 
@@ -180,6 +181,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 * Controls whether the welcome screen should be shown to the users on new install and updates.
 * Type: Bool.
 * Default: `false`
+* Applies to the versions whose `coolwsd.xml` carries a `welcome` section: CODE 24.04.7 to 24.04.10 and 26.04.2, Enterprise 24.04.13 to 24.04.18, 25.04.12 and 26.04.2. The other versions ship no such section and ignore the variable.
 
 `collabora__language_packages__host_var` / `collabora__language_packages__group_var`
 
