@@ -148,7 +148,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 * Enable or disable SSL verification of hosts remote to coolwsd. If true SSL verification will be strict, otherwise certs of hosts will not be verified. This covers the connections coolwsd opens itself, above all the ones to the WOPI host (Nextcloud and the like) for reading and writing the documents, and along with them the remote configuration and font downloads and the allowed external data sources. It does not affect the certificate coolwsd presents to browsers, which is `collabora__coolwsd_ssl_enable` and `collabora__coolwsd_ssl_termination`.
 * Type: Bool.
-* Default: `false`
+* Default: `true`
 * Applies to every supported version except 24.04.4, whose `coolwsd.xml` has no such setting.
 
 `collabora__coolwsd_ssl_termination`
@@ -249,7 +249,7 @@ collabora__coolwsd_ssl_enable: false
 collabora__coolwsd_ssl_settings_ca_file_path: '/etc/coolwsd/ca-chain.cert.pem'
 collabora__coolwsd_ssl_settings_cert_file_path: '/etc/coolwsd/cert.pem'
 collabora__coolwsd_ssl_settings_key_file_path: '/etc/coolwsd/key.pem'
-collabora__coolwsd_ssl_settings_ssl_verification: false
+collabora__coolwsd_ssl_settings_ssl_verification: true
 collabora__coolwsd_ssl_termination: true
 collabora__coolwsd_storage_wopi__group_var: []
 collabora__coolwsd_storage_wopi__host_var:
