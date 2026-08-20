@@ -1,0 +1,516 @@
+argument_specs:
+  main:
+    options:
+
+      apache_httpd__conf__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          conf-available / conf-enabled files. Dependent-role injection.
+          See `apache_httpd__conf__group_var` in the README.
+
+      apache_httpd__conf__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          conf-available / conf-enabled files. Group-level override.
+
+      apache_httpd__conf__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          conf-available / conf-enabled files. Host-level override.
+
+      apache_httpd__conf_add_default_charset:
+        type: 'str'
+        required: false
+        default: 'UTF-8'
+        description: >-
+          Charset added to the `Content-Type` header when the response
+          does not name one (`AddDefaultCharset`).
+
+      apache_httpd__conf_document_root:
+        type: 'str'
+        required: false
+        default: '/var/www/html'
+        description: >-
+          Directory the server serves files from (`DocumentRoot`).
+
+      apache_httpd__conf_enable_send_file:
+        type: 'str'
+        required: false
+        default: 'On'
+        description: >-
+          Whether the kernel `sendfile` support is used to deliver static
+          files (`EnableSendfile`).
+
+      apache_httpd__conf_error_log:
+        type: 'str'
+        required: false
+        default: 'syslog:local1'
+        description: >-
+          Where the server logs errors (`ErrorLog`).
+
+      apache_httpd__conf_hostname_lookups:
+        type: 'str'
+        required: false
+        default: 'Off'
+        description: >-
+          Whether DNS lookups are performed on client addresses
+          (`HostnameLookups`).
+
+      apache_httpd__conf_keep_alive:
+        type: 'str'
+        required: false
+        default: 'On'
+        description: >-
+          Whether persistent connections are allowed (`KeepAlive`).
+
+      apache_httpd__conf_keep_alive_timeout:
+        type: 'int'
+        required: false
+        default: 5
+        description: >-
+          Seconds the server waits for the next request on a persistent
+          connection (`KeepAliveTimeout`).
+
+      apache_httpd__conf_limit_request_body:
+        type: 'int'
+        required: false
+        default: 102400
+        description: >-
+          Maximum number of bytes allowed in a request body
+          (`LimitRequestBody`).
+
+      apache_httpd__conf_limit_request_field_size:
+        type: 'int'
+        required: false
+        default: 8190
+        description: >-
+          Maximum number of bytes allowed in a request header field
+          (`LimitRequestFieldSize`).
+
+      apache_httpd__conf_limit_request_fields:
+        type: 'int'
+        required: false
+        default: 100
+        description: >-
+          Maximum number of request header fields accepted from a client
+          (`LimitRequestFields`).
+
+      apache_httpd__conf_limit_request_line:
+        type: 'int'
+        required: false
+        default: 8190
+        description: >-
+          Maximum number of bytes allowed in the request line
+          (`LimitRequestLine`).
+
+      apache_httpd__conf_log_level:
+        type: 'str'
+        required: false
+        default: 'warn'
+        description: >-
+          Verbosity of the error log, optionally per module, for example
+          `notice core:info` (`LogLevel`).
+
+      apache_httpd__conf_max_keep_alive_requests:
+        type: 'int'
+        required: false
+        default: 500
+        description: >-
+          Number of requests allowed on a persistent connection
+          (`MaxKeepAliveRequests`).
+
+      apache_httpd__conf_server_admin:
+        type: 'str'
+        required: true
+        description: >-
+          Address the server includes in error messages sent to the client
+          (`ServerAdmin`).
+
+      apache_httpd__conf_server_name:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: >-
+          Hostname the server uses to identify itself (`ServerName`).
+
+      apache_httpd__conf_timeout:
+        type: 'int'
+        required: false
+        default: 10
+        description: >-
+          Seconds the server waits for I/O before failing a request
+          (`Timeout`).
+
+      apache_httpd__conf_trace_enable:
+        type: 'str'
+        required: false
+        default: 'Off'
+        description: >-
+          Whether `TRACE` requests are answered (`TraceEnable`).
+
+      apache_httpd__htpasswd__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Users in the htpasswd file. Dependent-role injection.
+          See `apache_httpd__htpasswd__group_var` in the README.
+
+      apache_httpd__htpasswd__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Users in the htpasswd file. Group-level override.
+
+      apache_httpd__htpasswd__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Users in the htpasswd file. Host-level override.
+
+      apache_httpd__limit_vhosts:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Deploy only the vHosts whose `conf_server_name` is in this list.
+          Unset deploys all of them.
+
+      apache_httpd__mod_dir_directory_index:
+        type: 'str'
+        required: false
+        default: 'index.html index.htm index.txt'
+        description: >-
+          Resources searched for when a directory is requested
+          (`DirectoryIndex`).
+
+      apache_httpd__mod_log_config_custom_log:
+        type: 'str'
+        required: false
+        description: >-
+          Global log directive for requests not handled by any vHost
+          (`CustomLog`). Unset omits the directive.
+
+      apache_httpd__mod_security_coreruleset_url:
+        type: 'str'
+        required: false
+        default: 'https://github.com/coreruleset/coreruleset/archive'
+        description: >-
+          Base URL the OWASP Core Rule Set archive is downloaded from.
+
+      apache_httpd__mod_security_coreruleset_version:
+        type: 'str'
+        required: false
+        default: '4.27.0'
+        description: >-
+          Version of the OWASP Core Rule Set to deploy.
+
+      apache_httpd__mod_ssl_ssl_use_stapling:
+        type: 'str'
+        required: false
+        default: 'on'
+        description: >-
+          Whether OCSP stapling is used (`SSLUseStapling`).
+
+      apache_httpd__mods__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          mods-available / mods-enabled files. Dependent-role injection.
+          See `apache_httpd__mods__group_var` in the README.
+
+      apache_httpd__mods__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          mods-available / mods-enabled files. Group-level override.
+
+      apache_httpd__mods__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          mods-available / mods-enabled files. Host-level override.
+
+      apache_httpd__mpm_common_listen:
+        type: 'list'
+        elements: 'raw'
+        required: false
+        default:
+          - 80
+        description: >-
+          Ports, or address and port combinations, the server binds to
+          (`Listen`).
+
+      apache_httpd__mpm_event_max_connections_per_child:
+        type: 'int'
+        required: false
+        default: 0
+        description: >-
+          Connections a child process handles before it is recycled;
+          `0` means unlimited (`MaxConnectionsPerChild`).
+
+      apache_httpd__mpm_event_max_request_workers:
+        type: 'int'
+        required: false
+        default: 400
+        description: >-
+          Maximum number of connections served simultaneously
+          (`MaxRequestWorkers`).
+
+      apache_httpd__mpm_event_max_spare_threads:
+        type: 'int'
+        required: false
+        default: 250
+        description: >-
+          Maximum number of idle threads (`MaxSpareThreads`).
+
+      apache_httpd__mpm_event_min_spare_threads:
+        type: 'int'
+        required: false
+        default: 75
+        description: >-
+          Minimum number of idle threads (`MinSpareThreads`).
+
+      apache_httpd__mpm_event_start_servers:
+        type: 'int'
+        required: false
+        default: 3
+        description: >-
+          Number of child processes created at startup (`StartServers`).
+
+      apache_httpd__mpm_event_thread_limit:
+        type: 'int'
+        required: false
+        default: 64
+        description: >-
+          Upper limit for `ThreadsPerChild` (`ThreadLimit`).
+
+      apache_httpd__mpm_event_threads_per_child:
+        type: 'int'
+        required: false
+        default: 25
+        description: >-
+          Number of threads each child process creates
+          (`ThreadsPerChild`).
+
+      apache_httpd__mpm_prefork_max_connections_per_child:
+        type: 'int'
+        required: false
+        default: 0
+        description: >-
+          Connections a child process handles before it is recycled;
+          `0` means unlimited (`MaxConnectionsPerChild`).
+
+      apache_httpd__mpm_prefork_max_request_workers:
+        type: 'int'
+        required: false
+        default: 256
+        description: >-
+          Maximum number of connections served simultaneously
+          (`MaxRequestWorkers`).
+
+      apache_httpd__mpm_prefork_max_spare_servers:
+        type: 'int'
+        required: false
+        default: 10
+        description: >-
+          Maximum number of idle child processes (`MaxSpareServers`).
+
+      apache_httpd__mpm_prefork_min_spare_servers:
+        type: 'int'
+        required: false
+        default: 5
+        description: >-
+          Minimum number of idle child processes (`MinSpareServers`).
+
+      apache_httpd__mpm_prefork_start_servers:
+        type: 'int'
+        required: false
+        default: 5
+        description: >-
+          Number of child processes created at startup (`StartServers`).
+
+      apache_httpd__mpm_worker_max_connections_per_child:
+        type: 'int'
+        required: false
+        default: 0
+        description: >-
+          Connections a child process handles before it is recycled;
+          `0` means unlimited (`MaxConnectionsPerChild`).
+
+      apache_httpd__mpm_worker_max_request_workers:
+        type: 'int'
+        required: false
+        default: 400
+        description: >-
+          Maximum number of connections served simultaneously
+          (`MaxRequestWorkers`).
+
+      apache_httpd__mpm_worker_max_spare_threads:
+        type: 'int'
+        required: false
+        default: 250
+        description: >-
+          Maximum number of idle threads (`MaxSpareThreads`).
+
+      apache_httpd__mpm_worker_min_spare_threads:
+        type: 'int'
+        required: false
+        default: 75
+        description: >-
+          Minimum number of idle threads (`MinSpareThreads`).
+
+      apache_httpd__mpm_worker_start_servers:
+        type: 'int'
+        required: false
+        default: 3
+        description: >-
+          Number of child processes created at startup (`StartServers`).
+
+      apache_httpd__mpm_worker_thread_limit:
+        type: 'int'
+        required: false
+        default: 64
+        description: >-
+          Upper limit for `ThreadsPerChild` (`ThreadLimit`).
+
+      apache_httpd__mpm_worker_threads_per_child:
+        type: 'int'
+        required: false
+        default: 25
+        description: >-
+          Number of threads each child process creates
+          (`ThreadsPerChild`).
+
+      apache_httpd__packages__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Packages installed via the OS package manager. Dependent-role
+          injection. See `apache_httpd__packages__group_var` in the README.
+
+      apache_httpd__packages__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Packages installed via the OS package manager. Group-level
+          override.
+
+      apache_httpd__packages__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Packages installed via the OS package manager. Host-level
+          override.
+
+      apache_httpd__skip_document_root_chown:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Skip the recursive chown of the document root.
+
+      apache_httpd__skip_mod_security_coreruleset:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Skip the deployment of the OWASP Core Rule Set.
+
+      apache_httpd__skip_php_fpm:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Skip the PHP-FPM configuration globally and in each vHost.
+
+      apache_httpd__systemd_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Whether the Apache service starts on boot.
+
+      apache_httpd__systemd_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State the Apache service is put in.
+
+      apache_httpd__vhosts__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          vHost definitions. Dependent-role injection.
+          See `apache_httpd__vhosts__group_var` in the README.
+
+      apache_httpd__vhosts__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          vHost definitions. Group-level override.
+
+      apache_httpd__vhosts__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          vHost definitions. Host-level override.
+
+      apache_httpd__wsgi_python_home:
+        type: 'str'
+        required: false
+        description: >-
+          Python virtual environment used by mod_wsgi
+          (`WSGIPythonHome`). Defaults to `/opt/python`.
+
+      apache_httpd__wsgi_python_path:
+        type: 'str'
+        required: false
+        description: >-
+          Additional directories added to the Python module search path
+          (`WSGIPythonPath`). Defaults to `/var/www/html/python/`.
+
+      apache_httpd__wsgi_script_alias:
+        type: 'str'
+        required: false
+        description: >-
+          URL prefix and the WSGI script it maps to (`WSGIScriptAlias`).
+          Defaults to `/ /var/www/html/python/index.py`.

@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
 
 ### Breaking Changes
 
 * **role:collabora**: `collabora__coolwsd_ssl_settings_ssl_verification` and `collabora__coolwsd_welcome_enable` reach the deployed `coolwsd.xml` again, and SSL verification of the WOPI host now defaults to strict. Both variables were only wired into a few old templates, so on newer versions the value came from the package instead of from the inventory, and most packages ship verification off. A host whose WOPI host presents a self-signed or otherwise untrusted certificate needs `collabora__coolwsd_ssl_settings_ssl_verification: false`, otherwise its documents stop loading.
+* **role:apache_httpd**: `mod_info` is no longer enabled, so `/server-info` stops serving the complete Apache configuration, including the credentials of other modules. Hosts that need the endpoint re-enable the `info` module in their inventory via `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var`.
+* **role:monitoring_plugins**: A source install now places the notification plugins in `/usr/lib64/nagios/plugins`, next to the check plugins, and removes the `/usr/lib64/nagios/plugins/notifications` directory it used before. This is where the shipped Icinga command definitions and the rpm/deb packages have always expected them. Adjust any command definition of your own that points into the `notifications` subdirectory.
 * **role:collabora**: Drop support for EOL Collabora 23.05. Upgrade to 24.04 or newer.
 * **role:icingaweb2_module_grafana**: The graph configuration for the Linuxfabrik Monitoring Plugins is only deployed when the role is called with `--tags icingaweb2_module_grafana:monitoring_plugins_graphs`, matching the `icingaweb2_module_director:basket` tag. Run the role with that tag to update `/etc/icingaweb2/modules/grafana/graphs.ini`. The `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` variable is gone; remove it from your inventory.
 
@@ -32,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
+* **role:monitoring_plugins**: A source install deploys the event plugins, which only the rpm/deb package used to ship.
+* **role:monitoring_plugins**: A source install completes on a minimal installation, which has neither the Python module `ansible.builtin.pip` needs nor an `/etc/bash_completion.d` directory.
+* **role:monitoring_plugins**: A source install leaves the plugins, the library and the virtual environment readable and executable for the monitoring user, even when the Ansible controller runs with a hardened umask.
+* **role:monitoring_plugins**: A second source install run against an unchanged host no longer reports changes.
 * **role:login**: Removing a user that had lingering enabled no longer aborts the run.
 * **role:example**: The config-validation handler of the reference role triggers the restart handler it notifies; only the template new roles are copied from was affected, not any role that manages an application.
 * **role:freeipa_server**: Commands and command groups can be assigned to a sudo rule, through the `allow_sudocmds` and `allow_sudocmdgroups` subkeys of `freeipa_server__sudorules`; the former `cmds` and `cmdgroups` names never reached FreeIPA and aborted the run with `Unsupported parameters`.
