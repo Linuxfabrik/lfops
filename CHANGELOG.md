@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:collabora**: Add support for Collabora Online CODE 26.04.1, 26.04.2 and 26.04.3, and Collabora Enterprise 24.04.18, 25.04.12 and 26.04.2.
 * **role:monitoring_plugins**: Deploy the bash completion file for source installs.
 * **role:kvm_vm**: VMs can now also be installed from an ISO or install tree instead of a prepared cloud image.
 * **role:files**: The `files:directories`, `files:files` and `files:symlinks` tags manage one kind of file system entity each, so a single directory or symlink can be deployed without touching the rest.

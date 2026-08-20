@@ -19,11 +19,17 @@ __collabora__supported_versions_code:
   - '25.04.5'
   - '25.04.6'
   - '25.04.10'
+  - '26.04.3'
+  - '26.04.2'
+  - '26.04.1'
 __collabora__supported_versions_enterprise:
   - '24.04.13'
   - '24.04.15'
   - '24.04.16'
   - '24.04.17'
+  - '24.04.18'
+  - '25.04.12'
+  - '26.04.2'
 __collabora__supported_versions: '{{
     collabora__use_code | bool | ternary(
       __collabora__supported_versions_code,
