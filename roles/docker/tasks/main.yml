@@ -7,6 +7,12 @@
         - 'docker-compose-plugin'
       state: 'present'
 
+  tags:
+    - 'docker'
+
+
+- block:
+
   - name: 'mkdir /etc/docker'
     ansible.builtin.file:
       path: '/etc/docker'
@@ -32,6 +38,7 @@
 
   tags:
     - 'docker'
+    - 'docker:configure'
 
 
 - block:

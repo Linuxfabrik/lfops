@@ -20,6 +20,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs and configures docker.
 * Triggers: docker.service restart.
 
+`docker:configure`
+
+* Deploys `/etc/docker/daemon.json`.
+* Triggers: docker.service restart.
+
 `docker:state`
 
 * Manages the state of the docker service.
