@@ -1,6 +1,9 @@
 {
     "dns": {{ docker__daemon_json_dns | to_nice_json(indent=8) }},
     "log-driver": "{{ docker__daemon_json_log_driver }}"
+{% if docker__daemon_json_default_address_pools is defined and docker__daemon_json_default_address_pools | length %}
+    ,"default-address-pools": {{ docker__daemon_json_default_address_pools | to_nice_json(indent=8) }}
+{% endif %}
 {% if docker__daemon_json_insecure_registries is defined and docker__daemon_json_insecure_registries | length %}
     ,"insecure-registries": {{ docker__daemon_json_insecure_registries | to_nice_json(indent=8) }}
 {% endif %}

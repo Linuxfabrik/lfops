@@ -28,6 +28,23 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Optional Role Variables
 
+`docker__daemon_json_default_address_pools`
+
+* The address ranges docker allocates the subnets of its container networks from, including the default `bridge` network. Set this to keep docker off ranges that are already routed in your network. The pools replace docker's built-in ones (`172.17.0.0/16` up to `172.28.0.0/14`, and `192.168.0.0/16`), they do not extend them.
+* Type: List of dictionaries.
+* Default: unset
+* Subkeys:
+
+    * `base`:
+
+        * Mandatory. The range the subnets are carved out of, in CIDR notation.
+        * Type: String.
+
+    * `size`:
+
+        * Mandatory. The prefix length of each subnet carved out of `base`. A `base` of `172.18.0.0/16` with a `size` of `24` yields 256 container networks.
+        * Type: Number.
+
 `docker__daemon_json_dns`
 
 * A list of DNS server for all Docker containers.
@@ -67,6 +84,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 Example:
 ```yaml
 # optional
+docker__daemon_json_default_address_pools:
+  - base: '172.18.0.0/16'
+    size: 24
 docker__daemon_json_dns:
   - '{{ ansible_facts["dns"]["nameservers"][0] }}'
   - 'dns.example.com'
