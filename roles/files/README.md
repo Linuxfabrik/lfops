@@ -88,6 +88,12 @@ Manual steps:
         * Mandatory. Path to the file.
         * Type: String.
 
+    * `backup`:
+
+        * Optional. Whether to create a timestamped backup of the file before overwriting it.
+        * Type: Bool.
+        * Default: `true`
+
     * `content`:
 
         * Optional. Content of the file. If unset, the role copies the file from `inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/" ~ item["path"]`.
@@ -181,6 +187,7 @@ files__files__host_var:
       echo "a script with
       multiple lines"
     mode: 0o755
+    backup: false
   - path: '/data/file2' # content will be taken from `inventory_dir/host_files/inventory_hostname/data/file3`
   - path: '/data/file3'
     state: 'absent'

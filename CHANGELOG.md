@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.1, 26.04.2 and 26.04.3, and Collabora Enterprise 24.04.18, 25.04.12 and 26.04.2.
