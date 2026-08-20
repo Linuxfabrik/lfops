@@ -24,6 +24,11 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 * Installs and configures either Collabora CODE or Collabora Enterprise.
 * Triggers: coolwsd.service restart.
 
+`collabora:configure`
+
+* Deploys `/etc/coolwsd/coolwsd.xml` and `/etc/logrotate.d/coolwsd`.
+* Triggers: coolwsd.service restart.
+
 `collabora:spell_check`
 
 * Installs spell checking tools.

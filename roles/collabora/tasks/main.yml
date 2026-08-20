@@ -28,6 +28,12 @@
       group: 'cool'
       mode: 0o640
 
+  tags:
+    - 'collabora'
+
+
+- block:
+
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
@@ -74,6 +80,7 @@
 
   tags:
     - 'collabora'
+    - 'collabora:configure'
 
 
 - block:
