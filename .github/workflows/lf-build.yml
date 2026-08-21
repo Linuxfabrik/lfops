@@ -28,7 +28,7 @@ jobs:
     steps:
 
       - name: 'Harden the runner (Audit all outbound calls)'
-        uses: 'step-security/harden-runner@b09bb98e06d4d774595224525879c09bc6e98c40' # v2.20.1
+        uses: 'step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c' # v2.21.0
         with:
           egress-policy: 'audit'
 
@@ -105,7 +105,7 @@ jobs:
 
       - name: 'Push to GitHub Container Registry'
         id: 'push-to-ghcr'
-        uses: 'redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c' # v2.8
+        uses: 'redhat-actions/push-to-registry@94ade333c38ecc0e60e94785125d9a52ca423b37' # v3.0.0
         with:
           registry: 'ghcr.io'
           image: '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee'
