@@ -21,7 +21,8 @@
       dest: '/etc/yum.repos.d/influxdb.repo'
       owner: 'root'
       group: 'root'
-      mode: 0o644
+      # 0600 while the file carries the mirror credentials
+      mode: '{{ "0o600" if repo_influxdb__basic_auth_login | default({}) | length > 0 else "0o644" }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

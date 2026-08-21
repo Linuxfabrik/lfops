@@ -19,7 +19,8 @@
       dest: '/etc/yum.repos.d/{{ item | basename }}'
       owner: 'root'
       group: 'root'
-      mode: 0o644
+      # 0600 while the file carries the mirror credentials
+      mode: '{{ "0o600" if repo_remi__basic_auth_login | default({}) | length > 0 else "0o644" }}'
     loop: '{{ __repo_remi__repo_files }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
