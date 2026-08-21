@@ -22,14 +22,14 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # v7.0.1
 
-      # The lowest version pyproject.toml supports, which is also ruff's
-      # target-version.  bandit and vulture parse the sources with this
-      # interpreter, so syntax newer than the floor fails here rather than
-      # on a user's machine.
+      # This runs pre-commit itself, not the collection.  The pinned stack in
+      # .github/pre-commit/requirements.txt needs 3.10 or newer, so it cannot
+      # be the py39 floor the controller plugins support.  That floor is
+      # covered by the matrix in lf-unit-tests.yml instead.
       - name: 'Set up Python'
         uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' # v7.0.0
         with:
-          python-version: '3.9'
+          python-version: '3.13'
 
       - name: 'Install pre-commit'
         run: 'pip install --require-hashes --requirement .github/pre-commit/requirements.txt'
