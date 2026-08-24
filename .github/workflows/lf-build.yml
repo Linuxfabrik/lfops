@@ -91,17 +91,23 @@ jobs:
             --server https://galaxy.ansible.com \
             --api-key "$ANSIBLE_GALAXY_TOKEN"
 
+      # Tagged without the registry prefix, so podman stores the image under
+      # localhost/.  push-to-registry derives its push source from the bare
+      # `image` input and prefixes that with localhost/, while its existence
+      # check uses the bare name and still resolves a `ghcr.io/...` image.
+      # A registry-prefixed local name therefore passes the check and fails
+      # the push.  Verified with podman 5.8.4 on Fedora 44.
       - name: 'Build Execution Environment'
         run: |
           ansible-builder build \
-            --tag 'ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
+            --tag '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
             -vvv
 
       - name: 'Re-tag the image'
         run: |
           podman tag \
-            'ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
-            'ghcr.io/${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG2 }}'
+            '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
+            '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG2 }}'
 
       - name: 'Push to GitHub Container Registry'
         id: 'push-to-ghcr'
