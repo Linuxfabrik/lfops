@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026070301
+# 2026082501
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -57,12 +57,27 @@ makecache_with_retry () {
     done
     return 1
 }
+
+last_txn_id () {
+    # dnf lists its history newest first, with the transaction id in the first column;
+    # neither the header nor the separator line starts with a digit. Comparing the id
+    # from before and after the transaction is what tells us whether this run changed
+    # anything at all: a bare `yum history info` always reports the last transaction,
+    # even one from a previous maintenance window. A host whose history is still empty
+    # yields an empty id on both sides, which compares equal and is correct.
+    # Verified against dnf 4.7 (Rocky 8), 4.14 (Rocky 9) and 4.20 (Rocky 10).
+    yum history list 2> /dev/null | awk '$1 ~ /^[0-9]+$/ { print $1; exit }'
+}
 {% endif %}
 
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ' ) }}"
 RECIPIENTS_NEW_CONFIGFILES="{{ system_update__mail_recipients_new_configfiles | join(' ' ) }}"
+
+# set to 1 by the distribution-specific block below once it knows that the transaction
+# actually changed packages. gates the closing notification.
+UPDATED=0
 
 # the reboot-request spool is owned and created by the schedule_reboot role (tmpfiles.d)
 
@@ -91,10 +106,21 @@ if ! makecache_with_retry; then
     exit 1
 fi
 {% endif %}
+TXN_BEFORE=$(last_txn_id)
 if ! yum -y update {{ system_update__cache_only | bool | ternary("--cacheonly --setopt=metadata_timer_sync=0", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
     exit 1
+fi
+
+TXN_AFTER=$(last_txn_id)
+if [ "$TXN_AFTER" = "$TXN_BEFORE" ]; then
+    UPDATED=0
+    TXN_REPORT='No packages were changed in this run.'
+    log "No updates were available"
+else
+    UPDATED=1
+    TXN_REPORT=$(yum history info "$TXN_AFTER")
 fi
 {% endif %}
 
@@ -108,6 +134,18 @@ fi
 apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null
 export DEBIAN_FRONTEND=noninteractive
 yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output
+
+# apt closes every run with a summary line; LC_ALL=C above keeps its wording stable.
+# only the first three counters are matched, so a run that changed nothing still counts
+# as a no-op when packages are held back ("... and N not upgraded"). apt 3.0 reworked
+# the output of `apt` but left this `apt-get` line untouched.
+# Verified against apt 2.6 (Debian 12), 3.0 (Debian 13) and 2.7 (Ubuntu 24.04).
+if grep -q '^0 upgraded, 0 newly installed, 0 to remove ' /tmp/update_output; then
+    UPDATED=0
+    log "No updates were available"
+else
+    UPDATED=1
+fi
 {% endif %}
 
 # after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
@@ -138,7 +176,7 @@ done
 needs-restarting --reboothint &> /dev/null
 if [ $? -eq 1 ]; then
     log "Reboot required (kernel/core component update); requesting reboot via the spool"
-    MSGBODY=$(yum history info)
+    MSGBODY="$TXN_REPORT"
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}
@@ -150,7 +188,7 @@ fi
 needs-restarting 2> /dev/null > /tmp/needs-restarting
 if [ -s /tmp/needs-restarting ]; then
     log "Reboot required (running services still use pre-update libraries); requesting reboot via the spool"
-    MSGBODY=$(cat /tmp/needs-restarting; yum history info)
+    MSGBODY=$(cat /tmp/needs-restarting; printf '%s\n' "$TXN_REPORT")
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}
@@ -178,11 +216,20 @@ fi
 post_update_code
 {% endif %}
 
+# stay quiet on an update day that had nothing to apply, the same way the security lane
+# does. the reboot checks above still ran, so a reboot carried over from an earlier
+# window is picked up either way; only the mail is suppressed.
+if [ "$UPDATED" -eq 0 ]; then
+    log "Nothing to report"
+    exit 0
+fi
+
 {% if ansible_facts['os_family'] == 'RedHat' %}
 log "System updated, no reboot required"
-send_msg "$SUBJECT_PREFIX - System updated without Reboot" "$(yum history info)"
+send_msg "$SUBJECT_PREFIX - System updated without Reboot" "$TXN_REPORT"
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'Debian' %}
+log "System updated, no reboot required"
 send_msg "$SUBJECT_PREFIX - System updated without Reboot" "$(cat /tmp/update_output)"
 {% endif %}

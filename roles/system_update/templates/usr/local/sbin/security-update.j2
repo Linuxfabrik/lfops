@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026070301
+# 2026082501
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository
 # only, then request a reboot if one is needed by dropping a file into the
@@ -54,6 +54,18 @@ makecache_with_retry () {
     return 1
 }
 
+last_txn_id () {
+    # dnf lists its history newest first, with the transaction id in the first column;
+    # neither the header nor the separator line starts with a digit. Comparing the id
+    # from before and after the transaction is what tells us whether this run changed
+    # anything at all: a bare `yum history info` always reports the last transaction,
+    # even the one the weekly lane made minutes earlier on a day where both run. A host
+    # whose history is still empty yields an empty id on both sides, which compares
+    # equal and is correct.
+    # Verified against dnf 4.7 (Rocky 8), 4.14 (Rocky 9) and 4.20 (Rocky 10).
+    yum history list 2> /dev/null | awk '$1 ~ /^[0-9]+$/ { print $1; exit }'
+}
+
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
 SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
@@ -103,10 +115,24 @@ fi
 # keeps this lane separate from the regular (weekly) update lane and from the frozen
 # mirror snapshot.
 log "Applying security hot-fixes from: $REPOS"
+TXN_BEFORE=$(last_txn_id)
 if ! yum --disablerepo="*" --enablerepo="$REPOS" -y upgrade 1> /tmp/security-update 2> /tmp/security-update-stderr; then
     log "Security update failed; see /tmp/security-update-stderr"
     send_msg "$SUBJECT_PREFIX - Security update failed" "$(</tmp/security-update-stderr)"
     exit 1
+fi
+
+# check-update having found something does not guarantee a transaction: the package can
+# be gone from the repo by now, held by a versionlock, or unsatisfiable, in which case
+# the upgrade above exits 0 having done nothing.
+TXN_AFTER=$(last_txn_id)
+if [ "$TXN_AFTER" = "$TXN_BEFORE" ]; then
+    UPDATED=0
+    TXN_REPORT='No packages were changed in this run.'
+    log "Nothing was installed after all"
+else
+    UPDATED=1
+    TXN_REPORT=$(yum history info "$TXN_AFTER")
 fi
 
 # request a reboot if a core component (kernel, glibc, ...) needs it, or if running
@@ -118,7 +144,14 @@ needs-restarting 2> /dev/null > /tmp/security-needs-restarting
 if [ "$reboothint_rc" -eq 1 ] || [ -s /tmp/security-needs-restarting ]; then
     log "Reboot required after security update; requesting reboot via the spool"
     # request a reboot; do-reboot sends the single notification at reboot time
-    yum history info > /run/schedule-reboot/security_update
+    printf '%s\n' "$TXN_REPORT" > /run/schedule-reboot/security_update
+    exit 0
+fi
+
+# an upgrade that installed nothing has nothing to report, the same way the check above
+# stays quiet when the repo has nothing pending.
+if [ "$UPDATED" -eq 0 ]; then
+    log "Nothing to report"
     exit 0
 fi
 

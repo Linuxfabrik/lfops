@@ -11,6 +11,7 @@ Reboots are not performed by the update scripts themselves. They are delegated t
 ## How the Role Behaves
 
 * **Updates run at the reboot window.** The regular lane (weekly) and the Rocky security lane (daily) both run at the maintenance window defined by `schedule_reboot__reboot_time__*` (the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role). When an update needs a reboot it drops a request into that role's spool; the update unit is ordered before the reboot actor, so the reboot waits for the update to finish before it runs.
+* **The regular lane only reports when it actually changed something.** On an update day where nothing was pending, it still checks whether a reboot is outstanding, but sends no "System updated without Reboot" mail. The mail it does send lists the packages of that run, not of an earlier one.
 * **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and requests no reboot. Turn the lane off entirely with `system_update__security_enabled: false`.
 
 
