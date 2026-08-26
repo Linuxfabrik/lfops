@@ -23,6 +23,19 @@
       register: '__molecule__pool_result'
       delegate_to: '{{ __molecule__hypervisor }}'
 
+    # Without this the missing pool surfaces further down as a dict lookup on an absent key
+    # ("has no attribute"), naming neither the pool nor what to do about it.
+    - name: 'Assert that the configured storage pool exists'
+      ansible.builtin.assert:
+        that:
+          - 'kvm_vm__pool in __molecule__pool_result["pools"]'
+        quiet: true
+        fail_msg: >-
+          The libvirt storage pool "{{ kvm_vm__pool }}" does not exist on
+          {{ __molecule__hypervisor }}. Available: {{ __molecule__pool_result["pools"] | list | join(", ") }}.
+          See "Preparing the controller" in CONTRIBUTING.md for how to create it, or set
+          LFOPS_TEST_POOL to a pool you can write.
+
     - name: 'Ensure the ephemeral inventory directory exists'
       ansible.builtin.file:
         path: '{{ __molecule__ephemeral_dir }}/inventory'
@@ -31,11 +44,13 @@
 
 
 # One VM per host in systems_under_test. The kvm_vm role delegates to kvm_vm__host, so this play
-# never connects to the (not yet existing) target; the play-level become is for the role's
-# privileged libvirt operations and the image download into the root-owned pool.
+# never connects to the (not yet existing) target. It deliberately does not escalate: the libvirt
+# calls go through the invoking user's 'libvirt' group membership, and the pool writes below (the
+# image download, and the role's qemu-img / virt-customize) are plain filesystem I/O into the
+# directory of the pool named by kvm_vm__pool, which that user has to be able to write. See
+# LFOPS_TEST_POOL in CONTRIBUTING.md for why that should not be the distribution's 'default' pool.
 - name: 'Create VM instances using the kvm_vm role'
   hosts: 'systems_under_test'
-  become: true
   gather_facts: false
   vars:
     kvm_vm__name: '{{ __molecule__instance_name }}'
