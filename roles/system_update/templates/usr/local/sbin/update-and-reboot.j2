@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082502
+# 2026082503
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -136,9 +136,29 @@ fi
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'Debian' %}
-apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null
+# apt-get update exits 0 when a mirror merely fails to answer, printing a `W: Failed to
+# fetch` warning and carrying on with the old lists; it only reports a non-zero status
+# for hard errors such as an unreadable sources list. So this catches a broken
+# configuration, not a mirror outage, unlike the retry loop of the RedHat lane.
+# Verified against apt 2.6 on Debian 12.
+if ! apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
+    log "Metadata refresh failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
+    exit 1
+fi
+# keep those warnings in the journal, since they are the only trace of a mirror outage.
+[ -s /tmp/system-update-stderr ] && log "$(</tmp/system-update-stderr)"
+
 export DEBIAN_FRONTEND=noninteractive
-yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output
+# the exit status of the pipeline is apt-get's own; `yes` only feeds it. A failing
+# maintainer script surfaces here as exit 100, with the detail split over both streams:
+# the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
+# Verified against apt 2.6 on Debian 12.
+if ! yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
+    log "System update failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/update_output)"
+    exit 1
+fi
 
 # apt closes every run with a summary line; LC_ALL=C above keeps its wording stable.
 # only the first three counters are matched, so a run that changed nothing still counts
