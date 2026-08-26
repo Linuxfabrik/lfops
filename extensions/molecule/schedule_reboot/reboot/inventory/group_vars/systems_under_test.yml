@@ -7,6 +7,10 @@ postfix__relayhost: 'mail.example.com'
 
 schedule_reboot__reboot_time__group_var: '03:00'
 
+# A prefix carrying brackets. Brackets are RFC 5322 specials, so the notification's From
+# display name has to be quoted for them; verify.yml asserts on the delivered header.
+schedule_reboot__mail_subject_prefix: '[molecule] '
+
 # reboot immediately on --now: this scenario asserts the reboot via a boot_id change
 # after wait_for_connection, so the default grace sleep would keep the host up past
 # the reconnect and make the check flap. The grace period itself is not under test here.
