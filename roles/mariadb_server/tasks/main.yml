@@ -224,7 +224,7 @@
   # the binary keeps `bin_t` and never reaches `mysqld_t`. Since 11.4.13 / 11.8.9 that is no longer
   # cosmetic: systemd execs `/bin/sh` (MDEV-40629), so an unlabeled binary lands in `initrc_t`
   # instead of `unconfined_service_t` and `httpd_t` clients lose the socket. The MariaDB packages
-  # pull it in on EL9 and EL10, on EL8 they do not. Installed everywhere anyway: it overrides the
+  # depend on it on EL9 and EL10, but not on EL8. Installed everywhere anyway: it overrides the
   # distro `mysql` module (priority 200 over 100) and tracks the upstream packages we deploy.
   - name: 'Install mysql-selinux'
     ansible.builtin.package:
@@ -238,7 +238,7 @@
       - 'mariadb_server__cnf_wsrep_on is false'
     notify: 'mariadb_server: systemctl restart mariadb'
 
-  # applies the context to the binary the running package already installed
+  # relabel the mariadbd binary that is already on disk
   - name: 'restorecon -Fv /usr/sbin/mariadbd'
     ansible.builtin.command: 'restorecon -Fv /usr/sbin/mariadbd'
     register: '__mariadb_server__mariadbd_restorecon_result'
