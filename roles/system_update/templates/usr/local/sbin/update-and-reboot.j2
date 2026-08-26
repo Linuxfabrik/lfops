@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082501
+# 2026082502
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -89,9 +89,20 @@ log "Starting system update"
 # end raw system_update__pre_update_code
 {% endif %}
 
-if systemctl is-active --quiet aide-check.timer && systemctl is-failed --quiet aide-check.service; then
-    cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
-    send_msg "$SUBJECT_PREFIX - aide-check.service state was failed before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
+# remember whether AIDE was already reporting changes before we touch anything. the
+# re-baseline further down would otherwise accept that drift as the new baseline and
+# destroy the finding. `aide --check` exits 1 on a mismatch, so a failed
+# aide-check.service is what "the last check found changes" looks like.
+# Verified against aide 0.19.2 on Rocky 9.
+AIDE_WAS_CLEAN=0
+if systemctl is-active --quiet aide-check.timer; then
+    if systemctl is-failed --quiet aide-check.service; then
+        log "aide-check was already failing before the update; the database will not be re-baselined"
+        cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
+        send_msg "$SUBJECT_PREFIX - aide-check.service state was failed before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
+    else
+        AIDE_WAS_CLEAN=1
+    fi
 fi
 
 # do the update, and print only critical errors about which we must be told
@@ -124,12 +135,6 @@ else
 fi
 {% endif %}
 
-if systemctl is-active --quiet aide-check.timer; then
-    aide --update 1> /dev/null
-    \mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
-    systemctl restart aide-check.service
-fi
-
 {% if ansible_facts['os_family'] == 'Debian' %}
 apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null
 export DEBIAN_FRONTEND=noninteractive
@@ -147,6 +152,17 @@ else
     UPDATED=1
 fi
 {% endif %}
+
+# re-baseline AIDE after the transaction, so the database describes the updated
+# filesystem. This sits below both distribution blocks because the Debian transaction
+# runs further down than the RedHat one. Only when this run actually changed packages,
+# and only when the check was passing beforehand: re-baselining an already-failing check
+# would silently accept whatever drifted since the last run, an intrusion included.
+if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
+    aide --update 1> /dev/null
+    \mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+    systemctl restart aide-check.service
+fi
 
 # after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
 # *.dpkg-dist / *.ucf-dist on Debian). one mail per file, sent via sendmail.
