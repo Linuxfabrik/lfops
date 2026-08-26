@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: A Galera cluster starts with the settings the role README documents. `binlog_format` reached the deployed configuration only when the binary log was enabled, so on a cluster the server kept its `MIXED` default and every node aborted the start with `Only binlog_format= 'ROW' is currently supported`.
 * **playbook:icingaweb2, playbook:setup_icinga2_master, role:icingaweb2** update `icingaweb2` dependent vars to ensure php.ini value `post_max_size` > `upload_max_filesize` by default.
 * **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
 * **role:monitoring_plugins**: A source install deploys the event plugins, which only the rpm/deb package used to ship.

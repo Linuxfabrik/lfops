@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026070201
+# 2026082601
 # 10.11
 
 [client]
@@ -28,7 +28,12 @@ bind_address                                   = {{ mariadb_server__cnf_bind_add
 {% endif %}
 binlog_cache_size                              = {{ mariadb_server__cnf_binlog_cache_size__combined_var }}
 binlog_expire_logs_seconds                     = {{ mariadb_server__cnf_binlog_expire_logs_seconds__combined_var }}
-{% if mariadb_server__cnf_log_bin__combined_var | length and mariadb_server__cnf_log_bin__combined_var | lower != 'off' %}
+{# binlog_format is a binary-log setting, so it is only written when the binary log is on.
+   Galera is the exception: with wsrep_on the server validates binlog_format at startup whether
+   or not the binary log is enabled, and aborts wsrep recovery on anything but ROW. #}
+{% if (mariadb_server__cnf_log_bin__combined_var | length
+       and mariadb_server__cnf_log_bin__combined_var | lower != 'off')
+      or mariadb_server__cnf_wsrep_on | bool %}
 binlog_format                                  = {{ mariadb_server__cnf_binlog_format__combined_var }}
 {% endif %}
 bulk_insert_buffer_size                        = {{ mariadb_server__cnf_bulk_insert_buffer_size__combined_var }}
