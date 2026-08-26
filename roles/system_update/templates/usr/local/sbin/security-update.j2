@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082502
+# 2026082601
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository
 # only, then request a reboot if one is needed by dropping a file into the
@@ -75,6 +75,10 @@ MAIL_FROM='{{ system_update__mail_from }}'
 SENDER="\"$(printf '%s' "$SUBJECT_PREFIX" | sed 's/[\\"]/\\&/g')\" <$MAIL_FROM>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
 
+# set to 1 once we know that the transaction actually changed packages. gates the
+# closing notification.
+UPDATED=0
+
 # the reboot-request spool is owned and created by the schedule_reboot role (tmpfiles.d)
 
 log "Starting security update run"
@@ -85,7 +89,7 @@ log "Starting security update run"
 # where the repo is absent or was opted out via repo_baseos__security_repo_enabled.
 have_repo=0
 for repo in {{ system_update__security_repos | join(' ') }}; do
-    if dnf repolist --enabled 2> /dev/null | awk 'NR > 1 { print $1 }' | grep -qxF "$repo"; then
+    if dnf repolist --enabled 2> /dev/null | awk 'NR > 1 { print $1 }' | grep --quiet --line-regexp --fixed-strings "$repo"; then
         have_repo=1
     fi
 done
@@ -134,7 +138,7 @@ TXN_AFTER=$(last_txn_id)
 if [ "$TXN_AFTER" = "$TXN_BEFORE" ]; then
     UPDATED=0
     TXN_REPORT='No packages were changed in this run.'
-    log "Nothing was installed after all"
+    log "No packages were changed in this run"
 else
     UPDATED=1
     TXN_REPORT=$(yum history info "$TXN_AFTER")
@@ -142,14 +146,22 @@ fi
 
 # request a reboot if a core component (kernel, glibc, ...) needs it, or if running
 # services still use the pre-update libraries.
-needs-restarting --reboothint &> /dev/null
+needs-restarting --reboothint > /tmp/security-reboothint 2>&1
 reboothint_rc=$?
 needs-restarting 2> /dev/null > /tmp/security-needs-restarting
 
 if [ "$reboothint_rc" -eq 1 ] || [ -s /tmp/security-needs-restarting ]; then
     log "Reboot required after security update; requesting reboot via the spool"
-    # request a reboot; do-reboot sends the single notification at reboot time
-    printf '%s\n' "$TXN_REPORT" > /run/schedule-reboot/security_update
+    # request a reboot; do-reboot sends the single notification at reboot time. keep
+    # whichever check fired: the hint names the core packages, the list the services
+    # still on the pre-update libraries. Without them a reboot carried over from an
+    # earlier run arrives with nothing but "No packages were changed in this run.".
+    # Verified against dnf-utils on Rocky 9.
+    {
+        [ "$reboothint_rc" -eq 1 ] && cat /tmp/security-reboothint
+        [ -s /tmp/security-needs-restarting ] && cat /tmp/security-needs-restarting
+        printf '%s\n' "$TXN_REPORT"
+    } > /run/schedule-reboot/security_update
     exit 0
 fi
 

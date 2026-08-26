@@ -13,6 +13,8 @@ Reboots are not performed by the update scripts themselves. They are delegated t
 * **Updates run at the reboot window.** The regular lane (weekly) and the Rocky security lane (daily) both run at the maintenance window defined by `schedule_reboot__reboot_time__*` (the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role). When an update needs a reboot it drops a request into that role's spool; the update unit is ordered before the reboot actor, so the reboot waits for the update to finish before it runs.
 * **The regular lane only reports when it actually changed something.** On an update day where nothing was pending, it still checks whether a reboot is outstanding, but sends no "System updated without Reboot" mail. The mail it does send lists the packages of that run, not of an earlier one.
 * **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and requests no reboot. Turn the lane off entirely with `system_update__security_enabled: false`.
+* **A failed update stops the run.** A metadata refresh or an upgrade that exits non-zero sends a "System update failed" mail with the error output and ends the run, on both families. Nothing downstream happens: no AIDE re-baseline, no reboot request, and no success mail for a host that is left half-configured.
+* **AIDE is re-baselined only when the check was clean beforehand.** If the host runs an AIDE check lane and the update changed packages, the regular lane refreshes the AIDE database afterwards and restarts the check, so the next check does not flag every file the update touched. If the check was already reporting changes when the update started, the database is left untouched and the log is kept at `/var/log/aide/aide.log-pre-system-update`: drift that predates the update, an intrusion included, is never accepted as the new baseline.
 
 
 ## Dependent Roles
@@ -23,13 +25,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Optional: postfix provides the `sendmail` interface and mail relay used for the notifications (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
 * The reboot mechanism must be present (role: [linuxfabrik.lfops.schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot)). It owns the reboot window (`schedule_reboot__reboot_time__*`) and performs the reboot an update requests.
 * Optional: yum-utils is installed on RHEL (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
-
-
-## Requirements
-
-Manual steps:
-
-* On Debian, install needrestart by running the [apps](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apps.yml) playbook (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 
 
 ## Tags
@@ -170,9 +165,7 @@ system_update__pre_update_code: |-
   check_dns() {
     local DNS_SERVER=$1
     if ! dig @$DNS_SERVER linuxfabrik.ch +short > /dev/null; then
-        SUBJECT="$SUBJECT_PREFIX - System update failed"
-        MSGBODY="DNS Server $DNS_SERVER failed to respond. Aborting update."
-        send_msg
+        send_msg "$SUBJECT_PREFIX - System update failed" "DNS Server $DNS_SERVER failed to respond. Aborting update."
         exit 1
     fi
   }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082504
+# 2026082601
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -94,17 +94,39 @@ log "Starting system update"
 # end raw system_update__pre_update_code
 {% endif %}
 
+{% if ansible_facts['os_family'] == 'RedHat' %}
+# The aide rpm ships no check unit at all, so aide-check.timer / aide-check.service are
+# the names the AIDE lane is deployed under here. aide defaults to /etc/aide.conf and
+# keeps the database gzipped.
+# Verified against aide 0.19.2 on Rocky 9.
+AIDE_CONFIG='/etc/aide.conf'
+AIDE_DB='/var/lib/aide/aide.db.gz'
+AIDE_DB_NEW='/var/lib/aide/aide.db.new.gz'
+AIDE_UNIT='aide-check'
+{% endif %}
+{% if ansible_facts['os_family'] == 'Debian' %}
+# aide-common ships dailyaidecheck.timer / dailyaidecheck.service, keeps the database
+# uncompressed, and its aide binary is built without a default config file, so --config
+# is mandatory rather than cosmetic.
+# Verified against aide 0.18.3 and aide-common on Debian 12.
+AIDE_CONFIG='/etc/aide/aide.conf'
+AIDE_DB='/var/lib/aide/aide.db'
+AIDE_DB_NEW='/var/lib/aide/aide.db.new'
+AIDE_UNIT='dailyaidecheck'
+{% endif %}
+
 # remember whether AIDE was already reporting changes before we touch anything. the
 # re-baseline further down would otherwise accept that drift as the new baseline and
-# destroy the finding. `aide --check` exits 1 on a mismatch, so a failed
-# aide-check.service is what "the last check found changes" looks like.
-# Verified against aide 0.19.2 on Rocky 9.
+# destroy the finding. `aide --check` exits 1 on a mismatch, so a failed check service
+# is what "the last check found changes" looks like. both families log to
+# /var/log/aide/aide.log.
+# Verified against aide 0.19.2 on Rocky 9 and aide 0.18.3 on Debian 12.
 AIDE_WAS_CLEAN=0
-if systemctl is-active --quiet aide-check.timer; then
-    if systemctl is-failed --quiet aide-check.service; then
-        log "aide-check was already failing before the update; the database will not be re-baselined"
+if systemctl is-active --quiet "${AIDE_UNIT}.timer"; then
+    if systemctl is-failed --quiet "${AIDE_UNIT}.service"; then
+        log "${AIDE_UNIT} was already failing before the update; the database will not be re-baselined"
         cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
-        send_msg "$SUBJECT_PREFIX - aide-check.service state was failed before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
+        send_msg "$SUBJECT_PREFIX - ${AIDE_UNIT}.service state was failed before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
     else
         AIDE_WAS_CLEAN=1
     fi
@@ -133,7 +155,7 @@ TXN_AFTER=$(last_txn_id)
 if [ "$TXN_AFTER" = "$TXN_BEFORE" ]; then
     UPDATED=0
     TXN_REPORT='No packages were changed in this run.'
-    log "No updates were available"
+    log "No packages were changed in this run"
 else
     UPDATED=1
     TXN_REPORT=$(yum history info "$TXN_AFTER")
@@ -170,9 +192,9 @@ fi
 # as a no-op when packages are held back ("... and N not upgraded"). apt 3.0 reworked
 # the output of `apt` but left this `apt-get` line untouched.
 # Verified against apt 2.6 (Debian 12), 3.0 (Debian 13) and 2.7 (Ubuntu 24.04).
-if grep -q '^0 upgraded, 0 newly installed, 0 to remove ' /tmp/update_output; then
+if grep --quiet '^0 upgraded, 0 newly installed, 0 to remove ' /tmp/update_output; then
     UPDATED=0
-    log "No updates were available"
+    log "No packages were changed in this run"
 else
     UPDATED=1
 fi
@@ -184,9 +206,9 @@ fi
 # and only when the check was passing beforehand: re-baselining an already-failing check
 # would silently accept whatever drifted since the last run, an intrusion included.
 if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
-    aide --update 1> /dev/null
-    \mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
-    systemctl restart aide-check.service
+    aide --config="$AIDE_CONFIG" --update 1> /dev/null
+    \mv "$AIDE_DB_NEW" "$AIDE_DB"
+    systemctl restart "${AIDE_UNIT}.service"
 fi
 
 # after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
@@ -214,10 +236,14 @@ done
 
 # any restarts needed? if so, request a reboot via the spool (do not reboot here)
 {% if ansible_facts['os_family'] == 'RedHat' %}
-needs-restarting --reboothint &> /dev/null
+# keep the hint itself: it names the core packages that ask for the reboot, which is the
+# only explanation the admin gets when the reboot is carried over from an earlier window
+# and this run changed nothing.
+# Verified against dnf-utils on Rocky 9.
+needs-restarting --reboothint > /tmp/reboothint 2>&1
 if [ $? -eq 1 ]; then
     log "Reboot required (kernel/core component update); requesting reboot via the spool"
-    MSGBODY="$TXN_REPORT"
+    MSGBODY=$(cat /tmp/reboothint; printf '%s\n' "$TXN_REPORT")
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}

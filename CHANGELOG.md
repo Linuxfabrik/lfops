@@ -38,10 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: A requested reboot names the core packages or the running services that ask for it, instead of only listing what the run changed.
 * **role:system_update**: A host with nothing to update no longer sends a "System updated without Reboot" mail on every update day.
 * **role:system_update**: The update mail and the reboot request describe the packages the run just changed instead of those of an earlier run.
 * **role:system_update**: The AIDE database is only refreshed when the update changed packages and the AIDE check was passing beforehand, so a host that was already reporting changes keeps reporting them instead of having them accepted as the new baseline.
-* **role:system_update**: On Debian the AIDE database is refreshed after the upgrade instead of before it, so the next check no longer flags every file the upgrade touched.
+* **role:system_update**: The AIDE database is refreshed after the update rather than before it, on Debian and Ubuntu as well as on RHEL, so the next check no longer flags every file the update touched.
 * **role:system_update**: A failed update on Debian is reported and stops the run, instead of being followed by a success mail or by the reboot of a half-configured host.
 * **playbook:icingaweb2, playbook:setup_icinga2_master, role:icingaweb2** update `icingaweb2` dependent vars to ensure php.ini value `post_max_size` > `upload_max_filesize` by default.
 * **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
