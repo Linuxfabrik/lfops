@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
 * **role:collabora**: The `localhost` WOPI host is an ordinary entry of `collabora__coolwsd_storage_wopi__*` instead of being hard-coded in the template, so it can be dropped with `state: 'absent'` like any other host.
 * **role:php**: The PHP-FPM configuration is checked with `php-fpm --test` before the service is restarted, so a broken pool or ini aborts the run with the error message instead of taking PHP-FPM down on the restart.

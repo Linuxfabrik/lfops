@@ -1020,20 +1020,76 @@ extensions
 
 The `extensions/molecule/example` scenario mirrors the `example` role: it is a fully commented, non-functional reference that walks through every file of a scenario (a non-functional reference because the `example` playbook installs the fictional "Example" application). Copy it as the starting point when adding a test for a playbook.
 
+#### Preparing the controller
+
+Three things have to be in place on the machine that runs `molecule`, once.
+
+**The checkout has to be resolvable as a collection.** The scenarios import the playbooks under test by FQCN (`linuxfabrik.lfops.<playbook>`), so the repository has to be reachable as `linuxfabrik/lfops` in a collection path. Symlinking it keeps the checkout authoritative, so a scenario always runs the code you are editing:
+
+```bash
+ln --symbolic --no-target-directory --force "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops
+```
+
+The link has to point at the very directory you run `molecule` in, otherwise the prerun step fails while installing the local collection (see "Troubleshooting").
+
+**You have to be in the `libvirt` group.** VM provisioning does not escalate; the libvirt calls go through that group.
+
+**The VM backend needs a storage pool you can write.** The base images and per-VM boot disks are written there as plain filesystem I/O (`get_url`, `qemu-img`, `virt-customize`). Do not use the distribution's `default` pool for this. Its directory is owned by a libvirt package, so every upgrade of that package restores the packaged directory mode, and a `chmod` on a directory carrying an ACL rewrites the ACL mask instead of the group bits. A `setfacl` grant on it therefore decays to `#effective:--x` without warning, and provisioning starts failing with `qemu-img: Permission denied` while `getfacl` still lists the entry that is supposed to allow it. Give the VM backend its own pool in a directory no package owns instead:
+
+```bash
+sudo mkdir --parents /var/lib/libvirt/images-lfops-molecule
+sudo chown "$(id -un):$(id -gn)" /var/lib/libvirt/images-lfops-molecule
+# 0751: you work in it, and qemu (which runs as its own user) only has to traverse it
+sudo chmod 0751 /var/lib/libvirt/images-lfops-molecule
+
+# on SELinux systems, label it so qemu may open the disk images
+sudo semanage fcontext --add --type virt_image_t '/var/lib/libvirt/images-lfops-molecule(/.*)?'
+sudo restorecon --recursive --verbose /var/lib/libvirt/images-lfops-molecule
+
+sudo virsh pool-define-as lfops-molecule dir --target /var/lib/libvirt/images-lfops-molecule
+sudo virsh pool-autostart lfops-molecule
+sudo virsh pool-start lfops-molecule
+```
+
+`lfops-molecule` is the pool name the scenarios expect, so no further configuration is needed once it exists. Use `LFOPS_TEST_POOL` if you want a different one.
+
+Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
+
+
+#### Running a scenario
+
+```bash
+molecule test --scenario-name apps/install
+```
+
 Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable. The variable is optional: unset, every target in the scenario runs. `localhost` (the hypervisor) is included automatically, so you only ever pass the targets themselves:
 
-```shell
-# all targets in the scenario
-molecule test --scenario-name apps/install
-
-# a subset
+```bash
 LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
 ```
 
+`LFOPS_TEST_POOL` names the libvirt storage pool the base images and per-VM boot disks are written to, and defaults to the `lfops-molecule` pool from "Preparing the controller" when unset. Both variables are independent of each other:
 
-Known Limitations:
+```bash
+LFOPS_TEST_POOL='lfops-molecule' LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
+```
 
-* VM-based testing requires passwordless sudo on the Ansible controller. The cloud image and per-VM disks are written and built directly in the root-owned libvirt pool directory (`get_url`, `qemu-img`, `virt-customize`), which is plain filesystem I/O and needs root. The read-only libvirt API calls already run unprivileged via the `libvirt` group; it is only the pool writes that require sudo. Trying to make the whole run rootless is not worth it: the only way to provision VMs without root-equivalent rights at all is the user session (`qemu:///session`), which the test cannot use because its address discovery reads the host's ARP/neighbour table for the libvirt-managed `default` network that only the system connection (`qemu:///system`) provides. Every other route still grants effective root: a member of the `libvirt` group (which the read-only calls already require) can define a domain backed by any host device and drive QEMU as root. Swapping the `sudo` for a user-owned `qemu:///system` pool therefore only trades an explicit, on-demand escalation for a standing root-equivalent privilege plus looser filesystem permissions, which is a worse posture, not a better one.
+`molecule test` tears the instances down when it finishes, including after a failure, which takes the evidence with it. `--destroy=never` skips the closing `destroy` step and leaves them up so you can log in and look at the broken state:
+
+```bash
+molecule test --destroy=never --scenario-name apps/install
+```
+
+The `test_sequence` has no leading `destroy`, so a subsequent run reuses whatever is still running: `create` is idempotent and skips the instances that already exist. Tear them down explicitly once you are done with them:
+
+```bash
+molecule destroy --scenario-name apps/install
+```
+
+
+#### Known Limitations
+
+* VM-based testing grants the invoking user rights that are worth being aware of. `libvirt` group membership is root-equivalent: a member can define a domain backed by any host device and drive QEMU as root. Owning the pool directory adds filesystem write access on top of that. Neither is a privilege reduction over the passwordless sudo this setup replaces, it only makes the grant explicit and confines the filesystem half to one directory. The only way to provision VMs without root-equivalent rights at all is the user session (`qemu:///session`), which the tests cannot use because their address discovery reads the host's ARP/neighbour table for the libvirt-managed `default` network that only the system connection (`qemu:///system`) provides.
 * Does not work inside an Ansible Execution Environment (Ansible Navigator). Provisioning runs as `localhost`, which inside an EE is the container, yet it has to act on the host's libvirt and podman. The disk-build tools (`qemu-img`, `virt-customize`, `virt-sysprep`) are filesystem-bound to the pool and have no libvirt-socket equivalent, so an EE would have to bind-mount the host libvirt/podman sockets and the pool directory and use host networking, which removes most of the isolation an EE exists to provide.
 
 

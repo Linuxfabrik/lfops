@@ -1,6 +1,7 @@
+# Does not escalate, for the same reason as vm-create.yml: the libvirt calls go through the
+# 'libvirt' group and the disk removal happens in the user-writable pool directory.
 - name: 'Destroy VM instances using the kvm_vm role'
   hosts: 'systems_under_test'
-  become: true
   gather_facts: false
   roles:
     - role: 'linuxfabrik.lfops.kvm_vm'
