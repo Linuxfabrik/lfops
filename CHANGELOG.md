@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
 
 ### Breaking Changes
 
@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: On RHEL 8, MariaDB keeps its own SELinux confinement after a package upgrade, by installing `mysql-selinux` the way the MariaDB packages already do on RHEL 9 and 10. Without it, applications on the same host lose their database connection with `Permission denied` as of MariaDB 11.4.13 and 11.8.9.
 * **playbook:icingaweb2, playbook:setup_icinga2_master, role:icingaweb2** update `icingaweb2` dependent vars to ensure php.ini value `post_max_size` > `upload_max_filesize` by default.
 * **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
 * **role:monitoring_plugins**: A source install deploys the event plugins, which only the rpm/deb package used to ship.

@@ -36,3 +36,29 @@
         that:
           - '(__molecule__nextcloud_statusphp_result["content"] | from_json)["installed"] | bool'
         fail_msg: 'status.php did not report installed. response: {{ __molecule__nextcloud_statusphp_result["content"] | d("") }}'
+
+
+# The role installs mysql-selinux so mariadbd gets `mysqld_exec_t` (MDEV-30520). Assert the domain
+# of the running process, not the label on the file: only that tells `mysqld_t` apart from
+# `initrc_t` and the `unconfined_service_t` that used to mask a missing label.
+- name: 'Verify mariadbd runs in the mysqld_t SELinux domain'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'ps -o label= -C mariadbd'
+      ansible.builtin.command: 'ps -o label= -C mariadbd'
+      register: '__molecule__mariadbd_label_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert mariadbd transitioned into mysqld_t'
+      ansible.builtin.assert:
+        that:
+          - '"mysqld_t" in __molecule__mariadbd_label_result["stdout"]'
+        fail_msg: 'mariadbd runs as "{{ __molecule__mariadbd_label_result["stdout"] | trim }}" instead of mysqld_t, so the mysqld_exec_t label on the binary is missing.'
+      when:
+        - '__molecule__mariadbd_label_result is not skipped'
