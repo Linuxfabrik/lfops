@@ -1,0 +1,44 @@
+# Variables the playbook under test needs, applied to every node of the cluster.
+
+# Mandatory: the version of MariaDB to install, and the administrative account the role uses for
+# every SQL operation afterwards. The same admin account on every node, as the role's README
+# requires: once the nodes are joined, users and databases are shared.
+repo_mariadb__version: '11.4'
+
+mariadb_server__admin_user:
+  username: 'mariadb-admin'
+  password: 'linuxfabrik'
+
+# The set of directives a Galera cluster needs, verbatim from "Config Directives for Galera" in
+# roles/mariadb_server/README.md. Keeping them together and in that order makes it obvious when
+# the README and this scenario drift apart. They are not optional: with the role's standalone
+# default of binlog_format MIXED, for one, wsrep recovery aborts the start with "Only
+# binlog_format= 'ROW' is currently supported".
+mariadb_server__cnf_bind_address__group_var: '0.0.0.0'
+mariadb_server__cnf_binlog_format__group_var: 'ROW'
+mariadb_server__cnf_default_storage_engine__group_var: 'InnoDB'
+mariadb_server__cnf_innodb_autoinc_lock_mode__group_var: 2
+mariadb_server__cnf_innodb_doublewrite__group_var: 'ON'
+mariadb_server__cnf_innodb_flush_log_at_trx_commit__group_var: 0
+
+# The cluster members. Built from the hosts of the running play rather than from a static list,
+# because the VMs get their addresses from the libvirt DHCP server at create time; vm-create.yml
+# writes them into Molecule's ephemeral inventory as ansible_host.
+#
+# ansible_play_hosts_all, not groups['systems_under_test']: --limit (LFOPS_TEST_TARGETS) restricts
+# which hosts a play runs against, but leaves the group membership untouched, so the group would
+# still name all nine hosts and wire three clusters' worth of nodes into one gcomm:// address.
+# The playbook's serial: 1 does not shrink it either, since ansible_play_hosts_all spans batches.
+mariadb_server__cnf_wsrep_cluster_addresses: '{{
+    ansible_play_hosts_all | map("extract", hostvars, "ansible_host") | list
+  }}'
+
+mariadb_server__cnf_wsrep_on: true
+
+# rsync is the role default and needs no credentials. Both SST methods are worth covering, because
+# the method decides which helper binaries mariadbd executes, which is exactly what SELinux
+# confinement constrains.
+mariadb_server__cnf_wsrep_sst_method: 'rsync'
+
+# A small buffer pool keeps three 4 GB VMs comfortable; the default is a fraction of RAM.
+mariadb_server__cnf_innodb_buffer_pool_size__group_var: '256M'

@@ -1,0 +1,11 @@
+# Molecule scenario marker for the 'galera' sub-scenario. Required even when empty, so that
+# Molecule discovers the scenario. Settings from extensions/molecule/config.yml apply unchanged:
+# this scenario needs the VM backend, which is the default there.
+#
+# Containers cannot host this test. A container runs under the host's kernel policy with its
+# filesystem relabelled to container_file_t, so mariadbd can never carry mysqld_exec_t and never
+# transitions into mysqld_t - the one thing the scenario exists to observe.
+#
+# Run one cluster at a time, see the note in inventory/hosts.yml:
+#
+#   LFOPS_TEST_TARGETS='rocky9-vm,rocky9-vm-2,rocky9-vm-3' molecule test --scenario-name mariadb_server/galera

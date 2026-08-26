@@ -1,0 +1,43 @@
+# A Galera cluster has to be bootstrapped exactly once: the first node starts with
+# --wsrep-new-cluster (the role's mariadb_server__run_galera_new_cluster), the rest join it. Every
+# later run must not bootstrap again, or the node would leave the cluster and form its own.
+#
+# Molecule runs this file twice with identical input (converge, then the idempotence step), so the
+# decision cannot come from the inventory: mariadb_server__run_galera_new_cluster: true in
+# group_vars would re-run galera_new_cluster on the idempotence pass, and that task reports changed
+# unconditionally. This play therefore looks at the hosts before deciding, and sets the flag as a
+# fact only when no node is running MariaDB yet.
+- name: 'Decide whether the Galera cluster still has to be bootstrapped'
+  hosts: 'lfops_mariadb_server'
+  gather_facts: false
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
+
+    # Before the first converge the package does not exist, so mariadb.service is not in the facts
+    # at all; hence the default rather than a plain lookup.
+    - name: 'Record the state of mariadb.service on this node'
+      ansible.builtin.set_fact:
+        __molecule__mariadb_service_state: '{{
+            ansible_facts["services"]["mariadb.service"]["state"] | d("absent")
+          }}'
+
+    # Bootstrap on the first host of the play, and only while the cluster does not exist yet. On a
+    # fresh set of VMs no node runs MariaDB, so this is true exactly once; on the idempotence pass
+    # every node is running and nothing is bootstrapped.
+    - name: 'Set mariadb_server__run_galera_new_cluster on the first node'
+      ansible.builtin.set_fact:
+        mariadb_server__run_galera_new_cluster: true
+      when:
+        - 'inventory_hostname == ansible_play_hosts_all | first'
+        - 'ansible_play_hosts_all
+             | map("extract", hostvars, "__molecule__mariadb_service_state")
+             | select("equalto", "running") | list | length == 0'
+
+
+# Import the playbook under test by its collection FQCN, so the test exercises the real playbook
+# (and through it, the roles) instead of a copy that could drift. Its serial: 1 is what makes the
+# rolling cluster build work: node 1 is fully up before node 2 tries to join it.
+- name: 'Converge mariadb_server playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mariadb_server'

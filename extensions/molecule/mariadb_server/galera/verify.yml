@@ -1,0 +1,152 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts what only the
+# running cluster can confirm: that the nodes found each other, that a write on one node is
+# readable on the others, and that SELinux logged no denial while all of that happened.
+#
+# It does not assert that galera-4 is installed or that the config file carries a wsrep line. If
+# the package task ran, the package is there; if the template task ran, the line is there. Neither
+# says anything about whether replication works.
+- name: 'Verify the Galera cluster is formed and replicating'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that mariadb.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["mariadb.service"]["state"] == "running"'
+        fail_msg: 'mariadb.service is not running on {{ inventory_hostname }}.'
+
+    # The cluster view, asked of each node separately. A node that never joined still runs happily
+    # as a single-node cluster, so a per-node "is it up" check would pass while the cluster is
+    # split; only the reported size and status tell them apart.
+    - name: 'SHOW GLOBAL STATUS LIKE "wsrep_%"'
+      ansible.mysql.mysql_query:
+        login_user: '{{ mariadb_server__admin_user["username"] }}'
+        login_password: '{{ mariadb_server__admin_user["password"] }}'
+        login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+        query: 'SHOW GLOBAL STATUS LIKE "wsrep_%"'
+      register: '__molecule__wsrep_status_result'
+
+    - name: 'Reduce the wsrep status rows to a dictionary'
+      ansible.builtin.set_fact:
+        __molecule__wsrep_status: '{{
+            __molecule__wsrep_status_result["query_result"][0]
+            | items2dict(key_name="Variable_name", value_name="Value")
+          }}'
+
+    - name: 'Assert that this node sees every cluster member and is synced'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__wsrep_status["wsrep_cluster_size"] | int == ansible_play_hosts_all | length'
+          - '__molecule__wsrep_status["wsrep_cluster_status"] == "Primary"'
+          - '__molecule__wsrep_status["wsrep_local_state_comment"] == "Synced"'
+          - '__molecule__wsrep_status["wsrep_ready"] == "ON"'
+        fail_msg: >-
+          {{ inventory_hostname }} reports cluster_size
+          {{ __molecule__wsrep_status["wsrep_cluster_size"] }} (expected
+          {{ ansible_play_hosts_all | length }}), status
+          {{ __molecule__wsrep_status["wsrep_cluster_status"] }}, state
+          {{ __molecule__wsrep_status["wsrep_local_state_comment"] }}, ready
+          {{ __molecule__wsrep_status["wsrep_ready"] }}.
+
+    # The real check. Galera is synchronous, so a committed write is on every node by the time the
+    # statement returns. Writing on the first node and reading on all of them proves the whole
+    # replication path works, which is what a state variable alone cannot show. The tasks run in
+    # order across all hosts, so the write is complete everywhere before the read starts.
+    - name: 'Write a row on the first node'
+      ansible.mysql.mysql_query:
+        login_user: '{{ mariadb_server__admin_user["username"] }}'
+        login_password: '{{ mariadb_server__admin_user["password"] }}'
+        login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+        query:
+          - 'CREATE DATABASE IF NOT EXISTS molecule_galera'
+          - 'CREATE TABLE IF NOT EXISTS molecule_galera.replication_probe (node VARCHAR(64) PRIMARY KEY)'
+          - 'REPLACE INTO molecule_galera.replication_probe (node) VALUES ("{{ inventory_hostname }}")'
+      when:
+        - 'inventory_hostname == ansible_play_hosts_all | first'
+
+    - name: 'Read the row back on every node'
+      ansible.mysql.mysql_query:
+        login_user: '{{ mariadb_server__admin_user["username"] }}'
+        login_password: '{{ mariadb_server__admin_user["password"] }}'
+        login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+        query: 'SELECT node FROM molecule_galera.replication_probe'
+      register: '__molecule__replication_probe_result'
+
+    - name: 'Assert the write made it to this node'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__replication_probe_result["query_result"][0]
+             | map(attribute="node") | list == [ansible_play_hosts_all | first]'
+        fail_msg: >-
+          {{ inventory_hostname }} does not have the row written on
+          {{ ansible_play_hosts_all | first }}; replication is not working.
+
+
+# The SELinux half. Kept in its own play so the cluster checks above stay readable, and because
+# these run only where SELinux is actually in force.
+#
+# The domain is reported, not asserted: the role deliberately leaves Galera nodes out of mysqld_t
+# today (mariadb_server__cnf_wsrep_on is false gates the mysql-selinux install and the restorecon),
+# and this scenario is what decides whether that gate can go. The number to read is the domain
+# below, together with the denial count.
+- name: 'Report the SELinux confinement of mariadbd and assert no denials were logged'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'ps -o label= -C mariadbd'
+      ansible.builtin.command: 'ps -o label= -C mariadbd'
+      register: '__molecule__mariadbd_label_result'
+      changed_when: false
+      # ps exits 1 when no process matches. mariadb.service is asserted running in the play above,
+      # so that would mean the unit runs something other than mariadbd; fail with that in words
+      # instead of a bare rc=1.
+      failed_when: '__molecule__mariadbd_label_result["rc"] not in [0, 1]'
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert that a mariadbd process was found'
+      ansible.builtin.assert:
+        that: '__molecule__mariadbd_label_result["rc"] == 0'
+        fail_msg: 'No mariadbd process on {{ inventory_hostname }}, although mariadb.service is running.'
+      when:
+        - '__molecule__mariadbd_label_result is not skipped'
+
+    - name: 'ls -Z /usr/sbin/mariadbd'
+      ansible.builtin.command: 'ls -Z /usr/sbin/mariadbd'
+      register: '__molecule__mariadbd_fcontext_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'SELinux confinement of mariadbd'
+      ansible.builtin.debug:
+        msg:
+          - 'process domain: {{ __molecule__mariadbd_label_result["stdout"] | d("") | trim }}'
+          - 'binary label:   {{ __molecule__mariadbd_fcontext_result["stdout"] | d("") | trim }}'
+          - 'selinux mode:   {{ ansible_facts["selinux"]["mode"] | d("n/a") }}'
+      when:
+        - '__molecule__mariadbd_label_result is not skipped'
+
+    # The assertion that matters whichever way the gate question is decided: confining mariadbd
+    # must not cost the cluster anything. A denial here is the failure mode the gate exists to
+    # avoid, and it shows up even on a permissive host, where it is logged but not enforced.
+    - name: 'ausearch --message AVC,USER_AVC,SELINUX_ERR --start boot'
+      ansible.builtin.command: 'ausearch --message AVC,USER_AVC,SELINUX_ERR --start boot'
+      register: '__molecule__avc_result'
+      changed_when: false
+      failed_when: '__molecule__avc_result["rc"] not in [0, 1]' # 1 is "<no matches>"
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert that SELinux logged no denial since boot'
+      ansible.builtin.assert:
+        that: '__molecule__avc_result["rc"] == 1'
+        fail_msg: 'SELinux denials on {{ inventory_hostname }}:{{ "\n" }}{{ __molecule__avc_result["stdout"] }}'
+      when:
+        - '__molecule__avc_result is not skipped'
