@@ -51,9 +51,20 @@
       ansible.builtin.command: 'ps -o label= -C mariadbd'
       register: '__molecule__mariadbd_label_result'
       changed_when: false
+      # ps exits 1 when no process matches, which would otherwise fail the task with a bare rc=1
+      # and no indication of what is wrong. The assert below turns it into a sentence.
+      failed_when: '__molecule__mariadbd_label_result["rc"] not in [0, 1]'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert that mariadbd is running'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__mariadbd_label_result["rc"] == 0'
+        fail_msg: 'No mariadbd process on {{ inventory_hostname }}.'
+      when:
+        - '__molecule__mariadbd_label_result is not skipped'
 
     - name: 'Assert mariadbd transitioned into mysqld_t'
       ansible.builtin.assert:

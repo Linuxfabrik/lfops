@@ -1,8 +1,14 @@
 # {{ ansible_managed }}
-# 20260826
+# 2026082601
 
-# mariadbd itself is labeled mysqld_exec_t by the role (MDEV-30520). Not from here: ProtectSystem=full
-# mounts /usr read-only inside the sandbox, so a chcon against the binary always fails. The socket does not.
+# mariadbd is labeled mysqld_exec_t by the role (MDEV-30520), not from here: ProtectSystem mounts
+# /usr read-only inside the service sandbox, so a chcon against the binary always fails.
+#
+# The socket below is a different matter. Once mariadbd actually runs in mysqld_t, the policy
+# labels it without help, through `type_transition mysqld_t mysqld_db_t:sock_file
+# mysqld_var_run_t` in the base policy of RHEL 8, 9 and 10. This line stays for the hosts where
+# that does not apply: Galera nodes, which the role deliberately leaves unlabeled, and a socket
+# configured outside both the datadir and /run. Elsewhere it relabels to what is already there.
 
 [Service]
 ExecStartPost=-/bin/chcon -t mysqld_var_run_t {{ mariadb_server__cnf_socket__combined_var }}

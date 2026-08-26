@@ -234,7 +234,11 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
-      # excluded on purpose: in `mysqld_t`, wsrep recovery fails the start with `Errcode: 13`
+      # Galera excluded: in `mysqld_t` the donor's mariabackup cannot reach the local socket and
+      # SST fails with `Errcode: 13`. Note this only takes effect on EL8. On EL9 and EL10 the
+      # MariaDB packages depend on mysql-selinux, so it is installed and the binary labeled no
+      # matter what this role does, and Galera nodes run confined there either way. Tracked in
+      # https://github.com/Linuxfabrik/lfops/issues/328.
       - 'mariadb_server__cnf_wsrep_on is false'
     notify: 'mariadb_server: systemctl restart mariadb'
 
