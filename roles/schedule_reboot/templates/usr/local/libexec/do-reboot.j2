@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026061001
+# 2026082501
 
 # The single reboot actor. Run by schedule-reboot.service (a timer at the reboot
 # window, ordered After= the update lanes) and by `schedule-reboot --now`. Reboots
@@ -24,7 +24,7 @@ send_msg () {
         printf 'Content-Type: text/plain; charset="utf-8"\n'
         printf 'Content-Transfer-Encoding: 8bit\n'
         printf '\n%s\n' "$body"
-    } | sendmail -oi -t -f "$SENDER"
+    } | sendmail -oi -t -f "$MAIL_FROM"
 {% if schedule_reboot__rocketchat_url is defined and schedule_reboot__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
         "text=${subject}
@@ -37,7 +37,12 @@ send_msg () {
 }
 
 SUBJECT_PREFIX="{{ schedule_reboot__mail_subject_prefix }}{{ schedule_reboot__mail_subject_hostname }}"
-SENDER="$SUBJECT_PREFIX <{{ schedule_reboot__mail_from }}>"
+MAIL_FROM='{{ schedule_reboot__mail_from }}'
+# RFC 5322 permits only atoms in an unquoted display name. A subject prefix such as
+# "[schedule_reboot] " carries brackets, which are specials, and a strict parser then
+# drops the whole address rather than just the name. So quote the display name, escaping
+# any embedded backslash or double quote.
+SENDER="\"$(printf '%s' "$SUBJECT_PREFIX" | sed 's/[\\"]/\\&/g')\" <$MAIL_FROM>"
 RECIPIENTS="{{ schedule_reboot__mail_recipients | join(' ') }}"
 
 # no reboot requested -> nothing to do (the common case on most days).

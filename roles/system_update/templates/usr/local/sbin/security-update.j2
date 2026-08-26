@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082501
+# 2026082502
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository
 # only, then request a reboot if one is needed by dropping a file into the
@@ -28,7 +28,7 @@ send_msg () {
         printf 'Content-Type: text/plain; charset="utf-8"\n'
         printf 'Content-Transfer-Encoding: 8bit\n'
         printf '\n%s\n' "$body"
-    } | sendmail -oi -t -f "$SENDER"
+    } | sendmail -oi -t -f "$MAIL_FROM"
 {% if system_update__rocketchat_url is defined and system_update__rocketchat_url | length %}
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
         "text=${subject}
@@ -67,7 +67,12 @@ last_txn_id () {
 }
 
 SUBJECT_PREFIX="{{ system_update__mail_subject_prefix }}{{ system_update__mail_subject_hostname }}"
-SENDER="$SUBJECT_PREFIX <{{ system_update__mail_from }}>"
+MAIL_FROM='{{ system_update__mail_from }}'
+# RFC 5322 permits only atoms in an unquoted display name. A subject prefix such as
+# "[system_update] " carries brackets, which are specials, and a strict parser then
+# drops the whole address rather than just the name. So quote the display name, escaping
+# any embedded backslash or double quote.
+SENDER="\"$(printf '%s' "$SUBJECT_PREFIX" | sed 's/[\\"]/\\&/g')\" <$MAIL_FROM>"
 RECIPIENTS="{{ system_update__mail_recipients_updates | join(' ') }}"
 
 # the reboot-request spool is owned and created by the schedule_reboot role (tmpfiles.d)
