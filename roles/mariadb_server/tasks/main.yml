@@ -547,13 +547,6 @@
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
 
-  - name: 'Secure installation: Reload privilege tables'
-    ansible.mysql.mysql_query:
-      login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
-      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
-      query: 'flush privileges;'
-
   - name: 'Secure installation (Linuxfabrik): Remove users ignored in --skip-name-resolve mode'
     ansible.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
@@ -570,6 +563,13 @@
         and (`proxied_user` = '');
     when:
       - 'mariadb_server__cnf_skip_name_resolve__combined_var == "ON"'
+
+  - name: 'Secure installation: Reload privilege tables'
+    ansible.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      query: 'flush privileges;'
 
   - name: 'Secure installation (Linuxfabrik): Ensure interactive login is disabled'
     ansible.builtin.user:
