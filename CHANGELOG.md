@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:system_update**: The AIDE database is only refreshed when the update changed packages and the AIDE check was passing beforehand, so a host that was already reporting changes keeps reporting them instead of having them accepted as the new baseline.
 * **role:system_update**: The AIDE database is refreshed after the update rather than before it, on Debian and Ubuntu as well as on RHEL, so the next check no longer flags every file the update touched.
 * **role:system_update**: A failed update on Debian is reported and stops the run, instead of being followed by a success mail or by the reboot of a half-configured host.
+* **role:schedule_reboot**: The role no longer aborts while deploying its reboot helper on Debian 12 and older and on Ubuntu 24.04 and older. Roles that pull it in, `system_update` among them, were unusable on those releases as well.
 * **playbook:icingaweb2, playbook:setup_icinga2_master, role:icingaweb2** update `icingaweb2` dependent vars to ensure php.ini value `post_max_size` > `upload_max_filesize` by default.
 * **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
 * **role:monitoring_plugins**: A source install deploys the event plugins, which only the rpm/deb package used to ship.
