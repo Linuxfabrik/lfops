@@ -414,11 +414,26 @@
     register: 'mariadb_server__z00_linuxfabrik_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  # InnoDB allocates its asynchronous IO contexts from fs.aio-max-nr at startup, so MariaDB has
+  # to come up after TuneD has applied the profile (role: kernel_settings). Unlike its siblings
+  # above this drop-in carries no restart notification: ordering is evaluated when systemd builds
+  # a transaction, so it takes effect on the next boot and a restart now would buy nothing.
+  - name: 'Deploy /etc/systemd/system/mariadb.service.d/z00-after-tuned.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/mariadb.service.d/z00-after-tuned.conf.j2'
+      dest: '/etc/systemd/system/mariadb.service.d/z00-after-tuned.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__mariadb_server__z00_after_tuned_result'
+
   - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
     when: >-
-      mariadb_server__socket_selinux_workaround_result is changed
+      __mariadb_server__z00_after_tuned_result is changed
+      or mariadb_server__socket_selinux_workaround_result is changed
       or mariadb_server__z00_linuxfabrik_result is changed
       or mariadb_server__service_result is changed
 

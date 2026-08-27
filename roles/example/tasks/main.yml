@@ -322,6 +322,36 @@
       - '/etc/example/platform.conf'
       - '{{ __example__sysconfig_path }}'
 
+  # example reads net.core.somaxconn once at startup (see
+  # example__kernel_settings__sysctl__dependent_var), so it has to come up after TuneD has
+  # applied the profile. systemd starts tuned.service in parallel with everything else, so
+  # without this drop-in example may start first and keep the old value for its whole runtime,
+  # while sysctl and `tuned-adm verify` already report the new one.
+  - name: 'mkdir -p /etc/systemd/system/example.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/example.service.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      state: 'directory'
+
+  # no restart notification here: ordering is evaluated while systemd builds a transaction, so
+  # it takes effect on the next boot and restarting the service now would buy nothing.
+  - name: 'Deploy /etc/systemd/system/example.service.d/z00-after-tuned.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/example.service.d/z00-after-tuned.conf.j2'
+      dest: '/etc/systemd/system/example.service.d/z00-after-tuned.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__example__z00_after_tuned_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__example__z00_after_tuned_result is changed'
+
   tags:
     - 'example'
     - 'example:configure'

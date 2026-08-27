@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026082701
+
+# Order the Graylog Data Node after TuneD, so that the kernel settings this host
+# depends on (vm.max_map_count, transparent hugepages) are applied before
+# OpenSearch reads them. OpenSearch checks vm.max_map_count in its bootstrap
+# checks and refuses to start when the value is too low.
+# tuned.service is Type=dbus and TuneD claims com.redhat.tuned only after it has
+# applied the profile, so After= is enough. An ordering dependency on a unit
+# that is not installed is ignored, so this drop-in is harmless without TuneD.
+
+[Unit]
+After=tuned.service

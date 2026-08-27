@@ -43,6 +43,19 @@ example__maintenance_cron_minute: '{{ 59 | random(seed=inventory_hostname) }}'
 example__service_enabled: true
 example__service_state: 'started'
 
+# --- publishing a dependent_var for another role ---
+# the kernel settings this role's service needs. the playbook feeds this into the
+# kernel_settings role, which hands it to TuneD (see playbooks/example.yml).
+# a value the service reads once at startup, like the one below, additionally needs the
+# After=tuned.service drop-in this role deploys, otherwise the service may come up before
+# TuneD has applied the profile. see "systemd Drop-ins and Service Ordering" in
+# CONTRIBUTING.md.
+example__kernel_settings__sysctl__dependent_var:
+  # the kernel clamps the accept queue to net.core.somaxconn inside listen(), so example
+  # keeps the old queue size until it is restarted.
+  - name: 'net.core.somaxconn'
+    value: 4096
+
 # --- list of dicts injection pattern ---
 # combined using linuxfabrik.lfops.combine_lod
 example__plugins__combined_var: '{{ (

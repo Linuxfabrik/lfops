@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026082701
+
+# Order example after TuneD, so that the kernel settings this host depends on
+# (net.core.somaxconn) are applied before example reads them. The kernel clamps
+# the accept queue to net.core.somaxconn inside listen(), so a value applied
+# after example started is not picked up until example is restarted.
+# tuned.service is Type=dbus and TuneD claims com.redhat.tuned only after it has
+# applied the profile, so After= is enough. An ordering dependency on a unit
+# that is not installed is ignored, so this drop-in is harmless without TuneD.
+
+[Unit]
+After=tuned.service

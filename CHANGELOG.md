@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
 * **role:collabora**: The `localhost` WOPI host is an ordinary entry of `collabora__coolwsd_storage_wopi__*` instead of being hard-coded in the template, so it can be dropped with `state: 'absent'` like any other host.

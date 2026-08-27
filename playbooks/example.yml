@@ -18,6 +18,15 @@
 
   roles:
 
+    # Hands the kernel settings the example service needs to TuneD. Runs before the example
+    # role so the values are applied by the time the service is started for the first time.
+    # On an already running host the ordering is what keeps the service from reading stale
+    # values after a reboot, see the After=tuned.service drop-in in the example role.
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ example__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not example__skip_kernel_settings | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_example'
       when:
         - 'not example__skip_repo_example | d(false)'
