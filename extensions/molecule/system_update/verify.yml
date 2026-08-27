@@ -111,9 +111,41 @@
     # and send no "System updated" mail. Running a full update per VM is the expensive
     # part of this scenario, but it is the only way to reach a host that is genuinely up
     # to date, which is the state the quiet path only ever happens on.
+    # This run installs everything the cloud image has pending, systemd included, and the systemd
+    # RPM re-execs the running init from its own scriptlet ("systemctl daemon-reexec"). That tears
+    # down the D-Bus connection this blocking call is waiting on, so systemctl exits 1 with
+    # "Failed to wait for response: Connection reset by peer" while the unit itself carries on and
+    # finishes normally. Tolerate exactly that error and wait for the unit instead, otherwise the
+    # scenario fails on every RedHat-family host for a reason unrelated to the code under test.
+    # Verified against systemd 252-67 on Rocky 9.
     - name: 'systemctl start update-and-reboot.service (first run, applies all pending updates)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
       ansible.builtin.command: 'systemctl start update-and-reboot.service'
+      register: '__molecule__update_first_start_result'
       changed_when: false
+      failed_when:
+        - '__molecule__update_first_start_result["rc"] != 0'
+        - '"D-Bus connection terminated" not in __molecule__update_first_start_result["stderr"]'
+
+    # systemctl has returned, so the job is queued either way: if the call survived, the oneshot
+    # has already finished and this polls once; if it was cut off, the unit is still activating.
+    - name: 'Wait for the first run to finish' # noqa command-instead-of-module (no module polls a oneshot to completion)
+      ansible.builtin.command: 'systemctl show --property=ActiveState --value update-and-reboot.service'
+      register: '__molecule__update_first_state_result'
+      until: '__molecule__update_first_state_result["stdout"] != "activating"'
+      retries: 90
+      delay: 10
+      changed_when: false
+
+    - name: 'systemctl show --property=Result update-and-reboot.service (first run)' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value update-and-reboot.service'
+      register: '__molecule__update_first_result'
+      changed_when: false
+
+    # Guards the tolerated D-Bus error above: the run still has to have succeeded, it just may not
+    # have been able to say so over D-Bus.
+    - name: 'Assert the first run completed successfully'
+      ansible.builtin.assert:
+        that: '__molecule__update_first_result["stdout"] == "success"'
 
     # Generous timeout: the first run may have pulled a new kernel, and the first boot
     # into it takes longer than the module's 600s default allows for on a slow host.
