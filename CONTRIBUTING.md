@@ -1049,9 +1049,18 @@ sudo restorecon --recursive --verbose /var/lib/libvirt/images-lfops-molecule
 sudo virsh pool-define-as lfops-molecule dir --target /var/lib/libvirt/images-lfops-molecule
 sudo virsh pool-autostart lfops-molecule
 sudo virsh pool-start lfops-molecule
+
+# keep the cached base images replaceable (no sudo required, the directory is yours by now)
+setfacl --default --modify "user:$(id -un):rw" /var/lib/libvirt/images-lfops-molecule
 ```
 
 `lfops-molecule` is the pool name the scenarios expect, so no further configuration is needed once it exists. Use `LFOPS_TEST_POOL` if you want a different one.
+
+That last `setfacl` is what lets a rebuilt upstream image be picked up automatically. The cloud images are fetched from rolling `latest` URLs, and `create` re-fetches one whenever upstream is newer than the cached copy. libvirt chowns every backing file a VM boots off to `qemu`, though, so without the ACL the cached image stops being writable for you and the next refresh fails with `Destination ... is not writable`. The default ACL survives that chown, and each replacement inherits it again. The download uses mode `0664` for the same reason: a file's ACL mask comes from the group bits of its creation mode, so at `0644` the entry would be ineffective from birth.
+
+A refresh only happens when the VM's boot disk is absent, which is the state `destroy` leaves behind. Running with `--destroy=never` therefore keeps the base image pinned, so a qcow2 overlay never has its backing file swapped underneath it.
+
+If you set this up before that `setfacl` existed, the images already in the pool are owned by `qemu` and cannot be given the ACL after the fact. Delete them once and the next run re-downloads them with it.
 
 Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
 
