@@ -223,11 +223,11 @@ selinux__fcontexts__host_var:
     target: '/var/www/html/nextcloud/.htaccess'
     state: 'present'
 selinux__modules__host_var:
-  - name: 'myapp_policy'
-    src: '{{ inventory_dir }}/host_files/selinux/myapp_policy' # directory containing myapp_policy.te, myapp_policy.fc, myapp_policy.if
-    state: 'present'
   - name: 'custom_httpd'
-    src: '{{ inventory_dir }}/host_files/selinux/custom_httpd'
+    src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/selinux/custom_httpd' # directory containing myapp_policy.te, myapp_policy.fc, myapp_policy.if
+    state: 'present'
+  - name: 'myapp_policy'
+    src: '{{ inventory_dir }}/group_files/selinux/myapp_policy'
   - name: 'old_module'
     state: 'absent'
 selinux__policy: 'default'
