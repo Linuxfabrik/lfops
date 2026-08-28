@@ -1,3 +1,7 @@
+# Ubuntu is loaded on top of the Debian os_family, so this is a full copy of vars/Debian.yml
+# today. It exists to keep Ubuntu visible at a glance and to give later Ubuntu-specific
+# drift a dedicated home instead of silently inheriting the Debian values.
+
 # With php__version set, install the versioned packages so the host stays on that version. The
 # unversioned metapackages come from the php-defaults source and follow whatever the configured
 # repo declares as its default. Within a Debian release that never moves, but with the sury repo

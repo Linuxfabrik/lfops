@@ -222,7 +222,7 @@ argument_specs:
       apache_httpd__mod_ssl_ssl_use_stapling:
         type: 'str'
         required: false
-        default: 'on'
+        default: 'off'
         description: >-
           Whether OCSP stapling is used (`SSLUseStapling`).
 

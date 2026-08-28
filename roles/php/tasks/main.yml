@@ -170,6 +170,31 @@
 
 - block:
 
+  # Ownership and mode mirror what the RedHat php-fpm package ships, so this task is a
+  # no-op there and creates the equivalent directory on Debian, which has none. The pool
+  # logs are written by the workers, so the directory has to be writable by the pool
+  # user; directly under /var/log (root:root 0755) they are not, and PHP reports that
+  # failure to a stderr PHP-FPM discards.
+  - name: 'mkdir -p {{ __php__fpm_log_path }}'
+    ansible.builtin.file:
+      path: '{{ __php__fpm_log_path }}'
+      state: 'directory'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: 'root'
+      mode: 0o770
+
+  # The `[global]` section lives next to the pools instead of in php-fpm.conf, which
+  # belongs to the package. See the template for what that costs and why it works.
+  - name: 'Deploy the global config to {{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/php-fpm.d/global.conf.j2'
+      dest: '{{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: php-fpm --test; restart php-fpm'
+
   - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
     ansible.builtin.file:
       path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
@@ -197,6 +222,30 @@
   tags:
     - 'php'
     - 'php:fpm'
+    - 'php:update'
+
+
+- block:
+
+  # RedHat needs nothing here: its packaged /etc/logrotate.d/php-fpm already globs
+  # __php__fpm_log_path. Debian's covers PHP-FPM's own error log only, so the per-pool
+  # logs would grow without bound.
+  # 'php:update' is included because the reopen helper carries the PHP version in its name.
+  - name: 'Deploy /etc/logrotate.d/php-fpm-pools'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/php-fpm-pools.j2'
+      dest: '/etc/logrotate.d/php-fpm-pools'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+
+  tags:
+    - 'php'
+    - 'php:logrotate'
     - 'php:update'
 
 

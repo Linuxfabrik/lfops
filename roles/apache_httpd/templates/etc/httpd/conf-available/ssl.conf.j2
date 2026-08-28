@@ -29,7 +29,13 @@ SSLSessionCacheTimeout  1800
 # ensures Perfect Forward Secrecy is not compromised if the server is not restarted regularly:
 SSLSessionTickets off
 
-# OCSP Stapling, only in httpd 2.3.3 and later
+# OCSP Stapling, only in httpd 2.3.3 and later.
+# Off by default: stapling needs an OCSP responder in the certificate's AIA extension, and
+# Let's Encrypt, where the acme_sh role gets its certificates, publishes none any more. With
+# stapling on, such a certificate makes mod_ssl log AH02218 and AH02604 at error level per
+# certificate and vhost on every start and reload, and staple nothing.
+# The cache and timeout directives below are inert while stapling is off; they are kept so that
+# switching the variable on is enough for a CA that does run a responder.
 SSLUseStapling {{ apache_httpd__mod_ssl_ssl_use_stapling | d('off') }}
 SSLStaplingCache shmcb:/var/run/ocsp(128000)
 SSLStaplingResponderTimeout 3

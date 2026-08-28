@@ -379,7 +379,11 @@ ping.response = pong
 ; The log file for slow requests
 ; Default Value: not set
 ; Note: slowlog is mandatory if request_slowlog_timeout is set
-slowlog = log/{{ item["name"] }}-slow.log
+; The relative path the Debian package suggests here expands against the global
+; prefix and resolves to /usr/log/$pool-slow.log, a directory that does not exist,
+; so PHP-FPM has nowhere to write the backtrace. Use the same absolute directory as
+; on RedHat instead. Verified against php-fpm 8.4 on Debian 13.
+slowlog = {{ __php__fpm_log_path }}/{{ item["name"] }}-slow.log
 
 ; The timeout for serving a single request after which a PHP backtrace will be
 ; dumped to the 'slowlog' file. A value of '0s' means 'off'.
@@ -495,7 +499,11 @@ env[PATH] = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ;                specified at startup with the -d argument
 ;php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f www@my.domain.com
 ;php_flag[display_errors] = off
-php_admin_value[error_log] = /var/log/php-fpm-{{ item["name"] }}-error.log
+; Written by the workers, not by the master, so it has to live in a directory the
+; pool user may create files in. Directly under /var/log (root:root 0755) PHP cannot,
+; and it reports that failure to a stderr PHP-FPM discards unless
+; catch_workers_output is on, so the application errors were lost without a trace.
+php_admin_value[error_log] = {{ __php__fpm_log_path }}/{{ item["name"] }}-error.log
 php_admin_flag[log_errors] = on
 ;php_admin_value[memory_limit] = 32M
 

@@ -794,14 +794,15 @@ apache_httpd__skip_mod_security_coreruleset: true
 
 `apache_httpd__mod_ssl_ssl_use_stapling`
 
-* See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
+* See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling). Stapling only does something for a certificate whose issuer runs an OCSP responder. Let's Encrypt, which the `acme_sh` role obtains certificates from, no longer publishes one, so its certificates carry no OCSP URI at all. Switch it on for a CA that still answers, or point `SSLStaplingForceURL` at a responder via a vhost of your own.
 * Type: String.
-* Default: `'on'`
+* Default: `'off'`
+* Matches the upstream default. It used to be `'on'`, which on a certificate without an OCSP URI makes mod_ssl log `AH02218` and `AH02604` at error level, once per certificate and vhost, on every start and every reload, without stapling anything.
 
 Example:
 ```yaml
 # optional - mod_ssl
-apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+apache_httpd__mod_ssl_ssl_use_stapling: 'off'
 ```
 
 
