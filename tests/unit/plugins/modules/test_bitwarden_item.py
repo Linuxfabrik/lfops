@@ -92,13 +92,17 @@ class _FakeBitwarden:
     items: ClassVar[list] = []
     edited: ClassVar[list] = []
     created: ClassVar[list] = []
+    vault_status = 'unlocked'
 
     def __init__(self, *args, **kwargs):
         pass
 
     @property
-    def is_unlocked(self):
-        return True
+    def status(self):
+        return type(self).vault_status
+
+    def get_not_unlocked_message(self, status):
+        return f'vault reports status "{status}"'
 
     def sync(self, *args, **kwargs):
         pass
@@ -160,6 +164,7 @@ class TestMain(unittest.TestCase):
         _FakeBitwarden.items = []
         _FakeBitwarden.edited = []
         _FakeBitwarden.created = []
+        _FakeBitwarden.vault_status = 'unlocked'
         self._patchers = [
             unittest.mock.patch.object(mod, 'Bitwarden', _FakeBitwarden),
             ansible_harness.patch_module(),
@@ -178,6 +183,16 @@ class TestMain(unittest.TestCase):
         except ansible_harness.AnsibleExitJson as exc:
             return exc.args[0]
         raise AssertionError('module did not call exit_json')
+
+    def test_vault_not_unlocked_fails(self):
+        for status in ('unauthenticated', 'locked'):
+            with self.subTest(status=status):
+                _FakeBitwarden.vault_status = status
+                ansible_harness.set_module_args({'name': 'host - db'})
+                with self.assertRaises(ansible_harness.AnsibleFailJson) as ctx:
+                    mod.run_module()
+                self.assertIn(status, ctx.exception.args[0]['msg'])
+                self.assertEqual(_FakeBitwarden.created, [])
 
     def test_check_mode_create_does_not_write(self):
         _FakeBitwarden.items = []  # nothing exists -> would create
