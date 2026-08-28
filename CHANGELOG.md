@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
 * **plugin:bitwarden_item**: Error messages no longer carry a doubled period in the middle.
+* **role:rocketchat**: The environment file no longer sets `MONGO_OPLOG_URL`, which Rocket.Chat has ignored since 5.0.1. A host without a MongoDB replica set also gets a usable environment file again, instead of one whose MongoDB URL and port ended up on the same line.
 * **role:rocketchat**: The container image is pulled from Docker Hub directly instead of through `registry.rocket.chat`, whose pull rate limit is shared by everyone using it, so image pulls and `podman auto-update` no longer fail with `toomanyrequests`.
 * **role:system_update**: A requested reboot names the core packages or the running services that ask for it, instead of only listing what the run changed.
 * **role:system_update**: A host with nothing to update no longer sends a "System updated without Reboot" mail on every update day.
