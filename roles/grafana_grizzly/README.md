@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.grafana_grizzly
 
-This role installs [grizzly](https://grafana.github.io/grizzly/), a tool for the management of Grafana dashboards.
+This role installs [grizzly](https://github.com/grafana/grizzly), a tool for the management of Grafana dashboards.
 
 Additionally, this role allows you to apply Grafana resources which are saved as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/grafana_grizzly/*.yml`.
 

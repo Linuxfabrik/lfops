@@ -199,7 +199,7 @@ apache_httpd__mod_dir_directory_index: 'index.html index.htm index.txt'
 
 # mod_security
 # normally nothing that you have to change
-# get details from https://coreruleset.org/installation/
+# get details from https://coreruleset.org/docs/deployment/install/
 # origin: https://github.com/coreruleset/coreruleset/releases
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
 apache_httpd__mod_security_coreruleset_version: '4.27.0'

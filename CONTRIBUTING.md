@@ -1231,4 +1231,4 @@ Net: not worth it right now. Revisit if [crun#2090](https://github.com/container
 
 * <https://github.com/whitecloud/ansible-styleguide>
 * <https://redhat-cop.github.io/automation-good-practices>
-* <https://docs.openstack.org/openstack-ansible/latest/contributor/code-rules.html>
+* <https://docs.openstack.org/openstack-ansible/latest/contributors/code-rules.html>

@@ -28,7 +28,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 Manual steps:
 
-* Create the target site in Matomo and obtain a `token_auth` with at least `admin` (or super user) permission. Store it in your inventory, ideally via the [linuxfabrik.lfops.bitwarden_item](https://github.com/Linuxfabrik/lfops/tree/main/roles/bitwarden_item) lookup.
+* Create the target site in Matomo and obtain a `token_auth` with at least `admin` (or super user) permission. Store it in your inventory, ideally via the [linuxfabrik.lfops.bitwarden_item](https://github.com/Linuxfabrik/lfops/blob/main/plugins/lookup/bitwarden_item.py) lookup.
 
 
 ## Tags

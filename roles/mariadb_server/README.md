@@ -21,8 +21,6 @@ The role provides the `mariadb_server:upgrade` tag to update the MariaDB server.
 
 By default, Ansible runs each task on all hosts affected by a play before starting the next task on any host, using 5 forks. This role manages one MariaDB host at a time (serially), e.g. to make cluster management as reliable and save as possible.
 
-Hardenings that can be covered by this role: See [STIGs](https://github.com/Linuxfabrik/lfops/blob/main/STIGs.md)
-
 
 *Available since LFOps `2.0.0`.*
 

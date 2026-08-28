@@ -16,7 +16,7 @@
       dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-graylog'
       mode: 0o644
 
-  # https://www.elastic.co/guide/en/graylog/reference/current/rpm.html#rpm-repo
+  # https://go2docs.graylog.org/current/downloading_and_installing_graylog/red_hat_installation.htm
   - name: 'Deploy the graylog repo (mirror: {{ repo_graylog__mirror_url }})'
     ansible.builtin.template:
       backup: true

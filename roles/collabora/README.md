@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.collabora
 
-This role installs and configures either [Collabora Online Development Edition](https://www.collaboraoffice.com/code/) or [Collabora Online Enterprise Edition](https://www.collaboraoffice.com/collabora-online-3/). Note: To use Collabora Enterprise, you need an active [Collabora Subscription](https://www.collaboraoffice.com/subscriptions-2/).
+This role installs and configures either [Collabora Online Development Edition](https://www.collaboraonline.com/code/) or [Collabora Online Enterprise Edition](https://www.collaboraonline.com/collabora-online/). Note: To use Collabora Enterprise, you need an active [Collabora Subscription](https://www.collaboraonline.com/subscriptions/).
 
 
 *Available since LFOps `2.0.0`.*
