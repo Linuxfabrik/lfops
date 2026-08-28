@@ -1,5 +1,5 @@
 # obtained via `mariadbd --help --verbose` on a clean installation from the repo_mariadb on rocky9
-# MariaDB-server-11.8.9-1.el9.x86_64
+# MariaDB-server-10.6.28-1.el9.x86_64
 
 Variables (--variable-name=value)
 and boolean options {FALSE|TRUE}                             Value (after reading options)
@@ -37,7 +37,6 @@ back-log                                                     80
 basedir                                                      /usr/
 big-tables                                                   FALSE
 bind-address                                                 (No default value)
-binlog-alter-two-phase                                       FALSE
 binlog-annotate-row-events                                   TRUE
 binlog-cache-size                                            32768
 binlog-checksum                                              CRC32
@@ -47,26 +46,18 @@ binlog-direct-non-transactional-updates                      FALSE
 binlog-expire-logs-seconds                                   0
 binlog-file-cache-size                                       16384
 binlog-format                                                MIXED
-binlog-gtid-index                                            TRUE
-binlog-gtid-index-page-size                                  4096
-binlog-gtid-index-span-min                                   65536
-binlog-large-commit-threshold                                134217728
-binlog-legacy-event-pos                                      FALSE
 binlog-optimize-thread-scheduling                            TRUE
 binlog-row-event-max-size                                    8192
 binlog-row-image                                             FULL
 binlog-row-metadata                                          NO_LOG
-binlog-space-limit                                           0
 binlog-stmt-cache-size                                       32768
-block-encryption-mode                                        aes-128-ecb
 bulk-insert-buffer-size                                      8388608
 character-set-client-handshake                               TRUE
-character-set-collations                                     utf8mb3=uca1400_ai_ci,utf8mb4=uca1400_ai_ci,ucs2=uca1400_ai_ci,utf16=uca1400_ai_ci,utf32=uca1400_ai_ci
 character-set-filesystem                                     binary
-character-set-server                                         utf8mb4
-character-sets-dir                                           /usr/share/mariadb/charsets/
+character-set-server                                         latin1
+character-sets-dir                                           /usr/share/mysql/charsets/
 chroot                                                       (No default value)
-collation-server                                             utf8mb4_uca1400_ai_ci
+collation-server                                             latin1_swedish_ci
 column-compression-threshold                                 100
 column-compression-zlib-level                                6
 column-compression-zlib-strategy                             DEFAULT_STRATEGY
@@ -77,6 +68,8 @@ connect-timeout                                              10
 console                                                      FALSE
 core-file                                                    FALSE
 datadir                                                      /var/lib/mysql/
+date-format                                                  %Y-%m-%d
+datetime-format                                              %Y-%m-%d %H:%i:%s
 deadlock-search-depth-long                                   15
 deadlock-search-depth-short                                  4
 deadlock-timeout-long                                        50000000
@@ -87,6 +80,7 @@ debug-disconnect-slave-event-count                           0
 debug-gdb                                                    FALSE
 debug-max-binlog-dump-events                                 0
 debug-no-sync                                                FALSE
+debug-no-thread-alarm                                        FALSE
 debug-sporadic-binlog-dump-fail                              FALSE
 default-password-lifetime                                    0
 default-regex-flags
@@ -109,7 +103,7 @@ eq-range-index-dive-limit                                    200
 event-scheduler                                              OFF
 expensive-subquery-limit                                     100
 expire-logs-days                                             0
-explicit-defaults-for-timestamp                              TRUE
+explicit-defaults-for-timestamp                              FALSE
 external-locking                                             FALSE
 extra-max-connections                                        1
 extra-port                                                   0
@@ -139,7 +133,7 @@ gtid-pos-auto-engines
 gtid-strict-mode                                             FALSE
 help                                                         TRUE
 histogram-size                                               254
-histogram-type                                               JSON_HB
+histogram-type                                               DOUBLE_PREC_HB
 host-cache-size                                              279
 idle-readonly-transaction-timeout                            0
 idle-transaction-timeout                                     0
@@ -155,27 +149,24 @@ innodb                                                       ON
 innodb-adaptive-flushing                                     TRUE
 innodb-adaptive-flushing-lwm                                 10
 innodb-adaptive-hash-index                                   FALSE
-innodb-adaptive-hash-index-cells                             16381
 innodb-adaptive-hash-index-parts                             8
-innodb-alter-copy-bulk                                       TRUE
 innodb-autoextend-increment                                  64
 innodb-autoinc-lock-mode                                     1
 innodb-buf-dump-status-frequency                             0
 innodb-buffer-page                                           ON
 innodb-buffer-page-lru                                       ON
-innodb-buffer-pool-chunk-size                                0
+innodb-buffer-pool-chunk-size                                134217728
 innodb-buffer-pool-dump-at-shutdown                          TRUE
 innodb-buffer-pool-dump-now                                  FALSE
 innodb-buffer-pool-dump-pct                                  25
 innodb-buffer-pool-filename                                  ib_buffer_pool
-innodb-buffer-pool-in-core-dump                              FALSE
 innodb-buffer-pool-load-abort                                FALSE
 innodb-buffer-pool-load-at-startup                           TRUE
 innodb-buffer-pool-load-now                                  FALSE
 innodb-buffer-pool-size                                      134217728
-innodb-buffer-pool-size-auto-min                             0
-innodb-buffer-pool-size-max                                  8796093022208
 innodb-buffer-pool-stats                                     ON
+innodb-change-buffer-max-size                                25
+innodb-change-buffering                                      none
 innodb-checksum-algorithm                                    full_crc32
 innodb-cmp                                                   ON
 innodb-cmp-per-index                                         ON
@@ -189,16 +180,20 @@ innodb-compression-default                                   FALSE
 innodb-compression-failure-threshold-pct                     5
 innodb-compression-level                                     6
 innodb-compression-pad-pct-max                               50
-innodb-data-file-buffering                                   FALSE
 innodb-data-file-path                                        ibdata1:12M:autoextend
-innodb-data-file-write-through                               FALSE
 innodb-data-home-dir                                         (No default value)
 innodb-deadlock-detect                                       TRUE
 innodb-deadlock-report                                       full
 innodb-default-encryption-key-id                             1
 innodb-default-row-format                                    dynamic
+innodb-defragment                                            FALSE
+innodb-defragment-fill-factor                                0.9
+innodb-defragment-fill-factor-n-recs                         20
+innodb-defragment-frequency                                  40
+innodb-defragment-n-pages                                    7
+innodb-defragment-stats-accuracy                             0
 innodb-disable-sort-file-cache                               FALSE
-innodb-doublewrite                                           ON
+innodb-doublewrite                                           TRUE
 innodb-encrypt-log                                           FALSE
 innodb-encrypt-tables                                        OFF
 innodb-encrypt-temporary-tables                              FALSE
@@ -236,23 +231,16 @@ innodb-ft-sort-pll-degree                                    2
 innodb-ft-total-cache-size                                   640000000
 innodb-ft-user-stopword-table                                (No default value)
 innodb-immediate-scrub-data-uncompressed                     FALSE
-innodb-index-shrink                                          TRUE
 innodb-instant-alter-column-allowed                          add_drop_reorder
 innodb-io-capacity                                           200
-innodb-io-capacity-max                                       4294967295
-innodb-linux-aio                                             auto
+innodb-io-capacity-max                                       18446744073709551615
 innodb-lock-wait-timeout                                     50
 innodb-lock-waits                                            ON
 innodb-locks                                                 ON
 innodb-log-buffer-size                                       16777216
-innodb-log-checkpoint-now                                    FALSE
-innodb-log-file-buffering                                    FALSE
-innodb-log-file-mmap                                         TRUE
 innodb-log-file-size                                         100663296
-innodb-log-file-write-through                                FALSE
 innodb-log-group-home-dir                                    (No default value)
-innodb-log-spin-wait-delay                                   0
-innodb-log-write-ahead-size                                  512
+innodb-log-write-ahead-size                                  8192
 innodb-lru-scan-depth                                        1536
 innodb-max-dirty-pages-pct                                   90
 innodb-max-dirty-pages-pct-lwm                               0
@@ -281,7 +269,7 @@ innodb-read-io-threads                                       4
 innodb-read-only                                             FALSE
 innodb-read-only-compressed                                  FALSE
 innodb-rollback-on-timeout                                   FALSE
-innodb-snapshot-isolation                                    TRUE
+innodb-snapshot-isolation                                    FALSE
 innodb-sort-buffer-size                                      1048576
 innodb-spin-wait-delay                                       4
 innodb-stats-auto-recalc                                     TRUE
@@ -311,11 +299,10 @@ innodb-table-locks                                           TRUE
 innodb-tablespaces-encryption                                ON
 innodb-temp-data-file-path                                   ibtmp1:12M:autoextend
 innodb-tmpdir                                                (No default value)
-innodb-truncate-temporary-tablespace-now                     FALSE
 innodb-trx                                                   ON
 innodb-undo-directory                                        (No default value)
 innodb-undo-log-truncate                                     FALSE
-innodb-undo-tablespaces                                      3
+innodb-undo-tablespaces                                      0
 innodb-use-atomic-writes                                     TRUE
 innodb-use-native-aio                                        TRUE
 innodb-write-io-threads                                      4
@@ -352,14 +339,9 @@ log-queries-not-using-indexes                                FALSE
 log-short-format                                             FALSE
 log-slave-updates                                            FALSE
 log-slow-admin-statements                                    TRUE
-log-slow-always-query-time                                   31536000
 log-slow-disabled-statements                                 sp
 log-slow-filter                                              admin,filesort,filesort_on_disk,filesort_priority_queue,full_join,full_scan,query_cache,query_cache_miss,tmp_table,tmp_table_on_disk
 log-slow-max-warnings                                        10
-log-slow-min-examined-row-limit                              0
-log-slow-query                                               FALSE
-log-slow-query-file                                          rocky9-slow.log
-log-slow-query-time                                          10
 log-slow-rate-limit                                          1
 log-slow-slave-statements                                    TRUE
 log-slow-verbosity
@@ -377,7 +359,6 @@ max-allowed-packet                                           16777216
 max-binlog-cache-size                                        18446744073709547520
 max-binlog-size                                              1073741824
 max-binlog-stmt-cache-size                                   18446744073709547520
-max-binlog-total-size                                        0
 max-connect-errors                                           100
 max-connections                                              151
 max-delayed-threads                                          20
@@ -396,17 +377,12 @@ max-session-mem-used                                         9223372036854775807
 max-sort-length                                              1024
 max-sp-recursion-depth                                       0
 max-statement-time                                           0
-max-tmp-session-space-usage                                  1099511627776
-max-tmp-total-space-usage                                    1099511627776
+max-tmp-tables                                               32
 max-user-connections                                         0
 max-write-lock-count                                         4294967295
 memlock                                                      FALSE
 metadata-locks-cache-size                                    1024
 metadata-locks-hash-instances                                8
-mhnsw-default-distance                                       euclidean
-mhnsw-default-m                                              6
-mhnsw-ef-search                                              20
-mhnsw-max-cache-size                                         16777216
 min-examined-row-limit                                       0
 mrr-buffer-size                                              262144
 myisam-block-size                                            1024
@@ -423,39 +399,24 @@ net-buffer-length                                            16384
 net-read-timeout                                             30
 net-retry-count                                              10
 net-write-timeout                                            60
-new-mode
 note-verbosity                                               basic,explain
 old                                                          FALSE
+old-alter-table                                              DEFAULT
 old-mode                                                     UTF8_IS_UTF8MB3
 old-passwords                                                FALSE
 old-style-user-limits                                        FALSE
 open-files-limit                                             32190
-optimizer-adjust-secondary-key-costs                         0
-optimizer-disk-read-cost                                     10.24
-optimizer-disk-read-ratio                                    0.02
-optimizer-extra-pruning-depth                                8
-optimizer-index-block-copy-cost                              0.0356
+optimizer-adjust-secondary-key-costs                         fix_reuse_range_for_ref,fix_card_multiplier
 optimizer-join-limit-pref-ratio                              0
-optimizer-key-compare-cost                                   0.011361
-optimizer-key-copy-cost                                      0.015685
-optimizer-key-lookup-cost                                    0.435777
-optimizer-key-next-find-cost                                 0.082347
 optimizer-max-sel-arg-weight                                 32000
 optimizer-max-sel-args                                       16000
-optimizer-prune-level                                        2
-optimizer-row-copy-cost                                      0.060866
-optimizer-row-lookup-cost                                    0.130839
-optimizer-row-next-find-cost                                 0.045916
-optimizer-rowid-compare-cost                                 0.002653
-optimizer-rowid-copy-cost                                    0.002653
-optimizer-scan-setup-cost                                    10
+optimizer-prune-level                                        1
 optimizer-search-depth                                       62
 optimizer-selectivity-sampling-limit                         100
-optimizer-switch                                             index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,index_merge_sort_intersection=off,index_condition_pushdown=on,derived_merge=on,derived_with_keys=on,firstmatch=on,loosescan=on,materialization=on,in_to_exists=on,semijoin=on,partial_match_rowid_merge=on,partial_match_table_scan=on,subquery_cache=on,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=on,semijoin_with_cache=on,join_cache_incremental=on,join_cache_hashed=on,join_cache_bka=on,optimize_join_buffer_size=on,table_elimination=on,extended_keys=on,exists_to_in=on,orderby_uses_equalities=on,condition_pushdown_for_derived=on,split_materialized=on,condition_pushdown_for_subquery=on,rowid_filter=on,condition_pushdown_from_having=on,not_null_range_scan=off,hash_join_cardinality=on,cset_narrowing=on,sargable_casefold=on
+optimizer-switch                                             index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,index_merge_sort_intersection=off,engine_condition_pushdown=off,index_condition_pushdown=on,derived_merge=on,derived_with_keys=on,firstmatch=on,loosescan=on,materialization=on,in_to_exists=on,semijoin=on,partial_match_rowid_merge=on,partial_match_table_scan=on,subquery_cache=on,mrr=off,mrr_cost_based=off,mrr_sort_keys=off,outer_join_with_cache=on,semijoin_with_cache=on,join_cache_incremental=on,join_cache_hashed=on,join_cache_bka=on,optimize_join_buffer_size=on,table_elimination=on,extended_keys=on,exists_to_in=on,orderby_uses_equalities=on,condition_pushdown_for_derived=on,split_materialized=on,condition_pushdown_for_subquery=on,rowid_filter=on,condition_pushdown_from_having=on
 optimizer-trace
 optimizer-trace-max-mem-size                                 1048576
 optimizer-use-condition-selectivity                          4
-optimizer-where-cost                                         0.032
 partition                                                    ON
 performance-schema                                           FALSE
 performance-schema-accounts-size                             -1
@@ -504,7 +465,7 @@ performance-schema-max-socket-classes                        10
 performance-schema-max-socket-instances                      -1
 performance-schema-max-sql-text-length                       1024
 performance-schema-max-stage-classes                         160
-performance-schema-max-statement-classes                     223
+performance-schema-max-statement-classes                     222
 performance-schema-max-statement-stack                       10
 performance-schema-max-table-handles                         -1
 performance-schema-max-table-instances                       -1
@@ -538,7 +499,6 @@ read-binlog-speed-limit                                      0
 read-buffer-size                                             131072
 read-only                                                    FALSE
 read-rnd-buffer-size                                         262144
-redirect-url
 relay-log                                                    (No default value)
 relay-log-index                                              (No default value)
 relay-log-info-file                                          relay-log.info
@@ -569,10 +529,10 @@ secure-file-priv                                             (No default value)
 secure-timestamp                                             NO
 sequence                                                     ON
 server-id                                                    1
-server-uid                                                   2XRiWW+C3XnRop2iFuyoCuVAXXU=
+server-uid                                                   dp2gSjg692uCEbm7GiXR8fqlRGk=
 session-track-schema                                         TRUE
 session-track-state-change                                   FALSE
-session-track-system-variables                               autocommit,character_set_client,character_set_connection,character_set_results,redirect_url,time_zone
+session-track-system-variables                               autocommit,character_set_client,character_set_connection,character_set_results,time_zone
 session-track-transaction-info                               OFF
 show-slave-auth-info                                         FALSE
 silent-startup                                               FALSE
@@ -581,15 +541,12 @@ skip-name-resolve                                            FALSE
 skip-networking                                              FALSE
 skip-show-database                                           FALSE
 skip-slave-start                                             FALSE
-slave-abort-blocking-timeout                                 31536000
 slave-compressed-protocol                                    FALSE
-slave-connections-needed-for-purge                           1
 slave-ddl-exec-mode                                          IDEMPOTENT
 slave-domain-parallel-threads                                0
 slave-exec-mode                                              STRICT
 slave-load-tmpdir                                            /tmp
 slave-max-allowed-packet                                     1073741824
-slave-max-statement-time                                     0
 slave-net-timeout                                            60
 slave-parallel-max-queued                                    131072
 slave-parallel-mode                                          conservative
@@ -609,7 +566,7 @@ socket                                                       /var/lib/mysql/mysq
 sort-buffer-size                                             2097152
 sql-mode                                                     STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
 sql-safe-updates                                             FALSE
-ssl                                                          TRUE
+ssl                                                          FALSE
 ssl-ca                                                       (No default value)
 ssl-capath                                                   (No default value)
 ssl-cert                                                     (No default value)
@@ -630,7 +587,6 @@ sync-relay-log-info                                          10000
 sysdate-is-now                                               FALSE
 system-time-zone                                             UTC
 system-versioning-alter-history                              ERROR
-system-versioning-insert-history                             FALSE
 table-cache                                                  2000
 table-definition-cache                                       400
 table-open-cache                                             2000
@@ -657,6 +613,7 @@ thread-pool-stall-limit                                      500
 thread-pool-stats                                            ON
 thread-pool-waits                                            ON
 thread-stack                                                 299008
+time-format                                                  %H:%i:%s
 tls-version                                                  TLSv1.2,TLSv1.3
 tmp-disk-table-size                                          18446744073709551615
 tmp-memory-table-size                                        16777216
@@ -672,18 +629,18 @@ use-stat-tables                                              PREFERABLY_FOR_QUER
 user-variables                                               ON
 userstat                                                     FALSE
 verbose                                                      TRUE
-version                                                      11.8.9-MariaDB
+version                                                      10.6.28-MariaDB
 version-comment                                              MariaDB Server
 version-compile-machine                                      x86_64
 version-compile-os                                           Linux
 version-malloc-library                                       system
-version-source-revision                                      bf9193a939f515e95dd8def1a5468088c91cede6
+version-source-revision                                      210ab6edf47fa73f3b77e974ed2e9357ccdd051c
 version-ssl-library                                          OpenSSL 3.5.1 1 Jul 2025
 wait-timeout                                                 28800
 wsrep-OSU-method                                             TOI
 wsrep-SR-store                                               table
-wsrep-allowlist
 wsrep-auto-increment-control                                 TRUE
+wsrep-causal-reads                                           FALSE
 wsrep-certification-rules                                    strict
 wsrep-certify-nonPK                                          TRUE
 wsrep-cluster-address
@@ -699,6 +656,7 @@ wsrep-forced-binlog-format                                   NONE
 wsrep-gtid-domain-id                                         0
 wsrep-gtid-mode                                              FALSE
 wsrep-ignore-apply-errors                                    7
+wsrep-load-data-splitting                                    FALSE
 wsrep-log-conflicts                                          FALSE
 wsrep-max-ws-rows                                            0
 wsrep-max-ws-size                                            2147483647
@@ -711,11 +669,11 @@ wsrep-node-name                                              rocky9
 wsrep-notify-cmd
 wsrep-on                                                     FALSE
 wsrep-patch-version                                          wsrep_26.22
-wsrep-provider                                               ON
 wsrep-provider                                               none
 wsrep-provider-options
 wsrep-recover                                                FALSE
 wsrep-reject-queries                                         NONE
+wsrep-replicate-myisam                                       FALSE
 wsrep-restart-slave                                          FALSE
 wsrep-retry-autocommit                                       1
 wsrep-slave-FK-checks                                        TRUE
@@ -727,7 +685,7 @@ wsrep-sst-donor-rejects-queries                              FALSE
 wsrep-sst-method                                             rsync
 wsrep-sst-receive-address                                    AUTO
 wsrep-start-position                                         00000000-0000-0000-0000-000000000000:-1
-wsrep-status-file
+wsrep-strict-ddl                                             FALSE
 wsrep-sync-wait                                              0
 wsrep-trx-fragment-size                                      0
 wsrep-trx-fragment-unit                                      bytes
