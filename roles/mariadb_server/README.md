@@ -532,12 +532,17 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#character_set_server)
 * Type: String.
 * Default: `'utf8mb4'`
+* Deviates from the upstream default `latin1` on 10.6, 10.11 and 11.4: `latin1` is a compatibility default that mangles any text outside its own character range, and MariaDB itself moved to `utf8mb4` in 11.6, so 11.8 already ships this value.
 
 `mariadb_server__cnf_collation_server__group_var` / `mariadb_server__cnf_collation_server__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#collation_server)
+* Changing this value on a host with existing databases does not change those databases, only the ones created afterwards without an explicit collation. The host then holds both, and joining or unioning text columns across a database created under each one fails with `ER 1267` / `ER 1271`, "Illegal mix of collations".
+* Note that importing a dump made with a different collation, eg `utf8mb4_unicode_ci` (10.6, 10.11) and `utf8mb4_uca1400_ai_ci` (11.4, 11.8), does not adopt this value either. `mariadb-dump` writes the source collation into its `CREATE DATABASE` and `CREATE TABLE` statements, so the restored database keeps the collation of the host it came from and differs from everything created locally.
+* The UCA-14.0.0 collations do not exist before MariaDB 10.10, which is why 10.6 cannot use them.
 * Type: String.
 * Default: 10.11-: `'utf8mb4_unicode_ci'`, 11.4+: `'utf8mb4_uca1400_ai_ci'`
+* Deviates from the upstream default `latin1_swedish_ci` on 10.6, 10.11 and 11.4, following `character_set_server` to a Unicode collation. 11.8 ships `utf8mb4_uca1400_ai_ci` itself.
 
 `mariadb_server__cnf_datadir__group_var` / `mariadb_server__cnf_datadir__host_var`
 
@@ -562,12 +567,14 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_max_connections)
 * Type: Number.
 * Default: `3`
+* Deviates from the upstream default `1`: one connection is gone as soon as a single session on the extra port hangs, which leaves no way in at exactly the wrong moment. Three allows a second look while the first session is stuck.
 
 `mariadb_server__cnf_extra_port__group_var` / `mariadb_server__cnf_extra_port__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/thread-pool-system-status-variables/#extra_port)
 * Type: Number.
 * Default: `3307`
+* Deviates from the upstream default `0`, which disables the extra port: a second listener with its own connection budget keeps an administrator able to log in when `max_connections` is exhausted, which is the situation where a database server most needs to be reachable. Remember to leave the port closed in the firewall for everyone else.
 
 `mariadb_server__cnf_general_log__group_var` / `mariadb_server__cnf_general_log__host_var`
 
@@ -636,6 +643,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_flush_neighbors)
 * Type: Number.
 * Default: `0`
+* Deviates from the upstream default `1`: flushing neighbouring pages turns random writes into sequential ones, which only pays off on rotational disks and is pure write amplification on SSD and NVMe. Set it back to `1` on a host that really does run on spinning disks.
 
 `mariadb_server__cnf_innodb_io_capacity__group_var` / `mariadb_server__cnf_innodb_io_capacity__host_var`
 
@@ -770,6 +778,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#log_error)
 * Type: String.
 * Default: `'/var/log/mariadb/mariadb.log'`
+* Deviates from the upstream default, which leaves the variable unset so the error log goes to stderr: a fixed path outside the data directory can be handed to logrotate and to the `mysql-logfile` check, and it does not change when the host is renamed. Note the consequence: naming a file takes the error log out of stderr, so systemd captures nothing and `journalctl -u mariadb` stays empty. Look in the file, not in the journal.
 
 `mariadb_server__cnf_log_slave_updates__host_var` / `mariadb_server__cnf_log_slave_updates__group_var`
 
@@ -800,6 +809,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#max_connections)
 * Type: Number.
 * Default: `64`
+* Deviates from the upstream default `151`: every connection can allocate its own sort, join and read buffers, so the ceiling is really a memory budget, and 64 covers what most applications open. An application that needs more is not left to guess: the `mysql-connections` check plugin warns once the current connections pass 85 percent of this value, which is the signal to raise it. The extra port keeps an administrator able to log in while it is exhausted.
 
 `mariadb_server__cnf_max_heap_table_size__group_var` / `mariadb_server__cnf_max_heap_table_size__host_var`
 
@@ -824,6 +834,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/performance-schema-system-variables/#performance_schema)
 * Type: String.
 * Default: `'ON'`
+* Deviates from the upstream default `'OFF'` because the Linuxfabrik Monitoring Plugins depend on it: `mysql-index-health` reads the `sys` views that the Performance Schema populates and reports UNKNOWN without it, and `mysql-memory` reads its footprint through `SHOW ENGINE PERFORMANCE_SCHEMA STATUS`. Enabling it needs a restart, so a host that only turns it on once a problem appears cannot diagnose that problem. It is not free: measured on MariaDB 11.8.9 with `max_connections` at 64, it costs roughly 95 MiB of resident memory.
 
 `mariadb_server__cnf_plugin_maturity__group_var` / `mariadb_server__cnf_plugin_maturity__host_var`
 
@@ -1101,17 +1112,21 @@ mariadb_server__dare_keys:
 
 Variables for `z00-linuxfabrik.cnf` directives and their default values, defined and supported by this role for DARE.
 
+MariaDB ships every one of these switches off. The role turns them all on, because encryption at rest is only meaningful as all-or-nothing: encrypting the tables while the redo log, the binary log and the temporary files stay in plaintext leaves the same rows readable on disk. None of it reaches the configuration file unless `mariadb_server__dare_keys` is set, so a host without DARE keys is unaffected. Note that the key file becomes as critical as the data itself, and that `mariabackup` needs it as well.
+
 `mariadb_server__cnf_encrypt_binlog__group_var` / `mariadb_server__cnf_encrypt_binlog__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/replication-and-binary-log-server-system-variables/#encrypt_binlog)
 * Type: String.
 * Default: `'ON'`
+* Deviates from the upstream default `'OFF'`, see the note at the top of this section.
 
 `mariadb_server__cnf_encrypt_tmp_files__group_var` / `mariadb_server__cnf_encrypt_tmp_files__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/server-system-variables/#encrypt_tmp_files)
 * Type: String.
 * Default: `'ON'`
+* Deviates from the upstream default `'OFF'`, see the note at the top of this section.
 
 `mariadb_server__cnf_file_key_management_encryption_algorithm__group_var` / `mariadb_server__cnf_file_key_management_encryption_algorithm__host_var`
 
@@ -1136,18 +1151,21 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_log)
 * Type: String.
 * Default: `'ON'`
+* Deviates from the upstream default `'OFF'`, see the note at the top of this section.
 
 `mariadb_server__cnf_innodb_encrypt_tables__group_var` / `mariadb_server__cnf_innodb_encrypt_tables__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_tables)
 * Type: String.
 * Default: `'ON'`
+* Deviates from the upstream default `'OFF'`, see the note at the top of this section.
 
 `mariadb_server__cnf_innodb_encrypt_temporary_tables__group_var` / `mariadb_server__cnf_innodb_encrypt_temporary_tables__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encrypt_temporary_tables)
 * Type: String.
 * Default: `'ON'`
+* Deviates from the upstream default `'OFF'`, see the note at the top of this section.
 
 `mariadb_server__cnf_innodb_encryption_rotate_key_age__group_var` / `mariadb_server__cnf_innodb_encryption_rotate_key_age__host_var`
 
@@ -1160,6 +1178,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_encryption_threads)
 * Type: Number.
 * Default: `4`
+* Deviates from the upstream default `0`, which runs no background threads at all, so tables that already exist are never encrypted and keys are never rotated. Any non-zero value makes the feature work; `4` is a starting point, not a tuned figure.
 
 `mariadb_server__cnf_plugin_load_add__group_var` / `mariadb_server__cnf_plugin_load_add__host_var`
 
