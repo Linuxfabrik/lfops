@@ -481,6 +481,36 @@ The Ansible built-in tags `always` and `never` are reserved for their built-in m
 * Always use the `ansible_facts` dictionary (e.g. `ansible_facts["os_family"]` instead of `ansible_os_family`). The old pre-2.5 "facts injected as separate variables" naming system will be deprecated in a future release of Ansible.
 
 
+##### Deviating from an Upstream Default
+
+Wherever a role default differs from what the managed software ships, say so and say why. The upstream default is what the host would run without the role, as installed from the repository the role uses, which is not necessarily the value the software's own documentation names: a distribution package may already override it.
+
+An undocumented deviation is indistinguishable from an accident. Nobody can tell whether the value was chosen deliberately or copied from a tuning blog years ago, so the next person either leaves a wrong value alone or "corrects" a deliberate one back to upstream. Both are silent changes to what runs in production.
+
+Two places, two audiences:
+
+* Where the value is defined (`defaults/main.yml`, `vars/<version>.yml`, `vars/<os>.yml`), add a trailing `# upstream default: <value>` comment. This addresses the developer, keep it to the value:
+
+    ```yaml
+    example__conf_max_connections__role_var: 100  # upstream default: 151
+    ```
+
+* In the README, add a `Deviates from the upstream default` bullet directly below the `Default:` bullet. This addresses the administrator and carries the reasoning, in one sentence. It goes last because it annotates the default, so the reader needs our value before the comparison, and because it keeps the short `Type:` / `Default:` pair in the same predictable place in every entry:
+
+    ```markdown
+    `example__conf_max_connections__host_var` / `example__conf_max_connections__group_var`
+
+    * Maximum number of concurrent connections. Must be between 1 and 10000.
+    * Type: Number.
+    * Default: `100`
+    * Deviates from the upstream default `151`: each connection reserves its own buffers, and 151 of them exhaust the memory of the 2 GB VMs this role is typically deployed on.
+    ```
+
+The reasoning lives in the README only. Do not repeat it in the YAML comment, where it would go stale unnoticed. If the deviation applies to some versions or platforms only, note that in the same bullet ("MariaDB 11.8 ships it on, older releases ship it off").
+
+Where a role has to know the upstream defaults to make such a call, keep the evidence in the repository rather than re-measuring it every time. `roles/mariadb_server/vars/vendor/` does this: one dump of `mariadbd --help --verbose` per supported version, taken from a clean installation, with the exact package recorded in the header. Upstream documents each variable, but never the delta between two patch releases, so a refreshed dump plus `git diff` is the only reliable way to see that a default moved.
+
+
 ##### Variable Validation with `argument_specs`
 
 Every role should include a `meta/argument_specs.yml` that declares all user-facing variables with their types. Ansible validates these automatically at role entry (before any tasks run), catching type mismatches and missing required variables without manual assert code.

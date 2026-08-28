@@ -698,9 +698,10 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 `mariadb_server__cnf_innodb_snapshot_isolation__group_var` / `mariadb_server__cnf_innodb_snapshot_isolation__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_snapshot_isolation).
-* Note that `'ON'` requires support from the application: a transaction in `REPEATABLE READ` that tries to modify a row another transaction changed after its snapshot was taken is aborted with `ER_CHECKREAD`. The application has to catch that error and retry the transaction, otherwise the write fails under concurrent load. Turn it on only for applications that are known to handle it. Note that MariaDB 11.8 ships it on, so the role deviates from the vendor there.
+* Note that `'ON'` requires support from the application: a transaction in `REPEATABLE READ` that tries to modify a row another transaction changed after its snapshot was taken is aborted with `ER_CHECKREAD`. The application has to catch that error and retry the transaction, otherwise the write fails under concurrent load. Turn it on only for applications that are known to handle it.
 * Type: String.
 * Default: `'OFF'`
+* Deviates from the upstream default on MariaDB 11.8, which ships it on; 10.6, 10.11 and 11.4 ship it off.
 
 `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var`
 
