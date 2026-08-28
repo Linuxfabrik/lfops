@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
+* **plugin:bitwarden_item**: Error messages no longer carry a doubled period in the middle.
 * **role:rocketchat**: The container image is pulled from Docker Hub directly instead of through `registry.rocket.chat`, whose pull rate limit is shared by everyone using it, so image pulls and `podman auto-update` no longer fail with `toomanyrequests`.
 * **role:system_update**: A requested reboot names the core packages or the running services that ask for it, instead of only listing what the run changed.
 * **role:system_update**: A host with nothing to update no longer sends a "System updated without Reboot" mail on every update day.

@@ -273,10 +273,29 @@ class Bitwarden:
         return copy.deepcopy(self._cache['templates'][template_name])
 
     @property
-    def is_unlocked(self):
-        """Check if the Bitwarden vault is unlocked."""
+    def status(self):
+        """Vault status as reported by the `bw serve` API.
+
+        Exactly one of 'unauthenticated' (not logged in), 'locked' (logged in, vault
+        locked) or 'unlocked'. Verified against the StatusCommand of bw 2026.8.0, which
+        declares these three and no others.
+        """
         result = self._api_call('status')
-        return result['data']['template']['status'] == 'unlocked'
+        return result['data']['template']['status']
+
+    def get_not_unlocked_message(self, status):
+        """Error message for a `bw serve` whose vault cannot be read.
+
+        Shared by the lookup plugin and the module so both give the same advice.
+        """
+        return (
+            f'The Bitwarden vault behind `bw serve` at {self._base_url} reports '
+            f'status "{status}", expected "unlocked". `bw serve` keeps its own session, '
+            'taken from the environment it was started in, so `bw status` in your '
+            'shell can report "unlocked" while this API does not. Run `bw login` if '
+            'needed, then `export BW_SESSION="$(bw unlock --raw)"` and restart '
+            '`bw serve`'
+        )
 
     def sync(self, force=False, interval=60):
         """Pull the latest vault data from server and repopulate the items cache.
@@ -394,10 +413,10 @@ class Bitwarden:
         characters (0-9 and a-f).
         """
         if password_length <= 0:
-            raise ValueError('Password length must be a positive integer.')
+            raise ValueError('Password length must be a positive integer')
         if password_choice.lower() == '0123456789abcdef' and password_length % 2 != 0:
             raise ValueError(
-                'Password length must be an even number to represent full hex bytes.'
+                'Password length must be an even number to represent full hex bytes'
             )
         return ''.join(secrets.choice(password_choice) for _ in range(password_length))
 
