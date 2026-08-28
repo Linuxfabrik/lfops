@@ -608,8 +608,10 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 `mariadb_server__cnf_innodb_buffer_pool_size__group_var` / `mariadb_server__cnf_innodb_buffer_pool_size__host_var`
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_buffer_pool_size)
+* Raise this on a dedicated database server, where 50 to 70 percent of the RAM is the usual target, and lower it on a small host that also runs Apache and PHP.
 * Type: String.
-* Default: `'128M'`
+* Default: `'512M'`
+* Deviates from the upstream default `'128M'`: this is the setting that decides whether InnoDB serves from memory or from disk, and a database with any real amount of data outgrows 128M immediately.
 
 `mariadb_server__cnf_innodb_doublewrite__group_var` / `mariadb_server__cnf_innodb_doublewrite__host_var`
 
