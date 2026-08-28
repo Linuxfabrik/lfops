@@ -1,5 +1,18 @@
 - block:
 
+  # /usr/local/libexec is not part of every base layout: Debian ships it from trixie on and
+  # Ubuntu from 26.04 on, while the RedHat family has always had it. Without this the deploy
+  # below fails with "Destination directory /usr/local/libexec does not exist". root:root 0755
+  # is what the distributions that do ship it use, and matches /usr/local/{bin,sbin} everywhere.
+  # Verified against Debian 11, 12 and 13, Ubuntu 22.04 and 24.04, and Rocky 9.
+  - name: 'Ensure /usr/local/libexec exists'
+    ansible.builtin.file:
+      path: '/usr/local/libexec'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
   - name: 'Deploy /usr/local/libexec/do-reboot'
     ansible.builtin.template:
       backup: true

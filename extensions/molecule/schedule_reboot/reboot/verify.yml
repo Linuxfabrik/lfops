@@ -1,5 +1,6 @@
 # Destructive verify: actually reboot the host through the CLI and confirm it
-# came back (boot_id changed) with an empty spool (tmpfs cleared on reboot).
+# came back (boot_id changed) with an empty spool (tmpfs cleared on reboot), and
+# that the notification do-reboot sent on the way down is a well-formed message.
 - name: 'Verify schedule_reboot performs a real reboot'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -42,3 +43,29 @@
     - name: 'Assert the spool is empty (tmpfs cleared by the reboot)'
       ansible.builtin.assert:
         that: '__molecule__spool_after_result["matched"] == 0'
+
+    # do-reboot mails the administrators before it goes down. postfix counts localhost
+    # among its own destinations, so root@localhost is delivered into the root mailbox
+    # instead of leaving via the (unreachable) relayhost. The grace period is 0 in this
+    # scenario, so the message usually only leaves the queue after the reboot - hence
+    # the retries.
+    - name: 'stat /var/mail/root'
+      ansible.builtin.stat:
+        path: '/var/mail/root'
+      register: '__molecule__root_mailbox_stat_result'
+      until: '__molecule__root_mailbox_stat_result["stat"]["exists"]'
+      retries: 12
+      delay: 5
+
+    - name: 'slurp /var/mail/root'
+      ansible.builtin.slurp:
+        src: '/var/mail/root'
+      register: '__molecule__root_mailbox_result'
+
+    # The bracketed prefix from group_vars must arrive as a quoted display name. Without
+    # the quoting a strict parser drops the whole address, not just the name.
+    - name: 'Assert the reboot notification carries a quoted From display name'
+      ansible.builtin.assert:
+        that: '__molecule__expected_from in (__molecule__root_mailbox_result["content"] | ansible.builtin.b64decode)'
+      vars:
+        __molecule__expected_from: "From: \"[molecule] "
