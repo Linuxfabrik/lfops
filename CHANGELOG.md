@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag. PHP-FPM finally reports what it is doing: pools log their application errors on Debian instead of dropping them, a hung worker is reclaimed after 65 minutes, and repeated worker crashes trigger a reload.
 
 ### Breaking Changes
 
+* **role:php**: PHP-FPM kills a request after 65 minutes instead of never. A worker blocked in a system call, on a database socket that never answers for example, held its slot forever and the pool bled capacity until it was full. The limit sits five minutes above the 3600 seconds Nextcloud raises `max_execution_time` to for large uploads, so PHP's own limit still fires first there. Raise `php__fpm_pool_conf_request_terminate_timeout__group_var` (or the `__host_var`) for workloads with legitimately longer requests, or set it to `0` to restore the previous behaviour.
 * **role:mariadb_server**: The InnoDB buffer pool grows from 128 MiB to 512 MiB, so a database with more than a trivial amount of data is served from memory instead of from disk. Every host running this role therefore uses roughly 384 MiB more RAM after the next restart of the service.
 * **role:mariadb_server**: The InnoDB redo log grows from 32 MiB to the 96 MiB MariaDB itself ships, so a write-heavy server no longer stalls waiting for a checkpoint on a redo log sized for much smaller workloads. InnoDB resizes the log itself when the service next restarts, also after an unclean shutdown, but the data directory needs 64 MiB more free space for it; check that on hosts that are tight before deploying. Set `mariadb_server__cnf_innodb_log_file_size__group_var: '32M'` (or the `__host_var`) to keep the previous size.
 * **role:mariadb_server**: `innodb_snapshot_isolation` now defaults to `OFF`. Turning it on requires support from the application: a transaction in `REPEATABLE READ` that modifies a row another transaction changed after its snapshot was taken is aborted with `ER_CHECKREAD`. The application has to catch that error and retry the transaction, otherwise the write fails under concurrent load. To restore the previous behaviour on hosts whose application is known to handle it, set `mariadb_server__cnf_innodb_snapshot_isolation__group_var: 'ON'` (or the `__host_var`).
@@ -23,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:php**: The `php:logrotate` tag rotates the per-pool PHP-FPM logs on Debian, which the packaged configuration does not cover.
+* **role:php**: The `[global]` section of the PHP-FPM configuration is managed from the inventory, so the log level and the emergency reload after repeated worker crashes can be set; the reload is now on by default after ten crashes within a minute.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.
@@ -34,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:php**: A PHP-FPM pool starts with 10 workers and keeps 10 idle instead of 5 each, so an ordinary traffic spike no longer makes PHP-FPM fork in bursts and warn about it every second, at the cost of five more resident workers per pool.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
@@ -42,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: On Debian a pool's `slowlog` points at a directory that exists, so a backtrace is actually written once `php__fpm_pool_conf_request_slowlog_timeout__*_var` is set.
+* **role:php**: On Debian the applications' PHP errors reach `/var/log/php-fpm/<pool>-error.log` instead of being discarded without a trace, because the path used before was not writable by the pool user.
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
 * **plugin:bitwarden_item**: Error messages no longer carry a doubled period in the middle.
 * **role:rocketchat**: The environment file no longer sets `MONGO_OPLOG_URL`, which Rocket.Chat has ignored since 5.0.1. A host without a MongoDB replica set also gets a usable environment file again, instead of one whose MongoDB URL and port ended up on the same line.

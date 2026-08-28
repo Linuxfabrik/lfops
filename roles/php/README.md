@@ -33,6 +33,17 @@ This role never exposes to the world that PHP is installed on the server, no mat
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+**Where PHP-FPM logs, and what a monitoring check sees there.** PHP-FPM keeps two kinds of log apart, and only one of them is the process manager's own. The master writes its error log to the path the distribution's `php-fpm.conf` names (`/var/log/php-fpm/error.log` on RedHat, `/var/log/phpX.Y-fpm.log` on Debian); that file holds pool saturation, worker crashes, request timeouts and the start / reload / shutdown markers, and it is what the [php-fpm-logfile](https://linuxfabrik.github.io/monitoring-plugins/check-plugins/php-fpm-logfile.html) check reads. The applications' own errors go to `/var/log/php-fpm/<pool>-error.log`, in PHP's format, and need a separate check. Nothing of either reaches the journal: the unit's journal entries are systemd's own start and stop lines.
+
+**Pool logs need a directory the workers may write to.** `/var/log/php-fpm` is created owned by the web server user, mode `0770`, mirroring what the RedHat package ships. A pool that runs as a different user than `php__fpm_pools__*_var` defaults to cannot create its log there; give it its own directory and point `raw` at it.
+
+**The `[global]` section is deployed as a drop-in.** `php-fpm.conf` belongs to the package, so the role writes `z00-linuxfabrik-global.conf` into the pool directory instead. That covers `log_level` and the two `emergency_restart_*` directives. It deliberately does not set `error_log`: RedHat reads the pool directory *before* its own `[global]` and would override the value again, while Debian and Fedora read it after and would not, so the same drop-in would move the log on some hosts and not on others.
+
+**Spawn pressure is loud by design.** Whenever `pm.min_spare_servers` cannot be met, PHP-FPM doubles its spawn rate every second and logs a `seems busy` warning from rate 8 on, once per second, unthrottled. A single traffic spike therefore writes a block of warnings even when the pool never fills up. `php__fpm_pool_conf_pm_start_servers__*_var` and `php__fpm_pool_conf_pm_min_spare_servers__*_var` keep a warm reserve that pushes the point where this starts; on a host where spikes are normal, pass `--ignore='seems busy'` to the monitoring check so that only the actual pool saturation alerts.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -48,7 +59,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs php, php-fpm and composer.
 * Installs and removes the configured PHP modules.
 * Deploys the `z00-linuxfabrik.ini` for every SAPI.
-* Deploys and removes the PHP-FPM pools.
+* Deploys and removes the PHP-FPM pools, and the `[global]` drop-in next to them.
+* Creates the PHP-FPM log directory.
+* Deploys the logrotate configuration for the per-pool logs (Debian only).
 * Manages the state of the php-fpm service.
 * Pins the `php`, `phar` and `phar.phar` alternatives (Debian with `php__version` set only).
 * Triggers: php-fpm.service restart.
@@ -60,13 +73,18 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php:fpm`
 
-* Deploys and removes the PHP-FPM pools. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
+* Deploys and removes the PHP-FPM pools, the `[global]` drop-in and the log directory. On Debian the configuration lives under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
 * Triggers: php-fpm.service restart.
 
 `php:ini`
 
 * Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
 * Triggers: php-fpm.service restart.
+
+`php:logrotate`
+
+* Debian only. Deploys `/etc/logrotate.d/php-fpm-pools` for the per-pool logs. On RedHat the packaged logrotate configuration already covers them.
+* Triggers: none.
 
 `php:modules`
 
@@ -386,6 +404,40 @@ php__ini_upload_max_filesize__host_var: '10000M'
 ```
 
 
+## Optional Role Variables - PHP-FPM Global Config Directives
+
+Variables for the `[global]` section of the PHP-FPM configuration, deployed as `z00-linuxfabrik-global.conf` next to the pools.
+
+`php__fpm_conf_emergency_restart_interval__group_var` / `php__fpm_conf_emergency_restart_interval__host_var`
+
+* The window `php__fpm_conf_emergency_restart_threshold__*_var` counts within. Available units: s(econds), m(inutes), h(ours), or d(ays).
+* Type: String.
+* Default: `'1m'`
+* Deviates from the upstream default `0`: PHP-FPM needs a non-zero threshold and a non-zero interval before it reloads itself after repeated worker crashes, so leaving either at zero turns the safety net off.
+
+`php__fpm_conf_emergency_restart_threshold__group_var` / `php__fpm_conf_emergency_restart_threshold__host_var`
+
+* Reload PHP-FPM once this many workers died on `SIGSEGV` or `SIGBUS` within `php__fpm_conf_emergency_restart_interval__*_var`. A value of `0` means off.
+* Type: Number.
+* Default: `10`
+* Deviates from the upstream default `0`: an extension or opcode cache that corrupts its workers otherwise keeps crashing them until someone notices, while a reload of the master usually restores service. PHP-FPM writes a WARNING when it triggers, so the underlying crash still surfaces in monitoring rather than being papered over.
+
+`php__fpm_conf_log_level__group_var` / `php__fpm_conf_log_level__host_var`
+
+* The log level of PHP-FPM's own error log. Possible values: `alert`, `error`, `warning`, `notice`, `debug`.
+* Type: String.
+* Default: `'notice'`
+* Matches the upstream default, but is pinned rather than left unset: PHP-FPM keeps the unset value at zero internally, so `php-fpm -tt` dumps `log_level = unknown value` and an administrator cannot read the level that is actually in effect. Raising it to `warning` drops the start, reload and shutdown markers that make a pool restarting in a loop visible.
+
+Example:
+```yaml
+# optional
+php__fpm_conf_emergency_restart_interval__host_var: '1m'
+php__fpm_conf_emergency_restart_threshold__host_var: 10
+php__fpm_conf_log_level__host_var: 'notice'
+```
+
+
 ## Optional Role Variables - PHP-FPM Pool Config Directives
 
 Variables for PHP-FPM pool directives and their default values, defined and supported by this role.
@@ -412,25 +464,29 @@ Variables for PHP-FPM pool directives and their default values, defined and supp
 
 * The desired minimum number of idle server processes.
 * Type: Number.
-* Default: `5`
+* Default: `10`
+* Deviates from the upstream default (`5` on RedHat, `1` on Debian): against `php__fpm_pool_conf_pm_max_children__*_var` of 50 the packaged value keeps so small a warm reserve that an ordinary traffic spike exhausts it in seconds, and PHP-FPM then forks in doubling bursts and logs a `seems busy` warning every second. Each idle worker costs its own memory, so lower it again on hosts that are tight.
 
 `php__fpm_pool_conf_pm_start_servers__group_var` / `php__fpm_pool_conf_pm_start_servers__host_var`
 
 * The number of child processes created on startup. Must be greater than `php__fpm_pool_conf_pm_min_spare_servers__*_var` but less than `php__fpm_pool_conf_pm_max_spare_servers__*_var`.
 * Type: Number.
-* Default: `5`
+* Default: `10`
+* Deviates from the upstream default (`5` on RedHat, `2` on Debian): the first requests after a restart otherwise arrive while the pool is still forking.
 
 `php__fpm_pool_conf_request_slowlog_timeout__group_var` / `php__fpm_pool_conf_request_slowlog_timeout__host_var`
 
 * The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
 * Type: Number.
 * Default: `0`
+* Off by default on purpose. PHP-FPM collects the backtrace with `ptrace`, which SELinux denies to the `httpd_t` domain the master and its workers both run in. On an enforcing RedHat host every slow request therefore produces `ERROR: failed to ptrace(ATTACH) child N: Operation not permitted` in the error log while the slowlog stays empty, which turns a monitoring check reading that log critical without a finding. Set it on Debian, or on RedHat only together with an SELinux policy module that grants `httpd_t` the `sys_ptrace` capability.
 
 `php__fpm_pool_conf_request_terminate_timeout__group_var` / `php__fpm_pool_conf_request_terminate_timeout__host_var`
 
 * The timeout for serving a single request after which the worker process will be killed. This option should be used when the `max_execution_time` ini option does not stop script execution for some reason. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
 * Type: Number.
-* Default: `0`
+* Default: `3900`
+* Deviates from the upstream default `0`: a worker blocked in a system call, on a database socket that never answers for example, holds its slot forever and the pool bleeds capacity until it is full. The value sits five minutes above the 3600 seconds Nextcloud raises `max_execution_time` to for large uploads, so PHP's own limit always fires first and this one only catches what PHP cannot stop itself. Raise it for workloads with legitimately longer requests, or set `0` to restore the previous behaviour.
 
 `php__fpm_pools__group_var` / `php__fpm_pools__host_var`
 
@@ -465,10 +521,10 @@ Example:
 php__fpm_pool_conf_pm__host_var: 'dynamic'
 php__fpm_pool_conf_pm_max_children__host_var: 50
 php__fpm_pool_conf_pm_max_spare_servers__host_var: 35
-php__fpm_pool_conf_pm_min_spare_servers__host_var: 5
-php__fpm_pool_conf_pm_start_servers__host_var: 5
-php__fpm_pool_conf_request_slowlog_timeout__host_var: '10s'
-php__fpm_pool_conf_request_terminate_timeout__host_var: '60s'
+php__fpm_pool_conf_pm_min_spare_servers__host_var: 10
+php__fpm_pool_conf_pm_start_servers__host_var: 10
+php__fpm_pool_conf_request_slowlog_timeout__host_var: 0
+php__fpm_pool_conf_request_terminate_timeout__host_var: '3900s'
 php__fpm_pools__host_var:
   - name: 'librenms'
     user: 'librenms'

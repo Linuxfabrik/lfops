@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+# 2026082801
+
+# The per-pool logs the role points `slowlog` and `php_admin_value[error_log]` at.
+# On RedHat the packaged /etc/logrotate.d/php-fpm already globs this directory, so this
+# file is deployed on Debian only, where the packaged configuration covers nothing but
+# PHP-FPM's own error log.
+#
+# No `create` directive: logrotate reuses the mode and ownership of the rotated file,
+# which is what the pool user needs to keep appending. The application error log is
+# opened with O_CREAT|O_APPEND per message and needs no signal, the slowlog is held open
+# by the master and is reopened by the helper below.
+
+{{ __php__fpm_log_path }}/*.log {
+    compress
+    delaycompress
+    missingok
+    notifempty
+    rotate 12
+    sharedscripts
+    weekly
+    postrotate
+        if [ -x /usr/lib/php/php{{ __php__installed_version }}-fpm-reopenlogs ]; then
+            /usr/lib/php/php{{ __php__installed_version }}-fpm-reopenlogs
+        fi
+    endscript
+}

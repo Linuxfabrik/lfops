@@ -1,0 +1,45 @@
+; {{ ansible_managed }}
+; 2026082801
+
+; The `[global]` section of the PHP-FPM configuration. It is deployed next to the pools
+; rather than into `php-fpm.conf`, because that file belongs to the package and the
+; distributions disagree on its contents.
+;
+; The distributions also disagree on where they place their `include=` line: RedHat reads
+; the pool directory before its own `[global]`, Debian and Fedora after it. A directive
+; the packaged `php-fpm.conf` sets itself (`error_log`, `pid`, `daemonize`) is therefore
+; overridden again on RedHat but not on Debian, which is why none of them are set here.
+; The directives below are set by no packaged `php-fpm.conf`, so they take effect
+; everywhere. Verified against php-fpm 7.2 on Rocky 8, 8.4 on Debian 13 and 8.5 on
+; Fedora 44.
+
+[global]
+
+; Log level. PHP-FPM reports the events an administrator has to act on (a pool that ran
+; out of workers, a worker that died on a signal, a request killed by
+; `request_terminate_timeout`) at WARNING, and its own start, reload and shutdown at
+; NOTICE. `notice` therefore keeps all of them; anything above drops the lifecycle
+; markers that make a pool restarting in a loop visible.
+;
+; The value is pinned even though it matches the compiled-in default, because PHP-FPM
+; leaves the unset value at 0 internally and `php-fpm -tt` then dumps
+; `log_level = unknown value` instead of the level that is actually in effect.
+;
+; Possible Values: alert, error, warning, notice, debug
+; Default Value: notice
+log_level = {{ php__fpm_conf_log_level__combined_var }}
+
+; Reload PHP-FPM once this many workers died on SIGSEGV or SIGBUS within
+; `emergency_restart_interval`. Both directives have to be set, a zero in either one
+; turns the mechanism off. This is a safety net against an extension or an opcode cache
+; that leaves the workers in a state only a fresh master recovers from; it is not a
+; substitute for fixing the crash, and PHP-FPM writes a WARNING when it triggers.
+;
+; Default Value: 0
+emergency_restart_threshold = {{ php__fpm_conf_emergency_restart_threshold__combined_var }}
+
+; The window `emergency_restart_threshold` counts within.
+; Available units: s(econds), m(inutes), h(ours), or d(ays)
+;
+; Default Value: 0
+emergency_restart_interval = {{ php__fpm_conf_emergency_restart_interval__combined_var }}

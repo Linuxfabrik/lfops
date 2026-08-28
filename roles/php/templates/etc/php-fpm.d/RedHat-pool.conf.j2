@@ -329,7 +329,7 @@ ping.response = pong
 ; The log file for slow requests
 ; Default Value: not set
 ; Note: slowlog is mandatory if request_slowlog_timeout is set
-slowlog = /var/log/php-fpm/{{ item["name"] }}-slow.log
+slowlog = {{ __php__fpm_log_path }}/{{ item["name"] }}-slow.log
 
 ; The timeout for serving a single request after which a PHP backtrace will be
 ; dumped to the 'slowlog' file. A value of '0s' means 'off'.
@@ -430,7 +430,7 @@ env[PATH] = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ;                specified at startup with the -d argument
 ;php_admin_value[sendmail_path] = /usr/sbin/sendmail -t -i -f www@my.domain.com
 ;php_flag[display_errors] = off
-php_admin_value[error_log] = /var/log/php-fpm/{{ item["name"] }}-error.log
+php_admin_value[error_log] = {{ __php__fpm_log_path }}/{{ item["name"] }}-error.log
 php_admin_flag[log_errors] = on
 ;php_admin_value[memory_limit] = 128M
 
