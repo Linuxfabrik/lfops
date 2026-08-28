@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: OCSP stapling is off by default, so a certificate whose issuer runs no OCSP responder (every Let's Encrypt certificate today, and therefore everything the `acme_sh` role obtains) no longer floods the error log with `AH02218` and `AH02604` on every start and reload while stapling nothing; set `apache_httpd__mod_ssl_ssl_use_stapling: 'on'` for a CA that still answers.
 * **role:php**: A PHP-FPM pool starts with 10 workers and keeps 10 idle instead of 5 each, so an ordinary traffic spike no longer makes PHP-FPM fork in bursts and warn about it every second, at the cost of five more resident workers per pool.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
