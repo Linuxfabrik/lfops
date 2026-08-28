@@ -1,0 +1,31 @@
+# The options that have to be on the kernel command line, rendered the way they appear there:
+# 'name=value', or a bare 'name' for options that stand on their own. Options with and without a
+# value are assembled differently, then concatenated.
+__bootloader__present_options: '{{
+    (bootloader__cmdline_options__combined_var | selectattr("state", "undefined") | list) +
+    (bootloader__cmdline_options__combined_var | selectattr("state", "defined")
+      | selectattr("state", "ne", "absent") | list)
+  }}'
+__bootloader__wanted_options: '{{
+    (__bootloader__present_options | selectattr("value", "defined") | map(attribute="name") | list
+      | zip(__bootloader__present_options | selectattr("value", "defined")
+        | map(attribute="value") | list)
+      | map("join", "=") | list) +
+    (__bootloader__present_options | selectattr("value", "undefined") | map(attribute="name") | list)
+  }}'
+
+# The names of the options that have to be off the kernel command line, whatever their value is.
+__bootloader__unwanted_option_names: '{{
+    bootloader__cmdline_options__combined_var | selectattr("state", "defined")
+      | selectattr("state", "eq", "absent") | map(attribute="name") | list
+  }}'
+
+# The args="..." line of every boot entry, as reported by `grubby --info=ALL`. The quotes are
+# turned into spaces so that a search for a whole option matches at the ends of the line as well.
+# Only meaningful once tasks/RedHat.yml has registered that command.
+__bootloader__current_args: "{{
+    __bootloader__grubby_info_result['stdout_lines'] | d([])
+    | select('match', '^args=')
+    | map('regex_replace', '\"', ' ')
+    | list
+  }}"

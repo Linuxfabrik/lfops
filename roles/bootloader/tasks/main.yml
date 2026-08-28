@@ -1,0 +1,55 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - ansible.builtin.debug:
+      msg:
+        - 'Combined cmdline_options:'
+        - '{{ bootloader__cmdline_options__combined_var }}'
+
+  # reset on every run, so a second run of the role in the same play does not inherit the
+  # findings of the first one
+  - name: 'Reset the state of a previous run'
+    ansible.builtin.set_fact:
+      __bootloader__missing_options: []
+      __bootloader__reboot_needed: false
+      __bootloader__superfluous_options: []
+
+  # include_tasks is required here because import_tasks cannot handle dynamic variables.
+  - name: 'Perform platform specific tasks'
+    ansible.builtin.include_tasks: '{{ ansible_facts["os_family"] }}.yml'
+
+  - name: 'stat /usr/local/sbin/schedule-reboot'
+    ansible.builtin.stat:
+      path: '/usr/local/sbin/schedule-reboot'
+    register: '__bootloader__schedule_reboot_stat_result'
+
+  - name: 'schedule-reboot bootloader'
+    ansible.builtin.command:
+      argv:
+        - 'schedule-reboot'
+        - 'bootloader'
+        - 'kernel command line changed'
+    register: '__bootloader__schedule_reboot_result'
+    changed_when: '__bootloader__schedule_reboot_result["rc"] == 0'
+    when:
+      - '__bootloader__reboot_needed | bool'
+      - '__bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
+
+  - ansible.builtin.debug:
+      msg: 'The kernel command line has changed. Please reboot the server manually to apply it.'
+    when:
+      - '__bootloader__reboot_needed | bool'
+      - 'not __bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
+
+  tags:
+    - 'bootloader'

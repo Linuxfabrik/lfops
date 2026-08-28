@@ -1,0 +1,12 @@
+bootloader__cmdline_options__combined_var: '{{ (
+      bootloader__cmdline_options__role_var +
+      bootloader__cmdline_options__dependent_var +
+      bootloader__cmdline_options__group_var +
+      bootloader__cmdline_options__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+bootloader__cmdline_options__dependent_var: []
+bootloader__cmdline_options__group_var: []
+bootloader__cmdline_options__host_var: []
+bootloader__cmdline_options__role_var: []

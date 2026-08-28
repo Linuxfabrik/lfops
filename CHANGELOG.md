@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** Kernel parameters that only take effect at boot time, `psi=1` among them, can be deployed from the inventory with the new `bootloader` role. On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
 
 ### Breaking Changes
 
@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, and a `--check` run reports what it would change without touching the host.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.

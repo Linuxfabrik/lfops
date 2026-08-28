@@ -1,0 +1,3 @@
+bootloader__cmdline_options__group_var:
+  - name: 'psi'
+    value: 1

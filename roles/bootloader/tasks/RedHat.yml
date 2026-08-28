@@ -1,0 +1,63 @@
+# grubby writes the boot entries on the Red Hat family, so the role calls it directly instead of
+# going through fedora.linux_system_roles.bootloader. That role rewrites GRUB_TIMEOUT in
+# /etc/default/grub and every `set timeout=` in grub.cfg on each run, which also replaces the
+# timeouts of the menu_auto_hide and menu_show_once blocks (`set timeout="${menu_show_once_timeout}"`
+# becomes a literal), and its bootloader_settings module declares supports_check_mode without ever
+# reading module.check_mode, so a --check run rewrites the boot entries for real.
+# Verified against grubby 8.40 on Rocky 9.
+- name: 'grubby --info=ALL'
+  ansible.builtin.command:
+    cmd: 'grubby --info=ALL'
+  register: '__bootloader__grubby_info_result'
+  changed_when: false
+  check_mode: false # read-only, and it has to run in check mode too to report what would change
+
+# The comparison covers every boot entry, not just the default one, and the option is escaped
+# before it goes into the pattern, so a dot in an option name matches a dot.
+- name: 'Determine the options missing from at least one boot entry'
+  ansible.builtin.set_fact:
+    __bootloader__missing_options: '{{ __bootloader__missing_options + [item] }}'
+  loop: '{{ __bootloader__wanted_options }}'
+  when:
+    - '__bootloader__current_args | reject("search", "(^| )" ~ (item | regex_escape) ~ "( |$)")
+        | list | length > 0'
+
+- name: 'Determine the options still set on at least one boot entry'
+  ansible.builtin.set_fact:
+    __bootloader__superfluous_options: '{{ __bootloader__superfluous_options + [item] }}'
+  loop: '{{ __bootloader__unwanted_option_names }}'
+  when:
+    - '__bootloader__current_args | select("search", "(^| )" ~ (item | regex_escape) ~ "(=| |$)")
+        | list | length > 0'
+
+# a `command` task is skipped in check mode, so without this a dry run would report nothing to do
+# although there is. This reports what would happen and marks the run as changed.
+- name: 'Report the pending kernel command line change'
+  ansible.builtin.debug:
+    msg: 'grubby --update-kernel=ALL would add [{{ __bootloader__missing_options | join(" ") }}]
+      and remove [{{ __bootloader__superfluous_options | join(" ") }}]'
+  changed_when: true
+  when:
+    - 'ansible_check_mode | bool'
+    - '(__bootloader__missing_options | length > 0) or (__bootloader__superfluous_options | length > 0)'
+
+- name: 'grubby --update-kernel=ALL --remove-args'
+  ansible.builtin.command:
+    cmd: 'grubby --update-kernel=ALL --remove-args={{ __bootloader__superfluous_options
+        | join(" ") | quote }}'
+  changed_when: true
+  when:
+    - '__bootloader__superfluous_options | length > 0'
+
+- name: 'grubby --update-kernel=ALL --args'
+  ansible.builtin.command:
+    cmd: 'grubby --update-kernel=ALL --args={{ __bootloader__missing_options | join(" ") | quote }}'
+  changed_when: true
+  when:
+    - '__bootloader__missing_options | length > 0'
+
+- name: 'Remember that the kernel command line changed'
+  ansible.builtin.set_fact:
+    __bootloader__reboot_needed: true
+  when:
+    - '(__bootloader__missing_options | length > 0) or (__bootloader__superfluous_options | length > 0)'
