@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:rocketchat**: The container image is pulled from Docker Hub directly instead of through `registry.rocket.chat`, whose pull rate limit is shared by everyone using it, so image pulls and `podman auto-update` no longer fail with `toomanyrequests`.
 * **role:system_update**: A requested reboot names the core packages or the running services that ask for it, instead of only listing what the run changed.
 * **role:system_update**: A host with nothing to update no longer sends a "System updated without Reboot" mail on every update day.
 * **role:system_update**: The update mail and the reboot request describe the packages the run just changed instead of those of an earlier run.

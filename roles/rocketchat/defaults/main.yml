@@ -40,7 +40,15 @@ rocketchat__podman_containers__containers__dependent_var:
       HealthRetries=5
       HealthStartPeriod=5s
       HealthTimeout=10s
-      Image=registry.rocket.chat/rocketchat/rocket.chat:{{ rocketchat__version }}
+      # Pull from Docker Hub directly. registry.rocket.chat is only a vanity host in front
+      # of Docker Hub, and its rate limit is keyed to the proxy's shared egress IP, so an
+      # unauthenticated pull fails with "toomanyrequests" as soon as anyone else exhausted
+      # that budget. Going direct uses our own per-IP budget. Same repository, same digests.
+      # Re-check with:
+      #   curl --silent --head https://registry.rocket.chat/v2/rocketchat/rocket.chat/manifests/latest | grep --ignore-case 'www-authenticate'
+      # A realm of "https://auth.docker.io/token" means it still is Docker Hub.
+      # Verified 2026-08-21.
+      Image=docker.io/rocketchat/rocket.chat:{{ rocketchat__version }}
       LogDriver=journald
       Network=rocketchat.network
       PublishPort={{ rocketchat__port }}:{{ rocketchat__port }}/tcp
