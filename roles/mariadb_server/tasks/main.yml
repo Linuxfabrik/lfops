@@ -220,19 +220,29 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-  # The unit drop-in's `ExecStartPre=-/bin/chcon -t mysqld_exec_t /usr/sbin/mariadbd` workaround for MDEV-30520 cannot relabel the binary on EL10+, where the packaged mariadb.service applies `ProtectSystem` that mounts /usr read-only inside the service sandbox. Set the label persistently here instead. Use `/usr/bin/mariadbd` because SELinux has an equivalency rule `/usr/sbin /usr/bin` (UsrMerge) and `semanage fcontext` rejects the equivalent path.
-  - name: 'semanage fcontext --add --type mysqld_exec_t /usr/bin/mariadbd'
-    community.general.sefcontext:
-      setype: 'mysqld_exec_t'
-      target: '/usr/bin/mariadbd'
+  # mysql-selinux ships the file contexts for the `mariadbd` binary names (MDEV-30520); without it
+  # the binary keeps `bin_t` and never reaches `mysqld_t`. Since 11.4.13 / 11.8.9 that is no longer
+  # cosmetic: systemd execs `/bin/sh` (MDEV-40629), so an unlabeled binary lands in `initrc_t`
+  # instead of `unconfined_service_t` and `httpd_t` clients lose the socket. The MariaDB packages
+  # depend on it on EL9 and EL10, but not on EL8. Installed everywhere anyway: it overrides the
+  # distro `mysql` module (priority 200 over 100) and tracks the upstream packages we deploy.
+  - name: 'Install mysql-selinux'
+    ansible.builtin.package:
+      name:
+        - 'mysql-selinux'
       state: 'present'
-    register: '__mariadb_server__mariadbd_fcontext_result'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
+      # Galera excluded: in `mysqld_t` the donor's mariabackup cannot reach the local socket and
+      # SST fails with `Errcode: 13`. Note this only takes effect on EL8. On EL9 and EL10 the
+      # MariaDB packages depend on mysql-selinux, so it is installed and the binary labeled no
+      # matter what this role does, and Galera nodes run confined there either way. Tracked in
+      # https://github.com/Linuxfabrik/lfops/issues/328.
       - 'mariadb_server__cnf_wsrep_on is false'
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  # relabel the mariadbd binary that is already on disk
   - name: 'restorecon -Fv /usr/sbin/mariadbd'
     ansible.builtin.command: 'restorecon -Fv /usr/sbin/mariadbd'
     register: '__mariadb_server__mariadbd_restorecon_result'
@@ -404,11 +414,26 @@
     register: 'mariadb_server__z00_linuxfabrik_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  # InnoDB allocates its asynchronous IO contexts from fs.aio-max-nr at startup, so MariaDB has
+  # to come up after TuneD has applied the profile (role: kernel_settings). Unlike its siblings
+  # above this drop-in carries no restart notification: ordering is evaluated when systemd builds
+  # a transaction, so it takes effect on the next boot and a restart now would buy nothing.
+  - name: 'Deploy /etc/systemd/system/mariadb.service.d/z00-after-tuned.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/mariadb.service.d/z00-after-tuned.conf.j2'
+      dest: '/etc/systemd/system/mariadb.service.d/z00-after-tuned.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__mariadb_server__z00_after_tuned_result'
+
   - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
     when: >-
-      mariadb_server__socket_selinux_workaround_result is changed
+      __mariadb_server__z00_after_tuned_result is changed
+      or mariadb_server__socket_selinux_workaround_result is changed
       or mariadb_server__z00_linuxfabrik_result is changed
       or mariadb_server__service_result is changed
 
@@ -547,13 +572,6 @@
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
 
-  - name: 'Secure installation: Reload privilege tables'
-    ansible.mysql.mysql_query:
-      login_user: '{{ mariadb_server__admin_user["username"] }}'
-      login_password: '{{ mariadb_server__admin_user["password"] }}'
-      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
-      query: 'flush privileges;'
-
   - name: 'Secure installation (Linuxfabrik): Remove users ignored in --skip-name-resolve mode'
     ansible.mysql.mysql_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
@@ -570,6 +588,13 @@
         and (`proxied_user` = '');
     when:
       - 'mariadb_server__cnf_skip_name_resolve__combined_var == "ON"'
+
+  - name: 'Secure installation: Reload privilege tables'
+    ansible.mysql.mysql_query:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      query: 'flush privileges;'
 
   - name: 'Secure installation (Linuxfabrik): Ensure interactive login is disabled'
     ansible.builtin.user:

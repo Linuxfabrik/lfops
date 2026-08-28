@@ -99,6 +99,32 @@
       mode: 0o700
     loop: '{{ graylog_datanode__path_repos }}'
 
+  - name: 'mkdir -p /etc/systemd/system/graylog-datanode.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/graylog-datanode.service.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      state: 'directory'
+
+  # OpenSearch checks vm.max_map_count in its bootstrap checks and refuses to start when the
+  # value is too low, so the Data Node has to come up after TuneD has applied the profile
+  # (role: kernel_settings).
+  - name: 'Deploy /etc/systemd/system/graylog-datanode.service.d/z00-after-tuned.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/graylog-datanode.service.d/z00-after-tuned.conf.j2'
+      dest: '/etc/systemd/system/graylog-datanode.service.d/z00-after-tuned.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__graylog_datanode__z00_after_tuned_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__graylog_datanode__z00_after_tuned_result is changed'
+
   tags:
     - 'graylog_datanode'
     - 'graylog_datanode:configure'

@@ -93,6 +93,31 @@
     when:
       - 'mongodb__keyfile_content is defined and mongodb__keyfile_content | length > 0'
 
+  - name: 'mkdir -p /etc/systemd/system/mongod.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/mongod.service.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      state: 'directory'
+
+  # mongod checks transparent hugepages once at startup, so it has to come up after TuneD has
+  # applied the profile (role: kernel_settings).
+  - name: 'Deploy /etc/systemd/system/mongod.service.d/z00-after-tuned.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/mongod.service.d/z00-after-tuned.conf.j2'
+      dest: '/etc/systemd/system/mongod.service.d/z00-after-tuned.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__mongodb__z00_after_tuned_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__mongodb__z00_after_tuned_result is changed'
+
   tags:
     - 'mongodb'
 

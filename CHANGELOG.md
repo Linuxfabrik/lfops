@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
 
 ### Breaking Changes
 
@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
 * **role:collabora**: The `localhost` WOPI host is an ordinary entry of `collabora__coolwsd_storage_wopi__*` instead of being hard-coded in the template, so it can be dropped with `state: 'absent'` like any other host.
@@ -45,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:system_update**: The AIDE database is refreshed after the update rather than before it, on Debian and Ubuntu as well as on RHEL, so the next check no longer flags every file the update touched.
 * **role:system_update**: A failed update on Debian is reported and stops the run, instead of being followed by a success mail or by the reboot of a half-configured host.
 * **role:schedule_reboot**: The role no longer aborts while deploying its reboot helper on Debian 12 and older and on Ubuntu 24.04 and older. Roles that pull it in, `system_update` among them, were unusable on those releases as well.
+* **role:mariadb_server**: On RHEL 8, MariaDB keeps its own SELinux confinement after a package upgrade, by installing `mysql-selinux` the way the MariaDB packages already do on RHEL 9 and 10. Without it, applications on the same host lose their database connection with `Permission denied` as of MariaDB 11.4.13 and 11.8.9.
 * **playbook:icingaweb2, playbook:setup_icinga2_master, role:icingaweb2** update `icingaweb2` dependent vars to ensure php.ini value `post_max_size` > `upload_max_filesize` by default.
 * **role:monitoring_plugins**: A source install installs the dependencies of the Linuxfabrik library, so checks that speak HTTP, MySQL, SMB or WinRM no longer report `Python module "httpx" is not installed` and its equivalents.
 * **role:monitoring_plugins**: A source install deploys the event plugins, which only the rpm/deb package used to ship.

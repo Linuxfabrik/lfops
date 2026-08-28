@@ -64,6 +64,7 @@ a central server, ...) is not a dependent role of this playbook; put it under "#
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
+* The kernel settings the example service needs must be applied (role: [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings)). This role additionally orders `example.service` after TuneD, so the settings are in place before the service reads them.
 * The example repository must be enabled (role: [linuxfabrik.lfops.repo_example](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_example)). The example packages are served from it.
 * Optional: the optional dependency (role: [linuxfabrik.lfops.optional_dependency](https://github.com/Linuxfabrik/lfops/tree/main/roles/optional_dependency)) enables the optional feature.
 

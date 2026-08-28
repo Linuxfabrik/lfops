@@ -703,6 +703,42 @@ Make sure to use the following format when passing multiple injections to avoid 
     ```
 
 
+#### systemd Drop-ins and Service Ordering
+
+* Deploy overrides as a drop-in under `/etc/systemd/system/<unit>.d/`, never by templating the unit file itself. Name the file after what it does (`z00-linuxfabrik.conf` for the role's own `[Service]` settings, `z00-after-<dependency>.conf` for an ordering dependency), and run `systemctl daemon-reload` when it changed.
+* If a role declares a `<role>__kernel_settings__*__dependent_var`, check whether its service reads that value once at startup. If it does, the role also has to order the service after TuneD. TuneD applies the profile when its daemon starts and systemd starts `tuned.service` in parallel with everything else, so without the ordering the service can come up first and keep the old value for its whole runtime, while `sysctl` and `tuned-adm verify` already report the new one. The classic case is `net.core.somaxconn`, which the kernel clamps the accept queue to inside `listen()`.
+
+    Not every kernel setting needs this. `vm.swappiness` or `net.bridge.bridge-nf-call-iptables` are honoured by the kernel continuously, so ordering buys nothing there. Decide per parameter, not per role.
+
+    ```ini
+    # roles/example/templates/etc/systemd/system/example.service.d/z00-after-tuned.conf.j2
+    [Unit]
+    After=tuned.service
+    ```
+
+    ```yaml
+    # roles/example/tasks/main.yml
+    - name: 'Deploy /etc/systemd/system/example.service.d/z00-after-tuned.conf'
+      ansible.builtin.template:
+        backup: true
+        src: 'etc/systemd/system/example.service.d/z00-after-tuned.conf.j2'
+        dest: '/etc/systemd/system/example.service.d/z00-after-tuned.conf'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      register: '__example__z00_after_tuned_result'
+
+    - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: '__example__z00_after_tuned_result is changed'
+    ```
+
+* Put the ordering into the consuming unit. Do not collect a `Before=` list in a drop-in for `tuned.service` (or for any other dependency): the requirement belongs to the service that has it, a central list has to be kept in sync with every host, and a long `Before=` list invites ordering cycles, which systemd resolves by silently dropping an arbitrary edge. An ordering dependency on a unit that is not installed is ignored without a warning, so the drop-in is safe on hosts where TuneD is absent.
+* Such a drop-in gets no restart notification. Ordering is evaluated while systemd builds a transaction, so it takes effect on the next boot and restarting the service during the run would buy nothing. For the same reason a `systemctl restart tuned` on a running host does not re-trigger the consuming services.
+* `roles/example` implements the whole chain: it declares `example__kernel_settings__sysctl__dependent_var`, `playbooks/example.yml` feeds that into the `kernel_settings` role, and the role deploys the `After=tuned.service` drop-in. `roles/icinga2_agent` shows the same drop-in pattern for a non-TuneD dependency (`z00-after-sssd.conf`).
+
+
 #### OS-specific Variables
 
 If some variables need to be parameterized according to distribution and version (name of packages, configuration file paths, names of services), use OS-specific vars-files inside the `vars/` of your role.
@@ -1049,9 +1085,18 @@ sudo restorecon --recursive --verbose /var/lib/libvirt/images-lfops-molecule
 sudo virsh pool-define-as lfops-molecule dir --target /var/lib/libvirt/images-lfops-molecule
 sudo virsh pool-autostart lfops-molecule
 sudo virsh pool-start lfops-molecule
+
+# keep the cached base images replaceable (no sudo required, the directory is yours by now)
+setfacl --default --modify "user:$(id -un):rw" /var/lib/libvirt/images-lfops-molecule
 ```
 
 `lfops-molecule` is the pool name the scenarios expect, so no further configuration is needed once it exists. Use `LFOPS_TEST_POOL` if you want a different one.
+
+That last `setfacl` is what lets a rebuilt upstream image be picked up automatically. The cloud images are fetched from rolling `latest` URLs, and `create` re-fetches one whenever upstream is newer than the cached copy. libvirt chowns every backing file a VM boots off to `qemu`, though, so without the ACL the cached image stops being writable for you and the next refresh fails with `Destination ... is not writable`. The default ACL survives that chown, and each replacement inherits it again. The download uses mode `0664` for the same reason: a file's ACL mask comes from the group bits of its creation mode, so at `0644` the entry would be ineffective from birth.
+
+A refresh only happens when the VM's boot disk is absent, which is the state `destroy` leaves behind. Running with `--destroy=never` therefore keeps the base image pinned, so a qcow2 overlay never has its backing file swapped underneath it.
+
+If you set this up before that `setfacl` existed, the images already in the pool are owned by `qemu` and cannot be given the ACL after the fact. Delete them once and the next run re-downloads them with it.
 
 Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
 

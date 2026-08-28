@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026082701
+
+# Order Graylog after TuneD, so that the kernel settings this host depends on
+# (transparent hugepages, net.core.rmem_max) are applied before Graylog reads
+# them. The JVM decides on hugepages at startup, and net.core.rmem_max caps the
+# receive buffer a UDP input can ask for via setsockopt(SO_RCVBUF).
+# tuned.service is Type=dbus and TuneD claims com.redhat.tuned only after it has
+# applied the profile, so After= is enough. An ordering dependency on a unit
+# that is not installed is ignored, so this drop-in is harmless without TuneD.
+
+[Unit]
+After=tuned.service

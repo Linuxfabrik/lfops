@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2026082701
+
+# Order Redis after TuneD, so that the kernel settings this host depends on
+# (net.core.somaxconn, vm.overcommit_memory, transparent hugepages) are applied
+# before Redis reads them. Redis reads them once at startup and keeps the values
+# for its whole runtime, and the kernel clamps the accept queue to
+# net.core.somaxconn inside listen().
+# tuned.service is Type=dbus and TuneD claims com.redhat.tuned only after it has
+# applied the profile, so After= is enough. An ordering dependency on a unit
+# that is not installed is ignored, so this drop-in is harmless without TuneD.
+
+[Unit]
+After=tuned.service

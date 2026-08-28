@@ -8,6 +8,28 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 *Available since LFOps `2.0.0`.*
 
 
+## Known Limitations
+
+* TuneD applies the settings when its daemon starts, and systemd starts `tuned.service` in parallel with other services. A service that reads kernel parameters at its own startup can therefore come up before TuneD has applied the profile and then keeps the old values for its whole runtime. `sysctl` and `tuned-adm verify` report the new values in the meantime, because both look at the current kernel state rather than at the state the service saw.
+* Example: the kernel applies the `net.core.somaxconn` clamp inside `listen()`, so Redis keeps the old accept queue size until it is restarted.
+* Wherever a service depends on a parameter this role sets, that service needs a systemd drop-in ordering it after TuneD.
+* Put the ordering into the consuming unit rather than collecting a `Before=` list in a drop-in for `tuned.service`: the requirement belongs to the service that has it, a central list has to be kept in sync with every host, and a long `Before=` list invites ordering cycles, which systemd resolves by silently dropping an arbitrary edge. An ordering dependency on a unit that is not installed is ignored without a warning, so the same drop-in is safe on hosts without TuneD.
+* The ordering works because `tuned.service` is `Type=dbus` and TuneD claims `com.redhat.tuned` only after the profile has been applied. That guarantee comes from the TuneD implementation, not from a documented contract, so it is worth re-checking after a major TuneD version jump.
+* Ordering only applies while systemd computes a transaction. Restarting `tuned.service` on a running host does not restart the consuming services, so they keep their stale values until they are restarted themselves.
+
+Example:
+```ini
+# /etc/systemd/system/redis.service.d/z00-after-tuned.conf
+# TuneD claims its D-Bus name only after applying the profile, so ordering
+# this service After=tuned.service guarantees the sysctls are in place first.
+# Verified against tuned 2.22.1 on Rocky 8: daemon.py calls start_tuning()
+# before exports.start(), which reaches dbus.service.BusName() in
+# dbus_exporter.py, where Type=dbus readiness is signalled.
+[Unit]
+After=tuned.service
+```
+
+
 ## Requirements
 
 Manual steps:
