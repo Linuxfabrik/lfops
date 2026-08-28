@@ -651,7 +651,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/kb/en/innodb-system-variables/#innodb_log_file_size)
 * Type: String.
-* Default: `'32M'`
+* Default: `'96M'`
 
 `mariadb_server__cnf_innodb_max_dirty_pages_pct__group_var` / `mariadb_server__cnf_innodb_max_dirty_pages_pct__host_var`
 
