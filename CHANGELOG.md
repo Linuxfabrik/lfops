@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:monitoring_plugins**: A source install also deploys the `*-logging.sudoers` companion, which keeps the plugin calls out of the authentication log. Without it every check costs five entries there, and a monitored host runs dozens of checks a minute. A host running sudo-rs, Ubuntu 26.04 for example, does not get the file and loses it again if it had one, because sudo-rs knows none of its settings and warns about each of them on every `sudo` call by any user.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
