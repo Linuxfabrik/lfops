@@ -205,7 +205,7 @@ apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/core
 apache_httpd__mod_security_coreruleset_version: '4.27.0'
 
 # mod_ssl
-apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+apache_httpd__mod_ssl_ssl_use_stapling: 'off'
 
 
 # Apache Virtual Host Configuration

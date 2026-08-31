@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: Set `apache_httpd__mod_ssl_ssl_use_stapling` to off by default because Let's Encrypt does not provide an OCSP URL-endpoint.
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
 * **plugin:bitwarden_item**: Error messages no longer carry a doubled period in the middle.
 * **role:rocketchat**: The environment file no longer sets `MONGO_OPLOG_URL`, which Rocket.Chat has ignored since 5.0.1. A host without a MongoDB replica set also gets a usable environment file again, instead of one whose MongoDB URL and port ended up on the same line.
