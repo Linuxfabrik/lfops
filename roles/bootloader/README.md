@@ -24,6 +24,8 @@ On the Red Hat family the boot entries are written with `grubby`. Debian and Ubu
 
 * GRUB 2 only. Hosts booted by zipl or systemd-boot are not supported.
 * Debian family: `state: 'absent'` only drops an option from the command line this role writes. An option that comes from `/etc/default/grub` or from another drop-in stays, because the role never edits files it does not own. On the Red Hat family the same option is removed with `grubby --remove-args`.
+* the `root` option cannot be managed. `grubby` reports it on a line of its own rather than as part of the kernel command line, so the role would never see it as applied and would set it again on every run. It is rejected with an error instead. This does not apply to `initrd`, which stays on the command line.
+* Red Hat family 8: a host that boots in BIOS mode and has `/boot/grub2/grubenv` as a symlink into the EFI System Partition is rejected with an error. Boot entries there reference the command line as `options $kernelopts` and keep the value in that environment block; from a BIOS boot GRUB reads it on `/boot` and cannot follow the symlink into the ESP, so it falls back to the command line compiled into `grub.cfg` and the option never reaches the kernel. `grubby` reports the option as applied either way, so the role would otherwise report a converged run that does nothing. The combination comes from images built to boot both ways. An installed host does not have it: booted BIOS it has a regular file there, booted UEFI it reads the copy in the ESP directly. Red Hat family 9 and later put the options in the boot entry itself and are unaffected.
 
 
 ## Dependent Roles
@@ -89,6 +91,24 @@ bootloader__cmdline_options__group_var:
 
 
 ## Troubleshooting
+
+**The run aborts with `Could not find or access '<family>.yml'`**
+
+* The host runs an operating system family this role ships no tasks for. It manages the kernel command line through `grubby` on the Red Hat family and through a GRUB drop-in on the Debian family; there is no third path. The role aborts rather than skipping the host, so a kernel parameter never goes silently unapplied.
+
+**The run aborts with `/boot/grub2/grubenv is a symlink onto the EFI System Partition`**
+
+* The host is a Red Hat family 8 machine that boots in BIOS mode from an image that also carries a UEFI boot path (see "Known Limitations"). The boot loader cannot read the file the kernel command line is stored in, so the option would be written and never applied. Replace the symlink with a regular copy of its target, which is what an installed BIOS host has:
+
+    ```bash
+    cp --remove-destination "$(readlink --canonicalize /boot/grub2/grubenv)" /boot/grub2/grubenv
+    ```
+
+    The next run then applies the options normally. Hosts booting in UEFI mode are not affected and are not checked.
+
+**The run aborts with `grubby reports root outside the kernel command line`**
+
+* the `root` option is configured in `bootloader__cmdline_options__*_var`. It cannot be managed here (see "Known Limitations"); remove the entry. The root device belongs in the partitioning or in `/etc/default/grub`.
 
 **The option is configured, but `/proc/cmdline` does not contain it**
 

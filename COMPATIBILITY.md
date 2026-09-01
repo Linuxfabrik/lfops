@@ -15,7 +15,7 @@ Which Ansible role is proven to run on which OS?
 | audit                                 |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | bind                                  |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | blocky                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
-| bootloader                            |  (x)   |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 44                                    |
+| bootloader                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 44                                    |
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | chromium_headless                     |   x    |  (x)   |   x    |   x    |    x    |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |

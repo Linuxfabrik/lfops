@@ -1,3 +1,10 @@
+# Option names grubby reports on a line of their own instead of inside args="...", which puts
+# them out of reach of the comparison below: the role would add them again on every run. `initrd`
+# is not one of them, an initrd= in --args stays in args="...", and the initrd= grubby reports
+# comes from the boot entry's own initrd line. Verified against grubby 8.40 on Rocky 9.
+__bootloader__grubby_reserved_option_names:
+  - 'root'
+
 # The options that have to be on the kernel command line, rendered the way they appear there:
 # 'name=value', or a bare 'name' for options that stand on their own. Options with and without a
 # value are assembled differently, then concatenated.
@@ -18,6 +25,11 @@ __bootloader__wanted_options: '{{
 __bootloader__unwanted_option_names: '{{
     bootloader__cmdline_options__combined_var | selectattr("state", "defined")
       | selectattr("state", "eq", "absent") | map(attribute="name") | list
+  }}'
+
+# Every configured option name, whatever its state. Used by the reserved-name assert.
+__bootloader__configured_option_names: '{{
+    bootloader__cmdline_options__combined_var | map(attribute="name") | list
   }}'
 
 # The args="..." line of every boot entry, as reported by `grubby --info=ALL`. The quotes are

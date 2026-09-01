@@ -1,3 +1,40 @@
+# Red Hat family 8 keeps the kernel command line in the GRUB environment block and lets the boot
+# entries reference it as `options $kernelopts`. grubby writes it there and reads it back expanded,
+# so it reports success whether or not the boot loader can read the file: only the next boot shows
+# the difference. The grub2-efi-x64 package ships /boot/grub2/grubenv as a symlink to the copy on
+# the EFI System Partition. Booted UEFI that is where GRUB looks anyway, but booted BIOS GRUB reads
+# $prefix/grubenv on /boot and cannot follow the link into the vfat ESP: load_env fails, $kernelopts
+# stays empty and the command line compiled into grub.cfg is used instead. The role would report a
+# converged, idempotent run while the option never reaches the kernel, so the combination is
+# rejected rather than reported as done. An installed host does not have it, only an image carrying
+# both boot paths. Red Hat family 9 and later put the options in the boot entry itself.
+# Verified against grubby 8.40-51.el8_10 and grub2-efi-x64 2.02-170 on Rocky 8.
+- name: 'stat /sys/firmware/efi'
+  ansible.builtin.stat:
+    path: '/sys/firmware/efi'
+  register: '__bootloader__efi_stat_result'
+  when:
+    - 'ansible_facts["distribution_major_version"] | int == 8'
+
+- name: 'stat /boot/grub2/grubenv'
+  ansible.builtin.stat:
+    path: '/boot/grub2/grubenv'
+    follow: false
+  register: '__bootloader__grubenv_stat_result'
+  when:
+    - 'ansible_facts["distribution_major_version"] | int == 8'
+
+- name: 'Assert that the boot loader can read the GRUB environment block'
+  ansible.builtin.assert:
+    that:
+      - 'not (__bootloader__grubenv_stat_result["stat"]["islnk"] | d(false) | bool)'
+    quiet: true
+    fail_msg: '/boot/grub2/grubenv is a symlink onto the EFI System Partition, but this host boots in BIOS mode, so the boot loader cannot read it and the kernel command line would never take effect. Replace the symlink with a regular file: cp --remove-destination "$(readlink --canonicalize /boot/grub2/grubenv)" /boot/grub2/grubenv'
+  when:
+    - 'ansible_facts["distribution_major_version"] | int == 8'
+    - 'not __bootloader__efi_stat_result["stat"]["exists"] | bool'
+
+
 # grubby writes the boot entries on the Red Hat family, so the role calls it directly instead of
 # going through fedora.linux_system_roles.bootloader. That role rewrites GRUB_TIMEOUT in
 # /etc/default/grub and every `set timeout=` in grub.cfg on each run, which also replaces the
@@ -41,7 +78,7 @@
     - 'ansible_check_mode | bool'
     - '(__bootloader__missing_options | length > 0) or (__bootloader__superfluous_options | length > 0)'
 
-- name: 'grubby --update-kernel=ALL --remove-args'
+- name: 'grubby --update-kernel=ALL --remove-args={{ __bootloader__superfluous_options | join(" ") }}'
   ansible.builtin.command:
     cmd: 'grubby --update-kernel=ALL --remove-args={{ __bootloader__superfluous_options
         | join(" ") | quote }}'
@@ -49,7 +86,7 @@
   when:
     - '__bootloader__superfluous_options | length > 0'
 
-- name: 'grubby --update-kernel=ALL --args'
+- name: 'grubby --update-kernel=ALL --args={{ __bootloader__missing_options | join(" ") }}'
   ansible.builtin.command:
     cmd: 'grubby --update-kernel=ALL --args={{ __bootloader__missing_options | join(" ") | quote }}'
   changed_when: true

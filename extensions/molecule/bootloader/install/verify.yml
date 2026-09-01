@@ -63,10 +63,14 @@
         - name: 'systemctl reboot'
           ansible.builtin.reboot:  # yamllint disable-line rule:empty-values
 
-        - name: 'slurp /proc/cmdline'
-          ansible.builtin.slurp:
-            src: '/proc/cmdline'
-          register: '__molecule__proc_cmdline_result'
+    # Read again, after the reboot above if there was one. This has to sit outside the block: a
+    # `register` on a skipped task overwrites the variable with the skip result, so re-registering
+    # inside the block would leave the assertion below without content on the second verify run,
+    # where the host already carries the option and the block does not run.
+    - name: 'slurp /proc/cmdline'
+      ansible.builtin.slurp:
+        src: '/proc/cmdline'
+      register: '__molecule__proc_cmdline_result'
 
     - name: 'Assert that the running kernel booted with psi=1'
       ansible.builtin.assert:

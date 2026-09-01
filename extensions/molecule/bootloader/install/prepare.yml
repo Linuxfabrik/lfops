@@ -1,0 +1,37 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# Bring the EL8 test image into the shape an installed EL8 host has, so this scenario tests the
+# role rather than a property of the cloud image.
+#
+# The GenericCloud image carries both boot paths, so grub2-efi-x64 is installed and ships
+# /boot/grub2/grubenv as a symlink onto the EFI System Partition. These VMs boot BIOS, where GRUB
+# cannot read across into the ESP, which is the combination the role rejects (see the role's
+# "Known Limitations"). An installed BIOS host has a regular file there, so the scenario creates
+# one. EL9 and later neither ship the symlink nor keep the command line in that file.
+- name: 'Make the EL8 grub environment block readable from a BIOS boot'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'stat /boot/grub2/grubenv'
+      ansible.builtin.stat:
+        path: '/boot/grub2/grubenv'
+        follow: false
+      register: '__molecule__grubenv_stat_result'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] | int == 8'
+
+    - name: 'Replace the grubenv symlink with a regular file'
+      ansible.builtin.command:
+        argv:
+          - 'cp'
+          - '--remove-destination'
+          - '{{ __molecule__grubenv_stat_result["stat"]["lnk_source"] | d("") }}'
+          - '/boot/grub2/grubenv'
+      changed_when: true
+      when:
+        - '__molecule__grubenv_stat_result["stat"]["islnk"] | d(false) | bool'
