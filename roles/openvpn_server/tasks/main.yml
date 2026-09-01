@@ -23,11 +23,16 @@
     when:
       - 'not openvpn_server__dh_skip_deploy'
 
+  # 0750: the daemon drops privileges to the openvpn user (`user openvpn` in server.conf) and
+  # reads a client's file from here when that client connects, so the group needs to traverse
+  # the directory. Nobody else has any business reading which clients exist.
   - name: 'mkdir /etc/openvpn/ccd'
     ansible.builtin.file:
       path: '/etc/openvpn/ccd'
       state: 'directory'
+      owner: 'root'
       group: 'openvpn'
+      mode: 0o750
 
   # the client-config-dir entries get no restart notification: OpenVPN reads the file of a
   # client when that client connects (multi_client_connect_source_ccd() in multi.c), so a
@@ -45,7 +50,9 @@
       backup: true
       src: 'etc/openvpn/ccd/raw.j2'
       dest: '/etc/openvpn/ccd/{{ item["name"] }}'
+      owner: 'root'
       group: 'openvpn'
+      mode: 0o640
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ openvpn_server__client_configs }}'
@@ -55,7 +62,9 @@
       backup: true
       src: 'etc/openvpn/server/server.conf.j2'
       dest: '/etc/openvpn/server/server.conf'
+      owner: 'root'
       group: 'openvpn'
+      mode: 0o640
     notify: 'openvpn_server: restart openvpn-server@server.service'
 
   - name: 'set "ip forwarding on" in /proc and reload the sysctl file'
@@ -83,12 +92,15 @@
       ports: '{{ openvpn_server__port }}'
       proto: 'udp'
       setype: 'openvpn_port_t'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
   - name: 'Deploy example client config to /tmp/{{ inventory_hostname }}.conf (on ansible control node)'
     ansible.builtin.template:
       backup: true
       src: 'tmp/client.conf.j2'
       dest: '/tmp/{{ inventory_hostname }}.conf'
+      mode: 0o600
     delegate_to: 'localhost'
     become: false
     changed_when: false # not an actual config change to the server

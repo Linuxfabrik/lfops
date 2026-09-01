@@ -14,6 +14,7 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 * A change to the certificate revocation list does **not** restart the service. OpenVPN reloads the file whenever it changed before each TLS negotiation, so a revoked certificate is refused from the next connection attempt onwards, without an outage for the other clients.
 * A change to a client config (CCD) does **not** restart the service either. OpenVPN reads a client's file when that client connects, so the change applies the next time that client reconnects, while the other clients stay up.
 * Configuration is fully templated. On every run `server.conf` and the CCD files are re-rendered from the role's templates (a timestamped backup is kept), so manual edits are overwritten. Manage all settings through the role variables below.
+* On hosts where SELinux is enabled the role labels the configured port with `openvpn_port_t`. Where SELinux is disabled that step is skipped.
 
 
 ## Dependent Roles
