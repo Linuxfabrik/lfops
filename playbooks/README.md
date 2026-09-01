@@ -1144,6 +1144,7 @@ Calls the following roles (in order):
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_icinga2_master__kernel_settings__skip_role`
 * [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis): `setup_icinga2_master__repo_redis__skip_role`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_icinga2_master__redis__skip_role`
+* [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_icinga2_master__valkey__skip_role`
 * [icingadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingadb): `setup_icinga2_master__icingadb__skip_role`
 * [icinga_kubernetes](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga_kubernetes): `setup_icinga2_master__icinga_kubernetes__skip_role` (default: `true`)
 * [icinga_kubernetes_web](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga_kubernetes_web): `setup_icinga2_master__icinga_kubernetes_web__skip_role` (default: `true`)
@@ -1219,6 +1220,7 @@ Calls the following roles (in order):
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `setup_mastodon__skip_repo_remi`
 * [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis)
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_mastodon__skip_redis`
+* [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_mastodon__skip_valkey`
 * [repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch): `setup_mastodon__skip_repo_elasticsearch`
 * [elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/elasticsearch): `setup_mastodon__skip_elasticsearch`
 * [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login): `setup_mastodon__skip_login`
@@ -1243,6 +1245,7 @@ Calls the following roles (in order):
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `setup_moodle__skip_repo_remi`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `setup_moodle__skip_php`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_moodle__skip_redis`
+* [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_moodle__skip_valkey`
 * [repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper): `setup_moodle__skip_repo_mydumper`
 * [repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb): `setup_moodle__skip_repo_mariadb`
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server): `setup_moodle__skip_mariadb_server`
@@ -1269,6 +1272,7 @@ Calls the following roles (in order):
 * [repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb): `setup_nextcloud__skip_repo_mariadb`
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server): `setup_nextcloud__skip_mariadb_server`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_nextcloud__skip_redis`
+* [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_nextcloud__skip_valkey`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_nextcloud__skip_selinux`
 * [systemd_unit](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_unit): `nextcloud__skip_systemd_unit`
 * [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud)

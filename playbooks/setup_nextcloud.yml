@@ -2,6 +2,14 @@
   hosts:
     - 'lfops_setup_nextcloud'
 
+  # Redis and Valkey are interchangeable for Nextcloud: same protocol, same port. Which of the
+  # two is available depends on the platform, so the defaults follow the OS - RHEL 10 has no
+  # Redis, while Debian 12 and Ubuntu 22.04 have no Valkey. Override either variable to pin a
+  # host to a specific server, or set both to run neither.
+  vars:
+    setup_nextcloud__skip_redis__internal_var: '{{ setup_nextcloud__skip_redis | d(ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10) }}'
+    setup_nextcloud__skip_valkey__internal_var: '{{ setup_nextcloud__skip_valkey | d(not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10)) }}'
+
   pre_tasks:
     - ansible.builtin.import_role:
         name: 'shared'
@@ -57,12 +65,22 @@
 #       when:
 #         - 'not setup_nextcloud__skip_fail2ban | d(false)'
 
+    # The sysctl entries go in from both roles unconditionally: the two ship identical values and
+    # combine_lod folds the duplicates back into one. Transparent hugepages is a scalar, so it has
+    # to name the server that is actually installed. Nested rather than chained with default():
+    # the defaults of a role load even when its tasks are skipped, so redis is always defined and
+    # a chain would never reach the valkey branch.
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
           mariadb_server__kernel_settings__sysctl__dependent_var | d([]) +
-          redis__kernel_settings__sysctl__dependent_var | d([])
+          redis__kernel_settings__sysctl__dependent_var | d([]) +
+          valkey__kernel_settings__sysctl__dependent_var | d([])
         }}'
-      kernel_settings__transparent_hugepages__dependent_var: "{{ redis__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      kernel_settings__transparent_hugepages__dependent_var: '{{
+          (not setup_nextcloud__skip_redis__internal_var) | ternary(
+            redis__kernel_settings__transparent_hugepages__dependent_var,
+            (not setup_nextcloud__skip_valkey__internal_var) | ternary(
+              valkey__kernel_settings__transparent_hugepages__dependent_var, "")) }}'
       when:
         - 'not setup_nextcloud__skip_kernel_settings | d(false)'
 
@@ -111,10 +129,14 @@
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
 
-      # === Redis
+      # === Redis / Valkey
     - role: 'linuxfabrik.lfops.redis'
       when:
-        - 'not setup_nextcloud__skip_redis | d(false)'
+        - 'not setup_nextcloud__skip_redis__internal_var'
+
+    - role: 'linuxfabrik.lfops.valkey'
+      when:
+        - 'not setup_nextcloud__skip_valkey__internal_var'
 
 
       # === Nextcloud Application

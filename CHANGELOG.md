@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:valkey**: Add a role and playbook to install and configure Valkey, listening on TCP 127.0.0.1:6379 by default. Valkey is taken from the distribution repositories (EPEL on RHEL 8, AppStream on RHEL 9 and 10, the distribution's own repository on Debian 13 and Ubuntu 24.04 / 26.04), and the configuration template matching the installed version is deployed. Debian 12 and Ubuntu 22.04 ship no Valkey and are not supported.
+* **playbook:setup_icinga2_master, playbook:setup_mastodon, playbook:setup_moodle, playbook:setup_nextcloud**: These stacks install Valkey on RHEL 10 and Redis everywhere else, so they can be deployed on RHEL 10 again. Both servers speak the same protocol on the same port, so the applications are configured identically either way. Override `setup_*__skip_redis` / `setup_*__skip_valkey` (`setup_icinga2_master__redis__skip_role` / `setup_icinga2_master__valkey__skip_role`) to force a specific server or to run neither.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.
