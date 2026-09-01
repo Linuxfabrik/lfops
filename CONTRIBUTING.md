@@ -219,6 +219,7 @@ When creating a new role, make sure to deliver:
 * Update `playbooks/all.yml`.
 * Update `COMPATIBILITY.md`.
 * Update `CHANGELOG.md`.
+* Update `.ansible-lint-ignore` if the role defines a `__combined_var`.
 
 
 ### OS Coverage
