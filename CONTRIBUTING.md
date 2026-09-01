@@ -1043,6 +1043,8 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
 
 Molecule is used as the framework to test the LFOps playbooks (and therefore indirectly the roles). The test scenarios and configurations live in `extensions/molecule` and are structured as follows:
 
+When you change a role or playbook, update the matching Molecule scenario in the same step, so the test keeps reflecting what the code does. New or changed behaviour belongs in that scenario's `verify.yml`, a changed input (a renamed or new variable, a different default) in its `inventory`.
+
 ```
 extensions
 └── molecule
@@ -1159,6 +1161,25 @@ The `test_sequence` has no leading `destroy`, so a subsequent run reuses whateve
 
 ```bash
 molecule destroy --scenario-name apps/install
+```
+
+To run the whole suite, loop over the scenarios. The loop below discovers them from `extensions/molecule`, skips the non-functional `default` and `example` scenarios, runs each one independently so one failure does not stop the rest, and prints a summary at the end. It uses `while read` with process substitution, so it behaves the same under `bash` and `zsh`:
+
+```bash
+failed=()
+while IFS= read -r scenario; do
+    echo "### ${scenario}"
+    molecule test --scenario-name "${scenario}" || failed+=("${scenario}")
+done < <(find extensions/molecule -name molecule.yml -printf '%P\n' \
+    | sed 's#/molecule.yml$##' \
+    | grep --invert-match --extended-regexp '^(default|example(/|$))' \
+    | sort)
+
+if [ "${#failed[@]}" -eq 0 ]; then
+    echo 'All scenarios passed.'
+else
+    printf 'FAILED: %s\n' "${failed[@]}"
+fi
 ```
 
 
