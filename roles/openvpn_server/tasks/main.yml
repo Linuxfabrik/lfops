@@ -19,6 +19,7 @@
       size: 2048
       mode: 0o440
       group: 'openvpn'
+    notify: 'openvpn_server: restart openvpn-server@server.service'
     when:
       - 'not openvpn_server__dh_skip_deploy'
 
@@ -28,6 +29,9 @@
       state: 'directory'
       group: 'openvpn'
 
+  # the client-config-dir entries get no restart notification: OpenVPN reads the file of a
+  # client when that client connects (multi_client_connect_source_ccd() in multi.c), so a
+  # changed entry applies on the next connect of that client. Verified against OpenVPN 2.6.
   - name: 'Remove client-configs from /etc/openvpn/ccd'
     ansible.builtin.file:
       path: '/etc/openvpn/ccd/{{ item["name"] }}'
@@ -52,6 +56,7 @@
       src: 'etc/openvpn/server/server.conf.j2'
       dest: '/etc/openvpn/server/server.conf'
       group: 'openvpn'
+    notify: 'openvpn_server: restart openvpn-server@server.service'
 
   - name: 'set "ip forwarding on" in /proc and reload the sysctl file'
     ansible.posix.sysctl:
@@ -69,6 +74,7 @@
       seuser: 'system_u'
       serole: 'object_r'
       setype: '{{ __openvpn_server__selinux_etc_type }}'
+    notify: 'openvpn_server: restart openvpn-server@server.service'
     when:
       - 'not openvpn_server__pkcs12_skip_deploy'
 
@@ -93,6 +99,9 @@
 
 - block:
 
+  # the CRL gets no restart notification: OpenVPN stats the file before every TLS negotiation
+  # and reloads it when it changed (tls_ctx_reload_crl() in ssl.c), so a revoked certificate
+  # takes effect on the next connection attempt. Verified against OpenVPN 2.6.
   - name: 'Deploy /etc/openvpn/server/crl.pem'
     ansible.builtin.copy:
       src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__crl_verify }}'
@@ -113,11 +122,16 @@
 
 - block:
 
-  - name: 'systemctl {{ openvpn_server__service_enabled | bool | ternary("enable", "disable") }} --now openvpn-server@server.service'
-    ansible.builtin.systemd:
+  - name: 'systemctl {{ openvpn_server__service_enabled | bool | ternary("enable", "disable") }} openvpn-server@server.service'
+    ansible.builtin.service:
       name: 'openvpn-server@server.service'
-      enabled: '{{ openvpn_server__service_enabled }}'
-      state: '{{ openvpn_server__service_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ openvpn_server__service_enabled | bool }}'
+
+  - name: 'systemctl {{ openvpn_server__service_state | regex_replace("p?ed$", "") }} openvpn-server@server.service'
+    ansible.builtin.service:
+      name: 'openvpn-server@server.service'
+      state: '{{ openvpn_server__service_state }}'
+    register: '__openvpn_server__service_state_result'
 
   tags:
     - 'openvpn_server'

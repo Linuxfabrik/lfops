@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.
@@ -42,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:openvpn_server**: A new server certificate, a changed `server.conf` or a regenerated Diffie-Hellman file restarts OpenVPN. Until now the files were written to disk while the running service kept its old configuration, so a renewed certificate only took effect at the next reboot. The certificate revocation list and the client configs still apply without a restart, since OpenVPN re-reads them per connection.
 * **role:apache_httpd**: Set `apache_httpd__mod_ssl_ssl_use_stapling` to off by default because Let's Encrypt does not provide an OCSP URL-endpoint.
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
 * **plugin:bitwarden_item**: Error messages no longer carry a doubled period in the middle.

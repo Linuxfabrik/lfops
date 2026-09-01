@@ -1,0 +1,8 @@
+- name: 'openvpn_server: restart openvpn-server@server.service'
+  ansible.builtin.service:
+    name: 'openvpn-server@server.service'
+    state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
+    - '__openvpn_server__service_state_result is not defined or __openvpn_server__service_state_result is not changed'
+    - 'openvpn_server__service_state != "stopped"'
