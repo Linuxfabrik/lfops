@@ -54,7 +54,7 @@ tags:
 #
 # note: do not forget to update collections in requirements.yml
 dependencies:
-  'ansible.mysql': '*' # note: "*" selects the highest version available
+  'ansible.mariadb': '*' # note: "*" selects the highest version available
   'ansible.posix': '*'
   'ansible.utils': '*'
   'ansible.windows': '*'

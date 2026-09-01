@@ -1,6 +1,6 @@
 # note: do not forget to update dependencies in galaxy.yml
 collections:
-  - name: 'ansible.mysql'
+  - name: 'ansible.mariadb'
   - name: 'ansible.posix'
   - name: 'ansible.utils'
   - name: 'ansible.windows'
