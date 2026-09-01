@@ -1,0 +1,92 @@
+# The kernel command line can only be observed on the running kernel, and it only changes on a
+# reboot. The scenario therefore reboots the host once, on the run where the option is still
+# missing from /proc/cmdline, and asserts the running kernel came up with it. verify runs twice
+# (after converge and after idempotence, see the test_sequence in config.yml); on the second run
+# the host already carries the option, so it neither expects a reboot request nor reboots again.
+- name: 'Verify the kernel command line carries the configured option'
+  hosts: 'systems_under_test'
+  tasks:
+
+    # Persistent state, visible before the reboot: on the Red Hat family the role writes the
+    # boot entries with grubby, on the Debian family update-grub regenerates grub.cfg.
+    - name: 'grubby --info=ALL'
+      ansible.builtin.command: 'grubby --info=ALL'
+      register: '__molecule__grubby_info_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that every boot entry has psi=1 on its command line'
+      ansible.builtin.assert:
+        that: '__molecule__grubby_info_result["stdout_lines"]
+            | select("match", "^args=")
+            | reject("search", "psi=1")
+            | list | length == 0'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'grep "^[[:space:]]*linux" /boot/grub/grub.cfg'
+      ansible.builtin.command: 'grep --extended-regexp "^[[:space:]]*linux" /boot/grub/grub.cfg'
+      register: '__molecule__grub_cfg_linux_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'Assert that every menu entry has psi=1 on its command line'
+      ansible.builtin.assert:
+        that: '__molecule__grub_cfg_linux_result["stdout_lines"]
+            | reject("search", "psi=1")
+            | list | length == 0'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'slurp /proc/cmdline'
+      ansible.builtin.slurp:
+        src: '/proc/cmdline'
+      register: '__molecule__proc_cmdline_result'
+
+    # Only true right after converge changed the boot loader configuration. The role requests the
+    # reboot instead of performing it, so the request has to be waiting in the schedule_reboot spool.
+    - name: 'Verify the pending reboot and apply it'
+      when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+      block:
+
+        - name: 'stat /run/schedule-reboot/bootloader'
+          ansible.builtin.stat:
+            path: '/run/schedule-reboot/bootloader'
+          register: '__molecule__reboot_request_stat_result'
+
+        - name: 'Assert that the role requested a reboot'
+          ansible.builtin.assert:
+            that: '__molecule__reboot_request_stat_result["stat"]["exists"] | bool'
+
+        - name: 'systemctl reboot'
+          ansible.builtin.reboot:  # yamllint disable-line rule:empty-values
+
+    # Read again, after the reboot above if there was one. This has to sit outside the block: a
+    # `register` on a skipped task overwrites the variable with the skip result, so re-registering
+    # inside the block would leave the assertion below without content on the second verify run,
+    # where the host already carries the option and the block does not run.
+    - name: 'slurp /proc/cmdline'
+      ansible.builtin.slurp:
+        src: '/proc/cmdline'
+      register: '__molecule__proc_cmdline_result'
+
+    - name: 'Assert that the running kernel booted with psi=1'
+      ansible.builtin.assert:
+        that: '"psi=1" in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+    # The option is only worth setting if the kernel acts on it. RHEL 8 ships kernels without
+    # pressure stall information, so this is checked everywhere else.
+    - name: 'slurp /proc/pressure/cpu'
+      ansible.builtin.slurp:
+        src: '/proc/pressure/cpu'
+      register: '__molecule__proc_pressure_cpu_result'
+      when:
+        - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int < 9)'
+
+    - name: 'Assert that the kernel reports pressure stall information'
+      ansible.builtin.assert:
+        that: '(__molecule__proc_pressure_cpu_result["content"] | ansible.builtin.b64decode) is search("^some ")'
+      when:
+        - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int < 9)'
