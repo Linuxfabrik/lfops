@@ -8,3 +8,17 @@
     - name: 'Assert that less is not installed'
       ansible.builtin.assert:
         that: '"less" not in ansible_facts["packages"]'
+
+    # The package database says the package is deregistered, this says the binary is really gone
+    # from PATH. A missing executable makes the command module report rc 2, so failed_when has to
+    # be off for that to be the passing case.
+    - name: 'less --version'
+      ansible.builtin.command: 'less --version'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__less_version_result'
+
+    - name: 'Assert that the less binary is gone from PATH'
+      ansible.builtin.assert:
+        that: '__molecule__less_version_result["rc"] != 0'
+        fail_msg: '{{ __molecule__less_version_result["stdout"] }}'
