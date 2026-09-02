@@ -56,7 +56,7 @@
       selinux__booleans__dependent_var: '{{
           librenms__selinux__booleans__dependent_var
         }}'
-      selinux__fcontexcts__dependent_var: '{{
+      selinux__fcontexts__dependent_var: '{{
           librenms__selinux__fcontexts__dependent_var
         }}'
       selinux__modules__dependent_var: '{{
