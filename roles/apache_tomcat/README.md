@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.apache_tomcat
 
-This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role uses the operating system's package manager, so EPEL is a must on RHEL. Log rotation in Tomcat is disabled and is done by logrotated. This role currently supports Tomcat v9.
+This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role uses the operating system's package manager, so EPEL is a must on RHEL. Log rotation in Tomcat is disabled and is done by logrotated. This role currently supports Tomcat v9 and v10.1.
 
 Optionally this role also installs:
 
