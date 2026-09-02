@@ -195,6 +195,8 @@
   # read each other's sessions. On RedHat the `/var/lib/php/session(/.*)?` file context gives the
   # subdirectory the `httpd_var_run_t` type php-fpm needs; on Debian the packaged `sessionclean`
   # timer recurses the base and reaps stale files.
+  # skipped for a pool that stores its sessions elsewhere (redis, memcached), where save_path is
+  # a connection string rather than a directory.
   # not named after the shell command, since `item` is not available when the task name is
   # rendered for the output; the loop label shows the pool instead.
   - name: 'Create the per-pool session directories below {{ __php__fpm_session_path }}'
@@ -206,6 +208,7 @@
       mode: 0o700
     when:
       - 'item["state"] | d("present") != "absent"'
+      - 'item["php_admin_value_session_save_handler"] | d("files") == "files"'
     loop: '{{ php__fpm_pools__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
