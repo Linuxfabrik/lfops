@@ -1,3 +1,4 @@
+keycloak__db_url: ''
 keycloak__db_url_database: 'keycloak'
 keycloak__db_url_host: 'localhost'
 keycloak__db_vendor: 'mariadb'
@@ -6,11 +7,16 @@ keycloak__expose_metrics_endpoints: true
 keycloak__hostname_backchannel_dynamic: false
 keycloak__https_certificate_file: ''
 keycloak__https_certificate_key_file: ''
-keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
-keycloak__log: 'file'
+keycloak__https_cipher_suites: []
+keycloak__https_protocols:
+  - 'TLSv1.3'
+  - 'TLSv1.2'
+keycloak__log:
+  - 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
 keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
+keycloak__proxy_trusted_addresses: []
 keycloak__service_enabled: true
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
 keycloak__service_state: 'started'
