@@ -1183,7 +1183,6 @@ Calls the following roles (in order):
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `keycloak__skip_kernel_settings`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `keycloak__skip_policycoreutils`
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)
-* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)
 * [keycloak](https://github.com/Linuxfabrik/lfops/tree/main/roles/keycloak)
 
 

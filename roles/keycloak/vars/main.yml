@@ -1,3 +1,11 @@
+# The Java runtime Keycloak needs, per Keycloak major version.
+# Verified against keycloak 26.4.7, which runs on OpenJDK 21.0.9 (Red Hat build).
+# Doubles as the list of major versions this role supports, see the assert in tasks/main.yml.
+__keycloak__java_package:
+  '24': 'java-17-openjdk-headless'
+  '25': 'java-21-openjdk-headless'
+  '26': 'java-21-openjdk-headless'
+
 __keycloak__download_url: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
 
 __keycloak__install_dir: '/opt/keycloak'

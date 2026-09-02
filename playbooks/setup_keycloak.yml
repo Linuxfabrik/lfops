@@ -70,11 +70,6 @@
 
     - role: 'linuxfabrik.lfops.python'
 
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: '{{
-          keycloak__apps__apps__dependent_var | d([])
-        }}'
-
     - role: 'linuxfabrik.lfops.keycloak'
 
 

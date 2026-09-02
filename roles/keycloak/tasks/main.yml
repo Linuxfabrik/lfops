@@ -1,5 +1,14 @@
 - block:
 
+  # simple mandatory variable checks (required, type, choices) live in meta/argument_specs.yml.
+  # this assert only covers what argument_specs cannot express.
+  - name: 'Check variable constraints'
+    ansible.builtin.assert:
+      that:
+        - 'keycloak__version.split(".")[0] in __keycloak__java_package'
+      quiet: true
+      fail_msg: 'Keycloak {{ keycloak__version }} is not supported by this role. Supported major versions: {{ __keycloak__java_package.keys() | join(", ") }}.'
+
   - name: 'stat /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
     ansible.builtin.stat:
       path: '/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
@@ -70,6 +79,11 @@
       owner: 'keycloak'
       group: 'keycloak'
       mode: 0o755
+
+  - name: 'Install {{ __keycloak__java_package[keycloak__version.split(".")[0]] }}'
+    ansible.builtin.package:
+      name: '{{ __keycloak__java_package[keycloak__version.split(".")[0]] }}'
+      state: 'present'
 
   # version.txt ships inside the tarball and names the installed release ("Keycloak - Version
   # 26.4.7"), so it tells us whether the wanted version is already in place. Without this the
