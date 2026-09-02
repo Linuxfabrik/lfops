@@ -30,35 +30,35 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
+        - 'not setup_keycloak__skip_repo_epel | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not keycloak__skip_repo_mydumper | d(false)'
+        - 'not setup_keycloak__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'not mariadb_server__skip_repo_mariadb | d(false)'
+        - 'not setup_keycloak__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           mariadb_server__python__modules__dependent_var
         }}'
       when:
-        - 'not mariadb_server__skip_python | d(false)'
+        - 'not setup_keycloak__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
-          mariadb_server__kernel_settings__sysctl__dependent_var | d([]) +
-          keycloak__kernel_settings__sysctl__dependent_var | d([])
+          mariadb_server__kernel_settings__sysctl__dependent_var | d([])
         }}'
       when:
-        - 'not keycloak__skip_kernel_settings | d(false)'
+        - 'not setup_keycloak__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not keycloak__skip_policycoreutils | default(false)'
+        - 'not setup_keycloak__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var: '{{
@@ -67,8 +67,8 @@
       mariadb_server__users__dependent_var: '{{
           keycloak__mariadb_server__users__dependent_var
         }}'
-
-    - role: 'linuxfabrik.lfops.python'
+      when:
+        - 'not setup_keycloak__skip_mariadb_server | d(false)'
 
     - role: 'linuxfabrik.lfops.keycloak'
 
