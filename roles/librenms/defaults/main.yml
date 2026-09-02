@@ -5,6 +5,9 @@ librenms__config_rrd_purge: 0
 librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'
+librenms__rrdcached_enabled: true
+librenms__rrdcached_service_enabled: true
+librenms__rrdcached_service_state: '{{ librenms__rrdcached_service_enabled | bool | ternary("started", "stopped") }}'
 
 # -----------------------------------------------------------------------------
 
@@ -138,3 +141,35 @@ librenms__selinux__modules__dependent_var:
       #============= httpd_t ==============
       allow httpd_t self:capability net_raw;
       allow httpd_t self:rawip_socket { getopt create setopt write read };
+
+  # Taken verbatim from dist/rrdcached/rrdcached_librenms.te of the LibreNMS repository, so a
+  # diff against upstream stays trivial. It lets rrdcached_t work on the RRD tree
+  # (httpd_sys_rw_content_t) and create its socket in /run (var_run_t), and lets httpd_t, which
+  # is what PHP-FPM runs as, connect to that socket.
+  - name: 'rrdcached_librenms'
+    content_te: |
+      # SELinux Policy File for rrdcached
+      module rrdcached_librenms 1.0;
+
+      require {
+              type var_run_t;
+              type tmp_t;
+              type httpd_t;
+              type rrdcached_t;
+              type httpd_sys_rw_content_t;
+              class dir { add_name getattr open read remove_name rmdir search write };
+              class file { create getattr open read rename setattr unlink write map lock };
+              class sock_file { create setattr unlink write };
+              class capability { fsetid sys_resource };
+              class unix_stream_socket connectto;
+      }
+
+      #============= rrdcached_t ==============
+
+      allow rrdcached_t httpd_sys_rw_content_t:dir { add_name getattr remove_name search write };
+      allow rrdcached_t httpd_sys_rw_content_t:file { create getattr open read rename setattr unlink write map lock };
+      allow rrdcached_t self:capability fsetid;
+      allow rrdcached_t var_run_t:sock_file { create setattr unlink };
+      allow httpd_t var_run_t:sock_file write;
+      allow httpd_t rrdcached_t:unix_stream_socket connectto;
+    state: '{{ librenms__rrdcached_enabled | bool | ternary("present", "absent") }}'

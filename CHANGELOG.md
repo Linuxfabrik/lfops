@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag. Apache serves HTTP/2 to every client that offers it over TLS, which in a typical setup is the reverse proxy in front of an application; the hop from that proxy to the backend is unchanged.
+**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag. Apache serves HTTP/2 to every client that offers it over TLS, which in a typical setup is the reverse proxy in front of an application; the hop from that proxy to the backend is unchanged. LibreNMS keeps its RRD updates in RRDCached and writes them out every 30 minutes, taking a large share of the poller's disk I/O off the host.
 
 ### Breaking Changes
 
@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:librenms**: LibreNMS stores its RRD files through RRDCached, which cuts the disk I/O of the poller by roughly a third.
+* **role:librenms**: The `librenms:rrdcached` tag deploys and configures RRDCached without touching the rest of the installation.
 * **role:php**: PHP-FPM pools are now fully configurable, each with its own user and group, process-manager tuning, timeouts and `php_admin_value` overrides. Every pool gets an isolated session directory, its own error and slow logs, and its own socket, so several applications can share a host without sharing a PHP process, a session store or a memory limit. One pool template now serves both distribution families.
 * **role:php**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and unknown variables, and an explicit `vars/Ubuntu.yml`.
 * **role:apache_httpd**: `apache_httpd__mod_http2_protocols` sets the protocols offered server-wide, the `conf_protocols` vHost key overrides it for a single vHost, and the remaining `apache_httpd__mod_http2_*` variables size the HTTP/2 worker pool and its per-connection buffers.

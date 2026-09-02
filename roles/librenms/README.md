@@ -6,6 +6,17 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+LibreNMS stores its time series in RRD files below `/opt/librenms/rrd`. By default the role puts [RRDCached](https://docs.librenms.org/Extensions/RRDCached/) in front of them, which collects the updates of a poll cycle in memory and writes them out every 30 minutes instead of on every update. This typically cuts the disk I/O of the poller by 30% to 40%.
+
+* The RRD files stay where they are and keep their format, so enabling or disabling RRDCached needs no data migration. Only who writes them changes.
+* RRDCached runs as `librenms` and listens on the Unix socket `/run/rrdcached.sock`. It is not reachable over the network, and the socket is deliberately not in `/tmp`, which `httpd` and `php-fpm` cannot see because both run with `PrivateTmp=true`.
+* The role configures the `rrdcached.service` of the `rrdtool` package with a systemd drop-in and disables the `rrdcached.socket` unit shipped alongside it, because socket activation would make RRDCached ignore the configured socket path.
+* On RHEL-compatible systems RRDCached needs the `rrdcached_librenms` SELinux policy module, without which it cannot write the RRD files and the web interface cannot draw graphs. The module is declared in `librenms__selinux__modules__dependent_var` and deployed by the `selinux` role, so skipping that role in the playbook leaves RRDCached without it.
+* Up to 30 minutes of collected data live in memory only. RRDCached journals them to `/var/tmp` and replays the journal after a crash.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -16,7 +27,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * PHP version >= 7.3 must be installed (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 * On RHEL-compatible systems, the `httpd_can_connect_ldap` and `httpd_setrlimit` SELinux booleans must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 * On RHEL-compatible systems, the appropriate SELinux file contexts must be set (have a look at `librenms__selinux__fcontexts__dependent_var` in the `defaults/main.yml`) (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
-* On RHEL-compatible systems, the `http_fping` SELinux policy module must be installed (have a look at `librenms__selinux__modules__dependent_var` in the `defaults/main.yml`) (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
+* On RHEL-compatible systems, the `http_fping` and `rrdcached_librenms` SELinux policy modules must be installed (have a look at `librenms__selinux__modules__dependent_var` in the `defaults/main.yml`) (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 
 
 ## Tags
@@ -30,6 +41,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Configures LibreNMS.
 * Triggers: none.
+
+`librenms:rrdcached`
+
+* Installs and configures RRDCached, and manages its service.
+* Triggers: rrdcached.service restart.
 
 
 ## Mandatory Role Variables
@@ -98,6 +114,24 @@ librenms__fqdn: 'librenms.example.com'
 * Type: String.
 * Default: `'librenms'`
 
+`librenms__rrdcached_enabled`
+
+* Whether LibreNMS reads and writes its RRD files through RRDCached. Set this to `false` to have LibreNMS access the files directly. Have a look at "How the Role Behaves" above.
+* Type: Boolean.
+* Default: `true`
+
+`librenms__rrdcached_service_enabled`
+
+* Enables or disables the RRDCached service, analogous to `systemctl enable/disable --now`. Only used if `librenms__rrdcached_enabled` is `true`.
+* Type: Bool.
+* Default: `true`
+
+`librenms__rrdcached_service_state`
+
+* Changes the state of the RRDCached service, analogous to `systemctl start/stop/restart/reload`. Only used if `librenms__rrdcached_enabled` is `true`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `librenms__rrdcached_service_enabled` is `true`, else `'stopped'`
+
 Example:
 ```yaml
 # optional
@@ -110,6 +144,9 @@ librenms__config_rrd_purge: 730
 librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'
+librenms__rrdcached_enabled: true
+librenms__rrdcached_service_enabled: true
+librenms__rrdcached_service_state: 'started'
 ```
 
 

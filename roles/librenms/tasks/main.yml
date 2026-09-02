@@ -89,70 +89,72 @@
     register: 'librenms__restorecon_data_result'
     changed_when: 'librenms__restorecon_data_result["stdout"] | length > 0'
 
-  # The SELinux policy module this role needs (http_fping) is declared in
+  # The SELinux policy modules this role needs (http_fping, rrdcached_librenms) are declared in
   # librenms__selinux__modules__dependent_var and deployed by the selinux role, like its booleans
   # and file contexts.
 
-  # TODO: currently librenms cannot find the rrdcached socket, skipping for now
-  # - name: 'semodule --list-modules | grep --quiet rrdcached_librenms # check for rrdcached_librenms'
-  #   ansible.builtin.shell: 'semodule --list-modules | grep --quiet rrdcached_librenms'
-  #   register: 'librenms__rrdcached_librenms_exists_result'
-  #   failed_when: 'librenms__rrdcached_librenms_exists_result["rc"] >= 2'
-  #   changed_when: false # just gathering information
-
-  # - block:
-
-  #   - name: 'Deploy /tmp/rrdcached_librenms.tt'
-  #     ansible.builtin.template:
-  #       backup: true
-  #       src: 'tmp/rrdcached_librenms.tt.j2'
-  #       dest: '/tmp/rrdcached_librenms.tt'
-
-  #   - name: 'checkmodule -M -m -o /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.tt'
-  #     ansible.builtin.command: 'checkmodule -M -m -o /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.tt'
-
-  #   - name: 'semodule_package -o /tmp/rrdcached_librenms.pp -m /tmp/rrdcached_librenms.mod'
-  #     ansible.builtin.command: 'semodule_package -o /tmp/rrdcached_librenms.pp -m /tmp/rrdcached_librenms.mod'
-
-  #   - name: 'semodule --install /tmp/rrdcached_librenms.pp'
-  #     ansible.builtin.command: 'semodule --install /tmp/rrdcached_librenms.pp'
-
-  #   - name: 'rm /tmp/rrdcached_librenms.tt /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.pp'
-  #     ansible.builtin.file:
-  #       path:
-  #         - '/tmp/rrdcached_librenms.tt'
-  #         - '/tmp/rrdcached_librenms.mod'
-  #         - '/tmp/rrdcached_librenms.pp'
-  #       state: 'absent'
-
-  #   # block
-  #   when: 'librenms__rrdcached_librenms_exists_result["rc"] != 0'
-
-  # - name: 'mkdir -p /etc/systemd/system/rrdcached.service.d/'
-  #   ansible.builtin.file:
-  #     path: '/etc/systemd/system/rrdcached.service.d/'
-  #     state: 'directory'
-
-  # - name: 'Deploy /etc/systemd/system/rrdcached.service.d/librenms.conf'
-  #   ansible.builtin.template:
-  #     backup: true
-  #     src: 'etc/systemd/system/rrdcached.service.d/librenms.conf.j2'
-  #     dest: '/etc/systemd/system/rrdcached.service.d/librenms.conf'
-  #     owner: 'root'
-  #     group: 'root'
-  #     mode: 0o644
-  #   register: 'librenms__rrdcached_systemd_override_result'
-
-  # - name: 'systemctl daemon-reload; systemctl restart rrdcached'
-  #   ansible.builtin.systemd:
-  #     name: 'rrdcached.service'
-  #     state: 'started'
-  #     enabled: true
-  #     daemon_reload: '{{ librenms__rrdcached_systemd_override_result is changed }}'
-  #
-
   tags:
     - 'librenms'
+
+
+- block:
+
+  # The socket unit of the rrdtool package binds /tmp/rrdcached.sock, which httpd
+  # and php-fpm cannot reach because both run with PrivateTmp=true. Socket
+  # activation also makes rrdcached ignore the listen address of the drop-in.
+  - name: 'systemctl disable --now rrdcached.socket'
+    ansible.builtin.service:
+      name: 'rrdcached.socket'
+      enabled: false
+      state: 'stopped'
+
+  - name: 'mkdir -p /etc/systemd/system/rrdcached.service.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/rrdcached.service.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # named after the role, not z00-linuxfabrik.conf: rrdcached.service belongs to the rrdtool
+  # package, and a role that manages RRDCached in its own right would collide with that name
+  - name: 'Deploy /etc/systemd/system/rrdcached.service.d/z00-librenms.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/rrdcached.service.d/z00-librenms.conf.j2'
+      dest: '/etc/systemd/system/rrdcached.service.d/z00-librenms.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__librenms__rrdcached_dropin_result'
+    notify: 'librenms: restart rrdcached'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__librenms__rrdcached_dropin_result is changed'
+
+  # split enabled and state into separate tasks so that the register on the state task
+  # only reflects actual state changes (started/stopped), not enabled/disabled changes.
+  # this allows the handler to correctly skip a restart when the service was just started,
+  # without false-positives from enabled-only changes.
+  - name: 'systemctl {{ librenms__rrdcached_service_enabled | bool | ternary("enable", "disable") }} rrdcached.service'
+    ansible.builtin.service:
+      name: 'rrdcached.service'
+      enabled: '{{ librenms__rrdcached_service_enabled | bool }}'
+
+  - name: 'systemctl {{ librenms__rrdcached_service_state | regex_replace("p?ed$", "") }} rrdcached.service'
+    ansible.builtin.service:
+      name: 'rrdcached.service'
+      state: '{{ librenms__rrdcached_service_state }}'
+    register: '__librenms__rrdcached_service_state_result'
+
+  # block
+  when:
+    - 'librenms__rrdcached_enabled | bool'
+  tags:
+    - 'librenms'
+    - 'librenms:rrdcached'
 
 
 - block:
@@ -198,6 +200,22 @@
       name: 'librenms-scheduler.timer'
       enabled: true
       state: 'started'
+
+  # LibreNMS assumes rrdtool 1.4 unless told otherwise, and then creates and
+  # tunes RRD files itself instead of letting rrdcached do it.
+  - name: 'rrdtool --version'
+    ansible.builtin.command: 'rrdtool --version'
+    register: '__librenms__rrdtool_version_result'
+    changed_when: false # just gathering information
+    check_mode: false # run task even if `--check` is specified
+    when: 'librenms__rrdcached_enabled | bool'
+
+  - name: 'Set the installed rrdtool version'
+    ansible.builtin.set_fact:
+      # "RRDtool 1.7.2  Copyright by Tobias Oetiker ..."
+      # variable is used in config.php.j2
+      __librenms__rrdtool_version: '{{ __librenms__rrdtool_version_result["stdout_lines"][0] | regex_search("[0-9]+\.[0-9]+\.[0-9]+") }}'
+    when: 'librenms__rrdcached_enabled | bool'
 
   - name: 'Deploy /opt/librenms/config.php'
     ansible.builtin.template:

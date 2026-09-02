@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026090101
+
+[Service]
+# The distribution unit runs "rrdcached -g" without a base directory, and its
+# companion rrdcached.socket binds /tmp/rrdcached.sock, which httpd and php-fpm
+# cannot reach because both run with PrivateTmp=true. Options as documented in
+# https://docs.librenms.org/Extensions/RRDCached/, with the socket in /run.
+ExecStart=
+ExecStart=/usr/bin/rrdcached -g -w 1800 -z 1800 -f 3600 -s librenms -U librenms -G librenms -B -R -j /var/tmp -l unix:{{ __librenms__rrdcached_socket }} -t 4 -F -b /opt/librenms/rrd/
+Restart=always
+RestartSec=10

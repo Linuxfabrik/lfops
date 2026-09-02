@@ -1,6 +1,6 @@
 <?php
 # {{ ansible_managed }}
-# 2024091001
+# 2026090101
 
 ## Have a look in misc/config_definitions.json for examples of settings you can set here. DO NOT EDIT misc/config_definitions.json!
 
@@ -14,7 +14,14 @@ $config['user'] = 'librenms';
 
 ### Enable this to use rrdcached. Be sure rrd_dir is within the rrdcached dir
 ### and that your web server has permission to talk to rrdcached.
-#$config['rrdcached']    = "unix:/tmp/rrdcached.sock";
+{% if librenms__rrdcached_enabled | bool %}
+$config['rrdcached'] = "unix:{{ __librenms__rrdcached_socket }}";
+### The exact version of the installed rrdtool. Anything below 1.5.5 makes
+### LibreNMS create and tune the RRD files itself instead of via rrdcached.
+$config['rrdtool_version'] = "{{ __librenms__rrdtool_version }}";
+{% else %}
+#$config['rrdcached']    = "unix:/run/rrdcached.sock";
+{% endif %}
 
 ### Default community
 #$config['snmp']['community'] = array('public');
