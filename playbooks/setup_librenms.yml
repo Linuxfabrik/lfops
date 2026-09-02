@@ -15,6 +15,16 @@
       tags:
         - 'always'
 
+    # The php role deploys the LibreNMS FPM pool and starts php-fpm before the librenms role
+    # creates the user that pool runs as, which aborts php-fpm's startup on a fresh host. The
+    # tasks are idempotent, so the librenms role running them again later costs nothing.
+    - ansible.builtin.import_role:
+        name: 'librenms'
+        tasks_from: 'user.yml'
+      tags:
+        - 'librenms'
+        - 'php'
+
 
   roles:
 

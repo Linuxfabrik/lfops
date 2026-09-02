@@ -28,21 +28,7 @@
       force: false
       version: '{{ librenms__github_release["json"]["tag_name"] }}'
 
-  - name: 'groupadd librenms'
-    ansible.builtin.group:
-      name: 'librenms'
-      state: 'present'
-
-  - name: 'useradd librenms -d /opt/librenms -M -r -s /bin/bash'
-    ansible.builtin.user:
-      comment: 'LibreNMS Service User'
-      name: 'librenms'
-      group: 'librenms'
-      home: '/opt/librenms'
-      createhome: false
-      system: true
-      shell: '/bin/bash'
-      state: 'present'
+  - ansible.builtin.import_tasks: 'user.yml'
 
   # this is magnitudes faster than using the file module
   - name: 'chown -R librenms:librenms /opt/librenms'

@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbook:setup_librenms**: A fresh installation no longer aborts while starting PHP-FPM.
 * **playbook:setup_librenms**: The SELinux file contexts for `/opt/librenms` are applied.
 * **role:apache_httpd**: Enabling an Apache module restarts httpd instead of reloading it, so the module actually takes effect. A reload loads the module but skips its initialization, which left HTTP/2 configured but silently inactive on RHEL 8 ([#339](https://github.com/Linuxfabrik/lfops/issues/339)).
 * **role:kvm_vm**: Two VMs created from the same inventory host no longer get the same MAC address, which made the second one fail with `The MAC address ... is in use by another virtual machine`. The generated MAC follows the VM name now. Hosts that leave `kvm_vm__name` at its default keep the MAC they had; on a host that sets it, a VM created from now on gets a different MAC, so check DHCP reservations and firewall rules keyed on it before recreating such a VM. Running VMs are not touched.
