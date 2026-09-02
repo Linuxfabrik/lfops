@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:selinux**: A policy module can be defined inline through the `content_te` subkey of `selinux__modules__*_var`, instead of pointing `src` at a directory on the Ansible controller.
+* **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:selinux**: A policy module is only recompiled and reinstalled when its source changed, so a run against an up-to-date host no longer reports a change for every module it manages.
+* **role:monitoring_plugins**: A source install also deploys the `*-logging.sudoers` companion, which keeps the plugin calls out of the authentication log. Without it every check costs five entries there, and a monitored host runs dozens of checks a minute. A host running sudo-rs, Ubuntu 26.04 for example, does not get the file and loses it again if it had one, because sudo-rs knows none of its settings and warns about each of them on every `sudo` call by any user.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
@@ -46,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **role:php**: The PHP-FPM slowlog holds the backtrace of a slow request on RedHat, instead of staying empty while php-fpm logs `failed to ptrace(ATTACH) child <pid>: Operation not permitted (1)`.
+* **role:openvpn_server**: A new server certificate, a changed `server.conf` or a regenerated Diffie-Hellman file restarts OpenVPN. Until now the files were written to disk while the running service kept its old configuration, so a renewed certificate only took effect at the next reboot. The certificate revocation list and the client configs still apply without a restart, since OpenVPN re-reads them per connection.
 * **role:apache_httpd**: Set `apache_httpd__mod_ssl_ssl_use_stapling` to off by default because Let's Encrypt does not provide an OCSP URL-endpoint.
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
 * **plugin:bitwarden_item**: Error messages no longer carry a doubled period in the middle.

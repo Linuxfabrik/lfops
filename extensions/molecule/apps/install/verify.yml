@@ -8,3 +8,17 @@
     - name: 'Assert that zsh is installed'
       ansible.builtin.assert:
         that: '"zsh" in ansible_facts["packages"]'
+
+    # The package database only knows what was registered. Running the payload proves the install
+    # is complete and usable, which a package-facts lookup cannot tell you.
+    - name: 'zsh --version'
+      ansible.builtin.command: 'zsh --version'
+      changed_when: false
+      register: '__molecule__zsh_version_result'
+
+    - name: 'Assert that the installed zsh runs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__zsh_version_result["rc"] == 0'
+          - '"zsh" in __molecule__zsh_version_result["stdout"]'
+        fail_msg: '{{ __molecule__zsh_version_result["stdout"] }}'
