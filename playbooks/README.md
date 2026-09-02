@@ -1180,14 +1180,13 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_keycloak__skip_repo_baseos`
-* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)
-* [repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper): `keycloak__skip_repo_mydumper`
-* [repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb): `mariadb_server__skip_repo_mariadb`
-* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `mariadb_server__skip_python`
-* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `keycloak__skip_kernel_settings`
-* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `keycloak__skip_policycoreutils`
-* [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)
-* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_keycloak__skip_repo_epel`
+* [repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper): `setup_keycloak__skip_repo_mydumper`
+* [repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb): `setup_keycloak__skip_repo_mariadb`
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_keycloak__skip_python`
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_keycloak__skip_kernel_settings`
+* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_keycloak__skip_policycoreutils`
+* [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server): `setup_keycloak__skip_mariadb_server`
 * [keycloak](https://github.com/Linuxfabrik/lfops/tree/main/roles/keycloak)
 
 

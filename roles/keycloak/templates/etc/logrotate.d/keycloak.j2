@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026090201
+
+{{ keycloak__log_file }} {
+    compress
+    copytruncate
+    create 0640 keycloak keycloak
+    daily
+    delaycompress
+    missingok
+    notifempty
+    rotate {{ keycloak__logrotate }}
+}
