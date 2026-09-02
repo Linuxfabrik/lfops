@@ -105,6 +105,20 @@ librenms__php__modules__dependent_var:
   - name: 'php-zip'
     state: 'present'
 
+
+# The poller and the discovery run as Python: LibreNMS/queuemanager.py imports pymysql at module
+# level, so without PyMySQL every poll cycle dies before it starts. dotenv reads
+# /opt/librenms/.env, and psutil reaps the worker processes ("polling gap possible" without it).
+# redis is only required for distributed polling, which this role does not set up.
+librenms__python__modules__dependent_var:
+  - name: 'python3-dotenv'
+    state: 'present'
+  - name: 'python3-psutil'
+    state: 'present'
+  - name: 'python3-PyMySQL'
+    state: 'present'
+
+
 librenms__selinux__booleans__dependent_var:
   - key: 'httpd_can_connect_ldap'
     value: 'on'

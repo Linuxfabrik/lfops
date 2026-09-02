@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:librenms**: The poller works on a host whose database is not local, because the Python modules it imports are installed by the role instead of arriving through the MariaDB role.
 * **role:librenms**: A second run of the role updates an existing installation instead of aborting at the git checkout.
 * **playbook:setup_librenms**: A fresh installation no longer aborts while starting PHP-FPM.
 * **playbook:setup_librenms**: The SELinux file contexts for `/opt/librenms` are applied.

@@ -197,3 +197,30 @@
         that:
           - '__molecule__rrdcached_probe_result["content"] is match("OK 0 PONG")'
         fail_msg: 'PHP-FPM could not talk to RRDCached: {{ __molecule__rrdcached_probe_result["content"] | d("") }}'
+
+
+# The poller, the discovery and the graphs only work if the interpreters actually find what they
+# import and load at runtime. None of that follows from the packages being installed: the modules
+# have to be importable for the LibreNMS user, and PHP has to load the extension in the CLI SAPI
+# the cron jobs use.
+- name: 'Verify the runtime dependencies of the poller and the graphs'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    # pymysql is imported at module level by LibreNMS/queuemanager.py, so a poll cycle dies
+    # without it. dotenv reads /opt/librenms/.env, psutil reaps the worker processes.
+    - name: 'python3 -c "import dotenv, psutil, pymysql"'
+      ansible.builtin.command: 'python3 -c "import dotenv, psutil, pymysql"'
+      become: true
+      become_user: 'librenms'
+      register: '__molecule__python_modules_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the poller can import its Python modules'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__python_modules_result["rc"] == 0'
+        fail_msg: 'The LibreNMS user cannot import the poller modules: {{ __molecule__python_modules_result["stderr"] | d("") }}'
