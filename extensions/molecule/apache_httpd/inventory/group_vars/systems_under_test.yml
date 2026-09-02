@@ -1,0 +1,40 @@
+apache_httpd__conf_server_admin: 'webmaster@example.com'
+
+# Two TLS vHosts on the same port, differing in one key. The first inherits the server-wide
+# protocol preference (apache_httpd__mod_http2_protocols, 'h2 http/1.1'), the second overrides it
+# per vHost. verify.yml derives what it expects from exactly this: an entry carrying conf_protocols
+# has to serve HTTP/1.1, an entry without it has to serve HTTP/2. That pins both halves of the
+# feature with one pair of requests, and it fails if either the server-wide default or the per-vHost
+# override stops working.
+#
+# Each vHost gets its own certificate rather than a shared one. Browsers coalesce connections across
+# vHosts that share a certificate, and Apache answers 421 Misdirected Request when such vHosts do
+# not carry identical TLS settings - a complication this scenario has no reason to take on.
+# prepare.yml issues one self-signed certificate per conf_server_name below.
+#
+# The document root is created by the role; verify.yml drops an index.html into it, because a
+# request has to reach a real response for its HTTP version to mean anything.
+apache_httpd__vhosts__group_var:
+
+  - comment: |-
+      Inherits the server-wide protocol preference, so it has to negotiate HTTP/2.
+    template: 'app'
+    virtualhost_port: 443
+    conf_server_name: 'h2.example.com'
+    raw: !unsafe |-
+      # ssl_module
+      SSLEngine on
+      SSLCertificateFile    /etc/pki/tls/certs/h2.example.com.crt
+      SSLCertificateKeyFile /etc/pki/tls/private/h2.example.com.key
+
+  - comment: |-
+      Overrides the server-wide protocol preference, so it has to stay on HTTP/1.1.
+    template: 'app'
+    virtualhost_port: 443
+    conf_protocols: 'http/1.1'
+    conf_server_name: 'h1.example.com'
+    raw: !unsafe |-
+      # ssl_module
+      SSLEngine on
+      SSLCertificateFile    /etc/pki/tls/certs/h1.example.com.crt
+      SSLCertificateKeyFile /etc/pki/tls/private/h1.example.com.key

@@ -1,0 +1,76 @@
+# Replaces the shared vm-prepare.yml for this scenario (see molecule.yml), so it imports it first
+# and only adds the precondition on top.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# The precondition for converge: a certificate per TLS vHost. Apache refuses to start when an
+# SSLCertificateFile is missing, so this cannot wait until verify. Self-signed is enough - the
+# assertions negotiate the protocol, they do not validate a chain, and curl is called with
+# --insecure accordingly.
+#
+# The names and the paths are not repeated here: they are read back out of the vHost definitions in
+# group_vars, so the certificates cannot drift away from what the vHosts point at.
+- name: 'Issue a self-signed certificate per TLS vHost'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__apache_httpd_server_names: '{{
+        apache_httpd__vhosts__group_var | map(attribute="conf_server_name") | list
+      }}'
+  tasks:
+
+    # RedHat gets these from the ca-certificates package, Debian and Ubuntu keep their certificates
+    # elsewhere and have no /etc/pki at all. The role's own __apache_httpd__openssl_*_path variables
+    # point at /etc/pki/tls on every platform, so the scenario follows them and creates the tree.
+    - name: 'mkdir -p /etc/pki/tls/certs /etc/pki/tls/private'
+      ansible.builtin.file:
+        path: '{{ item["path"] }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: '{{ item["mode"] }}'
+      loop:
+        - path: '/etc/pki/tls/certs'
+          mode: 0o755
+        - path: '/etc/pki/tls/private'
+          mode: 0o700
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    # community.crypto runs on the managed node here, so the library has to be there. The package is
+    # called python3-cryptography on every platform this scenario covers.
+    - name: 'Make sure the python cryptography module is installed'
+      ansible.builtin.package:
+        name: 'python3-cryptography'
+        state: 'present'
+
+    - name: 'openssl genrsa --out /etc/pki/tls/private/<name>.key'
+      community.crypto.openssl_privatekey:
+        path: '/etc/pki/tls/private/{{ item }}.key'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+      loop: '{{ __molecule__apache_httpd_server_names }}'
+
+    - name: 'openssl req --new --key /etc/pki/tls/private/<name>.key'
+      community.crypto.openssl_csr_pipe:
+        privatekey_path: '/etc/pki/tls/private/{{ item }}.key'
+        common_name: '{{ item }}'
+        subject_alt_name: 'DNS:{{ item }}'
+      loop: '{{ __molecule__apache_httpd_server_names }}'
+      register: '__molecule__apache_httpd_csr_result'
+      changed_when: false # the CSR is never written to disk, it only feeds the task below
+
+    - name: 'openssl x509 --req --signkey ... --out /etc/pki/tls/certs/<name>.crt'
+      community.crypto.x509_certificate:
+        path: '/etc/pki/tls/certs/{{ item["item"] }}.crt'
+        csr_content: '{{ item["csr"] }}'
+        privatekey_path: '/etc/pki/tls/private/{{ item["item"] }}.key'
+        provider: 'selfsigned'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop: '{{ __molecule__apache_httpd_csr_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
