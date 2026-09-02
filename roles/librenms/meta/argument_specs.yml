@@ -34,6 +34,13 @@ argument_specs:
         default: 0
         description: 'Number in days of how long to keep old rrd files. 0 disables this feature.'
 
+      # no default: defaults/main.yml derives it from librenms__config_app_url with a Jinja2
+      # expression, which argument_specs cannot evaluate
+      librenms__config_session_secure_cookie:
+        type: 'bool'
+        required: false
+        description: 'Whether LibreNMS marks its session cookie as secure, written to SESSION_SECURE_COOKIE in /opt/librenms/.env.'
+
       librenms__config_update_channel:
         type: 'str'
         required: false

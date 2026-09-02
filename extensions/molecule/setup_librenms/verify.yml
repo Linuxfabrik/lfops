@@ -280,20 +280,28 @@
           - '__molecule__php_gmp_result["stdout"] | trim == "true"'
         fail_msg: 'The PHP CLI does not load the gmp extension.'
 
-    # A floor, not a runtime check: the setting is only observable on the wire, from behind a
-    # proxy, and the scenario has none. Asserting the line at least proves that the empty proxy
-    # list is written rather than skipped, and that it reached the .env LibreNMS reads.
-    - name: 'grep APP_TRUSTED_PROXIES /opt/librenms/.env'
-      ansible.builtin.command: "grep --count --extended-regexp \"^APP_TRUSTED_PROXIES=''$\" /opt/librenms/.env"
-      register: '__molecule__trusted_proxies_result'
+    # A floor, not a runtime check: both settings are only observable on the wire, over HTTPS and
+    # from behind a proxy, and the scenario has neither. Asserting the lines at least proves that
+    # the https APP_URL of the inventory switched the cookie on, that the empty proxy list is
+    # written rather than skipped, and that both reached the .env Laravel reads instead of a
+    # php.ini the framework never consults.
+    - name: 'grep APP_TRUSTED_PROXIES SESSION_SECURE_COOKIE /opt/librenms/.env'
+      ansible.builtin.command: 'grep --count --extended-regexp "^({{ item }})$" /opt/librenms/.env'
+      register: '__molecule__env_setting_result'
       changed_when: false
       failed_when: false
+      loop:
+        - "APP_TRUSTED_PROXIES=''"
+        - 'SESSION_SECURE_COOKIE=true'
 
-    - name: 'Assert the empty trusted proxy list reached the LibreNMS environment'
+    - name: 'Assert both settings reached the LibreNMS environment'
       ansible.builtin.assert:
         that:
-          - '__molecule__trusted_proxies_result["stdout"] | trim == "1"'
-        fail_msg: "APP_TRUSTED_PROXIES='' is not set in /opt/librenms/.env."
+          - 'item["stdout"] | trim == "1"'
+        fail_msg: '{{ item["item"] }} is not set in /opt/librenms/.env.'
+      loop: '{{ __molecule__env_setting_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
 
     - name: 'stat --format=%C /opt/librenms/cache'
       ansible.builtin.command: 'stat --format=%C /opt/librenms/cache'

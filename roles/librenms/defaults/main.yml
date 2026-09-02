@@ -2,6 +2,7 @@ librenms__config_app_trusted_proxies: []  # upstream default: 127.0.0.1
 librenms__config_app_url: ''
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 0
+librenms__config_session_secure_cookie: '{{ (librenms__config_app_url is match("https://")) | ternary(true, false) }}'
 librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'

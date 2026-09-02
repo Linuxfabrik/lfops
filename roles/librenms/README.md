@@ -99,6 +99,12 @@ librenms__fqdn: 'librenms.example.com'
 * Type: Number.
 * Default: `0`
 
+`librenms__config_session_secure_cookie`
+
+* Whether LibreNMS marks its session cookie as secure, so a browser only sends it over HTTPS. Sets `SESSION_SECURE_COOKIE` in `/opt/librenms/.env` on every run. Defaults to `true` as soon as `librenms__config_app_url` names an `https://` URL, which is the host's own statement that it serves HTTPS. Do not set it to `true` on a host that is reachable over plain HTTP only: the browser then never sends the cookie back and the login fails with "419 Page Expired". LibreNMS is a Laravel application and issues this cookie itself, so `php__ini_session_cookie_secure` of the `php` role does not reach it.
+* Type: Boolean.
+* Default: `true` if `librenms__config_app_url` starts with `https://`, else `false`
+
 `librenms__config_update_channel`
 
 * Which update channel LibreNMS should use during automatic updates. Possible options: `master`, `release`.
@@ -144,6 +150,7 @@ librenms__config_app_trusted_proxies:
 librenms__config_app_url: 'https://librenms.example.com'
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 730
+librenms__config_session_secure_cookie: true
 librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'

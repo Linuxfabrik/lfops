@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:librenms**: The session cookie is marked as secure on hosts whose `librenms__config_app_url` is an `https://` URL, so a browser only sends it over HTTPS. LibreNMS reports the missing flag as a failure in its own validation. Set `librenms__config_session_secure_cookie` to override.
 * **role:librenms**: LibreNMS stores its RRD files through RRDCached, which cuts the disk I/O of the poller by roughly a third.
 * **role:librenms**: The `librenms:rrdcached` tag deploys and configures RRDCached without touching the rest of the installation.
 * **role:php**: PHP-FPM pools are now fully configurable, each with its own user and group, process-manager tuning, timeouts and `php_admin_value` overrides. Every pool gets an isolated session directory, its own error and slow logs, and its own socket, so several applications can share a host without sharing a PHP process, a session store or a memory limit. One pool template now serves both distribution families.
