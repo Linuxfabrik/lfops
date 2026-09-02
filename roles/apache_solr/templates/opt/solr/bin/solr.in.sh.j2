@@ -359,6 +359,8 @@
 #ZK_CREATE_CHROOT=true
 #ZK_HOST=""
 
+SOLR_HEAP="{{ apache_solr__heap }}"
+SOLR_SECURITY_MANAGER_ENABLED={{ apache_solr__security_manager_enabled | string | lower }}
 LOG4J_PROPS="{{ apache_solr__log4j_props | d('/var/solr/log4j2.xml') }}"
 SOLR_DATA_HOME="{{ apache_solr__data_dir }}"
 SOLR_HOME="{{ apache_solr__var_dir }}"

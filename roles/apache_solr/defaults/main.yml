@@ -1,5 +1,6 @@
 apache_solr__data_dir: '/var/solr/data'
 apache_solr__group: 'solr'
+apache_solr__heap: '512m'
 apache_solr__http_bind_address: '0.0.0.0'
 apache_solr__http_bind_port: 8983
 apache_solr__install_dir: '/opt'
@@ -19,6 +20,7 @@ apache_solr__roles__dependent_var: []
 apache_solr__roles__group_var: []
 apache_solr__roles__host_var: []
 apache_solr__roles__role_var: []
+apache_solr__security_manager_enabled: true
 apache_solr__service: 'solr'
 apache_solr__service_enabled: true
 apache_solr__service_state: '{{ apache_solr__service_enabled | bool | ternary("started", "stopped") }}'
