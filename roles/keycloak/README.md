@@ -2,8 +2,25 @@
 
 This role installs [Keycloak](https://www.keycloak.org/guides#getting-started).
 
+This role is compatible with the following Keycloak versions:
+
+* Keycloak 24
+* Keycloak 25
+* Keycloak 26
+
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+* **The tarball is fetched on the Ansible controller** and copied to the target from there, so a target without internet access can still be provisioned. The controller needs to reach `github.com`.
+* **Installation is keyed on `version.txt`.** Keycloak ships that file inside its tarball and it names the installed release. The role reads it and skips the download and the extraction when the wanted version is already in place.
+* **An upgrade extracts over the existing installation.** Bump `keycloak__version` and re-run the role. Files that the new release no longer ships stay behind, and `providers/`, `themes/` and `data/` are kept. Wipe `/opt/keycloak` by hand first if you want a clean tree.
+* **`kc.sh build` only runs when it has to**, that is when the installation or `keycloak.conf` changed. It also acts as the configuration check: an invalid value aborts the run naming the option and the accepted values, before the service is restarted with it. An unknown *option name* is not caught, Keycloak ignores it silently.
+* **The bootstrap admin is provisioned once.** See `keycloak__admin_login` and "Post-Installation Steps"; the cleartext password does not stay on disk after the run.
+* **The role does not manage TLS certificates.** It only points Keycloak at the paths given in `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`.
+* **Leaving both certificate variables empty selects edge mode**, where a reverse proxy in front of Keycloak terminates TLS. The role then sets `http-enabled=true` and `proxy-headers` itself, so Keycloak builds its URLs from the proxy's forwarded headers instead of from the internal address. Setting the two variables switches to reencrypt/passthrough, where Keycloak terminates TLS itself. See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/reverseproxy).
 
 
 ## Dependent Roles
@@ -11,18 +28,14 @@ This role installs [Keycloak](https://www.keycloak.org/guides#getting-started).
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * A MariaDB database and user for Keycloak must be created (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* The MariaDB repository must be enabled (role: [linuxfabrik.lfops.repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb)).
+* The EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The Python MySQL module required by the MariaDB role must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
+
+The role installs the OpenJDK matching `keycloak__version` itself (OpenJDK 17 for Keycloak 24, OpenJDK 21 for Keycloak 25 and newer).
 
 
 ## Requirements
-
-Minimum supported Keycloak version:
-
-* Keycloak 24.0.0
-
-Make sure you have OpenJDK installed.
-
-* Keycloak 25+: OpenJDK 21
-* Keycloak 24+: OpenJDK 17
 
 Keycloak supports one of the following database servers; create a database and a user for it. The "Setup Keycloak" playbook wires up MariaDB for you (see Dependent Roles), the others must be provided separately.
 
@@ -32,7 +45,9 @@ Keycloak supports one of the following database servers; create a database and a
 * oracle
 * postgres
 
-If Keycloak itself should terminate TLS (e.g. when not running behind a reverse proxy, or when using a reverse proxy in reencrypt/passthrough mode), you need to provide SSL/TLS certificates via `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`. This can be done using the [linuxfabrik.lfops.acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh) role. When running behind a reverse proxy that terminates TLS (edge mode), no certificates are needed, and you can leave the certificate variables empty (the default).
+Manual steps:
+
+* Optional: If Keycloak itself should terminate TLS (when it does not run behind a reverse proxy, or behind one in reencrypt/passthrough mode), provide the certificate and the private key and point `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file` at them. Run the [linuxfabrik.lfops.acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh) playbook to obtain them. Behind a reverse proxy that terminates TLS (edge mode) no certificates are needed and both variables stay empty.
 
 All Keycloak config settings are described here: https://www.keycloak.org/server/all-config
 
@@ -59,13 +74,18 @@ The first role run provisions a *temporary* bootstrap admin (`keycloak__admin_lo
 
 `keycloak`
 
-* Installs Keycloak.
+* Installs Keycloak, including the bootstrap of the temporary admin account.
 * Triggers: keycloak.service restart.
 
 `keycloak:configure`
 
-* Deploy Keycloak config and sysconfig file, and create keycloak service.
+* Deploys `keycloak.conf`, the sysconfig file and the systemd unit, and rebuilds the server when a build-time option changed.
 * Triggers: keycloak.service restart.
+
+`keycloak:logrotate`
+
+* Deploys the logrotate configuration.
+* Triggers: none.
 
 `keycloak:state`
 
@@ -118,7 +138,7 @@ The first role run provisions a *temporary* bootstrap admin (`keycloak__admin_lo
 
 `keycloak__version`
 
-* The version of Keycloak that should be installed.
+* The version of Keycloak that should be installed. Keycloak 24, 25 and 26 are supported; another major version aborts the run naming the supported ones.
 * Possible options: <https://github.com/keycloak/keycloak/releases>.
 * Type: String.
 
@@ -131,7 +151,7 @@ keycloak__admin_login:
 keycloak__db_login:
   username: 'keycloak'
   password: 'linuxfabrik'
-keycloak__hostname: 'keycloak.local'
+keycloak__hostname: 'keycloak.example.com'
 keycloak__version: '26.1.2'
 ```
 
@@ -140,25 +160,25 @@ keycloak__version: '26.1.2'
 
 `keycloak__db_url`
 
-* The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
+* The full database JDBC URL. If empty, a default URL is set based on the selected database vendor.
 * Type: String.
-* Default: unset
+* Default: `''`
 
 `keycloak__db_url_database`
 
-* The database name for Keycloak. If the db-url option is set, this option is ignored.
+* The database name for Keycloak. If `keycloak__db_url` is set, this option is ignored.
 * Type: String.
 * Default: `'keycloak'`
 
 `keycloak__db_url_host`
 
-* The host where the database for Keycloak is running. If the db-url option is set, this option is ignored.
+* The host where the database for Keycloak is running. If `keycloak__db_url` is set, this option is ignored.
 * Type: String.
 * Default: `'localhost'`
 
 `keycloak__db_vendor`
 
-* Specifies the database server Keycloak is supposed to use. Changing this requires a full run with the `keycloak` tag, as `kc.sh build` needs to be re-executed. Possible options: `mariadb`, `mssql`, `mysql`, `oracle`, `postgres`.
+* Specifies the database server Keycloak is supposed to use. Changing this requires a run with the `keycloak:configure` tag, as `kc.sh build` needs to be re-executed. Possible options: `dev-file`, `dev-mem`, `mariadb`, `mssql`, `mysql`, `oracle`, `postgres`, `tidb`. `dev-file` and `dev-mem` are meant for development only.
 * Type: String.
 * Default: `'mariadb'`
 
@@ -167,12 +187,14 @@ keycloak__version: '26.1.2'
 * If the server should expose healthcheck endpoints.
 * Type: Bool.
 * Default: `true`
+* Deviates from the upstream default `false`: a reverse proxy or load balancer in front of Keycloak needs `/health/ready` to tell whether the server is ready for traffic, and Keycloak refers to that endpoint itself while it is still bootstrapping and answering every other request with `503`. The endpoints are served on the management port, not next to the realms.
 
 `keycloak__expose_metrics_endpoints`
 
 * If the server should expose metrics endpoints.
 * Type: Bool.
 * Default: `true`
+* Deviates from the upstream default `false`: it lets a host be scraped without having to reconfigure and restart Keycloak first, and the endpoint is served on the same management port as the health endpoints, not next to the realms.
 
 `keycloak__hostname_backchannel_dynamic`
 
@@ -194,27 +216,41 @@ keycloak__version: '26.1.2'
 
 `keycloak__https_cipher_suites`
 
-* The cipher suites to use. If none is given, a reasonable default is selected.
-* Type: String.
-* Default: unset
+* The cipher suites to enable. An empty list lets Keycloak select a reasonable default.
+* Type: List of strings.
+* Default: `[]`
 
 `keycloak__https_protocols`
 
 * The TLS protocol versions Keycloak should use. Only applies when HTTPS certificate files are provided.
-* Type: String.
-* Default: `'TLSv1.3,TLSv1.2'`
+* Type: List of strings.
+* Default: `['TLSv1.3', 'TLSv1.2']`
+
+`keycloak__limit_nofile`
+
+* The open file descriptor limit of the systemd service (`LimitNOFILE`).
+* Type: Number.
+* Default: `131072`
 
 `keycloak__log`
 
-* Enable one or more log handlers in a comma-separated list.
-* Type: String.
-* Default: `'file'`
+* The log handlers to enable. Possible options: `console`, `file`, `syslog`.
+* Type: List of strings.
+* Default: `['file']`
+* Deviates from the upstream default `console`: a service logging to the journal only competes with the rest of the host for the journal's rate limit, and a Keycloak instance under load loses messages that way. With `file` in the list the role also deploys a logrotate configuration.
 
 `keycloak__log_file`
 
-* Set the log file path and filename.
+* Set the log file path and filename. Only used when `file` is one of `keycloak__log`.
 * Type: String.
 * Default: `'/var/log/keycloak/keycloak.log'`
+* Deviates from the upstream default `data/log/keycloak.log`: that path sits inside the installation directory, which the role overwrites on an upgrade.
+
+`keycloak__logrotate`
+
+* Number of rotated log files to keep. Falls back to `logrotate__rotate` when that is set.
+* Type: Number.
+* Default: `14`
 
 `keycloak__mode`
 
@@ -224,33 +260,49 @@ keycloak__version: '26.1.2'
 
 `keycloak__proxy_headers`
 
-* The proxy headers that should be accepted by the server. Only applies in production mode without HTTPS certificates (edge proxy mode).
+* The proxy headers that should be accepted by the server. Only applies in production mode without HTTPS certificates (edge proxy mode). Possible options: `forwarded`, `xforwarded`.
 * Type: String.
 * Default: `'xforwarded'`
+* Deviates from the upstream default of accepting no proxy headers at all: in edge mode Keycloak sits behind a reverse proxy by definition, and without this it builds its redirect URLs from the internal address.
 
 `keycloak__proxy_trusted_addresses`
 
-* A comma separated list of trusted proxy addresses. Only applies in production mode without HTTPS certificates (edge proxy mode).
-* Type: String.
-* Default: unset
+* Trusted proxy addresses, as IP addresses or CIDRs. Only applies in production mode without HTTPS certificates (edge proxy mode). An empty list trusts every proxy.
+* Type: List of strings.
+* Default: `[]`
 
 `keycloak__service_enabled`
 
-* Enables or disables the service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the service at boot, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
 
-`keycloak__spi_sticky_session_encoder_infinispan_should_attach_route`
+`keycloak__service_state`
 
-* https://www.keycloak.org/server/reverseproxy#_enable_sticky_sessions
-* Type: Bool.
-* Default: `false`
-
-`keycloak__state`
-
-* Controls the Systemd service. One of `started`, `stopped`, `reloaded`.
+* Controls the systemd service. One of `restarted`, `started`, `stopped`. `reloaded` is not available, Keycloak's unit has no `ExecReload`.
 * Type: String.
 * Default: `'started'`
+
+`keycloak__spi_sticky_session_encoder_infinispan_should_attach_route`
+
+* Whether the cluster route is attached to cookies, instead of relying on the session affinity of the reverse proxy. See <https://www.keycloak.org/server/reverseproxy#_enable_sticky_sessions>.
+* Type: Bool.
+* Default: `false`
+* Deviates from the upstream default `true`: the route only helps when Keycloak runs clustered behind a proxy that balances on it, and it is the reverse proxy that keeps the session affinity in the setups this role deploys. Upstream moves the same way and marks the enabled state as deprecated.
+
+`keycloak__transaction_default_timeout`
+
+* The default transaction timeout, in seconds. On Keycloak below 26.6.0 it is passed to the server as the Quarkus transaction manager property, from 26.6.0 on as `transaction-default-timeout`.
+* Type: Number.
+* Default: `3600`
+* Deviates from the upstream default `5m`: a realm import and the first start against a large database run well past five minutes and are rolled back at that mark.
+
+`keycloak__transaction_setup_timeout`
+
+* The transaction timeout for database migration, import and export transactions, in seconds. Only applies to Keycloak 26.6.0 and newer.
+* Type: Number.
+* Default: `3600`
+* Deviates from the upstream default `30m`: a schema migration on a large realm can exceed half an hour, and being cut off halfway leaves the migration to be repeated.
 
 Example:
 ```yaml
@@ -264,25 +316,34 @@ keycloak__expose_metrics_endpoints: true
 keycloak__hostname_backchannel_dynamic: false
 keycloak__https_certificate_file: '/etc/pki/tls/certs/www.example.com-chain.crt'
 keycloak__https_certificate_key_file: '/etc/pki/tls/private/www.example.com.key'
-keycloak__https_cipher_suites: 'TLS_RSA_WITH_AES_128_GCM_SHA256'
-keycloak__https_protocols: 'TLSv1.3,TLSv1.2'
-keycloak__log: 'file'
+keycloak__https_cipher_suites:
+  - 'TLS_RSA_WITH_AES_128_GCM_SHA256'
+keycloak__https_protocols:
+  - 'TLSv1.3'
+  - 'TLSv1.2'
+keycloak__limit_nofile: 131072
+keycloak__log:
+  - 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
+keycloak__logrotate: 14
 keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
-keycloak__proxy_trusted_addresses: '10.0.0.2'
+keycloak__proxy_trusted_addresses:
+  - '192.0.2.30'
 keycloak__service_enabled: true
+keycloak__service_state: 'started'
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
-keycloak__state: 'started'
+keycloak__transaction_default_timeout: 3600
+keycloak__transaction_setup_timeout: 3600
+keycloak__version: '26.1.2'
 ```
 
 
-## Using a reverse proxy
-
-See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/reverseproxy) for details. When running behind a reverse proxy that terminates TLS (edge mode), leave the HTTPS certificate variables empty. The role will automatically set `http-enabled=true` and `proxy-headers` (default: `xforwarded`). Optionally set `keycloak__proxy_trusted_addresses` to restrict which proxy addresses are trusted. When the reverse proxy does not terminate TLS (reencrypt/passthrough), provide certificate paths via `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file`.
-
-
 ## Troubleshooting
+
+**Role aborts with `Keycloak <version> is not supported by this role`**
+
+* `keycloak__version` names a major version the role ships no Java mapping for. Pin the host to one of the versions listed at the top of this README, or add the mapping to the role's `vars/main.yml`.
 
 **Role fails with `Could not obtain an admin-cli token`**
 
@@ -295,6 +356,10 @@ See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/r
     ```
 
 * Otherwise, check that `keycloak.service` is running and that `keycloak__admin_login` matches the actual bootstrap admin, then re-run.
+
+**Keycloak logs nothing to `journalctl -u keycloak`**
+
+* By default the role enables the `file` log handler only, so the log goes to `keycloak__log_file`. Add `console` to `keycloak__log` to get the log into the journal as well.
 
 
 ## License
