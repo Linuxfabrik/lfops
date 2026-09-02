@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:librenms**: The `http_fping` SELinux policy module is deployed by the `selinux` role, so a playbook run that skips that role no longer installs it.
 * **role:librenms**: The RRD, log, cache and storage directories are no longer made group-writable.
 * **role:apache_httpd**: HTTP/2 is enabled and is the preferred protocol on every connection that terminates TLS, while a client that does not offer it is still served HTTP/1.1 and cleartext HTTP/2 (h2c) is not offered; on RedHat the `mod_http2` package is installed for this.
 * **role:keycloak**: `keycloak__https_cipher_suites`, `keycloak__https_protocols`, `keycloak__log` and `keycloak__proxy_trusted_addresses` are YAML lists instead of comma-separated strings. A comma-separated value already in an inventory keeps working, Ansible splits it into the same list.

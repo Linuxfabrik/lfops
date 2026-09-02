@@ -89,41 +89,9 @@
     register: 'librenms__restorecon_data_result'
     changed_when: 'librenms__restorecon_data_result["stdout"] | length > 0'
 
-  - name: 'semodule --list-modules | grep --quiet http_fping # check for http_fping'
-    ansible.builtin.shell: 'semodule --list-modules | grep --quiet http_fping'
-    args:
-      executable: '/bin/bash'
-    register: 'librenms__http_fping_exists_result'
-    failed_when: 'librenms__http_fping_exists_result["rc"] >= 2'
-    changed_when: false # just gathering information
-
-  - block:
-
-    - name: 'Deploy /tmp/http_fping.tt'
-      ansible.builtin.template:
-        backup: true
-        src: 'tmp/http_fping.tt.j2'
-        dest: '/tmp/http_fping.tt'
-
-    - name: 'checkmodule -M -m -o /tmp/http_fping.mod /tmp/http_fping.tt'
-      ansible.builtin.command: 'checkmodule -M -m -o /tmp/http_fping.mod /tmp/http_fping.tt'
-
-    - name: 'semodule_package -o /tmp/http_fping.pp -m /tmp/http_fping.mod'
-      ansible.builtin.command: 'semodule_package -o /tmp/http_fping.pp -m /tmp/http_fping.mod'
-
-    - name: 'semodule --install /tmp/http_fping.pp'
-      ansible.builtin.command: 'semodule --install /tmp/http_fping.pp'
-
-    - name: 'rm /tmp/http_fping.tt /tmp/http_fping.mod /tmp/http_fping.pp'
-      ansible.builtin.file:
-        path:
-          - '/tmp/http_fping.tt'
-          - '/tmp/http_fping.mod'
-          - '/tmp/http_fping.pp'
-        state: 'absent'
-
-    # block
-    when: 'librenms__http_fping_exists_result["rc"] != 0'
+  # The SELinux policy module this role needs (http_fping) is declared in
+  # librenms__selinux__modules__dependent_var and deployed by the selinux role, like its booleans
+  # and file contexts.
 
   # TODO: currently librenms cannot find the rrdcached socket, skipping for now
   # - name: 'semodule --list-modules | grep --quiet rrdcached_librenms # check for rrdcached_librenms'
