@@ -32,9 +32,6 @@ A minimal working "app" vHost definition for a PHP-FPM application, located unde
 ```yaml
 apache_httpd__conf_server_admin: 'webmaster@example.com'
 apache_httpd__mods__host_var:
-  - filename: 'cgi'
-    enabled: true
-    state: 'present'
   - filename: 'proxy_fcgi'
     enabled: true
     state: 'present'
@@ -130,6 +127,8 @@ apache_httpd__vhosts__host_var:
 ### A non-hardened standard Apache vHost
 
 This is an Apache configuration that is close to the RHEL default configuration, without any CIS remediations.
+
+It enables `cgid` because the stock RHEL configuration loads it, not because the vHost below needs it: that vHost is a pure reverse proxy and never runs a CGI script. Loading the module starts the external CGI daemon and creates its `ScriptSock` at every start, so drop the entry unless you actually serve CGI.
 
 ```yaml
 apache_httpd__conf__host_var:

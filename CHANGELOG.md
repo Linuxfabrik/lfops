@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: The `cgi` and `cgid` modules are loaded when the inventory enables them; until now the entry was accepted but the module never ended up in the running server.
 * **role:php**: The PHP-FPM slowlog holds the backtrace of a slow request on RedHat, instead of staying empty while php-fpm logs `failed to ptrace(ATTACH) child <pid>: Operation not permitted (1)`.
 * **role:openvpn_server**: A new server certificate, a changed `server.conf` or a regenerated Diffie-Hellman file restarts OpenVPN. Until now the files were written to disk while the running service kept its old configuration, so a renewed certificate only took effect at the next reboot. The certificate revocation list and the client configs still apply without a restart, since OpenVPN re-reads them per connection.
 * **role:apache_httpd**: Set `apache_httpd__mod_ssl_ssl_use_stapling` to off by default because Let's Encrypt does not provide an OCSP URL-endpoint.
