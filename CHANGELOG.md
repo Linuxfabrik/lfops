@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:keycloak**: Rename `keycloak__state` to `keycloak__service_state`, the name every other LFOps role uses. The value `reloaded` is gone: Keycloak's systemd unit has no `ExecReload`, so a reload never worked; use `restarted` instead.
+* **role:keycloak**: The role installs the OpenJDK its Keycloak version needs (OpenJDK 17 for Keycloak 24, OpenJDK 21 for 25 and newer) instead of relying on the `apps` role, which `setup_keycloak` no longer runs. Hosts that used `apps__apps__*_var` through this playbook to install further packages have to run the `apps` playbook for them.
+* **playbook:setup_keycloak**: All skip variables are named `setup_keycloak__skip_<role>` now. Rename `keycloak__skip_kernel_settings`, `keycloak__skip_policycoreutils`, `keycloak__skip_repo_mydumper`, `mariadb_server__skip_python` and `mariadb_server__skip_repo_mariadb` accordingly.
 * **role:mariadb_server**: The InnoDB buffer pool grows from 128 MiB to 512 MiB, so a database with more than a trivial amount of data is served from memory instead of from disk. Every host running this role therefore uses roughly 384 MiB more RAM after the next restart of the service.
 * **role:mariadb_server**: The InnoDB redo log grows from 32 MiB to the 96 MiB MariaDB itself ships, so a write-heavy server no longer stalls waiting for a checkpoint on a redo log sized for much smaller workloads. InnoDB resizes the log itself when the service next restarts, also after an unclean shutdown, but the data directory needs 64 MiB more free space for it; check that on hosts that are tight before deploying. Set `mariadb_server__cnf_innodb_log_file_size__group_var: '32M'` (or the `__host_var`) to keep the previous size.
 * **role:mariadb_server**: `innodb_snapshot_isolation` now defaults to `OFF`. Turning it on requires support from the application: a transaction in `REPEATABLE READ` that modifies a row another transaction changed after its snapshot was taken is aborted with `ER_CHECKREAD`. The application has to catch that error and retry the transaction, otherwise the write fails under concurrent load. To restore the previous behaviour on hosts whose application is known to handle it, set `mariadb_server__cnf_innodb_snapshot_isolation__group_var: 'ON'` (or the `__host_var`).
@@ -23,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:keycloak**: The Keycloak log file is rotated, with `keycloak__logrotate` for the number of rotations kept and the `keycloak:logrotate` tag to deploy the configuration on its own. Until now the log grew unbounded, since Keycloak has no built-in rotation for its file log handler.
+* **role:keycloak**: Add `keycloak__limit_nofile`, `keycloak__transaction_default_timeout` and `keycloak__transaction_setup_timeout` for values that were hardcoded in the systemd unit and in `keycloak.conf`.
 * **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
@@ -35,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:keycloak**: `keycloak__https_cipher_suites`, `keycloak__https_protocols`, `keycloak__log` and `keycloak__proxy_trusted_addresses` are YAML lists instead of comma-separated strings. A comma-separated value already in an inventory keeps working, Ansible splits it into the same list.
+* **role:keycloak**: The Keycloak tarball is downloaded on the Ansible controller and copied to the target from there, so a target without internet access can be installed. The controller has to reach `github.com`.
+* **role:keycloak**: `--tags keycloak:configure` deploys the configuration and rebuilds the server, but no longer starts the service or bootstraps the admin account. Use the `keycloak` tag for a full run and `keycloak:state` for the service state.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
 * **role:collabora**: A host running a Collabora version the role has no configuration template for aborts with that version and the list of supported ones, instead of failing on a missing file.
@@ -43,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:keycloak**: A run against an unchanged host reports no changes any more. The tarball is only downloaded and extracted when the installed version differs from `keycloak__version`, and `kc.sh build` only runs when the installation or `keycloak.conf` actually changed, which also takes minutes off an ordinary run.
 * **role:openvpn_server**: A new server certificate, a changed `server.conf` or a regenerated Diffie-Hellman file restarts OpenVPN. Until now the files were written to disk while the running service kept its old configuration, so a renewed certificate only took effect at the next reboot. The certificate revocation list and the client configs still apply without a restart, since OpenVPN re-reads them per connection.
 * **role:apache_httpd**: Set `apache_httpd__mod_ssl_ssl_use_stapling` to off by default because Let's Encrypt does not provide an OCSP URL-endpoint.
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.
