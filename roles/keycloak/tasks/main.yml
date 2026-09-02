@@ -44,7 +44,7 @@
         - 'keycloak__proxy_headers: {{ keycloak__proxy_headers }}'
         - 'keycloak__service_enabled: {{ keycloak__service_enabled }}'
         - 'keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: {{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route }}'
-        - 'keycloak__state: {{ keycloak__state }}'
+        - 'keycloak__service_state: {{ keycloak__service_state }}'
         - 'keycloak__version: {{ keycloak__version }}'
 
   tags:
@@ -217,12 +217,12 @@
   - name: 'systemctl {{ keycloak__service_enabled | bool | ternary("enable", "disable") }} keycloak.service'
     ansible.builtin.service:
       name: 'keycloak.service'
-      enabled: '{{ keycloak__service_enabled }}'
+      enabled: '{{ keycloak__service_enabled | bool }}'
 
-  - name: 'systemctl {{ keycloak__state | regex_replace("p?ed$", "") }} keycloak.service'
+  - name: 'systemctl {{ keycloak__service_state | regex_replace("p?ed$", "") }} keycloak.service'
     ansible.builtin.service:
       name: 'keycloak.service'
-      state: '{{ keycloak__state }}'
+      state: '{{ keycloak__service_state }}'
     register: '__keycloak__service_state_result'
 
   tags:
@@ -337,7 +337,7 @@
   # block
   when:
     - 'not (__keycloak__admin_login_bootstrapped | bool)'
-    - 'keycloak__state == "started"'
+    - 'keycloak__service_state == "started"'
   tags:
     - 'keycloak'
     - 'keycloak:configure'

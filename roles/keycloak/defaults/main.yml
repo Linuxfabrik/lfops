@@ -13,7 +13,7 @@ keycloak__mode: 'production'
 keycloak__proxy_headers: 'xforwarded'
 keycloak__service_enabled: true
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
-keycloak__state: 'started'
+keycloak__service_state: 'started'
 
 # -----------------------------------------------------------------------------
 # no need to document the variables in the README below this line, as they

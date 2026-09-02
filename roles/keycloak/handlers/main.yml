@@ -11,4 +11,4 @@
   when:
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__keycloak__service_state_result is not defined or __keycloak__service_state_result is not changed'
-    - 'keycloak__state != "stopped"'
+    - 'keycloak__service_state != "stopped"'
