@@ -1,0 +1,704 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# the `__ini_*` and `__fpm_pool_conf_*` slots default to an empty string and only
+# carry a value when the user (or a dependent role) sets one, so the numeric ones
+# are declared as `raw`: an `int` spec would reject the empty default.
+argument_specs:
+  main:
+    options:
+
+      php__fpm_pool_conf_pm__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'How the process manager controls the number of child processes. Dependent-role injection.'
+
+      php__fpm_pool_conf_pm__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'How the process manager controls the number of child processes. Group-level override.'
+
+      php__fpm_pool_conf_pm__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'How the process manager controls the number of child processes. Host-level override.'
+
+      php__fpm_pool_conf_pm_max_children__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The maximum number of child processes. Dependent-role injection.'
+
+      php__fpm_pool_conf_pm_max_children__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The maximum number of child processes. Group-level override.'
+
+      php__fpm_pool_conf_pm_max_children__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The maximum number of child processes. Host-level override.'
+
+      php__fpm_pool_conf_pm_max_spare_servers__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The desired maximum number of idle server processes. Dependent-role injection.'
+
+      php__fpm_pool_conf_pm_max_spare_servers__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The desired maximum number of idle server processes. Group-level override.'
+
+      php__fpm_pool_conf_pm_max_spare_servers__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The desired maximum number of idle server processes. Host-level override.'
+
+      php__fpm_pool_conf_pm_min_spare_servers__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The desired minimum number of idle server processes. Dependent-role injection.'
+
+      php__fpm_pool_conf_pm_min_spare_servers__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The desired minimum number of idle server processes. Group-level override.'
+
+      php__fpm_pool_conf_pm_min_spare_servers__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The desired minimum number of idle server processes. Host-level override.'
+
+      php__fpm_pool_conf_pm_start_servers__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The number of child processes created on startup. Dependent-role injection.'
+
+      php__fpm_pool_conf_pm_start_servers__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The number of child processes created on startup. Group-level override.'
+
+      php__fpm_pool_conf_pm_start_servers__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'The number of child processes created on startup. Host-level override.'
+
+      php__fpm_pool_conf_request_slowlog_timeout__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Timeout after which a backtrace is dumped to the slowlog. Dependent-role injection.'
+
+      php__fpm_pool_conf_request_slowlog_timeout__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Timeout after which a backtrace is dumped to the slowlog. Group-level override.'
+
+      php__fpm_pool_conf_request_slowlog_timeout__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Timeout after which a backtrace is dumped to the slowlog. Host-level override.'
+
+      php__fpm_pool_conf_request_terminate_timeout__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Timeout after which the worker process is killed. Dependent-role injection.'
+
+      php__fpm_pool_conf_request_terminate_timeout__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Timeout after which the worker process is killed. Group-level override.'
+
+      php__fpm_pool_conf_request_terminate_timeout__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Timeout after which the worker process is killed. Host-level override.'
+
+      php__fpm_pools__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'PHP-FPM pools to manage. Dependent-role injection.'
+
+      php__fpm_pools__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'PHP-FPM pools to manage. Group-level override.'
+
+      php__fpm_pools__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'PHP-FPM pools to manage. Host-level override.'
+
+      php__fpm_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the php-fpm service at boot.'
+
+      php__fpm_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'The runtime state of the php-fpm service.'
+
+      php__ini_date_timezone__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The default timezone. Dependent-role injection.'
+
+      php__ini_date_timezone__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The default timezone. Group-level override.'
+
+      php__ini_date_timezone__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The default timezone. Host-level override.'
+
+      php__ini_default_socket_timeout__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Default timeout for socket based streams, in seconds. Dependent-role injection.'
+
+      php__ini_default_socket_timeout__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Default timeout for socket based streams, in seconds. Group-level override.'
+
+      php__ini_default_socket_timeout__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Default timeout for socket based streams, in seconds. Host-level override.'
+
+      php__ini_display_errors__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether errors are printed as part of the output. Dependent-role injection.'
+
+      php__ini_display_errors__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether errors are printed as part of the output. Group-level override.'
+
+      php__ini_display_errors__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether errors are printed as part of the output. Host-level override.'
+
+      php__ini_display_startup_errors__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether errors during PHP startup are printed. Dependent-role injection.'
+
+      php__ini_display_startup_errors__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether errors during PHP startup are printed. Group-level override.'
+
+      php__ini_display_startup_errors__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether errors during PHP startup are printed. Host-level override.'
+
+      php__ini_error_reporting__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The error reporting level. Dependent-role injection.'
+
+      php__ini_error_reporting__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The error reporting level. Group-level override.'
+
+      php__ini_error_reporting__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The error reporting level. Host-level override.'
+
+      php__ini_max_execution_time__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum execution time of a script, in seconds. Dependent-role injection.'
+
+      php__ini_max_execution_time__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum execution time of a script, in seconds. Group-level override.'
+
+      php__ini_max_execution_time__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum execution time of a script, in seconds. Host-level override.'
+
+      php__ini_max_file_uploads__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of files uploaded in one request. Dependent-role injection.'
+
+      php__ini_max_file_uploads__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of files uploaded in one request. Group-level override.'
+
+      php__ini_max_file_uploads__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of files uploaded in one request. Host-level override.'
+
+      php__ini_max_input_time__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum time a script may spend parsing request data, in seconds. Dependent-role injection.'
+
+      php__ini_max_input_time__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum time a script may spend parsing request data, in seconds. Group-level override.'
+
+      php__ini_max_input_time__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum time a script may spend parsing request data, in seconds. Host-level override.'
+
+      php__ini_max_input_vars__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of input variables accepted per request. Dependent-role injection.'
+
+      php__ini_max_input_vars__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of input variables accepted per request. Group-level override.'
+
+      php__ini_max_input_vars__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of input variables accepted per request. Host-level override.'
+
+      php__ini_memory_limit__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum amount of memory a script may consume. Dependent-role injection.'
+
+      php__ini_memory_limit__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum amount of memory a script may consume. Group-level override.'
+
+      php__ini_memory_limit__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum amount of memory a script may consume. Host-level override.'
+
+      php__ini_opcache_blacklist_filename__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to the opcache blacklist file. Dependent-role injection.'
+
+      php__ini_opcache_blacklist_filename__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to the opcache blacklist file. Group-level override.'
+
+      php__ini_opcache_blacklist_filename__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to the opcache blacklist file. Host-level override.'
+
+      php__ini_opcache_enable__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether the opcode cache is enabled. Dependent-role injection.'
+
+      php__ini_opcache_enable__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether the opcode cache is enabled. Group-level override.'
+
+      php__ini_opcache_enable__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether the opcode cache is enabled. Host-level override.'
+
+      php__ini_opcache_enable_cli__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether the opcode cache is enabled for the CLI. Dependent-role injection.'
+
+      php__ini_opcache_enable_cli__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether the opcode cache is enabled for the CLI. Group-level override.'
+
+      php__ini_opcache_enable_cli__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether the opcode cache is enabled for the CLI. Host-level override.'
+
+      php__ini_opcache_huge_code_pages__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether to copy the PHP code into huge pages. Dependent-role injection.'
+
+      php__ini_opcache_huge_code_pages__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether to copy the PHP code into huge pages. Group-level override.'
+
+      php__ini_opcache_huge_code_pages__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether to copy the PHP code into huge pages. Host-level override.'
+
+      php__ini_opcache_interned_strings_buffer__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Memory used to store interned strings, in MB. Dependent-role injection.'
+
+      php__ini_opcache_interned_strings_buffer__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Memory used to store interned strings, in MB. Group-level override.'
+
+      php__ini_opcache_interned_strings_buffer__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Memory used to store interned strings, in MB. Host-level override.'
+
+      php__ini_opcache_max_accelerated_files__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of scripts in the opcache hash table. Dependent-role injection.'
+
+      php__ini_opcache_max_accelerated_files__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of scripts in the opcache hash table. Group-level override.'
+
+      php__ini_opcache_max_accelerated_files__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Maximum number of scripts in the opcache hash table. Host-level override.'
+
+      php__ini_opcache_memory_consumption__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Size of the shared opcache memory storage, in MB. Dependent-role injection.'
+
+      php__ini_opcache_memory_consumption__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Size of the shared opcache memory storage, in MB. Group-level override.'
+
+      php__ini_opcache_memory_consumption__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Size of the shared opcache memory storage, in MB. Host-level override.'
+
+      php__ini_opcache_revalidate_freq__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'How often to check scripts for updates, in seconds. Dependent-role injection.'
+
+      php__ini_opcache_revalidate_freq__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'How often to check scripts for updates, in seconds. Group-level override.'
+
+      php__ini_opcache_revalidate_freq__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'How often to check scripts for updates, in seconds. Host-level override.'
+
+      php__ini_opcache_save_comments__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether to keep doc comments in the opcache. Dependent-role injection.'
+
+      php__ini_opcache_save_comments__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether to keep doc comments in the opcache. Group-level override.'
+
+      php__ini_opcache_save_comments__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether to keep doc comments in the opcache. Host-level override.'
+
+      php__ini_opcache_validate_timestamps__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether scripts are checked for updates at all. Dependent-role injection.'
+
+      php__ini_opcache_validate_timestamps__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether scripts are checked for updates at all. Group-level override.'
+
+      php__ini_opcache_validate_timestamps__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether scripts are checked for updates at all. Host-level override.'
+
+      php__ini_post_max_size__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum size of POST data that PHP accepts. Dependent-role injection.'
+
+      php__ini_post_max_size__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum size of POST data that PHP accepts. Group-level override.'
+
+      php__ini_post_max_size__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum size of POST data that PHP accepts. Host-level override.'
+
+      php__ini_session_cookie_httponly__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether the session cookie is hidden from JavaScript. Dependent-role injection.'
+
+      php__ini_session_cookie_httponly__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether the session cookie is hidden from JavaScript. Group-level override.'
+
+      php__ini_session_cookie_httponly__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether the session cookie is hidden from JavaScript. Host-level override.'
+
+      php__ini_session_cookie_secure__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether the session cookie is sent over HTTPS only. Dependent-role injection.'
+
+      php__ini_session_cookie_secure__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether the session cookie is sent over HTTPS only. Group-level override.'
+
+      php__ini_session_cookie_secure__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether the session cookie is sent over HTTPS only. Host-level override.'
+
+      php__ini_session_gc_maxlifetime__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Lifetime of session data before it is cleaned up, in seconds. Dependent-role injection.'
+
+      php__ini_session_gc_maxlifetime__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Lifetime of session data before it is cleaned up, in seconds. Group-level override.'
+
+      php__ini_session_gc_maxlifetime__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Lifetime of session data before it is cleaned up, in seconds. Host-level override.'
+
+      php__ini_session_sid_length__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Length of the session ID. Dependent-role injection.'
+
+      php__ini_session_sid_length__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Length of the session ID. Group-level override.'
+
+      php__ini_session_sid_length__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Length of the session ID. Host-level override.'
+
+      php__ini_session_trans_sid_tags__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'HTML tags rewritten to include the session ID. Dependent-role injection.'
+
+      php__ini_session_trans_sid_tags__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'HTML tags rewritten to include the session ID. Group-level override.'
+
+      php__ini_session_trans_sid_tags__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'HTML tags rewritten to include the session ID. Host-level override.'
+
+      php__ini_smtp__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Host used by the mail() function. Dependent-role injection.'
+
+      php__ini_smtp__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Host used by the mail() function. Group-level override.'
+
+      php__ini_smtp__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Host used by the mail() function. Host-level override.'
+
+      php__ini_upload_max_filesize__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum size of an uploaded file. Dependent-role injection.'
+
+      php__ini_upload_max_filesize__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum size of an uploaded file. Group-level override.'
+
+      php__ini_upload_max_filesize__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Maximum size of an uploaded file. Host-level override.'
+
+      php__modules__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Additional PHP modules to install as OS packages. Dependent-role injection.'
+
+      php__modules__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Additional PHP modules to install as OS packages. Group-level override.'
+
+      php__modules__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Additional PHP modules to install as OS packages. Host-level override.'
+
+      php__version:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'PHP version to install and pin on the Debian family. Empty follows the repository default.'
