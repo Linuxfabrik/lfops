@@ -279,3 +279,18 @@
         that:
           - '__molecule__php_gmp_result["stdout"] | trim == "true"'
         fail_msg: 'The PHP CLI does not load the gmp extension.'
+
+    - name: 'stat --format=%C /opt/librenms/cache'
+      ansible.builtin.command: 'stat --format=%C /opt/librenms/cache'
+      register: '__molecule__cache_context_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the cache directory is labelled httpd_cache_t'
+      ansible.builtin.assert:
+        that:
+          - '"httpd_cache_t" in __molecule__cache_context_result["stdout"]'
+        fail_msg: 'The cache directory is labelled "{{ __molecule__cache_context_result["stdout"] | trim }}" instead of httpd_cache_t.'
+      when:
+        - '__molecule__cache_context_result is not skipped'

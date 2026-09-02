@@ -1,11 +1,11 @@
 - block:
 
-  - name: 'Install cronie fping ImageMagick mtr net-snmp net-snmp-utils nmap rrdtool unzip'
+  - name: 'Install acl cronie fping mtr net-snmp net-snmp-utils nmap rrdtool unzip'
     ansible.builtin.package:
       name:
+        - 'acl'
         - 'cronie'
         - 'fping'
-        - 'ImageMagick'
         - 'mtr'
         - 'net-snmp'
         - 'net-snmp-utils'
@@ -53,8 +53,11 @@
 
   # The upstream docs make rrd, logs, bootstrap/cache and storage group-writable, for setups
   # where the web server runs under its own account. Here PHP-FPM, cron and the scheduler all
-  # run as librenms, which owns those trees, so the group bits buy nothing and cannot be kept
-  # anyway: the application creates files below them with umask 022 as it runs.
+  # run as librenms, which owns those trees, so the role does not set the group bits itself.
+  # Composer still does on a first install: LibreNMS/ComposerHelper.php runs setfacl whenever
+  # there is no .env yet. That is why acl is installed above, it is not part of a minimal
+  # installation on RHEL 10 and the call would fail with "command not found" there, while it
+  # succeeds on 8 and 9. Verified against LibreNMS 26.8 on Rocky 9 and Rocky 10.
 
   - name: 'ln -s /opt/librenms/lnms /usr/local/bin/lnms'
     ansible.builtin.file:

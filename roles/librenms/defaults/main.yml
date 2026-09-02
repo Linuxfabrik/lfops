@@ -123,11 +123,20 @@ librenms__python__modules__dependent_var:
     state: 'present'
 
 
-librenms__selinux__booleans__dependent_var:
-  - key: 'httpd_can_connect_ldap'
-    value: 'on'
-  - key: 'httpd_setrlimit'
-    value: 'on'
+# httpd_can_network_connect_db is only added for a database on another host. With a local one PHP
+# connects through the MariaDB socket, so the boolean would let every web application on the host
+# open database connections without buying LibreNMS anything. httpd_execmem, which the upstream
+# docs also set, is only needed with OPcache JIT, which the php role does not enable.
+librenms__selinux__booleans__dependent_var: '{{
+    [
+      {"key": "httpd_can_connect_ldap", "value": "on"},
+      {"key": "httpd_can_sendmail", "value": "on"},
+      {"key": "httpd_setrlimit", "value": "on"}
+    ] + (
+      (librenms__database_host not in ["127.0.0.1", "::1", "localhost"])
+      | ternary([{"key": "httpd_can_network_connect_db", "value": "on"}], [])
+    )
+  }}'
 librenms__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_content_t'
     target: '/opt/librenms/html(/.*)?'
@@ -135,6 +144,9 @@ librenms__selinux__fcontexts__dependent_var:
   # httpd_log_t is required for the logrotate to work
   - setype: 'httpd_log_t'
     target: '/opt/librenms/logs(/.*)?'
+    state: 'present'
+  - setype: 'httpd_cache_t'
+    target: '/opt/librenms/cache(/.*)?'
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/opt/librenms/(rrd|storage)(/.*)?'
