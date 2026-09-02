@@ -60,12 +60,12 @@
 
 - block:
 
-  - name: 'Ensure group keycloak exists'
+  - name: 'groupadd keycloak'
     ansible.builtin.group:
       name: 'keycloak'
       state: 'present'
 
-  - name: 'Add the user keycloak with primary group of keycloak'
+  - name: 'useradd --gid keycloak keycloak'
     ansible.builtin.user:
       name: 'keycloak'
       comment: 'User for Keycloak service'
@@ -202,6 +202,9 @@
   # It is not a handler because it has to run before the service is (re)started, and a handler
   # would only run after the state task below. Gating it on the two inputs that can carry a
   # changed build option keeps an unchanged host from paying for a rebuild on every run.
+  # It doubles as the configuration check: an invalid value aborts the run here with the offending
+  # option and the accepted values (verified against keycloak 26.4.7), before the restart handler
+  # can take the service down with it. An unknown option name is not caught, Keycloak ignores it.
   - name: 'cd {{ __keycloak__install_dir }} && bin/kc.sh build --db {{ keycloak__db_vendor }}' # noqa no-handler must run before the service is started
     ansible.builtin.command: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
     args:
