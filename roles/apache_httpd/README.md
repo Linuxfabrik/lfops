@@ -879,14 +879,14 @@ apache_httpd__skip_mod_security_coreruleset: true
 
 `apache_httpd__mod_ssl_ssl_use_stapling`
 
-* See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
+* Whether the server staples an OCSP response into the TLS handshake. Off, because a Let's Encrypt certificate carries no OCSP responder URL, so there is nothing to staple and Apache logs a warning per certificate on every start. Set it to `'on'` for a certificate from a CA that does publish an OCSP endpoint. See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
 * Type: String.
-* Default: `'on'`
+* Default: `'off'`
 
 Example:
 ```yaml
 # optional - mod_ssl
-apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+apache_httpd__mod_ssl_ssl_use_stapling: 'off'
 ```
 
 
