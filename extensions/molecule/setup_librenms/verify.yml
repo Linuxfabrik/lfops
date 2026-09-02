@@ -280,6 +280,21 @@
           - '__molecule__php_gmp_result["stdout"] | trim == "true"'
         fail_msg: 'The PHP CLI does not load the gmp extension.'
 
+    # A floor, not a runtime check: the setting is only observable on the wire, from behind a
+    # proxy, and the scenario has none. Asserting the line at least proves that the empty proxy
+    # list is written rather than skipped, and that it reached the .env LibreNMS reads.
+    - name: 'grep APP_TRUSTED_PROXIES /opt/librenms/.env'
+      ansible.builtin.command: "grep --count --extended-regexp \"^APP_TRUSTED_PROXIES=''$\" /opt/librenms/.env"
+      register: '__molecule__trusted_proxies_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the empty trusted proxy list reached the LibreNMS environment'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__trusted_proxies_result["stdout"] | trim == "1"'
+        fail_msg: "APP_TRUSTED_PROXIES='' is not set in /opt/librenms/.env."
+
     - name: 'stat --format=%C /opt/librenms/cache'
       ansible.builtin.command: 'stat --format=%C /opt/librenms/cache'
       register: '__molecule__cache_context_result'

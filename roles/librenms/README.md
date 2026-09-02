@@ -76,9 +76,10 @@ librenms__fqdn: 'librenms.example.com'
 
 `librenms__config_app_trusted_proxies`
 
-* A list of trusted reverse proxy IPs or CIDR ranges, joined into the comma separated `APP_TRUSTED_PROXIES` setting in `/opt/librenms/.env`. Have a look at https://docs.librenms.org/Support/Environment-Variables/. An empty list leaves the setting untouched.
+* A list of trusted reverse proxy IPs or CIDR ranges, joined into the comma separated `APP_TRUSTED_PROXIES` setting in `/opt/librenms/.env`, and written on every run. Have a look at https://docs.librenms.org/Support/Environment-Variables/. The empty default trusts no proxy at all, so LibreNMS ignores the `X-Forwarded-*` headers of any host: list your proxy here if one sits in front of LibreNMS, otherwise client addresses and the detected protocol are those of the proxy.
 * Type: List.
 * Default: `[]`
+* Deviates from the upstream default `127.0.0.1`: a proxy on the LibreNMS host itself is not the common case in LFOps, and a host that trusts one accepts spoofed `X-Forwarded-For` headers from anything able to reach it locally.
 
 `librenms__config_app_url`
 

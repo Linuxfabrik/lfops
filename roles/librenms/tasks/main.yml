@@ -265,6 +265,10 @@
       - key: 'DB_PASSWORD'
         value: '{{ librenms__database_login["password"] }}'
 
+  # Written on every run, including with an empty value, so the setting follows the inventory
+  # in both directions instead of leaving a stale line behind. LibreNMS reads the empty string
+  # as a deliberate value: EnvHelper::parseArray keeps "" out of the comma split, which is how
+  # the upstream security docs switch trusted proxies off.
   - name: 'Set app settings in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
@@ -275,9 +279,18 @@
     loop:
       - key: 'APP_TRUSTED_PROXIES'
         value: '{{ librenms__config_app_trusted_proxies | join(",") }}'
-      - key: 'APP_URL'
-        value: '{{ librenms__config_app_url }}'
-    when: 'item["value"] | length > 0'
+
+  # APP_URL has no meaningful empty value: writing it empty sets Laravel's app.url to the empty
+  # string rather than falling back to anything, and LibreNMS then reports it as misconfigured.
+  - name: 'Set the base URL in /opt/librenms/.env'
+    ansible.builtin.lineinfile:
+      path: '/opt/librenms/.env'
+      regexp: '^#?APP_URL'
+      line: 'APP_URL={{ librenms__config_app_url | quote }}'
+      mode: 0o600 # file contains secrets
+      state: 'present'
+    when:
+      - 'librenms__config_app_url | length > 0'
 
   tags:
     - 'librenms'
