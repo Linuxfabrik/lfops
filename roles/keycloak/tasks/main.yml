@@ -262,7 +262,6 @@
 
   tags:
     - 'keycloak'
-    - 'keycloak:configure'
     - 'keycloak:state'
 
 
@@ -375,4 +374,3 @@
     - 'keycloak__service_state == "started"'
   tags:
     - 'keycloak'
-    - 'keycloak:configure'
