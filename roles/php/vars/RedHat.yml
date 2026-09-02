@@ -8,5 +8,8 @@ __php__base_packages:
 __php__conf_dest:
   - '/etc/php.d/z00-linuxfabrik.ini'
 __php__config_test_command: 'php-fpm --test'
+__php__fpm_opcache_path: '/var/lib/php/opcache'
 __php__fpm_pools_path: '/etc/php-fpm.d'
+__php__fpm_runtime_path: '/run/php-fpm'
 __php__fpm_service_name: 'php-fpm'
+__php__fpm_session_path: '/var/lib/php/session'

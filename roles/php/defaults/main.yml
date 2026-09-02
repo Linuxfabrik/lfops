@@ -74,7 +74,7 @@ php__fpm_pool_conf_request_terminate_timeout__combined_var: '{{
 php__fpm_pool_conf_request_terminate_timeout__dependent_var: ''
 php__fpm_pool_conf_request_terminate_timeout__group_var: ''
 php__fpm_pool_conf_request_terminate_timeout__host_var: ''
-php__fpm_pool_conf_request_terminate_timeout__role_var: 0
+php__fpm_pool_conf_request_terminate_timeout__role_var: '60s'
 php__fpm_pools__combined_var: '{{ (
       php__fpm_pools__role_var +
       php__fpm_pools__dependent_var +
