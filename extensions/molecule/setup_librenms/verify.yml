@@ -198,6 +198,48 @@
           - '__molecule__rrdcached_probe_result["content"] is match("OK 0 PONG")'
         fail_msg: 'PHP-FPM could not talk to RRDCached: {{ __molecule__rrdcached_probe_result["content"] | d("") }}'
 
+    # fping is what the web interface pings a device with, and it runs in httpd_t like the code
+    # that calls it. Only the http_fping policy module lets that domain create, bind and use the
+    # raw and ICMP sockets fping needs. The absolute path is deliberate: /usr/sbin is not in the
+    # PATH of the FPM pool, and LibreNMS itself resolves the binary with "whereis -b".
+    - name: 'Deploy /opt/librenms/html/molecule-fping-probe.php'
+      ansible.builtin.copy:
+        content: |
+          <?php
+          $output = [];
+          $exit_code = 0;
+          exec('/usr/sbin/fping --count=1 127.0.0.1 2>&1', $output, $exit_code);
+          echo ($exit_code === 0 ? 'OK ' : 'FAIL ') . implode(' ', $output);
+        dest: '/opt/librenms/html/molecule-fping-probe.php'
+        owner: 'librenms'
+        group: 'librenms'
+        mode: 0o644
+
+    - name: 'restorecon /opt/librenms/html/molecule-fping-probe.php'
+      ansible.builtin.command: 'restorecon /opt/librenms/html/molecule-fping-probe.php'
+      changed_when: false
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'GET the fping probe through Apache and PHP-FPM (Host: {{ librenms__fqdn }})'
+      ansible.builtin.uri:
+        url: 'http://localhost/molecule-fping-probe.php'
+        headers:
+          Host: '{{ librenms__fqdn }}'
+        return_content: true
+      register: '__molecule__fping_probe_result'
+
+    - name: 'rm /opt/librenms/html/molecule-fping-probe.php'
+      ansible.builtin.file:
+        path: '/opt/librenms/html/molecule-fping-probe.php'
+        state: 'absent'
+
+    - name: 'Assert PHP-FPM could ping through fping'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__fping_probe_result["content"] is match("OK ")'
+        fail_msg: 'PHP-FPM could not run fping: {{ __molecule__fping_probe_result["content"] | d("") }}'
+
 
 # The poller, the discovery and the graphs only work if the interpreters actually find what they
 # import and load at runtime. None of that follows from the packages being installed: the modules

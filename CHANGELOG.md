@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:librenms**: The `http_fping` SELinux policy module carries the rules the LibreNMS documentation now lists, so pinging a device from the web interface also works where fping uses an ICMP socket or binds a source address.
 * **role:librenms**: PHP GMP is installed, so rates derived from 64-bit interface counters stay exact instead of silently losing precision in float arithmetic.
 * **role:librenms**: The `http_fping` SELinux policy module is deployed by the `selinux` role, so a playbook run that skips that role no longer installs it.
 * **role:librenms**: The RRD, log, cache and storage directories are no longer made group-writable.

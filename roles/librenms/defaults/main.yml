@@ -144,21 +144,26 @@ librenms__selinux__fcontexts__dependent_var:
     state: 'present'
 
 librenms__selinux__modules__dependent_var:
-  # fping is called by the web interface, which runs in the httpd_t domain and may not open a
-  # raw socket there.
+  # Taken verbatim from the "Allow fping" section of the LibreNMS installation docs, so a diff
+  # against upstream stays trivial. fping is called by the web interface, which runs in the
+  # httpd_t domain and may neither create a raw or ICMP socket nor bind one there.
   - name: 'http_fping'
     content_te: |
       module http_fping 1.0;
 
       require {
-          type httpd_t;
-          class capability net_raw;
-          class rawip_socket { getopt create setopt write read };
+      type node_t;
+      type httpd_t;
+      class capability net_raw;
+      class icmp_socket create;
+      class rawip_socket { getopt create setopt write read bind node_bind };
       }
 
       #============= httpd_t ==============
+      allow httpd_t node_t:rawip_socket node_bind;
       allow httpd_t self:capability net_raw;
-      allow httpd_t self:rawip_socket { getopt create setopt write read };
+      allow httpd_t self:icmp_socket create;
+      allow httpd_t self:rawip_socket { getopt create setopt write read bind };
 
   # Taken verbatim from dist/rrdcached/rrdcached_librenms.te of the LibreNMS repository, so a
   # diff against upstream stays trivial. It lets rrdcached_t work on the RRD tree
