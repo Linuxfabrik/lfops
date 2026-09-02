@@ -21,27 +21,40 @@
     check_mode: false # run task even if `--check` is specified
     run_once: true
 
+  - ansible.builtin.import_tasks: 'user.yml'
+
+  - name: 'mkdir -p /opt/librenms'
+    ansible.builtin.file:
+      path: '/opt/librenms'
+      state: 'directory'
+      owner: 'librenms'
+      group: 'librenms'
+      mode: 0o771
+
+  # Cloned as librenms, the way LibreNMS updates itself. Cloning as root and handing the tree
+  # over afterwards leaves git refusing to touch it on every later run ("detected dubious
+  # ownership"), which is git's safe.directory protection and cannot be worked around by a chown.
   - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms'
     ansible.builtin.git:
       repo: 'https://github.com/librenms/librenms.git'
       dest: '/opt/librenms'
       force: false
       version: '{{ librenms__github_release["json"]["tag_name"] }}'
+    become: true
+    become_user: 'librenms'
 
-  - ansible.builtin.import_tasks: 'user.yml'
+  # this is magnitudes faster than using the file module. --changes reports every file it
+  # touched, which keeps the task honest about whether it changed anything (installations that
+  # predate the clone above still carry root-owned files).
+  - name: 'chown -R --changes librenms:librenms /opt/librenms'
+    ansible.builtin.command: 'chown -R --changes librenms:librenms /opt/librenms'
+    register: '__librenms__chown_result'
+    changed_when: '__librenms__chown_result["stdout"] | length > 0'
 
-  # this is magnitudes faster than using the file module
-  - name: 'chown -R librenms:librenms /opt/librenms'
-    ansible.builtin.command: 'chown -R librenms:librenms /opt/librenms'
-
-  - name: 'chmod 771 /opt/librenms'
-    ansible.builtin.file:
-      path: '/opt/librenms'
-      mode: 0o771
-
-  # using in preference to the acls from the docs: 'setfacl -R -m g::rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache/ /opt/librenms/storage/'
-  - name: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
-    ansible.builtin.command: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
+  # The upstream docs make rrd, logs, bootstrap/cache and storage group-writable, for setups
+  # where the web server runs under its own account. Here PHP-FPM, cron and the scheduler all
+  # run as librenms, which owns those trees, so the group bits buy nothing and cannot be kept
+  # anyway: the application creates files below them with umask 022 as it runs.
 
   - name: 'ln -s /opt/librenms/lnms /usr/local/bin/lnms'
     ansible.builtin.file:
@@ -64,9 +77,15 @@
       chdir: '/opt/librenms'
     become: true
     become_user: 'librenms'
+    register: '__librenms__composer_result'
+    # composer says so whenever the lock file is already satisfied
+    changed_when: '"Nothing to install, update or remove" not in __librenms__composer_result["stdout"]'
 
-  - name: 'restorecon -RFv /opt/librenms'
-    ansible.builtin.command: 'restorecon -RFv /opt/librenms'
+  # No --force: it would also rewrite the SELinux user of every file the application created
+  # since the last run (unconfined_u back to system_u), which relabels on every run without
+  # changing what the targeted policy enforces, namely the type.
+  - name: 'restorecon -Rv /opt/librenms'
+    ansible.builtin.command: 'restorecon -Rv /opt/librenms'
     register: 'librenms__restorecon_data_result'
     changed_when: 'librenms__restorecon_data_result["stdout"] | length > 0'
 
