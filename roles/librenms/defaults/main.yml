@@ -195,4 +195,7 @@ librenms__selinux__modules__dependent_var:
       allow rrdcached_t var_run_t:sock_file { create setattr unlink };
       allow httpd_t var_run_t:sock_file write;
       allow httpd_t rrdcached_t:unix_stream_socket connectto;
-    state: '{{ librenms__rrdcached_enabled | bool | ternary("present", "absent") }}'
+    # Stays installed even when librenms__rrdcached_enabled is false. The selinux role runs
+    # before this one, so removing the module in the same run would deny RRDCached the writes of
+    # the shutdown flush that this role then triggers, losing up to 30 minutes of collected data.
+    state: 'present'

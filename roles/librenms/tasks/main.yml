@@ -159,6 +159,25 @@
 
 - block:
 
+  # A clean shutdown writes everything still held in memory to the RRD files, so switching to
+  # direct writes does not lose the poll cycles RRDCached has not flushed yet. The drop-in and
+  # the policy module stay in place, so the daemon can be switched back on without a full run.
+  - name: 'systemctl disable --now rrdcached.service'
+    ansible.builtin.service:
+      name: 'rrdcached.service'
+      enabled: false
+      state: 'stopped'
+
+  # block
+  when:
+    - 'not (librenms__rrdcached_enabled | bool)'
+  tags:
+    - 'librenms'
+    - 'librenms:rrdcached'
+
+
+- block:
+
   - name: 'cp /opt/librenms/misc/librenms.logrotate /etc/logrotate.d/librenms'
     ansible.builtin.copy:
       src: '/opt/librenms/misc/librenms.logrotate'

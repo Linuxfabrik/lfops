@@ -15,6 +15,7 @@ LibreNMS stores its time series in RRD files below `/opt/librenms/rrd`. By defau
 * The role configures the `rrdcached.service` of the `rrdtool` package with a systemd drop-in and disables the `rrdcached.socket` unit shipped alongside it, because socket activation would make RRDCached ignore the configured socket path.
 * On RHEL-compatible systems RRDCached needs the `rrdcached_librenms` SELinux policy module, without which it cannot write the RRD files and the web interface cannot draw graphs. The module is declared in `librenms__selinux__modules__dependent_var` and deployed by the `selinux` role, so skipping that role in the playbook leaves RRDCached without it.
 * Up to 30 minutes of collected data live in memory only. RRDCached journals them to `/var/tmp` and replays the journal after a crash.
+* Setting `librenms__rrdcached_enabled` to `false` stops and disables `rrdcached.service`, which flushes the collected data to the RRD files on the way out, and points LibreNMS at the files directly. The systemd drop-in, the `rrdcached_librenms` SELinux policy module and the RRD files themselves stay in place, so the switch can be reversed with another run of the role.
 
 
 ## Dependent Roles
@@ -117,7 +118,7 @@ librenms__fqdn: 'librenms.example.com'
 
 `librenms__rrdcached_enabled`
 
-* Whether LibreNMS reads and writes its RRD files through RRDCached. Set this to `false` to have LibreNMS access the files directly. Have a look at "How the Role Behaves" above.
+* Whether LibreNMS reads and writes its RRD files through RRDCached. Set this to `false` to stop and disable RRDCached and have LibreNMS access the files directly. Have a look at "How the Role Behaves" above.
 * Type: Boolean.
 * Default: `true`
 
