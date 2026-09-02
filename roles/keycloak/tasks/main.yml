@@ -55,35 +55,80 @@
       comment: 'User for Keycloak service'
       group: 'keycloak'
 
-  - name: 'Create log directory "/var/log/keycloak"'
+  - name: 'mkdir -p {{ keycloak__log_file | dirname }}'
     ansible.builtin.file:
-      path: '/var/log/keycloak'
+      path: '{{ keycloak__log_file | dirname }}'
       state: 'directory'
       owner: 'keycloak'
       group: 'keycloak'
+      mode: 0o755
 
-  - name: 'mkdir /opt/keycloak'
+  - name: 'mkdir -p {{ __keycloak__install_dir }}'
     ansible.builtin.file:
-      path: '/opt/keycloak'
+      path: '{{ __keycloak__install_dir }}'
       state: 'directory'
       owner: 'keycloak'
       group: 'keycloak'
+      mode: 0o755
 
-  - name: 'Download and unpack archive'
-    ansible.builtin.unarchive:
-      src: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
-      dest: '/opt/keycloak'
-      remote_src: true
-      extra_opts:
-        - '--strip-components=1'
+  # version.txt ships inside the tarball and names the installed release ("Keycloak - Version
+  # 26.4.7"), so it tells us whether the wanted version is already in place. Without this the
+  # role re-downloads and re-extracts the tarball on every single run.
+  - name: 'cat {{ __keycloak__install_dir }}/version.txt'
+    ansible.builtin.slurp:
+      src: '{{ __keycloak__install_dir }}/version.txt'
+    register: '__keycloak__version_txt_result'
+    failed_when: false # absent on a host that has no Keycloak installed yet
+    changed_when: false
+    check_mode: false
 
-  - name: 'chown -R keycloak:keycloak /opt/keycloak'
-    ansible.builtin.file:
-      path: '/opt/keycloak'
-      state: 'directory'
-      recurse: true
-      owner: 'keycloak'
-      group: 'keycloak'
+  - name: 'Set __keycloak__installed_version'
+    ansible.builtin.set_fact:
+      __keycloak__installed_version: '{{ __keycloak__version_txt_result["content"] | d("") | b64decode | regex_replace("(?s)^.*Version[ \t]+", "") | trim }}'
+
+
+  # use a sub-block with a block-level when to avoid repeating the same condition on every task.
+  - block:
+
+    # download on the controller (`delegate_to: 'localhost'`) and copy to the target afterwards,
+    # so that targets without internet access can still be provisioned.
+    - name: 'curl --output /tmp/ansible.keycloak-{{ keycloak__version }}.tar.gz {{ __keycloak__download_url }}' # noqa risky-file-permissions (temporary file)
+      ansible.builtin.get_url:
+        url: '{{ __keycloak__download_url }}'
+        dest: '/tmp/ansible.keycloak-{{ keycloak__version }}.tar.gz'
+        mode: 0o644
+      delegate_to: 'localhost'
+      become: false
+      changed_when: false # not an actual config change on the target
+      check_mode: false # run task even if `--check` is specified
+
+    - name: 'Copy /tmp/ansible.keycloak-{{ keycloak__version }}.tar.gz to the target' # noqa risky-file-permissions (temporary file)
+      ansible.builtin.copy:
+        src: '/tmp/ansible.keycloak-{{ keycloak__version }}.tar.gz'
+        dest: '/tmp/keycloak-{{ keycloak__version }}.tar.gz'
+
+    # an upgrade extracts over the existing tree. files the new release no longer ships are left
+    # behind, which is documented in the role README under "How the Role Behaves".
+    - name: 'tar xzf /tmp/keycloak-{{ keycloak__version }}.tar.gz -C {{ __keycloak__install_dir }} --strip-components=1'
+      ansible.builtin.unarchive:
+        src: '/tmp/keycloak-{{ keycloak__version }}.tar.gz'
+        dest: '{{ __keycloak__install_dir }}'
+        remote_src: true
+        owner: 'keycloak'
+        group: 'keycloak'
+        extra_opts:
+          - '--strip-components=1'
+      register: '__keycloak__unarchive_result'
+
+    when:
+      - '__keycloak__installed_version != keycloak__version'
+
+  # the module's recursive mode is slow on a tree the size of a Keycloak installation, so drive
+  # chown directly and derive changed_when from its --changes output.
+  - name: 'chown -R --changes keycloak:keycloak {{ __keycloak__install_dir | quote }}'
+    ansible.builtin.command: 'chown -R --changes keycloak:keycloak {{ __keycloak__install_dir | quote }}'
+    register: '__keycloak__chown_result'
+    changed_when: '__keycloak__chown_result["stdout"] | length > 0'
 
   tags:
     - 'keycloak'
@@ -91,21 +136,22 @@
 
 - block:
 
-  - name: 'Create Keycloak config file'
+  - name: 'Deploy {{ __keycloak__install_dir }}/conf/keycloak.conf'
     ansible.builtin.template:
       backup: true
       src: 'opt/keycloak/conf/keycloak.conf.j2'
-      dest: '/opt/keycloak/conf/keycloak.conf'
+      dest: '{{ __keycloak__install_dir }}/conf/keycloak.conf'
       owner: 'keycloak'
       group: 'keycloak'
-      mode: 0o640
+      mode: 0o640 # contains the database password
+    register: '__keycloak__conf_result'
     notify: 'keycloak: systemctl restart keycloak'
 
-  - name: 'Configure sysconfig file for Keycloak service'
+  - name: 'Deploy {{ __keycloak__sysconfig_path }}'
     ansible.builtin.template:
       backup: true
       src: 'etc/sysconfig/keycloak-sysconfig.j2'
-      dest: '/etc/sysconfig/keycloak'
+      dest: '{{ __keycloak__sysconfig_path }}'
       owner: 'root'
       group: 'root'
       mode: 0o640
@@ -113,7 +159,9 @@
       __keycloak__include_bootstrap_creds: '{{ not __keycloak__admin_login_bootstrapped }}'
     notify: 'keycloak: systemctl restart keycloak'
 
-  - name: 'Create keycloak.service'
+  # Keycloak ships no systemd unit with its tarball, so the unit itself is templated here rather
+  # than being overridden through a drop-in.
+  - name: 'Deploy /etc/systemd/system/keycloak.service'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/keycloak.service.j2'
@@ -121,31 +169,33 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__keycloak__unit_result'
     notify: 'keycloak: systemctl restart keycloak'
 
-  - name: 'systemctl daemon-reload'
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
+    when: '__keycloak__unit_result is changed'
+
+  # kc.sh build re-augments the server for its build-time options, the database vendor above all.
+  # It is not a handler because it has to run before the service is (re)started, and a handler
+  # would only run after the state task below. Gating it on the two inputs that can carry a
+  # changed build option keeps an unchanged host from paying for a rebuild on every run.
+  - name: 'cd {{ __keycloak__install_dir }} && bin/kc.sh build --db {{ keycloak__db_vendor }}' # noqa no-handler must run before the service is started
+    ansible.builtin.command: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
+    args:
+      chdir: '{{ __keycloak__install_dir }}'
+    become: true
+    become_user: 'keycloak'
+    changed_when: true # kc.sh build gives no idempotency signal, but it only runs on a real change
+    when:
+      - 'keycloak__mode == "production"'
+      - '(__keycloak__unarchive_result is defined and __keycloak__unarchive_result is changed) or
+         (__keycloak__conf_result is defined and __keycloak__conf_result is changed)'
 
   tags:
     - 'keycloak'
     - 'keycloak:configure'
-
-
-- block:
-
-  # kc.sh build always rebuilds and gives no reliable idempotency signal in its stdout, hence changed_when: true.
-  - name: 'cd /opt/keycloak && bin/kc.sh build --db {{ keycloak__db_vendor }}'
-    ansible.builtin.command: 'bin/kc.sh build --db {{ keycloak__db_vendor }}'
-    args:
-      chdir: '/opt/keycloak'
-    become: true
-    become_user: 'keycloak'
-    changed_when: true
-    when: 'keycloak__mode == "production"'
-
-  tags:
-    - 'keycloak'
 
 
 - block:
@@ -220,11 +270,11 @@
   # `backup: false` is on purpose. The previous file contained the cleartext bootstrap password;
   # writing a `.<timestamp>~` backup would leave those credentials on disk and defeat the
   # whole point of this cleanup pass.
-  - name: 'Deploy /etc/sysconfig/keycloak (without bootstrap credentials)'
+  - name: 'Deploy {{ __keycloak__sysconfig_path }} (without bootstrap credentials)'
     ansible.builtin.template:
       backup: false
       src: 'etc/sysconfig/keycloak-sysconfig.j2'
-      dest: '/etc/sysconfig/keycloak'
+      dest: '{{ __keycloak__sysconfig_path }}'
       owner: 'root'
       group: 'root'
       mode: 0o640

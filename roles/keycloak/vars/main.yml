@@ -1,0 +1,5 @@
+__keycloak__download_url: 'https://github.com/keycloak/keycloak/releases/download/{{ keycloak__version }}/keycloak-{{ keycloak__version }}.tar.gz'
+
+__keycloak__install_dir: '/opt/keycloak'
+
+__keycloak__sysconfig_path: '/etc/sysconfig/keycloak'
