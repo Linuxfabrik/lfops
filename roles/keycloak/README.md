@@ -286,7 +286,7 @@ See the [Keycloak reverse proxy documentation](https://www.keycloak.org/server/r
 
 **Role fails with `Could not obtain an admin-cli token`**
 
-* On a run where the bootstrap is not yet marked as done (the marker `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state` is missing), the role verifies that the bootstrap admin can obtain a token before writing the marker. This fails when the bootstrap admin no longer exists, which is the expected end state after the permanent-admin handover (see "Post-Installation Steps") once the `-temp` account has been deleted, combined with a missing marker file (e.g. a fresh Ansible controller, or a lost `/etc/ansible/facts.d`).
+* On a run where the bootstrap is not yet marked as done (the marker `/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state` is missing), the role verifies that the bootstrap admin can obtain a token before writing the marker. It waits up to five minutes for this, because Keycloak keeps answering `503` while it creates its database schema and the admin account on the first start, which takes a minute or two on a fresh database. This fails when the bootstrap admin no longer exists, which is the expected end state after the permanent-admin handover (see "Post-Installation Steps") once the `-temp` account has been deleted, combined with a missing marker file (e.g. a fresh Ansible controller, or a lost `/etc/ansible/facts.d`).
 * If the handover is already complete, recreate the marker on the target and re-run the role:
 
     ```bash

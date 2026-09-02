@@ -188,6 +188,11 @@
   # Verify the bootstrap admin actually exists with the configured password before touching
   # the marker. If this fails, the marker stays absent and a re-run with corrected variables
   # will re-render the credentials and retry.
+  # The retry budget covers Keycloak's bootstrap, not just a slow request: once the socket is
+  # bound, Keycloak still creates its database schema and the admin account, and answers every
+  # request with 503 from its BootstrapFilter until that is done. Measured on a fresh database:
+  # "Bootstrap completed in 95.064000 seconds" on a 2 vCPU Rocky 9 VM with keycloak 26.7.3, so
+  # 5 minutes leaves room on a slower host or a larger database.
   - name: 'curl --data grant_type=password --data client_id=admin-cli {{ __keycloak__base_url }}/realms/master/protocol/openid-connect/token'
     ansible.builtin.uri:
       url: '{{ __keycloak__base_url }}/realms/master/protocol/openid-connect/token'
@@ -202,8 +207,8 @@
       validate_certs: false
     register: '__keycloak__admin_token_result'
     until: '__keycloak__admin_token_result["status"] | d(0) == 200'
-    retries: 10
-    delay: 6
+    retries: 60
+    delay: 5
     no_log: true
     changed_when: false
     check_mode: false
