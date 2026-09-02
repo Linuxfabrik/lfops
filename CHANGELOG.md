@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:php**: On RedHat, every host running this role gets the `lfops_php_fpm_slowlog` SELinux policy module, which grants the `httpd_t` domain the `sys_ptrace` capability and `ptrace` on itself. Without it the PHP-FPM slowlog stays empty, because the master is not allowed to ptrace the worker whose backtrace it is supposed to write. The module is deployed regardless of whether the slowlog is switched on, the permissions apply to the whole `httpd_t` domain and therefore to Apache httpd as well, and compiling it installs `make` and `selinux-policy-devel` on the host. The `php` and `icingaweb2` playbooks run the `policycoreutils` and `selinux` roles for this; set the playbook's `__skip_selinux` variable (for example `php__skip_selinux: true`) to leave the host's policy untouched.
 * **role:mariadb_server**: The InnoDB buffer pool grows from 128 MiB to 512 MiB, so a database with more than a trivial amount of data is served from memory instead of from disk. Every host running this role therefore uses roughly 384 MiB more RAM after the next restart of the service.
 * **role:mariadb_server**: The InnoDB redo log grows from 32 MiB to the 96 MiB MariaDB itself ships, so a write-heavy server no longer stalls waiting for a checkpoint on a redo log sized for much smaller workloads. InnoDB resizes the log itself when the service next restarts, also after an unclean shutdown, but the data directory needs 64 MiB more free space for it; check that on hosts that are tight before deploying. Set `mariadb_server__cnf_innodb_log_file_size__group_var: '32M'` (or the `__host_var`) to keep the previous size.
 * **role:mariadb_server**: `innodb_snapshot_isolation` now defaults to `OFF`. Turning it on requires support from the application: a transaction in `REPEATABLE READ` that modifies a row another transaction changed after its snapshot was taken is aborted with `ER_CHECKREAD`. The application has to catch that error and retry the transaction, otherwise the write fails under concurrent load. To restore the previous behaviour on hosts whose application is known to handle it, set `mariadb_server__cnf_innodb_snapshot_isolation__group_var: 'ON'` (or the `__host_var`).
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:selinux**: A policy module can be defined inline through the `content_te` subkey of `selinux__modules__*_var`, instead of pointing `src` at a directory on the Ansible controller.
 * **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
@@ -35,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:selinux**: A policy module is only recompiled and reinstalled when its source changed, so a run against an up-to-date host no longer reports a change for every module it manages.
 * **role:monitoring_plugins**: A source install also deploys the `*-logging.sudoers` companion, which keeps the plugin calls out of the authentication log. Without it every check costs five entries there, and a monitored host runs dozens of checks a minute. A host running sudo-rs, Ubuntu 26.04 for example, does not get the file and loses it again if it had one, because sudo-rs knows none of its settings and warns about each of them on every `sudo` call by any user.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).
 * A repository file that carries mirror credentials is deployed with mode `0600` instead of `0644`, so an unprivileged `dnf` or `zypper` no longer lists those repositories (all `repo_*` roles).
@@ -44,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: The PHP-FPM slowlog holds the backtrace of a slow request on RedHat, instead of staying empty while php-fpm logs `failed to ptrace(ATTACH) child <pid>: Operation not permitted (1)`.
 * **role:openvpn_server**: A new server certificate, a changed `server.conf` or a regenerated Diffie-Hellman file restarts OpenVPN. Until now the files were written to disk while the running service kept its old configuration, so a renewed certificate only took effect at the next reboot. The certificate revocation list and the client configs still apply without a restart, since OpenVPN re-reads them per connection.
 * **role:apache_httpd**: Set `apache_httpd__mod_ssl_ssl_use_stapling` to off by default because Let's Encrypt does not provide an OCSP URL-endpoint.
 * **plugin:bitwarden_item, module:bitwarden_item**: A vault that is not unlocked is reported with the `bw serve` endpoint it was read from and the status it actually has, plus the hint that `bw serve` keeps the session it was started with. The previous message pointed at `bw login` and `bw unlock`, which do not reach a running `bw serve`.

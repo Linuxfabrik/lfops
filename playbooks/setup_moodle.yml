@@ -109,6 +109,7 @@
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{ moodle__selinux__booleans__dependent_var }}'
       selinux__fcontexts__dependent_var: '{{ moodle__selinux__fcontexts__dependent_var }}'
+      selinux__modules__dependent_var: '{{ php__selinux__modules__dependent_var }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_moodle__skip_selinux | default(false)'
