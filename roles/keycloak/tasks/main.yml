@@ -214,6 +214,34 @@
 
 - block:
 
+  # Keycloak has no built-in rotation for its file log handler (verified against keycloak 26.4.7),
+  # so the log grows unbounded without this. copytruncate because the handler holds the file open
+  # and does not reopen it after a rename.
+  - name: 'Deploy /etc/logrotate.d/keycloak'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/keycloak.j2'
+      dest: '/etc/logrotate.d/keycloak'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - '"file" in keycloak__log'
+
+  - name: 'rm -f /etc/logrotate.d/keycloak'
+    ansible.builtin.file:
+      path: '/etc/logrotate.d/keycloak'
+      state: 'absent'
+    when:
+      - '"file" not in keycloak__log'
+
+  tags:
+    - 'keycloak'
+    - 'keycloak:logrotate'
+
+
+- block:
+
   - name: 'systemctl {{ keycloak__service_enabled | bool | ternary("enable", "disable") }} keycloak.service'
     ansible.builtin.service:
       name: 'keycloak.service'
