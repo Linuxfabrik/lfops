@@ -79,6 +79,7 @@ log-file={{ keycloak__log_file }}
 
 {% if keycloak__version is ansible.builtin.version('26.6.0', '>=') %}
 # Transaction
-transaction-default-timeout=60m
-transaction-setup-timeout=60m
+# Both options take an integer number of seconds.
+transaction-default-timeout={{ keycloak__transaction_default_timeout }}
+transaction-setup-timeout={{ keycloak__transaction_setup_timeout }}
 {% endif %}

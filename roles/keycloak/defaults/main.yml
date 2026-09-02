@@ -11,6 +11,7 @@ keycloak__https_cipher_suites: []
 keycloak__https_protocols:
   - 'TLSv1.3'
   - 'TLSv1.2'
+keycloak__limit_nofile: 131072
 keycloak__log:
   - 'file'
 keycloak__log_file: '/var/log/keycloak/keycloak.log'
@@ -20,6 +21,8 @@ keycloak__proxy_headers: 'xforwarded'
 keycloak__proxy_trusted_addresses: []
 keycloak__service_enabled: true
 keycloak__spi_sticky_session_encoder_infinispan_should_attach_route: false
+keycloak__transaction_default_timeout: 3600
+keycloak__transaction_setup_timeout: 3600
 keycloak__service_state: 'started'
 
 # -----------------------------------------------------------------------------
