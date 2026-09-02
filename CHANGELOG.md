@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_tomcat**: Add support for Tomcat 10.1, whose `tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as an unsalted sha-256 digest instead of in clear text.
 * **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.

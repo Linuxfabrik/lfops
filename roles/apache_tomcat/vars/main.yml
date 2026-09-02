@@ -3,3 +3,4 @@
 # missing-file error. Extend it whenever a template set for a new version is added.
 __apache_tomcat__supported_versions:
   - '9.0'
+  - '10.1'

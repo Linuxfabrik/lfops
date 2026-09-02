@@ -22,6 +22,11 @@ Notes:
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* Passwords in `apache_tomcat__users__*_var` are always given in clear text. On Tomcat 10.1 the role stores them in `/etc/tomcat/tomcat-users.xml` as a sha-256 digest, because the `server.xml` it deploys configures a `MessageDigestCredentialHandler`. The digest is built without a salt and with a single iteration, so it is the value `printf '%s' '<password>' | sha256sum | cut -d' ' -f1` prints. On Tomcat 9.0 there is no credential handler and the password is stored in clear text.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -183,7 +188,7 @@ The GUI is protected against CSRF, but the text and JMX interfaces are not. To m
 
     * `password`:
 
-        * Mandatory.
+        * Mandatory. In clear text; see "How the Role Behaves" for how it is stored on the host.
         * Type: String.
 
     * `roles`:
