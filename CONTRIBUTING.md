@@ -230,6 +230,11 @@ When creating a new role or changing an existing one, pull through the **full op
 * Only mark a cell `x` in COMPATIBILITY.md once it is proven to run; use `(x)` for "expected to work but not verified".
 
 
+### Security by Default
+
+A host deployed with LFOps and no further inventory should already be in the state a security review would ask for, so where the safe value also works, it is the default. Do not ship the permissive one merely because the upstream package does; if you deviate from upstream, say so per "Deviating from an Upstream Default" below.
+
+
 ### Changelog Sections
 
 The project-agnostic "Changelog" rules above apply. LFOps overrides only the sorting: entries are sorted newest first, because operators running playbooks need to see what changed most recently.
