@@ -1,0 +1,199 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts what only the
+# running system can confirm: that RRDCached runs confined, that data actually reaches the RRD
+# tree through it, and that PHP-FPM can talk to its socket. The role's own tasks cannot tell any
+# of that, and a plain "the service is running" check would still pass while every write is
+# denied by SELinux, which is exactly how the earlier attempt at this failed.
+- name: 'Verify RRDCached runs and writes the RRD tree'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'systemctl list-units'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert rrdcached.service is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"]["rrdcached.service"]["state"] | d("") == "running"'
+          - 'ansible_facts["services"]["rrdcached.service"]["status"] | d("") == "enabled"'
+        fail_msg: 'rrdcached.service is not running and enabled: {{ ansible_facts["services"]["rrdcached.service"] | d("not present") }}'
+
+    - name: 'stat /run/rrdcached.sock'
+      ansible.builtin.stat:
+        path: '/run/rrdcached.sock'
+      register: '__molecule__rrdcached_socket_result'
+
+    # The socket has to be outside /tmp: httpd and php-fpm run with PrivateTmp=true and would
+    # not see it there. Its group has to be librenms, otherwise the poller cannot write to it.
+    - name: 'Assert the RRDCached socket belongs to the librenms group'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rrdcached_socket_result["stat"]["exists"] | bool'
+          - '__molecule__rrdcached_socket_result["stat"]["issock"] | bool'
+          - '__molecule__rrdcached_socket_result["stat"]["gr_name"] == "librenms"'
+        fail_msg: 'No usable RRDCached socket at /run/rrdcached.sock: {{ __molecule__rrdcached_socket_result["stat"] }}'
+
+    # Assert the domain of the running process, not the label on the binary: only that tells
+    # rrdcached_t apart from the unconfined_service_t a missing transition would leave behind.
+    - name: 'ps -o label= -C rrdcached'
+      ansible.builtin.command: 'ps -o label= -C rrdcached'
+      register: '__molecule__rrdcached_label_result'
+      changed_when: false
+      # ps exits 1 when no process matches, which would otherwise fail the task with a bare rc=1
+      # and no indication of what is wrong. The assert below turns it into a sentence.
+      failed_when: '__molecule__rrdcached_label_result["rc"] not in [0, 1]'
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert rrdcached runs in the rrdcached_t SELinux domain'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rrdcached_label_result["rc"] == 0'
+          - '"rrdcached_t" in __molecule__rrdcached_label_result["stdout"]'
+        fail_msg: 'rrdcached runs as "{{ __molecule__rrdcached_label_result["stdout"] | trim }}" instead of rrdcached_t.'
+      when:
+        - '__molecule__rrdcached_label_result is not skipped'
+
+    - name: 'semodule --list-modules | grep --quiet rrdcached_librenms'
+      ansible.builtin.shell: 'set -o pipefail; semodule --list-modules | grep --quiet rrdcached_librenms'
+      args:
+        executable: '/bin/bash'
+      register: '__molecule__rrdcached_semodule_result'
+      changed_when: false
+      failed_when: '__molecule__rrdcached_semodule_result["rc"] >= 2'
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the rrdcached_librenms policy module is installed'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rrdcached_semodule_result["rc"] == 0'
+        fail_msg: 'The rrdcached_librenms SELinux policy module is not installed.'
+      when:
+        - '__molecule__rrdcached_semodule_result is not skipped'
+
+    - name: 'rm /opt/librenms/rrd/molecule-rrdcached.rrd # leftover of an earlier verify run'
+      ansible.builtin.file:
+        path: '/opt/librenms/rrd/molecule-rrdcached.rrd'
+        state: 'absent'
+
+    # Create, update and flush through the daemon as the LibreNMS user does. This is the whole
+    # point of the exercise: it only succeeds if rrdcached_t may write the httpd_sys_rw_content_t
+    # tree below /opt/librenms/rrd, which needs both the file contexts and the policy module.
+    - name: 'rrdtool create / update / flushcached --daemon unix:/run/rrdcached.sock'
+      ansible.builtin.command: '{{ item }}'
+      loop:
+        - 'rrdtool create molecule-rrdcached.rrd --daemon unix:/run/rrdcached.sock --step 300 DS:test:GAUGE:600:0:U RRA:AVERAGE:0.5:1:10'
+        - 'rrdtool update molecule-rrdcached.rrd --daemon unix:/run/rrdcached.sock N:42'
+        - 'rrdtool flushcached molecule-rrdcached.rrd --daemon unix:/run/rrdcached.sock'
+      args:
+        chdir: '/opt/librenms/rrd'
+      become: true
+      become_user: 'librenms'
+      changed_when: false # test data, removed again below
+
+    - name: 'stat /opt/librenms/rrd/molecule-rrdcached.rrd'
+      ansible.builtin.stat:
+        path: '/opt/librenms/rrd/molecule-rrdcached.rrd'
+      register: '__molecule__rrdcached_rrd_result'
+
+    - name: 'Assert RRDCached wrote the file into the RRD tree'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rrdcached_rrd_result["stat"]["exists"] | bool'
+          - '__molecule__rrdcached_rrd_result["stat"]["pw_name"] == "librenms"'
+        fail_msg: 'RRDCached did not flush molecule-rrdcached.rrd to /opt/librenms/rrd.'
+
+    # The file inherits the label of the directory it is created in, so this proves the file
+    # contexts of the role reached the host and were applied.
+    - name: 'stat --format=%C /opt/librenms/rrd/molecule-rrdcached.rrd'
+      ansible.builtin.command: 'stat --format=%C /opt/librenms/rrd/molecule-rrdcached.rrd'
+      register: '__molecule__rrdcached_rrd_context_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the RRD files are labelled httpd_sys_rw_content_t'
+      ansible.builtin.assert:
+        that:
+          - '"httpd_sys_rw_content_t" in __molecule__rrdcached_rrd_context_result["stdout"]'
+        fail_msg: 'The RRD files are labelled "{{ __molecule__rrdcached_rrd_context_result["stdout"] | trim }}" instead of httpd_sys_rw_content_t.'
+      when:
+        - '__molecule__rrdcached_rrd_context_result is not skipped'
+
+    - name: 'rm /opt/librenms/rrd/molecule-rrdcached.rrd'
+      ansible.builtin.file:
+        path: '/opt/librenms/rrd/molecule-rrdcached.rrd'
+        state: 'absent'
+
+    - name: 'ausearch --message avc --start boot'
+      ansible.builtin.shell: 'set -o pipefail; ausearch --message avc --start boot | grep --extended-regexp "rrdcached|httpd_sys_rw_content_t" || true'
+      args:
+        executable: '/bin/bash'
+      register: '__molecule__rrdcached_avc_result'
+      changed_when: false
+      # "status" is enabled / disabled, the enforcing vs permissive distinction lives in "mode"
+      when:
+        - 'ansible_facts["selinux"]["mode"] | d("") == "enforcing"'
+
+    - name: 'Assert nothing was denied around RRDCached'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rrdcached_avc_result["stdout"] | length == 0'
+        fail_msg: 'SELinux denials around RRDCached: {{ __molecule__rrdcached_avc_result["stdout"] }}'
+      when:
+        - '__molecule__rrdcached_avc_result is not skipped'
+
+
+# The web interface draws its graphs from PHP-FPM, which runs in the httpd_t domain. Reaching the
+# socket from there needs the connectto and sock_file rules of the policy module, and a socket
+# outside /tmp. A probe served through the LibreNMS vHost is the only way to exercise that path,
+# because the domain follows from who executes the code, not from the user it runs as.
+- name: 'Verify PHP-FPM can talk to RRDCached'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Deploy /opt/librenms/html/molecule-rrdcached-probe.php'
+      ansible.builtin.copy:
+        content: |
+          <?php
+          $socket = @fsockopen('unix:///run/rrdcached.sock', -1, $errno, $errstr, 5);
+          if ($socket === false) {
+              echo 'FAIL ' . $errno . ' ' . $errstr;
+              exit;
+          }
+          fwrite($socket, "PING\n");
+          echo 'OK ' . trim(fgets($socket));
+          fclose($socket);
+        dest: '/opt/librenms/html/molecule-rrdcached-probe.php'
+        owner: 'librenms'
+        group: 'librenms'
+        mode: 0o644
+
+    - name: 'restorecon /opt/librenms/html/molecule-rrdcached-probe.php'
+      ansible.builtin.command: 'restorecon /opt/librenms/html/molecule-rrdcached-probe.php'
+      changed_when: false
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'GET the probe through Apache and PHP-FPM (Host: {{ librenms__fqdn }})'
+      ansible.builtin.uri:
+        url: 'http://localhost/molecule-rrdcached-probe.php'
+        headers:
+          Host: '{{ librenms__fqdn }}'
+        return_content: true
+      register: '__molecule__rrdcached_probe_result'
+
+    - name: 'rm /opt/librenms/html/molecule-rrdcached-probe.php'
+      ansible.builtin.file:
+        path: '/opt/librenms/html/molecule-rrdcached-probe.php'
+        state: 'absent'
+
+    - name: 'Assert PHP-FPM got a response from RRDCached'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rrdcached_probe_result["content"] is match("OK 0 PONG")'
+        fail_msg: 'PHP-FPM could not talk to RRDCached: {{ __molecule__rrdcached_probe_result["content"] | d("") }}'
