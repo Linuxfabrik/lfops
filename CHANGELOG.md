@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag.
+**Highlights:** On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag. Apache serves HTTP/2 to every client that offers it over TLS, which in a typical setup is the reverse proxy in front of an application; the hop from that proxy to the backend is unchanged.
 
 ### Breaking Changes
 
@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_httpd**: `apache_httpd__mod_http2_protocols` sets the protocols offered server-wide, the `conf_protocols` vHost key overrides it for a single vHost, and the remaining `apache_httpd__mod_http2_*` variables size the HTTP/2 worker pool and its per-connection buffers.
 * **role:selinux**: A policy module can be defined inline through the `content_te` subkey of `selinux__modules__*_var`, instead of pointing `src` at a directory on the Ansible controller.
 * **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: HTTP/2 is enabled and is the preferred protocol on every connection that terminates TLS, while a client that does not offer it is still served HTTP/1.1 and cleartext HTTP/2 (h2c) is not offered; on RedHat the `mod_http2` package is installed for this.
 * **role:selinux**: A policy module is only recompiled and reinstalled when its source changed, so a run against an up-to-date host no longer reports a change for every module it manages.
 * **role:monitoring_plugins**: A source install also deploys the `*-logging.sudoers` companion, which keeps the plugin calls out of the authentication log. Without it every check costs five entries there, and a monitored host runs dozens of checks a minute. A host running sudo-rs, Ubuntu 26.04 for example, does not get the file and loses it again if it had one, because sudo-rs knows none of its settings and warns about each of them on every `sudo` call by any user.
 * A service that depends on a kernel setting deployed by the `kernel_settings` role now starts after TuneD, so the setting is in place before the service reads it. Until now such a service could come up while TuneD was still applying the profile and then run with the old value until its next restart, while `sysctl` and `tuned-adm verify` already reported the new one (roles `graylog_datanode`, `graylog_server`, `mariadb_server`, `mongodb`, `redis`).

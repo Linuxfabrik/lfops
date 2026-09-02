@@ -633,6 +633,13 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 * Type: String.
 * Default: `'None'`
 
+`conf_protocols`
+
+* The protocols offered on this vHost, most preferred first, overriding `apache_httpd__mod_http2_protocols` for this vHost only. `h2` takes effect only on a vHost that terminates TLS, since that is where ALPN happens. See [Protocols](https://httpd.apache.org/docs/2.4/mod/core.html#protocols).
+* Applies to: app, proxy, wordpress.
+* Type: String.
+* Default: unset, which leaves the server-wide setting in place.
+
 `conf_proxy_error_override`
 
 * If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server. See [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride).
@@ -741,6 +748,80 @@ Example:
 ```yaml
 # optional - mod_dir
 apache_httpd__mod_dir_directory_index: 'index.html'
+```
+
+
+## Optional Role Variables - mod_http2
+
+HTTP/2 is enabled, and `h2` is the preferred protocol on every TLS connection. Browsers speak HTTP/2 only over TLS, so a vHost without a certificate keeps serving HTTP/1.1 either way. HTTP/2 is negotiated per connection, so it applies between a browser and the reverse proxy in front of an application; the hop from that proxy to the backend stays HTTP/1.1, because `mod_proxy_http` speaks nothing else.
+
+HTTP/2 hands every request to a worker thread of its own. That pool is separate from the MPM workers documented below: it is not counted against `apache_httpd__mpm_event_threads_per_child` and does not appear in `mod_status`. Budget for the additional threads and for the per-connection buffers when sizing a busy host. See the upstream [HTTP/2 dimensioning](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#dimensioning) notes.
+
+`apache_httpd__mod_http2_early_hints`
+
+* Whether to send a "103 Early Hints" response carrying the `Link` headers of `H2PushResource` as soon as the request starts being processed. This is the replacement for HTTP/2 Server Push, which RFC 9113 deprecated and which Chrome and Edge removed in version 106. See [H2EarlyHints](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2earlyhints).
+* Type: String.
+* Default: `'off'`
+
+`apache_httpd__mod_http2_max_session_streams`
+
+* Number of requests a client may have in flight on a single HTTP/2 connection. See [H2MaxSessionStreams](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2maxsessionstreams).
+* Type: Number.
+* Default: `100`
+
+`apache_httpd__mod_http2_max_workers`
+
+* Upper bound of the HTTP/2 worker thread pool per child process. Unset lets it default to `ThreadsPerChild`. See [H2MaxWorkers](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2maxworkers).
+* Type: Number.
+* Default: unset
+
+`apache_httpd__mod_http2_min_workers`
+
+* Lower bound of the HTTP/2 worker thread pool per child process. Unset lets it default to `ThreadsPerChild`. See [H2MinWorkers](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2minworkers).
+* Type: Number.
+* Default: unset
+
+`apache_httpd__mod_http2_protocols`
+
+* The protocols offered to clients, most preferred first. `h2` is HTTP/2 over TLS, `h2c` is HTTP/2 over cleartext TCP. Add `h2c` for a client that asks for it, such as a load balancer or `curl --http2`; no browser implements it. A protocol no loaded module implements is ignored rather than rejected. See [Protocols](https://httpd.apache.org/docs/2.4/mod/core.html#protocols).
+* Type: String.
+* Default: `'h2 http/1.1'`
+* Deviates from the upstream default `http/1.1`: without `h2` in the list, loading the module changes nothing and every connection stays on HTTP/1.1, so this is what turns HTTP/2 on.
+
+`apache_httpd__mod_http2_stream_max_mem_size`
+
+* Amount of response data buffered per request before the worker producing it is suspended. See [H2StreamMaxMemSize](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2streammaxmemsize).
+* Type: Number.
+* Default: `65536`
+
+`apache_httpd__mod_http2_window_size`
+
+* Amount of request body the server buffers per request before the client has to wait. See [H2WindowSize](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2windowsize).
+* Type: Number.
+* Default: `65535`
+
+Example:
+```yaml
+# optional - mod_http2
+apache_httpd__mod_http2_early_hints: 'off'
+apache_httpd__mod_http2_max_session_streams: 100
+apache_httpd__mod_http2_protocols: 'h2 h2c http/1.1'
+apache_httpd__mod_http2_stream_max_mem_size: 65536
+apache_httpd__mod_http2_window_size: 65535
+```
+
+To turn HTTP/2 off entirely on a host, disable the module and its configuration. Both, or neither: the `conf-available/http2.conf` snippet carries the `H2*` directives, which Apache rejects with `Invalid command 'H2MaxSessionStreams'` when the module is not loaded. That is intended, a missing module has to surface as a startup error rather than as silently dropped configuration.
+```yaml
+apache_httpd__conf__host_var:
+  - filename: 'http2'
+    enabled: false
+    state: 'present'
+    template: 'http2'
+apache_httpd__mods__host_var:
+  - filename: 'http2'
+    enabled: false
+    state: 'present'
+    template: 'http2'
 ```
 
 

@@ -198,6 +198,61 @@ argument_specs:
           Resources searched for when a directory is requested
           (`DirectoryIndex`).
 
+      apache_httpd__mod_http2_early_hints:
+        type: 'str'
+        required: false
+        default: 'off'
+        description: >-
+          Whether a "103 Early Hints" response is sent as soon as request
+          processing starts (`H2EarlyHints`).
+
+      apache_httpd__mod_http2_max_session_streams:
+        type: 'int'
+        required: false
+        default: 100
+        description: >-
+          Requests a client may have in flight on one HTTP/2 connection
+          (`H2MaxSessionStreams`).
+
+      apache_httpd__mod_http2_max_workers:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Upper bound of the HTTP/2 worker thread pool (`H2MaxWorkers`).
+          Empty omits the directive, which defaults it to `ThreadsPerChild`.
+
+      apache_httpd__mod_http2_min_workers:
+        type: 'raw'
+        required: false
+        default: ''
+        description: >-
+          Lower bound of the HTTP/2 worker thread pool (`H2MinWorkers`).
+          Empty omits the directive, which defaults it to `ThreadsPerChild`.
+
+      apache_httpd__mod_http2_protocols:
+        type: 'str'
+        required: false
+        default: 'h2 http/1.1'
+        description: >-
+          Protocols offered to clients, most preferred first (`Protocols`).
+
+      apache_httpd__mod_http2_stream_max_mem_size:
+        type: 'int'
+        required: false
+        default: 65536
+        description: >-
+          Response data buffered per request before the producing worker is
+          suspended (`H2StreamMaxMemSize`).
+
+      apache_httpd__mod_http2_window_size:
+        type: 'int'
+        required: false
+        default: 65535
+        description: >-
+          Request body buffered per request before the client has to wait
+          (`H2WindowSize`).
+
       apache_httpd__mod_log_config_custom_log:
         type: 'str'
         required: false

@@ -103,7 +103,7 @@ apache_httpd__mods__role_var:
     template: 'headers'
 
   - filename: 'http2'
-    enabled: false
+    enabled: true
     state: 'present'
     template: 'http2'
 
@@ -289,6 +289,9 @@ apache_httpd__mods__role_var:
     template: 'wsgi_python3'
 apache_httpd__packages__role_var:
   - name: 'mod_auth_openidc'
+    state: 'present'
+
+  - name: 'mod_http2' # ships mod_http2.so and mod_proxy_http2.so; part of apache2-bin on Debian
     state: 'present'
 
   - name: 'mod_qos'

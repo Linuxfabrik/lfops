@@ -197,6 +197,15 @@ apache_httpd__conf_trace_enable: 'Off'
 # mod_dir
 apache_httpd__mod_dir_directory_index: 'index.html index.htm index.txt'
 
+# mod_http2
+apache_httpd__mod_http2_early_hints: 'off'
+apache_httpd__mod_http2_max_session_streams: 100
+apache_httpd__mod_http2_max_workers: ''
+apache_httpd__mod_http2_min_workers: ''
+apache_httpd__mod_http2_protocols: 'h2 http/1.1'  # upstream default: http/1.1
+apache_httpd__mod_http2_stream_max_mem_size: 65536
+apache_httpd__mod_http2_window_size: 65535
+
 # mod_security
 # normally nothing that you have to change
 # get details from https://coreruleset.org/docs/deployment/install/
