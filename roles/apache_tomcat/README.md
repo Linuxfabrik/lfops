@@ -382,7 +382,7 @@ apache_tomcat__roles__host_var:
 apache_tomcat__server_xml_ajp_port: 8009
 apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain'
 apache_tomcat__server_xml_connector_compression: 'on'
-apache_tomcat__server_xml_connector_connection_timeout: 60000
+apache_tomcat__server_xml_connector_connection_timeout: 20000
 apache_tomcat__server_xml_connector_max_threads: 200
 apache_tomcat__server_xml_connector_min_spare_threads: 10
 apache_tomcat__server_xml_connector_port: 8080
