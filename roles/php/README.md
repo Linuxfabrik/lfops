@@ -33,10 +33,17 @@ This role never exposes to the world that PHP is installed on the server, no mat
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* On RedHat the role ships a small SELinux policy module, `lfops_php_fpm_slowlog`, and hands it to the `selinux` role through `php__selinux__modules__dependent_var`. It grants the `httpd_t` domain the `sys_ptrace` capability and `ptrace` on itself, which the PHP-FPM master needs to read the backtrace out of a worker that exceeded `php__fpm_pool_conf_request_slowlog_timeout__*_var`. Without it, PHP-FPM logs `failed to ptrace(ATTACH) child <pid>: Operation not permitted (1)` and leaves the slowlog empty. The targeted policy grants neither permission and offers no boolean for it, so the rules have to come from a module.
+* The module is installed regardless of the configured `request_slowlog_timeout`, so that turning the slowlog on later is a pure configuration change. The permissions it grants apply to the whole `httpd_t` domain, Apache httpd included. Its rules are unconditional and therefore not subject to the `deny_ptrace` boolean: on a host hardened with `setsebool -P deny_ptrace on`, `httpd_t` can still ptrace itself. Set `php__skip_selinux: true` in the playbook to leave the host's policy untouched.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
+* On RedHat, the `lfops_php_fpm_slowlog` policy module must be compiled and installed (roles: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils) and [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 * Optional: The EPEL repository, and CRB on Rocky 9 and newer, must be enabled (roles: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel) and [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). Remi's packages link against EPEL content: on RedHat 8 for example `php-opcache` needs `libcapstone`, which neither the default repositories nor PowerTools carry.
 * Optional: [Remi's RPM repository](https://rpms.remirepo.net/) (role: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)) provides newer PHP versions.
 
@@ -422,7 +429,7 @@ Variables for PHP-FPM pool directives and their default values, defined and supp
 
 `php__fpm_pool_conf_request_slowlog_timeout__group_var` / `php__fpm_pool_conf_request_slowlog_timeout__host_var`
 
-* The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays).
+* The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). The slowlog is written to `/var/log/php-fpm/<pool>-slow.log` on RedHat and to `log/<pool>-slow.log` below the FPM prefix on Debian. On RedHat the backtrace also needs the `lfops_php_fpm_slowlog` SELinux module, see "How the Role Behaves".
 * Type: Number.
 * Default: `0`
 

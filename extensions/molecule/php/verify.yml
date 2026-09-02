@@ -189,3 +189,67 @@
       ansible.builtin.assert:
         that: '__molecule__php_memory_limit_result["stdout"] == php__ini_memory_limit__group_var'
         fail_msg: 'memory_limit is {{ __molecule__php_memory_limit_result["stdout"] }}, expected {{ php__ini_memory_limit__group_var }}'
+
+    # The slowlog backtrace is the one thing on RedHat that a correct php-fpm configuration alone
+    # does not buy: the master has to ptrace the worker, which the targeted policy denies for
+    # httpd_t. Everything below drives one deliberately slow request through the pool and then looks
+    # at what php-fpm wrote. Grepping the pool config or listing the installed SELinux module would
+    # pass just as well on a host where the ptrace is still denied, which is the bug this covers.
+    - name: 'Assert SELinux is enforcing, otherwise the slowlog assertion proves nothing'
+      ansible.builtin.assert:
+        that: 'ansible_facts["selinux"]["mode"] | d("") == "enforcing"'
+        fail_msg: 'SELinux is not enforcing, so the ptrace denial this asserts against cannot occur'
+
+    # cgi-fcgi speaks FastCGI to the pool socket directly, so no web server is needed in front of
+    # php-fpm. It comes from EPEL, which the playbook under test enables on RedHat.
+    - name: 'Make sure cgi-fcgi is installed'
+      ansible.builtin.package:
+        name: 'fcgi'
+        state: 'present'
+
+    # /var/www/html comes from httpd-filesystem, which php-fpm depends on, so the document root and
+    # its httpd_sys_content_t label exist even without a web server. The label is set explicitly
+    # because the worker runs as httpd_t and has to be able to read the script.
+    - name: 'Deploy the slow script'
+      ansible.builtin.copy:
+        content: "<?php sleep(3); echo 'done';\n"
+        dest: '/var/www/html/molecule-slow.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o0644
+        setype: 'httpd_sys_content_t'
+
+    # In place, not by rewriting the file: php-fpm opens the slowlog once and keeps the descriptor,
+    # so a replacement would leave it writing into the unlinked inode and the assertion below would
+    # read an empty file no matter what happened.
+    - name: 'truncate --size=0 /var/log/php-fpm/www-slow.log'
+      ansible.builtin.command: 'truncate --size=0 /var/log/php-fpm/www-slow.log'
+      changed_when: false
+
+    - name: 'Request the slow script through the php-fpm pool socket'
+      ansible.builtin.command: 'cgi-fcgi -bind -connect /run/php-fpm/www.sock'
+      environment:
+        QUERY_STRING: ''
+        REQUEST_METHOD: 'GET'
+        SCRIPT_FILENAME: '/var/www/html/molecule-slow.php'
+        SCRIPT_NAME: '/molecule-slow.php'
+      register: '__molecule__php_slow_request_result'
+      changed_when: false
+      failed_when: '"done" not in __molecule__php_slow_request_result["stdout"]'
+
+    - name: 'Read the slowlog'
+      ansible.builtin.slurp:
+        src: '/var/log/php-fpm/www-slow.log'
+      register: '__molecule__php_slowlog_result'
+
+    # php-fpm logs the WARNING about the slow request to its error log whether the ptrace worked or
+    # not, and writes the slowlog file either way. Only the backtrace inside it proves the ptrace
+    # succeeded, hence the assertion on the stack frame rather than on the file.
+    - name: 'Assert php-fpm wrote the backtrace of the slow request'
+      ansible.builtin.assert:
+        that:
+          - '"molecule-slow.php" in __molecule__php_slowlog'
+          - '"sleep()" in __molecule__php_slowlog'
+        fail_msg: 'no backtrace in /var/log/php-fpm/www-slow.log, php-fpm could not ptrace its worker: {{ __molecule__php_slowlog | d("<empty>") }}'
+      vars:
+        __molecule__php_slowlog: '{{ __molecule__php_slowlog_result["content"] | b64decode }}'
