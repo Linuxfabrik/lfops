@@ -44,7 +44,17 @@ apache_httpd__vhosts__host_var:
 
 ### Reverse Proxy
 
+Compression is off by default, so this example turns it on: `mod_deflate` and `mod_filter` supply
+the filter, and the `deflate` conf snippet is what actually applies it to the MIME types listed in
+it. Both halves are needed; enabling only the modules compresses nothing, enabling only the conf
+fails the config test.
+
 ```yaml
+apache_httpd__conf__host_var:
+  - filename: 'deflate'
+    enabled: true
+    state: 'present'
+    template: 'deflate'
 apache_httpd__mods__host_var:
   - filename: 'deflate'
     enabled: true
@@ -132,6 +142,10 @@ It enables `cgid` because the stock RHEL configuration loads it, not because the
 
 ```yaml
 apache_httpd__conf__host_var:
+  - filename: 'deflate'
+    enabled: true
+    state: 'present'
+    template: 'deflate'
   - filename: 'expires'
     enabled: false
     state: 'present'
