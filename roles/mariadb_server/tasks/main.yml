@@ -162,6 +162,35 @@
       group: 'mysql'
       mode: '{{ mariadb_server__datadir_mode__combined_var }}'
 
+  # mysql-selinux ships the file contexts for the `mariadbd` binary names (MDEV-30520); without it
+  # the binary keeps `bin_t` and never reaches `mysqld_t`. Since 11.4.13 / 11.8.9 that is no longer
+  # cosmetic: systemd execs `/bin/sh` (MDEV-40629), so an unlabeled binary lands in `initrc_t`
+  # instead of `unconfined_service_t` and `httpd_t` clients lose the socket. The MariaDB packages
+  # depend on it on EL9 and EL10, but not on EL8. Installed everywhere anyway: it overrides the
+  # distro `mysql` module (priority 200 over 100) and tracks the upstream packages we deploy.
+  # Installed before the semanage tasks below, so they adjust the finished policy. It matters
+  # today for the socket: this package replaces the entry the base policy ships
+  # (/var/lib/mysql/mysql\.sock) with the regex /var/lib/mysql/mysql(x)?\.sock, so a task
+  # ordered before it matches the old entry, does nothing, and then reports changed on the
+  # next run once the package has swapped it. That only shows on EL8, where the MariaDB
+  # packages do not depend on mysql-selinux and this role installs it. Verified on Rocky 8.8
+  # with mysql-selinux-1.0.14: ordered before, run 2 reports changed; ordered after, it is clean.
+  - name: 'Install mysql-selinux'
+    ansible.builtin.package:
+      name:
+        - 'mysql-selinux'
+      state: 'present'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      # Galera excluded: in `mysqld_t` the donor's mariabackup cannot reach the local socket and
+      # SST fails with `Errcode: 13`. Note this only takes effect on EL8. On EL9 and EL10 the
+      # MariaDB packages depend on mysql-selinux, so it is installed and the binary labeled no
+      # matter what this role does, and Galera nodes run confined there either way. Tracked in
+      # https://github.com/Linuxfabrik/lfops/issues/328.
+      - 'mariadb_server__cnf_wsrep_on is false'
+    notify: 'mariadb_server: systemctl restart mariadb'
+
   # /var/lib/mysql(-files|-keyring)?(/.*)?             all files          system_u:object_r:mysqld_db_t:s0
   - name: 'semanage fcontext --add --type mysqld_db_t {{ mariadb_server__cnf_datadir__combined_var | ansible.builtin.regex_escape }}(-files|-keyring)?(/.*)?'
     community.general.sefcontext:
@@ -219,28 +248,6 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
-
-  # mysql-selinux ships the file contexts for the `mariadbd` binary names (MDEV-30520); without it
-  # the binary keeps `bin_t` and never reaches `mysqld_t`. Since 11.4.13 / 11.8.9 that is no longer
-  # cosmetic: systemd execs `/bin/sh` (MDEV-40629), so an unlabeled binary lands in `initrc_t`
-  # instead of `unconfined_service_t` and `httpd_t` clients lose the socket. The MariaDB packages
-  # depend on it on EL9 and EL10, but not on EL8. Installed everywhere anyway: it overrides the
-  # distro `mysql` module (priority 200 over 100) and tracks the upstream packages we deploy.
-  - name: 'Install mysql-selinux'
-    ansible.builtin.package:
-      name:
-        - 'mysql-selinux'
-      state: 'present'
-    when:
-      - 'ansible_facts["os_family"] == "RedHat"'
-      - 'ansible_facts["selinux"]["status"] != "disabled"'
-      # Galera excluded: in `mysqld_t` the donor's mariabackup cannot reach the local socket and
-      # SST fails with `Errcode: 13`. Note this only takes effect on EL8. On EL9 and EL10 the
-      # MariaDB packages depend on mysql-selinux, so it is installed and the binary labeled no
-      # matter what this role does, and Galera nodes run confined there either way. Tracked in
-      # https://github.com/Linuxfabrik/lfops/issues/328.
-      - 'mariadb_server__cnf_wsrep_on is false'
-    notify: 'mariadb_server: systemctl restart mariadb'
 
   # relabel the mariadbd binary that is already on disk
   - name: 'restorecon -Fv /usr/sbin/mariadbd'
