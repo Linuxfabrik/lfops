@@ -88,6 +88,10 @@ librenms__php__modules__dependent_var:
     state: 'present'
   - name: 'php-gd'
     state: 'present'
+  # without gmp (or bcmath) LibreNMS falls back to float arithmetic for counter deltas, which
+  # silently loses precision on 64-bit interface counters
+  - name: 'php-gmp'
+    state: 'present'
   - name: 'php-json'
     state: 'present'
   - name: 'php-ldap'

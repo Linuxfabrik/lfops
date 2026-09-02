@@ -224,3 +224,16 @@
         that:
           - '__molecule__python_modules_result["rc"] == 0'
         fail_msg: 'The LibreNMS user cannot import the poller modules: {{ __molecule__python_modules_result["stderr"] | d("") }}'
+
+    # Without gmp (or bcmath) LibreNMS computes 64-bit counter deltas in float and loses
+    # precision without saying so.
+    - name: 'php -r "var_export(extension_loaded(\"gmp\"));"'
+      ansible.builtin.command: 'php -r "var_export(extension_loaded(\"gmp\"));"'
+      register: '__molecule__php_gmp_result'
+      changed_when: false
+
+    - name: 'Assert the PHP CLI loads the gmp extension'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__php_gmp_result["stdout"] | trim == "true"'
+        fail_msg: 'The PHP CLI does not load the gmp extension.'
