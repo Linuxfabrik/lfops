@@ -364,17 +364,19 @@
         __molecule__app1: '{{ __molecule__pool_probe_result["results"][0]["stdout"] }}'
         __molecule__www: '{{ __molecule__pool_probe_result["results"][1]["stdout"] }}'
 
-    - name: 'stat the per-pool session directories'
+    - name: 'stat the per-pool session and WSDL cache directories'
       ansible.builtin.stat:
-        path: '{{ __molecule__session_path }}/{{ item }}'
+        path: '{{ item }}'
       register: '__molecule__session_dir_result'
       loop:
-        - 'app1'
-        - 'www'
+        - '{{ __molecule__session_path }}/app1'
+        - '{{ __molecule__session_path }}/www'
+        - '/var/lib/php/wsdlcache/app1'
+        - '/var/lib/php/wsdlcache/www'
 
-    # 0700 and the pool's own user is what keeps one pool from reading the other's session files,
-    # which is the whole point of giving each pool its own directory.
-    - name: 'Assert the session directories are private to their pool'
+    # 0700 and the pool's own user is what keeps one pool from reading the other's session files
+    # and cached WSDLs, which is the whole point of giving each pool its own directories.
+    - name: 'Assert the per-pool directories are private to their pool'
       ansible.builtin.assert:
         that:
           - 'item["stat"]["exists"]'
