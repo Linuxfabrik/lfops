@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:php**: The PHP-FPM pool configuration changed for existing hosts. Sessions now live in a per-pool directory (the default `www` pool moves from `/var/lib/php/session` to `/var/lib/php/session/www`), so logged-in users are signed out once after the upgrade. `memory_limit`, `max_execution_time`, `max_input_vars`, `post_max_size`, `upload_max_filesize` and `session.save_path` are now enforced as `php_admin_value`, so applications can no longer raise them at runtime via `ini_set()`. `soap.wsdl_cache_dir` is no longer set, the PHP default applies. Worker processes recycle after 500 requests (`pm.max_requests`) instead of running indefinitely, and a worker still serving a single request after 60 seconds is killed (`request_terminate_timeout`, previously off). Hosts with legitimately long-running web requests raise `php__fpm_pool_conf_request_terminate_timeout__group_var`.
 * **role:keycloak**: Rename `keycloak__state` to `keycloak__service_state`, the name every other LFOps role uses. The value `reloaded` is gone: Keycloak's systemd unit has no `ExecReload`, so a reload never worked; use `restarted` instead.
 * **role:keycloak**: The role installs the OpenJDK its Keycloak version needs (OpenJDK 17 for Keycloak 24, OpenJDK 21 for 25 and newer) instead of relying on the `apps` role, which `setup_keycloak` no longer runs. Hosts that used `apps__apps__*_var` through this playbook to install further packages have to run the `apps` playbook for them.
 * **playbook:setup_keycloak**: All skip variables are named `setup_keycloak__skip_<role>` now. Rename `keycloak__skip_kernel_settings`, `keycloak__skip_policycoreutils`, `keycloak__skip_repo_mydumper`, `mariadb_server__skip_python` and `mariadb_server__skip_repo_mariadb` accordingly.
@@ -27,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:php**: PHP-FPM pools are now fully configurable, each with its own user and group, process-manager tuning, timeouts and `php_admin_value` overrides. Every pool gets an isolated session directory, its own error and slow logs, and its own socket, so several applications can share a host without sharing a PHP process, a session store or a memory limit. One pool template now serves both distribution families.
+* **role:php**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and unknown variables, and an explicit `vars/Ubuntu.yml`.
 * **role:apache_httpd**: `apache_httpd__mod_http2_protocols` sets the protocols offered server-wide, the `conf_protocols` vHost key overrides it for a single vHost, and the remaining `apache_httpd__mod_http2_*` variables size the HTTP/2 worker pool and its per-connection buffers.
 * **role:keycloak**: The Keycloak log file is rotated, with `keycloak__logrotate` for the number of rotations kept and the `keycloak:logrotate` tag to deploy the configuration on its own. Until now the log grew unbounded, since Keycloak has no built-in rotation for its file log handler.
 * **role:keycloak**: Add `keycloak__limit_nofile`, `keycloak__transaction_default_timeout` and `keycloak__transaction_setup_timeout` for values that were hardcoded in the systemd unit and in `keycloak.conf`.
