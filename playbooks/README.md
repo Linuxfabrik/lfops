@@ -420,6 +420,8 @@ Calls the following roles (in order):
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `icingaweb2__skip_yum_utils`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `icingaweb2__skip_repo_remi`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `icingaweb2__skip_php`
+* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `icingaweb2__skip_policycoreutils`
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `icingaweb2__skip_selinux`
 * [repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga): `icingaweb2__skip_repo_icinga`
 * [icingaweb2](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2)
 
@@ -746,6 +748,8 @@ Calls the following roles (in order):
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `php__skip_repo_remi`
 * [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury): `php__skip_repo_sury`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)
+* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `php__skip_policycoreutils`
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `php__skip_selinux`
 
 
 ## podman_containers.yml

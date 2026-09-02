@@ -931,6 +931,10 @@ The following roles use techniques that are unusual within LFOps. Roles not in t
 
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): Generic driver for inventory-defined `.te` source. Compiles via `checkmodule` + `semodule_package` + `semodule --install` in a temp directory, and applies modules → booleans / file contexts / ports → restorecon → setenforce in that order so types and booleans introduced by a new module are usable in the same run.
 
+* [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): Publishes `php__selinux__modules__dependent_var` from `vars/main.yml`, the first role to inject a policy module into the `selinux` role. `vars/main.yml` rather than `defaults/`, because several playbooks run `selinux` before `php` and the value has to exist at play parse time. The module source is carried inline in the `content_te` subkey, since a role has no directory on the Ansible controller for the `src` subkey to point at.
+
+Before adding an `allow` rule to a role, work out what the rule buys an attacker **on top of** the DAC gates, and record the answer next to the rule. `ptrace_may_access()` and its equivalents run the DAC and capability checks first and only then call the LSM hook, so an SELinux denial is frequently the second lock on a door that is already bolted. A rule that looks alarming in isolation can turn out to change nothing for the realistic attacker, and one that looks harmless can turn out to be the only thing holding. `roles/php/vars/main.yml` carries such an assessment for `lfops_php_fpm_slowlog` and is the worked example to copy.
+
 
 #### FACL with multi-user / inherited access
 

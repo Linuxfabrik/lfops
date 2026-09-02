@@ -59,6 +59,9 @@
       selinux__fcontexcts__dependent_var: '{{
           librenms__selinux__fcontexts__dependent_var
         }}'
+      selinux__modules__dependent_var: '{{
+          php__selinux__modules__dependent_var
+        }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_librenms__skip_selinux | default(false)'

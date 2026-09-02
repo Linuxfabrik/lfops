@@ -11,3 +11,65 @@ __php__supported_versions:
   - '8.3'
   - '8.4'
   - '8.5'
+
+# The targeted policy runs both the PHP-FPM master and its workers as `httpd_t`, but grants that
+# domain neither the `sys_ptrace` capability nor `ptrace` on itself. The master ptraces a worker to
+# collect the backtrace `request_slowlog_timeout` asks for, so without this module it logs
+# "failed to ptrace(ATTACH) child <pid>: Operation not permitted (1)" and writes an empty slowlog.
+# Red Hat closed the corresponding bugs as NOTABUG / WONTFIX and ships no boolean for it, so the
+# rules have to come from a policy module of our own.
+# Both rules are needed: an enforcing host only reports the capability denial, because the failed
+# capability check already returns EPERM, while a permissive run also reports the `process ptrace`
+# one.
+# Verified against selinux-policy 3.14.3 (Rocky 8), 38.1.75 (Rocky 9) and 42.1.18 (Rocky 10).
+# Published from vars/main.yml so it is visible at play parse time, which the playbooks need because
+# some of them run the selinux role before the php role. The source is carried inline in the
+# `content_te` subkey because a role has no directory on the Ansible controller for `src` to point
+# at.
+#
+# Security assessment of the two rules, measured on Rocky 8 with selinux-policy 3.14.3 and php-fpm
+# 8.3 from remi, recorded here so it does not have to be redone:
+#
+# * Scope is the type, not the process. `allow httpd_t self:process ptrace` expands to
+#   `allow httpd_t httpd_t:process ptrace`, so every process in the domain may ptrace every other.
+#   That covers the PHP-FPM masters and workers and Apache httpd, which has nothing to do with the
+#   slowlog.
+# * A compromised worker gains nothing. `ptrace_may_access()` runs the DAC and capability checks
+#   first and only then calls the LSM hook. Workers drop privileges from root, which makes them
+#   non-dumpable, so /proc/<pid>/mem is owned by root:root even for a process running as `apache`,
+#   and they hold no capabilities at all (CapEff=0000000000000000, hence no CAP_SYS_PTRACE). A PHP
+#   RCE inside a worker therefore still fails before SELinux is consulted, and isolation between
+#   pools running as different users is unaffected.
+# * A compromised master gains one layer. The httpd and PHP-FPM masters run as root with the full
+#   capability set, so for them SELinux was the only thing denying ptrace. Most secrets in that
+#   memory (TLS keys, database credentials, session data) come from files a root `httpd_t` process
+#   can read anyway; what becomes newly reachable is memory-only material such as a decrypted
+#   request body or a token fetched at runtime.
+# * The rules are unconditional and therefore ignore `deny_ptrace`. A host hardened with
+#   `setsebool -P deny_ptrace on` keeps `allow httpd_t httpd_t:process { ... ptrace ... }` and the
+#   slowlog keeps working. Gating them on the boolean was rejected: it would make the slowlog
+#   silently stop producing backtraces on exactly those hosts. The README documents the interaction
+#   instead.
+# * Verdict: small. The alternative was shipping a `request_slowlog_timeout` setting that silently
+#   writes empty log files, and the rules match the ones Red Hat's own knowledgebase prescribes in
+#   solution 5153891. It is a CHANGELOG "Breaking Changes" entry all the same, because the scope is
+#   wider than the feature needs and an admin deserves the chance to object.
+__php__selinux__modules__dependent_var:
+  RedHat:
+    - name: 'lfops_php_fpm_slowlog'
+      content_te: |
+        module lfops_php_fpm_slowlog 1.0;
+
+        require {
+            type httpd_t;
+            class capability sys_ptrace;
+            class process ptrace;
+        }
+
+        # php-fpm ptraces its own workers to write the slowlog backtrace
+        allow httpd_t self:capability sys_ptrace;
+        allow httpd_t self:process ptrace;
+php__selinux__modules__dependent_var: '{{
+    __php__selinux__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
+  }}'
