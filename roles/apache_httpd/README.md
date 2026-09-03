@@ -476,11 +476,21 @@ Types of vHosts:
 * **app**: A hardened vHost running an application like Nextcloud, etc. with the most common options. Can be extended by using the `raw` variable.
 * **localhost**: A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Can be extended by using the `raw` variable. The following URLs are pre-configured and only accessible from localhost:
 
-    * `/fpm-ping` - PHP-FPM health check
-    * `/fpm-status` - PHP-FPM status page
+    * `/fpm-ping` - PHP-FPM health check of the `www` pool
+    * `/fpm-status` - PHP-FPM status page of the `www` pool
     * `/monitoring.php` - Linuxfabrik monitoring endpoint
     * `/server-info` - Apache server info (`mod_info` required, disabled by default)
     * `/server-status` - Apache server status (`mod_status` required)
+
+    Both PHP-FPM URLs are proxied to `__apache_httpd__php_socket`, the socket of the `www` pool. Every pool answers on the same FPM-internal paths `/fpm-status` and `/fpm-ping`, so a host running further pools (see the [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role) exposes them by adding one `Location` per pool via the vHost's `raw` variable, each pointing at that pool's socket:
+
+    ```text
+    <Location "/app1-fpm-status">
+        Require local
+        ProxyPass unix:/run/php-fpm/app1.sock|fcgi://localhost/fpm-status
+    </Location>
+    ```
+
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out).
 * **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
 * **redirect**: A vHost that redirects every request to `https://` on the same host, keeping the requested hostname and path. Set `virtualhost_port: 80` to redirect the plain HTTP port. Requests below `/.well-known/acme-challenge/` are excluded, so ACME/Let's Encrypt HTTP-01 challenges keep working. The `raw` variable replaces the redirect rule instead of extending it.
