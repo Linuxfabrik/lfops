@@ -71,7 +71,7 @@ Manual steps:
 * Sets ownership on the document root (`chown -R apache:apache`).
 * Hardens permissions on the config directory (`chmod -R g-w`).
 * Ensures httpd service is in the desired state.
-* Triggers: httpd.service reload.
+* Triggers: httpd.service reload, or restart when a module is enabled or disabled (see `apache_httpd:mods`).
 
 `apache_httpd:configure`
 
@@ -98,7 +98,7 @@ Manual steps:
 * Installs base packages and Apache packages/modules.
 * Creates the `conf-available/conf-enabled`, `mods-available/mods-enabled`, `sites-available/sites-enabled` directory structure.
 * Removes, creates, disables, and enables mods-available configs.
-* Triggers: httpd.service reload.
+* Triggers: httpd.service restart. A reload loads a newly enabled module but skips its initialization, leaving it loaded and inactive without an error.
 
 `apache_httpd:state`
 
