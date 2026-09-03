@@ -645,7 +645,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_protocols`
 
-* The protocols offered on this vHost, most preferred first, overriding `apache_httpd__mod_http2_protocols` for this vHost only. `h2` takes effect only on a vHost that terminates TLS, since that is where ALPN happens. See [Protocols](https://httpd.apache.org/docs/2.4/mod/core.html#protocols).
+* The protocols offered on this vHost, most preferred first, overriding `apache_httpd__mod_http2_protocols` for this vHost only. `h2` takes effect only on a vHost that terminates TLS, since that is where ALPN happens. The same WebSocket caveat applies as for the server-wide variable: dropping `http/1.1` breaks `wss://` on this vHost. See [Protocols](https://httpd.apache.org/docs/2.4/mod/core.html#protocols).
 * Applies to: app, proxy, wordpress.
 * Type: String.
 * Default: unset, which leaves the server-wide setting in place.
@@ -797,6 +797,7 @@ HTTP/2 hands every request to a worker thread of its own. That pool is separate 
 * Type: String.
 * Default: `'h2 http/1.1'`
 * Deviates from the upstream default `http/1.1`: without `h2` in the list, loading the module changes nothing and every connection stays on HTTP/1.1, so this is what turns HTTP/2 on.
+* Keep `http/1.1` in the list if anything on the host serves WebSockets. HTTP/2 has no `Upgrade` mechanism, and the role does not set `H2WebSockets`, so the server never offers the RFC 8441 handshake and a browser opens a separate HTTP/1.1 connection for `wss://`. A list of just `h2` leaves that connection nothing to negotiate and WebSocket clients fail to connect.
 
 `apache_httpd__mod_http2_stream_max_mem_size`
 
