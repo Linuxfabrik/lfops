@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:librenms**: `librenms__scheduler_service_enabled` and `librenms__scheduler_service_state` start, stop or disable the timer of the LibreNMS scheduler on its own.
+* **role:librenms**: The `librenms:cron`, `librenms:logrotate` and `librenms:state` tags deploy the scheduled jobs, deploy the logrotate configuration and manage the service state without touching the rest of the installation.
 * **role:librenms**: The session cookie is marked as secure on hosts whose `librenms__config_app_url` is an `https://` URL, so a browser only sends it over HTTPS. LibreNMS reports the missing flag as a failure in its own validation. Set `librenms__config_session_secure_cookie` to override.
 * **role:librenms**: LibreNMS stores its RRD files through RRDCached, which cuts the disk I/O of the poller by roughly a third.
 * **role:librenms**: The `librenms:rrdcached` tag deploys and configures RRDCached without touching the rest of the installation.
@@ -50,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:setup_librenms**: The skip variables of the playbook are all named after the playbook, `setup_librenms__skip_php` for example, instead of after the `librenms` role.
+* **playbook:setup_librenms**: The playbook no longer runs the `apps` role, since the `librenms` role installs `git` itself.
 * **role:librenms**: The `http_fping` SELinux policy module carries the rules the LibreNMS documentation now lists, so pinging a device from the web interface also works where fping uses an ICMP socket or binds a source address.
 * **role:librenms**: PHP GMP is installed, so rates derived from 64-bit interface counters stay exact instead of silently losing precision in float arithmetic.
 * **role:librenms**: The `httpd_can_sendmail` SELinux boolean is enabled, and `httpd_can_network_connect_db` in addition when the database is on another host.
@@ -72,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:librenms**: An update of LibreNMS that changes the units of its scheduler takes effect, because systemd is told to read them again.
 * **role:librenms**: The poller works on a host whose database is not local, because the Python modules it imports are installed by the role instead of arriving through the MariaDB role.
 * **role:librenms**: A second run of the role updates an existing installation instead of aborting at the git checkout.
 * **playbook:setup_librenms**: A fresh installation no longer aborts while starting PHP-FPM.

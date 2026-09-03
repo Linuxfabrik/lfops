@@ -8,6 +8,8 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 
 ## How the Role Behaves
 
+The role installs LibreNMS from a git checkout on the target host, not on the Ansible controller, and checks out the latest upstream release on every run. The version is not pinned, so a run updates an existing installation to whatever upstream currently offers. Between runs LibreNMS keeps itself up to date as well: the cron jobs are the ones upstream ships, and their nightly `daily.sh` updates the code on its own. `librenms__config_update_channel` selects the channel it follows.
+
 LibreNMS stores its time series in RRD files below `/opt/librenms/rrd`. By default the role puts [RRDCached](https://docs.librenms.org/Extensions/RRDCached/) in front of them, which collects the updates of a poll cycle in memory and writes them out every 30 minutes instead of on every update. This typically cuts the disk I/O of the poller by 30% to 40%.
 
 * The RRD files stay where they are and keep their format, so enabling or disabling RRDCached needs no data migration. Only who writes them changes.
@@ -32,22 +34,47 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * On RHEL-compatible systems, the `http_fping` and `rrdcached_librenms` SELinux policy modules must be installed (have a look at `librenms__selinux__modules__dependent_var` in the `defaults/main.yml`) (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 
 
+## Requirements
+
+* Outbound HTTPS access from the target host to `github.com`, both for the release lookup and for the git checkout, and to `packagist.org` for the PHP dependencies Composer installs. The role does no downloading on the Ansible controller.
+
+
+## Post-Installation Steps
+
+* The role prepares the database credentials in `/opt/librenms/.env`, but creates neither the database schema nor an account to log in with. Open `<librenms__fqdn>/install` and follow the web installer, which does both. An administrator can also be added on the host with `lnms user:add <username>`.
+
+
 ## Tags
 
 `librenms`
 
 * Installs and configures LibreNMS.
-* Triggers: none.
+* Triggers: rrdcached.service restart.
 
 `librenms:configure`
 
-* Configures LibreNMS.
+* Deploys the LibreNMS configuration, the scheduled jobs and the logrotate configuration.
+* Triggers: none.
+
+`librenms:cron`
+
+* Deploys the cron jobs and the units of the LibreNMS scheduler.
+* Triggers: none.
+
+`librenms:logrotate`
+
+* Deploys the logrotate configuration.
 * Triggers: none.
 
 `librenms:rrdcached`
 
 * Installs and configures RRDCached, and manages its service.
 * Triggers: rrdcached.service restart.
+
+`librenms:state`
+
+* Manages the state of the LibreNMS scheduler timer (start, stop, enable, disable).
+* Triggers: none.
 
 
 ## Mandatory Role Variables
@@ -56,6 +83,17 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The user account for accessing the MySQL database.
 * Type: Dictionary.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. The database user.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. The password of the database user.
+        * Type: String.
 
 `librenms__fqdn`
 
@@ -128,6 +166,7 @@ librenms__fqdn: 'librenms.example.com'
 * Whether LibreNMS reads and writes its RRD files through RRDCached. Set this to `false` to stop and disable RRDCached and have LibreNMS access the files directly. Have a look at "How the Role Behaves" above.
 * Type: Boolean.
 * Default: `true`
+* Deviates from the upstream default `false`: LibreNMS writes every RRD file on every poll cycle without it, which is the bulk of the disk I/O of a poller and the first thing to hurt once a host monitors more than a handful of devices.
 
 `librenms__rrdcached_service_enabled`
 
@@ -140,6 +179,18 @@ librenms__fqdn: 'librenms.example.com'
 * Changes the state of the RRDCached service, analogous to `systemctl start/stop/restart/reload`. Only used if `librenms__rrdcached_enabled` is `true`.
 * Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
 * Default: `'started'` if `librenms__rrdcached_service_enabled` is `true`, else `'stopped'`
+
+`librenms__scheduler_service_enabled`
+
+* Enables or disables the timer of the LibreNMS scheduler, analogous to `systemctl enable/disable --now`. The scheduler runs the maintenance and alerting jobs of LibreNMS.
+* Type: Bool.
+* Default: `true`
+
+`librenms__scheduler_service_state`
+
+* Changes the state of the timer of the LibreNMS scheduler, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `librenms__scheduler_service_enabled` is `true`, else `'stopped'`
 
 Example:
 ```yaml
@@ -157,6 +208,8 @@ librenms__database_name: 'librenms'
 librenms__rrdcached_enabled: true
 librenms__rrdcached_service_enabled: true
 librenms__rrdcached_service_state: 'started'
+librenms__scheduler_service_enabled: true
+librenms__scheduler_service_state: 'started'
 ```
 
 

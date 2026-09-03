@@ -317,3 +317,19 @@
         fail_msg: 'The cache directory is labelled "{{ __molecule__cache_context_result["stdout"] | trim }}" instead of httpd_cache_t.'
       when:
         - '__molecule__cache_context_result is not skipped'
+
+    # The scheduler runs the maintenance and the alerting jobs of LibreNMS. service_facts only
+    # lists units of type service, so a timer has to be asked for directly. Enabled matters as
+    # much as active here: the units come out of the git checkout, and only a daemon-reload after
+    # they change keeps what systemd runs in sync with what is on disk.
+    - name: 'systemctl show librenms-scheduler.timer'
+      ansible.builtin.systemd:
+        name: 'librenms-scheduler.timer'
+      register: '__molecule__scheduler_timer_result'
+
+    - name: 'Assert the LibreNMS scheduler timer is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__scheduler_timer_result["status"]["ActiveState"] == "active"'
+          - '__molecule__scheduler_timer_result["status"]["UnitFileState"] == "enabled"'
+        fail_msg: 'The LibreNMS scheduler timer is {{ __molecule__scheduler_timer_result["status"]["ActiveState"] }} and {{ __molecule__scheduler_timer_result["status"]["UnitFileState"] }}.'

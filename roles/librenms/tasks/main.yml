@@ -1,11 +1,13 @@
 - block:
 
-  - name: 'Install acl cronie fping mtr net-snmp net-snmp-utils nmap rrdtool unzip'
+  - name: 'Install acl cronie fping git mtr net-snmp net-snmp-utils nmap rrdtool unzip'
     ansible.builtin.package:
       name:
         - 'acl'
         - 'cronie'
         - 'fping'
+        # LibreNMS is installed from a git checkout and updates itself the same way
+        - 'git'
         - 'mtr'
         - 'net-snmp'
         - 'net-snmp-utils'
@@ -17,11 +19,12 @@
   - name: 'Get latest release version'
     ansible.builtin.uri:
       url: 'https://api.github.com/repos/librenms/librenms/releases/latest'
-    register: 'librenms__github_release'
+    register: '__librenms__github_release'
     check_mode: false # run task even if `--check` is specified
     run_once: true
 
-  - ansible.builtin.import_tasks: 'user.yml'
+  - name: 'Create the librenms user and group'
+    ansible.builtin.import_tasks: 'user.yml'
 
   - name: 'mkdir -p /opt/librenms'
     ansible.builtin.file:
@@ -39,7 +42,7 @@
       repo: 'https://github.com/librenms/librenms.git'
       dest: '/opt/librenms'
       force: false
-      version: '{{ librenms__github_release["json"]["tag_name"] }}'
+      version: '{{ __librenms__github_release["json"]["tag_name"] }}'
     become: true
     become_user: 'librenms'
 
@@ -89,8 +92,10 @@
   # changing what the targeted policy enforces, namely the type.
   - name: 'restorecon -Rv /opt/librenms'
     ansible.builtin.command: 'restorecon -Rv /opt/librenms'
-    register: 'librenms__restorecon_data_result'
-    changed_when: 'librenms__restorecon_data_result["stdout"] | length > 0'
+    register: '__librenms__restorecon_result'
+    changed_when: '__librenms__restorecon_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
   # The SELinux policy modules this role needs (http_fping, rrdcached_librenms) are declared in
   # librenms__selinux__modules__dependent_var and deployed by the selinux role, like its booleans
@@ -190,6 +195,15 @@
       mode: 0o644
       remote_src: true
 
+  tags:
+    - 'librenms'
+    - 'librenms:configure'
+    - 'librenms:logrotate'
+
+
+- block:
+
+  # Keeps the daily self-update of LibreNMS running, among the poller and discovery jobs.
   - name: 'cp /opt/librenms/dist/librenms.cron /etc/cron.d/librenms'
     ansible.builtin.copy:
       src: '/opt/librenms/dist/librenms.cron'
@@ -199,29 +213,51 @@
       mode: 0o644
       remote_src: true
 
-  - name: 'cp /opt/librenms/dist/librenms-scheduler.service /etc/systemd/system/'
+  - name: 'cp /opt/librenms/dist/{{ item }} /etc/systemd/system/'
     ansible.builtin.copy:
-      src: '/opt/librenms/dist/librenms-scheduler.service'
-      dest: '/etc/systemd/system/librenms-scheduler.service'
+      src: '/opt/librenms/dist/{{ item }}'
+      dest: '/etc/systemd/system/{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
       remote_src: true
+    loop:
+      - 'librenms-scheduler.service'
+      - 'librenms-scheduler.timer'
+    register: '__librenms__scheduler_units_result'
 
-  - name: 'cp /opt/librenms/dist/librenms-scheduler.timer /etc/systemd/system/'
-    ansible.builtin.copy:
-      src: '/opt/librenms/dist/librenms-scheduler.timer'
-      dest: '/etc/systemd/system/librenms-scheduler.timer'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-      remote_src: true
+  # The units come from the git checkout, so an update of LibreNMS can change them. Without the
+  # reload systemd keeps running the version it read before.
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__librenms__scheduler_units_result is changed'
 
-  - name: 'systemctl enable --now librenms-scheduler.timer'
+  tags:
+    - 'librenms'
+    - 'librenms:configure'
+    - 'librenms:cron'
+
+
+- block:
+
+  # split enabled and state into separate tasks, consistent with the rrdcached service above.
+  - name: 'systemctl {{ librenms__scheduler_service_enabled | bool | ternary("enable", "disable") }} librenms-scheduler.timer'
     ansible.builtin.service:
       name: 'librenms-scheduler.timer'
-      enabled: true
-      state: 'started'
+      enabled: '{{ librenms__scheduler_service_enabled | bool }}'
+
+  - name: 'systemctl {{ librenms__scheduler_service_state | regex_replace("p?ed$", "") }} librenms-scheduler.timer'
+    ansible.builtin.service:
+      name: 'librenms-scheduler.timer'
+      state: '{{ librenms__scheduler_service_state }}'
+
+  tags:
+    - 'librenms'
+    - 'librenms:state'
+
+
+- block:
 
   # LibreNMS assumes rrdtool 1.4 unless told otherwise, and then creates and
   # tunes RRD files itself instead of letting rrdcached do it.
@@ -248,10 +284,14 @@
       group: 'librenms'
       mode: 0o644
 
+  # lineinfile rather than a template, which is what LFOps otherwise uses for config files:
+  # /opt/librenms/.env is generated by the composer install and carries values this role does not
+  # know, APP_KEY among them, so rendering the whole file would throw them away. The regexps are
+  # anchored on the "=" so a key never matches a longer one that starts with the same characters.
   - name: 'Set DB connection settings in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
-      regexp: '^#?{{ item["key"] }}'
+      regexp: '^#?{{ item["key"] }}='
       line: '{{ item["key"] }}={{ item["value"] | quote }}'
       mode: 0o600 # file contains secrets
       state: 'present'
@@ -272,7 +312,7 @@
   - name: 'Set app settings in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
-      regexp: '^#?{{ item["key"] }}'
+      regexp: '^#?{{ item["key"] }}='
       line: '{{ item["key"] }}={{ item["value"] | quote }}'
       mode: 0o600 # file contains secrets
       state: 'present'
@@ -289,7 +329,7 @@
   - name: 'Set the base URL in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
-      regexp: '^#?APP_URL'
+      regexp: '^#?APP_URL='
       line: 'APP_URL={{ librenms__config_app_url | quote }}'
       mode: 0o600 # file contains secrets
       state: 'present'

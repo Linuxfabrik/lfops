@@ -95,3 +95,21 @@ argument_specs:
           - 'started'
           - 'stopped'
         description: 'Changes the state of the RRDCached service.'
+
+      librenms__scheduler_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the LibreNMS scheduler timer.'
+
+      # no default: defaults/main.yml derives it from librenms__scheduler_service_enabled with a
+      # Jinja2 expression, which argument_specs cannot evaluate
+      librenms__scheduler_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Changes the state of the LibreNMS scheduler timer.'
