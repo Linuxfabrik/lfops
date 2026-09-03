@@ -55,8 +55,13 @@ apache_httpd__conf__group_var: []
 apache_httpd__conf__host_var: []
 # Apache conf used internally by this role.
 apache_httpd__conf__role_var:
+  - filename: 'autoindex'
+    enabled: false
+    state: 'absent'
+    template: 'autoindex'
+
   - filename: 'deflate'
-    enabled: true
+    enabled: false
     state: 'present'
     template: 'deflate'
 
@@ -113,7 +118,7 @@ apache_httpd__conf__role_var:
     template: 'mime_magic'
 
   - filename: 'mod_security'
-    enabled: true
+    enabled: false
     state: 'present'
     template: 'mod_security'
 

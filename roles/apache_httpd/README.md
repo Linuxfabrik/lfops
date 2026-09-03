@@ -23,7 +23,11 @@ The config is split into several files forming the configuration hierarchy outli
 `-- sites-enabled/
 ```
 
-We avoid using `<IfModule>` in vHost definitions and in the global `httpd.conf` to facilitate debugging. Without `<IfModule>`, a missing module causes a clear startup error instead of silently dropping configuration. `<IfModule>` is only used in `mods-available/` and `conf-available/` where it is necessary to guard module-specific configuration.
+We avoid `<IfModule>` throughout. Without it, a missing module causes a clear startup error instead of silently dropping configuration, which is otherwise impossible to spot: `httpd -t` reports `Syntax OK` and the setting simply never applies.
+
+The consequence is a pairing rule: **a `conf-available` snippet and the module it configures have to be enabled together.** Enabling the `deflate` snippet without `mod_deflate` and `mod_filter` aborts the run at the config test with `Invalid command 'AddOutputFilterByType'`, which is the intended behaviour. The role's own defaults are consistent, so this only concerns snippets and modules you enable yourself via `apache_httpd__conf__*_var` and `apache_httpd__mods__*_var`.
+
+Two exceptions remain, both guarding against something other than a mismatch: `mods-available/wsgi_python3.conf` uses `<IfModule !wsgi_module>` so that two mod_wsgi builds never load into one process, and `conf-available/php.conf` guards its user-directory block with `<IfModule userdir_module>` because the role does not manage mod_userdir at all.
 
 `mod_info` is not enabled. It serves the complete configuration on `/server-info`, including the credentials other modules carry in their directives. The endpoint stays configured in the localhost vHost and answers with an empty response until the `info` module is enabled via `apache_httpd__mods__group_var` / `apache_httpd__mods__host_var`.
 
@@ -885,14 +889,14 @@ apache_httpd__skip_mod_security_coreruleset: true
 
 `apache_httpd__mod_ssl_ssl_use_stapling`
 
-* See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
+* Whether the server staples an OCSP response into the TLS handshake. Off, because a Let's Encrypt certificate carries no OCSP responder URL, so there is nothing to staple and Apache logs a warning per certificate on every start. Set it to `'on'` for a certificate from a CA that does publish an OCSP endpoint. See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
 * Type: String.
 * Default: `'off'`
 
 Example:
 ```yaml
 # optional - mod_ssl
-apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+apache_httpd__mod_ssl_ssl_use_stapling: 'off'
 ```
 
 

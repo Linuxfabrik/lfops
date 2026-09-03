@@ -214,7 +214,7 @@ apache_httpd__mods__role_var:
     template: 'proxy_wstunnel'
 
   - filename: 'qos'
-    enabled: true
+    enabled: false
     state: 'absent'
     template: 'qos'
 
