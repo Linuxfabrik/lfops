@@ -10,6 +10,8 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 
 The role installs LibreNMS from a git checkout on the target host, not on the Ansible controller, and checks out the latest upstream release on every run. The version is not pinned, so a run updates an existing installation to whatever upstream currently offers. Between runs LibreNMS keeps itself up to date as well: the cron jobs are the ones upstream ships, and their nightly `daily.sh` updates the code on its own. `librenms__config_update_channel` selects the channel it follows.
 
+The Python packages LibreNMS lists in its `requirements.txt` are installed with `pip` into the user site of the `librenms` user, `/opt/librenms/.local`. That is where LibreNMS looks for them itself: its nightly `daily.sh` runs the same `pip` call, and the requirements check behind `validate.php` reads the installed distribution metadata from there. Distribution packages cannot cover this, because no RHEL release ships `command_runner` and the `psutil` of RHEL 8 and 9 is older than LibreNMS requires. On RHEL 8 the role installs a current `pip` into that same user site first, since the `pip` of the distribution cannot use the prebuilt `psutil` wheel and would need a compiler on the host to build it. A host that carries such packages from an earlier manual `pip install` as `root` keeps them; they are outranked by the user site for LibreNMS, but `pip3 uninstall` as `root` is worth running once so only one place provides them.
+
 LibreNMS stores its time series in RRD files below `/opt/librenms/rrd`. By default the role puts [RRDCached](https://docs.librenms.org/Extensions/RRDCached/) in front of them, which collects the updates of a poll cycle in memory and writes them out every 30 minutes instead of on every update. This typically cuts the disk I/O of the poller by 30% to 40%.
 
 * The RRD files stay where they are and keep their format, so enabling or disabling RRDCached needs no data migration. Only who writes them changes.
@@ -36,7 +38,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Requirements
 
-* Outbound HTTPS access from the target host to `github.com`, both for the release lookup and for the git checkout, and to `packagist.org` for the PHP dependencies Composer installs. The role does no downloading on the Ansible controller.
+* Outbound HTTPS access from the target host to `github.com`, both for the release lookup and for the git checkout, to `packagist.org` for the PHP dependencies Composer installs, and to `pypi.org` and `files.pythonhosted.org` for the Python packages `pip` installs. The role does no downloading on the Ansible controller.
 
 
 ## Post-Installation Steps

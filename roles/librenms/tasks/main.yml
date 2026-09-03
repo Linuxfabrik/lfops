@@ -1,6 +1,14 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
-  - name: 'Install acl cronie fping git mtr net-snmp net-snmp-utils nmap rrdtool unzip'
+  - name: 'Install acl cronie fping git mtr net-snmp net-snmp-utils nmap python3-pip python3-setuptools rrdtool unzip'
     ansible.builtin.package:
       name:
         - 'acl'
@@ -12,6 +20,11 @@
         - 'net-snmp'
         - 'net-snmp-utils'
         - 'nmap'
+        # pip installs the Python requirements of LibreNMS below. setuptools provides the
+        # pkg_resources that both `ansible.builtin.pip` and the requirements check of LibreNMS
+        # fall back to, and it is a requirement of LibreNMS itself.
+        - 'python3-pip'
+        - 'python3-setuptools'
         - 'rrdtool'
         - 'unzip'
       state: 'present'
@@ -95,6 +108,38 @@
     register: '__librenms__composer_result'
     # composer says so whenever the lock file is already satisfied
     changed_when: '"Nothing to install, update or remove" not in __librenms__composer_result["stdout"]'
+
+  # RHEL 8 needs a current pip in the user site of librenms before the install below can work,
+  # vars/RedHat8.yml says why. On every other release the version is empty and the task is skipped.
+  - name: 'sudo -u librenms -i pip3 install --user pip=={{ __librenms__pip_bootstrap_version }}'
+    ansible.builtin.pip:
+      name: 'pip'
+      version: '{{ __librenms__pip_bootstrap_version }}'
+      extra_args: '--user'
+    become: true
+    become_user: 'librenms'
+    vars:
+      # keeps ~/.ansible out of the git working tree below /opt/librenms, see the clone above
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
+    when:
+      - '__librenms__pip_bootstrap_version | length > 0'
+
+  # Installed into the user site of librenms, which is where LibreNMS itself expects them: its
+  # daily.sh runs the same pip call as that user on every update, and validate.php checks them
+  # with scripts/dynamic_check_requirements.py, which reads the installed distribution metadata
+  # rather than importing the modules. The packages of the python role cannot cover this, because
+  # no RHEL release ships command_runner and the psutil of RHEL 8 and 9 is older than LibreNMS
+  # requires. Verified against LibreNMS 26.8.2 on Rocky 8, 9 and 10.
+  - name: 'sudo -u librenms -i pip3 install --user -r /opt/librenms/requirements.txt'
+    ansible.builtin.pip:
+      requirements: '/opt/librenms/requirements.txt'
+      extra_args: '--user'
+      executable: '{{ __librenms__pip_executable }}'
+    become: true
+    become_user: 'librenms'
+    vars:
+      # keeps ~/.ansible out of the git working tree below /opt/librenms, see the clone above
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
 
   # No --force: it would also rewrite the SELinux user of every file the application created
   # since the last run (unconfined_u back to system_u), which relabels on every run without
