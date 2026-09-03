@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:kvm_vm**: Two VMs created from the same inventory host no longer get the same MAC address, which made the second one fail with `The MAC address ... is in use by another virtual machine`. The generated MAC follows the VM name now. Hosts that leave `kvm_vm__name` at its default keep the MAC they had; on a host that sets it, a VM created from now on gets a different MAC, so check DHCP reservations and firewall rules keyed on it before recreating such a VM. Running VMs are not touched.
 * **role:keycloak**: A run against an unchanged host reports no changes any more. The tarball is only downloaded and extracted when the installed version differs from `keycloak__version`, and `kc.sh build` only runs when the installation or `keycloak.conf` actually changed, which also takes minutes off an ordinary run.
 * **role:php**: The PHP-FPM slowlog holds the backtrace of a slow request on RedHat, instead of staying empty while php-fpm logs `failed to ptrace(ATTACH) child <pid>: Operation not permitted (1)`.
 * **role:openvpn_server**: A new server certificate, a changed `server.conf` or a regenerated Diffie-Hellman file restarts OpenVPN. Until now the files were written to disk while the running service kept its old configuration, so a renewed certificate only took effect at the next reboot. The certificate revocation list and the client configs still apply without a restart, since OpenVPN re-reads them per connection.
