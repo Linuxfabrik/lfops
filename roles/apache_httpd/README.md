@@ -158,6 +158,13 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 * Type: String.
 * Default: `'syslog:local1'`
 
+`apache_httpd__conf_graceful_shutdown_timeout`
+
+* Seconds the server waits for in-flight requests to finish when it is stopped or restarted. Apache closes its listening sockets before it starts waiting, so the whole wait is downtime for new clients, not just for the requests still running. `0` waits until the last connection closes by itself, which never happens on a host proxying WebSockets or other long-lived connections: systemd then terminates the server after `TimeoutStopSec` (90 seconds by default). Raise it on a host with legitimately long-running requests, which are cut off when the timeout expires. See [GracefulShutdownTimeout](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#gracefulshutdowntimeout).
+* Type: Number.
+* Default: `3`
+* Deviates from the upstream default `0` (wait forever), which turns every restart into a 90 second outage on a host that holds long-lived connections.
+
 `apache_httpd__conf_hostname_lookups`
 
 * See [HostnameLookups](https://httpd.apache.org/docs/2.4/mod/core.html#hostnamelookups).
