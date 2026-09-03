@@ -57,6 +57,15 @@ argument_specs:
         description: >-
           Where the server logs errors (`ErrorLog`).
 
+      apache_httpd__conf_graceful_shutdown_timeout:
+        type: 'int'
+        required: false
+        default: 3
+        description: >-
+          Seconds the server waits for in-flight requests to finish when it is stopped
+          (`GracefulShutdownTimeout`). The listening sockets close first, so this is
+          downtime for new clients; 0 waits forever.
+
       apache_httpd__conf_hostname_lookups:
         type: 'str'
         required: false
