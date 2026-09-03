@@ -1,0 +1,124 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable end
+# state, not that individual tasks ran.
+#
+# The claim under test is that a client actually ends up speaking the protocol the inventory asked
+# for. Grepping the deployed configuration for `Protocols h2 http/1.1`, or checking that mod_http2
+# is loaded, would pass on a host where the negotiation still fails - because the module package is
+# missing, because the MPM cannot support it, or because the cipher suite makes clients fall back.
+# Every assertion below therefore comes from a request that was really made.
+- name: 'Verify apache_httpd serves HTTP/2 where it is configured to'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert httpd is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__unit["state"] | d("") == "running"'
+          - '__molecule__unit["status"] | d("") == "enabled"'
+        fail_msg: '{{ __molecule__service }}: {{ __molecule__unit | d("not known to systemd") }}'
+      vars:
+        __molecule__service: '{{ (ansible_facts["os_family"] == "Debian") | ternary("apache2.service", "httpd.service") }}'
+        __molecule__unit: '{{ ansible_facts["services"][__molecule__service] | d({}) }}'
+
+    # curl is what makes the assertions below real requests rather than a look at the config. It is
+    # not part of the role's package list, so the scenario installs it.
+    - name: 'Make sure curl is installed'
+      ansible.builtin.package:
+        name: 'curl'
+        state: 'present'
+
+    # The role creates the document root, but nothing puts a file in it, and a request that ends in
+    # 403 says nothing about which protocol carried it. DirectoryIndex resolves index.html first.
+    # setype is set explicitly because the worker reads the file as httpd_t on RedHat.
+    - name: 'Deploy an index.html into every vHost document root'
+      ansible.builtin.copy:
+        content: "ok\n"
+        dest: '/var/www/html/{{ item["conf_server_name"] }}/index.html'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
+      loop: '{{ apache_httpd__vhosts__group_var }}'
+      loop_control:
+        label: '{{ item["conf_server_name"] }}'
+
+    # --resolve points the name at the host itself, so no DNS is needed for names that exist only in
+    # this scenario. --insecure because the certificates are self-signed; this weakens nothing that
+    # is under test, since ALPN happens during the handshake either way.
+    # A GET, not --head: the app vHost template only permits the methods in allowed_http_methods,
+    # which defaults to GET and OPTIONS, so a HEAD would be answered with 405 by the rewrite rules
+    # rather than by the application. --output /dev/null throws the body away and leaves
+    # --write-out to report the negotiated version and the status.
+    - name: 'curl --http2 https://<vhost>/' # noqa command-instead-of-module (ansible.builtin.uri speaks HTTP/1.1 only and cannot report the negotiated protocol)
+      ansible.builtin.command: >-
+        curl --silent --insecure --http2
+        --resolve {{ item["conf_server_name"] }}:443:127.0.0.1
+        --output /dev/null
+        --write-out '%{http_version} %{http_code}'
+        https://{{ item["conf_server_name"] }}/
+      register: '__molecule__apache_httpd_curl_result'
+      changed_when: false
+      loop: '{{ apache_httpd__vhosts__group_var }}'
+      loop_control:
+        label: '{{ item["conf_server_name"] }}'
+
+    # The heart of the scenario. Both vHosts are offered h2 by the client; only the one that did not
+    # override conf_protocols may end up on HTTP/2. A host where mod_http2 is missing fails the
+    # first assertion, and a host where the per-vHost override is ignored fails the second.
+    - name: 'Assert every vHost negotiated the protocol its definition asks for'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout"] == __molecule__expected ~ " 200"'
+        fail_msg: >-
+          {{ item["item"]["conf_server_name"] }} answered "{{ item["stdout"] }}",
+          expected "{{ __molecule__expected }} 200"
+      vars:
+        __molecule__expected: '{{ "2" if "h2" in (item["item"]["conf_protocols"] | d("h2")) else "1.1" }}'
+      loop: '{{ __molecule__apache_httpd_curl_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["conf_server_name"] }}'
+
+    # HTTP/2 must not be forced on a client that did not ask for it. This is the fallback path every
+    # non-HTTP/2 client takes, and it is the one that breaks if 'Protocols' is misread as a
+    # requirement rather than a preference list.
+    - name: 'curl --http1.1 https://<vhost>/' # noqa command-instead-of-module (ansible.builtin.uri speaks HTTP/1.1 only and cannot report the negotiated protocol)
+      ansible.builtin.command: >-
+        curl --silent --insecure --http1.1
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --output /dev/null
+        --write-out '%{http_version} %{http_code}'
+        https://{{ __molecule__server_name }}/
+      register: '__molecule__apache_httpd_curl_http11_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
+
+    - name: 'Assert an HTTP/1.1 client is still served'
+      ansible.builtin.assert:
+        that: '__molecule__apache_httpd_curl_http11_result["stdout"] == "1.1 200"'
+        fail_msg: 'a client refusing HTTP/2 got "{{ __molecule__apache_httpd_curl_http11_result["stdout"] }}", expected "1.1 200"'
+
+    # h2c is HTTP/2 over cleartext and is deliberately not in the default protocol list, so a client
+    # asking to upgrade on port 80 has to be left on HTTP/1.1. Without this, dropping h2c from the
+    # default would be an untested claim. The localhost vHost of the role answers here; only the
+    # protocol version is of interest, so the status code is not asserted.
+    - name: 'curl --http2 http://localhost/' # noqa command-instead-of-module (ansible.builtin.uri speaks HTTP/1.1 only and cannot report the negotiated protocol)
+      ansible.builtin.command: >-
+        curl --silent --http2
+        --output /dev/null
+        --write-out '%{http_version}'
+        http://localhost/
+      register: '__molecule__apache_httpd_curl_h2c_result'
+      changed_when: false
+
+    - name: 'Assert cleartext HTTP/2 is not offered'
+      ansible.builtin.assert:
+        that: '__molecule__apache_httpd_curl_h2c_result["stdout"] == "1.1"'
+        fail_msg: >-
+          port 80 negotiated HTTP/{{ __molecule__apache_httpd_curl_h2c_result["stdout"] }};
+          h2c is not part of apache_httpd__mod_http2_protocols
