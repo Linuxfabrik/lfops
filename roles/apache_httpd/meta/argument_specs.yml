@@ -533,6 +533,14 @@ argument_specs:
         description: >-
           State the Apache service is put in.
 
+      apache_httpd__systemd_timeout_stop_sec:
+        type: 'int'
+        required: false
+        default: 5
+        description: >-
+          Seconds systemd waits for Apache to stop before terminating it with SIGKILL
+          (`TimeoutStopSec`). Deployed as a drop-in of the Apache service unit.
+
       apache_httpd__vhosts__dependent_var:
         type: 'list'
         elements: 'dict'

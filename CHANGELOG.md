@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: Restarting Apache takes about 5 seconds instead of 13 on a host that holds long-lived connections, such as a proxy for WebSockets, because systemd no longer waits out Apache's own shutdown escalation. Apache refuses new connections for the whole of that wait, so this shortens the outage. The hard stop leaks about three semaphores per restart (`ipcs -s`), which a reboot clears; raise `apache_httpd__systemd_timeout_stop_sec` to trade restart speed back for a longer graceful window.
 * **playbook:setup_librenms**: The skip variables of the playbook are all named after the playbook, `setup_librenms__skip_php` for example, instead of after the `librenms` role.
 * **playbook:setup_librenms**: The playbook no longer runs the `apps` role, since the `librenms` role installs `git` itself.
 * **role:librenms**: The `http_fping` SELinux policy module carries the rules the LibreNMS documentation now lists, so pinging a device from the web interface also works where fping uses an ICMP socket or binds a source address.

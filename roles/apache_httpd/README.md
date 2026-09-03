@@ -164,6 +164,7 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 * Type: Number.
 * Default: `3`
 * Deviates from the upstream default `0` (wait forever), which turns every restart into a 90 second outage on a host that holds long-lived connections.
+* Only bounds the graceful part of the stop. Apache then escalates to any child that has not exited, sending SIGTERM at 3, 5 and 7 seconds and SIGKILL at 9; that schedule is compiled into httpd and cannot be configured. `apache_httpd__systemd_timeout_stop_sec` is what bounds the total.
 
 `apache_httpd__conf_hostname_lookups`
 
@@ -404,6 +405,14 @@ apache_httpd__conf_trace_enable: 'Off'
 * Make sure Apache webserver service is in a specific state. Possible options: `reloaded`, `restarted`, `started`, `stopped`.
 * Type: String.
 * Default: `'started'`
+
+`apache_httpd__systemd_timeout_stop_sec`
+
+* Seconds systemd waits for Apache to stop before terminating the service with SIGKILL, deployed as a `TimeoutStopSec` drop-in of the Apache service unit. Apache closes its listening sockets at the very start of a stop, so the whole wait is downtime for new clients, not just for the requests still running. Keep this slightly above `apache_httpd__conf_graceful_shutdown_timeout` so requests still get their graceful window. See [TimeoutStopSec](https://www.freedesktop.org/software/systemd/man/systemd.service.html#TimeoutStopSec=).
+* Type: Number.
+* Default: `5`
+* Deviates from systemd's default of 90 seconds (`DefaultTimeoutStopSec`), which a host holding connections that never close by themselves pays in full on every restart.
+* The SIGKILL reaches Apache's parent process, which then cannot release its semaphore arrays: a host leaks roughly three of them per restart (`ipcs -s`). With a `SEMMNI` of 32000 that is on the order of ten thousand restarts before it matters, and a reboot clears them, but it is worth monitoring on a host that restarts Apache often.
 
 Example:
 ```yaml
