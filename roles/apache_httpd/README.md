@@ -796,7 +796,7 @@ apache_httpd__skip_mod_security_coreruleset: true
 
 * See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
 * Type: String.
-* Default: `'on'`
+* Default: `'off'`
 
 Example:
 ```yaml
