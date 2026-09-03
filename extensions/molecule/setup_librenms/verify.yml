@@ -91,6 +91,10 @@
         chdir: '/opt/librenms/rrd'
       become: true
       become_user: 'librenms'
+      vars:
+        # same reason as in the role: the home of librenms is /opt/librenms, and the default
+        # remote_tmp would leave a stray ~/.ansible in the checkout under test
+        ansible_remote_tmp: '/tmp/.ansible-librenms'
       changed_when: false # test data, removed again below
 
     - name: 'stat /opt/librenms/rrd/molecule-rrdcached.rrd'
@@ -257,6 +261,10 @@
       ansible.builtin.command: 'python3 -c "import dotenv, psutil, pymysql"'
       become: true
       become_user: 'librenms'
+      vars:
+        # same reason as in the role: the home of librenms is /opt/librenms, and the default
+        # remote_tmp would leave a stray ~/.ansible in the checkout under test
+        ansible_remote_tmp: '/tmp/.ansible-librenms'
       register: '__molecule__python_modules_result'
       changed_when: false
       failed_when: false

@@ -45,6 +45,12 @@
       version: '{{ __librenms__github_release["json"]["tag_name"] }}'
     become: true
     become_user: 'librenms'
+    vars:
+      # Ansible creates the become user's remote_tmp before it runs the module, and the home of
+      # librenms is /opt/librenms itself. Left at its default the clone would find ~/.ansible in
+      # the directory it is about to fill and abort with "already exists and is not an empty
+      # directory". Verified against ansible-core 2.16 on Rocky 8, 9 and 10.
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
 
   # this is magnitudes faster than using the file module. --changes reports every file it
   # touched, which keeps the task honest about whether it changed anything (installations that
@@ -83,6 +89,9 @@
       chdir: '/opt/librenms'
     become: true
     become_user: 'librenms'
+    vars:
+      # keeps ~/.ansible out of the git working tree below /opt/librenms, see the clone above
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
     register: '__librenms__composer_result'
     # composer says so whenever the lock file is already satisfied
     changed_when: '"Nothing to install, update or remove" not in __librenms__composer_result["stdout"]'
