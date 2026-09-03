@@ -89,7 +89,7 @@ Which Ansible role is proven to run on which OS?
 | kvm_host                              |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | kvm_vm                                |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| librenms                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | libreoffice                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | login                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35+                                   |
 | logrotate                             |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |

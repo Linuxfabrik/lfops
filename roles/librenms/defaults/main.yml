@@ -1,10 +1,16 @@
-librenms__config_app_trusted_proxies: []
+librenms__config_app_trusted_proxies: []  # upstream default: 127.0.0.1
 librenms__config_app_url: ''
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 0
+librenms__config_session_secure_cookie: '{{ (librenms__config_app_url is match("https://")) | ternary(true, false) }}'
 librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'
+librenms__rrdcached_enabled: true  # upstream default: false
+librenms__rrdcached_service_enabled: true
+librenms__rrdcached_service_state: '{{ librenms__rrdcached_service_enabled | bool | ternary("started", "stopped") }}'
+librenms__scheduler_service_enabled: true
+librenms__scheduler_service_state: '{{ librenms__scheduler_service_enabled | bool | ternary("started", "stopped") }}'
 
 # -----------------------------------------------------------------------------
 
@@ -52,11 +58,6 @@ librenms__apache_httpd__vhosts__dependent_var:
       AllowEncodedSlashes NoDecode
 
 
-librenms__apps__apps__dependent_var:
-  - name: 'git'
-    state: 'present'
-
-
 librenms__mariadb_server__databases__dependent_var:
   - name: '{{ librenms__database_name }}'
     collation: 'utf8mb4_unicode_ci'
@@ -85,6 +86,10 @@ librenms__php__modules__dependent_var:
     state: 'present'
   - name: 'php-gd'
     state: 'present'
+  # without gmp (or bcmath) LibreNMS falls back to float arithmetic for counter deltas, which
+  # silently loses precision on 64-bit interface counters
+  - name: 'php-gmp'
+    state: 'present'
   - name: 'php-json'
     state: 'present'
   - name: 'php-ldap'
@@ -102,11 +107,34 @@ librenms__php__modules__dependent_var:
   - name: 'php-zip'
     state: 'present'
 
-librenms__selinux__booleans__dependent_var:
-  - key: 'httpd_can_connect_ldap'
-    value: 'on'
-  - key: 'httpd_setrlimit'
-    value: 'on'
+
+# The poller and the discovery run as Python: LibreNMS/queuemanager.py imports pymysql at module
+# level, so without PyMySQL every poll cycle dies before it starts. dotenv reads
+# /opt/librenms/.env, and psutil reaps the worker processes ("polling gap possible" without it).
+# redis is only required for distributed polling, which this role does not set up.
+librenms__python__modules__dependent_var:
+  - name: 'python3-dotenv'
+    state: 'present'
+  - name: 'python3-psutil'
+    state: 'present'
+  - name: 'python3-PyMySQL'
+    state: 'present'
+
+
+# httpd_can_network_connect_db is only added for a database on another host. With a local one PHP
+# connects through the MariaDB socket, so the boolean would let every web application on the host
+# open database connections without buying LibreNMS anything. httpd_execmem, which the upstream
+# docs also set, is only needed with OPcache JIT, which the php role does not enable.
+librenms__selinux__booleans__dependent_var: '{{
+    [
+      {"key": "httpd_can_connect_ldap", "value": "on"},
+      {"key": "httpd_can_sendmail", "value": "on"},
+      {"key": "httpd_setrlimit", "value": "on"}
+    ] + (
+      (librenms__database_host not in ["127.0.0.1", "::1", "localhost"])
+      | ternary([{"key": "httpd_can_network_connect_db", "value": "on"}], [])
+    )
+  }}'
 librenms__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_content_t'
     target: '/opt/librenms/html(/.*)?'
@@ -115,9 +143,69 @@ librenms__selinux__fcontexts__dependent_var:
   - setype: 'httpd_log_t'
     target: '/opt/librenms/logs(/.*)?'
     state: 'present'
+  - setype: 'httpd_cache_t'
+    target: '/opt/librenms/cache(/.*)?'
+    state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/opt/librenms/(rrd|storage)(/.*)?'
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/opt/librenms/.env'
+    state: 'present'
+
+librenms__selinux__modules__dependent_var:
+  # Taken verbatim from the "Allow fping" section of the LibreNMS installation docs, so a diff
+  # against upstream stays trivial. fping is called by the web interface, which runs in the
+  # httpd_t domain and may neither create a raw or ICMP socket nor bind one there.
+  - name: 'http_fping'
+    content_te: |
+      module http_fping 1.0;
+
+      require {
+      type node_t;
+      type httpd_t;
+      class capability net_raw;
+      class icmp_socket create;
+      class rawip_socket { getopt create setopt write read bind node_bind };
+      }
+
+      #============= httpd_t ==============
+      allow httpd_t node_t:rawip_socket node_bind;
+      allow httpd_t self:capability net_raw;
+      allow httpd_t self:icmp_socket create;
+      allow httpd_t self:rawip_socket { getopt create setopt write read bind };
+
+  # Taken verbatim from dist/rrdcached/rrdcached_librenms.te of the LibreNMS repository, so a
+  # diff against upstream stays trivial. It lets rrdcached_t work on the RRD tree
+  # (httpd_sys_rw_content_t) and create its socket in /run (var_run_t), and lets httpd_t, which
+  # is what PHP-FPM runs as, connect to that socket.
+  - name: 'rrdcached_librenms'
+    content_te: |
+      # SELinux Policy File for rrdcached
+      module rrdcached_librenms 1.0;
+
+      require {
+              type var_run_t;
+              type tmp_t;
+              type httpd_t;
+              type rrdcached_t;
+              type httpd_sys_rw_content_t;
+              class dir { add_name getattr open read remove_name rmdir search write };
+              class file { create getattr open read rename setattr unlink write map lock };
+              class sock_file { create setattr unlink write };
+              class capability { fsetid sys_resource };
+              class unix_stream_socket connectto;
+      }
+
+      #============= rrdcached_t ==============
+
+      allow rrdcached_t httpd_sys_rw_content_t:dir { add_name getattr remove_name search write };
+      allow rrdcached_t httpd_sys_rw_content_t:file { create getattr open read rename setattr unlink write map lock };
+      allow rrdcached_t self:capability fsetid;
+      allow rrdcached_t var_run_t:sock_file { create setattr unlink };
+      allow httpd_t var_run_t:sock_file write;
+      allow httpd_t rrdcached_t:unix_stream_socket connectto;
+    # Stays installed even when librenms__rrdcached_enabled is false. The selinux role runs
+    # before this one, so removing the module in the same run would deny RRDCached the writes of
+    # the shutdown flush that this role then triggers, losing up to 30 minutes of collected data.
     state: 'present'

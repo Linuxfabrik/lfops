@@ -1,0 +1,8 @@
+- name: 'librenms: restart rrdcached'
+  ansible.builtin.service:
+    name: 'rrdcached.service'
+    state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
+    - '__librenms__rrdcached_service_state_result is not defined or __librenms__rrdcached_service_state_result is not changed'
+    - 'librenms__rrdcached_service_state != "stopped"'

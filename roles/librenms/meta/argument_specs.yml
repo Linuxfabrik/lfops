@@ -1,0 +1,115 @@
+argument_specs:
+  main:
+    options:
+
+      librenms__config_app_trusted_proxies:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'Trusted reverse proxy IPs or CIDR ranges, written to APP_TRUSTED_PROXIES in /opt/librenms/.env.'
+
+      librenms__config_app_url:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The base URL used for generated URLs, written to APP_URL in /opt/librenms/.env.'
+
+      librenms__config_auth_mechanism:
+        type: 'str'
+        required: false
+        default: 'mysql'
+        choices:
+          - 'active_directory'
+          - 'http-auth'
+          - 'ldap'
+          - 'ldap-authorization'
+          - 'mysql'
+          - 'sso'
+        description: 'Which authentication mechanism LibreNMS should use.'
+
+      librenms__config_rrd_purge:
+        type: 'int'
+        required: false
+        default: 0
+        description: 'Number in days of how long to keep old rrd files. 0 disables this feature.'
+
+      # no default: defaults/main.yml derives it from librenms__config_app_url with a Jinja2
+      # expression, which argument_specs cannot evaluate
+      librenms__config_session_secure_cookie:
+        type: 'bool'
+        required: false
+        description: 'Whether LibreNMS marks its session cookie as secure, written to SESSION_SECURE_COOKIE in /opt/librenms/.env.'
+
+      librenms__config_update_channel:
+        type: 'str'
+        required: false
+        default: 'release'
+        choices:
+          - 'master'
+          - 'release'
+        description: 'Which update channel LibreNMS should use during automatic updates.'
+
+      librenms__database_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'The host on which the MySQL database is reachable.'
+
+      librenms__database_login:
+        type: 'dict'
+        required: true
+        description: 'The user account for accessing the MySQL database.'
+
+      librenms__database_name:
+        type: 'str'
+        required: false
+        default: 'librenms'
+        description: 'The name of the SQL database.'
+
+      librenms__fqdn:
+        type: 'str'
+        required: true
+        description: 'The fully qualified domain name under which LibreNMS is accessible.'
+
+      librenms__rrdcached_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether LibreNMS reads and writes its RRD files through RRDCached.'
+
+      librenms__rrdcached_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the RRDCached service.'
+
+      # no default: defaults/main.yml derives it from librenms__rrdcached_service_enabled with a
+      # Jinja2 expression, which argument_specs cannot evaluate
+      librenms__rrdcached_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Changes the state of the RRDCached service.'
+
+      librenms__scheduler_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the LibreNMS scheduler timer.'
+
+      # no default: defaults/main.yml derives it from librenms__scheduler_service_enabled with a
+      # Jinja2 expression, which argument_specs cannot evaluate
+      librenms__scheduler_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Changes the state of the LibreNMS scheduler timer.'
