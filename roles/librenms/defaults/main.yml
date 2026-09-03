@@ -1,8 +1,7 @@
 librenms__config_app_trusted_proxies: []  # upstream default: 127.0.0.1
-librenms__config_app_url: ''
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 0
-librenms__config_session_secure_cookie: '{{ (librenms__config_app_url is match("https://")) | ternary(true, false) }}'
+librenms__config_session_secure_cookie: '{{ (librenms__url is match("https://")) | ternary(true, false) }}'
 librenms__config_update_channel: 'release'
 librenms__database_host: 'localhost'
 librenms__database_name: 'librenms'
@@ -50,7 +49,8 @@ librenms__apache_httpd__vhosts__dependent_var:
     conf_allow_override: 'All' # TODO
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '/opt/librenms/html'
-    conf_server_name: '{{ librenms__fqdn }}'
+    # the host part only: a port or a subdirectory in librenms__url must not reach ServerName
+    conf_server_name: '{{ librenms__url | urlsplit("hostname") }}'
 
     php_set_handler: 'SetHandler "proxy:unix:/run/php-fpm/librenms.sock|fcgi://localhost"'
 

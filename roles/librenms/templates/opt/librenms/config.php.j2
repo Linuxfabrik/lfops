@@ -1,6 +1,6 @@
 <?php
 # {{ ansible_managed }}
-# 2026090101
+# 2026090301
 
 ## Have a look in misc/config_definitions.json for examples of settings you can set here. DO NOT EDIT misc/config_definitions.json!
 
@@ -10,7 +10,7 @@ $config['user'] = 'librenms';
 
 ### This should *only* be set if you want to *force* a particular hostname/port
 ### It will prevent the web interface being usable form any other hostname
-#$config['base_url']        = "/";
+$config['base_url'] = "{{ librenms__url }}";
 
 ### Enable this to use rrdcached. Be sure rrd_dir is within the rrdcached dir
 ### and that your web server has permission to talk to rrdcached.

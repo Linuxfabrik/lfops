@@ -183,11 +183,11 @@
       when:
         - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-    - name: 'GET the probe through Apache and PHP-FPM (Host: {{ librenms__fqdn }})'
+    - name: 'GET the probe through Apache and PHP-FPM (Host: {{ librenms__url | urlsplit("hostname") }})'
       ansible.builtin.uri:
         url: 'http://localhost/molecule-rrdcached-probe.php'
         headers:
-          Host: '{{ librenms__fqdn }}'
+          Host: '{{ librenms__url | urlsplit("hostname") }}'
         return_content: true
       register: '__molecule__rrdcached_probe_result'
 
@@ -225,11 +225,11 @@
       when:
         - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-    - name: 'GET the fping probe through Apache and PHP-FPM (Host: {{ librenms__fqdn }})'
+    - name: 'GET the fping probe through Apache and PHP-FPM (Host: {{ librenms__url | urlsplit("hostname") }})'
       ansible.builtin.uri:
         url: 'http://localhost/molecule-fping-probe.php'
         headers:
-          Host: '{{ librenms__fqdn }}'
+          Host: '{{ librenms__url | urlsplit("hostname") }}'
         return_content: true
       register: '__molecule__fping_probe_result'
 

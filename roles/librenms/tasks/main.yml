@@ -359,7 +359,7 @@
       - key: 'DB_PASSWORD'
         value: '{{ librenms__database_login["password"] }}'
 
-  # Written on every run, including with an empty value, so both settings follow the inventory in
+  # Written on every run, including with an empty value, so the settings follow the inventory in
   # both directions instead of leaving a stale line behind. LibreNMS reads the empty string as a
   # deliberate value: EnvHelper::parseArray keeps "" out of the comma split, which is how the
   # upstream security docs switch trusted proxies off.
@@ -373,22 +373,15 @@
     loop:
       - key: 'APP_TRUSTED_PROXIES'
         value: '{{ librenms__config_app_trusted_proxies | join(",") }}'
+      # Laravel builds the links of everything that runs without a request, the alert
+      # notifications above all, from this value. It is the same URL as the base_url of
+      # config.php, which covers the URLs LibreNMS builds itself.
+      - key: 'APP_URL'
+        value: '{{ librenms__url }}'
       # Laravel reads its session cookie flags from .env, not from php.ini: the cookie is issued
       # by the framework, so session.cookie_secure of the php role does not reach it.
       - key: 'SESSION_SECURE_COOKIE'
         value: '{{ librenms__config_session_secure_cookie | bool | ternary("true", "false") }}'
-
-  # APP_URL has no meaningful empty value: writing it empty sets Laravel's app.url to the empty
-  # string rather than falling back to anything, and LibreNMS then reports it as misconfigured.
-  - name: 'Set the base URL in /opt/librenms/.env'
-    ansible.builtin.lineinfile:
-      path: '/opt/librenms/.env'
-      regexp: '^#?APP_URL='
-      line: 'APP_URL={{ librenms__config_app_url | quote }}'
-      mode: 0o600 # file contains secrets
-      state: 'present'
-    when:
-      - 'librenms__config_app_url | length > 0'
 
   tags:
     - 'librenms'

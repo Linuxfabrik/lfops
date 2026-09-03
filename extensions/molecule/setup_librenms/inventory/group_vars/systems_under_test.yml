@@ -1,13 +1,12 @@
 apache_httpd__conf_server_admin: 'root@localhost'
 
-# an https base URL is what makes the role mark the session cookie as secure. The vHost itself
-# serves plain HTTP, which the probes in verify.yml talk to directly, so this only exercises the
-# derived default of librenms__config_session_secure_cookie.
-librenms__config_app_url: 'https://librenms.example.com'
 librenms__database_login:
   username: 'librenms'
   password: 'linuxfabrik'
-librenms__fqdn: 'librenms.example.com'
+# an https URL is what makes the role mark the session cookie as secure. The vHost itself serves
+# plain HTTP, which the probes in verify.yml talk to directly, so the scheme only exercises the
+# derived default of librenms__config_session_secure_cookie.
+librenms__url: 'https://librenms.example.com'
 
 mariadb_server__admin_user:
   username: 'mariadb-admin'

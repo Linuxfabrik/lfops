@@ -9,12 +9,6 @@ argument_specs:
         default: []
         description: 'Trusted reverse proxy IPs or CIDR ranges, written to APP_TRUSTED_PROXIES in /opt/librenms/.env.'
 
-      librenms__config_app_url:
-        type: 'str'
-        required: false
-        default: ''
-        description: 'The base URL used for generated URLs, written to APP_URL in /opt/librenms/.env.'
-
       librenms__config_auth_mechanism:
         type: 'str'
         required: false
@@ -34,7 +28,7 @@ argument_specs:
         default: 0
         description: 'Number in days of how long to keep old rrd files. 0 disables this feature.'
 
-      # no default: defaults/main.yml derives it from librenms__config_app_url with a Jinja2
+      # no default: defaults/main.yml derives it from librenms__url with a Jinja2
       # expression, which argument_specs cannot evaluate
       librenms__config_session_secure_cookie:
         type: 'bool'
@@ -66,11 +60,6 @@ argument_specs:
         required: false
         default: 'librenms'
         description: 'The name of the SQL database.'
-
-      librenms__fqdn:
-        type: 'str'
-        required: true
-        description: 'The fully qualified domain name under which LibreNMS is accessible.'
 
       librenms__rrdcached_enabled:
         type: 'bool'
@@ -113,3 +102,8 @@ argument_specs:
           - 'started'
           - 'stopped'
         description: 'Changes the state of the LibreNMS scheduler timer.'
+
+      librenms__url:
+        type: 'str'
+        required: true
+        description: 'The URL under which LibreNMS is reachable, including the scheme. Seeds the ServerName of the vHost, APP_URL in /opt/librenms/.env and base_url in /opt/librenms/config.php.'

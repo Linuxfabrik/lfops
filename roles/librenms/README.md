@@ -10,6 +10,8 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 
 The role installs LibreNMS from a git checkout on the target host, not on the Ansible controller, and checks out the latest upstream release on every run. The version is not pinned, so a run updates an existing installation to whatever upstream currently offers. Between runs LibreNMS keeps itself up to date as well: the cron jobs are the ones upstream ships, and their nightly `daily.sh` updates the code on its own. `librenms__config_update_channel` selects the channel it follows.
 
+`librenms__url` is the one place the address of the instance is configured. The role writes it to `base_url` in `/opt/librenms/config.php`, which overrides the URL LibreNMS otherwise detects from each request, and to `APP_URL` in `/opt/librenms/.env`, which Laravel uses wherever there is no request to detect from, alert notifications above all. Both are needed: LibreNMS builds part of its links itself and leaves the rest to Laravel. Note that `base_url` ties the instance to that address, so opening the web interface under a different name makes the built-in validation fail rather than only warn. `config.php` outranks the `config` database table, so a `base_url` set through the web interface or `lnms config:set` on an existing host is masked from the next run onwards.
+
 The Python packages LibreNMS lists in its `requirements.txt` are installed with `pip` into the user site of the `librenms` user, `/opt/librenms/.local`. That is where LibreNMS looks for them itself: its nightly `daily.sh` runs the same `pip` call, and the requirements check behind `validate.php` reads the installed distribution metadata from there. Distribution packages cannot cover this, because no RHEL release ships `command_runner` and the `psutil` of RHEL 8 and 9 is older than LibreNMS requires. On RHEL 8 the role installs a current `pip` into that same user site first, since the `pip` of the distribution cannot use the prebuilt `psutil` wheel and would need a compiler on the host to build it. A host that carries such packages from an earlier manual `pip install` as `root` keeps them; they are outranked by the user site for LibreNMS, but `pip3 uninstall` as `root` is worth running once so only one place provides them.
 
 LibreNMS stores its time series in RRD files below `/opt/librenms/rrd`. By default the role puts [RRDCached](https://docs.librenms.org/Extensions/RRDCached/) in front of them, which collects the updates of a poll cycle in memory and writes them out every 30 minutes instead of on every update. This typically cuts the disk I/O of the poller by 30% to 40%.
@@ -43,7 +45,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Post-Installation Steps
 
-* The role prepares the database credentials in `/opt/librenms/.env`, but creates neither the database schema nor an account to log in with. Open `<librenms__fqdn>/install` and follow the web installer, which does both. An administrator can also be added on the host with `lnms user:add <username>`.
+* The role prepares the database credentials in `/opt/librenms/.env`, but creates neither the database schema nor an account to log in with. Open `<librenms__url>/install` and follow the web installer, which does both. An administrator can also be added on the host with `lnms user:add <username>`.
 
 
 ## Tags
@@ -97,9 +99,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Mandatory. The password of the database user.
         * Type: String.
 
-`librenms__fqdn`
+`librenms__url`
 
-* The fully qualified domain name under which LibreNMS is accessible.
+* The URL under which LibreNMS is reachable, including the scheme and, where applicable, a port or a subdirectory. It is the single source for three settings: the `ServerName` of the vHost gets its host part, `APP_URL` in `/opt/librenms/.env` and `base_url` in `/opt/librenms/config.php` get the URL itself. Use the URL your users type in the browser, which with a TLS-terminating reverse proxy in front is an `https://` URL even though Apache httpd on the host serves plain HTTP.
 * Type: String.
 
 Example:
@@ -108,7 +110,7 @@ Example:
 librenms__database_login:
   username: 'librenms'
   password: 'linuxfabrik'
-librenms__fqdn: 'librenms.example.com'
+librenms__url: 'https://librenms.example.com'
 ```
 
 
@@ -120,12 +122,6 @@ librenms__fqdn: 'librenms.example.com'
 * Type: List.
 * Default: `[]`
 * Deviates from the upstream default `127.0.0.1`: a proxy on the LibreNMS host itself is not the common case in LFOps, and a host that trusts one accepts spoofed `X-Forwarded-For` headers from anything able to reach it locally.
-
-`librenms__config_app_url`
-
-* The base URL used for generated URLs, for example when running behind a reverse proxy. Have a look at https://docs.librenms.org/Support/Environment-Variables/. An empty string leaves the `APP_URL` setting in `/opt/librenms/.env` untouched.
-* Type: String.
-* Default: `''`
 
 `librenms__config_auth_mechanism`
 
@@ -141,9 +137,9 @@ librenms__fqdn: 'librenms.example.com'
 
 `librenms__config_session_secure_cookie`
 
-* Whether LibreNMS marks its session cookie as secure, so a browser only sends it over HTTPS. Sets `SESSION_SECURE_COOKIE` in `/opt/librenms/.env` on every run. Defaults to `true` as soon as `librenms__config_app_url` names an `https://` URL, which is the host's own statement that it serves HTTPS. Do not set it to `true` on a host that is reachable over plain HTTP only: the browser then never sends the cookie back and the login fails with "419 Page Expired". LibreNMS is a Laravel application and issues this cookie itself, so `php__ini_session_cookie_secure` of the `php` role does not reach it.
+* Whether LibreNMS marks its session cookie as secure, so a browser only sends it over HTTPS. Sets `SESSION_SECURE_COOKIE` in `/opt/librenms/.env` on every run. Defaults to `true` as soon as `librenms__url` names an `https://` URL, which is the host's own statement that it serves HTTPS. Do not set it to `true` on a host that is reachable over plain HTTP only: the browser then never sends the cookie back and the login fails with "419 Page Expired". LibreNMS is a Laravel application and issues this cookie itself, so `php__ini_session_cookie_secure` of the `php` role does not reach it.
 * Type: Boolean.
-* Default: `true` if `librenms__config_app_url` starts with `https://`, else `false`
+* Default: `true` if `librenms__url` starts with `https://`, else `false`
 
 `librenms__config_update_channel`
 
@@ -200,7 +196,6 @@ Example:
 librenms__config_app_trusted_proxies:
   - '192.0.2.0/24'
   - '198.51.100.7'
-librenms__config_app_url: 'https://librenms.example.com'
 librenms__config_auth_mechanism: 'mysql'
 librenms__config_rrd_purge: 730
 librenms__config_session_secure_cookie: true
