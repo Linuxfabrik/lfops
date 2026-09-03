@@ -50,7 +50,7 @@
   # Cloned as librenms, the way LibreNMS updates itself. Cloning as root and handing the tree
   # over afterwards leaves git refusing to touch it on every later run ("detected dubious
   # ownership"), which is git's safe.directory protection and cannot be worked around by a chown.
-  - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms'
+  - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms # version {{ __librenms__github_release["json"]["tag_name"] }}'
     ansible.builtin.git:
       repo: 'https://github.com/librenms/librenms.git'
       dest: '/opt/librenms'
