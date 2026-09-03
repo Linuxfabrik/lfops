@@ -114,7 +114,7 @@ librenms__fqdn: 'librenms.example.com'
 
 `librenms__config_app_trusted_proxies`
 
-* A list of trusted reverse proxy IPs or CIDR ranges, joined into the comma separated `APP_TRUSTED_PROXIES` setting in `/opt/librenms/.env`, and written on every run. Have a look at https://docs.librenms.org/Support/Environment-Variables/. The empty default trusts no proxy at all, so LibreNMS ignores the `X-Forwarded-*` headers of any host: list your proxy here if one sits in front of LibreNMS, otherwise client addresses and the detected protocol are those of the proxy.
+* A list of trusted reverse proxy IPs or CIDR ranges, joined into the comma separated `APP_TRUSTED_PROXIES` setting in `/opt/librenms/.env`, and written on every run. Have a look at https://docs.librenms.org/Support/Environment-Variables/. The empty default trusts no proxy at all, so LibreNMS ignores the `X-Forwarded-*` headers of any host: list your proxy here if one sits in front of LibreNMS, otherwise client addresses and the detected protocol are those of the proxy. Have a look at "Troubleshooting" below for how to check what a running instance makes of the setting.
 * Type: List.
 * Default: `[]`
 * Deviates from the upstream default `127.0.0.1`: a proxy on the LibreNMS host itself is not the common case in LFOps, and a host that trusts one accepts spoofed `X-Forwarded-For` headers from anything able to reach it locally.
@@ -211,6 +211,15 @@ librenms__rrdcached_service_state: 'started'
 librenms__scheduler_service_enabled: true
 librenms__scheduler_service_state: 'started'
 ```
+
+
+## Troubleshooting
+
+**Logs and access control show the address of the reverse proxy instead of the client's**
+
+* LibreNMS honours the `X-Forwarded-*` headers only from an address listed in `librenms__config_app_trusted_proxies`, and the empty default trusts none. To check what a running instance does, log in through the proxy and open "Auth History" under Settings in the web interface: the "IP Address" column of the top row is the address LibreNMS derived from the request, so it has to show the client and not the proxy. Reading that page requires the admin or the global-read role.
+* To confirm that a host which is not listed cannot forge an address, repeat the login from such a host with an `X-Forwarded-For` header of its own. The row in "Auth History" has to carry that host's own address; if it carries the forged one, the host is trusted.
+* `sudo -u librenms lnms config:show trustedproxy` prints the list as the application resolved it. This tells an unset `APP_TRUSTED_PROXIES`, where LibreNMS falls back to trusting `127.0.0.1`, apart from one that is deliberately empty.
 
 
 ## License
