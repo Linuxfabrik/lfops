@@ -230,6 +230,11 @@ When creating a new role or changing an existing one, pull through the **full op
 * Only mark a cell `x` in COMPATIBILITY.md once it is proven to run; use `(x)` for "expected to work but not verified".
 
 
+### Security by Default
+
+A host deployed with LFOps and no further inventory should already be in the state a security review would ask for, so where the safe value also works, it is the default. Do not ship the permissive one merely because the upstream package does; if you deviate from upstream, say so per "Deviating from an Upstream Default" below.
+
+
 ### Changelog Sections
 
 The project-agnostic "Changelog" rules above apply. LFOps overrides only the sorting: entries are sorted newest first, because operators running playbooks need to see what changed most recently.
@@ -337,7 +342,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 * **Variable subgroups**: large roles MAY split optional (or mandatory) variables into `## Optional Role Variables - <Subgroup>` sections, using the upstream module name, the variable prefix as a code span, or a functional label. These are the same canonical section repeated; give each its own `Example:` block. A subgroup MAY keep its Mandatory and Optional sections paired together (group-by-module, as in `apache_httpd`) instead of forcing all mandatory subgroups before all optional ones. A variable grouping must always be its own `##` section, never a `###` subheading inside `## Optional Role Variables`.
 * **Subheadings and walkthroughs**: `###` subheadings are allowed only as sub-structure inside a section (e.g. procedural steps within a walkthrough), never as a stand-in for a variable subgroup. The walkthrough slot accepts a descriptive role-specific title when none of `Single-Node Setup` / `Cluster Setup` / `Adding a Node to an Existing Cluster` fits (e.g. `bind` `## Primary-Secondary Example`). Sections are separated by two blank lines, including above and below the `*Available since*` marker.
 * **Special roles**: utility/meta roles (e.g. `shared`) MAY replace `## Tags` and the `## *Role Variables` sections with `## Available Tasks` and `## Usage Example`. Controller-side API roles (e.g. `uptimerobot`) MAY add `## Running the Role`, `## Example Inventory` and `## Read-Only Inspection`. Both MUST keep the mandatory frame (title, marker, License, Author Information).
-* **Reference-grade sections**: a role MAY add a focused role-specific section where no canonical section fits (e.g. `monitoring_plugins` `## Installation Methods`, `keycloak` `## Using a reverse proxy`). Keep these to a minimum; prefer folding behaviour notes into `## How the Role Behaves` and error/fix notes into `## Troubleshooting`.
+* **Reference-grade sections**: a role MAY add a focused role-specific section where no canonical section fits (e.g. `monitoring_plugins` `## Installation Methods`, `apache_tomcat` `## Multiple Tomcat Instances`). Keep these to a minimum; prefer folding behaviour notes into `## How the Role Behaves` and error/fix notes into `## Troubleshooting`.
 
 
 #### Tasks
