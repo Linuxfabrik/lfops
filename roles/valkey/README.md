@@ -51,6 +51,7 @@ This role is compatible with the following Valkey versions:
 * Systemd: Resource limit directive for the number of file descriptors.
 * Type: Number.
 * Default: `10240`
+* Deviates from the upstream default on Debian and Ubuntu, whose unit sets `65535`, and matches it on RHEL, whose unit sets `10240`: one value across all platforms keeps the descriptor budget of a host predictable, and 10240 covers the default `maxclients` of 10000 plus the server's own descriptors.
 
 `valkey__service_state`
 
@@ -69,6 +70,7 @@ This role is compatible with the following Valkey versions:
 * Systemd: First, it configures the time to wait for the ExecStop= command. Second, it configures the time to wait for Valkey itself to stop. If Valkey doesn't terminate in the specified time, it will be forcibly terminated by SIGKILL.
 * Type: String.
 * Default: `'90s'`
+* Deviates from the upstream default on Debian and Ubuntu, whose unit sets `TimeoutStopSec=0` and therefore waits indefinitely: a shutdown that hangs on a large dataset blocks a reboot forever instead of being cut short. On RHEL the unit leaves the setting commented out, where systemd's own default is the same 90s.
 
 Example:
 
@@ -127,6 +129,7 @@ Variables for `valkey.conf` directives and their default values, defined and sup
 * [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
 * Type: String.
 * Default: `'50M'`
+* Deviates from the upstream default `0`, which lets the dataset grow until the host runs out of memory: a cache that is bounded by default cannot take the rest of the host down with it. Raise it to what the application actually needs, and note that `valkey__conf_maxmemory_policy` is `noeviction`, so reaching the limit makes writes fail rather than evicting keys.
 
 `valkey__conf_maxmemory_policy`
 
