@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.redis
 
-This role installs and configures [Redis](https://redis.io/), per default listening on TCP 127.0.0.1:6379. Note that this role configures Systemd with unit file overrides for Redis.
+This role installs and configures [Redis](https://redis.io/), per default listening on TCP port 6379 on the loopback interfaces. Note that this role configures Systemd with unit file overrides for Redis.
 
 This role is compatible with Redis v6+.
 
@@ -103,7 +103,8 @@ Variables for `redis.conf` directives and their default values, defined and supp
 
 * [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
-* Default: `'127.0.0.1'`
+* Default: `'127.0.0.1 -::1'`
+* A `-` in front of an address makes it optional: Redis logs a warning and keeps running where that address does not exist, rather than aborting with `Failed listening on port 6379 (tcp), aborting.`. Without the prefix, `::1` takes down the service on a host with no IPv6 loopback, such as a RHEL minimal installation.
 
 `redis__conf_databases`
 
