@@ -20,7 +20,7 @@ argument_specs:
       valkey__conf_bind:
         type: 'str'
         required: false
-        default: '127.0.0.1'
+        default: '127.0.0.1 -::1'
         description: 'Space-separated list of addresses Valkey listens on.'
 
       valkey__conf_daemonize:

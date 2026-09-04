@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.valkey
 
-This role installs and configures [Valkey](https://valkey.io/), per default listening on TCP 127.0.0.1:6379. Note that this role configures systemd with unit file overrides for Valkey.
+This role installs and configures [Valkey](https://valkey.io/), per default listening on TCP port 6379 on the loopback interfaces. Note that this role configures systemd with unit file overrides for Valkey.
 
 Valkey is installed from the distribution repositories. Which version that is depends on the operating system.
 
@@ -104,7 +104,8 @@ Variables for `valkey.conf` directives and their default values, defined and sup
 
 * [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
 * Type: String.
-* Default: `'127.0.0.1'`
+* Default: `'127.0.0.1 -::1'`
+* A `-` in front of an address makes it optional: Valkey logs a warning and keeps running where that address does not exist, rather than aborting with `Failed listening on port 6379 (tcp), aborting.`. Without the prefix, `::1` takes down the service on a host with no IPv6 loopback, such as a RHEL minimal installation.
 
 `valkey__conf_daemonize`
 
