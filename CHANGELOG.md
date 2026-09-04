@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_solr**: The maximum size of the Java heap can be configured via `apache_solr__heap`.
+* **role:apache_solr**: The Java Security Manager can be switched off via `apache_solr__security_manager_enabled`, for instances that have to follow symlinks pointing outside of Solr's own directories.
 * **role:apache_httpd**: The GELF access log carries the request protocol as its own `_http_version` field, so the share of traffic on HTTP/2 can be graphed per vHost in Graylog. The text log formats already contained it as part of the request line and are unchanged, because fail2ban and the Matomo log importer parse them positionally.
 * **role:librenms**: `librenms__scheduler_service_enabled` and `librenms__scheduler_service_state` start, stop or disable the timer of the LibreNMS scheduler on its own.
 * **role:librenms**: The `librenms:cron`, `librenms:logrotate` and `librenms:state` tags deploy the scheduled jobs, deploy the logrotate configuration and manage the service state without touching the rest of the installation.

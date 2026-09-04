@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025081301
+# 2026090401
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -361,10 +361,12 @@
 
 LOG4J_PROPS="{{ apache_solr__log4j_props | d('/var/solr/log4j2.xml') }}"
 SOLR_DATA_HOME="{{ apache_solr__data_dir }}"
+SOLR_HEAP="{{ apache_solr__heap }}"
 SOLR_HOME="{{ apache_solr__var_dir }}"
 SOLR_JETTY_HOST="{{ apache_solr__http_bind_address | d('127.0.0.1') }}"
 SOLR_LOG_LEVEL={{ apache_solr__log_level | d('INFO') }}
 SOLR_LOGS_DIR="{{ apache_solr__logs_dir | d('logs') }}"
 SOLR_PID_DIR="{{ apache_solr__pid_dir }}"
 SOLR_PORT={{ apache_solr__http_bind_port | d(8983) }}
+SOLR_SECURITY_MANAGER_ENABLED={{ apache_solr__security_manager_enabled | bool | string | lower }}
 SOLR_STOP_WAIT={{ apache_solr__stop_wait | d(180) }}
