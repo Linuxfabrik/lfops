@@ -58,7 +58,11 @@
     setup_icinga2_master__python__skip_role__internal_var: '{{ setup_icinga2_master__python__skip_role | d(false) }}'
     setup_icinga2_master__python_venv__skip_role__internal_var: '{{ setup_icinga2_master__python_venv__skip_role | d(false) }}'
     setup_icinga2_master__redis__skip_injections__internal_var: '{{ setup_icinga2_master__redis__skip_injections | d(setup_icinga2_master__redis__skip_role__internal_var) }}'
-    setup_icinga2_master__redis__skip_role__internal_var: '{{ setup_icinga2_master__redis__skip_role | d(false) }}'
+    # Icinga DB talks to either Redis or Valkey over the same protocol on the same port, so the
+    # choice is a matter of what the platform ships: RHEL 10 has no Redis, while Debian 12 and
+    # Ubuntu 22.04 have no Valkey. Hence the OS-dependent defaults. Set both skip variables to run
+    # neither, or override one to force a specific server.
+    setup_icinga2_master__redis__skip_role__internal_var: '{{ setup_icinga2_master__redis__skip_role | d(ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10) }}'
     setup_icinga2_master__repo_epel__skip_role__internal_var: '{{ setup_icinga2_master__repo_epel__skip_role | d(false) }}'
     setup_icinga2_master__repo_grafana__skip_role__internal_var: '{{ setup_icinga2_master__repo_grafana__skip_role | d(false) }}'
     setup_icinga2_master__repo_icinga__skip_role__internal_var: '{{ setup_icinga2_master__repo_icinga__skip_role | d(false) }}'
@@ -70,6 +74,8 @@
     setup_icinga2_master__repo_remi__skip_role__internal_var: '{{ setup_icinga2_master__repo_remi__skip_role | d(false) }}'
     setup_icinga2_master__repo_sury__skip_role__internal_var: '{{ setup_icinga2_master__repo_sury__skip_role | d(false) }}'
     setup_icinga2_master__selinux__skip_role__internal_var: '{{ setup_icinga2_master__selinux__skip_role | d(false) }}'
+    setup_icinga2_master__valkey__skip_injections__internal_var: '{{ setup_icinga2_master__valkey__skip_injections | d(setup_icinga2_master__valkey__skip_role__internal_var) }}'
+    setup_icinga2_master__valkey__skip_role__internal_var: '{{ setup_icinga2_master__valkey__skip_role | d(not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10)) }}'
     setup_icinga2_master__yum_utils__skip_role__internal_var: '{{ setup_icinga2_master__yum_utils__skip_role | d(false) }}'
 
 
@@ -250,20 +256,35 @@
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{
           (not setup_icinga2_master__mariadb_server__skip_injections__internal_var) | ternary(mariadb_server__kernel_settings__sysctl__dependent_var, []) | d([]) +
-          (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__sysctl__dependent_var, []) | d([])
+          (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__sysctl__dependent_var, []) | d([]) +
+          (not setup_icinga2_master__valkey__skip_injections__internal_var) | ternary(valkey__kernel_settings__sysctl__dependent_var, []) | d([])
         }}'
-      kernel_settings__transparent_hugepages__dependent_var: '{{ (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(redis__kernel_settings__transparent_hugepages__dependent_var, "") }}'
+      # Nested rather than chained with default(): ternary yields an empty string when the
+      # injection is skipped, and default() only substitutes an undefined value, never an empty
+      # one, so a chain would stop at the empty redis branch and never reach valkey.
+      kernel_settings__transparent_hugepages__dependent_var: '{{
+          (not setup_icinga2_master__redis__skip_injections__internal_var) | ternary(
+            redis__kernel_settings__transparent_hugepages__dependent_var,
+            (not setup_icinga2_master__valkey__skip_injections__internal_var) | ternary(
+              valkey__kernel_settings__transparent_hugepages__dependent_var, "")) }}'
       when:
         - 'not setup_icinga2_master__kernel_settings__skip_role__internal_var'
 
+    # Tied to the redis role below: with Valkey selected, the server comes from the distribution
+    # and this repository is not needed.
     - role: 'linuxfabrik.lfops.repo_redis'
       when:
         - 'ansible_facts["os_family"] == "Debian"' # not available for RedHat, instead using repo_remi there
         - 'not setup_icinga2_master__repo_redis__skip_role__internal_var'
+        - 'not setup_icinga2_master__redis__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.redis'
       when:
         - 'not setup_icinga2_master__redis__skip_role__internal_var'
+
+    - role: 'linuxfabrik.lfops.valkey'
+      when:
+        - 'not setup_icinga2_master__valkey__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.icingadb'
       when:

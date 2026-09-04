@@ -126,7 +126,7 @@ Which Ansible role is proven to run on which OS?
 | python                                |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Windows                                      |
 | python_venv                           |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
 | qemu_guest_agent                      |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| redis                                 |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| redis                                 |   x    |   x    |   x    |   x    |         |    (x)    |    (x)    |    (x)    | RHEL 10: no Redis, use the `valkey` role     |
 | repo_baseos                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_collabora                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_collabora_code                   |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
@@ -170,6 +170,7 @@ Which Ansible role is proven to run on which OS?
 | trend_micro_v1es                      |        |        |   x    |   x    |    x    |           |     x     |           |                                              |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |
+| valkey                                |        |   x    |   x    |   x    |    x    |           |     x     |     x     | no Valkey in Deb 12 / Ubu 22.04              |
 | vsftpd                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | wordpress                             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | yum_utils                             |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |

@@ -1,0 +1,153 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state, not that individual tasks ran.
+#
+# The centre of gravity is the last block: every setting is read back from the *running* server via
+# `valkey-cli CONFIG GET`, so the whole chain is proven at once - group_vars, to the per-version
+# template, to the file the service reads, to the value the server actually applies. Grepping
+# valkey.conf would prove none of that.
+- name: 'Verify valkey is running and uses the configured values'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+
+    # The RedHat packages call the unit valkey.service, the Debian/Ubuntu ones valkey-server.service.
+    __molecule__valkey_service_name: '{{
+        (ansible_facts["os_family"] == "RedHat") | ternary("valkey.service", "valkey-server.service")
+      }}'
+    # `-a` on the command line prints a warning to stderr on every call; --no-auth-warning silences
+    # it so a non-empty stderr stays meaningful.
+    __molecule__valkey_cli: 'valkey-cli -a {{ valkey__conf_requirepass | quote }} --no-auth-warning'
+
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert the valkey service is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"][__molecule__valkey_service_name]["state"] == "running"'
+          - 'ansible_facts["services"][__molecule__valkey_service_name]["status"] == "enabled"'
+        fail_msg: '{{ __molecule__valkey_service_name }} is {{ ansible_facts["services"][__molecule__valkey_service_name] | d("absent") }}'
+
+    - name: 'Assert valkey is reachable on its port'
+      ansible.builtin.wait_for:
+        host: '127.0.0.1'
+        port: '{{ valkey__conf_port | d(6379) }}'
+        timeout: 30
+
+    # The bind default carries the upstream '-::1', where the '-' makes the address optional. Two
+    # halves to that: it answers on the IPv6 loopback where the host has one (asserted here), and
+    # it merely warns where the host has none, instead of aborting - which the service assertion
+    # above already covers, since those hosts would have no running service at all.
+    # Gate on the loopback interface, not on ansible_facts['all_ipv6_addresses']: that fact lists
+    # the real addresses only and never contains ::1, which would skip these tasks everywhere.
+    - name: 'valkey-cli -h ::1 PING'
+      ansible.builtin.command: '{{ __molecule__valkey_cli }} -h ::1 PING'
+      register: '__molecule__valkey_ipv6_ping_result'
+      changed_when: false
+      when:
+        - '"::1" in (ansible_facts["lo"]["ipv6"] | d([]) | map(attribute="address") | list)'
+
+    - name: 'Assert valkey answers on the IPv6 loopback'
+      ansible.builtin.assert:
+        that: '__molecule__valkey_ipv6_ping_result["stdout"] == "PONG"'
+        fail_msg: 'valkey did not answer on ::1: {{ __molecule__valkey_ipv6_ping_result["stdout"] | d("") }}{{ __molecule__valkey_ipv6_ping_result["stderr"] | d("") }}'
+      when:
+        - '"::1" in (ansible_facts["lo"]["ipv6"] | d([]) | map(attribute="address") | list)'
+
+    # The regression this role was split out for: on RHEL 10 the config file was deployed with a
+    # hardcoded `redis` group while the package creates a `valkey` one, so the run died with
+    # "chgrp failed: failed to look up group redis". Assert the ownership the package expects.
+    - name: 'stat /etc/valkey/valkey.conf'
+      ansible.builtin.stat:
+        path: '/etc/valkey/valkey.conf'
+      register: '__molecule__valkey_conf_result'
+
+    - name: 'Assert the config file is owned by root:valkey and not world-readable'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__valkey_conf_result["stat"]["exists"]'
+          - '__molecule__valkey_conf_result["stat"]["pw_name"] == "root"'
+          - '__molecule__valkey_conf_result["stat"]["gr_name"] == "valkey"'
+          - '__molecule__valkey_conf_result["stat"]["mode"] == "0640"'
+        fail_msg: '/etc/valkey/valkey.conf is {{ __molecule__valkey_conf_result["stat"] | d("missing") }}'
+
+    # The systemd drop-in is only proven by what the unit ends up with, not by the file on disk.
+    - name: 'systemctl show {{ __molecule__valkey_service_name }} --property=LimitNOFILE' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show {{ __molecule__valkey_service_name }} --property=LimitNOFILE --value'
+      register: '__molecule__valkey_limit_nofile_result'
+      changed_when: false
+
+    - name: 'Assert the drop-in raised LimitNOFILE'
+      ansible.builtin.assert:
+        that: '__molecule__valkey_limit_nofile_result["stdout"] | int == valkey__service_limit_nofile'
+        fail_msg: 'LimitNOFILE is {{ __molecule__valkey_limit_nofile_result["stdout"] }}, expected {{ valkey__service_limit_nofile }}'
+
+    # requirepass is proven twice over: an unauthenticated call has to fail, and the authenticated
+    # calls below have to succeed.
+    - name: 'valkey-cli PING without authentication'
+      ansible.builtin.command: 'valkey-cli PING'
+      register: '__molecule__valkey_noauth_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert an unauthenticated client is rejected'
+      ansible.builtin.assert:
+        that: '"NOAUTH" in __molecule__valkey_noauth_result["stdout"] ~ __molecule__valkey_noauth_result["stderr"]'
+        fail_msg: 'valkey answered an unauthenticated PING: {{ __molecule__valkey_noauth_result["stdout"] }}'
+
+    # Ask the running server what it actually applied. maxmemory comes back in bytes, so the
+    # expected values are normalised here rather than in the assertion. Mind the unit convention:
+    # in valkey.conf "M" is 1000*1000 and only "MB" is 1024*1024, so 128M is 128000000 bytes.
+    # Verified against valkey 8.0.9 on Rocky 10.
+    - name: 'valkey-cli CONFIG GET'
+      ansible.builtin.command: '{{ __molecule__valkey_cli }} CONFIG GET {{ item["directive"] }}'
+      register: '__molecule__valkey_config_get_result'
+      changed_when: false
+      loop:
+        - directive: 'databases'
+          expected: '{{ valkey__conf_databases | string }}'
+        - directive: 'loglevel'
+          expected: '{{ valkey__conf_loglevel }}'
+        - directive: 'maxmemory'
+          expected: '{{ (valkey__conf_maxmemory | regex_replace("[^0-9]", "") | int) * 1000 * 1000 }}'
+        - directive: 'maxmemory-policy'
+          expected: '{{ valkey__conf_maxmemory_policy }}'
+      loop_control:
+        label: '{{ item["directive"] }}'
+
+    # CONFIG GET returns the name and the value on two lines; the value is the last one.
+    - name: 'Assert the running server applied the configured values'
+      ansible.builtin.assert:
+        that: 'item["stdout_lines"][-1] == item["item"]["expected"]'
+        fail_msg: '{{ item["item"]["directive"] }} is {{ item["stdout_lines"][-1] }}, expected {{ item["item"]["expected"] }}'
+      loop: '{{ __molecule__valkey_config_get_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["directive"] }}'
+
+    # Proves the role picked the template matching the installed version, which is the one piece of
+    # per-OS logic the role does on its own.
+    - name: 'Get the list of installed packages'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Read the header of the deployed /etc/valkey/valkey.conf'
+      ansible.builtin.slurp:
+        src: '/etc/valkey/valkey.conf'
+      register: '__molecule__valkey_conf_slurp_result'
+
+    - name: 'Assert the deployed template matches the installed Valkey version'
+      ansible.builtin.assert:
+        that: '__molecule__valkey_conf_header is search("Valkey v" ~ (__molecule__valkey_installed_version | regex_escape) ~ " configuration file")'
+        fail_msg: 'Valkey {{ __molecule__valkey_installed_version }} is installed, but the deployed config header reads: {{ __molecule__valkey_conf_header }}'
+      vars:
+        __molecule__valkey_package: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("valkey", "valkey-server") }}'
+        __molecule__valkey_installed_version: '{{
+            ansible_facts["packages"][__molecule__valkey_package][0]["version"] | regex_search("\d+\.\d+")
+          }}'
+        # line 4 of the template: "# Valkey vX.Y configuration file."
+        __molecule__valkey_conf_header: '{{
+            (__molecule__valkey_conf_slurp_result["content"] | b64decode).splitlines()[3]
+          }}'

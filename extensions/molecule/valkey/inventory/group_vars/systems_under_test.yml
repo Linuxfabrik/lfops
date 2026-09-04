@@ -1,0 +1,12 @@
+# Variables the playbook under test needs, applied to every system under test.
+#
+# Every value here deliberately differs from the role default, so verify.yml can
+# tell "the running server uses what the inventory asked for" apart from "the
+# running server happens to use the packaged default".
+valkey__conf_databases: 32
+valkey__conf_loglevel: 'verbose'
+valkey__conf_maxmemory: '128M'
+valkey__conf_maxmemory_policy: 'allkeys-lru'
+valkey__conf_requirepass: 'linuxfabrik'
+
+valkey__service_limit_nofile: 20480
