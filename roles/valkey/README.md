@@ -22,6 +22,7 @@ This role is compatible with the following Valkey versions:
 * The role does not pin a Valkey version. It installs whatever the enabled repositories offer, reads the installed version back from the package database, and deploys the configuration template matching that version. If no template matches, the run aborts with the list of supported versions instead of failing on a missing file.
 * The whole configuration file is templated, so local edits to `/etc/valkey/valkey.conf` are overwritten on the next run. A backup of the previous file is kept next to it.
 * The role manages TCP access only. The unix socket the RHEL packages enable by default is commented out in the deployed configuration.
+* `daemonize` and `supervised` are not exposed as role variables. Every packaged unit passes `--daemonize no --supervised systemd` on its `ExecStart` line, and the command line wins over the configuration file, so a variable for either would have had no effect on the running service.
 * On RHEL 10 there is no Redis in the distribution repositories, so this role is the drop-in replacement for [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) there. Valkey and Redis both listen on TCP 6379 by default, so do not run both roles against the same host without changing one of the ports.
 
 
@@ -107,12 +108,6 @@ Variables for `valkey.conf` directives and their default values, defined and sup
 * Default: `'127.0.0.1 -::1'`
 * A `-` in front of an address makes it optional: Valkey logs a warning and keeps running where that address does not exist, rather than aborting with `Failed listening on port 6379 (tcp), aborting.`. Without the prefix, `::1` takes down the service on a host with no IPv6 loopback, such as a RHEL minimal installation.
 
-`valkey__conf_daemonize`
-
-* [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
-* Type: String.
-* Default: `'no'`
-
 `valkey__conf_databases`
 
 * [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
@@ -168,12 +163,6 @@ Variables for `valkey.conf` directives and their default values, defined and sup
 * Type: List.
 * Default: `['3600 1', '300 100', '60 10000']`
 
-`valkey__conf_supervised`
-
-* [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
-* Type: String.
-* Default: `'auto'`
-
 `valkey__conf_tls_auth_clients`
 
 * [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
@@ -210,7 +199,6 @@ Example:
 valkey__conf_appendonly: 'yes'
 valkey__conf_auto_aof_rewrite_min_size: '64mb'
 valkey__conf_bind: '127.0.0.1'
-valkey__conf_daemonize: 'no'
 valkey__conf_databases: 16
 valkey__conf_loglevel: 'notice'
 valkey__conf_maxmemory: '50M'
@@ -228,7 +216,6 @@ valkey__conf_tls_ca_cert_file: '/etc/valkey/ca.pem'
 valkey__conf_tls_cert_file: '/etc/valkey/valkey.pem'
 valkey__conf_tls_key_file: '/etc/valkey/valkey.key'
 valkey__conf_tls_port: 6379
-valkey__conf_supervised: 'auto'
 ```
 
 

@@ -1,7 +1,6 @@
 valkey__conf_appendonly: 'no'
 valkey__conf_auto_aof_rewrite_min_size: '64mb'
 valkey__conf_bind: '127.0.0.1 -::1'
-valkey__conf_daemonize: 'no'
 valkey__conf_databases: 16
 valkey__conf_loglevel: 'notice'
 valkey__conf_maxmemory: '50M'  # upstream default: 0 (unlimited)
@@ -9,7 +8,6 @@ valkey__conf_maxmemory_policy: 'noeviction'
 valkey__conf_port: 6379
 valkey__conf_protected_mode: 'yes'
 valkey__conf_replica_serve_stale_data: 'yes'
-valkey__conf_supervised: 'auto'
 
 valkey__service_enabled: true
 valkey__service_limit_nofile: 10240  # upstream default: 10240 on RHEL, 65535 on Debian / Ubuntu

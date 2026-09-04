@@ -23,12 +23,6 @@ argument_specs:
         default: '127.0.0.1 -::1'
         description: 'Space-separated list of addresses Valkey listens on.'
 
-      valkey__conf_daemonize:
-        type: 'str'
-        required: false
-        default: 'no'
-        description: 'Runs Valkey as a daemon. Keep this at "no" when running under systemd.'
-
       valkey__conf_databases:
         type: 'int'
         required: false
@@ -81,12 +75,6 @@ argument_specs:
         elements: 'str'
         required: false
         description: 'Snapshotting rules, each entry being a "<seconds> <changes>" pair.'
-
-      valkey__conf_supervised:
-        type: 'str'
-        required: false
-        default: 'auto'
-        description: 'Interaction with the supervision daemon.'
 
       valkey__conf_tls_auth_clients:
         type: 'str'

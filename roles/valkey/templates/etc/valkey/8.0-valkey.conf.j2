@@ -329,7 +329,8 @@ tls-auth-clients {{ valkey__conf_tls_auth_clients }}
 # By default the server does not run as a daemon. Use 'yes' if you need it.
 # Note that the server will write a pid file in /var/run/valkey.pid when daemonized.
 # When the server is supervised by upstart or systemd, this parameter has no impact.
-daemonize {{ valkey__conf_daemonize }}
+# not configurable: the unit passes --daemonize no on its ExecStart line, which wins.
+daemonize no
 
 # If you run the server from upstart or systemd, the server can interact with your
 # supervision tree. Options:
@@ -347,7 +348,9 @@ daemonize {{ valkey__conf_daemonize }}
 # The default is "no". To run under upstart/systemd, you can simply uncomment
 # the line below:
 #
-supervised {{ valkey__conf_supervised }}
+# not configurable: the unit passes --supervised systemd on its ExecStart line, which
+# wins. Kept at auto so a hand-started server still does the right thing.
+supervised auto
 
 # If a pid file is specified, the server writes it where specified at startup
 # and removes it at exit.
