@@ -21,6 +21,11 @@ This role is compatible with the following Redis versions:
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The `daemonize` and `supervised` settings of `redis.conf` are not exposed as role variables, because no value an administrator could pick would change the running service. A Redis that is supervised by systemd never daemonizes, whatever `daemonize` says, and every packaged unit either passes `--supervised systemd` on its `ExecStart` line or, in the case of the packages.redis.io unit used on Debian and Ubuntu, relies on the `supervised auto` this role deploys. The only other value that unit would accept is `systemd`, which is what `auto` resolves to there anyway; `no` stops Redis from reporting readiness and leaves the unit failed. The role therefore deploys `daemonize no` and `supervised auto` on every platform.
+
+
 ## Tags
 
 `redis`
@@ -100,12 +105,6 @@ Variables for `redis.conf` directives and their default values, defined and supp
 * Type: String.
 * Default: `'127.0.0.1'`
 
-`redis__conf_daemonize`
-
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
-* Type: String.
-* Default: `'no'`
-
 `redis__conf_databases`
 
 * [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
@@ -160,12 +159,6 @@ Variables for `redis.conf` directives and their default values, defined and supp
 * Type: List.
 * Default: `['3600 1', '300 100', '60 10000']`
 
-`redis__conf_supervised`
-
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
-* Type: String.
-* Default: `'auto'`
-
 `redis__conf_tls_auth_clients`
 
 * [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
@@ -202,7 +195,6 @@ Example:
 redis__conf_appendonly: 'yes'
 redis__conf_auto_aof_rewrite_min_size: '64mb'
 redis__conf_bind: '127.0.0.1'
-redis__conf_daemonize: 'no'
 redis__conf_databases: 16
 redis__conf_loglevel: 'notice'
 redis__conf_maxmemory: '50M'
@@ -220,7 +212,6 @@ redis__conf_tls_ca_cert_file: '/etc/redis/ca.pem'
 redis__conf_tls_cert_file: '/etc/redis/redis.pem'
 redis__conf_tls_key_file: '/etc/redis/redis.key'
 redis__conf_tls_port: 6379
-redis__conf_supervised: 'auto'
 ```
 
 
