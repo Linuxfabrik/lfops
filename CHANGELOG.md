@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_solr**: The maximum size of the Java heap can be configured via `apache_solr__heap`.
+* **role:apache_solr**: The Java Security Manager can be switched off via `apache_solr__security_manager_enabled`, for instances that have to follow symlinks pointing outside of Solr's own directories.
 * **role:selinux**: A policy module can be defined inline through the `content_te` subkey of `selinux__modules__*_var`, instead of pointing `src` at a directory on the Ansible controller.
 * **role:openvpn_server**: Add `openvpn_server__service_state` to start, stop, restart or reload the OpenVPN service independently of whether it is enabled at boot.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
@@ -34,8 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:kvm_vm**: VMs can now also be installed from an ISO or install tree instead of a prepared cloud image.
 * **role:files**: The `files:directories`, `files:files` and `files:symlinks` tags manage one kind of file system entity each, so a single directory or symlink can be deployed without touching the rest.
 * **plugin:bitwarden_item**: The lookup can be told not to create secrets, so a lookup that finds no matching item aborts the run instead of silently generating a new password. Set `LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false`, or `create = false` in the `[bitwarden_item_lookup]` section of your `ansible.cfg`; the default is the previous behaviour.
-* **role:apache_solr**: The maximum size of the Java heap can be configured via `apache_solr__heap`.
-* **role:apache_solr**: The Java Security Manager can be switched off via `apache_solr__security_manager_enabled`, for instances that have to follow symlinks pointing outside of Solr's own directories.
 
 ### Changed
 
