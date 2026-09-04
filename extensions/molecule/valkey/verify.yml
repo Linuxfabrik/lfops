@@ -42,19 +42,21 @@
     # halves to that: it answers on the IPv6 loopback where the host has one (asserted here), and
     # it merely warns where the host has none, instead of aborting - which the service assertion
     # above already covers, since those hosts would have no running service at all.
+    # Gate on the loopback interface, not on ansible_facts['all_ipv6_addresses']: that fact lists
+    # the real addresses only and never contains ::1, which would skip these tasks everywhere.
     - name: 'valkey-cli -h ::1 PING'
       ansible.builtin.command: '{{ __molecule__valkey_cli }} -h ::1 PING'
       register: '__molecule__valkey_ipv6_ping_result'
       changed_when: false
       when:
-        - '"::1" in ansible_facts["all_ipv6_addresses"]'
+        - '"::1" in (ansible_facts["lo"]["ipv6"] | d([]) | map(attribute="address") | list)'
 
     - name: 'Assert valkey answers on the IPv6 loopback'
       ansible.builtin.assert:
         that: '__molecule__valkey_ipv6_ping_result["stdout"] == "PONG"'
         fail_msg: 'valkey did not answer on ::1: {{ __molecule__valkey_ipv6_ping_result["stdout"] | d("") }}{{ __molecule__valkey_ipv6_ping_result["stderr"] | d("") }}'
       when:
-        - '"::1" in ansible_facts["all_ipv6_addresses"]'
+        - '"::1" in (ansible_facts["lo"]["ipv6"] | d([]) | map(attribute="address") | list)'
 
     # The regression this role was split out for: on RHEL 10 the config file was deployed with a
     # hardcoded `redis` group while the package creates a `valkey` one, so the run died with
