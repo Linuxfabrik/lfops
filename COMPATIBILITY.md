@@ -84,12 +84,12 @@ Which Ansible role is proven to run on which OS?
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | kernel_modules                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| keycloak                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| keycloak                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | kvm_host                              |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | kvm_vm                                |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| librenms                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | libreoffice                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | login                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35+                                   |
 | logrotate                             |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
@@ -117,7 +117,7 @@ Which Ansible role is proven to run on which OS?
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | opensearch                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| php                                   |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| php                                   |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | postfix                               |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |

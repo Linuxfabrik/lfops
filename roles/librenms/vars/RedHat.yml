@@ -1,0 +1,3 @@
+# RHEL 8 is handled in the more specific vars/RedHat8.yml.
+__librenms__pip_bootstrap_version: ''
+__librenms__pip_executable: 'pip3'

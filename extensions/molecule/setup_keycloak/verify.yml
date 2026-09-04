@@ -1,0 +1,75 @@
+# verify.yml checks the observable end result: the service runs, it answers on its
+# ports, and it actually uses the values this scenario set in group_vars. It does not
+# assert that keycloak.conf exists or contains a line, since that would only exercise
+# Jinja and the template module.
+- name: 'Verify keycloak is installed and configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__keycloak_url: 'http://127.0.0.1:8080'
+    # Health and metrics live on the management interface, which listens on 9000 by
+    # default (verified against keycloak 26.4.7).
+    __molecule__keycloak_management_url: 'http://127.0.0.1:9000'
+  tasks:
+
+    # Real check: is the service up? This catches a configuration that deployed without
+    # error but makes the service crash on start, which the role's own tasks cannot see.
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that keycloak.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["keycloak.service"]["state"] == "running"'
+
+    # The important check: does the running server report the hostname the scenario
+    # configured? This proves the whole chain, group_vars to template to the service
+    # reading keycloak.conf to the URLs it hands out.
+    - name: 'curl {{ __molecule__keycloak_url }}/realms/master/.well-known/openid-configuration'
+      ansible.builtin.uri:
+        url: '{{ __molecule__keycloak_url }}/realms/master/.well-known/openid-configuration'
+        status_code: 200
+      register: '__molecule__keycloak_oidc_result'
+
+    - name: 'Assert the running server issues tokens for the configured hostname'
+      ansible.builtin.assert:
+        that: 'keycloak__hostname in __molecule__keycloak_oidc_result["json"]["issuer"]'
+        fail_msg: 'Expected "{{ keycloak__hostname }}" in the issuer, got "{{ __molecule__keycloak_oidc_result["json"]["issuer"] }}".'
+
+    # The bootstrap admin lives in the database, so a successful token request proves
+    # both that the account was provisioned and that Keycloak reaches MariaDB.
+    - name: 'curl --data grant_type=password --data client_id=admin-cli {{ __molecule__keycloak_url }}/realms/master/protocol/openid-connect/token'
+      ansible.builtin.uri:
+        url: '{{ __molecule__keycloak_url }}/realms/master/protocol/openid-connect/token'
+        method: 'POST'
+        body_format: 'form-urlencoded'
+        body:
+          client_id: 'admin-cli'
+          grant_type: 'password'
+          password: '{{ keycloak__admin_login["password"] }}'
+          username: '{{ keycloak__admin_login["username"] }}'
+        status_code: 200
+
+    # keycloak__expose_healthcheck_endpoints and keycloak__expose_metrics_endpoints are
+    # build-time options: reaching them proves kc.sh build ran with what the scenario set.
+    - name: 'curl {{ __molecule__keycloak_management_url }}/health/ready'
+      ansible.builtin.uri:
+        url: '{{ __molecule__keycloak_management_url }}/health/ready'
+        status_code: 200
+
+    - name: 'curl {{ __molecule__keycloak_management_url }}/metrics'
+      ansible.builtin.uri:
+        url: '{{ __molecule__keycloak_management_url }}/metrics'
+        status_code: 200
+
+    # The file log handler is enabled, so the running server must be writing to the
+    # configured path. An empty or missing file means the handler never took effect.
+    - name: 'stat {{ keycloak__log_file }}'
+      ansible.builtin.stat:
+        path: '{{ keycloak__log_file }}'
+      register: '__molecule__keycloak_log_stat'
+
+    - name: 'Assert the running server writes to the configured log file'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__keycloak_log_stat["stat"]["exists"]'
+          - '__molecule__keycloak_log_stat["stat"]["size"] > 0'

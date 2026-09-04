@@ -1,0 +1,9 @@
+# Molecule scenario marker for the 'apache_httpd' scenario, run with
+# `molecule test --scenario-name apache_httpd`.
+#
+# It overrides the prepare step (see prepare.yml): the scenario's vHosts terminate TLS, and Apache
+# refuses to start when a SSLCertificateFile it is pointed at does not exist. The certificates
+# therefore have to be on the host before converge runs the playbook under test.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

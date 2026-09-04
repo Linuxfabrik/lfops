@@ -892,7 +892,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#socket)
 * Type: String.
-* Default: RHEL: `'/run/mariadb/mariadb.sock'`, Debian: `'/run/mysqld/mysqld.sock'`
+* Default: RHEL: `'/var/lib/mysql/mysql.sock'` (follows `mariadb_server__cnf_datadir`), Debian: `'/run/mysqld/mysqld.sock'`
 
 `mariadb_server__cnf_sort_buffer_size__group_var` / `mariadb_server__cnf_sort_buffer_size__host_var`
 

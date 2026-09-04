@@ -1,9 +1,16 @@
 # skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
 # the service was just started (redundant), or if the user wants it stopped.
+# `| bool` is mandatory on the flag: `--extra-vars 'lfops__skip_restart_handlers=false'` passes
+# the string "false", which is truthy on its own.
 # __keycloak__service_state_result is registered on a dedicated state-only task (not the enabled
 # task), so that enabled-only changes don't prevent the restart.
 # `is not defined` covers a run that skips the state block (`--skip-tags keycloak:state`), where
 # the result is never registered.
+# this guard is only sound because the state task runs after every task that notifies a handler.
+# there is no chained validation handler: `kc.sh show-config` does not validate (it exits 0 on an
+# unknown option and on an invalid value alike, verified against keycloak 26.4.7), and `kc.sh
+# build`, which does reject invalid values, already runs as a task before the state task, so a
+# broken configuration aborts the run before this handler can restart the service.
 - name: 'keycloak: systemctl restart keycloak'
   ansible.builtin.service:
     name: 'keycloak.service'
@@ -11,4 +18,4 @@
   when:
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__keycloak__service_state_result is not defined or __keycloak__service_state_result is not changed'
-    - 'keycloak__state != "stopped"'
+    - 'keycloak__service_state != "stopped"'

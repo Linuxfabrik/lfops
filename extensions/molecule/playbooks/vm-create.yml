@@ -67,49 +67,55 @@
       | d("default")]["path"] }}
   pre_tasks:
 
-    # Refresh the cached base image only when this VM's boot disk is about to be built from
-    # scratch. Detecting a rebuilt upstream image needs no work of ours: with no checksum set,
-    # get_url's "file already exists" early exit never fires, so the request goes out as a
-    # conditional GET carrying If-Modified-Since and comes back 200 whenever upstream is newer.
-    # What must not happen is that refresh landing under an existing boot disk. A qcow2 overlay
-    # reads its unallocated clusters straight from the backing file, so replacing the base image
-    # out from under one corrupts that guest. After 'destroy' the boot disk is gone and the
-    # refresh is free to happen; with --destroy=never, or after an aborted run, it is skipped.
-    - name: 'Refresh the cached cloud image unless a boot disk still uses it'
-      when: 'molecule__vm_image_url is defined'
-      block:
+    # Refresh the cached base image only while the pool holds no boot disk at all. Detecting a
+    # rebuilt upstream image needs no work of ours: with no checksum set, get_url's "file already
+    # exists" early exit never fires, so the request goes out as a conditional GET carrying
+    # If-Modified-Since and comes back 200 whenever upstream is newer. What must not happen is
+    # that refresh landing under an existing boot disk. A qcow2 overlay records the *path* of its
+    # backing file and reads its unallocated clusters straight from it, so replacing the base
+    # image hands every overlay pointing at that path a different image the next time it is
+    # opened. get_url finishes with a rename, so a guest that is running right now keeps reading
+    # the old inode through its open descriptor and survives; the damage surfaces on its next
+    # boot, or on the next qemu-img / virt-customize touching that disk.
+    # The guard is pool-wide on purpose, not "does *this* VM's boot disk exist": with
+    # LFOPS_TEST_ID (see "Running scenarios in parallel" in CONTRIBUTING.md) concurrent runs share
+    # the pool under different instance names, so a per-VM guard would happily replace the image
+    # another run's VM is sitting on. Blocking on any boot disk is coarser than needed - it also
+    # defers a Rocky 10 refresh while only a Rocky 9 VM exists - but the refresh is an
+    # optimisation, and the next run that starts with a drained pool picks it up.
+    - name: 'List the boot disks currently in the storage pool'
+      ansible.builtin.find:
+        paths: '{{ __molecule__pool_path }}'
+        patterns: '*-boot.qcow2'
+      register: '__molecule__boot_disks_result'
+      delegate_to: '{{ __molecule__hypervisor }}'
 
-        - name: 'stat the boot disk in the storage pool'
-          ansible.builtin.stat:
-            path: '{{ __molecule__pool_path }}/{{ __molecule__instance_name }}-boot.qcow2'
-            get_checksum: false
-          register: '__molecule__boot_disk_stat_result'
-          delegate_to: '{{ __molecule__hypervisor }}'
-
-        # mode 0664, not 0644: the pool directory carries a default ACL granting the invoking
-        # user rw (see "Preparing the controller" in CONTRIBUTING.md), and a file's ACL mask is
-        # taken from the group bits of its creation mode. At 0644 the mask comes out r--, leaving
-        # that ACL entry ineffective from birth, and the next refresh then fails with
-        # "Destination ... is not writable" once libvirt has chowned the image to qemu, which it
-        # does to every backing file a VM boots off. At 0664 the mask stays rw-, the chown
-        # preserves the ACL, and the replacement goes through. Raise timeout well above the 10s
-        # default too: the images are several hundred MB and one play downloads all of them at
-        # once (forks), so individual connections stall past 10s under the shared bandwidth and
-        # hit "read operation timed out".
-        # Verified against ansible-core 2.16.18.
-        - name: 'Download the cloud image into the storage pool'
-          ansible.builtin.get_url:
-            url: '{{ molecule__vm_image_url }}'
-            dest: '{{ __molecule__pool_path }}/{{ kvm_vm__base_image }}'
-            mode: 0o664
-            timeout: 120
-            # Stage the download inside the pool, not in remote_tmp. A file picks the ACL up from
-            # the directory it is created in, and get_url finishes with a plain rename, which
-            # carries none: a temp file staged elsewhere on the same filesystem lands here with no
-            # ACL at all, and the grant above is silently lost on every refresh.
-            tmp_dest: '{{ __molecule__pool_path }}'
-          delegate_to: '{{ __molecule__hypervisor }}'
-          when: 'not __molecule__boot_disk_stat_result["stat"]["exists"]'
+    # mode 0664, not 0644: the pool directory carries a default ACL granting the invoking
+    # user rw (see "Preparing the controller" in CONTRIBUTING.md), and a file's ACL mask is
+    # taken from the group bits of its creation mode. At 0644 the mask comes out r--, leaving
+    # that ACL entry ineffective from birth, and the next refresh then fails with
+    # "Destination ... is not writable" once libvirt has chowned the image to qemu, which it
+    # does to every backing file a VM boots off. At 0664 the mask stays rw-, the chown
+    # preserves the ACL, and the replacement goes through. Raise timeout well above the 10s
+    # default too: the images are several hundred MB and one play downloads all of them at
+    # once (forks), so individual connections stall past 10s under the shared bandwidth and
+    # hit "read operation timed out".
+    # Verified against ansible-core 2.16.18.
+    - name: 'Download the cloud image into the storage pool'
+      ansible.builtin.get_url:
+        url: '{{ molecule__vm_image_url }}'
+        dest: '{{ __molecule__pool_path }}/{{ kvm_vm__base_image }}'
+        mode: 0o664
+        timeout: 120
+        # Stage the download inside the pool, not in remote_tmp. A file picks the ACL up from
+        # the directory it is created in, and get_url finishes with a plain rename, which
+        # carries none: a temp file staged elsewhere on the same filesystem lands here with no
+        # ACL at all, and the grant above is silently lost on every refresh.
+        tmp_dest: '{{ __molecule__pool_path }}'
+      delegate_to: '{{ __molecule__hypervisor }}'
+      when:
+        - 'molecule__vm_image_url is defined'
+        - '__molecule__boot_disks_result["files"] | length == 0'
 
   roles:
     - role: 'linuxfabrik.lfops.kvm_vm'

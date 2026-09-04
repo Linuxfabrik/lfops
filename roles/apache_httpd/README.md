@@ -71,7 +71,7 @@ Manual steps:
 * Sets ownership on the document root (`chown -R apache:apache`).
 * Hardens permissions on the config directory (`chmod -R g-w`).
 * Ensures httpd service is in the desired state.
-* Triggers: httpd.service reload.
+* Triggers: httpd.service reload, or restart when a module is enabled or disabled (see `apache_httpd:mods`).
 
 `apache_httpd:configure`
 
@@ -98,7 +98,7 @@ Manual steps:
 * Installs base packages and Apache packages/modules.
 * Creates the `conf-available/conf-enabled`, `mods-available/mods-enabled`, `sites-available/sites-enabled` directory structure.
 * Removes, creates, disables, and enables mods-available configs.
-* Triggers: httpd.service reload.
+* Triggers: httpd.service restart. A reload loads a newly enabled module but skips its initialization, leaving it loaded and inactive without an error.
 
 `apache_httpd:state`
 
@@ -157,6 +157,14 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 * See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
 * Type: String.
 * Default: `'syslog:local1'`
+
+`apache_httpd__conf_graceful_shutdown_timeout`
+
+* Seconds the server waits for in-flight requests to finish when it is stopped or restarted. Apache closes its listening sockets before it starts waiting, so the whole wait is downtime for new clients, not just for the requests still running. `0` waits until the last connection closes by itself, which never happens on a host proxying WebSockets or other long-lived connections: systemd then terminates the server after `TimeoutStopSec` (90 seconds by default). Raise it on a host with legitimately long-running requests, which are cut off when the timeout expires. See [GracefulShutdownTimeout](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#gracefulshutdowntimeout).
+* Type: Number.
+* Default: `3`
+* Deviates from the upstream default `0` (wait forever), which turns every restart into a 90 second outage on a host that holds long-lived connections.
+* Only bounds the graceful part of the stop. Apache then escalates to any child that has not exited, sending SIGTERM at 3, 5 and 7 seconds and SIGKILL at 9; that schedule is compiled into httpd and cannot be configured. `apache_httpd__systemd_timeout_stop_sec` is what bounds the total.
 
 `apache_httpd__conf_hostname_lookups`
 
@@ -398,6 +406,14 @@ apache_httpd__conf_trace_enable: 'Off'
 * Type: String.
 * Default: `'started'`
 
+`apache_httpd__systemd_timeout_stop_sec`
+
+* Seconds systemd waits for Apache to stop before terminating the service with SIGKILL, deployed as a `TimeoutStopSec` drop-in of the Apache service unit. Apache closes its listening sockets at the very start of a stop, so the whole wait is downtime for new clients, not just for the requests still running. Keep this slightly above `apache_httpd__conf_graceful_shutdown_timeout` so requests still get their graceful window. See [TimeoutStopSec](https://www.freedesktop.org/software/systemd/man/systemd.service.html#TimeoutStopSec=).
+* Type: Number.
+* Default: `5`
+* Deviates from systemd's default of 90 seconds (`DefaultTimeoutStopSec`), which a host holding connections that never close by themselves pays in full on every restart.
+* The SIGKILL reaches Apache's parent process, which then cannot release its semaphore arrays: a host leaks roughly three of them per restart (`ipcs -s`). With a `SEMMNI` of 32000 that is on the order of ten thousand restarts before it matters, and a reboot clears them, but it is worth monitoring on a host that restarts Apache often.
+
 Example:
 ```yaml
 # optional - role-specific
@@ -476,11 +492,21 @@ Types of vHosts:
 * **app**: A hardened vHost running an application like Nextcloud, etc. with the most common options. Can be extended by using the `raw` variable.
 * **localhost**: A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Can be extended by using the `raw` variable. The following URLs are pre-configured and only accessible from localhost:
 
-    * `/fpm-ping` - PHP-FPM health check
-    * `/fpm-status` - PHP-FPM status page
+    * `/fpm-ping` - PHP-FPM health check of the `www` pool
+    * `/fpm-status` - PHP-FPM status page of the `www` pool
     * `/monitoring.php` - Linuxfabrik monitoring endpoint
     * `/server-info` - Apache server info (`mod_info` required, disabled by default)
     * `/server-status` - Apache server status (`mod_status` required)
+
+    Both PHP-FPM URLs are proxied to `__apache_httpd__php_socket`, the socket of the `www` pool. Every pool answers on the same FPM-internal paths `/fpm-status` and `/fpm-ping`, so a host running further pools (see the [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php) role) exposes them by adding one `Location` per pool via the vHost's `raw` variable, each pointing at that pool's socket:
+
+    ```text
+    <Location "/app1-fpm-status">
+        Require local
+        ProxyPass unix:/run/php-fpm/app1.sock|fcgi://localhost/fpm-status
+    </Location>
+    ```
+
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out).
 * **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
 * **redirect**: A vHost that redirects every request to `https://` on the same host, keeping the requested hostname and path. Set `virtualhost_port: 80` to redirect the plain HTTP port. Requests below `/.well-known/acme-challenge/` are excluded, so ACME/Let's Encrypt HTTP-01 challenges keep working. The `raw` variable replaces the redirect rule instead of extending it.
@@ -633,6 +659,13 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 * Type: String.
 * Default: `'None'`
 
+`conf_protocols`
+
+* The protocols offered on this vHost, most preferred first, overriding `apache_httpd__mod_http2_protocols` for this vHost only. `h2` takes effect only on a vHost that terminates TLS, since that is where ALPN happens. The same WebSocket caveat applies as for the server-wide variable: dropping `http/1.1` breaks `wss://` on this vHost. See [Protocols](https://httpd.apache.org/docs/2.4/mod/core.html#protocols).
+* Applies to: app, proxy, wordpress.
+* Type: String.
+* Default: unset, which leaves the server-wide setting in place.
+
 `conf_proxy_error_override`
 
 * If you want to have a common look and feel on the error pages seen by the end user, set this to "On" and define them on the reverse proxy server. See [ProxyErrorOverride](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxyerroroverride).
@@ -744,6 +777,81 @@ apache_httpd__mod_dir_directory_index: 'index.html'
 ```
 
 
+## Optional Role Variables - mod_http2
+
+HTTP/2 is enabled, and `h2` is the preferred protocol on every TLS connection. Browsers speak HTTP/2 only over TLS, so a vHost without a certificate keeps serving HTTP/1.1 either way. HTTP/2 is negotiated per connection, so it applies between a browser and the reverse proxy in front of an application; the hop from that proxy to the backend stays HTTP/1.1, because `mod_proxy_http` speaks nothing else.
+
+HTTP/2 hands every request to a worker thread of its own. That pool is separate from the MPM workers documented below: it is not counted against `apache_httpd__mpm_event_threads_per_child` and does not appear in `mod_status`. Budget for the additional threads and for the per-connection buffers when sizing a busy host. See the upstream [HTTP/2 dimensioning](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#dimensioning) notes.
+
+`apache_httpd__mod_http2_early_hints`
+
+* Whether to send a "103 Early Hints" response carrying the `Link` headers of `H2PushResource` as soon as the request starts being processed. This is the replacement for HTTP/2 Server Push, which RFC 9113 deprecated and which Chrome and Edge removed in version 106. See [H2EarlyHints](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2earlyhints).
+* Type: String.
+* Default: `'off'`
+
+`apache_httpd__mod_http2_max_session_streams`
+
+* Number of requests a client may have in flight on a single HTTP/2 connection. See [H2MaxSessionStreams](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2maxsessionstreams).
+* Type: Number.
+* Default: `100`
+
+`apache_httpd__mod_http2_max_workers`
+
+* Upper bound of the HTTP/2 worker thread pool per child process. Unset lets it default to `ThreadsPerChild`. See [H2MaxWorkers](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2maxworkers).
+* Type: Number.
+* Default: unset
+
+`apache_httpd__mod_http2_min_workers`
+
+* Lower bound of the HTTP/2 worker thread pool per child process. Unset lets it default to `ThreadsPerChild`. See [H2MinWorkers](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2minworkers).
+* Type: Number.
+* Default: unset
+
+`apache_httpd__mod_http2_protocols`
+
+* The protocols offered to clients, most preferred first. `h2` is HTTP/2 over TLS, `h2c` is HTTP/2 over cleartext TCP. Add `h2c` for a client that asks for it, such as a load balancer or `curl --http2`; no browser implements it. A protocol no loaded module implements is ignored rather than rejected. See [Protocols](https://httpd.apache.org/docs/2.4/mod/core.html#protocols).
+* Type: String.
+* Default: `'h2 http/1.1'`
+* Deviates from the upstream default `http/1.1`: without `h2` in the list, loading the module changes nothing and every connection stays on HTTP/1.1, so this is what turns HTTP/2 on.
+* Keep `http/1.1` in the list if anything on the host serves WebSockets. HTTP/2 has no `Upgrade` mechanism, and the role does not set `H2WebSockets`, so the server never offers the RFC 8441 handshake and a browser opens a separate HTTP/1.1 connection for `wss://`. A list of just `h2` leaves that connection nothing to negotiate and WebSocket clients fail to connect.
+
+`apache_httpd__mod_http2_stream_max_mem_size`
+
+* Amount of response data buffered per request before the worker producing it is suspended. See [H2StreamMaxMemSize](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2streammaxmemsize).
+* Type: Number.
+* Default: `65536`
+
+`apache_httpd__mod_http2_window_size`
+
+* Amount of request body the server buffers per request before the client has to wait. See [H2WindowSize](https://httpd.apache.org/docs/2.4/mod/mod_http2.html#h2windowsize).
+* Type: Number.
+* Default: `65535`
+
+Example:
+```yaml
+# optional - mod_http2
+apache_httpd__mod_http2_early_hints: 'off'
+apache_httpd__mod_http2_max_session_streams: 100
+apache_httpd__mod_http2_protocols: 'h2 h2c http/1.1'
+apache_httpd__mod_http2_stream_max_mem_size: 65536
+apache_httpd__mod_http2_window_size: 65535
+```
+
+To turn HTTP/2 off entirely on a host, disable the module and its configuration. Both, or neither: the `conf-available/http2.conf` snippet carries the `H2*` directives, which Apache rejects with `Invalid command 'H2MaxSessionStreams'` when the module is not loaded. That is intended, a missing module has to surface as a startup error rather than as silently dropped configuration.
+```yaml
+apache_httpd__conf__host_var:
+  - filename: 'http2'
+    enabled: false
+    state: 'present'
+    template: 'http2'
+apache_httpd__mods__host_var:
+  - filename: 'http2'
+    enabled: false
+    state: 'present'
+    template: 'http2'
+```
+
+
 ## Optional Role Variables - mod_log_config
 
 This module is for flexible logging of client requests. Logs are written in a customizable format, and may be written directly to a file, or to an external program. Conditional logging is provided so that individual requests may be included or excluded from the logs based on characteristics of the request.
@@ -796,7 +904,7 @@ apache_httpd__skip_mod_security_coreruleset: true
 
 * See [SSLUseStapling](https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslusestapling).
 * Type: String.
-* Default: `'on'`
+* Default: `'off'`
 
 Example:
 ```yaml

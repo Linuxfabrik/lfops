@@ -230,6 +230,11 @@ When creating a new role or changing an existing one, pull through the **full op
 * Only mark a cell `x` in COMPATIBILITY.md once it is proven to run; use `(x)` for "expected to work but not verified".
 
 
+### Security by Default
+
+A host deployed with LFOps and no further inventory should already be in the state a security review would ask for, so where the safe value also works, it is the default. Do not ship the permissive one merely because the upstream package does; if you deviate from upstream, say so per "Deviating from an Upstream Default" below.
+
+
 ### Changelog Sections
 
 The project-agnostic "Changelog" rules above apply. LFOps overrides only the sorting: entries are sorted newest first, because operators running playbooks need to see what changed most recently.
@@ -337,7 +342,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 * **Variable subgroups**: large roles MAY split optional (or mandatory) variables into `## Optional Role Variables - <Subgroup>` sections, using the upstream module name, the variable prefix as a code span, or a functional label. These are the same canonical section repeated; give each its own `Example:` block. A subgroup MAY keep its Mandatory and Optional sections paired together (group-by-module, as in `apache_httpd`) instead of forcing all mandatory subgroups before all optional ones. A variable grouping must always be its own `##` section, never a `###` subheading inside `## Optional Role Variables`.
 * **Subheadings and walkthroughs**: `###` subheadings are allowed only as sub-structure inside a section (e.g. procedural steps within a walkthrough), never as a stand-in for a variable subgroup. The walkthrough slot accepts a descriptive role-specific title when none of `Single-Node Setup` / `Cluster Setup` / `Adding a Node to an Existing Cluster` fits (e.g. `bind` `## Primary-Secondary Example`). Sections are separated by two blank lines, including above and below the `*Available since*` marker.
 * **Special roles**: utility/meta roles (e.g. `shared`) MAY replace `## Tags` and the `## *Role Variables` sections with `## Available Tasks` and `## Usage Example`. Controller-side API roles (e.g. `uptimerobot`) MAY add `## Running the Role`, `## Example Inventory` and `## Read-Only Inspection`. Both MUST keep the mandatory frame (title, marker, License, Author Information).
-* **Reference-grade sections**: a role MAY add a focused role-specific section where no canonical section fits (e.g. `monitoring_plugins` `## Installation Methods`, `keycloak` `## Using a reverse proxy`). Keep these to a minimum; prefer folding behaviour notes into `## How the Role Behaves` and error/fix notes into `## Troubleshooting`.
+* **Reference-grade sections**: a role MAY add a focused role-specific section where no canonical section fits (e.g. `monitoring_plugins` `## Installation Methods`, `apache_tomcat` `## Multiple Tomcat Instances`). Keep these to a minimum; prefer folding behaviour notes into `## How the Role Behaves` and error/fix notes into `## Troubleshooting`.
 
 
 #### Tasks
@@ -736,6 +741,7 @@ Make sure to use the following format when passing multiple injections to avoid 
 #### systemd Drop-ins and Service Ordering
 
 * Deploy overrides as a drop-in under `/etc/systemd/system/<unit>.d/`, never by templating the unit file itself. Name the file after what it does (`z00-linuxfabrik.conf` for the role's own `[Service]` settings, `z00-after-<dependency>.conf` for an ordering dependency), and run `systemctl daemon-reload` when it changed.
+* Where a role configures a unit that belongs to *another* piece of software, name the drop-in `z00-<role>.conf` instead. `roles/librenms` writes `rrdcached.service.d/z00-librenms.conf`: the unit ships with the `rrdtool` package, the settings in it exist only because LibreNMS is on the host, and a role managing RRDCached in its own right would otherwise overwrite them with its own `z00-linuxfabrik.conf`.
 * If a role declares a `<role>__kernel_settings__*__dependent_var`, check whether its service reads that value once at startup. If it does, the role also has to order the service after TuneD. TuneD applies the profile when its daemon starts and systemd starts `tuned.service` in parallel with everything else, so without the ordering the service can come up first and keep the old value for its whole runtime, while `sysctl` and `tuned-adm verify` already report the new one. The classic case is `net.core.somaxconn`, which the kernel clamps the accept queue to inside `listen()`.
 
     Not every kernel setting needs this. `vm.swappiness` or `net.bridge.bridge-nf-call-iptables` are honoured by the kernel continuously, so ordering buys nothing there. Decide per parameter, not per role.
@@ -1102,7 +1108,7 @@ Three things have to be in place on the machine that runs `molecule`, once.
 ln --symbolic --no-target-directory --force "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops
 ```
 
-The link has to point at the very directory you run `molecule` in, otherwise the prerun step fails while installing the local collection (see "Troubleshooting").
+The link has to point at the very directory you run `molecule` in, otherwise the prerun step fails while installing the local collection (see "Troubleshooting"). That makes it a single global setting: with several checkouts or worktrees you have to repoint it before every run. "Running scenarios in parallel" below replaces it with a per-worktree link.
 
 **You have to be in the `libvirt` group.** VM provisioning does not escalate; the libvirt calls go through that group.
 
@@ -1130,7 +1136,7 @@ setfacl --default --modify "user:$(id -un):rw" /var/lib/libvirt/images-lfops-mol
 
 That last `setfacl` is what lets a rebuilt upstream image be picked up automatically. The cloud images are fetched from rolling `latest` URLs, and `create` re-fetches one whenever upstream is newer than the cached copy. libvirt chowns every backing file a VM boots off to `qemu`, though, so without the ACL the cached image stops being writable for you and the next refresh fails with `Destination ... is not writable`. The default ACL survives that chown, and each replacement inherits it again. The download uses mode `0664` for the same reason: a file's ACL mask comes from the group bits of its creation mode, so at `0644` the entry would be ineffective from birth.
 
-A refresh only happens when the VM's boot disk is absent, which is the state `destroy` leaves behind. Running with `--destroy=never` therefore keeps the base image pinned, so a qcow2 overlay never has its backing file swapped underneath it.
+A refresh only happens while the pool holds no boot disk at all, which is the state `destroy` leaves behind. Running with `--destroy=never` therefore keeps the base images pinned, so a qcow2 overlay never has its backing file swapped underneath it. The check deliberately looks at the whole pool rather than at the boot disk of the VM being created, because parallel runs (see below) share the pool under different instance names.
 
 If you set this up before that `setfacl` existed, the images already in the pool are owned by `qemu` and cannot be given the ACL after the fact. Delete them once and the next run re-downloads them with it.
 
@@ -1187,6 +1193,32 @@ fi
 ```
 
 
+#### Running scenarios in parallel
+
+Two Molecule runs on one machine, typically two worktrees on two branches, collide in two places. Both are opt-in, so a single run needs none of this.
+
+**Give each run its own collection path.** The `linuxfabrik/lfops` symlink from "Preparing the controller" is one global location, so with several worktrees you would have to repoint it before every run. `ANSIBLE_HOME` moves the whole location into the worktree instead: it is where `ansible-core` looks for collections by default, and where Molecule keeps its ephemeral directory. Run this once per worktree, in the worktree:
+
+```bash
+export ANSIBLE_HOME="$(pwd)/.ansible"
+mkdir --parents "${ANSIBLE_HOME}/collections/ansible_collections/linuxfabrik"
+ln --symbolic --no-target-directory --force "$(pwd)" \
+    "${ANSIBLE_HOME}/collections/ansible_collections/linuxfabrik/lfops"
+```
+
+Keep the `export` in the shell you run `molecule` in (a `direnv` `.envrc` or a per-worktree profile does the job). The prerun step then finds the symlink, logs `Found symlinked collection, skipping its installation`, and never touches `~/.ansible`. Note that this collection path replaces the global one rather than extending it, so the collections in `requirements.yml` are installed into the worktree on the first run.
+
+**Give each run its own instance names.** The scenario inventories name their targets by distribution (`rocky9-vm`, `debian13-vm`), and those names become the libvirt domain, the podman container and the boot disk in the storage pool. Two runs of scenarios that share a target therefore address the same instances, and the first `destroy` takes the other run's VMs with it. `LFOPS_TEST_ID` inserts a token into those names:
+
+```bash
+LFOPS_TEST_ID='pr248' molecule test --scenario-name apps/install
+```
+
+`rocky9-vm` then becomes the domain `lfops-molecule-pr248-rocky9-vm` with its own boot disk, alongside a concurrent run's `lfops-molecule-rocky9-vm`. Unset, the names are what they always were. Use a token that identifies the run at a glance in `virsh list`, and remember that `molecule destroy` only tears down the instances of the `LFOPS_TEST_ID` it is given.
+
+Sharing the pool between parallel runs is intended, so the multi-GB base images are downloaded once. Nothing has to be split with `LFOPS_TEST_POOL`.
+
+
 #### Known Limitations
 
 * VM-based testing grants the invoking user rights that are worth being aware of. `libvirt` group membership is root-equivalent: a member can define a domain backed by any host device and drive QEMU as root. Owning the pool directory adds filesystem write access on top of that. Neither is a privilege reduction over the passwordless sudo this setup replaces, it only makes the grant explicit and confines the filesystem half to one directory. The only way to provision VMs without root-equivalent rights at all is the user session (`qemu:///session`), which the tests cannot use because their address discovery reads the host's ARP/neighbour table for the libvirt-managed `default` network that only the system connection (`qemu:///system`) provides.
@@ -1236,7 +1268,7 @@ A useful rule of thumb: if an assertion would still pass while the service is de
 
 * Before running a scenario, Molecule's prerun step tries to install the current repository as a collection with `ansible-galaxy collection install --force <repo>`. That build fails because `galaxy.yml` carries a non-semver `version` (`main`), which `ansible-galaxy` rejects.
 * Option 1: disable the prerun so Molecule stops trying to build and install the local collection, by setting `prerun: false` as a top-level key in the `config.yml`. If you do this, you have to make sure that LFOps is installed yourself.
-* Option 2: If you installed LFOps by symlinking it, make sure the link points to the **same** folder that you are running `molecule` in (`ln -sf "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops`).
+* Option 2: If you installed LFOps by symlinking it, make sure the link points to the **same** folder that you are running `molecule` in (`ln -sf "$(pwd)" ~/.ansible/collections/ansible_collections/linuxfabrik/lfops`). The prerun step only skips the build when it finds a symlink resolving to the current directory, and it looks for it under `ANSIBLE_HOME`, so with the per-worktree setup from "Running scenarios in parallel" the link to check is the one inside the worktree.
 
 
 #### Why libvirt VMs and Podman containers, and not microVMs
