@@ -3,6 +3,7 @@ apache_httpd__skip_mod_security_coreruleset: true
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
+apache_httpd__systemd_timeout_stop_sec: 5
 
 
 # Apache Module Installation
@@ -181,6 +182,7 @@ apache_httpd__conf_add_default_charset: 'UTF-8'
 apache_httpd__conf_document_root: '/var/www/html'
 apache_httpd__conf_enable_send_file: 'On'
 apache_httpd__conf_error_log: 'syslog:local1'
+apache_httpd__conf_graceful_shutdown_timeout: 3
 apache_httpd__conf_hostname_lookups: 'Off'
 apache_httpd__conf_keep_alive: 'On'
 apache_httpd__conf_keep_alive_timeout: 5
@@ -197,15 +199,24 @@ apache_httpd__conf_trace_enable: 'Off'
 # mod_dir
 apache_httpd__mod_dir_directory_index: 'index.html index.htm index.txt'
 
+# mod_http2
+apache_httpd__mod_http2_early_hints: 'off'
+apache_httpd__mod_http2_max_session_streams: 100
+apache_httpd__mod_http2_max_workers: ''
+apache_httpd__mod_http2_min_workers: ''
+apache_httpd__mod_http2_protocols: 'h2 http/1.1'  # upstream default: http/1.1
+apache_httpd__mod_http2_stream_max_mem_size: 65536
+apache_httpd__mod_http2_window_size: 65535
+
 # mod_security
 # normally nothing that you have to change
-# get details from https://coreruleset.org/installation/
+# get details from https://coreruleset.org/docs/deployment/install/
 # origin: https://github.com/coreruleset/coreruleset/releases
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
 apache_httpd__mod_security_coreruleset_version: '4.27.0'
 
 # mod_ssl
-apache_httpd__mod_ssl_ssl_use_stapling: 'on'
+apache_httpd__mod_ssl_ssl_use_stapling: 'off'
 
 
 # Apache Virtual Host Configuration

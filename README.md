@@ -409,6 +409,8 @@ bw status | jq
 bw serve --hostname 127.0.0.1 --port 8087 &
 ```
 
+The order matters. `bw serve` takes its session from the environment it is started in and keeps it for its lifetime, so exporting `BW_SESSION` afterwards does not reach a running instance. In that case `bw status` reports `unlocked` while the API Ansible talks to is still locked. Check the API itself with `curl --silent http://127.0.0.1:8087/status`, and restart `bw serve` if it disagrees with your shell.
+
 The lookup returns multiple keys, including `username` and `password`. To get only the password:
 
 ```yaml

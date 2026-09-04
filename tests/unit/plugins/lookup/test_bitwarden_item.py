@@ -46,13 +46,17 @@ class _FakeBitwarden:
     items_by_search: ClassVar[list] = []
     item_by_id = None
     created_items: ClassVar[list] = []
+    vault_status = 'unlocked'
 
     def __init__(self, *args, **kwargs):
         pass
 
     @property
-    def is_unlocked(self):
-        return True
+    def status(self):
+        return type(self).vault_status
+
+    def get_not_unlocked_message(self, status):
+        return f'vault reports status "{status}"'
 
     def sync(self, *args, **kwargs):
         pass
@@ -100,6 +104,7 @@ class _BitwardenLookupTestCase(unittest.TestCase):
         _FakeBitwarden.items_by_search = []
         _FakeBitwarden.item_by_id = None
         _FakeBitwarden.created_items = []
+        _FakeBitwarden.vault_status = 'unlocked'
         # a value leaking in from the caller's environment would flip the
         # default of the `create` option under the tests' feet
         self._orig_create_env = os.environ.pop(CREATE_ENV_VAR, None)
@@ -124,6 +129,15 @@ class TestRun(_BitwardenLookupTestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['username'], 'dba')
         self.assertEqual(result[0]['password'], 'linuxfabrik')
+
+    def test_vault_not_unlocked_aborts(self):
+        for status in ('unauthenticated', 'locked'):
+            with self.subTest(status=status):
+                _FakeBitwarden.vault_status = status
+                with self.assertRaises(AnsibleError) as ctx:
+                    self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
+                self.assertIn(status, str(ctx.exception))
+                self.assertEqual(_FakeBitwarden.created_items, [])
 
     def test_multiple_matches_raise(self):
         _FakeBitwarden.items_by_search = [

@@ -1,4 +1,11 @@
 # Manage Apache mods (files in `mods-available`)
+#
+# Every task here that changes which modules httpd loads notifies the restart handler, not the
+# reload one. A graceful reload does load the shared object, but httpd parses its configuration
+# twice at startup and only once on a reload, and modules that skip the first `post_config` pass
+# (mod_http2, mod_cgid, mod_md and others) then never run their initialization. The module ends up
+# loaded but uninitialized, with no error: on EL8 that leaves mod_http2 loaded while ALPN keeps
+# offering http/1.1 only. Verified against httpd 2.4.37 on Rocky 8 and 2.4.62 on Rocky 9.
 
 - name: 'Combined Mods:'
   ansible.builtin.debug:
@@ -13,7 +20,7 @@
   when: 'not item["enabled"] | d(true)
         or item["state"] | d("present") == "absent"'
   notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'
+    - 'apache_httpd: httpd -t; systemctl restart httpd'
 
 - name: 'Remove mods-available configs'
   ansible.builtin.file:
@@ -35,7 +42,7 @@
     - 'item["state"] | d("present") != "absent"'
   loop: '{{ apache_httpd__mods__combined_var }}'
   notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'
+    - 'apache_httpd: httpd -t; systemctl restart httpd'
 
 - name: 'Enable mods'
   ansible.builtin.file:
@@ -49,4 +56,4 @@
     - 'item["enabled"] | d(true)'
     - 'item["state"] | d("present") != "absent"'
   notify:
-    - 'apache_httpd: httpd -t; systemctl reload httpd'
+    - 'apache_httpd: httpd -t; systemctl restart httpd'

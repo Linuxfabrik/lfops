@@ -32,5 +32,9 @@ __php__conf_dest:
 # Debian ships no unversioned php-fpm binary and registers none with alternatives, so the config
 # test has to address the installed version explicitly.
 __php__config_test_command: 'php-fpm{{ __php__installed_version }} --test'
+__php__fpm_opcache_path: '/var/lib/php/opcache'
 __php__fpm_pools_path: '/etc/php/{{ __php__installed_version }}/fpm/pool.d'
+__php__fpm_runtime_path: '/run/php'
 __php__fpm_service_name: 'php{{ __php__installed_version }}-fpm'
+__php__fpm_session_path: '/var/lib/php/sessions'
+__php__fpm_wsdlcache_path: '/var/lib/php/wsdlcache'

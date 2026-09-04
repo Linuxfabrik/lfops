@@ -235,7 +235,7 @@
       --disk {{ kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] }}/{{ kvm_vm__name }}-cloud-init.iso,device=cdrom,bus=scsi,format=iso
       {% endif %}
       {% for item in kvm_vm__network_connections %}
-      --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
+      --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=kvm_vm__name)) }}
       {% endfor %}
       --noautoconsole
       --nographics
@@ -285,7 +285,7 @@
       {% endif %}
 
       {% for item in kvm_vm__network_connections %}
-      --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=inventory_hostname)) }}
+      --network {{ item["network_type"] | d("network") }}={{ item["network_name"] | d("default") }},model=virtio,mac={{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=kvm_vm__name)) }}
       {% endfor %}
       {% if kvm_vm__machine is defined and kvm_vm__machine | length %}
       --machine '{{ kvm_vm__machine }}'

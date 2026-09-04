@@ -189,3 +189,200 @@
       ansible.builtin.assert:
         that: '__molecule__php_memory_limit_result["stdout"] == php__ini_memory_limit__group_var'
         fail_msg: 'memory_limit is {{ __molecule__php_memory_limit_result["stdout"] }}, expected {{ php__ini_memory_limit__group_var }}'
+
+    # The slowlog backtrace is the one thing on RedHat that a correct php-fpm configuration alone
+    # does not buy: the master has to ptrace the worker, which the targeted policy denies for
+    # httpd_t. Everything below drives one deliberately slow request through the pool and then looks
+    # at what php-fpm wrote. Grepping the pool config or listing the installed SELinux module would
+    # pass just as well on a host where the ptrace is still denied, which is the bug this covers.
+    - name: 'Assert SELinux is enforcing, otherwise the slowlog assertion proves nothing'
+      ansible.builtin.assert:
+        that: 'ansible_facts["selinux"]["mode"] | d("") == "enforcing"'
+        fail_msg: 'SELinux is not enforcing, so the ptrace denial this asserts against cannot occur'
+
+    # cgi-fcgi speaks FastCGI to the pool socket directly, so no web server is needed in front of
+    # php-fpm. It comes from EPEL, which the playbook under test enables on RedHat.
+    - name: 'Make sure cgi-fcgi is installed'
+      ansible.builtin.package:
+        name: 'fcgi'
+        state: 'present'
+
+    # /var/www/html comes from httpd-filesystem, which php-fpm depends on, so the document root and
+    # its httpd_sys_content_t label exist even without a web server. The label is set explicitly
+    # because the worker runs as httpd_t and has to be able to read the script.
+    - name: 'Deploy the slow script'
+      ansible.builtin.copy:
+        content: "<?php sleep(3); echo 'done';\n"
+        dest: '/var/www/html/molecule-slow.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o0644
+        setype: 'httpd_sys_content_t'
+
+    # In place, not by rewriting the file: php-fpm opens the slowlog once and keeps the descriptor,
+    # so a replacement would leave it writing into the unlinked inode and the assertion below would
+    # read an empty file no matter what happened.
+    - name: 'truncate --size=0 /var/log/php-fpm/www-slow.log'
+      ansible.builtin.command: 'truncate --size=0 /var/log/php-fpm/www-slow.log'
+      changed_when: false
+
+    - name: 'Request the slow script through the php-fpm pool socket'
+      ansible.builtin.command: 'cgi-fcgi -bind -connect /run/php-fpm/www.sock'
+      environment:
+        QUERY_STRING: ''
+        REQUEST_METHOD: 'GET'
+        SCRIPT_FILENAME: '/var/www/html/molecule-slow.php'
+        SCRIPT_NAME: '/molecule-slow.php'
+      register: '__molecule__php_slow_request_result'
+      changed_when: false
+      failed_when: '"done" not in __molecule__php_slow_request_result["stdout"]'
+
+    - name: 'Read the slowlog'
+      ansible.builtin.slurp:
+        src: '/var/log/php-fpm/www-slow.log'
+      register: '__molecule__php_slowlog_result'
+
+    # php-fpm logs the WARNING about the slow request to its error log whether the ptrace worked or
+    # not, and writes the slowlog file either way. Only the backtrace inside it proves the ptrace
+    # succeeded, hence the assertion on the stack frame rather than on the file.
+    - name: 'Assert php-fpm wrote the backtrace of the slow request'
+      ansible.builtin.assert:
+        that:
+          - '"molecule-slow.php" in __molecule__php_slowlog'
+          - '"sleep()" in __molecule__php_slowlog'
+        fail_msg: 'no backtrace in /var/log/php-fpm/www-slow.log, php-fpm could not ptrace its worker: {{ __molecule__php_slowlog | d("<empty>") }}'
+      vars:
+        __molecule__php_slowlog: '{{ __molecule__php_slowlog_result["content"] | b64decode }}'
+
+
+# Pools are the one part of the role where "the file is on disk" says nothing: what matters is that
+# each running pool serves its own configuration. Everything below asks the running workers through
+# their own sockets, one pool at a time, rather than grepping the rendered pool files.
+- name: 'Verify the PHP-FPM pools are isolated and enforced at runtime'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Set the OS-specific pool facts'
+      ansible.builtin.set_fact:
+        __molecule__apache_user: '{{ "apache" if ansible_facts["os_family"] == "RedHat" else "www-data" }}'
+        __molecule__fcgi_package: '{{ "fcgi" if ansible_facts["os_family"] == "RedHat" else "libfcgi-bin" }}'
+        __molecule__runtime_path: '{{ "/run/php-fpm" if ansible_facts["os_family"] == "RedHat" else "/run/php" }}'
+        __molecule__session_path: '{{ "/var/lib/php/session" if ansible_facts["os_family"] == "RedHat" else "/var/lib/php/sessions" }}'
+
+    # cgi-fcgi speaks FastCGI to the pool socket directly, so no web server is needed in front of
+    # php-fpm. On RedHat it comes from EPEL, which the playbook under test enables.
+    - name: 'Make sure cgi-fcgi is installed'
+      ansible.builtin.package:
+        name: '{{ __molecule__fcgi_package }}'
+        state: 'present'
+
+    # On RedHat /var/www/html and its httpd_sys_content_t label come from httpd-filesystem, which
+    # php-fpm depends on. On Debian nothing creates it without a web server, so create it here.
+    - name: 'mkdir -p /var/www/html'
+      ansible.builtin.file:
+        path: '/var/www/html'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    # One probe per pool, on its own path: the opcode cache is shared across all pools of one FPM
+    # master, so two pools requesting the same script path would serve each other's cached copy
+    # within opcache.revalidate_freq, and with it the php_admin_value the first pool compiled it
+    # under. A distinct path per pool keeps the probes independent.
+    - name: 'Deploy a per-pool php probe script'
+      ansible.builtin.copy:
+        content: |
+          <?php
+          echo 'memory_limit=' . ini_get('memory_limit') . "\n";
+          // php_admin_value must block this raise; the value has to stay put.
+          @ini_set('memory_limit', '1024M');
+          echo 'memory_limit_after=' . ini_get('memory_limit') . "\n";
+          echo 'session_save_path=' . ini_get('session.save_path') . "\n";
+        dest: '/var/www/html/molecule-probe-{{ item }}.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: '{{ "httpd_sys_content_t" if ansible_facts["os_family"] == "RedHat" else omit }}'
+      loop:
+        - 'app1'
+        - 'www'
+
+    # The status page reports the live process manager, which differs per pool (www: the dynamic
+    # default, app1: the static override). Both pools serve it on the same path, so a wrong answer
+    # here means the socket reached the wrong pool or the override never arrived.
+    - name: 'Query the status page of each pool through its own socket'
+      ansible.builtin.command: 'cgi-fcgi -bind -connect {{ __molecule__runtime_path }}/{{ item }}.sock'
+      environment:
+        QUERY_STRING: ''
+        REQUEST_METHOD: 'GET'
+        SCRIPT_FILENAME: '/fpm-status'
+        SCRIPT_NAME: '/fpm-status'
+      register: '__molecule__pool_status_result'
+      changed_when: false
+      loop:
+        - 'app1'
+        - 'www'
+
+    - name: 'Assert each socket is answered by its own pool with its own process manager'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__pool_status_result["results"][0]["stdout"] is search("pool:\s+app1")'
+          - '__molecule__pool_status_result["results"][0]["stdout"] is search("process manager:\s+static")'
+          - '__molecule__pool_status_result["results"][1]["stdout"] is search("pool:\s+www")'
+          - '__molecule__pool_status_result["results"][1]["stdout"] is search("process manager:\s+dynamic")'
+        fail_msg: 'status pages: {{ __molecule__pool_status_result["results"] | map(attribute="stdout") | list }}'
+
+    - name: 'Run the probe script through each pool socket'
+      ansible.builtin.command: 'cgi-fcgi -bind -connect {{ __molecule__runtime_path }}/{{ item }}.sock'
+      environment:
+        QUERY_STRING: ''
+        REQUEST_METHOD: 'GET'
+        SCRIPT_FILENAME: '/var/www/html/molecule-probe-{{ item }}.php'
+        SCRIPT_NAME: '/molecule-probe-{{ item }}.php'
+      register: '__molecule__pool_probe_result'
+      changed_when: false
+      loop:
+        - 'app1'
+        - 'www'
+
+    # app1 must report its own php_admin_value, www the value from the ini, and neither may be
+    # raised by ini_set. Same script, two pools, two different effective configurations: that is
+    # the isolation the pool feature exists for.
+    - name: 'Assert each pool enforces its own php_admin_value and session directory'
+      ansible.builtin.assert:
+        that:
+          - '"memory_limit=192M" in __molecule__app1'
+          - '"memory_limit_after=192M" in __molecule__app1'
+          - '__molecule__app1 is search("session_save_path=" ~ __molecule__session_path ~ "/app1")'
+          - '"memory_limit=256M" in __molecule__www'
+          - '__molecule__www is search("session_save_path=" ~ __molecule__session_path ~ "/www")'
+        fail_msg: 'app1: {{ __molecule__app1 }} www: {{ __molecule__www }}'
+      vars:
+        __molecule__app1: '{{ __molecule__pool_probe_result["results"][0]["stdout"] }}'
+        __molecule__www: '{{ __molecule__pool_probe_result["results"][1]["stdout"] }}'
+
+    - name: 'stat the per-pool session and WSDL cache directories'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: '__molecule__session_dir_result'
+      loop:
+        - '{{ __molecule__session_path }}/app1'
+        - '{{ __molecule__session_path }}/www'
+        - '/var/lib/php/wsdlcache/app1'
+        - '/var/lib/php/wsdlcache/www'
+
+    # 0700 and the pool's own user is what keeps one pool from reading the other's session files
+    # and cached WSDLs, which is the whole point of giving each pool its own directories.
+    - name: 'Assert the per-pool directories are private to their pool'
+      ansible.builtin.assert:
+        that:
+          - 'item["stat"]["exists"]'
+          - 'item["stat"]["mode"] == "0700"'
+          - 'item["stat"]["pw_name"] == __molecule__apache_user'
+        fail_msg: '{{ item["item"] }}: {{ item["stat"] }}'
+      loop: '{{ __molecule__session_dir_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

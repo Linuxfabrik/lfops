@@ -52,7 +52,7 @@
     - 'icingadb'
 
 
-# https://icinga.com/docs/icinga-db/latest/doc/02-Installation/04-RHEL/
+# https://icinga.com/docs/icinga-db/latest/doc/02-Installation/RHEL/
 - block:
 
   - name: 'Check if the icingadb tables exist'

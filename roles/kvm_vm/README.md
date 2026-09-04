@@ -244,7 +244,7 @@ kvm_vm__vcpus: 2
 
     * `mac`:
 
-        * Optional. MAC of the interface. Defaults to a randomly generated MAC starting with `52:54:`.
+        * Optional. MAC of the interface. Defaults to a MAC starting with `52:54:`, derived from `kvm_vm__name` and the position of the interface in this list, so the same VM keeps the same MAC across a destroy and recreate.
         * Type: String.
 
     * `addresses`:

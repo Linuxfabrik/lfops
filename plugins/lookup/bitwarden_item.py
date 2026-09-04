@@ -36,6 +36,7 @@ notes:
 requirements:
     - Bitwarden CLI C(bw) version v2022.9.0 or newer. See U(https://bitwarden.com/help/article/cli/) for installation instructions.
     - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The plugin connects to C(127.0.0.1:8087) by default.
+    - C(bw serve) takes its session from the environment it is started in and keeps it for its lifetime. Export C(BW_SESSION) before starting it. Unlocking the vault afterwards only affects the C(bw) CLI in your shell, so C(bw status) can report C(unlocked) while the API the plugin talks to is still locked.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -314,10 +315,9 @@ class LookupModule(LookupBase):
 
         bw = Bitwarden()
 
-        if not bw.is_unlocked:
-            raise AnsibleError(
-                'Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.'
-            )
+        status = bw.status
+        if status != 'unlocked':
+            raise AnsibleError(bw.get_not_unlocked_message(status))
         display.vvv('lfbwlp - run - bitwarden vault is unlocked')
 
         bw.sync()
@@ -357,7 +357,7 @@ class LookupModule(LookupBase):
                     continue  # done here, go to next term
                 else:
                     # item not found by ID. if there is an ID given we expect it to exist
-                    raise AnsibleError(f'Item with id {id_} not found.')
+                    raise AnsibleError(f'Item with id {id_} not found')
 
             name = Bitwarden.get_pretty_name(name, hostname, purpose)
             display.vvv(f'lfbwlp - run - get item: {name}')
@@ -367,7 +367,7 @@ class LookupModule(LookupBase):
 
             if len(result) > 1:
                 raise AnsibleError(
-                    'Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.'
+                    'Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting'
                 )
 
             if len(result) == 1:
@@ -380,7 +380,7 @@ class LookupModule(LookupBase):
                 # the user declared that this run must not mint new secrets
                 raise AnsibleError(
                     f'Bitwarden item "{name}" not found, and item creation is disabled '
-                    '(LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false). Aborting.'
+                    '(LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false). Aborting'
                 )
             else:
                 display.vvv('lfbwlp - run - no item found. generating new one')

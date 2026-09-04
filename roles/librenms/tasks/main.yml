@@ -1,15 +1,30 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
-  - name: 'Install cronie fping ImageMagick mtr net-snmp net-snmp-utils nmap rrdtool unzip'
+  - name: 'Install acl cronie fping git mtr net-snmp net-snmp-utils nmap python3-pip python3-setuptools rrdtool unzip'
     ansible.builtin.package:
       name:
+        - 'acl'
         - 'cronie'
         - 'fping'
-        - 'ImageMagick'
+        # LibreNMS is installed from a git checkout and updates itself the same way
+        - 'git'
         - 'mtr'
         - 'net-snmp'
         - 'net-snmp-utils'
         - 'nmap'
+        # pip installs the Python requirements of LibreNMS below. setuptools provides the
+        # pkg_resources that both `ansible.builtin.pip` and the requirements check of LibreNMS
+        # fall back to, and it is a requirement of LibreNMS itself.
+        - 'python3-pip'
+        - 'python3-setuptools'
         - 'rrdtool'
         - 'unzip'
       state: 'present'
@@ -17,45 +32,54 @@
   - name: 'Get latest release version'
     ansible.builtin.uri:
       url: 'https://api.github.com/repos/librenms/librenms/releases/latest'
-    register: 'librenms__github_release'
+    register: '__librenms__github_release'
     check_mode: false # run task even if `--check` is specified
     run_once: true
 
-  - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms'
+  - name: 'Create the librenms user and group'
+    ansible.builtin.import_tasks: 'user.yml'
+
+  - name: 'mkdir -p /opt/librenms'
+    ansible.builtin.file:
+      path: '/opt/librenms'
+      state: 'directory'
+      owner: 'librenms'
+      group: 'librenms'
+      mode: 0o771
+
+  # Cloned as librenms, the way LibreNMS updates itself. Cloning as root and handing the tree
+  # over afterwards leaves git refusing to touch it on every later run ("detected dubious
+  # ownership"), which is git's safe.directory protection and cannot be worked around by a chown.
+  - name: 'git clone https://github.com/librenms/librenms.git /opt/librenms # version {{ __librenms__github_release["json"]["tag_name"] }}'
     ansible.builtin.git:
       repo: 'https://github.com/librenms/librenms.git'
       dest: '/opt/librenms'
       force: false
-      version: '{{ librenms__github_release["json"]["tag_name"] }}'
+      version: '{{ __librenms__github_release["json"]["tag_name"] }}'
+    become: true
+    become_user: 'librenms'
+    vars:
+      # Ansible creates the become user's remote_tmp before it runs the module, and the home of
+      # librenms is /opt/librenms itself. Left at its default the clone would find ~/.ansible in
+      # the directory it is about to fill and abort with "already exists and is not an empty
+      # directory". Verified against ansible-core 2.16 on Rocky 8, 9 and 10.
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
 
-  - name: 'groupadd librenms'
-    ansible.builtin.group:
-      name: 'librenms'
-      state: 'present'
+  # this is magnitudes faster than using the file module. --changes reports every file it
+  # touched, which keeps the task honest about whether it changed anything (installations that
+  # predate the clone above still carry root-owned files).
+  - name: 'chown -R --changes librenms:librenms /opt/librenms'
+    ansible.builtin.command: 'chown -R --changes librenms:librenms /opt/librenms'
+    register: '__librenms__chown_result'
+    changed_when: '__librenms__chown_result["stdout"] | length > 0'
 
-  - name: 'useradd librenms -d /opt/librenms -M -r -s /bin/bash'
-    ansible.builtin.user:
-      comment: 'LibreNMS Service User'
-      name: 'librenms'
-      group: 'librenms'
-      home: '/opt/librenms'
-      createhome: false
-      system: true
-      shell: '/bin/bash'
-      state: 'present'
-
-  # this is magnitudes faster than using the file module
-  - name: 'chown -R librenms:librenms /opt/librenms'
-    ansible.builtin.command: 'chown -R librenms:librenms /opt/librenms'
-
-  - name: 'chmod 771 /opt/librenms'
-    ansible.builtin.file:
-      path: '/opt/librenms'
-      mode: 0o771
-
-  # using in preference to the acls from the docs: 'setfacl -R -m g::rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache/ /opt/librenms/storage/'
-  - name: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
-    ansible.builtin.command: 'chmod -R g=rwx /opt/librenms/rrd /opt/librenms/logs /opt/librenms/bootstrap/cache /opt/librenms/storage'
+  # The upstream docs make rrd, logs, bootstrap/cache and storage group-writable, for setups
+  # where the web server runs under its own account. Here PHP-FPM, cron and the scheduler all
+  # run as librenms, which owns those trees, so the role does not set the group bits itself.
+  # Composer still does on a first install: LibreNMS/ComposerHelper.php runs setfacl whenever
+  # there is no .env yet. That is why acl is installed above, it is not part of a minimal
+  # installation on RHEL 10 and the call would fail with "command not found" there, while it
+  # succeeds on 8 and 9. Verified against LibreNMS 26.8 on Rocky 9 and Rocky 10.
 
   - name: 'ln -s /opt/librenms/lnms /usr/local/bin/lnms'
     ansible.builtin.file:
@@ -78,108 +102,140 @@
       chdir: '/opt/librenms'
     become: true
     become_user: 'librenms'
+    vars:
+      # keeps ~/.ansible out of the git working tree below /opt/librenms, see the clone above
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
+    register: '__librenms__composer_result'
+    # composer says so whenever the lock file is already satisfied
+    changed_when: '"Nothing to install, update or remove" not in __librenms__composer_result["stdout"]'
 
-  - name: 'restorecon -RFv /opt/librenms'
-    ansible.builtin.command: 'restorecon -RFv /opt/librenms'
-    register: 'librenms__restorecon_data_result'
-    changed_when: 'librenms__restorecon_data_result["stdout"] | length > 0'
+  # RHEL 8 needs a current pip in the user site of librenms before the install below can work,
+  # vars/RedHat8.yml says why. On every other release the version is empty and the task is skipped.
+  - name: 'sudo -u librenms -i pip3 install --user pip=={{ __librenms__pip_bootstrap_version }}'
+    ansible.builtin.pip:
+      name: 'pip'
+      version: '{{ __librenms__pip_bootstrap_version }}'
+      extra_args: '--user'
+    become: true
+    become_user: 'librenms'
+    vars:
+      # keeps ~/.ansible out of the git working tree below /opt/librenms, see the clone above
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
+    when:
+      - '__librenms__pip_bootstrap_version | length > 0'
 
-  - name: 'semodule --list-modules | grep --quiet http_fping # check for http_fping'
-    ansible.builtin.shell: 'semodule --list-modules | grep --quiet http_fping'
-    args:
-      executable: '/bin/bash'
-    register: 'librenms__http_fping_exists_result'
-    failed_when: 'librenms__http_fping_exists_result["rc"] >= 2'
-    changed_when: false # just gathering information
+  # Installed into the user site of librenms, which is where LibreNMS itself expects them: its
+  # daily.sh runs the same pip call as that user on every update, and validate.php checks them
+  # with scripts/dynamic_check_requirements.py, which reads the installed distribution metadata
+  # rather than importing the modules. The packages of the python role cannot cover this, because
+  # no RHEL release ships command_runner and the psutil of RHEL 8 and 9 is older than LibreNMS
+  # requires. Verified against LibreNMS 26.8.2 on Rocky 8, 9 and 10.
+  - name: 'sudo -u librenms -i pip3 install --user -r /opt/librenms/requirements.txt'
+    ansible.builtin.pip:
+      requirements: '/opt/librenms/requirements.txt'
+      extra_args: '--user'
+      executable: '{{ __librenms__pip_executable }}'
+    become: true
+    become_user: 'librenms'
+    vars:
+      # keeps ~/.ansible out of the git working tree below /opt/librenms, see the clone above
+      ansible_remote_tmp: '/tmp/.ansible-librenms'
 
-  - block:
+  # No --force: it would also rewrite the SELinux user of every file the application created
+  # since the last run (unconfined_u back to system_u), which relabels on every run without
+  # changing what the targeted policy enforces, namely the type.
+  - name: 'restorecon -Rv /opt/librenms'
+    ansible.builtin.command: 'restorecon -Rv /opt/librenms'
+    register: '__librenms__restorecon_result'
+    changed_when: '__librenms__restorecon_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
 
-    - name: 'Deploy /tmp/http_fping.tt'
-      ansible.builtin.template:
-        backup: true
-        src: 'tmp/http_fping.tt.j2'
-        dest: '/tmp/http_fping.tt'
-
-    - name: 'checkmodule -M -m -o /tmp/http_fping.mod /tmp/http_fping.tt'
-      ansible.builtin.command: 'checkmodule -M -m -o /tmp/http_fping.mod /tmp/http_fping.tt'
-
-    - name: 'semodule_package -o /tmp/http_fping.pp -m /tmp/http_fping.mod'
-      ansible.builtin.command: 'semodule_package -o /tmp/http_fping.pp -m /tmp/http_fping.mod'
-
-    - name: 'semodule --install /tmp/http_fping.pp'
-      ansible.builtin.command: 'semodule --install /tmp/http_fping.pp'
-
-    - name: 'rm /tmp/http_fping.tt /tmp/http_fping.mod /tmp/http_fping.pp'
-      ansible.builtin.file:
-        path:
-          - '/tmp/http_fping.tt'
-          - '/tmp/http_fping.mod'
-          - '/tmp/http_fping.pp'
-        state: 'absent'
-
-    # block
-    when: 'librenms__http_fping_exists_result["rc"] != 0'
-
-  # TODO: currently librenms cannot find the rrdcached socket, skipping for now
-  # - name: 'semodule --list-modules | grep --quiet rrdcached_librenms # check for rrdcached_librenms'
-  #   ansible.builtin.shell: 'semodule --list-modules | grep --quiet rrdcached_librenms'
-  #   register: 'librenms__rrdcached_librenms_exists_result'
-  #   failed_when: 'librenms__rrdcached_librenms_exists_result["rc"] >= 2'
-  #   changed_when: false # just gathering information
-
-  # - block:
-
-  #   - name: 'Deploy /tmp/rrdcached_librenms.tt'
-  #     ansible.builtin.template:
-  #       backup: true
-  #       src: 'tmp/rrdcached_librenms.tt.j2'
-  #       dest: '/tmp/rrdcached_librenms.tt'
-
-  #   - name: 'checkmodule -M -m -o /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.tt'
-  #     ansible.builtin.command: 'checkmodule -M -m -o /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.tt'
-
-  #   - name: 'semodule_package -o /tmp/rrdcached_librenms.pp -m /tmp/rrdcached_librenms.mod'
-  #     ansible.builtin.command: 'semodule_package -o /tmp/rrdcached_librenms.pp -m /tmp/rrdcached_librenms.mod'
-
-  #   - name: 'semodule --install /tmp/rrdcached_librenms.pp'
-  #     ansible.builtin.command: 'semodule --install /tmp/rrdcached_librenms.pp'
-
-  #   - name: 'rm /tmp/rrdcached_librenms.tt /tmp/rrdcached_librenms.mod /tmp/rrdcached_librenms.pp'
-  #     ansible.builtin.file:
-  #       path:
-  #         - '/tmp/rrdcached_librenms.tt'
-  #         - '/tmp/rrdcached_librenms.mod'
-  #         - '/tmp/rrdcached_librenms.pp'
-  #       state: 'absent'
-
-  #   # block
-  #   when: 'librenms__rrdcached_librenms_exists_result["rc"] != 0'
-
-  # - name: 'mkdir -p /etc/systemd/system/rrdcached.service.d/'
-  #   ansible.builtin.file:
-  #     path: '/etc/systemd/system/rrdcached.service.d/'
-  #     state: 'directory'
-
-  # - name: 'Deploy /etc/systemd/system/rrdcached.service.d/librenms.conf'
-  #   ansible.builtin.template:
-  #     backup: true
-  #     src: 'etc/systemd/system/rrdcached.service.d/librenms.conf.j2'
-  #     dest: '/etc/systemd/system/rrdcached.service.d/librenms.conf'
-  #     owner: 'root'
-  #     group: 'root'
-  #     mode: 0o644
-  #   register: 'librenms__rrdcached_systemd_override_result'
-
-  # - name: 'systemctl daemon-reload; systemctl restart rrdcached'
-  #   ansible.builtin.systemd:
-  #     name: 'rrdcached.service'
-  #     state: 'started'
-  #     enabled: true
-  #     daemon_reload: '{{ librenms__rrdcached_systemd_override_result is changed }}'
-  #
+  # The SELinux policy modules this role needs (http_fping, rrdcached_librenms) are declared in
+  # librenms__selinux__modules__dependent_var and deployed by the selinux role, like its booleans
+  # and file contexts.
 
   tags:
     - 'librenms'
+
+
+- block:
+
+  # The socket unit of the rrdtool package binds /tmp/rrdcached.sock, which httpd
+  # and php-fpm cannot reach because both run with PrivateTmp=true. Socket
+  # activation also makes rrdcached ignore the listen address of the drop-in.
+  - name: 'systemctl disable --now rrdcached.socket'
+    ansible.builtin.service:
+      name: 'rrdcached.socket'
+      enabled: false
+      state: 'stopped'
+
+  - name: 'mkdir -p /etc/systemd/system/rrdcached.service.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/rrdcached.service.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # named after the role, not z00-linuxfabrik.conf: rrdcached.service belongs to the rrdtool
+  # package, and a role that manages RRDCached in its own right would collide with that name
+  - name: 'Deploy /etc/systemd/system/rrdcached.service.d/z00-librenms.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/rrdcached.service.d/z00-librenms.conf.j2'
+      dest: '/etc/systemd/system/rrdcached.service.d/z00-librenms.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__librenms__rrdcached_dropin_result'
+    notify: 'librenms: restart rrdcached'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__librenms__rrdcached_dropin_result is changed'
+
+  # split enabled and state into separate tasks so that the register on the state task
+  # only reflects actual state changes (started/stopped), not enabled/disabled changes.
+  # this allows the handler to correctly skip a restart when the service was just started,
+  # without false-positives from enabled-only changes.
+  - name: 'systemctl {{ librenms__rrdcached_service_enabled | bool | ternary("enable", "disable") }} rrdcached.service'
+    ansible.builtin.service:
+      name: 'rrdcached.service'
+      enabled: '{{ librenms__rrdcached_service_enabled | bool }}'
+
+  - name: 'systemctl {{ librenms__rrdcached_service_state | regex_replace("p?ed$", "") }} rrdcached.service'
+    ansible.builtin.service:
+      name: 'rrdcached.service'
+      state: '{{ librenms__rrdcached_service_state }}'
+    register: '__librenms__rrdcached_service_state_result'
+
+  # block
+  when:
+    - 'librenms__rrdcached_enabled | bool'
+  tags:
+    - 'librenms'
+    - 'librenms:rrdcached'
+
+
+- block:
+
+  # A clean shutdown writes everything still held in memory to the RRD files, so switching to
+  # direct writes does not lose the poll cycles RRDCached has not flushed yet. The drop-in and
+  # the policy module stay in place, so the daemon can be switched back on without a full run.
+  - name: 'systemctl disable --now rrdcached.service'
+    ansible.builtin.service:
+      name: 'rrdcached.service'
+      enabled: false
+      state: 'stopped'
+
+  # block
+  when:
+    - 'not (librenms__rrdcached_enabled | bool)'
+  tags:
+    - 'librenms'
+    - 'librenms:rrdcached'
 
 
 - block:
@@ -193,6 +249,15 @@
       mode: 0o644
       remote_src: true
 
+  tags:
+    - 'librenms'
+    - 'librenms:configure'
+    - 'librenms:logrotate'
+
+
+- block:
+
+  # Keeps the daily self-update of LibreNMS running, among the poller and discovery jobs.
   - name: 'cp /opt/librenms/dist/librenms.cron /etc/cron.d/librenms'
     ansible.builtin.copy:
       src: '/opt/librenms/dist/librenms.cron'
@@ -202,29 +267,67 @@
       mode: 0o644
       remote_src: true
 
-  - name: 'cp /opt/librenms/dist/librenms-scheduler.service /etc/systemd/system/'
+  - name: 'cp /opt/librenms/dist/{{ item }} /etc/systemd/system/'
     ansible.builtin.copy:
-      src: '/opt/librenms/dist/librenms-scheduler.service'
-      dest: '/etc/systemd/system/librenms-scheduler.service'
+      src: '/opt/librenms/dist/{{ item }}'
+      dest: '/etc/systemd/system/{{ item }}'
       owner: 'root'
       group: 'root'
       mode: 0o644
       remote_src: true
+    loop:
+      - 'librenms-scheduler.service'
+      - 'librenms-scheduler.timer'
+    register: '__librenms__scheduler_units_result'
 
-  - name: 'cp /opt/librenms/dist/librenms-scheduler.timer /etc/systemd/system/'
-    ansible.builtin.copy:
-      src: '/opt/librenms/dist/librenms-scheduler.timer'
-      dest: '/etc/systemd/system/librenms-scheduler.timer'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-      remote_src: true
+  # The units come from the git checkout, so an update of LibreNMS can change them. Without the
+  # reload systemd keeps running the version it read before.
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__librenms__scheduler_units_result is changed'
 
-  - name: 'systemctl enable --now librenms-scheduler.timer'
+  tags:
+    - 'librenms'
+    - 'librenms:configure'
+    - 'librenms:cron'
+
+
+- block:
+
+  # split enabled and state into separate tasks, consistent with the rrdcached service above.
+  - name: 'systemctl {{ librenms__scheduler_service_enabled | bool | ternary("enable", "disable") }} librenms-scheduler.timer'
     ansible.builtin.service:
       name: 'librenms-scheduler.timer'
-      enabled: true
-      state: 'started'
+      enabled: '{{ librenms__scheduler_service_enabled | bool }}'
+
+  - name: 'systemctl {{ librenms__scheduler_service_state | regex_replace("p?ed$", "") }} librenms-scheduler.timer'
+    ansible.builtin.service:
+      name: 'librenms-scheduler.timer'
+      state: '{{ librenms__scheduler_service_state }}'
+
+  tags:
+    - 'librenms'
+    - 'librenms:state'
+
+
+- block:
+
+  # LibreNMS assumes rrdtool 1.4 unless told otherwise, and then creates and
+  # tunes RRD files itself instead of letting rrdcached do it.
+  - name: 'rrdtool --version'
+    ansible.builtin.command: 'rrdtool --version'
+    register: '__librenms__rrdtool_version_result'
+    changed_when: false # just gathering information
+    check_mode: false # run task even if `--check` is specified
+    when: 'librenms__rrdcached_enabled | bool'
+
+  - name: 'Set the installed rrdtool version'
+    ansible.builtin.set_fact:
+      # "RRDtool 1.7.2  Copyright by Tobias Oetiker ..."
+      # variable is used in config.php.j2
+      __librenms__rrdtool_version: '{{ __librenms__rrdtool_version_result["stdout_lines"][0] | regex_search("[0-9]+\.[0-9]+\.[0-9]+") }}'
+    when: 'librenms__rrdcached_enabled | bool'
 
   - name: 'Deploy /opt/librenms/config.php'
     ansible.builtin.template:
@@ -235,10 +338,14 @@
       group: 'librenms'
       mode: 0o644
 
+  # lineinfile rather than a template, which is what LFOps otherwise uses for config files:
+  # /opt/librenms/.env is generated by the composer install and carries values this role does not
+  # know, APP_KEY among them, so rendering the whole file would throw them away. The regexps are
+  # anchored on the "=" so a key never matches a longer one that starts with the same characters.
   - name: 'Set DB connection settings in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
-      regexp: '^#?{{ item["key"] }}'
+      regexp: '^#?{{ item["key"] }}='
       line: '{{ item["key"] }}={{ item["value"] | quote }}'
       mode: 0o600 # file contains secrets
       state: 'present'
@@ -252,19 +359,29 @@
       - key: 'DB_PASSWORD'
         value: '{{ librenms__database_login["password"] }}'
 
+  # Written on every run, including with an empty value, so the settings follow the inventory in
+  # both directions instead of leaving a stale line behind. LibreNMS reads the empty string as a
+  # deliberate value: EnvHelper::parseArray keeps "" out of the comma split, which is how the
+  # upstream security docs switch trusted proxies off.
   - name: 'Set app settings in /opt/librenms/.env'
     ansible.builtin.lineinfile:
       path: '/opt/librenms/.env'
-      regexp: '^#?{{ item["key"] }}'
+      regexp: '^#?{{ item["key"] }}='
       line: '{{ item["key"] }}={{ item["value"] | quote }}'
       mode: 0o600 # file contains secrets
       state: 'present'
     loop:
       - key: 'APP_TRUSTED_PROXIES'
         value: '{{ librenms__config_app_trusted_proxies | join(",") }}'
+      # Laravel builds the links of everything that runs without a request, the alert
+      # notifications above all, from this value. It is the same URL as the base_url of
+      # config.php, which covers the URLs LibreNMS builds itself.
       - key: 'APP_URL'
-        value: '{{ librenms__config_app_url }}'
-    when: 'item["value"] | length > 0'
+        value: '{{ librenms__url }}'
+      # Laravel reads its session cookie flags from .env, not from php.ini: the cookie is issued
+      # by the framework, so session.cookie_secure of the php role does not reach it.
+      - key: 'SESSION_SECURE_COOKIE'
+        value: '{{ librenms__config_session_secure_cookie | bool | ternary("true", "false") }}'
 
   tags:
     - 'librenms'

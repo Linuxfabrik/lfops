@@ -15,6 +15,16 @@
       tags:
         - 'always'
 
+    # The php role deploys the LibreNMS FPM pool and starts php-fpm before the librenms role
+    # creates the user that pool runs as, which aborts php-fpm's startup on a fresh host. The
+    # tasks are idempotent, so the librenms role running them again later costs nothing.
+    - ansible.builtin.import_role:
+        name: 'librenms'
+        tasks_from: 'user.yml'
+      tags:
+        - 'librenms'
+        - 'php'
+
 
   roles:
 
@@ -22,7 +32,7 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["distribution_major_version"] in ["7"]'
-        - 'not librenms__skip_yum_utils | default(false)'
+        - 'not setup_librenms__skip_yum_utils | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_baseos'
       repo_baseos__crb_repo_enabled__dependent_var: '{{
@@ -36,45 +46,50 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not librenms__skip_repo_epel | default(false)'
+        - 'not setup_librenms__skip_repo_epel | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not librenms__skip_repo_mydumper | default(false)'
+        - 'not setup_librenms__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'not librenms__skip_repo_mariadb | default(false)'
+        - 'not setup_librenms__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_librenms__skip_policycoreutils | default(false)'
+        - 'not setup_librenms__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{
           librenms__selinux__booleans__dependent_var
         }}'
-      selinux__fcontexcts__dependent_var: '{{
+      selinux__fcontexts__dependent_var: '{{
           librenms__selinux__fcontexts__dependent_var
+        }}'
+      selinux__modules__dependent_var: '{{
+          librenms__selinux__modules__dependent_var +
+          php__selinux__modules__dependent_var
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_librenms__skip_selinux | default(false)'
+        - 'not setup_librenms__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           apache_httpd__python__modules__dependent_var +
+          librenms__python__modules__dependent_var +
           mariadb_server__python__modules__dependent_var
         }}'
       when:
-        - 'not librenms__skip_python | default(false)'
+        - 'not setup_librenms__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: '{{ mariadb_server__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
-        - 'not librenms__skip_kernel_settings | d(false)'
+        - 'not setup_librenms__skip_kernel_settings | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__databases__dependent_var: '{{
@@ -84,12 +99,12 @@
           librenms__mariadb_server__users__dependent_var
         }}'
       when:
-        - 'not librenms__skip_mariadb_server | default(false)'
+        - 'not setup_librenms__skip_mariadb_server | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not librenms__skip_repo_remi | default(false)'
+        - 'not setup_librenms__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
       php__modules__dependent_var: '{{
@@ -99,21 +114,14 @@
           librenms__php__fpm_pools__dependent_var
         }}'
       when:
-        - 'not librenms__skip_php | default(false)'
-
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: '{{
-          librenms__apps__apps__dependent_var
-        }}'
-      when:
-        - 'not librenms__skip_apps | default(false)'
+        - 'not setup_librenms__skip_php | d(false)'
 
     - role: 'linuxfabrik.lfops.librenms'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
       apache_httpd__vhosts__dependent_var: '{{ librenms__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
-        - 'not librenms__skip_apache_httpd | default(false)'
+        - 'not setup_librenms__skip_apache_httpd | d(false)'
 
 
   post_tasks:

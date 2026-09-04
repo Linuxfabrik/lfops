@@ -1,5 +1,9 @@
 # Compatibility
 
+## Supported releases
+
+Fixes, including security fixes, are only released for the most recent version. A major version therefore reaches its end of life on the day the next major version is published, and within a major version only the latest minor release is maintained. There is no fixed release cadence: a new major version is published whenever breaking changes accumulate, in practice every few weeks to a few months.
+
 Which Ansible role is proven to run on which OS?
 
 | Role                                  | Deb 12 | Deb 13 | RHEL 8 | RHEL 9 | RHEL 10 | Ubu 22.04 | Ubu 24.04 | Ubu 26.04 | Other                                        |
@@ -80,12 +84,12 @@ Which Ansible role is proven to run on which OS?
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | kernel_modules                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| keycloak                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| keycloak                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | kvm_host                              |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | kvm_vm                                |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| librenms                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | libreoffice                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | login                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35+                                   |
 | logrotate                             |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
@@ -113,7 +117,7 @@ Which Ansible role is proven to run on which OS?
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | opensearch                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| php                                   |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| php                                   |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | postfix                               |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |

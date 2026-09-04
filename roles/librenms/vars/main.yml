@@ -1,0 +1,1 @@
+__librenms__rrdcached_socket: '/run/rrdcached.sock'

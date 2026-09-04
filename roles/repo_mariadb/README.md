@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.repo_mariadb
 
-This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mariadb-package-repository-setup-and-usage/).
+This role deploys the [MariaDB Package Repository](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/mariadb-package-repository-setup-and-usage).
 
 
 *Available since LFOps `2.0.0`.*
@@ -18,7 +18,7 @@ This role deploys the [MariaDB Package Repository](https://mariadb.com/kb/en/mar
 
 `repo_mariadb__version`
 
-* The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/kb/en/mariadb-server-release-dates/) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release.
+* The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/docs/release-notes/community-server) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release.
 * Type: String.
 
 Example:

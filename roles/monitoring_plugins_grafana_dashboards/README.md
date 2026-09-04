@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.monitoring_plugins_grafana_dashboards
 
-This role deploys the Monitoring Plugins Grafana Dashboards for a Grafana Server using [grizzly](https://grafana.github.io/grizzly/).
+This role deploys the Monitoring Plugins Grafana Dashboards for a Grafana Server using [grizzly](https://github.com/grafana/grizzly).
 
 
 *Available since LFOps `3.0.0`.*
@@ -11,7 +11,7 @@ This role deploys the Monitoring Plugins Grafana Dashboards for a Grafana Server
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * Grafana must be installed and configured with the required provisioning config (role: [linuxfabrik.lfops.grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana)).
-* [grizzly](https://grafana.github.io/grizzly/) must be installed (role: [linuxfabrik.lfops.grafana_grizzly](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana_grizzly)).
+* [grizzly](https://github.com/grafana/grizzly) must be installed (role: [linuxfabrik.lfops.grafana_grizzly](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana_grizzly)).
 
 
 ## Tags
