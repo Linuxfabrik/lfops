@@ -87,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:fail2ban**: The `apache-404` filter no longer produces false positives on the `linuxfabrikio` log format when a later field (such as bytes received `%I`) happens to contain `404`.
 * **role:librenms**: The Python packages LibreNMS requires are installed, so its own validation no longer reports `command_runner` and `psutil` as missing.
 * **role:librenms**: An update of LibreNMS that changes the units of its scheduler takes effect, because systemd is told to read them again.
 * **role:librenms**: The poller works on a host whose database is not local, because the Python modules it imports are installed by the role instead of arriving through the MariaDB role.

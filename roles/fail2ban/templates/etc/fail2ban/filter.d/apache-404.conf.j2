@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026090401
+# 2026090402
 
 # Fail2Ban filter that matches HTTP 404 responses in Apache access logs.
 #
@@ -10,7 +10,7 @@
 
 [Definition]
 
-failregex = ^<HOST> .*"[^"]*" 404\s
+failregex = ^<HOST> [^"]*"[^"]*" 404\s
 
 datepattern = ^[^\[]*\[({DATE})
               {^LN-BEG}
