@@ -9,6 +9,9 @@ fail2ban__filters__dependent_var: []
 fail2ban__filters__group_var: []
 fail2ban__filters__host_var: []
 fail2ban__filters__role_var:
+  - filename: 'apache-404'
+    state: 'present'
+    template: 'apache-404'
   - filename: 'apache-dos'
     state: 'present'
     template: 'apache-dos'
@@ -20,6 +23,9 @@ fail2ban__jail_default_action: |-
 fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip: []
 fail2ban__jail_default_rocketchat_hook: ''
+fail2ban__jail_apache_404_bantime: '8h'
+fail2ban__jail_apache_404_findtime: '10s'
+fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_portscan_allowed_ports:
   - 22
 fail2ban__jail_portscan_bantime: '8h'

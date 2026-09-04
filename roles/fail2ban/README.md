@@ -4,8 +4,9 @@ This role installs and configures [fail2ban](https://www.fail2ban.org).
 
 Filters and jails are defined in the inventory (`fail2ban__filters__*_var` / `fail2ban__jails__*_var`). Each entry either references one of the templates shipped with the role, or uses the `raw` template to deploy an arbitrary filter or jail definition.
 
-This role provides two additional filters:
+This role provides three additional filters:
 
+* apache-404: Matches HTTP 404 responses in Apache access logs. Can be used to ban IPs causing excessive 404 errors.
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port. Note that this requires an iptables firewall with logging (for example, fwbuilder).
 
@@ -41,7 +42,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The fail2ban filter definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `apache-dos`, `portscan`
+* Default: `apache-404`, `apache-dos`, `portscan`
 * Subkeys:
 
     * `filename`:
@@ -88,6 +89,24 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * The incoming Rocket.Chat hook which will be used to send a notification on bans. For this to work `rocketchat` has to be in the action, have a look at `fail2ban__jail_default_action` (example below).
 * Type: String.
 * Default: `''`
+
+`fail2ban__jail_apache_404_bantime`
+
+* The ban duration for the apache-404 jail.
+* Type: String.
+* Default: `'8h'`
+
+`fail2ban__jail_apache_404_findtime`
+
+* The find time for the apache-404 jail. An IP is banned if it causes more than `fail2ban__jail_apache_404_maxretry` 404 errors within this duration.
+* Type: String.
+* Default: `'10s'`
+
+`fail2ban__jail_apache_404_maxretry`
+
+* The number of 404 errors within `fail2ban__jail_apache_404_findtime` before an IP is banned.
+* Type: Integer.
+* Default: `10`
 
 `fail2ban__jail_portscan_allowed_ports`
 
@@ -164,6 +183,9 @@ fail2ban__filters__host_var:
       [Definition]
       failregex = ^<HOST> .*"POST /admin/j_security_check HTTP/[\d.]+" (401|403)
       ignoreregex =
+fail2ban__jail_apache_404_bantime: '8h'
+fail2ban__jail_apache_404_findtime: '10s'
+fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
   rocketchat[name=%(__name__)s, rocketchat-hook="%(rocketchat-hook)s"]

@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+# 2026090401
+
+# Fail2Ban filter that matches HTTP 404 responses in Apache access logs.
+#
+# Works with the following Apache LogFormats:
+# LogFormat "%h %l %u %t \"%r\" %>s %b" common
+# LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+# LogFormat "%h %{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" linuxfabrikio
+
+[Definition]
+
+failregex = ^<HOST> .*"[^"]*" 404\s
+
+datepattern = ^[^\[]*\[({DATE})
+              {^LN-BEG}
+
+
+# DEV Notes:
+#
+# example log lines (linuxfabrikio):
+# 10.80.32.156 - - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234 "-" "Mozilla/5.0" 500 1500
+# example log lines (combined):
+# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234 "-" "Mozilla/5.0"
+# example log lines (common):
+# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234
