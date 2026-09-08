@@ -12,6 +12,8 @@
 
 failregex = ^<HOST> [^"]*"[^"]*" 404\s
 
+ignoreregex = {% if fail2ban__jail_apache_404_ignoreregex %}{{ fail2ban__jail_apache_404_ignoreregex | join('\n              ') }}{% endif %}
+
 datepattern = ^[^\[]*\[({DATE})
               {^LN-BEG}
 

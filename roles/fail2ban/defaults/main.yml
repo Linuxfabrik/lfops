@@ -24,6 +24,7 @@ fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip: []
 fail2ban__jail_default_rocketchat_hook: ''
 fail2ban__jail_apache_404_bantime: '8h'
+fail2ban__jail_apache_404_ignoreregex: []
 fail2ban__jail_apache_404_findtime: '10s'
 fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_portscan_allowed_ports:

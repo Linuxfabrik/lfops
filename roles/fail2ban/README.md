@@ -96,6 +96,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `'8h'`
 
+`fail2ban__jail_apache_404_ignoreregex`
+
+* A list of regular expressions. Log lines matching any of these patterns will be ignored by the apache-404 filter, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`.
+* Type: List of strings.
+* Default: `[]`
+
 `fail2ban__jail_apache_404_findtime`
 
 * The find time for the apache-404 jail. An IP is banned if it causes more than `fail2ban__jail_apache_404_maxretry` 404 errors within this duration.
@@ -185,6 +191,9 @@ fail2ban__filters__host_var:
       ignoreregex =
 fail2ban__jail_apache_404_bantime: '8h'
 fail2ban__jail_apache_404_findtime: '10s'
+fail2ban__jail_apache_404_ignoreregex:
+  - '^<HOST> [^"]*"GET /favicon\.ico '
+  - '^<HOST> [^"]*"GET /assets/style\.css '
 fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
