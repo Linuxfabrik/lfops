@@ -87,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins_grafana_dashboards**: The Grafana dashboards are collected in an empty directory on the controller. That directory was reused across runs, so the dashboard of a plugin that upstream renamed or removed kept being deployed, and a downgrade to an older Monitoring Plugins version still rolled out the dashboards of the newer one.
 * **role:fail2ban**: The `apache-404` filter no longer produces false positives on the `linuxfabrikio` log format when a later field (such as bytes received `%I`) happens to contain `404`.
 * **role:librenms**: The Python packages LibreNMS requires are installed, so its own validation no longer reports `command_runner` and `psutil` as missing.
 * **role:librenms**: An update of LibreNMS that changes the units of its scheduler takes effect, because systemd is told to read them again.
