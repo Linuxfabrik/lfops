@@ -274,6 +274,16 @@
       label: '{{ item["name"] }}'
     notify: 'php: php-fpm --test; restart php-fpm'
 
+  # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
+  # version's tree, which the package ships with nothing but its own default pool.
+  tags:
+    - 'php'
+    - 'php:fpm'
+    - 'php:update'
+
+
+- block:
+
   # On Debian the packaged logrotate config only covers the single /var/log/<service>.log file, not
   # the per-pool logs in the directory above, so ship our own. On RedHat the package's
   # /etc/logrotate.d/php-fpm already rotates /var/log/php-fpm/*log.
@@ -285,14 +295,16 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    when:
-      - 'ansible_facts["os_family"] == "Debian"'
 
-  # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
-  # version's tree, which the package ships with nothing but its own default pool.
+  # block
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+
+  # 'php:update' is included because both the rotated directory and the reopen helper carry the
+  # PHP version in their name, so a version change has to re-render this file.
   tags:
     - 'php'
-    - 'php:fpm'
+    - 'php:logrotate'
     - 'php:update'
 
 

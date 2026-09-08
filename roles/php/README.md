@@ -68,6 +68,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs and removes the configured PHP modules.
 * Deploys the `z00-linuxfabrik.ini` for every SAPI.
 * Deploys and removes the PHP-FPM pools, together with their session, opcache and log directories.
+* Deploys the logrotate configuration for the per-pool logs (Debian only).
 * Manages the state of the php-fpm service.
 * Pins the `php`, `phar` and `phar.phar` alternatives (Debian with `php__version` set only).
 * Triggers: php-fpm.service restart.
@@ -81,13 +82,17 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Deploys and removes the PHP-FPM pools. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
 * Creates the shared opcache directory, the php-fpm log directory and one session directory per pool, and relabels them on SELinux hosts.
-* Deploys `/etc/logrotate.d/linuxfabrik-php-fpm` on Debian, where the packaged logrotate config does not cover the per-pool logs.
 * Triggers: php-fpm.service restart.
 
 `php:ini`
 
 * Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
 * Triggers: php-fpm.service restart.
+
+`php:logrotate`
+
+* Debian only. Deploys `/etc/logrotate.d/linuxfabrik-php-fpm` for the per-pool logs. On RedHat the packaged logrotate configuration already covers them.
+* Triggers: none.
 
 `php:modules`
 
@@ -101,7 +106,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php:update`
 
-* Updates the PHP packages, composer and the PHP modules, and reasserts the ini, the pools, the service state and the alternatives. Do not forget to update the repo beforehand.
+* Updates the PHP packages, composer and the PHP modules, and reasserts the ini, the pools, the logrotate configuration, the service state and the alternatives. Do not forget to update the repo beforehand.
 * On Debian with `php__version` set, this is also how a major version change is carried out: raise `php__version`, then run this tag. It installs the declared version, moves the pools, alternatives and the FPM service over to it, and purges the stacks of all other versions.
 * Triggers: php-fpm.service restart.
 
