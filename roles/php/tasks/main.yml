@@ -60,6 +60,19 @@
           else (ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d"))
         }}'
 
+  # 'always' as well, because the version defaults are not only the ini's: memory_limit,
+  # max_execution_time and post_max_size are rendered into every pool as php_admin_value, so a
+  # `--tags php:fpm` run needs them too. Loaded from the php:ini block they were missing there, and
+  # the pools were written with empty values, which php-fpm accepts without complaint while the
+  # empty php_admin_value overrides what php.ini says.
+  # Guarded rather than asserted: an unsupported version must not fail here on a missing file, so
+  # that a consuming role which only needs __php__installed_version still runs. The php:ini block
+  # asserts the version properly once this role actually templates something for it.
+  - name: 'Load default values for {{ __php__installed_version }}'
+    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
+    when:
+      - '__php__installed_version in __php__supported_versions'
+
   # 'always': __php__installed_version / __php__fpm_service_name are prerequisites referenced by
   # the php:state block and by consuming roles (e.g. nextcloud) under their own --tags runs,
   # where the php-specific blocks are filtered out. Tagging the discovery 'always' keeps them defined.
@@ -132,9 +145,6 @@
       quiet: true
       fail_msg: 'PHP {{ __php__installed_version }} is not supported by this role. Supported versions: {{ __php__supported_versions | join(", ") }}.'
 
-  - name: 'Load default values for {{ __php__installed_version }}'
-    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
-
   # On Debian every SAPI has its own conf.d, and the apache2 one is shipped by
   # libapache2-mod-phpX.Y, which is not installed when only FPM is used. Creating the directories
   # unconditionally keeps __php__conf_dest a plain static list instead of a conditional one. dpkg
@@ -175,8 +185,7 @@
   # a backstop while it stays above max_execution_time: below it PHP-FPM SIGTERMs the worker before
   # PHP reaches its own limit, so the longer runtime a role asked for is capped without saying so,
   # and the pool logs a bare "execution timed out" instead of PHP's fatal error naming the script.
-  # A role raising max_execution_time without raising this too therefore loses both silently, which
-  # is what happened to nextcloud (3600) against the role default of 60s.
+  # A role raising max_execution_time without raising this too therefore loses both silently.
   # Checked per pool, so a per-pool override is validated rather than the default it replaces.
   # A zero on either side switches that limit off deliberately, so those pools are skipped.
   - name: 'Assert that request_terminate_timeout stays above max_execution_time'
