@@ -845,6 +845,19 @@ Consumers stay simple - they reference the public variable directly, with no awa
 
 The filter mirrors the precedence of `shared/tasks/platform-variables.yml` (least to most specific: `os_family`, `os_family + distribution_major_version`, `os_family + distribution_version`, `distribution`, `distribution + distribution_major_version`, `distribution + distribution_version`) and returns the value of the most specific present key. Pass `default=[]` (or whatever the consumer expects) when the value is optional on platforms not listed in the dict; otherwise an unmatched call raises an error.
 
+A `__dependent_var` has to be computable before the consuming role starts. Do not derive one from a variable that the consuming role itself only sets at runtime. A consuming role with a `meta/argument_specs.yml` templates every declared role parameter at role entry, before any of its own tasks run, and an undefined value anywhere inside the platform-keyed dictionary collapses the whole dictionary, so `platform_select` aborts the play with `input must be a dict keyed by platform identifier, got AnsibleUndefined`.
+
+Where the dependency cannot be avoided, guard the public variable and publish an empty list until the value exists. Ansible re-templates a role parameter on every use, so the consumer still receives the real list once its own discovery has run. The roles that build Debian PHP package names from `__php__installed_version`, which the `php` role discovers with `package_facts`, do it like this:
+
+```yaml
+# roles/nextcloud/vars/main.yml
+nextcloud__php__modules__dependent_var: '{{
+    (__nextcloud__php__modules__dependent_var
+      | linuxfabrik.lfops.platform_select(ansible_facts))
+    if __php__installed_version is defined else []
+  }}'
+```
+
 
 #### LFOps-wide Shared Variables
 
