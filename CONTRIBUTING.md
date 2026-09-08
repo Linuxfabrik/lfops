@@ -1168,6 +1168,8 @@ Tests can be run against a subset of targets by providing them as a comma-separa
 LFOPS_TEST_TARGETS='rocky*' molecule test --scenario-name apps/install
 ```
 
+It scopes `molecule destroy` the same way, which is how a single target is rebuilt without touching the rest. The instances that survive such a destroy stay usable: the ephemeral SSH keypair and the dynamic inventory they are reached through are kept, and only an unfiltered destroy removes them.
+
 `LFOPS_TEST_POOL` names the libvirt storage pool the base images and per-VM boot disks are written to, and defaults to the `lfops-molecule` pool from "Preparing the controller" when unset. Both variables are independent of each other:
 
 ```bash
