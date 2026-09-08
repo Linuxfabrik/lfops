@@ -12,3 +12,11 @@ php__fpm_pools__group_var:
     pm_max_children: 4
     php_admin_value_memory_limit: '192M'
     state: 'present'
+
+# [global] values that differ from the role defaults, so verify.yml can prove they come from the
+# inventory rather than from defaults/main.yml. log_level stays at or below notice on purpose: the
+# `php-fpm -tt` dump verify.yml reads is emitted at NOTICE, so a higher level would silence the
+# very output the assertion parses.
+php__fpm_conf_emergency_restart_interval__group_var: '2m'
+php__fpm_conf_emergency_restart_threshold__group_var: 7
+php__fpm_conf_log_level__group_var: 'debug'

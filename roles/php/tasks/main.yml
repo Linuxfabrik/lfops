@@ -248,6 +248,26 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # The `[global]` section lives next to the pools rather than in php-fpm.conf, which belongs to
+  # the package. See the template for which directives can be set this way and why.
+  # The `z00-` prefix is the LFOps drop-in convention and keeps the file at the end of a pool
+  # directory listing instead of interleaved among the pools. It buys no precedence here, and
+  # none is needed: where this file sorts among the pool files does not matter, because
+  # `[global]` and a pool section never compete. Verified on Rocky 9 with a pool named `aaa`
+  # (parsed before this file) and again with the file renamed so it parsed first: identical
+  # merged configuration both times, both pools intact. The name only decides anything if another
+  # file in the directory also carries a `[global]` section, which a pool can do through its
+  # `raw` key, and even then `z00-` does not guarantee winning, since `zzz.conf` sorts after it.
+  - name: 'Deploy the global config to {{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/php-fpm.d/z00-linuxfabrik-global.conf.j2'
+      dest: '{{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: php-fpm --test; restart php-fpm'
+
   - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
     ansible.builtin.file:
       path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
@@ -274,6 +294,16 @@
       label: '{{ item["name"] }}'
     notify: 'php: php-fpm --test; restart php-fpm'
 
+  # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
+  # version's tree, which the package ships with nothing but its own default pool.
+  tags:
+    - 'php'
+    - 'php:fpm'
+    - 'php:update'
+
+
+- block:
+
   # On Debian the packaged logrotate config only covers the single /var/log/<service>.log file, not
   # the per-pool logs in the directory above, so ship our own. On RedHat the package's
   # /etc/logrotate.d/php-fpm already rotates /var/log/php-fpm/*log.
@@ -285,14 +315,16 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    when:
-      - 'ansible_facts["os_family"] == "Debian"'
 
-  # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
-  # version's tree, which the package ships with nothing but its own default pool.
+  # block
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+
+  # 'php:update' is included because both the rotated directory and the reopen helper carry the
+  # PHP version in their name, so a version change has to re-render this file.
   tags:
     - 'php'
-    - 'php:fpm'
+    - 'php:logrotate'
     - 'php:update'
 
 

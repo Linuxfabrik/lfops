@@ -39,6 +39,8 @@ This role never exposes to the world that PHP is installed on the server, no mat
 * The module is installed regardless of the configured `request_slowlog_timeout`, so that turning the slowlog on later is a pure configuration change. The permissions it grants apply to the whole `httpd_t` domain, Apache httpd included. Its rules are unconditional and therefore not subject to the `deny_ptrace` boolean: on a host hardened with `setsebool -P deny_ptrace on`, `httpd_t` can still ptrace itself. Set `php__skip_selinux: true` in the playbook to leave the host's policy untouched.
 * Every pool using the default `files` session handler gets a dedicated session directory below the distribution's session base (`/var/lib/php/session` on RedHat, `/var/lib/php/sessions` on Debian), owned by the pool's `user` and `group` with mode `0700`, so pools cannot read each other's sessions. On RedHat the `/var/lib/php/session(/.*)?` file context gives it the `httpd_var_run_t` type php-fpm needs. On Debian the packaged `sessionclean` timer recurses the session base using the global `session.gc_maxlifetime`, so a per-pool `session.gc_maxlifetime` is not honored by the cleanup there, and a session that stays open but idle longer than the lifetime may be removed.
 * Each pool writes its `error_log` and `slowlog` into a per-service log directory (`/var/log/php-fpm` on RedHat, `/var/log/<service>` on Debian, e.g. `/var/log/php8.4-fpm`), which the role creates. On RedHat the package's logrotate config already rotates `/var/log/php-fpm/*log`; on Debian the role ships `/etc/logrotate.d/linuxfabrik-php-fpm` for the per-pool logs, since the packaged config only covers the single global log file.
+* The `[global]` section of the PHP-FPM configuration is deployed as `z00-linuxfabrik-global.conf` next to the pools, because `php-fpm.conf` itself belongs to the package. Which side wins depends on where the packaged `php-fpm.conf` puts its `include=` line, and the families differ: RedHat reads the pool directory before its own `[global]`, so the package overrides the drop-in, while Debian reads it after and the drop-in overrides the package. The role therefore sets only directives that no packaged `php-fpm.conf` touches (`log_level` and the `emergency_restart_*` pair), which take effect on both. `error_log`, `pid` and `daemonize` are deliberately left out: they are exactly what the packages set, so setting them here would move them on Debian and silently do nothing on RedHat.
+* With `pm = dynamic` the master checks once per second whether `pm.min_spare_servers` workers are idle. If not, it forks a batch of workers and doubles the batch size for the next check, up to `pm.max_spawn_rate` (32). From a batch size of 8 on, every one of those checks logs `seems busy (you may need to increase pm.start_servers, or pm.min/max_spare_servers)` at warning level, and unlike the `server reached pm.max_children setting` warning beside it, this one has no once-only guard, so it repeats every second for as long as the shortfall lasts. The batch size falls back to 1 only once idle workers exceed `pm.max_spare_servers` again, or when `pm.max_children` is reached. An ordinary traffic spike therefore writes a block of these warnings while the pool still had capacity to spare: `server reached pm.max_children setting` is the saturation signal, `seems busy` only a hint to keep a larger warm reserve. Raising `php__fpm_pool_conf_pm_start_servers__*_var` and `php__fpm_pool_conf_pm_min_spare_servers__*_var` does that, at the cost of that many resident workers per pool; on a host where spikes are normal, pass `--ignore='seems busy'` to the `php-fpm-logfile` [Monitoring Plugin](https://github.com/Linuxfabrik/monitoring-plugins) instead.
 * Each pool listens on its own Unix socket below the FPM runtime directory (`/run/php-fpm/<pool>.sock` on RedHat, `/run/php/<pool>.sock` on Debian). The socket belongs to `root` and carries a POSIX ACL entry for the web server user (`listen.acl_users`), so a pool running as its own user still hands the web server access without either of them owning the socket. On Debian this deviates from the packaged pool file, which uses `listen.owner` / `listen.group` instead. On Debian the packaged php-fpm systemd unit additionally maintains a version-agnostic `update-alternatives` alias at `/run/php/php-fpm.sock` pointing at the socket of the default `www` pool. That alias only ever tracks `www`, so configure the web server with the explicit per-pool socket path rather than the generic one. RedHat ships no such alias.
 * The pool sets `env[PATH]`, which upstream leaves unset: with `clear_env` at its default the worker environment is empty, so `getenv("PATH")` returns nothing, which trips applications that shell out and fails Nextcloud's "PHP getenv" setup check.
 * Every pool gets its own WSDL cache directory below `/var/lib/php/wsdlcache`, owned like its session directory. The SOAP extension caches parsed WSDL files there, so a `SoapClient` does not refetch and reparse the service description on every request. PHP's own default is `/tmp`, which on RedHat means the php-fpm unit's `PrivateTmp` namespace and therefore a cache thrown away on every restart, and on Debian the shared `/tmp`. Only relevant to applications using `SoapClient`: without the `soap` extension installed the setting is inert, and `ini_get('soap.wsdl_cache_dir')` returns an empty string.
@@ -66,7 +68,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs php, php-fpm and composer.
 * Installs and removes the configured PHP modules.
 * Deploys the `z00-linuxfabrik.ini` for every SAPI.
-* Deploys and removes the PHP-FPM pools, together with their session, opcache and log directories.
+* Deploys and removes the PHP-FPM pools and the `[global]` drop-in, together with their session, opcache and log directories.
+* Deploys the logrotate configuration for the per-pool logs (Debian only).
 * Manages the state of the php-fpm service.
 * Pins the `php`, `phar` and `phar.phar` alternatives (Debian with `php__version` set only).
 * Triggers: php-fpm.service restart.
@@ -78,15 +81,19 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php:fpm`
 
-* Deploys and removes the PHP-FPM pools. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
+* Deploys and removes the PHP-FPM pools, and the `[global]` drop-in next to them. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
 * Creates the shared opcache directory, the php-fpm log directory and one session directory per pool, and relabels them on SELinux hosts.
-* Deploys `/etc/logrotate.d/linuxfabrik-php-fpm` on Debian, where the packaged logrotate config does not cover the per-pool logs.
 * Triggers: php-fpm.service restart.
 
 `php:ini`
 
 * Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
 * Triggers: php-fpm.service restart.
+
+`php:logrotate`
+
+* Debian only. Deploys `/etc/logrotate.d/linuxfabrik-php-fpm` for the per-pool logs. On RedHat the packaged logrotate configuration already covers them.
+* Triggers: none.
 
 `php:modules`
 
@@ -100,7 +107,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `php:update`
 
-* Updates the PHP packages, composer and the PHP modules, and reasserts the ini, the pools, the service state and the alternatives. Do not forget to update the repo beforehand.
+* Updates the PHP packages, composer and the PHP modules, and reasserts the ini, the pools and their `[global]` drop-in, the logrotate configuration, the service state and the alternatives. Do not forget to update the repo beforehand.
 * On Debian with `php__version` set, this is also how a major version change is carried out: raise `php__version`, then run this tag. It installs the declared version, moves the pools, alternatives and the FPM service over to it, and purges the stacks of all other versions.
 * Triggers: php-fpm.service restart.
 
@@ -370,6 +377,40 @@ php__ini_upload_max_filesize__host_var: '10000M'
 ```
 
 
+## Optional Role Variables - PHP-FPM Global Config Directives
+
+Variables for the `[global]` section of the PHP-FPM configuration, deployed as `z00-linuxfabrik-global.conf` next to the pools. Only directives that no packaged `php-fpm.conf` sets itself can be configured here, see "How the Role Behaves".
+
+`php__fpm_conf_emergency_restart_interval__group_var` / `php__fpm_conf_emergency_restart_interval__host_var`
+
+* The window `php__fpm_conf_emergency_restart_threshold__*_var` counts within. Available units: s(econds), m(inutes), h(ours), or d(ays). A value of `0` switches the mechanism off.
+* Type: String.
+* Default: `'1m'`
+* Deviates from the upstream default `0`: the mechanism needs a non-zero threshold and a non-zero interval, so leaving either at zero switches it off.
+
+`php__fpm_conf_emergency_restart_threshold__group_var` / `php__fpm_conf_emergency_restart_threshold__host_var`
+
+* Reload PHP-FPM once this many workers have died on `SIGSEGV` or `SIGBUS` within `php__fpm_conf_emergency_restart_interval__*_var`. A value of `0` means off.
+* Type: Number.
+* Default: `10`
+* Deviates from the upstream default `0`: an extension or opcode cache that corrupts its workers otherwise keeps crashing them until somebody notices, while a reload of the master usually restores service. Ten crashes in a minute is well clear of ordinary application fatals, which do not count here: only `SIGSEGV` and `SIGBUS` do. PHP-FPM writes a WARNING when it triggers, so the crash still reaches monitoring instead of being papered over.
+
+`php__fpm_conf_log_level__group_var` / `php__fpm_conf_log_level__host_var`
+
+* The log level of PHP-FPM's own error log. Possible values: `alert`, `error`, `warning`, `notice`, `debug`.
+* Type: String.
+* Default: `'notice'`
+* Matches the upstream default but is pinned rather than left unset, because PHP-FPM keeps an unset value at zero internally and `php-fpm -tt` then dumps `log_level = unknown value` instead of the level actually in effect. Raising it to `warning` drops the start, reload and shutdown markers that make a pool restarting in a loop visible, and silences the `php-fpm -tt` configuration dump along with them.
+
+Example:
+```yaml
+# optional
+php__fpm_conf_emergency_restart_interval__host_var: '1m'
+php__fpm_conf_emergency_restart_threshold__host_var: 10
+php__fpm_conf_log_level__host_var: 'notice'
+```
+
+
 ## Optional Role Variables - PHP-FPM Pool Config Directives
 
 Variables for PHP-FPM pool directives and their default values, defined and supported by this role.
@@ -397,6 +438,7 @@ Variables for PHP-FPM pool directives and their default values, defined and supp
 `php__fpm_pool_conf_pm_min_spare_servers__group_var` / `php__fpm_pool_conf_pm_min_spare_servers__host_var`
 
 * The desired minimum number of idle server processes.
+* A pool that keeps falling below this logs `seems busy` once per second until it recovers, see "How the Role Behaves".
 * Type: Number.
 * Default: `5`
 * Deviates from the upstream default on Debian, which ships `1`: the role uses the RedHat package value for both families.
@@ -410,7 +452,7 @@ Variables for PHP-FPM pool directives and their default values, defined and supp
 
 `php__fpm_pool_conf_request_slowlog_timeout__group_var` / `php__fpm_pool_conf_request_slowlog_timeout__host_var`
 
-* The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). The slowlog is written to `/var/log/php-fpm/<pool>-slow.log` on RedHat and to `log/<pool>-slow.log` below the FPM prefix on Debian. On RedHat the backtrace also needs the `lfops_php_fpm_slowlog` SELinux module, see "How the Role Behaves".
+* The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). The slowlog is written to the per-service log directory, `/var/log/php-fpm/<pool>-slow.log` on RedHat and `/var/log/<service>/<pool>-slow.log` on Debian, for example `/var/log/php8.4-fpm/www-slow.log`. On RedHat the backtrace also needs the `lfops_php_fpm_slowlog` SELinux module, see "How the Role Behaves".
 * Type: Number.
 * Default: `0`
 
