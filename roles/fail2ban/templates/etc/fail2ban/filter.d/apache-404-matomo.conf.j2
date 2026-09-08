@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+# 2026090801
+
+# Fail2Ban filter that matches HTTP 404 responses in Apache access logs
+# using the matomo LogFormat, where the virtual host (%v) is the first field
+# and the client IP (%h) is the second.
+# For common, combined or linuxfabrikio LogFormats use the apache-404 filter.
+#
+# Matomo LogFormat (defined in roles/apache_httpd log_config.conf):
+# LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
+
+[Definition]
+
+failregex = ^\S+ <HOST> [^"]*"[^"]*" 404\s
+
+ignoreregex = {% if fail2ban__jail_apache_404_ignoreregex %}{{ fail2ban__jail_apache_404_ignoreregex | join('\n              ') }}{% endif %}
+
+datepattern = ^[^\[]*\[({DATE})
+              {^LN-BEG}
+
+
+# DEV Notes:
+#
+# example log lines (matomo):
+# www.example.com 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234 "-" "Mozilla/5.0"
