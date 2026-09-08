@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026090201
+# 2026090801
 
 /var/log/{{ __php__fpm_service_name }}/*log {
     rotate 14
@@ -8,6 +8,9 @@
     notifempty
     compress
     delaycompress
+    # without this, the postrotate script runs once per rotated file, so the reopen helper is
+    # invoked twice per pool (error log and slowlog) instead of once for the whole rotation
+    sharedscripts
     postrotate
         if [ -x /usr/lib/php/{{ __php__fpm_service_name }}-reopenlogs ]; then
             /usr/lib/php/{{ __php__fpm_service_name }}-reopenlogs;
