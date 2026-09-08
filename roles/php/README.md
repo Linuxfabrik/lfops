@@ -410,7 +410,7 @@ Variables for PHP-FPM pool directives and their default values, defined and supp
 
 `php__fpm_pool_conf_request_slowlog_timeout__group_var` / `php__fpm_pool_conf_request_slowlog_timeout__host_var`
 
-* The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). The slowlog is written to `/var/log/php-fpm/<pool>-slow.log` on RedHat and to `log/<pool>-slow.log` below the FPM prefix on Debian. On RedHat the backtrace also needs the `lfops_php_fpm_slowlog` SELinux module, see "How the Role Behaves".
+* The timeout for serving a single request after which a PHP backtrace will be dumped to the slowlog file. A value of `0` means off. Available units: s(econds, default), m(inutes), h(ours), or d(ays). The slowlog is written to the per-service log directory, `/var/log/php-fpm/<pool>-slow.log` on RedHat and `/var/log/<service>/<pool>-slow.log` on Debian, for example `/var/log/php8.4-fpm/www-slow.log`. On RedHat the backtrace also needs the `lfops_php_fpm_slowlog` SELinux module, see "How the Role Behaves".
 * Type: Number.
 * Default: `0`
 
