@@ -386,3 +386,48 @@
       loop: '{{ __molecule__session_dir_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+
+# The [global] drop-in is the one part of the role whose correctness depends on how the packaged
+# php-fpm.conf orders its `include=` line, which differs per family. Reading the deployed file back
+# would prove nothing about that: only the merged configuration shows who won. `php-fpm -tt` dumps
+# exactly that, so this play asks php-fpm rather than the filesystem.
+- name: 'Verify the PHP-FPM [global] drop-in reaches the merged configuration'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    # Debian ships no unversioned php-fpm binary, the same reason the role's own config test
+    # addresses the version explicitly.
+    - name: 'php-fpm -tt # dump the merged configuration'
+      ansible.builtin.command: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("php-fpm", "php-fpm" ~ php__version) }} -tt'
+      register: '__molecule__php_fpm_dump_result'
+      changed_when: false
+
+    # The dump normalises a time value to seconds, so '2m' from the inventory has to come back
+    # as 120s. Asserting the raw inventory string would pass on a php-fpm that ignored the file.
+    - name: 'Assert the drop-in values are in the merged configuration'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__php_fpm_dump is search("log_level = DEBUG")'
+          - '__molecule__php_fpm_dump is search("emergency_restart_threshold = 7")'
+          - '__molecule__php_fpm_dump is search("emergency_restart_interval = 120s")'
+        fail_msg: 'the [global] drop-in did not reach the merged configuration: {{ __molecule__php_fpm_dump }}'
+      vars:
+        __molecule__php_fpm_dump: '{{ __molecule__php_fpm_dump_result["stderr"] }}'
+
+    # The role deliberately does not set error_log in the drop-in, because the packaged
+    # php-fpm.conf sets it and only Debian would let the drop-in win. This guards that decision:
+    # if error_log is ever added to the template, this assertion fails on Debian while RedHat
+    # keeps passing, which is exactly the split that makes the mistake hard to spot in production.
+    - name: 'Assert error_log is still the packaged path, not one from the drop-in'
+      ansible.builtin.assert:
+        that: '__molecule__php_fpm_dump is search("error_log = " ~ (__molecule__packaged_error_log | regex_escape))'
+        fail_msg: 'error_log is not the packaged {{ __molecule__packaged_error_log }}: {{ __molecule__php_fpm_dump }}'
+      vars:
+        __molecule__php_fpm_dump: '{{ __molecule__php_fpm_dump_result["stderr"] }}'
+        __molecule__packaged_error_log: '{{
+            "/var/log/php-fpm/error.log" if ansible_facts["os_family"] == "RedHat"
+            else "/var/log/php" ~ php__version ~ "-fpm.log"
+          }}'

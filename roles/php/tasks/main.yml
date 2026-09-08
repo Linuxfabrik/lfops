@@ -248,6 +248,26 @@
       - 'ansible_facts["os_family"] == "RedHat"'
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # The `[global]` section lives next to the pools rather than in php-fpm.conf, which belongs to
+  # the package. See the template for which directives can be set this way and why.
+  # The `z00-` prefix is the LFOps drop-in convention and keeps the file at the end of a pool
+  # directory listing instead of interleaved among the pools. It buys no precedence here, and
+  # none is needed: where this file sorts among the pool files does not matter, because
+  # `[global]` and a pool section never compete. Verified on Rocky 9 with a pool named `aaa`
+  # (parsed before this file) and again with the file renamed so it parsed first: identical
+  # merged configuration both times, both pools intact. The name only decides anything if another
+  # file in the directory also carries a `[global]` section, which a pool can do through its
+  # `raw` key, and even then `z00-` does not guarantee winning, since `zzz.conf` sorts after it.
+  - name: 'Deploy the global config to {{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/php-fpm.d/z00-linuxfabrik-global.conf.j2'
+      dest: '{{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: php-fpm --test; restart php-fpm'
+
   - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
     ansible.builtin.file:
       path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'

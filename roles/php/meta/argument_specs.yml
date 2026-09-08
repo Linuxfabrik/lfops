@@ -2,12 +2,66 @@
 # use this for simple "is defined" / type checks. for complex validations
 # (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
 #
-# the `__ini_*` and `__fpm_pool_conf_*` slots default to an empty string and only
-# carry a value when the user (or a dependent role) sets one, so the numeric ones
+# the `__ini_*`, `__fpm_conf_*` and `__fpm_pool_conf_*` slots default to an empty string and
+# only carry a value when the user (or a dependent role) sets one, so the numeric ones
 # are declared as `raw`: an `int` spec would reject the empty default.
 argument_specs:
   main:
     options:
+
+      php__fpm_conf_emergency_restart_interval__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The window emergency_restart_threshold counts crashed workers within. Dependent-role injection.'
+
+      php__fpm_conf_emergency_restart_interval__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The window emergency_restart_threshold counts crashed workers within. Group-level override.'
+
+      php__fpm_conf_emergency_restart_interval__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The window emergency_restart_threshold counts crashed workers within. Host-level override.'
+
+      php__fpm_conf_emergency_restart_threshold__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Number of workers dying on SIGSEGV or SIGBUS within emergency_restart_interval that triggers a reload. Dependent-role injection.'
+
+      php__fpm_conf_emergency_restart_threshold__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Number of workers dying on SIGSEGV or SIGBUS within emergency_restart_interval that triggers a reload. Group-level override.'
+
+      php__fpm_conf_emergency_restart_threshold__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Number of workers dying on SIGSEGV or SIGBUS within emergency_restart_interval that triggers a reload. Host-level override.'
+
+      php__fpm_conf_log_level__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The log level of the PHP-FPM error log. Dependent-role injection.'
+
+      php__fpm_conf_log_level__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The log level of the PHP-FPM error log. Group-level override.'
+
+      php__fpm_conf_log_level__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The log level of the PHP-FPM error log. Host-level override.'
 
       php__fpm_pool_conf_pm__dependent_var:
         type: 'str'

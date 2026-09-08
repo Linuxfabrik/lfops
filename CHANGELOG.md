@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:php**: The `[global]` section of the PHP-FPM configuration can be set from the inventory, so the log level and the reload after repeated worker crashes are configurable; the reload is on by default after ten crashes within a minute.
 * **role:fail2ban**: The `apache-404` filter and jail ban IPs that cause excessive HTTP 404 errors in the Apache access log, configurable via `fail2ban__jail_apache_404_bantime`, `fail2ban__jail_apache_404_findtime` and `fail2ban__jail_apache_404_maxretry`.
 * **role:apache_solr**: The maximum size of the Java heap can be configured via `apache_solr__heap`.
 * **role:apache_solr**: The Java Security Manager can be switched off via `apache_solr__security_manager_enabled`, for instances that have to follow symlinks pointing outside of Solr's own directories.
