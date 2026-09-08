@@ -101,6 +101,7 @@
         - 'not setup_nextcloud__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
+      php__fpm_pool_conf_request_terminate_timeout__dependent_var: '{{ nextcloud__php__fpm_pool_conf_request_terminate_timeout__dependent_var }}'
       php__ini_max_execution_time__dependent_var: '{{ nextcloud__php__ini_max_execution_time__dependent_var }}'
       php__ini_max_file_uploads__dependent_var: '{{ nextcloud__php__ini_max_file_uploads__dependent_var }}'
       php__ini_memory_limit__dependent_var: '{{ nextcloud__php__ini_memory_limit__dependent_var }}'

@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:php**: A run aborts when a pool's `request_terminate_timeout` is not above its `max_execution_time`, instead of deploying a pool whose longer execution time is capped by PHP-FPM without saying so. Setting either to `0` still switches that limit off.
 * **role:php**: The logrotate configuration for the per-pool PHP-FPM logs on Debian is deployed by the `php:logrotate` tag instead of `php:fpm`.
 * **role:redis**: Redis also listens on the IPv6 loopback `[::1]:6379`, where it previously answered on `127.0.0.1` only, so clients that resolve `localhost` to `::1` are no longer refused. Hosts without an IPv6 loopback are unaffected: the address is marked optional, so Redis logs a warning and carries on instead of aborting.
 * **role:apache_httpd**: Restarting Apache takes about 5 seconds instead of 13 on a host that holds long-lived connections, such as a proxy for WebSockets, because systemd no longer waits out Apache's own shutdown escalation. Apache refuses new connections for the whole of that wait, so this shortens the outage. The hard stop leaks about three semaphores per restart (`ipcs -s`), which a reboot clears; raise `apache_httpd__systemd_timeout_stop_sec` to trade restart speed back for a longer graceful window.
@@ -89,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: Long web requests are no longer killed after 60 seconds, so assembling a large chunked upload completes again. The role raises `max_execution_time` to 3600, but PHP-FPM has terminated a request after 60 seconds since the pool rework, and its limit fired first.
 * **role:monitoring_plugins_grafana_dashboards**: The Grafana dashboards are collected in an empty directory on the controller. That directory was reused across runs, so the dashboard of a plugin that upstream renamed or removed kept being deployed, and a downgrade to an older Monitoring Plugins version still rolled out the dashboards of the newer one.
 * **role:fail2ban**: The `apache-404` filter no longer produces false positives on the `linuxfabrikio` log format when a later field (such as bytes received `%I`) happens to contain `404`.
 * **role:librenms**: The Python packages LibreNMS requires are installed, so its own validation no longer reports `command_runner` and `psutil` as missing.

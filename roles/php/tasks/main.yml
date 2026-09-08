@@ -170,6 +170,51 @@
 
 - block:
 
+  # request_terminate_timeout is PHP-FPM's backstop for a request that max_execution_time cannot
+  # stop, because the script is blocked in a system call rather than executing PHP. It only acts as
+  # a backstop while it stays above max_execution_time: below it PHP-FPM SIGTERMs the worker before
+  # PHP reaches its own limit, so the longer runtime a role asked for is capped without saying so,
+  # and the pool logs a bare "execution timed out" instead of PHP's fatal error naming the script.
+  # A role raising max_execution_time without raising this too therefore loses both silently, which
+  # is what happened to nextcloud (3600) against the role default of 60s.
+  # Checked per pool, so a per-pool override is validated rather than the default it replaces.
+  # A zero on either side switches that limit off deliberately, so those pools are skipped.
+  - name: 'Assert that request_terminate_timeout stays above max_execution_time'
+    ansible.builtin.assert:
+      that:
+        - '__php__terminate_seconds | int > __php__max_execution_time | int'
+      quiet: true
+      fail_msg: >-
+        Pool {{ item["name"] }}: request_terminate_timeout ({{ __php__terminate_raw }} =
+        {{ __php__terminate_seconds }} seconds) has to be greater than max_execution_time
+        ({{ __php__max_execution_time }} seconds), otherwise PHP-FPM kills the worker before PHP
+        can stop the script itself. Raise
+        php__fpm_pool_conf_request_terminate_timeout__group_var (or the pool's
+        request_terminate_timeout), or lower php__ini_max_execution_time__group_var.
+    loop: '{{ php__fpm_pools__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - '__php__terminate_seconds | int > 0'
+      - '__php__max_execution_time | int > 0'
+    vars:
+      # FPM accepts a bare number of seconds or an s/m/h/d suffix (fpm_conf.c: fpm_conf_set_time),
+      # so the value has to be normalised before it can be compared with the plain seconds of
+      # max_execution_time.
+      __php__terminate_raw: '{{ item["request_terminate_timeout"] | d(php__fpm_pool_conf_request_terminate_timeout__combined_var) | string }}'
+      __php__terminate_seconds: '{{
+          (__php__terminate_raw | regex_search("^[0-9]+") | int)
+          * ({"s": 1, "m": 60, "h": 3600, "d": 86400}[__php__terminate_raw | regex_search("[smhd]$") | d("s", true)])
+        }}'
+      __php__max_execution_time: '{{ item["php_admin_value_max_execution_time"] | d(php__ini_max_execution_time__combined_var) }}'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   # opcache is shared among all php-fpm pools, so a single shared directory is enough. On RedHat
   # the package ships it; create it for parity on Debian.
   - name: 'mkdir -p {{ __php__fpm_opcache_path }}'
