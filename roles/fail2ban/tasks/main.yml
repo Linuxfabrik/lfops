@@ -1,4 +1,5 @@
 - block:
+
   - name: 'Install fail2ban'
     ansible.builtin.package:
       name:
@@ -11,16 +12,14 @@
 
 - block:
 
-  - name: 'Deploy actions'
+  - name: 'Deploy /etc/fail2ban/action.d/rocketchat.conf'
     ansible.builtin.template:
       backup: true
-      src: 'etc/fail2ban/action.d/{{ item }}.conf.j2'
-      dest: '/etc/fail2ban/action.d/{{ item }}.conf'
+      src: 'etc/fail2ban/action.d/rocketchat.conf.j2'
+      dest: '/etc/fail2ban/action.d/rocketchat.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    loop:
-      - 'rocketchat'
     notify:
       - 'fail2ban: restart fail2ban'
 
@@ -101,6 +100,7 @@
 
   tags:
     - 'fail2ban'
+    - 'fail2ban:configure'
 
 
 # runs last, after the jails and filters above, so that a fresh installation starts fail2ban with
@@ -108,12 +108,12 @@
 - block:
 
   - name: 'systemctl {{ fail2ban__service_enabled | bool | ternary("enable", "disable") }} fail2ban.service'
-    ansible.builtin.systemd:
+    ansible.builtin.service:
       name: 'fail2ban.service'
-      enabled: '{{ fail2ban__service_enabled }}'
+      enabled: '{{ fail2ban__service_enabled | bool }}'
 
   - name: 'systemctl {{ fail2ban__service_state | regex_replace("p?ed$", "") }} fail2ban.service'
-    ansible.builtin.systemd:
+    ansible.builtin.service:
       name: 'fail2ban.service'
       state: '{{ fail2ban__service_state }}'
     register: '__fail2ban__service_state_result'

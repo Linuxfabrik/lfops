@@ -1,3 +1,4 @@
+fail2ban__filter_apache_404_ignoreregex: []
 fail2ban__filters__combined_var: '{{ (
       fail2ban__filters__role_var +
       fail2ban__filters__dependent_var +
@@ -21,15 +22,17 @@ fail2ban__filters__role_var:
   - filename: 'portscan'
     state: 'present'
     template: 'portscan'
+fail2ban__jail_apache_404_bantime: '8h'
+fail2ban__jail_apache_404_findtime: '10s'
+fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+# jail.d is read in alphabetical order, so this file overrides the banaction that the
+# fail2ban-firewalld package sets in 00-firewalld.conf. Verified against fail2ban
+# 1.1.0-6.el9 on Rocky 9: `fail2ban-client get sshd actions` reports iptables-multiport.
 fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip: []
 fail2ban__jail_default_rocketchat_hook: ''
-fail2ban__jail_apache_404_bantime: '8h'
-fail2ban__jail_apache_404_ignoreregex: []
-fail2ban__jail_apache_404_findtime: '10s'
-fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_portscan_allowed_ports:
   - 22
 fail2ban__jail_portscan_bantime: '8h'

@@ -9,19 +9,35 @@ This role provides four additional filters:
 * apache-404: Matches HTTP 404 responses in Apache access logs (common, combined, linuxfabrikio). Can be used to ban IPs causing excessive 404 errors.
 * apache-404-matomo: Like apache-404, but for the matomo LogFormat where the virtual host (`%v`) precedes the client IP (`%h`). Do not enable both `apache-404` and `apache-404-matomo` on the same log file, as `apache-404` would capture the virtual host name instead of the client IP.
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
-* portscan: Instantly blocks an IP if it accesses a non-permitted port. Note that this requires an iptables firewall with logging (for example, fwbuilder).
+* portscan: Instantly blocks an IP if it accesses a non-permitted port.
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+The role deploys its `[DEFAULT]` section as `jail.d/z00-defaults.conf`. fail2ban reads `jail.d/` in alphabetical order, so this file is read after the `00-firewalld.conf` that the `fail2ban-firewalld` package ships on the Red Hat family, and `banaction` ends up as `fail2ban__jail_default_banaction` instead of the packaged firewalld action. `banaction_allports` is not touched and keeps the packaged value.
+
+Jails are read from a `z10-<template>.conf.j2` source but written to `jail.d/<filename>.conf`, so the destination name, and with it the order in which fail2ban reads the jail, is chosen freely per entry. Filters have no such prefix and are written to `filter.d/<filename>.conf`.
 
 
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
+* On Rocky 9 and newer, the CRB repository must be enabled, since EPEL builds against it (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)).
 * The `python3-policycoreutils` module must be installed (required for the SELinux Ansible tasks) (role: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)).
 * On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
 * On RHEL-compatible systems, the `nis_enabled` SELinux boolean must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
+* sshd must log at `VERBOSE` level, otherwise the sshd jail does not see the failed logins (role: [linuxfabrik.lfops.sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd)).
+* The firewall must be one the `iptables-multiport` banaction can insert its chains into (role: [linuxfabrik.lfops.firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall)).
+
+
+## Requirements
+
+* Optional: The `apache-*` jails read the Apache logs below `/var/log/httpd/`.
+* Optional: The `portscan` filter matches the kernel log of an iptables firewall that logs denied packets, as fwbuilder generates it, read through the systemd journal. Without such a firewall the jail never bans.
 
 
 ## Tags
@@ -31,6 +47,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs and configures fail2ban.
 * Triggers: fail2ban.service restart.
 
+`fail2ban:configure`
+
+* Deploys the actions, filters and jails without touching the packages.
+* Triggers: fail2ban.service restart.
+
 `fail2ban:state`
 
 * Manages the state of the fail2ban service.
@@ -38,6 +59,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 
 ## Optional Role Variables
+
+`fail2ban__filter_apache_404_ignoreregex`
+
+* A list of regular expressions. Log lines matching any of these patterns will be ignored by the `apache-404` and `apache-404-matomo` filters, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`.
+* Type: List of strings.
+* Default: `[]`
 
 `fail2ban__filters__group_var` / `fail2ban__filters__host_var`
 
@@ -67,41 +94,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/filter.d), or `raw`.
         * Type: String.
 
-`fail2ban__jail_default_action`
-
-* The default action. This will be used in all jails which do not overwrite it.
-* Type: String.
-* Default: `fail2ban__jail_default_banaction`
-
-`fail2ban__jail_default_banaction`
-
-* The default banaction, which will be executed as defined in `fail2ban__jail_default_action` (assuming the jail does not overwrite it).
-* Type: String.
-* Default: `'iptables-multiport'`
-
-`fail2ban__jail_default_ignoreip`
-
-* List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it).
-* Type: List.
-* Default: `[]`
-
-`fail2ban__jail_default_rocketchat_hook`
-
-* The incoming Rocket.Chat hook which will be used to send a notification on bans. For this to work `rocketchat` has to be in the action, have a look at `fail2ban__jail_default_action` (example below).
-* Type: String.
-* Default: `''`
-
 `fail2ban__jail_apache_404_bantime`
 
 * The ban duration for the apache-404 jail.
 * Type: String.
 * Default: `'8h'`
-
-`fail2ban__jail_apache_404_ignoreregex`
-
-* A list of regular expressions. Log lines matching any of these patterns will be ignored by the apache-404 and apache-404-matomo filters, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`.
-* Type: List of strings.
-* Default: `[]`
 
 `fail2ban__jail_apache_404_findtime`
 
@@ -115,10 +112,34 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: Integer.
 * Default: `10`
 
+`fail2ban__jail_default_action`
+
+* The default action. This will be used in all jails which do not overwrite it.
+* Type: String.
+* Default: `'%(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]'`
+
+`fail2ban__jail_default_banaction`
+
+* The default banaction, which will be executed as defined in `fail2ban__jail_default_action` (assuming the jail does not overwrite it).
+* Type: String.
+* Default: `'iptables-multiport'`
+
+`fail2ban__jail_default_ignoreip`
+
+* List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it).
+* Type: List of strings.
+* Default: `[]`
+
+`fail2ban__jail_default_rocketchat_hook`
+
+* The incoming Rocket.Chat hook which will be used to send a notification on bans. For this to work `rocketchat` has to be in the action, have a look at `fail2ban__jail_default_action` (example below).
+* Type: String.
+* Default: `''`
+
 `fail2ban__jail_portscan_allowed_ports`
 
 * A list of ports which are allowed to be accessed. IPs accessing these ports will not be blocked. Note: This setting is for the portscan jail.
-* Type: List.
+* Type: List of numbers.
 * Default: `[22]`
 
 `fail2ban__jail_portscan_bantime`
@@ -130,7 +151,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `fail2ban__jail_portscan_server_ips`
 
 * A list of IP addresses of the server. Only traffic destined for these IPs will be considered. This prevents accidental banning due to traffic which is passing by the server, but not destined for it. Note: This setting is for the portscan jail.
-* Type: List.
+* Type: List of strings.
 * Default: `'{{ ansible_facts["all_ipv4_addresses"] }}'`
 
 `fail2ban__jail_sshd_bantime`
@@ -182,6 +203,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 Example:
 ```yaml
 # optional
+fail2ban__filter_apache_404_ignoreregex:
+  - '^<HOST> [^"]*"GET /favicon\.ico '
+  - '^<HOST> [^"]*"GET /assets/style\.css '
 fail2ban__filters__host_var:
   - filename: 'numishare-admin'
     state: 'present'
@@ -192,9 +216,6 @@ fail2ban__filters__host_var:
       ignoreregex =
 fail2ban__jail_apache_404_bantime: '8h'
 fail2ban__jail_apache_404_findtime: '10s'
-fail2ban__jail_apache_404_ignoreregex:
-  - '^<HOST> [^"]*"GET /favicon\.ico '
-  - '^<HOST> [^"]*"GET /assets/style\.css '
 fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]

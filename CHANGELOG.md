@@ -8,7 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-tbd
+### Breaking Changes
+
+* **role:fail2ban**: Rename `fail2ban__jail_apache_404_ignoreregex` to `fail2ban__filter_apache_404_ignoreregex` in your inventory. The regular expressions land in the `apache-404` and `apache-404-matomo` filters, which both jails share, so the old name pointed at a jail that never carried the setting. The value itself is unchanged.
+
+### Added
+
+* **role:fail2ban**: The `fail2ban:configure` tag deploys the actions, filters and jails without touching the packages.
+* **role:fail2ban**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
+
+### Fixed
+
+* **role:fail2ban**: The `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome` and `apache-noscript` jail templates can be deployed again. Using one of them aborted the run.
 
 
 ## [v9.0.0] - 2026-09-09
