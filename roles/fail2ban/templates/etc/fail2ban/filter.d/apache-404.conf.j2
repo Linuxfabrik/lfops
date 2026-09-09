@@ -3,14 +3,30 @@
 
 # Fail2Ban filter that matches HTTP 404 responses in Apache access logs.
 #
-# Works with the following Apache LogFormats:
-# LogFormat "%h %l %u %t \"%r\" %>s %b" common
+# Assumes %v (canonical ServerName) is not an IP address in order to distinguish between matomo/vhost_common and linuxfabrikio.
+#
+# Tested with the following Apache LogFormats:
+#
 # LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+# LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+# LogFormat "%h %l %u %t \"%r\" %>s %b" common
+# LogFormat "%h %l %u %t \"%r\" %>s \"%{User-Agent}i\"" fail2ban
+#
+# LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
+# LogFormat "%v %h %l %u %t \"%r\" %>s %b" vhost_common
+#
 # LogFormat "%h %{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" linuxfabrikio
 
 [Definition]
 
-failregex = ^<HOST> [^"]*"[^"]*" 404\s
+# Line 1: %h %l %u %t (combined, combinedio, common, fail2ban)
+# Line 2: %v %h %l %u %t (matomo, vhost_common)
+#         (?!\d+\.\d+\.\d+\.\d+\s) rejects IPv4 addresses
+#         [^\s:]+ rejects IPv6 addresses
+# Line 3: %h %{X-Forwarded-For}i %l %u %t (linuxfabrikio)
+failregex = ^<HOST> \S+ \S+ \[[^"]*"[^"]*" 404\s
+            ^(?!\d+\.\d+\.\d+\.\d+\s)[^\s:]+ <HOST> \S+ \S+ \[[^"]*"[^"]*" 404\s
+            ^<ADDR> \S+ \S+ \S+ \[[^"]*"[^"]*" 404\s
 
 ignoreregex = {% if fail2ban__filter_apache_404_ignoreregex %}{{ fail2ban__filter_apache_404_ignoreregex | join('\n              ') }}{% endif %}
 
@@ -20,9 +36,13 @@ datepattern = ^[^\[]*\[({DATE})
 
 # DEV Notes:
 #
+# example log lines (combined, combinedio, common, fail2ban):
+# 10.80.32.156 - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 2955 "-" "Mozilla/5.0"
+# 10.80.32.156 - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 2955 "-" "Mozilla/5.0" 346 3157
+# 10.80.32.156 - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 2955
+# 10.80.32.156 - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 "Mozilla/5.0"
+# example log lines (matomo, vhost_common):
+# test.example.com 10.80.32.156 - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 2955 "-" "Mozilla/5.0"
+# test.example.com 10.80.32.156 - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 2955
 # example log lines (linuxfabrikio):
-# 10.80.32.156 - - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234 "-" "Mozilla/5.0" 500 1500
-# example log lines (combined):
-# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234 "-" "Mozilla/5.0"
-# example log lines (common):
-# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET /nonexistent HTTP/1.1" 404 1234
+# 10.80.32.156 - - - [09/Sep/2026:14:10:55 +0200] "GET /nonexistent HTTP/1.1" 404 2955 "-" "Mozilla/5.0" 346 3157

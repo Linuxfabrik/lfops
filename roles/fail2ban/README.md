@@ -4,10 +4,10 @@ This role installs and configures [fail2ban](https://www.fail2ban.org).
 
 Filters and jails are defined in the inventory (`fail2ban__filters__*_var` / `fail2ban__jails__*_var`). Each entry either references one of the templates shipped with the role, or uses the `raw` template to deploy an arbitrary filter or jail definition.
 
-This role provides four additional filters:
+This role provides three additional filters:
 
-* apache-404: Matches HTTP 404 responses in Apache access logs (common, combined, linuxfabrikio). Can be used to ban IPs causing excessive 404 errors.
-* apache-404-matomo: Like apache-404, but for the matomo LogFormat where the virtual host (`%v`) precedes the client IP (`%h`). Do not enable both `apache-404` and `apache-404-matomo` on the same log file, as `apache-404` would capture the virtual host name instead of the client IP.
+* apache-404: Matches HTTP 404 responses in Apache access logs (combined, combinedio, common, fail2ban, linuxfabrikio, matomo, vhost_common). Can be used to ban IPs causing excessive 404 errors.
+  **Important:** in order to capture the client ip for all formats, this filter requires the ServerName to be a domain instead of an ip address when using a LogFormat where the canonical ServerName `%v` precedes the client IP `%h` (matomo, vhost_common).
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port.
 
@@ -62,7 +62,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__filter_apache_404_ignoreregex`
 
-* A list of regular expressions. Log lines matching any of these patterns will be ignored by the `apache-404` and `apache-404-matomo` filters, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`.
+* A list of regular expressions. Log lines matching any of these patterns will be ignored by the `apache-404` filter, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`.
 * Type: List of strings.
 * Default: `[]`
 
@@ -70,7 +70,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The fail2ban filter definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `apache-404`, `apache-404-matomo`, `apache-dos`, `portscan`
+* Default: `apache-404`, `apache-dos`, `portscan`
 * Subkeys:
 
     * `filename`:

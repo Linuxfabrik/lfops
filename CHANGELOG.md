@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:fail2ban**: Removed `apache-404-matomo` filter and jail. The `apache-404` filter now matches all supported LogFormats including matomo and vhost_common. Remove `apache-404-matomo` entries from `fail2ban__filters__*_var` and `fail2ban__jails__*_var` in your inventory and use `apache-404` instead.
 * **role:fail2ban**: Rename `fail2ban__jail_apache_404_ignoreregex` to `fail2ban__filter_apache_404_ignoreregex` in your inventory. The regular expressions land in the `apache-404` and `apache-404-matomo` filters, which both jails share, so the old name pointed at a jail that never carried the setting. The value itself is unchanged.
 
 ### Added
