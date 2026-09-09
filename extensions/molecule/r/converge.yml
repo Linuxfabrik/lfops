@@ -1,0 +1,2 @@
+- name: 'Converge r playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.r'

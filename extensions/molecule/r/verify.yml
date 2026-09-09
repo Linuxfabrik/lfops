@@ -1,0 +1,86 @@
+# What only the running system can confirm is whether R itself honours what the
+# role wrote. The files under $R_HOME/etc are not checked; a fresh R process is
+# asked instead, because that is the whole chain: file, R startup, option.
+- name: 'Verify R is installed and configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'R --version'
+      ansible.builtin.command: 'R --version'
+      changed_when: false
+      register: '__molecule__r_version_result'
+
+    - name: 'Assert that R runs'
+      ansible.builtin.assert:
+        that: '"R version" in __molecule__r_version_result["stdout"]'
+
+    # Rprofile.site is what makes install.packages() fetch prebuilt binaries.
+    # Without the user agent the package manager serves sources instead, which
+    # turns every install with compiled code into a local build, so both halves
+    # are asserted rather than just the repository.
+    - name: 'R -e getOption("repos"), getOption("HTTPUserAgent")'
+      ansible.builtin.command: >-
+        R --quiet --no-save --no-restore
+          -e 'cat(getOption("repos")[["P3M"]], "|", getOption("HTTPUserAgent"))'
+      changed_when: false
+      register: '__molecule__r_options_result'
+
+    - name: 'Assert that R reads from the package manager with a user agent'
+      ansible.builtin.assert:
+        that:
+          - '"packagemanager.posit.co" in __molecule__r_options_result["stdout"]'
+          - '"R (" in __molecule__r_options_result["stdout"]'
+        fail_msg: 'R reports repos/HTTPUserAgent as: {{ __molecule__r_options_result["stdout"] }}'
+
+    # The path component differs per RHEL generation and RHEL 8 uses "centos8",
+    # so a wrong vars/RedHat<major>.yml would still look plausible above.
+    - name: 'Assert that the package manager path matches the RHEL generation'
+      ansible.builtin.assert:
+        that: '__molecule__r_expected_path in __molecule__r_options_result["stdout"]'
+        fail_msg: >-
+          Expected the {{ __molecule__r_expected_path }} repository on
+          {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_major_version"] }},
+          got: {{ __molecule__r_options_result["stdout"] }}
+      vars:
+        __molecule__r_expected_path: >-
+          {{ (ansible_facts["distribution_major_version"] | int == 8)
+             | ternary("centos8", "rhel" ~ ansible_facts["distribution_major_version"]) }}
+
+    # Renviron.site is the only way to reach an R process started by Shiny
+    # Server, so confirm a variable written there arrives in R's environment.
+    - name: 'R -e Sys.getenv("MOLECULE_R_PROBE")'
+      ansible.builtin.command: >-
+        R --quiet --no-save --no-restore -e 'cat(Sys.getenv("MOLECULE_R_PROBE"))'
+      changed_when: false
+      register: '__molecule__r_environ_result'
+
+    - name: 'Assert that Renviron.site reaches the R process'
+      ansible.builtin.assert:
+        that: '"/var/lib/molecule-r-probe" in __molecule__r_environ_result["stdout"]'
+
+    - name: 'R -e library(jsonlite)'
+      ansible.builtin.command: >-
+        R --quiet --no-save --no-restore
+          -e 'library(jsonlite); cat(toJSON(list(ok = TRUE)))'
+      changed_when: false
+      register: '__molecule__r_package_result'
+
+    - name: 'Assert that the CRAN package is installed and loadable'
+      ansible.builtin.assert:
+        that: '"ok" in __molecule__r_package_result["stdout"]'
+        fail_msg: 'jsonlite did not load: {{ __molecule__r_package_result["stdout"] }}'
+
+    # rmarkdown refuses to render without pandoc, and the package comes from
+    # PowerTools on RHEL 8 but from EPEL on 9 and 10, so it is worth asking R
+    # whether it can actually see the binary.
+    - name: 'R -e Sys.which("pandoc")'
+      ansible.builtin.command: >-
+        R --quiet --no-save --no-restore -e 'cat(Sys.which("pandoc"))'
+      changed_when: false
+      register: '__molecule__r_pandoc_result'
+
+    - name: 'Assert that pandoc is on the PATH of the R process'
+      ansible.builtin.assert:
+        that: '"pandoc" in __molecule__r_pandoc_result["stdout"]'
+        fail_msg: 'R cannot find pandoc: {{ __molecule__r_pandoc_result["stdout"] }}'
