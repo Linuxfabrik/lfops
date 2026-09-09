@@ -1,0 +1,28 @@
+# The option under test. The same one the 'install' sub-scenario uses, so the two differ in the
+# reboot path only. Whether the kernel acts on psi is verified there; here the point is when the
+# host reboots, which is independent of the option.
+bootloader__cmdline_options__group_var:
+  - name: 'psi'
+    value: 1
+
+# The behaviour under test: the role applies the change in the same run instead of leaving the
+# request for the maintenance window.
+lfops__reboot_now: true
+
+# Inputs for the roles the bootloader playbook pulls in. mailto_root is mandatory: it needs a
+# from and a list of recipients. A local address is enough, the test never sends real mail.
+mailto_root__from: 'root@localhost'
+mailto_root__to:
+  - 'root@localhost'
+
+# postfix needs a relayhost; an unreachable example host is fine, the test does not deliver mail.
+postfix__relayhost: 'mail.example.com'
+
+# No grace period, so converge does not idle for a minute per host before the reboot. The
+# notification mail then usually leaves the queue only after the reboot, which this scenario does
+# not check; the schedule_reboot/reboot scenario covers the mail.
+schedule_reboot__reboot_grace_period: 0
+
+# Reboot window far from the test run, so the schedule_reboot timer never fires mid-test. The
+# reboot under test is triggered by the role itself, not by the timer.
+schedule_reboot__reboot_time__group_var: '03:00'

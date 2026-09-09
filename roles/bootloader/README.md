@@ -16,6 +16,7 @@ On the Red Hat family the boot entries are written with `grubby`. Debian and Ubu
 * A run against a host that already carries the configured command line changes nothing and reports no change, and it neither requests a reboot nor touches any file. Changing the value of an option that is already set replaces it rather than adding a second one.
 * `--check` changes nothing. The dry run reads the current boot entries and reports what it would add or remove.
 * The change only takes effect on the next boot. When the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) mechanism is deployed, a changed command line requests a reboot at the next maintenance window (spool entry `bootloader`). Without it, the role only prints a message and leaves the reboot to the operator.
+* `lfops__reboot_now` makes the role apply the change in the same run instead of waiting for the window. The reboot still goes through the same mechanism, so the notification mail, the Icinga downtime and the grace period all apply, and a reboot another role requested earlier in the run is carried out together with this one. The role then waits for the host to come back before the play continues. Set it as `--extra-vars` for a single change, or in the inventory for a host group whose reboots need no window. Have a look at the [README](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__reboot_now). With the variable set on a host where the `schedule_reboot` mechanism is missing, the run aborts rather than reporting a reboot it cannot perform.
 * On the Red Hat family a kernel installed later inherits the command line from the running kernel. `kernel-install` builds the boot entry of a new kernel from `/etc/kernel/cmdline`, from `/usr/lib/kernel/cmdline`, or, when neither exists, from `/proc/cmdline` of the running kernel (verified against `/usr/lib/kernel/install.d/20-grub.install` on Rocky 9). A kernel installed between the change and the reboot therefore still comes up without the new options; run the role again afterwards. On the Debian family this cannot happen, because installing a kernel regenerates `/boot/grub/grub.cfg` from the drop-in.
 * The role manages the kernel command line only. It does not add, remove or reorder boot entries, does not change the boot loader timeout, and does not manage the GRUB password.
 
@@ -47,7 +48,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `bootloader`
 
 * Configures the kernel command line.
-* Requests a reboot when the kernel command line changed.
+* Requests a reboot when the kernel command line changed, or performs it in the same run when `lfops__reboot_now` is set.
 * Triggers: none.
 
 
@@ -109,6 +110,10 @@ bootloader__cmdline_options__group_var:
 **The run aborts with `grubby reports root outside the kernel command line`**
 
 * the `root` option is configured in `bootloader__cmdline_options__*_var`. It cannot be managed here (see "Known Limitations"); remove the entry. The root device belongs in the partitioning or in `/etc/default/grub`.
+
+**The run aborts with `lfops__reboot_now is set, but /usr/local/sbin/schedule-reboot is missing`**
+
+* The immediate reboot was requested on a host that does not have the reboot mechanism, so the role can neither reboot through it nor set the Icinga downtime and send the notification that go with it. The check runs before the boot entries are written, so the host is left untouched, and it runs on every host carrying the variable rather than only on those that need a reboot. Either run the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role on the host, which the `bootloader` playbook does by default unless `bootloader__skip_schedule_reboot` is set, or drop `lfops__reboot_now` and reboot the host yourself.
 
 **The option is configured, but `/proc/cmdline` does not contain it**
 

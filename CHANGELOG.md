@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, and a `--check` run reports what it would change without touching the host.
+* **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, or applies it during the run when `lfops__reboot_now` is set, and a `--check` run reports what it would change without touching the host.
 * **role:files**: A file can opt out of the backup copy that is written before it is overwritten, via the `backup` subkey of `files__files__*_var`.
 * **role:collabora**: The `collabora:configure` tag deploys `coolwsd.xml` and the logrotate configuration without touching the packages.
 * **role:docker**: The address pools docker assigns container network subnets from (`default-address-pools`) can be configured.
