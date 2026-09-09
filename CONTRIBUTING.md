@@ -476,6 +476,43 @@ A role that requests reboots also has to:
 * Cover the windowed path in its ordinary Molecule scenario, by asserting that the request file waits in `/run/schedule-reboot/` and the host is still up, and the immediate path in a separate destructive sub-scenario, by asserting that the change is already effective when `verify.yml` starts. `extensions/molecule/bootloader/install` and `extensions/molecule/bootloader/reboot_now` are the references.
 
 
+#### Reporting a Manual Step to the Operator
+
+Where a role finishes with something the operator has to do by hand, it appends the message to `__shared__end_of_play_messages` in addition to printing it. Every playbook imports `roles/shared/tasks/print-messages.yml` in its `post_tasks`, which prints the collected list as one block. `post_tasks` run after the roles section and after its handlers have flushed, so the operator gets one "what you still have to do by hand" block directly above the `PLAY RECAP` instead of single `debug` messages scattered over a run that scrolled past hundreds of lines. A `setup_*` play that triggers several of them collects them all.
+
+Keep the role's own inline `debug` as well. The duplication is deliberate: a role imported into a play outside this collection has no `post_tasks` import and would otherwise report nothing at all. For the same reason, put the message text into the role's `vars/main.yml` once, as `__<role>__end_of_play_message`, rather than writing it twice.
+
+```yaml
+# roles/example/vars/main.yml
+__example__end_of_play_message: 'example: The kernel command line has changed. Please reboot the server manually to apply it.'
+```
+
+```yaml
+# roles/example/tasks/main.yml
+- name: 'Report that a manual reboot is required'
+  ansible.builtin.debug:
+    msg: '{{ __example__end_of_play_message }}'
+  when:
+    - '__example__reboot_needed | bool'
+
+- name: 'Collect the message for the end of the play'
+  ansible.builtin.set_fact:
+    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__example__end_of_play_message] }}'
+  when:
+    - '__example__reboot_needed | bool'
+```
+
+* Prefix each message with the role name, so a block collected from several roles says which one is asking.
+* Append with `| d([])`, since the variable does not exist until the first role appends to it.
+* Never use `cacheable: true`. The recommended `ansible.cfg` enables the `jsonfile` fact cache, and a cached entry would resurface on unrelated runs.
+* `__shared__` is the namespace for shared internals (`roles/shared/`). The user-facing LFOps-wide prefix is `lfops__`, with one underscore.
+* Append only for a step the operator really has to perform, and only under a condition that is false once the host is converged. The printer renders the block with `changed_when: true` so it stands out, which makes a message queued on every run fail the Molecule `idempotence` step. An advisory printed unconditionally is also noise the operator learns to skip.
+* A handler appends with a second handler task carrying the same `listen`, as in [roles/mongodb](https://github.com/Linuxfabrik/lfops/blob/main/roles/mongodb/handlers/main.yml). `include_role` cannot be used as a handler, so a shared task file is not an option there.
+* [roles/bootloader](https://github.com/Linuxfabrik/lfops/blob/main/roles/bootloader/tasks/main.yml) is the reference implementation; [roles/kernel_settings](https://github.com/Linuxfabrik/lfops/blob/main/roles/kernel_settings/tasks/main.yml) and [roles/network](https://github.com/Linuxfabrik/lfops/blob/main/roles/network/tasks/main.yml) are the other consumers.
+
+Known limitation: `post_tasks` do not run when the play fails, so a run that aborts after a message was collected does not print the block (`--force-handlers` does not help). The inline messages kept in the roles cover that case.
+
+
 #### Tags
 
 * Naming scheme: `role_name` and `role_name:section`. For example `apache_httpd` and `apache_httpd:vhosts`.

@@ -15,8 +15,24 @@
       - 'ansible_facts["os_family"] == "RedHat"'
     ignore_errors: true # allow this task to fail, for example due to unconfigured repos
 
+  # only when the upstream role actually touched a connection profile. It registers
+  # __network_connections_result unconditionally, so the reminder is tied to a real change
+  # instead of being printed on every run, where it is noise the operator learns to skip.
   - ansible.builtin.debug:
-      msg: 'Please restart the network manually if needed (systemctl restart NetworkManager).'
+      msg: '{{ __network__end_of_play_message }}'
+    when:
+      - '__network_connections_result is defined'
+      - '__network_connections_result is changed'
+
+  # printed again as one block above the PLAY RECAP, see roles/shared/tasks/print-messages.yml.
+  # The inline message above stays for plays outside this collection, which do not import the
+  # printer in their post_tasks.
+  - name: 'Collect the message for the end of the play'
+    ansible.builtin.set_fact:
+      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__network__end_of_play_message] }}'
+    when:
+      - '__network_connections_result is defined'
+      - '__network_connections_result is changed'
 
   tags:
     - 'network'

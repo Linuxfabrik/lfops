@@ -6,7 +6,7 @@ Concretely, this role:
 
 * Calls `fedora.linux_system_roles.network` with whatever `network_connections` you pass in (host or group vars).
 * On Red Hat-family hosts only: removes the `hc-utils` package (Hetzner Cloud utilities). They install legacy ifcfg scripts that fight with NetworkManager. The task tolerates the package not being installed (`ignore_errors: true`).
-* Prints a reminder that NetworkManager may need to be restarted by hand (`systemctl restart NetworkManager`) for the new configuration to take full effect — the upstream role applies connections via NetworkManager APIs, but a few changes (e.g. plugin reloads) require a service restart.
+* Prints a reminder that NetworkManager may need to be restarted by hand (`systemctl restart NetworkManager`) whenever the upstream role changed a connection profile. The upstream role applies connections via NetworkManager APIs, but a few changes (e.g. plugin reloads) require a service restart. The reminder is repeated in the block of manual steps that every LFOps playbook prints above the `PLAY RECAP`.
 
 
 *Available since LFOps `2.0.0`.*

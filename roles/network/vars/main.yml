@@ -1,0 +1,4 @@
+# Collected in __shared__end_of_play_messages and printed once at the end of the play, see
+# roles/shared/tasks/print-messages.yml. Kept in one place because the role both prints it inline
+# and appends it there.
+__network__end_of_play_message: 'network: Please restart the network manually if needed (systemctl restart NetworkManager).'

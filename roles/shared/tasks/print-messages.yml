@@ -1,0 +1,27 @@
+# Prints the messages roles collected in __shared__end_of_play_messages, imported in the
+# post_tasks of every LFOps playbook. post_tasks run after the roles section and after its
+# handlers have flushed, so this is the last output before the PLAY RECAP: the operator gets one
+# block of manual steps instead of single debug messages scattered over hundreds of lines.
+#
+# The roles keep their own inline message and append in addition to printing it. The duplication
+# is deliberate: a role imported into a play outside this collection has no post_tasks import and
+# would otherwise report nothing at all.
+#
+# Known limitation: post_tasks do not run when the play fails, so a run that aborts after a
+# message was collected does not print the block. --force-handlers does not help. The inline
+# messages in the roles cover that case.
+- name: 'Manual steps required'
+  ansible.builtin.debug:
+    msg: '{{ __shared__end_of_play_messages }}'
+  changed_when: true # renders the block in yellow so it stands out; safe because the task is skipped when nothing was collected
+  when:
+    - '__shared__end_of_play_messages | d([]) | length > 0'
+
+# playbooks/all.yml runs every playbook as its own play against the same host, and the facts
+# set_fact writes survive a play. Without the reset, every following play would print the
+# messages of the plays before it again.
+- name: 'Reset the collected messages'
+  ansible.builtin.set_fact:
+    __shared__end_of_play_messages: []
+  when:
+    - '__shared__end_of_play_messages | d([]) | length > 0'

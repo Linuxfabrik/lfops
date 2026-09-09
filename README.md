@@ -56,6 +56,7 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
     * [Typical Workflow Example](#typical-workflow-example)
     * [The "all" Playbook](#the-all-playbook)
     * [Skipping Roles in a Playbook](#skipping-roles-in-a-playbook)
+    * [Manual Steps at the End of a Run](#manual-steps-at-the-end-of-a-run)
 
 * [Configuration](#configuration)
 
@@ -297,6 +298,20 @@ In playbooks that support role injections (like `setup_icinga2_master`), there a
 
 * `playbook_name__role_name__skip_role`: Skips the role and disables the role's injections. Have a look at the playbook for the default value.
 * `playbook_name__role_name__skip_role_injections`: Disables or re-enables the role's injections. Takes priority over `playbook_name__role_name__skip_role`. Defaults to `playbook_name__role_name__skip_role` for ease of use. Have a look at the playbook for the affected injections.
+
+
+### Manual Steps at the End of a Run
+
+Some changes cannot be completed by Ansible alone, for example a changed kernel command line that only takes effect after a reboot. Where that happens, the role says so where the task runs, and the playbook repeats every such message as one block directly above the `PLAY RECAP`:
+
+```
+TASK [linuxfabrik.lfops.shared : Manual steps required] ************************
+changed: [myhost] =>
+  msg:
+  - 'bootloader: The kernel command line has changed. Please reboot the server manually to apply it.'
+```
+
+The block is the summary of what the run left for you to do. It is skipped when a run leaves nothing behind, so an empty run stays quiet. A play that aborts does not reach the block; the message of the role that queued it is still in the output above.
 
 
 ## Configuration

@@ -16,7 +16,21 @@
 
 - name: 'mongodb: manually execute systemctl restart mongod.service'
   ansible.builtin.debug:
-    msg: 'The variable "mongodb_replSetName" is set! Please restart your MongoDB instances manually...'
+    msg: '{{ __mongodb__end_of_play_message }}'
+  listen: 'mongodb: systemctl restart mongod.service'
+  when:
+    - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
+    - 'mongodb__service_state != "stopped"'
+    - 'mongodb__repl_set_name is defined and mongodb__repl_set_name | length > 0'
+
+# printed again as one block above the PLAY RECAP, see roles/shared/tasks/print-messages.yml. The
+# inline message above stays for plays outside this collection, which do not import the printer in
+# their post_tasks. A separate handler task rather than an include of a shared task file, because
+# ansible-core refuses include_role as a handler ("Using 'ansible.builtin.include_role' as a
+# handler is not supported"). Verified against ansible-core 2.16.
+- name: 'mongodb: collect the message for the end of the play'
+  ansible.builtin.set_fact:
+    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__mongodb__end_of_play_message] }}'
   listen: 'mongodb: systemctl restart mongod.service'
   when:
     - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'

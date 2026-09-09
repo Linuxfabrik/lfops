@@ -15,9 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Every playbook prints the manual steps a run leaves to the operator as one block directly above the `PLAY RECAP`, collected from all roles of the play instead of scattered over its output. The roles keep printing their message where it occurs as well, so a role used outside this collection still reports it.
 * **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, or applies it during the run when `lfops__reboot_now` is set, and a `--check` run reports what it would change without touching the host.
 * **role:fail2ban**: The `fail2ban:configure` tag deploys the actions, filters and jails without touching the packages.
 * **role:fail2ban**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
+
+### Changed
+
+* **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
 
 ### Fixed
 

@@ -41,3 +41,8 @@ __bootloader__current_args: "{{
     | map('regex_replace', '\"', ' ')
     | list
   }}"
+
+# Collected in __shared__end_of_play_messages and printed once at the end of the play, see
+# roles/shared/tasks/print-messages.yml. Kept in one place because the role both prints it inline
+# and appends it there.
+__bootloader__end_of_play_message: 'bootloader: The kernel command line has changed. Please reboot the server manually to apply it.'

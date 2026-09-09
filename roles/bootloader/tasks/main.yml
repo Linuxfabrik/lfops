@@ -136,7 +136,17 @@
 
   - name: 'Report that a manual reboot is required'
     ansible.builtin.debug:
-      msg: 'The kernel command line has changed. Please reboot the server manually to apply it.'
+      msg: '{{ __bootloader__end_of_play_message }}'
+    when:
+      - '__bootloader__reboot_needed | bool'
+      - 'not __bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
+
+  # printed again as one block above the PLAY RECAP, see roles/shared/tasks/print-messages.yml.
+  # The inline message above stays for plays outside this collection, which do not import the
+  # printer in their post_tasks.
+  - name: 'Collect the message for the end of the play'
+    ansible.builtin.set_fact:
+      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__bootloader__end_of_play_message] }}'
     when:
       - '__bootloader__reboot_needed | bool'
       - 'not __bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'

@@ -13,6 +13,11 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 * Append a `START` / `END` line to `/var/log/linuxfabrik-lfops.log` on the target host. Includes the playbook name as well as run/skip tags. No-op in `--check` mode and on Windows. Used as `pre_tasks` / `post_tasks` in every LFOps playbook.
 * Parameters: none.
 
+`print-messages.yml`
+
+* Prints the messages roles collected in `__shared__end_of_play_messages` as one block, so the operator sees every manual step in one place directly above the `PLAY RECAP` instead of scattered over a long run. Skipped when nothing was collected, and clears the list afterwards so the next play of a `playbooks/all.yml` run does not repeat it. Used as `post_tasks` in every LFOps playbook, next to `log-end.yml`.
+* Parameters: none. Reads `__shared__end_of_play_messages`, see the "Reporting a Manual Step to the Operator" section of the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md).
+
 `platform-variables.yml`
 
 * Loads OS-family / distribution / version-specific `vars/<name>.yml` files of the *calling* role, in order from least to most specific (e.g. `RedHat.yml` -> `RedHat8.yml` -> `Rocky.yml` -> `Rocky8.yml` -> `Rocky8.10.yml`). Missing files are skipped silently.
