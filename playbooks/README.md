@@ -815,6 +815,15 @@ Calls the following roles (in order):
 * [qemu_guest_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/qemu_guest_agent)
 
 
+## r.yml
+
+Calls the following roles (in order):
+
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `r__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `r__skip_repo_epel`
+* [r](https://github.com/Linuxfabrik/lfops/tree/main/roles/r)
+
+
 ## redis.yml
 
 Calls the following roles (in order):

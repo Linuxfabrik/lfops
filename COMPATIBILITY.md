@@ -126,6 +126,7 @@ Which Ansible role is proven to run on which OS?
 | python                                |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Windows                                      |
 | python_venv                           |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
 | qemu_guest_agent                      |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| r                                     |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | redis                                 |   x    |   x    |   x    |   x    |         |    (x)    |    (x)    |    (x)    | RHEL 10: no Redis, use the `valkey` role     |
 | repo_baseos                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_collabora                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |

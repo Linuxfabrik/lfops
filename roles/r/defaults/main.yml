@@ -1,0 +1,35 @@
+r__cran_packages__combined_var: '{{ (
+      r__cran_packages__role_var +
+      r__cran_packages__dependent_var +
+      r__cran_packages__group_var +
+      r__cran_packages__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+r__cran_packages__dependent_var: []
+r__cran_packages__group_var: []
+r__cran_packages__host_var: []
+r__cran_packages__role_var: []
+
+# Default lives in vars/RedHat<major>.yml, which is why this is absent from
+# argument_specs.yml.
+r__cran_repo_url: '{{ __r__cran_repo_url }}'  # upstream default: https://cloud.r-project.org
+
+r__http_user_agent_enabled: true
+
+r__renviron_site__combined_var: '{{ (
+      r__renviron_site__role_var +
+      r__renviron_site__dependent_var +
+      r__renviron_site__group_var +
+      r__renviron_site__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+
+r__renviron_site__dependent_var: []
+r__renviron_site__group_var: []
+r__renviron_site__host_var: []
+r__renviron_site__role_var: []
+r__renviron_site_raw: ''
+r__rprofile_site_raw: ''
+
+r__skip_build_dependency_installation: false

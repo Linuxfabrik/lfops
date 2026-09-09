@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# 2026090801
+
+options(
+  repos = c(P3M = "{{ r__cran_repo_url }}")
+{%- if r__http_user_agent_enabled | bool %},
+  # The Posit Public Package Manager serves prebuilt binaries only when the user agent
+  # identifies R and the platform. Without HTTPUserAgent, R silently falls back to compiling
+  # from source, which turns a package like data.table into a multi-minute build.
+  HTTPUserAgent = sprintf(
+    "R/%s R (%s)",
+    getRversion(),
+    paste(getRversion(), R.version$platform, R.version$arch, R.version$os)
+  )
+{%- endif %}
+)
+{% if r__rprofile_site_raw | length %}
+
+{{ r__rprofile_site_raw }}
+{% endif %}

@@ -95,6 +95,7 @@
 - import_playbook: 'python.yml'
 - import_playbook: 'python_venv.yml'
 - import_playbook: 'qemu_guest_agent.yml'
+- import_playbook: 'r.yml'
 - import_playbook: 'redis.yml'
 - import_playbook: 'repo_baseos.yml'
 - import_playbook: 'repo_collabora.yml'

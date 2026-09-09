@@ -1,0 +1,29 @@
+# R_HOME on the RHEL family. The EPEL package installs below /usr/lib64 on every supported
+# architecture, so this is not architecture specific.
+__r__home: '/usr/lib64/R'
+
+# install.packages() writes to the first entry of .libPaths(), which is this directory.
+__r__library: '/usr/lib64/R/library'
+
+__r__required_packages:
+  - 'R'
+  - 'pandoc'
+
+# Development packages of the C libraries the common CRAN packages link against. Only needed
+# when a package is built from source, which happens for anything the Posit Public Package
+# Manager has no binary for. All of them live in AppStream.
+__r__build_dependency_packages:
+  - 'cairo-devel'
+  - 'fontconfig-devel'
+  - 'freetype-devel'
+  - 'fribidi-devel'
+  - 'gcc'
+  - 'gcc-c++'
+  - 'harfbuzz-devel'
+  - 'libcurl-devel'
+  - 'libjpeg-turbo-devel'
+  - 'libpng-devel'
+  - 'libtiff-devel'
+  - 'libxml2-devel'
+  - 'make'
+  - 'openssl-devel'

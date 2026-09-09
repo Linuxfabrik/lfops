@@ -1,0 +1,94 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ __r__required_packages }}'
+      state: 'present'
+
+  - name: 'Install the build dependencies of the CRAN packages'
+    ansible.builtin.package:
+      name: '{{ __r__build_dependency_packages }}'
+      state: 'present'
+    when:
+      - 'not r__skip_build_dependency_installation | bool'
+
+  tags:
+    - 'r'
+
+
+- block:
+
+  # Neither file is shipped by the R packages, so both are created here. They are read by every
+  # R process, including the workers Shiny Server starts.
+  - name: 'Deploy {{ __r__home }}/etc/Rprofile.site'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/lib64/R/etc/Rprofile.site.j2'
+      dest: '{{ __r__home }}/etc/Rprofile.site'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy {{ __r__home }}/etc/Renviron.site'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/lib64/R/etc/Renviron.site.j2'
+      dest: '{{ __r__home }}/etc/Renviron.site'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'r'
+    - 'r:configure'
+
+
+- block:
+
+  - name: 'Combined CRAN packages'
+    ansible.builtin.debug:
+      var: 'r__cran_packages__combined_var'
+
+  # install.packages() and remove.packages() are not idempotent themselves, so the presence of
+  # the package directory in the library decides whether they run at all.
+  - name: 'R -e remove.packages()'
+    ansible.builtin.command: >-
+      R --quiet --no-save --no-restore
+        -e 'remove.packages("{{ item["name"] }}")'
+    args:
+      removes: '{{ __r__library }}/{{ item["name"] }}/DESCRIPTION'
+    loop: '{{ r__cran_packages__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") == "absent"'
+
+  # install.packages() reports a failed installation as a warning on stdout and still exits 0,
+  # so the library is asked afterwards whether the package really arrived, in the same call.
+  - name: 'R -e install.packages()'
+    ansible.builtin.command: >-
+      R --quiet --no-save --no-restore
+        -e 'install.packages("{{ item["name"] }}");
+            if (!nzchar(system.file(package = "{{ item["name"] }}"))) quit(status = 1)'
+    args:
+      creates: '{{ __r__library }}/{{ item["name"] }}/DESCRIPTION'
+    loop: '{{ r__cran_packages__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  tags:
+    - 'r'
+    - 'r:modules'

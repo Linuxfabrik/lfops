@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2026090801
+#
+# R reads this file on every start. It is the only reliable place for environment variables an
+# R process needs, because a worker started by Shiny Server goes through `su --login`, which
+# discards the environment of the calling service.
+
+{% for item in r__renviron_site__combined_var if item['state'] | d('present') != 'absent' %}
+{{ item['name'] }}={{ item['value'] }}
+{% endfor %}
+{% if r__renviron_site_raw | length %}
+
+{{ r__renviron_site_raw }}
+{% endif %}

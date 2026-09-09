@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:r, playbook:r**: Add a role and playbook to install R and pandoc, point R at the Posit Public Package Manager so that CRAN packages arrive as prebuilt binaries instead of being compiled on the host, and install the CRAN packages an application needs.
 * **role:fail2ban**: The `apache-404` filter and jail ban IPs that cause excessive HTTP 404 errors in the Apache access log, configurable via `fail2ban__jail_apache_404_bantime`, `fail2ban__jail_apache_404_findtime` and `fail2ban__jail_apache_404_maxretry`.
 * **role:apache_solr**: The maximum size of the Java heap can be configured via `apache_solr__heap`.
 * **role:apache_solr**: The Java Security Manager can be switched off via `apache_solr__security_manager_enabled`, for instances that have to follow symlinks pointing outside of Solr's own directories.
