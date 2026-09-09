@@ -422,16 +422,28 @@
 
   # rmdir removes an empty directory only, which is exactly the wanted guard: the tenant
   # directory goes when its last application went, and stays when the operator keeps files there.
+  #
+  # stat decides whether there is anything to do, rather than the command module's `removes`.
+  # That returns rc 0 without running the command when the path is gone, which is
+  # indistinguishable from a successful rmdir and made the task report a change on every run.
+  - name: 'stat the tenant directories of the retired locations'
+    ansible.builtin.stat:
+      path: '{{ item }}'
+    register: '__shiny_server__tenant_dir_stat_result'
+    loop: '{{ __shiny_server__removable_tenant_dirs }}'
+
   - name: 'rmdir the tenant directories of the retired locations'
-    ansible.builtin.command: 'rmdir {{ item | quote }}'
-    args:
-      removes: '{{ item }}'
+    ansible.builtin.command: 'rmdir {{ item["item"] | quote }}'
     register: '__shiny_server__rmdir_result'
     changed_when: '__shiny_server__rmdir_result["rc"] == 0'
     failed_when:
       - '__shiny_server__rmdir_result["rc"] != 0'
       - '"not empty" not in __shiny_server__rmdir_result["stderr"]'
-    loop: '{{ __shiny_server__removable_tenant_dirs }}'
+    loop: '{{ __shiny_server__tenant_dir_stat_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"] }}'
+    when:
+      - 'item["stat"]["exists"]'
 
   # force, because a worker that has not reached its app_idle_timeout yet still holds the
   # account. It serves nothing at this point, the location is gone from the configuration, and

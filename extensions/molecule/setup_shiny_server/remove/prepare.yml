@@ -1,0 +1,86 @@
+# Replaces the shared vm-prepare.yml for this sub-scenario (see molecule.yml), so it imports it
+# first and only adds the precondition on top.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# This sub-scenario asserts that retiring a location removes what the role created for it, so
+# that state has to exist before converge runs. It cannot be inherited from the install
+# sub-scenario: Molecule gives every sub-scenario its own ephemeral directory and therefore its
+# own SSH key, so the instances of one cannot be reached by the other.
+#
+# The accounts in particular have to be seeded here rather than left to the role, because the
+# role does not create an account for a location that is already absent. Without them the
+# removal would have nothing to remove and the assertions would pass vacuously.
+- name: 'Seed the state an earlier install would have left behind'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__shiny_server_run_as_users: '{{
+        shiny_server__locations__group_var
+        | map(attribute="run_as", default="") | list
+        | reject("eq", "") | unique | list
+      }}'
+  tasks:
+
+    - name: 'groupadd the accounts of every location'
+      ansible.builtin.group:
+        name: '{{ item }}'
+        state: 'present'
+        system: true
+      loop: '{{ __molecule__shiny_server_run_as_users }}'
+
+    - name: 'mkdir -p {{ shiny_server__users_home_dir }}'
+      ansible.builtin.file:
+        path: '{{ shiny_server__users_home_dir }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'useradd the accounts of every location'
+      ansible.builtin.user:
+        name: '{{ item }}'
+        group: '{{ item }}'
+        home: '{{ shiny_server__users_home_dir }}/{{ item }}'
+        shell: '/sbin/nologin'
+        system: true
+        state: 'present'
+      loop: '{{ __molecule__shiny_server_run_as_users }}'
+
+    - name: 'mkdir -p the log directories'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+      loop: '{{ shiny_server__locations__group_var | map(attribute="log_dir", default="") | list | reject("eq", "") | unique | list }}'
+
+    - name: 'mkdir -p the application directories'
+      ansible.builtin.file:
+        path: '{{ item["app_dir"] }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+      loop: '{{ shiny_server__locations__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    - name: 'Deploy the tenant applications'
+      ansible.builtin.copy:
+        content: |
+          library(shiny)
+          ui <- fluidPage(textOutput('location'))
+          server <- function(input, output, session) {
+            output$location <- renderText(paste('location:', '{{ item["path"] }}'))
+          }
+          shinyApp(ui, server)
+        dest: '{{ item["app_dir"] }}/app.R'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop: '{{ shiny_server__locations__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'

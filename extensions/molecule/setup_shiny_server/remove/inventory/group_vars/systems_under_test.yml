@@ -3,6 +3,10 @@ apache_httpd__conf_server_admin: 'root@localhost'
 
 shiny_server__version: '1.5.23.1030'
 
+# Set explicitly because prepare.yml seeds the accounts and needs the same path the role uses;
+# a prepare playbook does not run the role and therefore does not see its defaults.
+shiny_server__users_home_dir: '/var/lib/shiny-server/home'
+
 # Tenant acme keeps app2 and retires app1: the account, the log directory and the tenant
 # directory are shared with app2 and therefore have to survive. Tenant globex is retired
 # completely, so its account, home directory, application directory, tenant directory and log
