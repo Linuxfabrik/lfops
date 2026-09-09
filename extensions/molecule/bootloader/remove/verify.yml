@@ -1,0 +1,87 @@
+# Verify the removal. prepare.yml put psi=1 on the kernel command line, converge removed it
+# again. Nothing rebooted in between, so /proc/cmdline never carried the option and the check is
+# on the persistent state: the boot entries, and on the Debian family the drop-in that produced
+# them. The counterpart to install/verify.yml, which asserts the same state is present.
+- name: 'Verify the kernel command line no longer carries the removed option'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - name: 'grubby --info=ALL'
+      ansible.builtin.command: 'grubby --info=ALL'
+      register: '__molecule__grubby_info_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    # The quotes are turned into spaces first, the way the role does it, so that an option sitting
+    # right behind args=" is still matched as a whole word.
+    - name: 'Assert that no boot entry has psi on its command line'
+      ansible.builtin.assert:
+        that: "__molecule__grubby_info_result['stdout_lines']
+            | select('match', '^args=')
+            | map('regex_replace', '\"', ' ')
+            | select('search', '(^| )psi(=| |$)')
+            | list | length == 0"
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    # --remove-args must not have taken the boot entries with it.
+    - name: 'Assert that the host still has boot entries'
+      ansible.builtin.assert:
+        that: '__molecule__grubby_info_result["stdout_lines"]
+            | select("match", "^args=")
+            | list | length > 0'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'grep "^[[:space:]]*linux" /boot/grub/grub.cfg'
+      ansible.builtin.command: 'grep --extended-regexp "^[[:space:]]*linux" /boot/grub/grub.cfg'
+      register: '__molecule__grub_cfg_linux_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'Assert that no menu entry has psi on its command line'
+      ansible.builtin.assert:
+        that: '__molecule__grub_cfg_linux_result["stdout_lines"]
+            | select("search", "(^| )psi(=| |$)")
+            | list | length == 0'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    # update-grub has to have produced a usable configuration, not an empty one: every menu entry
+    # still names its root device.
+    - name: 'Assert that every menu entry still names its root device'
+      ansible.builtin.assert:
+        that: '__molecule__grub_cfg_linux_result["stdout_lines"]
+            | reject("search", "(^| )root=")
+            | list | length == 0'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    # With nothing left to set the drop-in has nothing to say, so the role removes it instead of
+    # leaving an empty file behind.
+    - name: 'stat /etc/default/grub.d/z00-lfops.cfg'
+      ansible.builtin.stat:
+        path: '/etc/default/grub.d/z00-lfops.cfg'
+      register: '__molecule__grub_dropin_stat_result'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'Assert that the GRUB drop-in is gone'
+      ansible.builtin.assert:
+        that: 'not __molecule__grub_dropin_stat_result["stat"]["exists"] | bool'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    # The role requests the reboot rather than performing it, so the request has to be waiting in
+    # the schedule_reboot spool. Nothing rebooted, so the request is still there on the second
+    # verify run as well.
+    - name: 'stat /run/schedule-reboot/bootloader'
+      ansible.builtin.stat:
+        path: '/run/schedule-reboot/bootloader'
+      register: '__molecule__reboot_request_stat_result'
+
+    - name: 'Assert that the role requested a reboot'
+      ansible.builtin.assert:
+        that: '__molecule__reboot_request_stat_result["stat"]["exists"] | bool'

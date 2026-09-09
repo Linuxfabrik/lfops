@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, or applies it during the run when `lfops__reboot_now` is set, and a `--check` run reports what it would change without touching the host.
 * **role:fail2ban**: The `fail2ban:configure` tag deploys the actions, filters and jails without touching the packages.
 * **role:fail2ban**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 

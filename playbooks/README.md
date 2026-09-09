@@ -99,6 +99,16 @@ Calls the following roles (in order):
 * [blocky](https://github.com/Linuxfabrik/lfops/tree/main/roles/blocky)
 
 
+## bootloader.yml
+
+Calls the following roles (in order):
+
+* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `bootloader__skip_postfix`
+* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `bootloader__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `bootloader__skip_schedule_reboot`
+* [bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader)
+
+
 ## borg_local.yml
 
 Calls the following roles (in order):

@@ -219,6 +219,7 @@ When creating a new role, make sure to deliver:
 * Update `playbooks/all.yml`.
 * Update `COMPATIBILITY.md`.
 * Update `CHANGELOG.md`.
+* Update `.ansible-lint-ignore` if the role defines a `__combined_var`.
 
 
 ### OS Coverage
@@ -433,6 +434,46 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
         - '__example__service_state_result is not changed'
         - 'example__service_state != "stopped"'
     ```
+
+
+#### Reboots
+
+A role never reboots the host on its own. When a change only takes effect after a reboot, the role files a request with the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) mechanism and lets the host reboot once, at its maintenance window, together with every other reason that is pending by then.
+
+`lfops__reboot_now` overrides that default. Set it to `true` to have a role that requested a reboot perform it in the same run, either as `--extra-vars` for a single change or in `group_vars` for a host group whose reboots need no window. It defaults to `false` and is documented once in the [README](./README.md#lfops__reboot_now), not per role.
+
+Scheduling and rebooting are the same request. `schedule-reboot --now` writes the same spool file and additionally starts the actor, so both paths keep the notification mail, the Icinga downtime and the grace period, and both coalesce with a request another role filed earlier in the run.
+
+The resulting behaviour, from the operator's point of view:
+
+| Situation                                                     | Behaviour                                                                            |
+| ---                                                           | ---                                                                                  |
+| Nothing changed                                               | No request and no message.                                                           |
+| Changed, `lfops__reboot_now` set, schedule_reboot is deployed | Requests the reboot, triggers it, waits for the host to come back.                   |
+| Changed, schedule_reboot is deployed                          | Requests the reboot. It happens at the window.                                       |
+| Changed, schedule_reboot is absent                            | Reports that the operator has to reboot. The run succeeds.                           |
+| `lfops__reboot_now` set, schedule_reboot is absent            | The run aborts before changing anything, naming both remedies.                       |
+| The request itself fails                                      | The run aborts. A lost reboot request must never be reported as a successful deploy. |
+
+The last two rows are the point of the pattern: a reboot the operator explicitly asked for must not degrade into a debug message, and a deploy whose reboot request was lost must not report success.
+
+[roles/bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader) is the reference implementation. Its `tasks/main.yml` covers every row of the table above, in two places: the precondition assert sits in the validation block at the top, the reboot tasks themselves at the end. Copy both and replace the reason (`bootloader`), the detail text and the role-internal variable that says a reboot is needed.
+
+Notes on that pattern:
+
+* **Fire and forget is mandatory, not an optimisation.** `--now` starts `schedule-reboot.service`, whose actor sends the notification, sets the downtime, sleeps the grace period and reboots. A synchronous task would die on the dropped connection and fail the run after a reboot that actually succeeded. Killing the async wrapper does not stop the systemd unit, so the reboot happens either way.
+* **Wait for the host to go down before waiting for it to come back.** A `wait_for` on the SSH port with `state: 'stopped'`, delegated to the controller, has to sit between the two. Waiting only for the host to return looks equivalent but is not: the actor mails the administrators and calls the Icinga API before it sleeps the grace period, so the moment the host goes down is not bounded by any delay the role can compute. A slow `sendmail` or an unreachable Icinga endpoint is enough for the connection check to succeed against the still-running host, report the reboot as done, and let the play continue into a host that goes down moments later. On hosts reached through a jump host or a `ProxyCommand` this probes the wrong path; compare `/proc/sys/kernel/random/boot_id` before and after instead.
+* **`wait_for_connection` belongs to the same branch.** Without it, everything after the role in the play runs against a host that is going down.
+* **Do not use `ansible.builtin.reboot`.** It bypasses the notification mail, the Icinga downtime and the coalescing with other pending requests, and it leaves the host's reboot state invisible to `schedule_reboot`.
+* **Two tasks, not one with a conditional `argv`.** The two branches differ in more than the argument: only one of them is asynchronous, and only one can evaluate `rc` for `changed_when`.
+* **Check mode is safe without extra guards**, since `ansible.builtin.command` does not run under `--check`. A check run reports the pending change and touches nothing.
+* **The precondition belongs in the validation block**, next to the role's other asserts and tagged `always`, not next to the reboot tasks. Whether the host can reboot at all is a precondition of the mode the operator asked for, so it is decided before the role writes anything, and it is not gated on whether this particular run needs a reboot. Gating it there would surface the contradiction only on the run that happens to change something, which is the run that can least afford it.
+
+A role that requests reboots also has to:
+
+* Run `schedule_reboot` before itself in its own playbook, gated by a `<playbook>__skip_schedule_reboot` variable, so the CLI is in place when the role wants it. See [playbooks/bootloader.yml](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/bootloader.yml).
+* List the mechanism as an optional entry under `## Dependent Roles` in its README, and describe what a changed value does under `## How the Role Behaves`.
+* Cover the windowed path in its ordinary Molecule scenario, by asserting that the request file waits in `/run/schedule-reboot/` and the host is still up, and the immediate path in a separate destructive sub-scenario, by asserting that the change is already effective when `verify.yml` starts. `extensions/molecule/bootloader/install` and `extensions/molecule/bootloader/reboot_now` are the references.
 
 
 #### Tags
@@ -973,6 +1014,11 @@ Before adding an `allow` rule to a role, work out what the rule buys an attacker
 #### Permission management via `find -exec chmod`
 
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
+
+
+#### Reboot requests
+
+* [bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader): Never reboots the host itself. A changed kernel command line is registered with the `schedule_reboot` mechanism and applied at the maintenance window, and `lfops__reboot_now` performs it during the run instead, fired asynchronously and followed by a wait for the host to go down and to come back. "Reboots" above carries the full pattern and its traps.
 
 
 #### systemd socket activation with an on-demand backend

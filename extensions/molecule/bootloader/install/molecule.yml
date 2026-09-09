@@ -1,0 +1,10 @@
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name bootloader/install`.
+#
+# The prepare playbook is overridden to work around a property of the Rocky 8 cloud image that an
+# installed host does not have; see the scenario-local prepare.yml. It imports the shared
+# vm-prepare.yml first, so the systems under test are still waited for and their facts still
+# gathered.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

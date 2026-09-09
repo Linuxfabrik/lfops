@@ -1,0 +1,4 @@
+__bootloader__grub_dropin_path: '/etc/default/grub.d/z00-lfops.cfg'
+# absolute path on purpose: /usr/sbin is not in the PATH of an unprivileged login, and
+# `become_method: su` keeps that PATH, so the bare command name is not found there
+__bootloader__update_grub_command: '/usr/sbin/update-grub'

@@ -1,0 +1,33 @@
+# With lfops__reboot_now the role has to apply the change within the run, so by the time verify
+# starts the running kernel already carries the option. That is the whole difference to the
+# 'install' sub-scenario, where the same converge leaves /proc/cmdline untouched and the request
+# waiting in the spool: this playbook never reboots anything itself.
+#
+# verify runs twice (after converge and after idempotence, see the test_sequence in config.yml).
+# The second run finds the same state, because the idempotent converge changes nothing and
+# therefore reboots nothing.
+- name: 'Verify the role rebooted the host during the run'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - name: 'slurp /proc/cmdline'
+      ansible.builtin.slurp:
+        src: '/proc/cmdline'
+      register: '__molecule__proc_cmdline_result'
+
+    # The instances were created without the option, so the running kernel can only carry it if
+    # the host went down and came back up while the playbook was running.
+    - name: 'Assert that the running kernel booted with psi=1'
+      ansible.builtin.assert:
+        that: '"psi=1" in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+    # The spool lives on tmpfs, so a reboot clears it. A leftover request would mean the role
+    # filed one that nothing acted on, which is the windowed path rather than this one.
+    - name: 'find /run/schedule-reboot'
+      ansible.builtin.find:
+        paths: '/run/schedule-reboot'
+      register: '__molecule__spool_result'
+
+    - name: 'Assert that no reboot request is left pending'
+      ansible.builtin.assert:
+        that: '__molecule__spool_result["matched"] == 0'

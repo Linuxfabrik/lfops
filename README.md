@@ -338,6 +338,21 @@ This variable is used as the default whenever the version of the [Linuxfabrik Mo
 lfops__monitoring_plugins_version: 'dev'
 ```
 
+#### `lfops__reboot_now`
+
+Roles do not reboot a host on their own. A change that only takes effect after a reboot (for example a kernel command line deployed by the `bootloader` role) is registered with the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) mechanism, and the host reboots once at its maintenance window, together with every other reason pending by then.
+
+Set this variable to `true` to have the reboot performed during the run instead. It goes through the same mechanism, so the notification mail, the Icinga downtime and the grace period still apply, and Ansible waits for the host to come back before the play continues.
+
+```bash
+ansible-playbook linuxfabrik.lfops.bootloader --limit myhost \
+  --extra-vars='lfops__reboot_now=true'
+```
+
+Use `--extra-vars` for a single change that has to be effective right away. Set it in `group_vars` for a group of hosts whose reboots need no window, for example a development environment.
+
+The host needs the `schedule_reboot` role for either path. Every playbook that installs a role able to request a reboot runs it by default. On a host where it is missing, a role that would request a reboot only reports that the operator has to reboot, and with `lfops__reboot_now` set the run aborts rather than reporting a reboot it cannot perform.
+
 #### `lfops__remove_rpmnew_rpmsave`
 
 This variable aims to simplify the management of rpmnew and rpmsave files (and their Debian equivalents) by allowing the admin to remove them with LFOps. The workflow would be to adjust the template in LFOps according to the new config file, then deploy with `--extra-vars='lfops__remove_rpmnew_rpmsave=true'` to update the config and remove the rpmnew / rpmsave in one run.

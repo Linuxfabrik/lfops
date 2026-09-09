@@ -1,0 +1,100 @@
+# Red Hat family 8 keeps the kernel command line in the GRUB environment block and lets the boot
+# entries reference it as `options $kernelopts`. grubby writes it there and reads it back expanded,
+# so it reports success whether or not the boot loader can read the file: only the next boot shows
+# the difference. The grub2-efi-x64 package ships /boot/grub2/grubenv as a symlink to the copy on
+# the EFI System Partition. Booted UEFI that is where GRUB looks anyway, but booted BIOS GRUB reads
+# $prefix/grubenv on /boot and cannot follow the link into the vfat ESP: load_env fails, $kernelopts
+# stays empty and the command line compiled into grub.cfg is used instead. The role would report a
+# converged, idempotent run while the option never reaches the kernel, so the combination is
+# rejected rather than reported as done. An installed host does not have it, only an image carrying
+# both boot paths. Red Hat family 9 and later put the options in the boot entry itself.
+# Verified against grubby 8.40-51.el8_10 and grub2-efi-x64 2.02-170 on Rocky 8.
+- name: 'stat /sys/firmware/efi'
+  ansible.builtin.stat:
+    path: '/sys/firmware/efi'
+  register: '__bootloader__efi_stat_result'
+  when:
+    - 'ansible_facts["distribution_major_version"] | int == 8'
+
+- name: 'stat /boot/grub2/grubenv'
+  ansible.builtin.stat:
+    path: '/boot/grub2/grubenv'
+    follow: false
+  register: '__bootloader__grubenv_stat_result'
+  when:
+    - 'ansible_facts["distribution_major_version"] | int == 8'
+
+- name: 'Assert that the boot loader can read the GRUB environment block'
+  ansible.builtin.assert:
+    that:
+      - 'not (__bootloader__grubenv_stat_result["stat"]["islnk"] | d(false) | bool)'
+    quiet: true
+    fail_msg: '/boot/grub2/grubenv is a symlink onto the EFI System Partition, but this host boots in BIOS mode, so the boot loader cannot read it and the kernel command line would never take effect. Replace the symlink with a regular file: cp --remove-destination "$(readlink --canonicalize /boot/grub2/grubenv)" /boot/grub2/grubenv'
+  when:
+    - 'ansible_facts["distribution_major_version"] | int == 8'
+    - 'not __bootloader__efi_stat_result["stat"]["exists"] | bool'
+
+
+# grubby writes the boot entries on the Red Hat family, so the role calls it directly instead of
+# going through fedora.linux_system_roles.bootloader. That role rewrites GRUB_TIMEOUT in
+# /etc/default/grub and every `set timeout=` in grub.cfg on each run, which also replaces the
+# timeouts of the menu_auto_hide and menu_show_once blocks (`set timeout="${menu_show_once_timeout}"`
+# becomes a literal), and its bootloader_settings module declares supports_check_mode without ever
+# reading module.check_mode, so a --check run rewrites the boot entries for real.
+# Verified against grubby 8.40 on Rocky 9.
+- name: 'grubby --info=ALL'
+  ansible.builtin.command:
+    cmd: 'grubby --info=ALL'
+  register: '__bootloader__grubby_info_result'
+  changed_when: false
+  check_mode: false # read-only, and it has to run in check mode too to report what would change
+
+# The comparison covers every boot entry, not just the default one, and the option is escaped
+# before it goes into the pattern, so a dot in an option name matches a dot.
+- name: 'Determine the options missing from at least one boot entry'
+  ansible.builtin.set_fact:
+    __bootloader__missing_options: '{{ __bootloader__missing_options + [item] }}'
+  loop: '{{ __bootloader__wanted_options }}'
+  when:
+    - '__bootloader__current_args | reject("search", "(^| )" ~ (item | regex_escape) ~ "( |$)")
+        | list | length > 0'
+
+- name: 'Determine the options still set on at least one boot entry'
+  ansible.builtin.set_fact:
+    __bootloader__superfluous_options: '{{ __bootloader__superfluous_options + [item] }}'
+  loop: '{{ __bootloader__unwanted_option_names }}'
+  when:
+    - '__bootloader__current_args | select("search", "(^| )" ~ (item | regex_escape) ~ "(=| |$)")
+        | list | length > 0'
+
+# a `command` task is skipped in check mode, so without this a dry run would report nothing to do
+# although there is. This reports what would happen and marks the run as changed.
+- name: 'Report the pending kernel command line change'
+  ansible.builtin.debug:
+    msg: 'grubby --update-kernel=ALL would add [{{ __bootloader__missing_options | join(" ") }}]
+      and remove [{{ __bootloader__superfluous_options | join(" ") }}]'
+  changed_when: true
+  when:
+    - 'ansible_check_mode | bool'
+    - '(__bootloader__missing_options | length > 0) or (__bootloader__superfluous_options | length > 0)'
+
+- name: 'grubby --update-kernel=ALL --remove-args={{ __bootloader__superfluous_options | join(" ") }}'
+  ansible.builtin.command:
+    cmd: 'grubby --update-kernel=ALL --remove-args={{ __bootloader__superfluous_options
+        | join(" ") | quote }}'
+  changed_when: true
+  when:
+    - '__bootloader__superfluous_options | length > 0'
+
+- name: 'grubby --update-kernel=ALL --args={{ __bootloader__missing_options | join(" ") }}'
+  ansible.builtin.command:
+    cmd: 'grubby --update-kernel=ALL --args={{ __bootloader__missing_options | join(" ") | quote }}'
+  changed_when: true
+  when:
+    - '__bootloader__missing_options | length > 0'
+
+- name: 'Remember that the kernel command line changed'
+  ansible.builtin.set_fact:
+    __bootloader__reboot_needed: true
+  when:
+    - '(__bootloader__missing_options | length > 0) or (__bootloader__superfluous_options | length > 0)'

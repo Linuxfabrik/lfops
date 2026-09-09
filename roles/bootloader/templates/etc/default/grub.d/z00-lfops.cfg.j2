@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# 20260828
+
+# Sourced by grub-mkconfig after /etc/default/grub, so the setting below wins. Run
+# `update-grub` after changing this file to regenerate /boot/grub/grub.cfg.
+# Appended to whatever /etc/default/grub set, so the packaged parameters are kept.
+GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX {{ __bootloader__wanted_options | join(' ') }}"

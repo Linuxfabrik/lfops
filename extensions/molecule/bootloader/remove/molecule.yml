@@ -1,0 +1,11 @@
+# Molecule scenario marker for the 'remove' sub-scenario, run with
+# `molecule test --scenario-name bootloader/remove`.
+#
+# The prepare playbook is overridden so the option is on the kernel command line before converge
+# runs. Without it, converge would remove an option that was never there and every assertion in
+# verify.yml would pass on a host the role never touched. The scenario-local prepare.yml imports
+# the shared vm-prepare.yml first, so the systems under test are still waited for and their facts
+# still gathered.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

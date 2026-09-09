@@ -1,0 +1,49 @@
+- name: 'Playbook linuxfabrik.lfops.bootloader'
+  hosts:
+    - 'lfops_bootloader'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
+      when:
+        - 'not bootloader__skip_postfix | d(false)'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not bootloader__skip_mailto_root | d(false)'
+
+    # deployed before the bootloader role, so the schedule-reboot command is in place when a
+    # changed kernel command line requests a reboot
+    - role: 'linuxfabrik.lfops.schedule_reboot'
+      when:
+        - 'not bootloader__skip_schedule_reboot | d(false)'
+
+    - role: 'linuxfabrik.lfops.bootloader'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

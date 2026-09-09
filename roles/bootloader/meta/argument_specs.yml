@@ -1,0 +1,30 @@
+argument_specs:
+  main:
+    options:
+
+      bootloader__cmdline_options__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Kernel command line options to apply (`name`/`value`/`state`).
+          Dependent-role injection.
+
+      bootloader__cmdline_options__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Kernel command line options to apply (`name`/`value`/`state`).
+          Group-level override.
+
+      bootloader__cmdline_options__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Kernel command line options to apply (`name`/`value`/`state`).
+          Host-level override.
