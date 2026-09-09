@@ -1,4 +1,7 @@
 venv/*
+# ANSIBLE_HOME when the worktree carries its own collection path (see CONTRIBUTING.md,
+# "Running scenarios in parallel")
+/.ansible/
 **/.DS_Store
 *.tar.gz
 tests/output/*

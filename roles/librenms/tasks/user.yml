@@ -1,0 +1,21 @@
+# Kept in its own file because two callers need it: tasks/main.yml, where the account belongs,
+# and playbooks/setup_librenms.yml, which has to create it before the php role runs. The php role
+# deploys the LibreNMS FPM pool with "user = librenms", and php-fpm resolves the user of every
+# pool while starting up: an unknown name aborts the whole daemon with "cannot get uid for user"
+# and exit code 78, not just that one pool.
+
+- name: 'groupadd librenms'
+  ansible.builtin.group:
+    name: 'librenms'
+    state: 'present'
+
+- name: 'useradd librenms -d /opt/librenms -M -r -s /bin/bash'
+  ansible.builtin.user:
+    comment: 'LibreNMS Service User'
+    name: 'librenms'
+    group: 'librenms'
+    home: '/opt/librenms'
+    createhome: false
+    system: true
+    shell: '/bin/bash'
+    state: 'present'

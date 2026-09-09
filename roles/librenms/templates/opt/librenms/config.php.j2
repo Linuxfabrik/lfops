@@ -1,6 +1,6 @@
 <?php
 # {{ ansible_managed }}
-# 2024091001
+# 2026090301
 
 ## Have a look in misc/config_definitions.json for examples of settings you can set here. DO NOT EDIT misc/config_definitions.json!
 
@@ -10,17 +10,24 @@ $config['user'] = 'librenms';
 
 ### This should *only* be set if you want to *force* a particular hostname/port
 ### It will prevent the web interface being usable form any other hostname
-#$config['base_url']        = "/";
+$config['base_url'] = "{{ librenms__url }}";
 
 ### Enable this to use rrdcached. Be sure rrd_dir is within the rrdcached dir
 ### and that your web server has permission to talk to rrdcached.
-#$config['rrdcached']    = "unix:/tmp/rrdcached.sock";
+{% if librenms__rrdcached_enabled | bool %}
+$config['rrdcached'] = "unix:{{ __librenms__rrdcached_socket }}";
+### The exact version of the installed rrdtool. Anything below 1.5.5 makes
+### LibreNMS create and tune the RRD files itself instead of via rrdcached.
+$config['rrdtool_version'] = "{{ __librenms__rrdtool_version }}";
+{% else %}
+#$config['rrdcached']    = "unix:/run/rrdcached.sock";
+{% endif %}
 
 ### Default community
 #$config['snmp']['community'] = array('public');
 
 ### Authentication Model
-$config['auth_mechanism'] = "{{ librenms__config_auth_mechanism | d('mysql') }}"; # options: mysql, ldap, http-auth
+$config['auth_mechanism'] = "{{ librenms__config_auth_mechanism }}"; # options: mysql, ldap, http-auth
 #$config['http_auth_guest'] = "guest"; # remember to configure this user if you use http-auth
 
 ### List of RFC1918 networks to allow scanning-based discovery
@@ -32,7 +39,7 @@ $config['auth_mechanism'] = "{{ librenms__config_auth_mechanism | d('mysql') }}"
 #$config['update'] = 0;
 
 # Number in days of how long to keep old rrd files. 0 disables this feature
-$config['rrd_purge'] = {{ librenms__config_rrd_purge | d(0) }};
+$config['rrd_purge'] = {{ librenms__config_rrd_purge }};
 
 # Uncomment to submit callback stats via proxy
 #$config['callback_proxy'] = "hostname:port";
@@ -46,4 +53,4 @@ $config['enable_billing'] = 1;
 # Enable the in-built services support (Nagios plugins)
 $config['show_services'] = 1;
 
-$config["update_channel"] = "{{ librenms__config_update_channel | d('master') }}";
+$config["update_channel"] = "{{ librenms__config_update_channel }}";

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026040801
+# 2026090201
 
 [Unit]
 Description=Keycloak Service
@@ -8,22 +8,15 @@ After=network.target
 [Service]
 User=keycloak
 Group=keycloak
-EnvironmentFile=/etc/sysconfig/keycloak
-{% if keycloak__mode == 'production' %}
+EnvironmentFile={{ __keycloak__sysconfig_path }}
 {% if keycloak__version is ansible.builtin.version('26.6.0', '<') %}
-ExecStart=/opt/keycloak/bin/kc.sh start -Dquarkus.transaction-manager.default-transaction-timeout=3600
+{# transaction-default-timeout only exists as of 26.6.0, older releases take the Quarkus property, in seconds #}
+ExecStart={{ __keycloak__install_dir }}/bin/kc.sh {{ (keycloak__mode == 'production') | ternary('start', 'start-dev') }} -Dquarkus.transaction-manager.default-transaction-timeout={{ keycloak__transaction_default_timeout }}
 {% else %}
-ExecStart=/opt/keycloak/bin/kc.sh start
+ExecStart={{ __keycloak__install_dir }}/bin/kc.sh {{ (keycloak__mode == 'production') | ternary('start', 'start-dev') }}
 {% endif %}
-{% else %}
-{% if keycloak__version is ansible.builtin.version('26.6.0', '<') %}
-ExecStart=/opt/keycloak/bin/kc.sh start-dev -Dquarkus.transaction-manager.default-transaction-timeout=3600
-{% else %}
-ExecStart=/opt/keycloak/bin/kc.sh start-dev
-{% endif %}
-{% endif %}
-LimitNOFILE=131072
-WorkingDirectory=/opt/keycloak
+LimitNOFILE={{ keycloak__limit_nofile }}
+WorkingDirectory={{ __keycloak__install_dir }}
 
 [Install]
 WantedBy=multi-user.target

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026040801
+# 2026090201
 
 # Basic settings for running in production. Change accordingly before deploying the server.
 
@@ -9,13 +9,13 @@
 db={{ keycloak__db_vendor }}
 
 # The username of the database user.
-db-username={{ keycloak__db_login.username }}
+db-username={{ keycloak__db_login["username"] }}
 
 # The password of the database user.
-db-password={{ keycloak__db_login.password }}
+db-password={{ keycloak__db_login["password"] }}
 
 # The full database JDBC URL. If not provided, a default URL is set based on the selected database vendor.
-{% if keycloak__db_url is defined and keycloak__db_url | length %}
+{% if keycloak__db_url | length > 0 %}
 db-url={{ keycloak__db_url }}
 {% else %}
 #db-url=jdbc:mariadb://localhost/keycloak
@@ -34,35 +34,40 @@ metrics-enabled={{ keycloak__expose_metrics_endpoints | string | lower }}
 # HTTP
 
 # The file path to a server certificate or certificate chain in PEM format.
-{% if keycloak__https_certificate_file | default('') | length %}
+{% if keycloak__https_certificate_file | length > 0 %}
 https-certificate-file={{ keycloak__https_certificate_file }}
 {% else %}
 #https-certificate-file=${kc.home.dir}/conf/server.crt.pem
 {% endif %}
 
 # The file path to a private key in PEM format.
-{% if keycloak__https_certificate_key_file | default('') | length %}
+{% if keycloak__https_certificate_key_file | length > 0 %}
 https-certificate-key-file={{ keycloak__https_certificate_key_file }}
 {% else %}
 #https-certificate-key-file=${kc.home.dir}/conf/server.key.pem
 {% endif %}
-{% if keycloak__mode == 'production' and keycloak__https_certificate_file | default('') | length == 0 %}
+{% if keycloak__mode == 'production' and keycloak__https_certificate_file | length == 0 %}
 http-enabled=true
 
 # Proxy
 proxy-headers={{ keycloak__proxy_headers }}
-{% if keycloak__proxy_trusted_addresses is defined and keycloak__proxy_trusted_addresses | length %}
-proxy-trusted-addresses={{ keycloak__proxy_trusted_addresses }}
+{% if keycloak__proxy_trusted_addresses | length > 0 %}
+proxy-trusted-addresses={{ keycloak__proxy_trusted_addresses | join(',') }}
 {% endif %}
 {% endif %}
-{% if keycloak__https_certificate_file | default('') | length %}
-{% if keycloak__https_cipher_suites is defined and keycloak__https_cipher_suites | length %}
-https-cipher-suites={{ keycloak__https_cipher_suites }}
+{% if keycloak__https_certificate_file | length > 0 %}
+{% if keycloak__https_cipher_suites | length > 0 %}
+https-cipher-suites={{ keycloak__https_cipher_suites | join(',') }}
 {% endif %}
-https-protocols={{ keycloak__https_protocols }}
+https-protocols={{ keycloak__https_protocols | join(',') }}
 {% endif %}
 
 # Do not attach route to cookies and rely on the session affinity capabilities from reverse proxy
+{# The single-dash option name is the legacy spelling. Keycloak resolves the modern
+   spi-sticky-session-encoder--infinispan--should-attach-route first and falls back to this one
+   (MicroProfileConfigProvider.MicroProfileScope#getValue), so it keeps working across Keycloak
+   24 to 26. Verified against keycloak 26.7: with this line the provider factory logs "Should
+   attach route to the sticky session cookie: false", without it "true". #}
 spi-sticky-session-encoder-infinispan-should-attach-route={{ keycloak__spi_sticky_session_encoder_infinispan_should_attach_route | string | lower }}
 
 # Hostname for the Keycloak server.
@@ -72,11 +77,14 @@ hostname-backchannel-dynamic={{ keycloak__hostname_backchannel_dynamic | string 
 {% endif %}
 
 # Logs
-log={{ keycloak__log }}
+log={{ keycloak__log | join(',') }}
+{% if 'file' in keycloak__log %}
 log-file={{ keycloak__log_file }}
+{% endif %}
 
 {% if keycloak__version is ansible.builtin.version('26.6.0', '>=') %}
 # Transaction
-transaction-default-timeout=60m
-transaction-setup-timeout=60m
+# Both options take an integer number of seconds.
+transaction-default-timeout={{ keycloak__transaction_default_timeout }}
+transaction-setup-timeout={{ keycloak__transaction_setup_timeout }}
 {% endif %}

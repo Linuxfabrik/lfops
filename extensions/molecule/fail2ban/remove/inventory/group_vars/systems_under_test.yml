@@ -1,0 +1,25 @@
+# The remove sub-scenario runs the same playbook but flips the inventory-defined filter and jail
+# to state: 'absent'. This exercises the list-with-state removal pattern the LFOps roles use, and
+# gives verify.yml something concrete to assert is gone.
+#
+# Like every Molecule sub-scenario this one is self-contained: it provisions and converges its own
+# instances, so it does not build on the state the install sub-scenario leaves behind (each
+# sub-scenario has its own ephemeral SSH keypair and cannot reach the other's VMs). What it proves
+# is that a state: 'absent' entry keeps the jail off the host and off the running server, without
+# taking the rest of the installation with it.
+#
+# See the install group_vars for why the firewall role is skipped.
+fail2ban__skip_firewall: true
+
+fail2ban__jail_default_banaction: 'iptables-multiport'
+fail2ban__jail_sshd_bantime: '3h'
+
+fail2ban__filters__group_var:
+  - filename: 'molecule-journal'
+    state: 'absent'
+    template: 'raw'
+
+fail2ban__jails__group_var:
+  - filename: 'z20-molecule-journal'
+    state: 'absent'
+    template: 'raw'

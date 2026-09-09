@@ -12,7 +12,13 @@ __icingaweb2_module_x509__php__modules__dependent_var:
       state: 'present'
     - name: 'php-pcntl'
       state: 'present'
+# `__php__installed_version` is discovered by the php role at runtime, but its argument_specs
+# validation templates this variable at role entry, before that discovery. An undefined value
+# anywhere in the dict collapses the whole dict, so platform_select would abort the run.
+# Publishing an empty list until the version is known is safe: the value is re-templated on
+# every use, so the php role gets the real list when it consumes it.
 icingaweb2_module_x509__php__modules__dependent_var: '{{
-    __icingaweb2_module_x509__php__modules__dependent_var
-    | linuxfabrik.lfops.platform_select(ansible_facts)
+    (__icingaweb2_module_x509__php__modules__dependent_var
+      | linuxfabrik.lfops.platform_select(ansible_facts))
+    if __php__installed_version is defined else []
   }}'

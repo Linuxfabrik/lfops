@@ -1,0 +1,50 @@
+; {{ ansible_managed }}
+; 2026090801
+
+; The `[global]` section of the PHP-FPM configuration. It is deployed next to the pools rather
+; than into `php-fpm.conf`, because that file belongs to the package and the two families
+; disagree on its contents.
+;
+; They also disagree on where they place their `include=` line, which decides who wins:
+;   RedHat  reads the pool directory BEFORE its own `[global]`, so a directive the packaged
+;           php-fpm.conf sets itself is applied after this file and overrides it.
+;   Debian  reads it AFTER, so this file would override the package.
+; `error_log`, `pid` and `daemonize` are exactly the directives the packaged php-fpm.conf sets,
+; so setting any of them here would move it on Debian and not on RedHat. None of them are set
+; below for that reason. The directives that are set are ones no packaged php-fpm.conf touches,
+; so they take effect on both families.
+;
+; Verified with php-fpm 8.0.30-8.el9_8 on Rocky 9 and php8.4-fpm 8.4.24-1~deb13u1 on Debian 13:
+; with this file in place `php-fpm -tt` reports the three values below on both, while error_log
+; stays at the packaged path on RedHat and follows this file on Debian.
+
+[global]
+
+; Log level of PHP-FPM's own error log. PHP-FPM reports what an administrator has to act on (a
+; pool out of workers, a worker killed by a signal, a request killed by
+; `request_terminate_timeout`) at WARNING, and its own start, reload and shutdown at NOTICE, so
+; `notice` keeps both. Anything above drops the lifecycle markers that make a pool restarting in
+; a loop visible, and also silences the configuration dump of `php-fpm -tt`, which is emitted at
+; NOTICE.
+;
+; Pinned even though it matches the compiled-in default: unset, PHP-FPM leaves the value at 0
+; internally and `php-fpm -tt` dumps `log_level = unknown value` instead of the level in effect.
+;
+; Possible Values: alert, error, warning, notice, debug
+; Default Value: notice
+log_level = {{ php__fpm_conf_log_level__combined_var }}
+
+; Reload PHP-FPM once this many workers have died on SIGSEGV or SIGBUS within
+; `emergency_restart_interval`. Both directives have to be non-zero, a zero in either one turns
+; the mechanism off. This is a safety net against an extension or an opcode cache that leaves the
+; workers in a state only a fresh master recovers from. It is not a substitute for fixing the
+; crash: PHP-FPM writes a WARNING when it triggers, so the crash still surfaces in monitoring.
+;
+; Default Value: 0
+emergency_restart_threshold = {{ php__fpm_conf_emergency_restart_threshold__combined_var }}
+
+; The window `emergency_restart_threshold` counts within.
+; Available units: s(econds), m(inutes), h(ours), or d(ays)
+;
+; Default Value: 0
+emergency_restart_interval = {{ php__fpm_conf_emergency_restart_interval__combined_var }}

@@ -9,3 +9,9 @@ php__version: '8.4'
 # 8.3 exists as a remi stream on Rocky 8, 9 and 10, and is not the distribution default on any of
 # them, so the stream is provably what drives the installed version.
 repo_remi__enabled_php_version: '8.3'
+
+# Off by default. Turning it on is what makes the PHP-FPM master ptrace a worker, which the targeted
+# policy denies unless the role's lfops_php_fpm_slowlog module is installed. Only set for the RedHat
+# hosts, because SELinux is what the assertion is about. Two seconds is short enough to trip on the
+# three-second sleep verify.yml issues and long enough not to trip on an ordinary request.
+php__fpm_pool_conf_request_slowlog_timeout__group_var: '2s'

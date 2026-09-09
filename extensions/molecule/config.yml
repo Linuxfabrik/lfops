@@ -2,6 +2,22 @@
 # resolves a scenario (e.g. `molecule test`, `molecule converge`, `molecule create`). Individual
 # scenarios can override any of these settings in their own molecule.yml.
 
+# `molecule destroy` (and the destroy at the end of `molecule test`) prunes the scenario's
+# ephemeral directory afterwards, keeping only the state file, the provisioner's ansible.cfg and
+# inventory, and whatever is listed here. The ephemeral SSH keypair and the dynamic inventory of
+# running VMs have to survive that: they are what every already-provisioned VM of the scenario is
+# reachable through, and vm-create.yml only generates a new keypair when none is present. Without
+# this, a destroy scoped to a subset with LFOPS_TEST_TARGETS would strand every VM that survived
+# it, since nothing re-injects a key into a running VM. vm-destroy.yml removes the three files
+# itself, but only after an unfiltered destroy.
+# Matched with fnmatch against absolute paths, hence the leading '*'.
+driver:
+  safe_files:
+    - '*/molecule_key'
+    - '*/molecule_key.pub'
+    - '*/inventory/molecule_vm.yml'
+
+
 ansible:
   cfg:
     defaults:

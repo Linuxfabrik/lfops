@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# 2026090301
+
+# Bounds how long systemd waits for Apache to stop before it terminates the whole service with
+# SIGKILL. Without it the wait is systemd's default of 90 seconds, which a host holding long-lived
+# proxied connections (WebSockets) always pays in full: Apache stops accepting new connections
+# right at the start of a stop, so the whole wait is downtime.
+[Service]
+TimeoutStopSec={{ apache_httpd__systemd_timeout_stop_sec }}

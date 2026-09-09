@@ -195,12 +195,14 @@ example__backup_target: '/backup/example'
 * Maximum number of concurrent connections. Must be between 1 and 10000.
 * Type: Number.
 * Default: `100`
+* Deviates from the upstream default `151`: each connection reserves its own buffers, and 151 of them exhaust the memory of the 2 GB VMs this role is typically deployed on.
 
 `example__conf_worker_threads`
 
 * Number of worker threads for request processing.
 * Type: Number.
 * Default: 1.0.0: `4`, 2.0.0: `8`
+* Deviates from the upstream default `4` on 2.0.0, which processes each request in two stages and therefore idles at the shipped value; 1.0.0 keeps it.
 
 `example__lib_version`
 

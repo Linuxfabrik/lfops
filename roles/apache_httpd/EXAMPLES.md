@@ -2,10 +2,26 @@
 
 ## HTTP/2
 
-HTTP/2 is supported only over an encrypted connection. The website must be served over a secure TLS connection and accessed through https:// in the browser. Therefore, all Apache servers in the chain must be enabled for TLS before HTTP/2 is used.
+HTTP/2 is on by default, and `h2` is the preferred protocol on every connection that terminates TLS. Browsers negotiate HTTP/2 through ALPN during the TLS handshake and implement it over TLS only, so a vHost without a certificate keeps serving HTTP/1.1 with no further configuration needed.
 
-* For Proxy servers, use Let's Encrypt certificates.
-* For App servers, use self-signed certificates.
+The protocol is negotiated per connection, not per request chain. In the usual setup, a TLS-terminating reverse proxy in front of an application server, the browser talks HTTP/2 to the proxy and the proxy talks HTTP/1.1 to the backend, because `mod_proxy_http` speaks nothing else. The backend therefore needs neither a certificate nor HTTP/2 for the browser to get it.
+
+Two things to keep in mind:
+
+* HTTP/2 requires a threaded MPM. `mpm_event` is the default of this role and is the right choice; under `mpm_prefork`, `mod_http2` processes one request at a time per connection, which negates the point of the protocol.
+* Several vHosts sharing one certificate (a wildcard, or several `subjectAltName` entries) let a browser reuse the same connection for all of them. Those vHosts must then carry an identical TLS configuration, otherwise Apache answers with `421 Misdirected Request`.
+
+To offer HTTP/2 over cleartext as well, for a load balancer or `curl --http2` rather than a browser, add `h2c`:
+
+```yaml
+apache_httpd__mod_http2_protocols: 'h2 h2c http/1.1'
+```
+
+Verify the result from a client:
+
+```bash
+curl --http2 --head https://www.example.com/
+```
 
 
 ## vHosts
@@ -148,10 +164,6 @@ apache_httpd__mods__host_var:
     enabled: true
     state: 'present'
     template: 'filter'
-  - filename: 'http2'
-    enabled: true
-    state: 'present'
-    template: 'http2'
   - filename: 'proxy_http'
     enabled: true
     state: 'present'

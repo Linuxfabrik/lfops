@@ -1,0 +1,5 @@
+# Same playbook as the install sub-scenario; only the scenario inventory differs. The remove
+# sub-scenario flips the inventory-defined filter and jail to state: 'absent' (see its
+# group_vars), which exercises the role's removal path.
+- name: 'Converge fail2ban playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.fail2ban'

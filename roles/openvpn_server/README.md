@@ -8,6 +8,15 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* A change to `/etc/openvpn/server/server.conf`, to the server certificate (`server.p12`) or to the Diffie-Hellman file restarts `openvpn-server@server.service`, because OpenVPN reads all three only at startup. The restart drops every connected client, which then reconnects on its own. Defer it with `lfops__skip_restart_handlers`, and note that the restart is skipped when the service was just started in the same run or when `openvpn_server__service_state` is `stopped`.
+* A change to the certificate revocation list does **not** restart the service. OpenVPN reloads the file whenever it changed before each TLS negotiation, so a revoked certificate is refused from the next connection attempt onwards, without an outage for the other clients.
+* A change to a client config (CCD) does **not** restart the service either. OpenVPN reads a client's file when that client connects, so the change applies the next time that client reconnects, while the other clients stay up.
+* Configuration is fully templated. On every run `server.conf` and the CCD files are re-rendered from the role's templates (a timestamped backup is kept), so manual edits are overwritten. Manage all settings through the role variables below.
+* On hosts where SELinux is enabled the role labels the configured port with `openvpn_port_t`. Where SELinux is disabled that step is skipped.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -29,7 +38,7 @@ Manual steps:
 `openvpn_server`
 
 * Installs and configures OpenVPN.
-* Triggers: none.
+* Triggers: openvpn-server@server.service restart.
 
 `openvpn_server:crl`
 
@@ -147,9 +156,15 @@ For details see `man openvpn`.
 
 `openvpn_server__service_enabled`
 
-* Enables or disables the `openvpn-server@server` service, analogous to `systemctl enable/disable --now`.
+* Enables or disables the `openvpn-server@server` service at boot, analogous to `systemctl enable/disable`.
 * Type: Bool.
 * Default: `true`
+
+`openvpn_server__service_state`
+
+* Changes the state of the OpenVPN service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Default: `'started'` if `openvpn_server__service_enabled` is `true`, else `'stopped'`
 
 Example:
 
@@ -173,6 +188,7 @@ openvpn_server__pushs:
 openvpn_server__raw: |-
   plugin /usr/lib64/openvpn/plugins/openvpn-plugin-auth-pam.so "openvpn login USERNAME password PASSWORD pin OTP"
 openvpn_server__service_enabled: true
+openvpn_server__service_state: 'started'
 ```
 
 

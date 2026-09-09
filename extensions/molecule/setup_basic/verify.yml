@@ -1,15 +1,18 @@
-- name: 'Verify setup_basic installed the monitoring plugins'
+- name: 'Verify setup_basic configured the bundled roles'
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
-    - name: 'stat /usr/lib64/nagios/plugins/about-me'
-      ansible.builtin.stat:
-        path: '/usr/lib64/nagios/plugins/about-me'
-      register: '__molecule__about_me_plugin_stat_result'
+    # Running a plugin instead of stat-ing it proves the deployed payload executes and its bundled
+    # runtime resolves, which a stat cannot tell you.
+    - name: '/usr/lib64/nagios/plugins/about-me'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/about-me'
+      changed_when: false
+      register: '__molecule__about_me_result'
 
-    - name: 'Assert that the about-me monitoring plugin is installed'
+    - name: 'Assert that the about-me monitoring plugin runs'
       ansible.builtin.assert:
-        that: '__molecule__about_me_plugin_stat_result["stat"]["exists"]'
+        that: '__molecule__about_me_result["rc"] == 0'
+        fail_msg: '{{ __molecule__about_me_result["stdout"] }}'
 
     - name: 'glances --version'
       ansible.builtin.command: 'glances --version'
@@ -36,6 +39,34 @@
       loop: '{{ __molecule__atd_state_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
+    # least valid enough to start with. Queried via systemctl instead of service_facts because the
+    # unit differs per family (Type=forking on RHEL, Type=oneshot with RemainAfterExit on Debian,
+    # where the daemon runs as postfix@-.service), which service_facts reports as running vs exited.
+    - name: 'systemctl is-active postfix.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active postfix.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__postfix_active_result'
+
+    - name: 'Assert that postfix.service is active'
+      ansible.builtin.assert:
+        that: '__molecule__postfix_active_result["stdout"] == "active"'
+        fail_msg: '{{ __molecule__postfix_active_result["stdout"] }}'
+
+    # Ask the running Postfix for its effective relayhost and compare it against what the scenario
+    # set. This covers the whole chain, group_vars -> main.cf -> the daemon reading it, which is
+    # exactly what grepping the config file would not.
+    - name: 'postconf -h relayhost'
+      ansible.builtin.command: 'postconf -h relayhost'
+      changed_when: false
+      register: '__molecule__postfix_relayhost_result'
+
+    - name: 'Assert that Postfix uses the configured relayhost'
+      ansible.builtin.assert:
+        that: '__molecule__postfix_relayhost_result["stdout"] | trim == postfix__relayhost'
+        fail_msg: '{{ __molecule__postfix_relayhost_result["stdout"] }}'
 
     - name: 'postconf -h sender_canonical_maps recipient_canonical_maps'
       ansible.builtin.command: 'postconf -h sender_canonical_maps recipient_canonical_maps'

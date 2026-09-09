@@ -82,3 +82,59 @@
       loop: '{{ __molecule__ownership["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    # The Defaults that keep the plugin calls out of the authentication log ship in a drop-in of
+    # their own, because sudo-rs knows none of them and prints a warning for each of them on
+    # every sudo call by any user. The role therefore places it only where the classic sudo from
+    # sudo.ws runs, and takes it away again where it does not.
+    - name: 'Find out which sudo implementation the host runs'
+      ansible.builtin.command: 'sudo --version'
+      register: '__molecule__sudo_version'
+      changed_when: false
+
+    - name: 'Stat the logging sudoers drop-in'
+      ansible.builtin.stat:
+        path: '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
+      register: '__molecule__sudoers_logging'
+      changed_when: false
+
+    - name: 'Assert the logging sudoers drop-in is there where the classic sudo runs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__sudoers_logging["stat"]["exists"]'
+          - '__molecule__sudoers_logging["stat"]["mode"] == "0440"'
+        fail_msg: >-
+          this host runs the classic sudo, so it should carry
+          /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging with mode 0440; without it every
+          check writes five entries into the authentication log
+      when:
+        - '"sudo-rs" not in __molecule__sudo_version["stdout"]'
+
+    - name: 'Assert the logging sudoers drop-in is absent where sudo-rs runs'
+      ansible.builtin.assert:
+        that:
+          - 'not __molecule__sudoers_logging["stat"]["exists"]'
+        fail_msg: >-
+          this host runs sudo-rs, which knows none of the settings in
+          /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging and would warn about each of them
+          on every sudo call by any user
+      when:
+        - '"sudo-rs" in __molecule__sudo_version["stdout"]'
+
+    # The point of splitting the drop-in in two: whatever the host runs, an ordinary sudo call
+    # has to stay silent. A drop-in the local sudo cannot parse makes every sudo call by every
+    # user on the host noisy, which is what the plugins deployed here would otherwise cause.
+    - name: 'Run a sudo call that has nothing to do with monitoring'
+      ansible.builtin.command: 'sudo -n /bin/true'
+      register: '__molecule__sudo_run'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert sudo complains about none of our drop-ins'
+      ansible.builtin.assert:
+        that:
+          - '"unknown setting" not in __molecule__sudo_run["stderr"]'
+          - '"linuxfabrik-monitoring-plugins" not in __molecule__sudo_run["stderr"]'
+        fail_msg: >-
+          sudo answered "{{ __molecule__sudo_run["stderr"] | trim }}" on a call that has nothing
+          to do with monitoring, so one of our sudoers drop-ins does not parse here

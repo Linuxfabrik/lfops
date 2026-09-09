@@ -143,6 +143,41 @@ class TestApiCall(unittest.TestCase):
             self.bw._api_call('status')
 
 
+class TestStatus(unittest.TestCase):
+    def setUp(self):
+        self.bw = _make_bitwarden()
+        self._orig_open_url = bitwarden.open_url
+
+    def tearDown(self):
+        bitwarden.open_url = self._orig_open_url
+
+    def _serve_status(self, status):
+        bitwarden.open_url = lambda *a, **k: _FakeResponse(
+            {
+                'success': True,
+                'data': {'object': 'template', 'template': {'status': status}},
+            }
+        )
+
+    def test_status_is_passed_through(self):
+        # the complete set of values bw reports, see the status property
+        for status in ('unauthenticated', 'locked', 'unlocked'):
+            with self.subTest(status=status):
+                self._serve_status(status)
+                self.assertEqual(self.bw.status, status)
+
+    def test_not_unlocked_message_names_endpoint_and_status(self):
+        message = self.bw.get_not_unlocked_message('locked')
+        self.assertIn('http://127.0.0.1:8087', message)
+        self.assertIn('"locked"', message)
+        self.assertIn('bw serve', message)
+
+    def test_not_unlocked_message_has_no_trailing_period(self):
+        # AnsibleError appends ". <original message>" when it wraps an exception,
+        # so a trailing period would show up doubled in the playbook output
+        self.assertFalse(self.bw.get_not_unlocked_message('locked').endswith('.'))
+
+
 class TestGetItems(unittest.TestCase):
     def setUp(self):
         self.bw = _make_bitwarden()

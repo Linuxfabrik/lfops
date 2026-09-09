@@ -15,8 +15,18 @@
   gather_facts: false
   vars:
     __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
+    __molecule__test_targets: '{{ lookup("env", "LFOPS_TEST_TARGETS") }}'
   tasks:
 
+    # Only after an unfiltered destroy. Both artifacts are shared by every VM of the scenario,
+    # while LFOPS_TEST_TARGETS scopes the play above to a subset: localhost is always part of the
+    # limit (see config.yml), so this play runs either way. Removing them after a partial destroy
+    # strands every VM that survived. Their cloud-init injected the public half of this keypair
+    # and vm-create.yml only generates a new one when it is absent, so the next run would come up
+    # with a key none of them accept and fail in prepare with "Connection closed by <ip> port 22".
+    # There is no way back from that: nothing re-injects a key into a running VM, and create
+    # skips instances that already exist, so they have to be destroyed and rebuilt by hand.
+    # Keeping the files is harmless by comparison, the next unfiltered destroy removes them.
     - name: 'Remove the ephemeral SSH keypair and dynamic inventory'
       ansible.builtin.file:
         path: '{{ __molecule__ephemeral_dir }}/{{ item }}'
@@ -25,3 +35,5 @@
         - 'molecule_key'
         - 'molecule_key.pub'
         - 'inventory/molecule_vm.yml'
+      when:
+        - '__molecule__test_targets | length == 0'

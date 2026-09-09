@@ -73,6 +73,12 @@ apache_solr__version: '9.4.0'
 * Type: String.
 * Default: `'solr'`
 
+`apache_solr__heap`
+
+* [SOLR_HEAP](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#memory-and-gc-settings), the maximum size of the Java heap.
+* Type: String.
+* Default: `'512m'`
+
 `apache_solr__http_bind_address`
 
 * [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations).
@@ -137,6 +143,12 @@ apache_solr__version: '9.4.0'
 
         * Optional. Either `present` or `absent`.
         * Type: String.
+
+`apache_solr__security_manager_enabled`
+
+* `SOLR_SECURITY_MANAGER_ENABLED`. Enables the Java Security Manager, which confines Solr's file system access to its own directories. Set to `false` if Solr has to follow symlinks pointing outside of them.
+* Type: Bool.
+* Default: `true`
 
 `apache_solr__service`
 
@@ -207,6 +219,7 @@ Example:
 # optional
 apache_solr__data_dir: '/var/solr/data'
 apache_solr__group: 'solr'
+apache_solr__heap: '512m'
 apache_solr__http_bind_address: '0.0.0.0'
 apache_solr__http_bind_port: 8983
 apache_solr__install_dir: '/opt'
@@ -214,6 +227,7 @@ apache_solr__log4j_props: '/var/solr/log4j2.xml'
 apache_solr__log_level: 'INFO'
 apache_solr__logs_dir: '/var/log/solr'
 apache_solr__pid_dir: '/var/solr'
+apache_solr__security_manager_enabled: true
 apache_solr__service: 'solr'
 apache_solr__service_enabled: true
 apache_solr__service_state: 'started'

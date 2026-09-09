@@ -1,0 +1,147 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# the cross-role injection default this role publishes
+# (fail2ban__selinux__booleans__dependent_var) is consumed by the selinux role, not
+# passed into this role, so it is not declared here.
+#
+# fail2ban__service_state carries no `default` here, because its default in
+# defaults/main.yml is a Jinja2 expression, which argument_specs cannot evaluate.
+#
+# fail2ban__jail_portscan_server_ips is not declared at all. argument_specs templates
+# every declared option at role entry, and its default reads the gathered fact
+# ansible_all_ipv4_addresses, so declaring it would abort the role on any host where
+# network facts are unavailable (gather_facts disabled, or an image without iproute),
+# even for a run that never deploys the portscan jail. It is documented in the README.
+argument_specs:
+  main:
+    options:
+
+      fail2ban__filter_apache_404_ignoreregex:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'Regular expressions whose matching log lines are excluded from the 404 count.'
+
+      fail2ban__filters__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The fail2ban filter definitions. Dependent-role injection.'
+
+      fail2ban__filters__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The fail2ban filter definitions. Group-level override.'
+
+      fail2ban__filters__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The fail2ban filter definitions. Host-level override.'
+
+      fail2ban__jail_apache_404_bantime:
+        type: 'str'
+        required: false
+        default: '8h'
+        description: 'The ban duration for the apache-404 jail.'
+
+      fail2ban__jail_apache_404_findtime:
+        type: 'str'
+        required: false
+        default: '10s'
+        description: 'The find time for the apache-404 jail.'
+
+      fail2ban__jail_apache_404_maxretry:
+        type: 'int'
+        required: false
+        default: 10
+        description: 'The number of 404 errors within the find time before an IP is banned.'
+
+      fail2ban__jail_default_action:
+        type: 'str'
+        required: false
+        default: |-
+          %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
+        description: 'The default action, used by all jails that do not overwrite it.'
+
+      fail2ban__jail_default_banaction:
+        type: 'str'
+        required: false
+        default: 'iptables-multiport'
+        description: 'The default banaction, executed as defined in the default action.'
+
+      fail2ban__jail_default_ignoreip:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'IP addresses in CIDR notation that are ignored by all jails.'
+
+      fail2ban__jail_default_rocketchat_hook:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The incoming Rocket.Chat hook used to send a notification on bans.'
+
+      fail2ban__jail_portscan_allowed_ports:
+        type: 'list'
+        required: false
+        default:
+          - 22
+        description: 'Ports that may be accessed without being blocked by the portscan jail.'
+
+      fail2ban__jail_portscan_bantime:
+        type: 'str'
+        required: false
+        default: '8h'
+        description: 'The ban duration for the portscan jail.'
+
+      fail2ban__jail_sshd_bantime:
+        type: 'str'
+        required: false
+        default: '7d'
+        description: 'The ban duration for the sshd jail.'
+
+      fail2ban__jails__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The fail2ban jail definitions. Dependent-role injection.'
+
+      fail2ban__jails__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The fail2ban jail definitions. Group-level override.'
+
+      fail2ban__jails__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The fail2ban jail definitions. Host-level override.'
+
+      fail2ban__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the fail2ban service.'
+
+      fail2ban__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of the fail2ban service.'

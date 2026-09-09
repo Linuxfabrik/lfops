@@ -22,7 +22,10 @@ example__conf_max_connections__combined_var: '{{
 example__conf_max_connections__dependent_var: ''
 example__conf_max_connections__group_var: ''
 example__conf_max_connections__host_var: ''
-example__conf_max_connections__role_var: 100
+# a role default that differs from what the software ships gets the upstream value as a
+# trailing comment, so nobody "corrects" it back. the reasoning belongs in the README,
+# see "Deviating from an Upstream Default" in CONTRIBUTING.md.
+example__conf_max_connections__role_var: 100  # upstream default: 151
 example__conf_tls_protocols: 'TLSv1.2 TLSv1.3'
 
 

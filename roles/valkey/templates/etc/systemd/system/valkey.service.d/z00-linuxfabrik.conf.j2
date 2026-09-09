@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# 2026081401
+
+# If you need to change max open file limit
+# for example, when you change maxclient in configuration
+# you can change the LimitNOFILE value below.
+# See "man systemd.exec" for more information.
+
+# Replica nodes on large system may take lot of time to start.
+# You may need to raise the TimeoutStartSec and TimeoutStopSec
+# values below.
+# See "man systemd.service" for more information.
+
+[Service]
+LimitNOFILE={{ valkey__service_limit_nofile | d(10240) }}
+TimeoutStartSec={{ valkey__service_timeout_start_sec | d('90s') }}
+TimeoutStopSec={{ valkey__service_timeout_stop_sec | d('90s') }}

@@ -1,0 +1,12 @@
+# RHEL 8 ships pip 9.0.3, which predates the manylinux2010 and manylinux2014 wheel tags. It
+# therefore finds no wheel for the psutil version LibreNMS requires, falls back to building it
+# from source and aborts with "unable to execute 'gcc'". The upstream docs install gcc and
+# python3-devel for this; a current pip in the user site of librenms takes the prebuilt wheel
+# instead and keeps a compiler and the Python headers off the host. The install stays confined to
+# that user, root keeps the pip of the distribution.
+# 21.3.1 is the last pip release that runs on Python 3.6, which is the interpreter the LibreNMS
+# scripts use here, so this version is a ceiling rather than a value that needs bumping. It is
+# pinned exactly because a range such as "pip<22" is satisfied by the 9.0.3 already installed.
+# Verified against pip 9.0.3 / 21.3.1 and psutil 7.2.2 on Rocky 8.
+__librenms__pip_bootstrap_version: '21.3.1'
+__librenms__pip_executable: '/opt/librenms/.local/bin/pip3'

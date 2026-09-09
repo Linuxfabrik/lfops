@@ -1,0 +1,43 @@
+- name: 'Playbook linuxfabrik.lfops.valkey'
+  hosts:
+    - 'lfops_valkey'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ valkey__kernel_settings__sysctl__dependent_var | d([]) }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ valkey__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      when:
+        - 'not valkey__skip_kernel_settings | d(false)'
+
+    # RHEL 9 and 10 ship Valkey in AppStream, RHEL 8 does not, so EPEL is only needed there.
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution"] != "Fedora"'
+        - 'ansible_facts["distribution_major_version"] | int == 8'
+        - 'not valkey__skip_repo_epel | d(false)'
+
+    - role: 'linuxfabrik.lfops.valkey'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

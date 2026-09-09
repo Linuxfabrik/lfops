@@ -19,6 +19,10 @@
         set -euo pipefail
         shopt -s nullglob
 
+        # start from an empty directory: the flattened copy outlives the run,
+        # so a dashboard of a plugin that was renamed or removed upstream would
+        # otherwise be deployed forever
+        rm -rf /tmp/ansible.monitoring-plugins-repo-flattened/grafana
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/grafana
         for dir in "/tmp/ansible.monitoring-plugins-repo/check-plugins"/*/; do
             # dir ends in a slash, so basename drops it and gives you the plugin name

@@ -6,38 +6,38 @@ mariadb_server__cnf_binlog_cache_size__role_var: '32768'
 mariadb_server__cnf_binlog_expire_logs_seconds__role_var: '0'
 mariadb_server__cnf_binlog_format__role_var: 'MIXED'
 mariadb_server__cnf_bulk_insert_buffer_size__role_var: '8M'
-mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'
+mariadb_server__cnf_character_set_server__role_var: 'utf8mb4'  # upstream default: latin1
 mariadb_server__cnf_client_ssl_ca__role_var: '{{ mariadb_server__cnf_ssl_ca__combined_var }}'
 mariadb_server__cnf_client_ssl_cert__role_var: ''
 mariadb_server__cnf_client_ssl_key__role_var: ''
 mariadb_server__cnf_client_ssl_verify_server_cert__role_var: false
-mariadb_server__cnf_collation_server__role_var: 'utf8mb4_unicode_ci'
+mariadb_server__cnf_collation_server__role_var: 'utf8mb4_unicode_ci'  # upstream default: latin1_swedish_ci
 mariadb_server__cnf_datadir__role_var: '/var/lib/mysql/'
 mariadb_server__cnf_default_storage_engine__role_var: 'InnoDB'
 mariadb_server__cnf_eq_range_index_dive_limit__role_var: '200'
-mariadb_server__cnf_extra_max_connections__role_var: 3
-mariadb_server__cnf_extra_port__role_var: 3307
+mariadb_server__cnf_extra_max_connections__role_var: 3  # upstream default: 1
+mariadb_server__cnf_extra_port__role_var: 3307  # upstream default: 0
 mariadb_server__cnf_general_log__role_var: 'OFF'
-mariadb_server__cnf_general_log_file__role_var: '/var/log/mariadb/mariadb-general.log'
+mariadb_server__cnf_general_log_file__role_var: '/var/log/mariadb/mariadb-general.log'  # upstream default: <hostname>.log in the datadir
 mariadb_server__cnf_innodb_adaptive_hash_index__role_var: 'OFF'
 mariadb_server__cnf_innodb_adaptive_hash_index_parts__role_var: '8'
 mariadb_server__cnf_innodb_autoinc_lock_mode__role_var: 1
 mariadb_server__cnf_innodb_buffer_pool_chunk_size__role_var: '128M'
-mariadb_server__cnf_innodb_buffer_pool_size__role_var: '128M'
+mariadb_server__cnf_innodb_buffer_pool_size__role_var: '512M'  # upstream default: '128M'
 mariadb_server__cnf_innodb_doublewrite__role_var: 'ON'
 mariadb_server__cnf_innodb_file_per_table__role_var: 'ON'
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__role_var: 1
-mariadb_server__cnf_innodb_flush_neighbors__role_var: 0
+mariadb_server__cnf_innodb_flush_neighbors__role_var: 0  # upstream default: 1
 mariadb_server__cnf_innodb_io_capacity__role_var: 200
 mariadb_server__cnf_innodb_log_buffer_size__role_var: '16M'
-mariadb_server__cnf_innodb_log_file_size__role_var: '32M'  # default: '96M'
+mariadb_server__cnf_innodb_log_file_size__role_var: '96M'
 mariadb_server__cnf_innodb_max_dirty_pages_pct__role_var: '90'
 mariadb_server__cnf_innodb_max_purge_lag__role_var: '0'
 mariadb_server__cnf_innodb_open_files__role_var: 0 # results in autosized
 mariadb_server__cnf_innodb_print_all_deadlocks__role_var: 'OFF'
 mariadb_server__cnf_innodb_purge_batch_size__role_var: '127'
 mariadb_server__cnf_innodb_read_io_threads__role_var: '4'
-mariadb_server__cnf_innodb_snapshot_isolation__role_var: 'ON'
+mariadb_server__cnf_innodb_snapshot_isolation__role_var: 'OFF'
 mariadb_server__cnf_innodb_strict_mode__role_var: 'ON'
 mariadb_server__cnf_innodb_sync_spin_loops__role_var: '30'
 mariadb_server__cnf_innodb_write_io_threads__role_var: '4'
@@ -48,25 +48,25 @@ mariadb_server__cnf_local_infile__role_var: 'ON'
 mariadb_server__cnf_lock_wait_timeout__role_var: '86400'
 mariadb_server__cnf_log_bin__role_var: ''
 mariadb_server__cnf_log_bin_trust_function_creators__role_var: 'OFF'
-mariadb_server__cnf_log_error__role_var: '/var/log/mariadb/mariadb.log'
+mariadb_server__cnf_log_error__role_var: '/var/log/mariadb/mariadb.log'  # upstream default: unset, the error log goes to stderr
 mariadb_server__cnf_log_slave_updates__role_var: 'OFF'
 mariadb_server__cnf_long_query_time__role_var: '10'
 mariadb_server__cnf_lower_case_table_names__role_var: 0
 mariadb_server__cnf_max_allowed_packet__role_var: '16M'
-mariadb_server__cnf_max_connections__role_var: 64
+mariadb_server__cnf_max_connections__role_var: 64  # upstream default: 151
 mariadb_server__cnf_max_heap_table_size__role_var: '16M'
 mariadb_server__cnf_net_read_timeout__role_var: '30'
 mariadb_server__cnf_net_write_timeout__role_var: '60'
-mariadb_server__cnf_performance_schema__role_var: 'ON'
+mariadb_server__cnf_performance_schema__role_var: 'ON'  # upstream default: 'OFF'
 mariadb_server__cnf_plugin_maturity__role_var: ''
 mariadb_server__cnf_query_cache_limit__role_var: '1M'
-mariadb_server__cnf_query_cache_size__role_var: 0
+mariadb_server__cnf_query_cache_size__role_var: 0  # upstream default: 1M
 mariadb_server__cnf_query_cache_type__role_var: 'OFF'
-mariadb_server__cnf_require_secure_transport__role_var: 'OFF' # default: 'OFF'
+mariadb_server__cnf_require_secure_transport__role_var: 'OFF'
 mariadb_server__cnf_server_id__role_var: '1'
 mariadb_server__cnf_skip_name_resolve__role_var: 'OFF'
 mariadb_server__cnf_slow_query_log__role_var: 0
-mariadb_server__cnf_slow_query_log_file__role_var: '/var/log/mariadb/mariadb-slowquery.log'
+mariadb_server__cnf_slow_query_log_file__role_var: '/var/log/mariadb/mariadb-slowquery.log'  # upstream default: <hostname>-slow.log in the datadir
 mariadb_server__cnf_sort_buffer_size__role_var: '2M'
 mariadb_server__cnf_sql_mode__role_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_ssl_ca__role_var: ''

@@ -1,12 +1,27 @@
-- name: 'Verify monitoring plugins are installed'
+# Running a plugin instead of stat-ing it proves the deployed payload executes and its bundled
+# runtime resolves, which a stat cannot tell you. Asking the package database for the installed
+# version proves the other half: the version the scenario pinned in group_vars is what landed on
+# the host.
+- name: 'Verify the monitoring plugins are installed and usable'
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
-    - name: 'stat /usr/lib64/nagios/plugins/about-me'
-      ansible.builtin.stat:
-        path: '/usr/lib64/nagios/plugins/about-me'
-      register: '__molecule__about_me_plugin_stat_result'
+    - name: '/usr/lib64/nagios/plugins/about-me'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/about-me'
+      changed_when: false
+      register: '__molecule__about_me_result'
 
-    - name: 'Assert that about-me monitoring plugin is installed'
+    - name: 'Assert that the about-me plugin runs'
       ansible.builtin.assert:
-        that: '__molecule__about_me_plugin_stat_result["stat"]["exists"]'
+        that: '__molecule__about_me_result["rc"] == 0'
+        fail_msg: '{{ __molecule__about_me_result["stdout"] }}'
+
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    # Prefix match: the deb version carries a packaging suffix (5.0.0-1), the rpm version does not.
+    - name: 'Assert that the configured monitoring plugins version is installed'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik-monitoring-plugins" in ansible_facts["packages"]'
+          - 'ansible_facts["packages"]["linuxfabrik-monitoring-plugins"][0]["version"].startswith(monitoring_plugins__version)'

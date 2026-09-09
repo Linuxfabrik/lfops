@@ -349,7 +349,9 @@ tls-auth-clients {{ redis__conf_tls_auth_clients }}
 # By default Redis does not run as a daemon. Use 'yes' if you need it.
 # Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
 # When Redis is supervised by upstart or systemd, this parameter has no impact.
-daemonize {{ redis__conf_daemonize }}
+# not configurable: as the note above says, a supervised server ignores this, and every
+# packaged unit runs Redis supervised by systemd.
+daemonize no
 
 # If you run Redis from upstart or systemd, Redis can interact with your
 # supervision tree. Options:
@@ -367,7 +369,10 @@ daemonize {{ redis__conf_daemonize }}
 # The default is "no". To run under upstart/systemd, you can simply uncomment
 # the line below:
 #
-supervised {{ redis__conf_supervised }}
+# not configurable, and load-bearing on Debian and Ubuntu: the packages.redis.io unit
+# passes no --supervised of its own, so this line is what makes Redis report readiness to
+# systemd there ('no' leaves the unit failed). Every other packaging overrides it anyway.
+supervised auto
 
 # If a pid file is specified, Redis writes it where specified at startup
 # and removes it at exit.

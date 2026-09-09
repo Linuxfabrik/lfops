@@ -471,6 +471,11 @@ nextcloud__collabora__coolwsd_storage_wopi__dependent_var:
   - name: '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
     state: 'present'
 
+# Has to stay above nextcloud__php__ini_max_execution_time__dependent_var so PHP's own limit
+# trips first and reports a fatal error, leaving PHP-FPM as the backstop for a worker stuck
+# in a system call, which max_execution_time cannot interrupt. The php role defaults to 60s,
+# which would otherwise cap every Nextcloud request long before 3600.
+nextcloud__php__fpm_pool_conf_request_terminate_timeout__dependent_var: '3900s'
 nextcloud__php__ini_max_execution_time__dependent_var: 3600
 nextcloud__php__ini_max_file_uploads__dependent_var: 100
 nextcloud__php__ini_memory_limit__dependent_var: '1024M'

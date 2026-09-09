@@ -7,10 +7,19 @@
 * sets SELinux file contexts using `semanage fcontext`. It does NOT automatically apply them using `restorecon` - have a look at `selinux__restorecons__*_var`
 * manages SELinux ports using `semanage port`
 * applies SELinux contexts to files using `restorecon`
-* compiles and installs custom SELinux policy modules from source (.te, .fc, .if files). Note: Module installation is not idempotent - modules with `state: present` will always be compiled and installed on each run
+* compiles and installs custom SELinux policy modules from source (.te, .fc, .if files)
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+A policy module is compiled on the target host, because a compiled policy package is tied to the policy version of the host it was built for. The compilation happens in a temporary directory that is removed again at the end of the run, and it pulls in a compiler toolchain (`make` and `selinux-policy-devel`) on every host that gets a module.
+
+Compiling the same source twice yields a byte-identical policy package, so the role compares what it compiled against what is installed and only calls `semodule --install` when the two differ. Editing a module's source therefore deploys the new version, while an unchanged module reports no change. Removing a module by hand outside of Ansible reinstalls it on the next run.
+
+Under `--check` the role compiles and compares as usual, since that only writes to the temporary directory. It cannot report the resulting `semodule --install` though: Ansible skips command tasks in check mode.
 
 
 ## Dependent Roles
@@ -110,19 +119,24 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `selinux__modules__host_var` / `selinux__modules__group_var`
 
 * A list of dictionaries containing custom SELinux policy modules to compile and install.
-* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time). Note: Modules with `state: present` will always be compiled and installed on each run to ensure they stay up-to-date with source changes.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
 
     * `name`:
 
-        * Mandatory. Name of the SELinux module.
+        * Mandatory. Name of the SELinux module. It must match the module name declared in the `.te` source.
+        * Type: String.
+
+    * `content_te`:
+
+        * Mandatory, unless `src` is given. The `.te` policy source itself. Use this for a short module that carries no `.fc` or `.if` file, and for a module a role injects, which has no directory on the Ansible controller to point at. A module that also needs a `.fc` or `.if` file uses `src`; for file contexts alone, prefer `selinux__fcontexts__*_var`.
         * Type: String.
 
     * `src`:
 
-        * Mandatory. Path to directory containing module source files. The directory must contain a `.te` file with the same basename as the module name. Optional `.fc` (file context) and `.if` (interface) files will be included if present.
+        * Mandatory, unless `content_te` is given. Path to a directory containing module source files. The directory must contain a `.te` file with the same basename as the module name. Optional `.fc` (file context) and `.if` (interface) files will be included if present.
         * Type: String.
 
     * `state`:
@@ -223,11 +237,21 @@ selinux__fcontexts__host_var:
     target: '/var/www/html/nextcloud/.htaccess'
     state: 'present'
 selinux__modules__host_var:
-  - name: 'myapp_policy'
-    src: '{{ inventory_dir }}/host_files/selinux/myapp_policy' # directory containing myapp_policy.te, myapp_policy.fc, myapp_policy.if
-    state: 'present'
   - name: 'custom_httpd'
-    src: '{{ inventory_dir }}/host_files/selinux/custom_httpd'
+    src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/selinux/custom_httpd' # directory containing myapp_policy.te, myapp_policy.fc, myapp_policy.if
+    state: 'present'
+  - name: 'myapp_policy'
+    src: '{{ inventory_dir }}/group_files/selinux/myapp_policy'
+  - name: 'myapp_socket'
+    content_te: |
+      module myapp_socket 1.0;
+
+      require {
+          type myapp_t;
+          class unix_stream_socket connectto;
+      }
+
+      allow myapp_t self:unix_stream_socket connectto;
   - name: 'old_module'
     state: 'absent'
 selinux__policy: 'default'

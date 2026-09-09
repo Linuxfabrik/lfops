@@ -1,0 +1,33 @@
+# Variables the playbook under test needs, applied to every system under test.
+
+# Mandatory for the keycloak role. The bootstrap admin is consumed on the first start
+# and verified in verify.yml by requesting a token with it.
+keycloak__admin_login:
+  username: 'keycloak-admin-temp'
+  password: 'linuxfabrik'
+
+keycloak__db_login:
+  username: 'keycloak'
+  password: 'linuxfabrik'
+
+# verify.yml asserts that the running server reports this hostname in its OpenID
+# discovery document, which is what proves the value reached the service.
+keycloak__hostname: 'keycloak.example.com'
+
+# 26.6.0 and newer, so the scenario covers the transaction-* options in keycloak.conf
+# and the ExecStart without the Quarkus property.
+keycloak__version: '26.7.3'
+
+# Optional values whose runtime effect verify.yml checks: the two endpoints on the
+# management interface, and the log handler writing to keycloak__log_file.
+keycloak__expose_healthcheck_endpoints: true
+keycloak__expose_metrics_endpoints: true
+keycloak__log:
+  - 'file'
+keycloak__log_file: '/var/log/keycloak/keycloak.log'
+
+mariadb_server__admin_user:
+  username: 'mariadb-admin'
+  password: 'linuxfabrik'
+
+repo_mariadb__version: '11.4'

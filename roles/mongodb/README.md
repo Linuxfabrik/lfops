@@ -211,7 +211,7 @@ mongodb__dump_user:
 
 `mongodb__dump_use_oplog`
 
-* Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets.
+* Use this to capture incoming write operations during the dump operation to ensure that the backups reflect a consistent data state. Note that this only works on cluster setups or with replica sets. Such a dump has to be restored with `mongorestore --oplogReplay`, otherwise the captured operations are ignored and the restore is as inconsistent as one taken without this option.
 * Type: Bool.
 * Default: `false`
 

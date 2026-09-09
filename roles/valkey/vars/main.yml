@@ -1,0 +1,8 @@
+# Valkey versions this role ships a configuration template for. The installed
+# version is matched against this list so an unsupported one aborts with a clear
+# message instead of a missing-template error.
+__valkey__supported_versions:
+  - '7.2'
+  - '8.0'
+  - '8.1'
+  - '9.0'

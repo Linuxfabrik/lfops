@@ -1,0 +1,190 @@
+argument_specs:
+  main:
+    options:
+
+      keycloak__admin_login:
+        type: 'dict'
+        required: false
+        description: 'The temporary Keycloak bootstrap admin credentials, with the subkeys "username" and "password". Mandatory on the first role run, see the README.'
+
+      keycloak__db_login:
+        type: 'dict'
+        required: true
+        description: 'The database login credentials for Keycloak, with the subkeys "username" and "password".'
+
+      keycloak__db_url:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The full database JDBC URL. If empty, a default URL is derived from the database vendor.'
+
+      keycloak__db_url_database:
+        type: 'str'
+        required: false
+        default: 'keycloak'
+        description: 'The database name for Keycloak. Ignored when keycloak__db_url is set.'
+
+      keycloak__db_url_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'The host the database for Keycloak runs on. Ignored when keycloak__db_url is set.'
+
+      keycloak__db_vendor:
+        type: 'str'
+        required: false
+        default: 'mariadb'
+        choices:
+          - 'dev-file'
+          - 'dev-mem'
+          - 'mariadb'
+          - 'mssql'
+          - 'mysql'
+          - 'oracle'
+          - 'postgres'
+          - 'tidb'
+        description: 'The database server Keycloak uses. dev-file and dev-mem are development-only.'
+
+      keycloak__expose_healthcheck_endpoints:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the server exposes health check endpoints.'
+
+      keycloak__expose_metrics_endpoints:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the server exposes metrics endpoints.'
+
+      keycloak__hostname:
+        type: 'str'
+        required: true
+        description: 'The hostname Keycloak is reachable at.'
+
+      keycloak__hostname_backchannel_dynamic:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Enables dynamic resolving of backchannel URLs.'
+
+      keycloak__https_certificate_file:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to a server certificate or certificate chain in PEM format. Empty for edge proxy setups.'
+
+      keycloak__https_certificate_key_file:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to a private key in PEM format. Empty for edge proxy setups.'
+
+      keycloak__https_cipher_suites:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'The cipher suites to enable. Empty lets Keycloak pick its own default.'
+
+      keycloak__https_protocols:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'TLSv1.3'
+          - 'TLSv1.2'
+        description: 'The TLS protocol versions to enable. Only applies when certificate files are provided.'
+
+      keycloak__limit_nofile:
+        type: 'int'
+        required: false
+        default: 131072
+        description: 'The open file descriptor limit of the systemd service (LimitNOFILE).'
+
+      keycloak__log:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'file'
+        choices:
+          - 'console'
+          - 'file'
+          - 'syslog'
+        description: 'The log handlers to enable.'
+
+      keycloak__log_file:
+        type: 'str'
+        required: false
+        default: '/var/log/keycloak/keycloak.log'
+        description: 'Path and filename of the log file. Only used when the "file" log handler is enabled.'
+
+      keycloak__logrotate:
+        type: 'int'
+        required: false
+        description: 'Number of rotated log files to keep.'
+
+      keycloak__mode:
+        type: 'str'
+        required: false
+        default: 'production'
+        choices:
+          - 'development'
+          - 'production'
+        description: 'The mode to start Keycloak in.'
+
+      keycloak__proxy_headers:
+        type: 'str'
+        required: false
+        default: 'xforwarded'
+        choices:
+          - 'forwarded'
+          - 'xforwarded'
+        description: 'The proxy headers the server accepts. Only applies in edge proxy mode.'
+
+      keycloak__proxy_trusted_addresses:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'Trusted proxy addresses. Only applies in edge proxy mode.'
+
+      keycloak__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service at boot.'
+
+      keycloak__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired runtime state of the keycloak service.'
+
+      keycloak__spi_sticky_session_encoder_infinispan_should_attach_route:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether the route is attached to cookies, instead of relying on the session affinity of the reverse proxy.'
+
+      keycloak__transaction_default_timeout:
+        type: 'int'
+        required: false
+        default: 3600
+        description: 'The default transaction timeout in seconds.'
+
+      keycloak__transaction_setup_timeout:
+        type: 'int'
+        required: false
+        default: 3600
+        description: 'The transaction timeout in seconds for database migration, import and export transactions.'
+
+      keycloak__version:
+        type: 'str'
+        required: true
+        description: 'The version of Keycloak to install.'

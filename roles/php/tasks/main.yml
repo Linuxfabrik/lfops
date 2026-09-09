@@ -60,6 +60,19 @@
           else (ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d"))
         }}'
 
+  # 'always' as well, because the version defaults are not only the ini's: memory_limit,
+  # max_execution_time and post_max_size are rendered into every pool as php_admin_value, so a
+  # `--tags php:fpm` run needs them too. Loaded from the php:ini block they were missing there, and
+  # the pools were written with empty values, which php-fpm accepts without complaint while the
+  # empty php_admin_value overrides what php.ini says.
+  # Guarded rather than asserted: an unsupported version must not fail here on a missing file, so
+  # that a consuming role which only needs __php__installed_version still runs. The php:ini block
+  # asserts the version properly once this role actually templates something for it.
+  - name: 'Load default values for {{ __php__installed_version }}'
+    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
+    when:
+      - '__php__installed_version in __php__supported_versions'
+
   # 'always': __php__installed_version / __php__fpm_service_name are prerequisites referenced by
   # the php:state block and by consuming roles (e.g. nextcloud) under their own --tags runs,
   # where the php-specific blocks are filtered out. Tagging the discovery 'always' keeps them defined.
@@ -132,9 +145,6 @@
       quiet: true
       fail_msg: 'PHP {{ __php__installed_version }} is not supported by this role. Supported versions: {{ __php__supported_versions | join(", ") }}.'
 
-  - name: 'Load default values for {{ __php__installed_version }}'
-    ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
-
   # On Debian every SAPI has its own conf.d, and the apache2 one is shipped by
   # libapache2-mod-phpX.Y, which is not installed when only FPM is used. Creating the directories
   # unconditionally keeps __php__conf_dest a plain static list instead of a conditional one. dpkg
@@ -170,6 +180,148 @@
 
 - block:
 
+  # request_terminate_timeout is PHP-FPM's backstop for a request that max_execution_time cannot
+  # stop, because the script is blocked in a system call rather than executing PHP. It only acts as
+  # a backstop while it stays above max_execution_time: below it PHP-FPM SIGTERMs the worker before
+  # PHP reaches its own limit, so the longer runtime a role asked for is capped without saying so,
+  # and the pool logs a bare "execution timed out" instead of PHP's fatal error naming the script.
+  # A role raising max_execution_time without raising this too therefore loses both silently.
+  # Checked per pool, so a per-pool override is validated rather than the default it replaces.
+  # A zero on either side switches that limit off deliberately, so those pools are skipped.
+  - name: 'Assert that request_terminate_timeout stays above max_execution_time'
+    ansible.builtin.assert:
+      that:
+        - '__php__terminate_seconds | int > __php__max_execution_time | int'
+      quiet: true
+      fail_msg: >-
+        Pool {{ item["name"] }}: request_terminate_timeout ({{ __php__terminate_raw }} =
+        {{ __php__terminate_seconds }} seconds) has to be greater than max_execution_time
+        ({{ __php__max_execution_time }} seconds), otherwise PHP-FPM kills the worker before PHP
+        can stop the script itself. Raise
+        php__fpm_pool_conf_request_terminate_timeout__group_var (or the pool's
+        request_terminate_timeout), or lower php__ini_max_execution_time__group_var.
+    loop: '{{ php__fpm_pools__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - '__php__terminate_seconds | int > 0'
+      - '__php__max_execution_time | int > 0'
+    vars:
+      # FPM accepts a bare number of seconds or an s/m/h/d suffix (fpm_conf.c: fpm_conf_set_time),
+      # so the value has to be normalised before it can be compared with the plain seconds of
+      # max_execution_time.
+      __php__terminate_raw: '{{ item["request_terminate_timeout"] | d(php__fpm_pool_conf_request_terminate_timeout__combined_var) | string }}'
+      __php__terminate_seconds: '{{
+          (__php__terminate_raw | regex_search("^[0-9]+") | int)
+          * ({"s": 1, "m": 60, "h": 3600, "d": 86400}[__php__terminate_raw | regex_search("[smhd]$") | d("s", true)])
+        }}'
+      __php__max_execution_time: '{{ item["php_admin_value_max_execution_time"] | d(php__ini_max_execution_time__combined_var) }}'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # opcache is shared among all php-fpm pools, so a single shared directory is enough. On RedHat
+  # the package ships it; create it for parity on Debian.
+  - name: 'mkdir -p {{ __php__fpm_opcache_path }}'
+    ansible.builtin.file:
+      path: '{{ __php__fpm_opcache_path }}'
+      state: 'directory'
+      owner: 'root'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o770
+
+  # php-fpm writes the per-pool error_log and slowlog into this directory but does not create it
+  # itself. On RedHat the package ships /var/log/php-fpm with exactly this ownership; create it for
+  # parity on Debian, where the package only ships a single /var/log/<service>.log file.
+  - name: 'mkdir -p /var/log/{{ __php__fpm_service_name }}'
+    ansible.builtin.file:
+      path: '/var/log/{{ __php__fpm_service_name }}'
+      state: 'directory'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: 'root'
+      mode: 0o770
+
+  # each pool gets its own session directory below the distro's session base, so the pools cannot
+  # read each other's sessions. On RedHat the `/var/lib/php/session(/.*)?` file context gives the
+  # subdirectory the `httpd_var_run_t` type php-fpm needs; on Debian the packaged `sessionclean`
+  # timer recurses the base and reaps stale files.
+  # skipped for a pool that stores its sessions elsewhere (redis, memcached), where save_path is
+  # a connection string rather than a directory.
+  # not named after the shell command, since `item` is not available when the task name is
+  # rendered for the output; the loop label shows the pool instead.
+  - name: 'Create the per-pool session directories below {{ __php__fpm_session_path }}'
+    ansible.builtin.file:
+      path: '{{ item["php_admin_value_session_save_path"] | d(__php__fpm_session_path ~ "/" ~ item["name"]) }}'
+      state: 'directory'
+      owner: '{{ item["user"] | d(__shared__apache_httpd_user) }}'
+      group: '{{ item["group"] | d(__shared__apache_httpd_group) }}'
+      mode: 0o700
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["php_admin_value_session_save_handler"] | d("files") == "files"'
+    loop: '{{ php__fpm_pools__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  # the SOAP extension caches parsed WSDL files here. On RedHat the package ships the base
+  # directory, on Debian nothing does, so PHP would fall back to its own default of /tmp.
+  - name: 'mkdir -p {{ __php__fpm_wsdlcache_path }}'
+    ansible.builtin.file:
+      path: '{{ __php__fpm_wsdlcache_path }}'
+      state: 'directory'
+      owner: 'root'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o770
+
+  # one subdirectory per pool, for the same reason the session directories are per pool: a cached
+  # WSDL carries the internal endpoints and message types of the service it describes, and the
+  # pools do not necessarily run as the same user. On RedHat the
+  # `/var/lib/php/wsdlcache(/.*)?` file context gives it the `httpd_var_run_t` type php-fpm needs.
+  - name: 'Create the per-pool WSDL cache directories below {{ __php__fpm_wsdlcache_path }}'
+    ansible.builtin.file:
+      path: '{{ item["php_admin_value_soap_wsdl_cache_dir"] | d(__php__fpm_wsdlcache_path ~ "/" ~ item["name"]) }}'
+      state: 'directory'
+      owner: '{{ item["user"] | d(__shared__apache_httpd_user) }}'
+      group: '{{ item["group"] | d(__shared__apache_httpd_group) }}'
+      mode: 0o700
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ php__fpm_pools__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'restorecon -Fvr {{ __php__fpm_session_path }} {{ __php__fpm_opcache_path }} {{ __php__fpm_wsdlcache_path }}'
+    ansible.builtin.command: 'restorecon -Fvr {{ __php__fpm_session_path }} {{ __php__fpm_opcache_path }} {{ __php__fpm_wsdlcache_path }}'
+    register: '__php__restorecon_result'
+    changed_when: '__php__restorecon_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  # The `[global]` section lives next to the pools rather than in php-fpm.conf, which belongs to
+  # the package. See the template for which directives can be set this way and why.
+  # The `z00-` prefix is the LFOps drop-in convention and keeps the file at the end of a pool
+  # directory listing instead of interleaved among the pools. It buys no precedence here, and
+  # none is needed: where this file sorts among the pool files does not matter, because
+  # `[global]` and a pool section never compete. Verified on Rocky 9 with a pool named `aaa`
+  # (parsed before this file) and again with the file renamed so it parsed first: identical
+  # merged configuration both times, both pools intact. The name only decides anything if another
+  # file in the directory also carries a `[global]` section, which a pool can do through its
+  # `raw` key, and even then `z00-` does not guarantee winning, since `zzz.conf` sorts after it.
+  - name: 'Deploy the global config to {{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/php-fpm.d/z00-linuxfabrik-global.conf.j2'
+      dest: '{{ __php__fpm_pools_path }}/z00-linuxfabrik-global.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: php-fpm --test; restart php-fpm'
+
   - name: 'Remove absent pools from {{ __php__fpm_pools_path }}'
     ansible.builtin.file:
       path: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
@@ -177,12 +329,14 @@
     when:
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
     notify: 'php: php-fpm --test; restart php-fpm'
 
   - name: 'Deploy the pools to {{ __php__fpm_pools_path }}'
     ansible.builtin.template:
       backup: true
-      src: 'etc/php-fpm.d/{{ ansible_facts["os_family"] }}-pool.conf.j2'
+      src: 'etc/php-fpm.d/pool.conf.j2'
       dest: '{{ __php__fpm_pools_path }}/{{ item["name"] }}.conf'
       owner: 'root'
       group: 'root'
@@ -190,6 +344,8 @@
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ php__fpm_pools__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
     notify: 'php: php-fpm --test; restart php-fpm'
 
   # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
@@ -197,6 +353,32 @@
   tags:
     - 'php'
     - 'php:fpm'
+    - 'php:update'
+
+
+- block:
+
+  # On Debian the packaged logrotate config only covers the single /var/log/<service>.log file, not
+  # the per-pool logs in the directory above, so ship our own. On RedHat the package's
+  # /etc/logrotate.d/php-fpm already rotates /var/log/php-fpm/*log.
+  - name: 'Deploy /etc/logrotate.d/linuxfabrik-php-fpm'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/linuxfabrik-php-fpm.j2'
+      dest: '/etc/logrotate.d/linuxfabrik-php-fpm'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  # block
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+
+  # 'php:update' is included because both the rotated directory and the reopen helper carry the
+  # PHP version in their name, so a version change has to re-render this file.
+  tags:
+    - 'php'
+    - 'php:logrotate'
     - 'php:update'
 
 

@@ -1,0 +1,12 @@
+# The module entries split by state, so the long filter expression is written once instead of in
+# every task of the module blocks. An entry without a `state` key defaults to `present`.
+__selinux__modules_absent: '{{
+    selinux__modules__combined_var
+    | selectattr("state", "defined")
+    | selectattr("state", "equalto", "absent")
+    | list
+  }}'
+__selinux__modules_present: '{{
+    (selinux__modules__combined_var | selectattr("state", "undefined") | list) +
+    (selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list)
+  }}'

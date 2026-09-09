@@ -36,6 +36,7 @@ notes:
 requirements:
     - Bitwarden CLI C(bw) version v2022.9.0 or newer. See U(https://bitwarden.com/help/article/cli/) for installation instructions.
     - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The module connects to C(127.0.0.1:8087) by default.
+    - C(bw serve) takes its session from the environment it is started in and keeps it for its lifetime. Export C(BW_SESSION) before starting it. Unlocking the vault afterwards only affects the C(bw) CLI in your shell, so C(bw status) can report C(unlocked) while the API the module talks to is still locked.
 
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
@@ -344,10 +345,9 @@ def run_module():
 
     bw = Bitwarden()
 
-    if not bw.is_unlocked:
-        module.fail_json(
-            msg='Not logged into Bitwarden, or Bitwarden Vault is locked. Please run `bw login` and `bw unlock` first.'
-        )
+    status = bw.status
+    if status != 'unlocked':
+        module.fail_json(msg=bw.get_not_unlocked_message(status))
 
     # to be sure we are up to date
     bw.sync()

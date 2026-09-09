@@ -1,0 +1,58 @@
+# Verify the removal. Same mindset as install/verify.yml: check the observable result, and confirm
+# the removal did not take the rest of the installation down with it.
+- name: 'Verify the inventory-defined jail is removed'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+
+  tasks:
+
+    # Removing one jail must not stop the server, so this is the most important check here.
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert the fail2ban service is still running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["fail2ban.service"]["state"] == "running"'
+        fail_msg: 'fail2ban.service is {{ ansible_facts["services"]["fail2ban.service"] | d("absent") }}'
+
+    # The counterpart to install's presence check: the server no longer knows the jail, while the
+    # two jails from the role defaults are untouched.
+    - name: 'fail2ban-client status {{ item }}'
+      ansible.builtin.command: 'fail2ban-client status {{ item }}'
+      register: '__molecule__fail2ban_jail_status_result'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      loop:
+        - 'molecule-journal'
+        - 'portscan'
+        - 'sshd'
+
+    - name: 'Assert the removed jail is gone and the default jails still run'
+      ansible.builtin.assert:
+        that: 'item["rc"] != 0 if item["item"] == "molecule-journal" else item["rc"] == 0'
+        fail_msg: >-
+          the {{ item["item"] }} jail is {{ (item["rc"] == 0) | ternary("running", "not running") }},
+          which is not what the remove scenario expects
+      loop: '{{ __molecule__fail2ban_jail_status_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # The jail and filter files are the end state the role manages here, and their absence is what
+    # tells the server to drop the jail on the next restart, so assert it directly.
+    - name: 'stat the removed jail and filter files'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: '__molecule__fail2ban_removed_files_result'
+      loop:
+        - '/etc/fail2ban/filter.d/molecule-journal.conf'
+        - '/etc/fail2ban/jail.d/z20-molecule-journal.conf'
+
+    - name: 'Assert the jail and filter files are removed'
+      ansible.builtin.assert:
+        that: 'not item["stat"]["exists"]'
+        fail_msg: '{{ item["item"] }} still exists'
+      loop: '{{ __molecule__fail2ban_removed_files_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

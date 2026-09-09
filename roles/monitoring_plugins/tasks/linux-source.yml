@@ -396,6 +396,34 @@
       dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
       mode: 0o440
 
+  - name: 'Find out which sudo implementation the server runs'
+    ansible.builtin.command: 'sudo --version'
+    changed_when: false
+    failed_when: false
+    register: '__monitoring_plugins__sudo_version'
+
+  # The Defaults that keep the plugin calls out of the authentication log ship in a drop-in of
+  # their own, because sudo-rs knows none of them and prints a warning for each on every sudo
+  # call by any user. Without them a single check costs five entries in the log, the sudo
+  # command line plus the PAM session being opened and closed, and a monitored host runs dozens
+  # of checks a minute. The name carries no dot: sudo skips a file in /etc/sudoers.d with one.
+  - name: 'Copy the /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging file to the server'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
+      dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
+      mode: 0o440
+    when:
+      - '"sudo-rs" not in __monitoring_plugins__sudo_version["stdout"]'
+
+  # A host upgraded in place to a release that switched to sudo-rs, Ubuntu 26.04 for example,
+  # would otherwise keep the companion and warn about it on every sudo call.
+  - name: 'Make sure the logging sudoers file is absent where sudo-rs runs'
+    ansible.builtin.file:
+      path: '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
+      state: 'absent'
+    when:
+      - '"sudo-rs" in __monitoring_plugins__sudo_version["stdout"]'
+
   # Completes the plugins' command line options in an interactive shell, the same file the
   # rpm/deb packages install. It is only read when the bash-completion package is present,
   # which this role deliberately does not pull onto a monitored host.

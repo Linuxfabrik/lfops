@@ -9,3 +9,4 @@ openvpn_server__pkcs12_skip_deploy: false
 openvpn_server__port: 1194
 openvpn_server__pushs: []
 openvpn_server__service_enabled: true
+openvpn_server__service_state: '{{ openvpn_server__service_enabled | bool | ternary("started", "stopped") }}'

@@ -1,0 +1,2 @@
+- name: 'Converge apache_httpd playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.apache_httpd'

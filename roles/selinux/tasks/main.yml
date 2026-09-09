@@ -37,46 +37,143 @@
 
 - block:
 
+  # Without this the run would fail inside `make` with "No rule to make target", naming a path in a
+  # temporary directory that says nothing about which inventory entry is at fault.
+  - name: 'Assert that every SELinux module has a source'
+    ansible.builtin.assert:
+      that:
+        - '__selinux__modules_without_source | length == 0'
+      quiet: true
+      fail_msg: 'SELinux modules without a "src" or "content_te" subkey: {{ __selinux__modules_without_source | join(", ") }}.'
+    vars:
+      __selinux__modules_without_source: '{{
+          __selinux__modules_present
+          | rejectattr("src", "defined")
+          | rejectattr("content_te", "defined")
+          | map(attribute="name")
+          | list
+        }}'
+
   - name: 'Install SELinux module compilation dependencies'
     ansible.builtin.package:
       name: '{{ __selinux__module_compilation_packages }}'
       state: 'present'
 
+  # Everything from here up to the "semodule --install" below only writes into a scratch directory
+  # and never touches the managed system, hence the `changed_when: false` and `check_mode: false` on
+  # each of those tasks. Without them the role would report a change on every run even when the
+  # policy is already up to date, and a `--check` run could not tell whether a module would be
+  # installed at all.
   - name: 'Create temporary directory for module compilation'
     ansible.builtin.tempfile:
       state: 'directory'
       suffix: 'selinux__modules'
     register: '__selinux__temp_dir_result'
+    changed_when: false
+    check_mode: false
+
+  - name: 'Create one directory per SELinux module'
+    ansible.builtin.file:
+      path: '{{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}'
+      state: 'directory'
+      mode: 0o0755
+    loop: '{{ __selinux__modules_present }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    changed_when: false
+    check_mode: false
 
   - name: 'Copy SELinux module source directories to target'
     ansible.builtin.copy:
       src: '{{ item["src"] }}'
       dest: '{{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/'
       mode: 0o0755
-    loop: '{{ selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list }}'
+    loop: '{{ __selinux__modules_present | selectattr("src", "defined") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    changed_when: false
+    check_mode: false
+
+  - name: 'Deploy inline SELinux module sources to target'
+    ansible.builtin.copy:
+      content: '{{ item["content_te"] }}'
+      dest: '{{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/{{ item["name"] }}.te'
+      mode: 0o0644
+    loop: '{{ __selinux__modules_present | selectattr("content_te", "defined") | list }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    changed_when: false
+    check_mode: false
 
   - name: 'Compile SELinux modules using policy devel Makefile'
     ansible.builtin.command:
       cmd: 'make -f /usr/share/selinux/devel/Makefile {{ item["name"] }}.pp'
       chdir: '{{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}'
-    loop: '{{ selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list }}'
+    loop: '{{ __selinux__modules_present }}'
+    loop_control:
+      label: '{{ item["name"] }}'
     register: '__selinux__compile_result'
     changed_when: false
+    check_mode: false
+    ignore_errors: '{{ ansible_check_mode }}' # ignore errors if `--check` is specified, as the compilation dependencies could not be installed yet
 
-  - name: 'Install or upgrade SELinux modules'
+  # `semodule --extract` writes <name>.pp into the current working directory and refuses to
+  # overwrite, so it needs a directory of its own. It exits non-zero when the module is not
+  # installed, which the comparison below treats like a mismatch.
+  - name: 'Create temporary directory for the installed SELinux modules'
+    ansible.builtin.file:
+      path: '{{ __selinux__temp_dir_result["path"] }}/__installed'
+      state: 'directory'
+      mode: 0o0700
+    changed_when: false
+    check_mode: false
+
+  - name: 'semodule --extract ...'
     ansible.builtin.command:
-      cmd: 'semodule --install {{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/{{ item["name"] }}.pp'
-    loop: '{{ selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list }}'
+      cmd: 'semodule --extract={{ item["name"] }}'
+      chdir: '{{ __selinux__temp_dir_result["path"] }}/__installed'
+    loop: '{{ __selinux__modules_present }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    failed_when: false # the module is simply not installed yet
+    changed_when: false
+    check_mode: false
+
+  # Compiling the same source twice yields a byte-identical policy package, so an unchanged module
+  # does not have to be reinstalled. Without this comparison the role reports a change on every run,
+  # for every host the module is deployed to.
+  # Verified against libsemanage 2.9 / selinux-policy 3.14.3 on Rocky 8.
+  - name: 'cmp the compiled SELinux modules with the installed ones'
+    ansible.builtin.command:
+      cmd: 'cmp --silent {{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/{{ item["name"] }}.pp {{ __selinux__temp_dir_result["path"] }}/__installed/{{ item["name"] }}.pp'
+    loop: '{{ __selinux__modules_present }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    register: '__selinux__module_cmp_result'
+    failed_when: false
+    changed_when: false
+    check_mode: false
+
+  - name: 'semodule --install ...'
+    ansible.builtin.command:
+      cmd: 'semodule --install {{ __selinux__temp_dir_result["path"] }}/{{ item[0]["name"] }}/{{ item[0]["name"] }}.pp'
+    loop: '{{ __selinux__modules_present | zip(__selinux__module_cmp_result["results"]) }}'
+    loop_control:
+      label: '{{ item[0]["name"] }}'
     register: '__selinux__install_module_result'
+    changed_when: true # only reached when the comparison above found a difference
+    when: 'item[1]["rc"] | d(1) != 0'
 
   - name: 'Clean up temporary directory'
     ansible.builtin.file:
       path: '{{ __selinux__temp_dir_result["path"] }}'
       state: 'absent'
+    changed_when: false
+    check_mode: false
 
   when:
     - 'selinux__state != "disabled"'
-    - '(selinux__modules__combined_var | selectattr("state", "undefined") | list + selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "present") | list) | length > 0'
+    - '__selinux__modules_present | length > 0'
   tags:
     - 'selinux'
     - 'selinux:modules'
@@ -92,13 +189,16 @@
   - name: 'Remove SELinux modules'
     ansible.builtin.command:
       cmd: 'semodule --remove {{ item["name"] }}'
-    loop: '{{ selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "absent") | list }}'
+    loop: '{{ __selinux__modules_absent }}'
+    loop_control:
+      label: '{{ item["name"] }}'
     when: 'item["name"] in __selinux__installed_modules_result["stdout_lines"]'
     register: '__selinux__remove_module_result'
+    changed_when: true # only reached when the module is actually installed
 
   when:
     - 'selinux__state != "disabled"'
-    - '(selinux__modules__combined_var | selectattr("state", "defined") | selectattr("state", "equalto", "absent") | list) | length > 0'
+    - '__selinux__modules_absent | length > 0'
   tags:
     - 'selinux'
     - 'selinux:modules'

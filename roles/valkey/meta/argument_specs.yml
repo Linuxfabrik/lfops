@@ -1,0 +1,148 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+argument_specs:
+  main:
+    options:
+
+      valkey__conf_appendonly:
+        type: 'str'
+        required: false
+        default: 'no'
+        description: 'Enables the append only file (AOF) persistence mode.'
+
+      valkey__conf_auto_aof_rewrite_min_size:
+        type: 'str'
+        required: false
+        default: '64mb'
+        description: 'Minimum size of the append only file before a rewrite is triggered.'
+
+      valkey__conf_bind:
+        type: 'str'
+        required: false
+        default: '127.0.0.1 -::1'
+        description: 'Space-separated list of addresses Valkey listens on.'
+
+      valkey__conf_databases:
+        type: 'int'
+        required: false
+        default: 16
+        description: 'Number of databases.'
+
+      valkey__conf_loglevel:
+        type: 'str'
+        required: false
+        default: 'notice'
+        description: 'Server verbosity level.'
+
+      valkey__conf_maxmemory:
+        type: 'str'
+        required: false
+        default: '50M'
+        description: 'Memory limit after which the eviction policy takes effect.'
+
+      valkey__conf_maxmemory_policy:
+        type: 'str'
+        required: false
+        default: 'noeviction'
+        description: 'How Valkey evicts keys once the memory limit is reached.'
+
+      valkey__conf_port:
+        type: 'int'
+        required: false
+        default: 6379
+        description: 'TCP port to listen on. Set to 0 to disable the TCP socket.'
+
+      valkey__conf_protected_mode:
+        type: 'str'
+        required: false
+        default: 'yes'
+        description: 'Refuses queries from non-loopback addresses while no password is set.'
+
+      valkey__conf_replica_serve_stale_data:
+        type: 'str'
+        required: false
+        default: 'yes'
+        description: 'Lets a replica answer queries while the link to the primary is down.'
+
+      valkey__conf_requirepass:
+        type: 'str'
+        required: false
+        description: 'Password clients have to authenticate with.'
+
+      valkey__conf_save:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: 'Snapshotting rules, each entry being a "<seconds> <changes>" pair.'
+
+      valkey__conf_tls_auth_clients:
+        type: 'str'
+        required: false
+        description: 'Whether clients have to authenticate with a certificate.'
+
+      valkey__conf_tls_ca_cert_file:
+        type: 'str'
+        required: false
+        description: 'Path to the CA certificate used to verify clients.'
+
+      valkey__conf_tls_cert_file:
+        type: 'str'
+        required: false
+        description: 'Path to the TLS certificate.'
+
+      valkey__conf_tls_key_file:
+        type: 'str'
+        required: false
+        description: 'Path to the TLS private key.'
+
+      valkey__conf_tls_port:
+        type: 'int'
+        required: false
+        description: 'TLS port to listen on. Set valkey__conf_port to 0 to only listen with TLS.'
+
+      valkey__kernel_settings__sysctl__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        description: 'Kernel settings injected into the kernel_settings role.'
+
+      valkey__kernel_settings__transparent_hugepages__dependent_var:
+        type: 'str'
+        required: false
+        default: 'madvise'
+        description: 'Transparent hugepages setting injected into the kernel_settings role.'
+
+      valkey__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the Valkey service.'
+
+      valkey__service_limit_nofile:
+        type: 'int'
+        required: false
+        default: 10240
+        description: 'systemd: resource limit for the number of file descriptors.'
+
+      valkey__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Changes the state of the Valkey service.'
+
+      valkey__service_timeout_start_sec:
+        type: 'str'
+        required: false
+        default: '90s'
+        description: 'systemd: time to wait for start-up.'
+
+      valkey__service_timeout_stop_sec:
+        type: 'str'
+        required: false
+        default: '90s'
+        description: 'systemd: time to wait for the service to stop.'

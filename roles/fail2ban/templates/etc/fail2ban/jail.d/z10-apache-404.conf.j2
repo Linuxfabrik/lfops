@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026090401
+
+[apache-404]
+bantime  = {{ fail2ban__jail_apache_404_bantime }}
+enabled  = true
+findtime = {{ fail2ban__jail_apache_404_findtime }}
+logpath  = /var/log/httpd/*access?log
+maxretry = {{ fail2ban__jail_apache_404_maxretry }}
+port     = http,https

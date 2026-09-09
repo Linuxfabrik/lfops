@@ -1,8 +1,10 @@
 # Ansible Role linuxfabrik.lfops.redis
 
-This role installs and configures [Redis](https://redis.io/), per default listening on TCP 127.0.0.1:6379. Note that this role configures Systemd with unit file overrides for Redis.
+This role installs and configures [Redis](https://redis.io/), per default listening on TCP port 6379 on the loopback interfaces. Note that this role configures Systemd with unit file overrides for Redis.
 
 This role is compatible with Redis v6+.
+
+RHEL 10 does not ship Redis, so this role does not support it. Use the [linuxfabrik.lfops.valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey) role there.
 
 You can pre-enable Remi's repo with the [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) role to get an up-to-date Redis version. If you use the [Redis Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/redis.yml), this is automatically done for you.
 
@@ -17,6 +19,11 @@ This role is compatible with the following Redis versions:
 
 
 *Available since LFOps `2.0.0`.*
+
+
+## How the Role Behaves
+
+* The `daemonize` and `supervised` settings of `redis.conf` are not exposed as role variables, because no value an administrator could pick would change the running service. A Redis that is supervised by systemd never daemonizes, whatever `daemonize` says, and every packaged unit either passes `--supervised systemd` on its `ExecStart` line or, in the case of the packages.redis.io unit used on Debian and Ubuntu, relies on the `supervised auto` this role deploys. The only other value that unit would accept is `systemd`, which is what `auto` resolves to there anyway; `no` stops Redis from reporting readiness and leaves the unit failed. The role therefore deploys `daemonize no` and `supervised auto` on every platform.
 
 
 ## Tags
@@ -96,13 +103,8 @@ Variables for `redis.conf` directives and their default values, defined and supp
 
 * [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
 * Type: String.
-* Default: `'127.0.0.1'`
-
-`redis__conf_daemonize`
-
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
-* Type: String.
-* Default: `'no'`
+* Default: `'127.0.0.1 -::1'`
+* A `-` in front of an address makes it optional: Redis logs a warning and keeps running where that address does not exist, rather than aborting with `Failed listening on port 6379 (tcp), aborting.`. Without the prefix, `::1` takes down the service on a host with no IPv6 loopback, such as a RHEL minimal installation.
 
 `redis__conf_databases`
 
@@ -158,12 +160,6 @@ Variables for `redis.conf` directives and their default values, defined and supp
 * Type: List.
 * Default: `['3600 1', '300 100', '60 10000']`
 
-`redis__conf_supervised`
-
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
-* Type: String.
-* Default: `'auto'`
-
 `redis__conf_tls_auth_clients`
 
 * [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
@@ -200,7 +196,6 @@ Example:
 redis__conf_appendonly: 'yes'
 redis__conf_auto_aof_rewrite_min_size: '64mb'
 redis__conf_bind: '127.0.0.1'
-redis__conf_daemonize: 'no'
 redis__conf_databases: 16
 redis__conf_loglevel: 'notice'
 redis__conf_maxmemory: '50M'
@@ -218,7 +213,6 @@ redis__conf_tls_ca_cert_file: '/etc/redis/ca.pem'
 redis__conf_tls_cert_file: '/etc/redis/redis.pem'
 redis__conf_tls_key_file: '/etc/redis/redis.key'
 redis__conf_tls_port: 6379
-redis__conf_supervised: 'auto'
 ```
 
 

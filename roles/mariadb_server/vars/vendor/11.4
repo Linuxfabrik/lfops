@@ -1,4 +1,5 @@
 # obtained via `mariadbd --help --verbose` on a clean installation from the repo_mariadb on rocky9
+# MariaDB-server-11.4.13-1.el9.x86_64
 
 Variables (--variable-name=value)
 and boolean options {FALSE|TRUE}                             Value (after reading options)
@@ -127,7 +128,7 @@ ft-query-expansion-limit                                     20
 ft-stopword-file                                             (No default value)
 gdb                                                          FALSE
 general-log                                                  FALSE
-general-log-file                                             vagrant-rocky9.log
+general-log-file                                             rocky9.log
 getopt-prefix-matching                                       TRUE
 group-concat-max-len                                         1048576
 gtid-cleanup-batch-size                                      64
@@ -165,12 +166,13 @@ innodb-buffer-pool-dump-at-shutdown                          TRUE
 innodb-buffer-pool-dump-now                                  FALSE
 innodb-buffer-pool-dump-pct                                  25
 innodb-buffer-pool-filename                                  ib_buffer_pool
+innodb-buffer-pool-in-core-dump                              FALSE
 innodb-buffer-pool-load-abort                                FALSE
 innodb-buffer-pool-load-at-startup                           TRUE
 innodb-buffer-pool-load-now                                  FALSE
 innodb-buffer-pool-size                                      134217728
 innodb-buffer-pool-size-auto-min                             0
-innodb-buffer-pool-size-max                                  0
+innodb-buffer-pool-size-max                                  8796093022208
 innodb-buffer-pool-stats                                     ON
 innodb-checksum-algorithm                                    full_crc32
 innodb-cmp                                                   ON
@@ -332,7 +334,7 @@ lc-messages-dir                                              (No default value)
 lc-time-names                                                en_US
 local-infile                                                 TRUE
 lock-wait-timeout                                            86400
-log-basename                                                 vagrant-rocky9.navidsassan.loc
+log-basename                                                 rocky9
 log-bin                                                      (No default value)
 log-bin-compress                                             FALSE
 log-bin-compress-min-len                                     256
@@ -352,7 +354,7 @@ log-slow-filter                                              admin,filesort,file
 log-slow-max-warnings                                        10
 log-slow-min-examined-row-limit                              0
 log-slow-query                                               FALSE
-log-slow-query-file                                          vagrant-rocky9-slow.log
+log-slow-query-file                                          rocky9-slow.log
 log-slow-query-time                                          10
 log-slow-rate-limit                                          1
 log-slow-slave-statements                                    TRUE
@@ -417,7 +419,7 @@ old                                                          FALSE
 old-mode                                                     UTF8_IS_UTF8MB3
 old-passwords                                                FALSE
 old-style-user-limits                                        FALSE
-open-files-limit                                             32184
+open-files-limit                                             32190
 optimizer-adjust-secondary-key-costs                         0
 optimizer-disk-read-cost                                     10.24
 optimizer-disk-read-ratio                                    0.02
@@ -503,7 +505,7 @@ performance-schema-session-connect-attrs-size                -1
 performance-schema-setup-actors-size                         -1
 performance-schema-setup-objects-size                        -1
 performance-schema-users-size                                -1
-pid-file                                                     /var/lib/mysql/vagrant-rocky9.pid
+pid-file                                                     /var/lib/mysql/rocky9.pid
 plugin-dir                                                   /usr/lib64/mysql/plugin/
 plugin-maturity                                              gamma
 port                                                         3306
@@ -557,7 +559,7 @@ secure-file-priv                                             (No default value)
 secure-timestamp                                             NO
 sequence                                                     ON
 server-id                                                    1
-server-uid                                                   RQ7K5DbImZjHazX/gLAJOofvbg8=
+server-uid                                                   0T9QN3YbtNfDc5j36G31S0s0Acs=
 session-track-schema                                         TRUE
 session-track-state-change                                   FALSE
 session-track-system-variables                               autocommit,character_set_client,character_set_connection,character_set_results,redirect_url,time_zone
@@ -591,7 +593,7 @@ slave-transaction-retry-interval                             0
 slave-type-conversions
 slow-launch-time                                             2
 slow-query-log                                               FALSE
-slow-query-log-file                                          vagrant-rocky9-slow.log
+slow-query-log-file                                          rocky9-slow.log
 socket                                                       /var/lib/mysql/mysql.sock
 sort-buffer-size                                             2097152
 sql-mode                                                     STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
@@ -639,7 +641,7 @@ thread-pool-oversubscribe                                    3
 thread-pool-prio-kickup-timer                                1000
 thread-pool-priority                                         auto
 thread-pool-queues                                           ON
-thread-pool-size                                             2
+thread-pool-size                                             8
 thread-pool-stall-limit                                      500
 thread-pool-stats                                            ON
 thread-pool-waits                                            ON
@@ -659,13 +661,13 @@ use-stat-tables                                              PREFERABLY_FOR_QUER
 user-variables                                               ON
 userstat                                                     FALSE
 verbose                                                      TRUE
-version                                                      11.4.9-MariaDB
+version                                                      11.4.13-MariaDB
 version-comment                                              MariaDB Server
 version-compile-machine                                      x86_64
 version-compile-os                                           Linux
 version-malloc-library                                       system
-version-source-revision                                      aa6a2e6bf05d43c3bb44db50566937a5f97a6580
-version-ssl-library                                          OpenSSL 3.0.7 1 Nov 2022
+version-source-revision                                      170b1d70737be6f134448f51713cdc1ae215b420
+version-ssl-library                                          OpenSSL 3.5.1 1 Jul 2025
 wait-timeout                                                 28800
 wsrep-OSU-method                                             TOI
 wsrep-SR-store                                               table
@@ -695,12 +697,12 @@ wsrep-mysql-replication-bundle                               0
 wsrep-new-cluster                                            FALSE
 wsrep-node-address
 wsrep-node-incoming-address                                  AUTO
-wsrep-node-name                                              vagrant-rocky9.navidsassan.loc
+wsrep-node-name                                              rocky9
 wsrep-notify-cmd
 wsrep-on                                                     FALSE
 wsrep-patch-version                                          wsrep_26.22
-wsrep-provider                                               none
 wsrep-provider                                               ON
+wsrep-provider                                               none
 wsrep-provider-options
 wsrep-recover                                                FALSE
 wsrep-reject-queries                                         NONE
