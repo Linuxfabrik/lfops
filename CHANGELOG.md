@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:r, playbook:r**: Add a role and playbook to install R and pandoc, point R at the Posit Public Package Manager so that CRAN packages arrive as prebuilt binaries instead of being compiled on the host, and install the CRAN packages an application needs.
 * **role:borg_local, role:icinga2_master, role:nextcloud, role:schedule_reboot, role:tools**: `icinga2_master__downtime_api_user` creates an Icinga2 API user that may only schedule and remove downtimes, and the roles that set a downtime around a backup, a Nextcloud update or a reboot use it unless their own `*__icinga2_api_user_login` is set.
 * **role:crypto_policy, role:kernel_modules, role:selinux**: A change that only takes effect after a reboot requests one at the maintenance window instead of being left to the operator to notice: a switched crypto policy, a blocked kernel module that is still loaded, and switching SELinux on or off. Where the reboot mechanism is not deployed, the role reports the pending reboot as before. `lfops__reboot_now` performs it in the same run.
 * Every playbook prints the manual steps a run leaves to the operator as one block directly above the `PLAY RECAP`, collected from all roles of the play instead of scattered over its output. The roles keep printing their message where it occurs as well, so a role used outside this collection still reports it.
