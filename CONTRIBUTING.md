@@ -1016,6 +1016,11 @@ Before adding an `allow` rule to a role, work out what the rule buys an attacker
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
 
 
+#### Reboot requests
+
+* [bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader): Never reboots the host itself. A changed kernel command line is registered with the `schedule_reboot` mechanism and applied at the maintenance window, and `lfops__reboot_now` performs it during the run instead, fired asynchronously and followed by a wait for the host to go down and to come back. "Reboots" above carries the full pattern and its traps.
+
+
 #### systemd socket activation with an on-demand backend
 
 * [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): Fronts a long-running daemon (Chromium, which does not implement the systemd socket-activation protocol) with a `systemd-socket-proxyd`. A `.socket` unit binds the public port, the proxy forwards to the backend on `127.0.0.1` and exits after an idle timeout, and `BindsTo=` ties the backend's lifecycle to the proxy so it starts on the first request and stops when idle.
