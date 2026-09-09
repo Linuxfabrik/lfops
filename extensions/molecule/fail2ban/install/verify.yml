@@ -1,0 +1,108 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state, not that individual tasks ran.
+#
+# Everything of substance is read back from the *running* fail2ban server with `fail2ban-client`,
+# never from the files in /etc/fail2ban. A jail only appears there once the server has parsed
+# jail.d, resolved the filter, and started the jail's actions, so a single `fail2ban-client status
+# <jail>` proves the whole chain at once: group_vars, to the template, to the file the server
+# reads, to the jail it actually runs. Grepping the deployed .conf would prove none of that.
+- name: 'Verify fail2ban is running and uses the configured jails'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+
+    # The bantime that install/inventory sets as fail2ban__jail_sshd_bantime, in the seconds the
+    # server reports back.
+    __molecule__fail2ban_sshd_bantime_seconds: 10800
+
+  tasks:
+
+    # Floor check. On its own this would still pass with a dead server, so it is the start of the
+    # verification, not the goal.
+    - name: 'Get the list of installed packages'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert the fail2ban package is installed'
+      ansible.builtin.assert:
+        that: '"fail2ban" in ansible_facts["packages"]'
+
+    # The real floor: fail2ban refuses to start when a jail references a filter it cannot resolve
+    # or a log file that matches nothing, so a running server already rules out a broken config.
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert the fail2ban service is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"]["fail2ban.service"]["state"] == "running"'
+          - 'ansible_facts["services"]["fail2ban.service"]["status"] == "enabled"'
+        fail_msg: 'fail2ban.service is {{ ansible_facts["services"]["fail2ban.service"] | d("absent") }}'
+
+    # The jails the server actually runs: two from the role defaults, one defined from the
+    # inventory through the raw template. A jail missing here never made it past the server.
+    - name: 'fail2ban-client status {{ item }}'
+      ansible.builtin.command: 'fail2ban-client status {{ item }}'
+      register: '__molecule__fail2ban_jail_status_result'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      loop:
+        - 'molecule-journal'
+        - 'portscan'
+        - 'sshd'
+
+    - name: 'Assert the server runs the default and the inventory-defined jails'
+      ansible.builtin.assert:
+        that: 'item["rc"] == 0'
+        fail_msg: 'the {{ item["item"] }} jail is not running: {{ item["stderr"] | d(item["stdout"]) }}'
+      loop: '{{ __molecule__fail2ban_jail_status_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # Proves a value from the inventory reaches the running jail, rather than the server falling
+    # back to the 10m that jail.conf ships.
+    - name: 'fail2ban-client get sshd bantime'
+      ansible.builtin.command: 'fail2ban-client get sshd bantime'
+      register: '__molecule__fail2ban_sshd_bantime_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the sshd jail uses the configured bantime'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_sshd_bantime_result["stdout"] | int == __molecule__fail2ban_sshd_bantime_seconds'
+        fail_msg: 'the sshd bantime is {{ __molecule__fail2ban_sshd_bantime_result["stdout"] }}s, expected {{ __molecule__fail2ban_sshd_bantime_seconds }}s ({{ fail2ban__jail_sshd_bantime }})'
+
+    # fail2ban reads jail.d alphabetically, so the role's z00-defaults.conf has to win over the
+    # 00-firewalld.conf that the fail2ban-firewalld package ships, otherwise every jail would ban
+    # through firewalld instead of the configured banaction. Nothing about that ordering is
+    # visible in the role's own files, which is why it is asserted against the running server.
+    - name: 'fail2ban-client get sshd actions'
+      ansible.builtin.command: 'fail2ban-client get sshd actions'
+      register: '__molecule__fail2ban_sshd_actions_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the sshd jail bans through the configured banaction'
+      ansible.builtin.assert:
+        that: 'fail2ban__jail_default_banaction in __molecule__fail2ban_sshd_actions_result["stdout"]'
+        fail_msg: 'the sshd jail uses {{ __molecule__fail2ban_sshd_actions_result["stdout"] }}, expected {{ fail2ban__jail_default_banaction }}'
+
+    # The role publishes fail2ban__selinux__booleans__dependent_var, which the playbook feeds into
+    # the selinux role. Without the boolean fail2ban cannot resolve users through NSS and the sshd
+    # jail logs a denial instead of banning, so assert the end state on the host.
+    - name: 'getsebool nis_enabled'
+      ansible.builtin.command: 'getsebool nis_enabled'
+      register: '__molecule__fail2ban_nis_enabled_result'
+      changed_when: false
+      check_mode: false
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the nis_enabled SELinux boolean is on'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_nis_enabled_result["stdout"] is search("--> on")'
+        fail_msg: 'nis_enabled is {{ __molecule__fail2ban_nis_enabled_result["stdout"] }}'
+      when:
+        - 'ansible_facts["selinux"]["status"] != "disabled"'

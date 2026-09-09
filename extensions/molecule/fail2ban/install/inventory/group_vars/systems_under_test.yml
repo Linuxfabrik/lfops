@@ -1,0 +1,41 @@
+# Variables the playbook under test needs, applied to every system under test.
+#
+# The firewall role is skipped. It defaults to fwbuilder, which starts fwb.service from an
+# /etc/fwb.sh this scenario cannot supply. The iptables-multiport banaction is still exercised:
+# fail2ban-server depends on nftables and therefore brings the iptables command with it, so the
+# jails start their actions on a host the firewall role never touched.
+fail2ban__skip_firewall: true
+
+# Pinned by the scenario rather than left to the role default, because verify.yml reads it back
+# from the running server: verify.yml runs no roles, so a role default would be undefined there.
+fail2ban__jail_default_banaction: 'iptables-multiport'
+
+# Deliberately not the role default of 7d, so verify.yml can tell "the running server uses what
+# the inventory asked for" apart from "the running server happens to use the default".
+fail2ban__jail_sshd_bantime: '3h'
+
+# A filter and a jail defined entirely from the inventory, which exercises the raw template and
+# the combine_lod merge over the role defaults. Both read the journal instead of a log file, so
+# the jail loads on a host that has neither Apache nor a logging firewall - the two things the
+# shipped jails need. The remove sub-scenario declares the same two with state: 'absent'.
+fail2ban__filters__group_var:
+  - filename: 'molecule-journal'
+    state: 'present'
+    template: 'raw'
+    raw: |-
+      [Definition]
+      failregex = ^.*molecule-fail2ban-probe from <HOST>$
+      journalmatch = _SYSTEMD_UNIT=sshd.service
+
+fail2ban__jails__group_var:
+  - filename: 'z20-molecule-journal'
+    state: 'present'
+    template: 'raw'
+    raw: |-
+      [molecule-journal]
+      backend  = systemd
+      bantime  = 1h
+      enabled  = true
+      findtime = 1m
+      maxretry = 3
+      port     = 0:65535

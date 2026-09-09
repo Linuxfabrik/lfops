@@ -1,0 +1,3 @@
+# Molecule scenario marker. The shared config.yml already provisions libvirt/KVM VMs, so this
+# scenario needs no driver override: fail2ban reads the systemd journal and inserts iptables
+# rules, neither of which a shared-kernel container represents faithfully.
