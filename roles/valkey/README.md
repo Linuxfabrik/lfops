@@ -14,7 +14,7 @@ This role is compatible with the following Valkey versions:
 * 9.0
 
 
-*Available in the next LFOps release.*
+*Available since LFOps `9.0.0`.*
 
 
 ## How the Role Behaves

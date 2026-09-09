@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+tbd
+
+
+## [v9.0.0] - 2026-09-09
+
 **Highlights:** Valkey gets its own role and playbook instead of being installed under the Redis name, which is what RHEL 10 hosts need now that Red Hat ships no Redis at all; those hosts have to be moved over. On RHEL 8, a MariaDB package upgrade no longer cuts applications on the same host off from their database. Apache no longer loads `mod_info`, which served the complete configuration including other modules' credentials. A broken PHP-FPM configuration aborts the run instead of taking the service down on the restart. Sudo rules deployed by `freeipa_server` can carry their commands again. The Bitwarden lookup can be told to abort instead of silently generating a new password, for runs against hosts whose credentials must already exist. The Grafana graph configuration for the Monitoring Plugins is no longer deployed on every ordinary run and has to be requested explicitly by its tag. Apache serves HTTP/2 to every client that offers it over TLS, which in a typical setup is the reverse proxy in front of an application; the hop from that proxy to the backend is unchanged. LibreNMS keeps its RRD updates in RRDCached and writes them out every 30 minutes, taking a large share of the poller's disk I/O off the host.
 
 ### Breaking Changes
@@ -1051,7 +1056,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **module_util:gnupg**: Add new module util
 
 
-[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v8.0.0...HEAD
+[Unreleased]: https://github.com/Linuxfabrik/lfops/compare/v9.0.0...HEAD
+[v9.0.0]: https://github.com/Linuxfabrik/lfops/compare/v8.0.0...v9.0.0
 [v8.0.0]: https://github.com/Linuxfabrik/lfops/compare/v7.0.0...v8.0.0
 [v7.0.0]: https://github.com/Linuxfabrik/lfops/compare/v6.0.1...v7.0.0
 [v6.0.1]: https://github.com/Linuxfabrik/lfops/compare/v6.0.0...v6.0.1
