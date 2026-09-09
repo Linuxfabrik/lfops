@@ -1,0 +1,2 @@
+# Posit publishes no RHEL 10 build; the RHEL 9 one runs there unchanged (see vars/RedHat.yml).
+__rstudio_server__package_dist: 'rhel9'
