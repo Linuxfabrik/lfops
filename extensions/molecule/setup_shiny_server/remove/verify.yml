@@ -1,0 +1,86 @@
+# Verify the removal. Same mindset as install/verify.yml: check the observable result, and
+# confirm the removal did not take the surviving tenant down with it. The two halves matter
+# equally, because the dangerous failure mode here is not "too little was removed" but "a
+# still-active location lost its account or its data".
+- name: 'Verify the retired locations are gone and the remaining one still runs'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that shiny-server.service is still running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["shiny-server.service"]["state"] == "running"'
+
+    # The surviving application is what proves the removal was surgical.
+    - name: 'curl http://127.0.0.1:3838/acme/app2/'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:3838/acme/app2/'
+        status_code: 200
+
+    - name: 'curl http://shiny-acme.example.com/app2/ with credentials'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/app2/'
+        headers:
+          Host: 'shiny-acme.example.com'
+        url_username: 'firstname.lastname'
+        url_password: 'linuxfabrik'
+        force_basic_auth: true
+        status_code: 200
+
+    # The retired locations are out of the running configuration, so Shiny Server no longer
+    # knows the paths at all.
+    - name: 'curl the retired locations'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:3838{{ item }}/'
+        status_code: 404
+      loop:
+        - '/acme/app1'
+        - '/globex/app1'
+
+    - name: 'getent passwd'
+      ansible.builtin.getent:
+        database: 'passwd'
+
+    - name: 'Assert that the account of the fully retired tenant is gone'
+      ansible.builtin.assert:
+        that: '"shiny-globex" not in ansible_facts["getent_passwd"]'
+        fail_msg: 'shiny-globex still exists although all of its locations were retired.'
+
+    # The account is shared with the surviving acme/app2, so retiring acme/app1 must not touch
+    # it. This is the assertion that catches a naive "remove every account of an absent
+    # location" implementation.
+    - name: 'Assert that the account shared with the surviving application is kept'
+      ansible.builtin.assert:
+        that: '"shiny-acme" in ansible_facts["getent_passwd"]'
+        fail_msg: 'shiny-acme was removed although acme/app2 still uses it.'
+
+    - name: 'stat the directories'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: '__molecule__shiny_server_stat_result'
+      loop:
+        - '/srv/shiny-server/tenants/acme'
+        - '/srv/shiny-server/tenants/acme/app1'
+        - '/srv/shiny-server/tenants/acme/app2'
+        - '/srv/shiny-server/tenants/globex'
+        - '/var/lib/shiny-server/home/shiny-globex'
+        - '/var/log/shiny-server/acme'
+        - '/var/log/shiny-server/globex'
+
+    - name: 'Assert what the removal kept and what it took'
+      ansible.builtin.assert:
+        that: 'item["stat"]["exists"] == (item["item"] in __molecule__shiny_server_expected_present)'
+        fail_msg: >-
+          {{ item["item"] }} is {{ item["stat"]["exists"] | ternary("present", "absent") }},
+          expected {{ (item["item"] in __molecule__shiny_server_expected_present) | ternary("present", "absent") }}.
+      vars:
+        __molecule__shiny_server_expected_present:
+          - '/srv/shiny-server/tenants/acme'
+          - '/srv/shiny-server/tenants/acme/app2'
+          - '/var/log/shiny-server/acme'
+      loop: '{{ __molecule__shiny_server_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

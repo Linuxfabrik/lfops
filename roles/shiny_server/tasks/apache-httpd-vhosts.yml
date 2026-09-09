@@ -1,0 +1,8 @@
+# Builds the injections for the apache_httpd role. The setup playbook imports this file in its
+# pre_tasks, because apache_httpd runs before shiny_server and a variable definition cannot
+# carry the Jinja loop that renders the Apache configuration of an arbitrary number of tenants.
+
+- name: 'Build the apache_httpd vHost and htpasswd injections'
+  ansible.builtin.set_fact:
+    shiny_server__apache_httpd__htpasswd__dependent_var: '{{ lookup("ansible.builtin.template", "apache-httpd-htpasswd.yml.j2") | from_yaml | d([], true) }}'
+    shiny_server__apache_httpd__vhosts__dependent_var: '{{ lookup("ansible.builtin.template", "apache-httpd-vhosts.yml.j2") | from_yaml | d([], true) }}'

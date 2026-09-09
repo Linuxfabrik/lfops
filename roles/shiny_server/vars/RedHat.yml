@@ -1,0 +1,13 @@
+# Posit builds one RPM against CentOS 8 and ships it for the whole RHEL family. It declares no
+# dependencies at all (`rpm --query --requires` lists only /bin/sh and rpmlib entries) and
+# carries its own Node.js runtime under /opt/shiny-server/ext/node/bin/, which is why the same
+# file runs on RHEL 8, 9 and 10.
+__shiny_server__package_dist: 'centos8'
+__shiny_server__package_arch: 'x86_64'
+__shiny_server__package_extension: 'rpm'
+
+__shiny_server__package_filename: 'shiny-server-{{ shiny_server__version }}-{{ __shiny_server__package_arch }}.{{ __shiny_server__package_extension }}'
+__shiny_server__download_url: '{{
+    shiny_server__download_url if shiny_server__download_url | length
+    else "https://download3.rstudio.org/" ~ __shiny_server__package_dist ~ "/" ~ __shiny_server__package_arch ~ "/" ~ __shiny_server__package_filename
+  }}'

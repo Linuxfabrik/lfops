@@ -158,6 +158,7 @@ Which Ansible role is proven to run on which OS?
 | selinux                               |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | shared                                |        |        |        |        |         |           |           |           | controller-side helper, target OS irrelevant |
 | shell                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| shiny_server                          |        |        |   x    |   x    |    x    |           |           |           | x86_64 only, the vendor ships no other build |
 | snmp                                  |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | squid                                 |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |

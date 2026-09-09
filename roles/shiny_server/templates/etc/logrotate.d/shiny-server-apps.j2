@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2026090801
+#
+# The logrotate file the package ships as /etc/logrotate.d/shiny-server covers the daemon log
+# /var/log/shiny-server.log only, and is overwritten on every package update, so the per-session
+# application logs get their own file here. Without preserve_logs those logs are deleted when a
+# worker exits cleanly; with it, thousands of files accumulate.
+{{ shiny_server__log_dir }}/*.log {{ shiny_server__log_dir }}/*/*.log {
+    compress
+    copytruncate
+    daily
+    delaycompress
+    missingok
+    notifempty
+    rotate {{ shiny_server__logrotate }}
+}

@@ -1,0 +1,50 @@
+# Mandatory variable of the apache_httpd role, which this playbook pulls in.
+apache_httpd__conf_server_admin: 'root@localhost'
+
+shiny_server__version: '1.5.23.1030'
+
+# Two tenants, so that the separation between them can be verified rather than
+# assumed. Each gets its own account, its own worker and its own vHost. Tenant
+# acme runs two applications on one account, which is what the remove
+# sub-scenario needs to show that retiring one of them keeps the other running.
+shiny_server__locations__group_var:
+  - path: '/acme/app1'
+    app_dir: '/srv/shiny-server/tenants/acme/app1'
+    log_dir: '/var/log/shiny-server/acme'
+    run_as: 'shiny-acme'
+    # Long enough that the worker started by the request in verify.yml is still
+    # alive when the following task looks for it. At the default of 5 seconds it
+    # would be reaped in between.
+    app_idle_timeout: 900
+  - path: '/acme/app2'
+    app_dir: '/srv/shiny-server/tenants/acme/app2'
+    log_dir: '/var/log/shiny-server/acme'
+    run_as: 'shiny-acme'
+    app_idle_timeout: 900
+  - path: '/globex/app1'
+    app_dir: '/srv/shiny-server/tenants/globex/app1'
+    log_dir: '/var/log/shiny-server/globex'
+    run_as: 'shiny-globex'
+    app_idle_timeout: 900
+    simple_scheduler: 20
+
+shiny_server__vhosts__group_var:
+  - conf_server_name: 'shiny-acme.example.com'
+    htpasswd:
+      - username: 'firstname.lastname'
+        password: 'linuxfabrik'
+    locations:
+      - shiny_location: '/acme/app1'
+        path: '/app1'
+      - shiny_location: '/acme/app2'
+        path: '/app2'
+  - conf_server_name: 'shiny-globex.example.com'
+    htpasswd:
+      - username: 'globex.admin'
+        password: 'linuxfabrik'
+    locations:
+      - shiny_location: '/globex/app1'
+        path: '/app1'
+
+shiny_server__memory_max: '2G'
+shiny_server__tasks_max: 200

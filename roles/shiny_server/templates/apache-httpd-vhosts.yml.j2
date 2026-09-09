@@ -1,0 +1,61 @@
+{#
+  Renders the vHost list that is injected into the apache_httpd role. This is a template and
+  not a variable definition because an arbitrary number of tenants, each with an arbitrary
+  number of applications, needs a Jinja loop to produce the Apache configuration.
+#}
+{% for vhost in shiny_server__vhosts__combined_var | sort(attribute='conf_server_name') %}
+{% set __auth_user_file = vhost['auth_user_file'] | d(shiny_server__htpasswd_dir ~ '/.htpasswd-' ~ vhost['conf_server_name']) %}
+{% set __auth_enabled = vhost['auth_enabled'] | d(shiny_server__vhost_default_auth_enabled) %}
+{% set __credentials_header_enabled = vhost['credentials_header_enabled'] | d(shiny_server__vhost_default_credentials_header_enabled) %}
+- by_role: 'shiny_server'
+  comment: 'vHost for the Shiny Server tenant {{ vhost['conf_server_name'] }}'
+  conf_proxy_preserve_host: '{{ vhost['conf_proxy_preserve_host'] | d('On') }}'
+  conf_proxy_timeout: {{ vhost['conf_proxy_timeout'] | d(shiny_server__vhost_default_conf_proxy_timeout) }}
+  conf_server_name: '{{ vhost['conf_server_name'] }}'
+  enabled: {{ vhost['enabled'] | d(true) | bool | ternary('true', 'false') }}
+  filename: '{{ vhost['filename'] | d(vhost['conf_server_name']) }}'
+  state: '{{ vhost['state'] | d('present') }}'
+  template: 'proxy'
+  virtualhost_port: {{ vhost['virtualhost_port'] | d(shiny_server__vhost_default_virtualhost_port) }}
+  allowed_http_methods:
+{% for method in vhost['allowed_http_methods'] | d(shiny_server__vhost_default_allowed_http_methods) %}
+    - '{{ method }}'
+{% endfor %}
+  raw: |
+{% if __auth_enabled | bool %}
+    <Location />
+        AuthType Basic
+        AuthName "{{ vhost['auth_name'] | d('Shiny ' ~ vhost['conf_server_name']) }}"
+        AuthBasicProvider file
+        AuthUserFile {{ __auth_user_file }}
+        Require valid-user
+    </Location>
+{% endif %}
+{% if __credentials_header_enabled | bool %}
+
+    # headers_module
+    # Pass the authenticated user into the application, where it is readable as session$user.
+    # "set" overwrites whatever the client sent; with "add" a client could name itself. Only
+    # the "expr=" form yields the user: %{REMOTE_USER}s reads SSL variables and %{REMOTE_USER}e
+    # the subprocess environment, both of which resolve to the literal "(null)" here. The
+    # "early" flag would run the directive before authentication and leave the value empty.
+    RequestHeader set Shiny-Server-Credentials "expr={\"user\":\"%{REMOTE_USER}\",\"groups\":[]}"
+{% endif %}
+{% for location in vhost['locations'] | d([]) if location['state'] | d('present') != 'absent' %}
+{% set __path = location['path'] | d(location['shiny_location']) %}
+
+    # {{ location['shiny_location'] }}
+{% if __path | regex_replace('/$', '') | length %}
+    # Without this, the application is only reachable with the trailing slash.
+    RewriteRule ^{{ __path | regex_replace('/$', '') }}$ {{ __path | regex_replace('/$', '') }}/ [redirect,last]
+{% endif %}
+    RewriteCond %{HTTP:Upgrade} =websocket [nocase]
+    RewriteRule ^{{ __path | regex_replace('/$', '') }}/(.*) ws://{{ shiny_server__conf_listen_host }}:{{ shiny_server__conf_listen_port }}{{ location['shiny_location'] | regex_replace('/$', '') }}/$1 [proxy,last]
+    RewriteCond %{HTTP:Upgrade} !=websocket [nocase]
+    RewriteRule ^{{ __path | regex_replace('/$', '') }}/(.*) http://{{ shiny_server__conf_listen_host }}:{{ shiny_server__conf_listen_port }}{{ location['shiny_location'] | regex_replace('/$', '') }}/$1 [proxy,last]
+{% endfor %}
+{% if vhost['raw'] | d() %}
+
+{{ vhost['raw'] | indent(4, first=True) }}
+{% endif %}
+{% endfor %}

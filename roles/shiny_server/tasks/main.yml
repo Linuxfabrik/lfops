@@ -1,0 +1,457 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Check that every location defines an application or a site directory'
+    ansible.builtin.assert:
+      that:
+        - 'item["app_dir"] is defined or item["site_dir"] is defined'
+      quiet: true
+      fail_msg: 'The shiny_server location "{{ item["path"] }}" needs either app_dir or site_dir.'
+    loop: '{{ __shiny_server__active_locations }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  # A site_dir hands out a whole directory tree, turning every application below it into a
+  # second, separately reachable URL. Where that tree contains another location's app_dir, the
+  # application is served twice, and the copy reached through the site_dir carries whatever the
+  # site_dir's location is protected by rather than its own.
+  - name: 'Check that no application directory lies below a site directory'
+    ansible.builtin.assert:
+      that:
+        - '__shiny_server__active_app_dirs
+           | select("match", item["site_dir"] | regex_escape ~ "/") | list | length == 0'
+      quiet: true
+      fail_msg: >-
+        The site directory "{{ item["site_dir"] }}" of location "{{ item["path"] }}" contains the application
+        directory of another location
+        ({{ __shiny_server__active_app_dirs | select("match", item["site_dir"] | regex_escape ~ "/") | join(", ") }}),
+        which would serve that application a second time under "{{ item["path"] }}". Move the application out
+        of that tree, or narrow the site directory.
+    loop: '{{ __shiny_server__active_locations | selectattr("site_dir", "defined") | list }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  # Shiny Server Open Source authenticates nobody and passes every client header through to the
+  # R worker. On a listener reachable from the network, a client bypasses the reverse proxy and
+  # sets Shiny-Server-Credentials itself, which is the value the application reads as
+  # session$user.
+  - name: 'Check that the credentials header is only passed on a loopback listener'
+    ansible.builtin.assert:
+      that:
+        - 'shiny_server__conf_listen_host in ["127.0.0.1", "::1", "localhost"]'
+      quiet: true
+      fail_msg: >-
+        A vHost passes Shiny-Server-Credentials, but Shiny Server listens on
+        {{ shiny_server__conf_listen_host }}. Anyone reaching that address can set the header themselves and
+        give an application any identity. Set shiny_server__conf_listen_host to 127.0.0.1, or turn the header
+        off per vHost with credentials_header_enabled.
+    when:
+      - 'shiny_server__vhosts__combined_var | selectattr("credentials_header_enabled", "defined") | selectattr("credentials_header_enabled", "eq", true) | list | length > 0
+         or (shiny_server__vhost_default_credentials_header_enabled | bool
+             and shiny_server__vhosts__combined_var | rejectattr("credentials_header_enabled", "defined") | list | length > 0)'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # Created here rather than left to the package, so that the configuration below can already
+  # reference the user and the service comes up with it in place. The package's postinstall
+  # skips its own useradd when the account exists.
+  - name: 'groupadd {{ shiny_server__conf_run_as }}'
+    ansible.builtin.group:
+      name: '{{ shiny_server__conf_run_as }}'
+      state: 'present'
+      system: true
+
+  - name: 'useradd {{ shiny_server__conf_run_as }}'
+    ansible.builtin.user:
+      name: '{{ shiny_server__conf_run_as }}'
+      comment: 'Shiny Server'
+      group: '{{ shiny_server__conf_run_as }}'
+      home: '/home/{{ shiny_server__conf_run_as }}'
+      shell: '/bin/sh'
+      system: true
+      state: 'present'
+
+  tags:
+    - 'shiny_server'
+
+
+- block:
+
+  - name: 'Combined locations'
+    ansible.builtin.debug:
+      var: 'shiny_server__locations__combined_var'
+
+  # One system account per tenant, so that the separation also holds in the file system. The
+  # account needs no login shell: Shiny Server starts the worker as root with
+  # `su -s /bin/bash`, which overrides the shell of the account. It does need a home directory,
+  # because the launch is aborted when that is missing.
+  - name: 'mkdir -p {{ shiny_server__users_home_dir }}'
+    ansible.builtin.file:
+      path: '{{ shiny_server__users_home_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # A group of its own for read access to the shared code tree, kept apart from the group of the
+  # service account. Were the service account's group used for both jobs, an application left at
+  # the default run_as would have its directory owned by the very group every tenant is a member
+  # of, and all of them could read it.
+  - name: 'groupadd {{ shiny_server__shared_group }}'
+    ansible.builtin.group:
+      name: '{{ shiny_server__shared_group }}'
+      state: 'present'
+      system: true
+
+  - name: 'usermod --append --groups {{ shiny_server__shared_group }} {{ shiny_server__conf_run_as }}'
+    ansible.builtin.user:
+      name: '{{ shiny_server__conf_run_as }}'
+      groups:
+        - '{{ shiny_server__shared_group }}'
+      append: true
+
+  - name: 'groupadd for the run_as users'
+    ansible.builtin.group:
+      name: '{{ item }}'
+      state: 'present'
+      system: true
+    loop: '{{ __shiny_server__run_as_users }}'
+
+  # Its own primary group is what keeps the account out of the other tenants' directories, the
+  # secondary membership in the shared group is what lets it read the shared code tree, which is
+  # therefore group readable instead of world readable.
+  - name: 'useradd for the run_as users'
+    ansible.builtin.user:
+      name: '{{ item }}'
+      comment: 'Shiny Server tenant {{ item }}'
+      group: '{{ item }}'
+      groups:
+        - '{{ shiny_server__shared_group }}'
+      append: true
+      home: '{{ shiny_server__users_home_dir }}/{{ item }}'
+      shell: '/sbin/nologin'
+      system: true
+      state: 'present'
+    loop: '{{ __shiny_server__run_as_users }}'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:users'
+
+
+- block:
+
+  - name: 'Gather package facts'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false
+
+  - name: 'Set installed version fact'
+    ansible.builtin.set_fact:
+      __shiny_server__installed_version: '{{ ansible_facts["packages"]["shiny-server"][0]["version"] | d("") }}'
+
+  # Deploy the configuration before the package, not after. The package copies its own
+  # configuration only when none exists and then enables and starts the service straight away,
+  # so without this the service would come up once listening on every interface and serving
+  # /srv/shiny-server without access control.
+  - name: 'mkdir -p /etc/shiny-server'
+    ansible.builtin.file:
+      path: '/etc/shiny-server'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - block:
+
+    # Posit publishes one RPM, built against CentOS 8, for the whole RHEL family. It declares no
+    # dependencies and brings its own Node.js runtime, which is why it runs unchanged on RHEL 8,
+    # 9 and 10.
+    - name: 'curl --output /tmp/ansible.{{ __shiny_server__package_filename }} {{ __shiny_server__download_url }}' # noqa risky-file-permissions (temporary file)
+      ansible.builtin.get_url:
+        url: '{{ __shiny_server__download_url }}'
+        dest: '/tmp/ansible.{{ __shiny_server__package_filename }}'
+        mode: 0o644
+      delegate_to: 'localhost'
+      become: false
+      changed_when: false # not an actual config change on the target
+      check_mode: false # run task even if `--check` is specified
+
+    - name: 'Copy /tmp/ansible.{{ __shiny_server__package_filename }} to the target' # noqa risky-file-permissions (temporary file)
+      ansible.builtin.copy:
+        src: '/tmp/ansible.{{ __shiny_server__package_filename }}'
+        dest: '/tmp/{{ __shiny_server__package_filename }}'
+      changed_when: false # the install task below reports the change
+
+    # ansible.builtin.package cannot install a local file with the GPG check disabled, and Posit
+    # does not sign the package.
+    #
+    # This is also the update path: dnf resolves an install of a newer file as an upgrade of the
+    # installed package, and of an older one as a downgrade, which is all Posit documents.
+    # Verified on Rocky 9 with shiny-server 1.5.23.1030 -> 1.5.24.1038: dnf reports "Upgrading",
+    # the service is restarted by the package's own posttrans and comes back enabled, and
+    # shiny-server.conf, the systemd drop-in and shiny-server-apps are left untouched.
+    - name: 'dnf install /tmp/{{ __shiny_server__package_filename }}'
+      ansible.builtin.dnf:
+        name: '/tmp/{{ __shiny_server__package_filename }}'
+        disable_gpg_check: true # the vendor does not sign the package
+        state: 'present'
+
+    - name: 'rm -f /tmp/{{ __shiny_server__package_filename }}'
+      ansible.builtin.file:
+        path: '/tmp/{{ __shiny_server__package_filename }}'
+        state: 'absent'
+      changed_when: false
+
+    when:
+      - '__shiny_server__installed_version != shiny_server__version'
+
+  tags:
+    - 'shiny_server'
+
+
+- block:
+
+  - name: 'mkdir -p {{ shiny_server__site_dir }}'
+    ansible.builtin.file:
+      path: '{{ shiny_server__site_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # The shared tree holds the application code every tenant runs. Readable and traversable for
+  # all of them through their membership in the shared group, writable for none, and invisible
+  # to the rest of the host.
+  - name: 'mkdir -p {{ shiny_server__shared_dir }}'
+    ansible.builtin.file:
+      path: '{{ shiny_server__shared_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: '{{ shiny_server__shared_group }}'
+      mode: 0o750
+
+  - name: 'mkdir -p {{ shiny_server__tenants_dir }}'
+    ansible.builtin.file:
+      path: '{{ shiny_server__tenants_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Shiny writes uploads into a per-session directory below TMPDIR, created by the worker
+  # itself, so every run_as user has to be able to create one here. The sticky bit keeps one
+  # tenant from removing another one's files, as on /tmp.
+  - name: 'mkdir -p {{ shiny_server__tmp_dir }}'
+    ansible.builtin.file:
+      path: '{{ shiny_server__tmp_dir }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o1777
+
+  # 0750 with the tenant's own group is what keeps one tenant's R worker out of another
+  # tenant's application directory and data.
+  - name: 'mkdir -p the application directories'
+    ansible.builtin.file:
+      path: '{{ item["app_dir"] }}'
+      state: 'directory'
+      owner: 'root'
+      group: '{{ item["run_as"] | d(shiny_server__conf_run_as) }}'
+      mode: 0o750
+    loop: '{{ __shiny_server__active_locations }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    when:
+      - 'item["app_dir"] is defined'
+
+  # Ownership as the package sets it. With the default log_as_user, the log files themselves are
+  # created by the root server process and handed to the account the worker runs as.
+  - name: 'mkdir -p {{ shiny_server__log_dir }}'
+    ansible.builtin.file:
+      path: '{{ shiny_server__log_dir }}'
+      state: 'directory'
+      owner: '{{ shiny_server__conf_run_as }}'
+      group: '{{ shiny_server__conf_run_as }}'
+      mode: 0o755
+
+  # Shiny Server creates a missing log directory itself, but only at the moment the first worker
+  # starts. Creating them here lets logrotate find them before anyone has visited an application.
+  - name: 'mkdir -p the per-location log directories'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ __shiny_server__log_dirs }}'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:configure'
+
+
+- block:
+
+  - name: 'Deploy /etc/shiny-server/shiny-server.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/shiny-server/shiny-server.conf.j2'
+      dest: '/etc/shiny-server/shiny-server.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'shiny_server: reload shiny-server'
+
+  - name: 'mkdir -p /etc/systemd/system/shiny-server.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/shiny-server.service.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/shiny-server.service.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/shiny-server.service.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/shiny-server.service.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__shiny_server__z00_linuxfabrik_result'
+    notify: 'shiny_server: restart shiny-server'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__shiny_server__z00_linuxfabrik_result is changed'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:configure'
+
+
+- block:
+
+  # A separate file, because the package overwrites /etc/logrotate.d/shiny-server on every
+  # update. That one covers the daemon log, this one the per-session application logs.
+  - name: 'Deploy /etc/logrotate.d/shiny-server-apps'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/shiny-server-apps.j2'
+      dest: '/etc/logrotate.d/shiny-server-apps'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:logrotate'
+
+
+- block:
+
+  - name: 'systemctl {{ shiny_server__service_enabled | bool | ternary("enable", "disable") }} shiny-server.service'
+    ansible.builtin.service:
+      name: 'shiny-server.service'
+      enabled: '{{ shiny_server__service_enabled | bool }}'
+
+  - name: 'systemctl {{ shiny_server__service_state | regex_replace("p?ed$", "") }} shiny-server.service'
+    ansible.builtin.service:
+      name: 'shiny-server.service'
+      state: '{{ shiny_server__service_state }}'
+    register: '__shiny_server__service_state_result'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:state'
+
+
+- block:
+
+  - name: 'Flush handlers so that the service can be used by other roles later'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:configure'
+    - 'shiny_server:state'
+    # so that a run limited to :users still reloads the configuration before the removals
+    # below take the accounts of the retired locations away
+    - 'shiny_server:users'
+
+
+# Runs after the flush above on purpose: the reload has to have taken the retired locations out
+# of the running configuration before their accounts and directories go, otherwise the worker
+# still serving one of them holds its account open.
+- block:
+
+  - name: 'Removals for the retired locations'
+    ansible.builtin.debug:
+      msg:
+        app_dirs: '{{ __shiny_server__removable_app_dirs }}'
+        log_dirs: '{{ __shiny_server__removable_log_dirs }}'
+        run_as_users: '{{ __shiny_server__removable_run_as_users }}'
+        tenant_dirs: '{{ __shiny_server__removable_tenant_dirs }}'
+
+  - name: 'rm -rf the application directories of the retired locations'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop: '{{ __shiny_server__removable_app_dirs }}'
+
+  - name: 'rm -rf the log directories of the retired locations'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop: '{{ __shiny_server__removable_log_dirs }}'
+
+  # rmdir removes an empty directory only, which is exactly the wanted guard: the tenant
+  # directory goes when its last application went, and stays when the operator keeps files there.
+  - name: 'rmdir the tenant directories of the retired locations'
+    ansible.builtin.command: 'rmdir {{ item | quote }}'
+    args:
+      removes: '{{ item }}'
+    register: '__shiny_server__rmdir_result'
+    changed_when: '__shiny_server__rmdir_result["rc"] == 0'
+    failed_when:
+      - '__shiny_server__rmdir_result["rc"] != 0'
+      - '"not empty" not in __shiny_server__rmdir_result["stderr"]'
+    loop: '{{ __shiny_server__removable_tenant_dirs }}'
+
+  # force, because a worker that has not reached its app_idle_timeout yet still holds the
+  # account. It serves nothing at this point, the location is gone from the configuration, and
+  # it exits on its own; userdel would otherwise abort the run depending on the traffic the
+  # application happened to see.
+  - name: 'userdel --remove --force the accounts of the retired locations'
+    ansible.builtin.user:
+      name: '{{ item }}'
+      state: 'absent'
+      remove: true
+      force: true
+    loop: '{{ __shiny_server__removable_run_as_users }}'
+
+  - name: 'groupdel the accounts of the retired locations'
+    ansible.builtin.group:
+      name: '{{ item }}'
+      state: 'absent'
+    loop: '{{ __shiny_server__removable_run_as_users }}'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:configure'
+    - 'shiny_server:users'

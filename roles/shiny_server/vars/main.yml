@@ -1,0 +1,111 @@
+# Published for roles that run earlier in the play than shiny_server. vars/main.yml is loaded at
+# play parse and visible to every role in the play, which defaults/main.yml also is, but keeping
+# the injections that other roles consume in one place makes them easy to find.
+
+# The R packages a Shiny application needs at a minimum. rmarkdown and knitr are what the
+# interactive-report half of Shiny is built on, htmltools is what shiny itself renders through.
+shiny_server__r__cran_packages__dependent_var:
+  - name: 'htmltools'
+  - name: 'knitr'
+  - name: 'rmarkdown'
+  - name: 'shiny'
+
+# Apache modules the generated vHosts need on top of what apache_httpd enables by default.
+# proxy_wstunnel carries the WebSocket a Shiny session runs on, proxy_http the ordinary
+# requests. headers, proxy and rewrite are enabled by that role already.
+shiny_server__apache_httpd__mods__dependent_var:
+  - filename: 'proxy_http'
+    enabled: true
+    state: 'present'
+    template: 'proxy_http'
+
+  - filename: 'proxy_wstunnel'
+    enabled: true
+    state: 'present'
+    template: 'proxy_wstunnel'
+
+
+# --- role-internal derived values ---
+
+# The locations that are actually deployed. Kept here so the state filtering is written once
+# instead of in every loop.
+__shiny_server__active_locations: '{{
+    shiny_server__locations__combined_var
+    | rejectattr("state", "defined") | list
+    + (shiny_server__locations__combined_var
+       | selectattr("state", "defined")
+       | selectattr("state", "ne", "absent") | list)
+  }}'
+
+# The application directories in use, for the site_dir overlap check.
+__shiny_server__active_app_dirs: '{{
+    __shiny_server__active_locations
+    | map(attribute="app_dir", default="") | list
+    | reject("eq", "") | list
+  }}'
+
+# The tenant accounts to create: every run_as of an active location except the account the
+# package already brings.
+__shiny_server__run_as_users: '{{
+    __shiny_server__active_locations
+    | map(attribute="run_as", default="") | list
+    | reject("eq", "")
+    | reject("eq", shiny_server__conf_run_as)
+    | unique | list
+  }}'
+
+# The per-location log directories to create. shiny_server__log_dir itself is handled
+# separately, because it keeps the ownership the package gives it.
+__shiny_server__log_dirs: '{{
+    __shiny_server__active_locations
+    | map(attribute="log_dir", default="") | list
+    | reject("eq", "")
+    | reject("eq", shiny_server__log_dir)
+    | unique | list
+  }}'
+
+# The locations the inventory has retired. Dropping an entry from the inventory only stops the
+# location from being served; removing what the role created takes an explicit state: 'absent'.
+__shiny_server__absent_locations: '{{
+    shiny_server__locations__combined_var
+    | selectattr("state", "defined")
+    | selectattr("state", "eq", "absent") | list
+  }}'
+
+# What a retired location leaves behind, minus everything an active location still uses. Two
+# locations of one tenant commonly share an account and a log directory, so retiring one of them
+# must not take the other one's account with it. The service account is never removed, it
+# belongs to the package.
+__shiny_server__removable_run_as_users: '{{
+    (__shiny_server__absent_locations
+     | map(attribute="run_as", default="") | list
+     | reject("eq", "")
+     | reject("eq", shiny_server__conf_run_as)
+     | unique | list)
+    | difference(__shiny_server__run_as_users)
+  }}'
+
+__shiny_server__removable_app_dirs: '{{
+    (__shiny_server__absent_locations
+     | map(attribute="app_dir", default="") | list
+     | reject("eq", "") | unique | list)
+    | difference(__shiny_server__active_locations | map(attribute="app_dir", default="") | list)
+  }}'
+
+__shiny_server__removable_log_dirs: '{{
+    (__shiny_server__absent_locations
+     | map(attribute="log_dir", default="") | list
+     | reject("eq", "") | unique | list)
+    | difference(__shiny_server__log_dirs + [shiny_server__log_dir])
+  }}'
+
+# The per-tenant directory above the application directories, removed only when the last
+# application of that tenant is gone. rmdir refuses a non-empty directory, which is the guard.
+__shiny_server__removable_tenant_dirs: '{{
+    (__shiny_server__removable_app_dirs
+     | map("dirname") | list
+     | select("match", shiny_server__tenants_dir | regex_escape ~ "/")
+     | unique | list)
+    | difference(__shiny_server__active_locations
+                 | map(attribute="app_dir", default="") | map("dirname") | list)
+  }}'

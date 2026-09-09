@@ -1,0 +1,98 @@
+- name: 'Playbook linuxfabrik.lfops.setup_shiny_server'
+  hosts:
+    - 'lfops_setup_shiny_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+    # apache_httpd runs before shiny_server, so the vHost and htpasswd lists have to exist
+    # before the roles start. Rendering the Apache configuration of an arbitrary number of
+    # tenants needs a Jinja loop, which a variable definition cannot carry.
+    - ansible.builtin.import_role:
+        name: 'shiny_server'
+        tasks_from: 'apache-httpd-vhosts.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    # === Repositories ===
+
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      # CRB is shipped in the Rocky default repo file (Rocky 9+, formerly from EPEL), so enable it there only.
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
+        - 'not setup_shiny_server__skip_repo_baseos | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
+        - 'not setup_shiny_server__skip_repo_epel | d(false)'
+
+    # === SELinux ===
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_shiny_server__skip_policycoreutils | d(false)'
+
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          apache_httpd__selinux__booleans__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_shiny_server__skip_selinux | d(false)'
+
+    # === R ===
+
+    - role: 'linuxfabrik.lfops.r'
+      r__cran_packages__dependent_var: '{{
+          shiny_server__r__cran_packages__dependent_var
+        }}'
+      r__renviron_site__dependent_var: '{{
+          shiny_server__r__renviron_site__dependent_var
+        }}'
+      when:
+        - 'not setup_shiny_server__skip_r | d(false)'
+
+    # === Application ===
+
+    - role: 'linuxfabrik.lfops.shiny_server'
+
+    # === Web server ===
+
+    # python3-passlib is what the htpasswd task of the apache_httpd role needs.
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{ apache_httpd__python__modules__dependent_var | d([]) }}'
+      when:
+        - 'not setup_shiny_server__skip_python | d(false)'
+
+    - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__htpasswd__dependent_var: '{{ shiny_server__apache_httpd__htpasswd__dependent_var | d([]) }}'
+      apache_httpd__mods__dependent_var: '{{ shiny_server__apache_httpd__mods__dependent_var | d([]) }}'
+      apache_httpd__vhosts__dependent_var: '{{ shiny_server__apache_httpd__vhosts__dependent_var | d([]) }}'
+      when:
+        - 'not setup_shiny_server__skip_apache_httpd | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'

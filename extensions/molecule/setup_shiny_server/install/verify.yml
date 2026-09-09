@@ -1,0 +1,135 @@
+# What is worth asserting here is what only the running system can confirm: that
+# each tenant really gets its own R worker under its own account, that one
+# tenant cannot read the other's files, and that the reverse proxy in front
+# actually asks for a password. That the configuration file was written is
+# guaranteed by the template task and is not checked.
+- name: 'Verify setup_shiny_server'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that shiny-server.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["shiny-server.service"]["state"] == "running"'
+
+    - name: 'Assert that httpd.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["httpd.service"]["state"] == "running"'
+
+    - name: 'systemctl show shiny-server' # noqa command-instead-of-module (read-only property query)
+      ansible.builtin.command: 'systemctl show shiny-server --property=MemoryMax --property=TasksMax'
+      changed_when: false
+      register: '__molecule__shiny_server_unit_result'
+
+    # Proves that the drop-in reaches the running unit, which the package would
+    # have overwritten had the role templated the unit file itself.
+    - name: 'Assert that the resource limits of the drop-in are in effect'
+      ansible.builtin.assert:
+        that:
+          - '"MemoryMax=2147483648" in __molecule__shiny_server_unit_result["stdout"]'
+          - '"TasksMax=200" in __molecule__shiny_server_unit_result["stdout"]'
+
+    - name: 'curl the applications on the Shiny Server listener'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:3838{{ item }}/'
+        status_code: 200
+      loop:
+        - '/acme/app1'
+        - '/acme/app2'
+        - '/globex/app1'
+
+    # One single-threaded worker per application is what the whole per-tenant layout
+    # exists for, and each has to run under the tenant's own account. Tenant acme runs
+    # two applications on one account, so it has to end up with two workers: that is
+    # the difference between one location per application and one per tenant, and the
+    # reason a long computation in one application does not block the other.
+    - name: 'pgrep --list-full SockJSAdapter'
+      ansible.builtin.command: 'ps -eo user:20,args'
+      changed_when: false
+      register: '__molecule__shiny_server_worker_result'
+
+    - name: 'Assert that every application has its own worker under its own account'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__shiny_server_worker_result["stdout_lines"]
+             | select("search", "^" ~ item["user"] ~ "\\s+.*SockJSAdapter") | list | length == item["workers"]'
+        fail_msg: >-
+          Expected {{ item["workers"] }} R worker(s) running as {{ item["user"] }}, found
+          {{ __molecule__shiny_server_worker_result["stdout_lines"]
+             | select("search", "^" ~ item["user"] ~ "\\s+.*SockJSAdapter") | list | length }}.
+      loop:
+        - user: 'shiny-acme'
+          workers: 2
+        - user: 'shiny-globex'
+          workers: 1
+      loop_control:
+        label: '{{ item["user"] }}'
+
+    - name: 'sudo --user=shiny-acme cat the globex application'
+      ansible.builtin.command: 'su -s /bin/bash -- shiny-acme -c "cat /srv/shiny-server/tenants/globex/app1/app.R"'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__shiny_server_cross_tenant_result'
+
+    - name: 'Assert that one tenant cannot read the other tenant files'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__shiny_server_cross_tenant_result["rc"] != 0'
+        fail_msg: 'shiny-acme was able to read the application of shiny-globex.'
+
+    - name: 'curl http://shiny-acme.example.com/app1/ without credentials'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/app1/'
+        headers:
+          Host: 'shiny-acme.example.com'
+        status_code: 401
+
+    - name: 'curl http://shiny-acme.example.com/app1/ with credentials'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/app1/'
+        headers:
+          Host: 'shiny-acme.example.com'
+        url_username: 'firstname.lastname'
+        url_password: 'linuxfabrik'
+        force_basic_auth: true
+        status_code: 200
+
+    # An upload arrives by POST and the SockJS fallback transports use it too,
+    # so a proxy that answers 405 breaks both without any visible error.
+    - name: 'curl --request POST http://shiny-acme.example.com/app1/'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/app1/'
+        method: 'POST'
+        headers:
+          Host: 'shiny-acme.example.com'
+        url_username: 'firstname.lastname'
+        url_password: 'linuxfabrik'
+        force_basic_auth: true
+        status_code:
+          - 200
+          - 404
+      register: '__molecule__shiny_server_post_result'
+
+    - name: 'Assert that POST is not rejected by the proxy'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__shiny_server_post_result["status"] != 405'
+
+    # Proves the whole chain of the r role: Rprofile.site is read, the package
+    # manager is configured, and the user agent that makes it serve binaries is
+    # set. Without the latter, R silently compiles every package from source.
+    - name: 'R -e getOption("repos")'
+      ansible.builtin.command: >-
+        R --quiet --no-save --no-restore
+          -e 'cat(getOption("repos")[["P3M"]], getOption("HTTPUserAgent"))'
+      changed_when: false
+      register: '__molecule__r_repos_result'
+
+    - name: 'Assert that R reads from the Posit Public Package Manager with a user agent'
+      ansible.builtin.assert:
+        that:
+          - '"packagemanager.posit.co" in __molecule__r_repos_result["stdout"]'
+          - '"R (" in __molecule__r_repos_result["stdout"]'

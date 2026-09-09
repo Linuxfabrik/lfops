@@ -1,0 +1,6 @@
+# Same playbook as the install sub-scenario; only the scenario inventory differs. The remove
+# sub-scenario retires one of tenant acme's two applications and all of tenant globex, which
+# exercises both halves of the removal path: what is shared with a still-active location has to
+# survive, what nothing else uses has to go.
+- name: 'Converge setup_shiny_server playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_shiny_server'
