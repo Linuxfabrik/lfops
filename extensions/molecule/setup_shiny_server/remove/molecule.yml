@@ -1,13 +1,11 @@
 # Molecule scenario marker for the 'setup_shiny_server/remove' sub-scenario, run with
 # `molecule test --scenario-name setup_shiny_server/remove`.
 #
-# It borrows the prepare step of the install sub-scenario, which derives the application
-# directories from the locations in group_vars. Here that includes the retired ones, so the
-# directories this run is meant to remove demonstrably exist before converge starts.
-#
-# In a real suite, run install first to create the state and then this one on the same
-# instances (`molecule test --destroy=never`). As a standalone run it still exercises the
-# removal path, because prepare creates what converge then takes away.
+# It overrides the prepare step (see prepare.yml), which seeds the accounts, directories and
+# applications that converge then retires. That state cannot be inherited by running the install
+# sub-scenario first: Molecule gives every sub-scenario its own ephemeral directory and therefore
+# its own SSH key, so the instances created by one are unreachable from the other. The
+# sub-scenario is standalone by necessity.
 provisioner:
   playbooks:
-    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/../install/prepare.yml'
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'
