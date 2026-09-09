@@ -305,6 +305,16 @@ Variables for `php.ini` directives and their default values, defined and support
 * Type: String.
 * Default: `'On'`
 
+`php__ini_session_cookie_samesite__group_var` / `php__ini_session_cookie_samesite__host_var`
+
+* The `SameSite` attribute of the session cookie, which decides on which cross-site requests the browser sends it. One of `Lax`, `Strict`, `None` or an empty string. PHP only validates the value when a script sets it through `ini_set()`; read from an ini file it is written into the `Set-Cookie` header verbatim, so a typo silently ships a nonsense attribute that browsers then ignore. The role's `meta/argument_specs.yml` therefore restricts the variable to the four accepted values and aborts at role entry instead. [php.net](https://www.php.net/manual/en/session.configuration.php)
+* `Lax` sends the cookie on same-site requests and on top-level cross-site navigations, but not on cross-site POSTs, iframes or XHR, which is what stops a foreign page from acting under the visitor's session. `Strict` withholds it on a top-level navigation as well, so a user following a link from an email lands logged out until the next click. `None` switches the protection off and only works together with `php__ini_session_cookie_secure__*_var`, otherwise browsers drop the cookie entirely. An empty string emits no attribute and leaves the decision to the browser, which differs between Chrome, Firefox and Safari.
+* Set `None` (with `Secure`) for an application whose identity provider returns through a cross-site POST, as SAML HTTP-POST binding and the OIDC `form_post` response mode do: with `Lax` the callback arrives without the session and the login loops. On a host serving more than one application, set it for that pool alone via `php_value_session_cookie_samesite` in `php__fpm_pools__*_var` instead of host-wide. Applications embedded from another registrable domain need it too. An identity provider or an embedded service under the same registrable domain, for example Collabora at `office.example.com` inside Nextcloud at `cloud.example.com`, counts as same-site and is unaffected.
+* Only deployed from PHP 7.3 on, since PHP 7.2 does not know the directive.
+* Type: String.
+* Default: `'Lax'`
+* Deviates from the upstream default, which is an empty string up to PHP 8.5 and therefore emits no attribute at all. PHP itself moves to `Lax` in 8.6, so this anticipates the upstream default rather than departing from it.
+
 `php__ini_session_cookie_secure__group_var` / `php__ini_session_cookie_secure__host_var`
 
 * Sends the session cookie only over HTTPS. Leave off on hosts that also serve sessions over plain HTTP. [php.net](https://www.php.net/manual/en/session.configuration.php)
@@ -368,6 +378,7 @@ php__ini_opcache_save_comments__host_var: 1
 php__ini_opcache_validate_timestamps__host_var: 1
 php__ini_post_max_size__host_var: '8M'
 php__ini_session_cookie_httponly__host_var: 'On'
+php__ini_session_cookie_samesite__host_var: 'Lax'
 php__ini_session_cookie_secure__host_var: 'Off'
 php__ini_session_gc_maxlifetime__host_var: 1440
 php__ini_session_sid_length__host_var: 32
@@ -629,6 +640,13 @@ Variables for PHP-FPM pool directives and their default values, defined and supp
         * Type: String.
         * Default: `/var/lib/php/session/<pool>` (RedHat), `/var/lib/php/sessions/<pool>` (Debian)
         * Deviates from the upstream default, which points every pool at the one shared session base (`/var/lib/php/session` on RedHat as a `php_value`, `/var/lib/php/sessions` from `php.ini` on Debian): pools sharing one directory can read each other's session files, and with it each other's logged-in users.
+
+    * `php_value_session_cookie_httponly` / `php_value_session_cookie_samesite` / `php_value_session_cookie_secure`:
+
+        * Optional. The session cookie policy for this pool, overriding the host-wide `php__ini_session_cookie_*__*_var` for its own workers. Use them where one host serves applications with different needs: an application whose identity provider returns through a cross-site POST (SAML HTTP-POST binding, OIDC `form_post`) needs `php_value_session_cookie_samesite: 'None'` together with `php_value_session_cookie_secure: 'On'`, which browsers require for `None`, while the rest of the host keeps `Lax`. An internal site served over plain HTTP needs `php_value_session_cookie_secure: 'Off'`. `session.cookie_samesite` is only rendered from PHP 7.3 on, since 7.2 does not know the directive.
+        * Type: String.
+        * Default: the host-wide `php__ini_session_cookie_httponly__*_var`, `php__ini_session_cookie_samesite__*_var` and `php__ini_session_cookie_secure__*_var`
+        * Deployed as `php_value` and not as `php_admin_value`, unlike the limits above: those are ceilings a pool must not raise, whereas the cookie policy is something an application may legitimately manage itself through `session_set_cookie_params()`. As a `php_admin_value` that call is refused (`ini_set()` returns `false` and the value does not move), and an application that deliberately needs `None` fails at runtime as a login loop rather than visibly. `php_value` also keeps the semantics the `php.ini` setting already had.
 
     * `php_admin_value_soap_wsdl_cache_dir`:
 

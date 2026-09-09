@@ -21,6 +21,7 @@ php__ini_opcache_save_comments__role_var: 1
 php__ini_opcache_validate_timestamps__role_var: 1
 php__ini_post_max_size__role_var: '8M'
 php__ini_session_cookie_httponly__role_var: 'On'
+php__ini_session_cookie_samesite__role_var: 'Lax'  # upstream default: '' (no attribute) up to PHP 8.5
 php__ini_session_cookie_secure__role_var: 'Off'
 php__ini_session_gc_maxlifetime__role_var: 1440
 php__ini_session_trans_sid_tags__role_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
