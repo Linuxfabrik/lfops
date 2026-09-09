@@ -1,0 +1,98 @@
+shiny_server__conf_allow_app_override: false  # upstream default: true
+shiny_server__conf_app_idle_timeout: 5
+shiny_server__conf_app_init_timeout: 60
+shiny_server__conf_frame_options: 'sameorigin'  # upstream default: allow
+shiny_server__conf_http_keepalive_timeout: 45
+shiny_server__conf_listen_host: '127.0.0.1'  # upstream default: * (every interface)
+shiny_server__conf_listen_port: 3838
+shiny_server__conf_preserve_logs: false
+shiny_server__conf_run_as: 'shiny'
+shiny_server__conf_sanitize_errors: true
+shiny_server__conf_simple_scheduler: 100
+
+# Derived from shiny_server__version and the platform in vars/RedHat.yml when empty.
+shiny_server__download_url: ''
+
+shiny_server__htpasswd_dir: '/etc/httpd'
+shiny_server__log_dir: '/var/log/shiny-server'
+shiny_server__logrotate: '{{ logrotate__rotate | d(14) }}'
+
+# Resource limit for the systemd drop-in. Empty leaves the setting out of it.
+shiny_server__memory_max: ''
+
+shiny_server__service_enabled: true
+shiny_server__service_state: 'started'
+shiny_server__shared_dir: '/srv/shiny-server/shared'
+
+# Must stay distinct from shiny_server__conf_run_as: that account's group owns the
+# application directory of every location left at the default run_as, so merging the
+# two would make those directories readable by all tenants.
+shiny_server__shared_group: 'shiny-shared'
+
+# Root the role creates; shiny_server__shared_dir and shiny_server__tenants_dir live below it.
+shiny_server__site_dir: '/srv/shiny-server'
+
+# Resource limit for the systemd drop-in. Empty leaves the setting out of it.
+shiny_server__tasks_max: ''
+
+shiny_server__tenants_dir: '/srv/shiny-server/tenants'
+shiny_server__tmp_dir: '/var/lib/shiny-server/tmp'
+
+# Shiny Server aborts the launch of a worker whose run_as user has no home directory,
+# so these have to be real directories (lib/worker/app-worker.ts:127).
+shiny_server__users_home_dir: '/var/lib/shiny-server/home'
+
+# --- Shiny Server locations ---
+shiny_server__locations__combined_var: '{{ (
+      shiny_server__locations__role_var +
+      shiny_server__locations__dependent_var +
+      shiny_server__locations__group_var +
+      shiny_server__locations__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+
+shiny_server__locations__dependent_var: []
+shiny_server__locations__group_var: []
+shiny_server__locations__host_var: []
+shiny_server__locations__role_var: []
+
+# --- Apache httpd vHosts ---
+shiny_server__vhosts__combined_var: '{{ (
+      shiny_server__vhosts__role_var +
+      shiny_server__vhosts__dependent_var +
+      shiny_server__vhosts__group_var +
+      shiny_server__vhosts__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="conf_server_name")
+  }}'
+
+shiny_server__vhosts__dependent_var: []
+shiny_server__vhosts__group_var: []
+shiny_server__vhosts__host_var: []
+shiny_server__vhosts__role_var: []
+
+# Applied to every generated vHost, overridable per vHost with the key of the same
+# name without the `vhost_default_` prefix.
+shiny_server__vhost_default_allowed_http_methods:
+  # POST carries the uploads and the SockJS fallback transports, HEAD the monitoring
+  # checks.
+  - 'GET'
+  - 'HEAD'
+  - 'OPTIONS'
+  - 'POST'
+shiny_server__vhost_default_auth_enabled: true
+shiny_server__vhost_default_conf_proxy_timeout: 300  # upstream default: 60 (Apache Timeout)
+shiny_server__vhost_default_credentials_header_enabled: true
+shiny_server__vhost_default_virtualhost_port: 80
+
+# --- Injections into other roles ---
+# These two are filled in by tasks/apache-httpd-vhosts.yml, which the setup playbook
+# imports in its pre_tasks. Rendering the Apache configuration of an arbitrary number
+# of tenants needs a Jinja loop, which a variable definition cannot carry.
+shiny_server__apache_httpd__htpasswd__dependent_var: []
+shiny_server__apache_httpd__vhosts__dependent_var: []
+
+# The worker reaches its environment only through Renviron.site, because Shiny Server
+# starts it with `su --login`, which discards the environment of the service.
+shiny_server__r__renviron_site__dependent_var:
+  - name: 'TMPDIR'
+    value: '{{ shiny_server__tmp_dir }}'

@@ -1,0 +1,54 @@
+# {{ ansible_managed }}
+# 2026090901
+
+{% if not shiny_server__conf_allow_app_override | bool %}
+# Without this, an application directory may raise its own request limit, turn error
+# sanitizing off, make its log files world readable and pick its own Python interpreter
+# through a .shiny_app.conf next to the application code.
+allow_app_override false;
+{% endif %}
+http_keepalive_timeout {{ shiny_server__conf_http_keepalive_timeout }};
+preserve_logs {{ shiny_server__conf_preserve_logs | bool | ternary('true', 'false') }};
+run_as {{ shiny_server__conf_run_as }};
+
+server {
+    listen {{ shiny_server__conf_listen_port }} {{ shiny_server__conf_listen_host }};
+
+    app_idle_timeout {{ shiny_server__conf_app_idle_timeout }};
+    app_init_timeout {{ shiny_server__conf_app_init_timeout }};
+    frame_options {{ shiny_server__conf_frame_options }};
+    sanitize_errors {{ shiny_server__conf_sanitize_errors | bool | ternary('true', 'false') }};
+    simple_scheduler {{ shiny_server__conf_simple_scheduler }};
+{% for item in shiny_server__locations__combined_var | sort(attribute='path') if item['state'] | d('present') != 'absent' %}
+
+    location {{ item['path'] }} {
+{% if item['site_dir'] | d() %}
+        site_dir {{ item['site_dir'] }};
+{% else %}
+        app_dir {{ item['app_dir'] }};
+{% endif %}
+        log_dir {{ item['log_dir'] | d(shiny_server__log_dir) }};
+{% if item['run_as'] | d() %}
+        run_as {{ item['run_as'] }};
+{% endif %}
+{% if item['app_idle_timeout'] is defined %}
+        app_idle_timeout {{ item['app_idle_timeout'] }};
+{% endif %}
+{% if item['app_init_timeout'] is defined %}
+        app_init_timeout {{ item['app_init_timeout'] }};
+{% endif %}
+{% if item['directory_index'] is defined %}
+        directory_index {{ item['directory_index'] | bool | ternary('on', 'off') }};
+{% endif %}
+{% if item['python'] | d() %}
+        python {{ item['python'] }};
+{% endif %}
+{% if item['sanitize_errors'] is defined %}
+        sanitize_errors {{ item['sanitize_errors'] | bool | ternary('true', 'false') }};
+{% endif %}
+{% if item['simple_scheduler'] is defined %}
+        simple_scheduler {{ item['simple_scheduler'] }};
+{% endif %}
+    }
+{% endfor %}
+}
