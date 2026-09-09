@@ -153,6 +153,35 @@
     - 'shiny_server:users'
 
 
+# Deployed before the package on purpose. The package copies its own configuration only when
+# none exists and then enables and starts the service straight away, so without this the service
+# would come up once listening on every interface and serving /srv/shiny-server without access
+# control.
+- block:
+
+  - name: 'mkdir -p /etc/shiny-server'
+    ansible.builtin.file:
+      path: '/etc/shiny-server'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/shiny-server/shiny-server.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/shiny-server/shiny-server.conf.j2'
+      dest: '/etc/shiny-server/shiny-server.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'shiny_server: reload shiny-server'
+
+  tags:
+    - 'shiny_server'
+    - 'shiny_server:configure'
+
+
 - block:
 
   - name: 'Gather package facts'
@@ -162,18 +191,6 @@
   - name: 'Set installed version fact'
     ansible.builtin.set_fact:
       __shiny_server__installed_version: '{{ ansible_facts["packages"]["shiny-server"][0]["version"] | d("") }}'
-
-  # Deploy the configuration before the package, not after. The package copies its own
-  # configuration only when none exists and then enables and starts the service straight away,
-  # so without this the service would come up once listening on every interface and serving
-  # /srv/shiny-server without access control.
-  - name: 'mkdir -p /etc/shiny-server'
-    ansible.builtin.file:
-      path: '/etc/shiny-server'
-      state: 'directory'
-      owner: 'root'
-      group: 'root'
-      mode: 0o755
 
   - block:
 
@@ -305,16 +322,6 @@
 
 
 - block:
-
-  - name: 'Deploy /etc/shiny-server/shiny-server.conf'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/shiny-server/shiny-server.conf.j2'
-      dest: '/etc/shiny-server/shiny-server.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    notify: 'shiny_server: reload shiny-server'
 
   - name: 'mkdir -p /etc/systemd/system/shiny-server.service.d/'
     ansible.builtin.file:
