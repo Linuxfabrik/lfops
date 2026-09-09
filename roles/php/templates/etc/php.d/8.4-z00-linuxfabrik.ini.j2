@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2025072801
+; 2026090801
 ; php 8.4
 
 [PHP]
@@ -39,6 +39,9 @@ smtp_port = 25
 
 [Session]
 session.cookie_httponly = {{ php__ini_session_cookie_httponly__combined_var }}
+; quoted: PHP's ini parser reads the bare word none as an empty string, so an unquoted
+; None would silently disable the attribute instead of setting SameSite=None.
+session.cookie_samesite = "{{ php__ini_session_cookie_samesite__combined_var }}"
 session.cookie_secure = {{ php__ini_session_cookie_secure__combined_var }}
 session.gc_maxlifetime = {{ php__ini_session_gc_maxlifetime__combined_var }}
 session.sid_length = {{ php__ini_session_sid_length__combined_var }}

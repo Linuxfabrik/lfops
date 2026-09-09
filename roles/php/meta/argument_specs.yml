@@ -622,6 +622,27 @@ argument_specs:
         default: ''
         description: 'Whether the session cookie is hidden from JavaScript. Host-level override.'
 
+      php__ini_session_cookie_samesite__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        choices: ['', 'Lax', 'None', 'Strict']
+        description: 'The SameSite attribute of the session cookie. Dependent-role injection.'
+
+      php__ini_session_cookie_samesite__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        choices: ['', 'Lax', 'None', 'Strict']
+        description: 'The SameSite attribute of the session cookie. Group-level override.'
+
+      php__ini_session_cookie_samesite__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        choices: ['', 'Lax', 'None', 'Strict']
+        description: 'The SameSite attribute of the session cookie. Host-level override.'
+
       php__ini_session_cookie_secure__dependent_var:
         type: 'str'
         required: false
