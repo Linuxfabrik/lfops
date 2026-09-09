@@ -1,0 +1,28 @@
+# Refuses lfops__reboot_now on a host that cannot perform the reboot, and registers the stat
+# result that request-reboot.yml reads later.
+#
+# Import this from the calling role's validation block, tagged 'always', so the contradiction is
+# decided before the role writes anything. Deliberately not gated on whether this run changes
+# anything: the check has to surface on every run, not only on the one run that happens to need a
+# reboot, which is the run that can least afford to abort halfway through.
+#
+#   - name: 'Assert that a reboot is possible'
+#     ansible.builtin.include_role:
+#       name: 'shared'
+#       tasks_from: 'assert-reboot-possible.yml'
+#
+# Parameters: none.
+
+- name: 'stat /usr/local/sbin/schedule-reboot'
+  ansible.builtin.stat:
+    path: '/usr/local/sbin/schedule-reboot'
+  register: '__shared__schedule_reboot_stat_result'
+
+- name: 'Assert that the schedule-reboot mechanism is deployed'
+  ansible.builtin.assert:
+    that:
+      - '__shared__schedule_reboot_stat_result["stat"]["exists"] | bool'
+    quiet: true
+    fail_msg: 'lfops__reboot_now is set, but /usr/local/sbin/schedule-reboot is missing. Run the schedule_reboot role, or unset the variable and reboot the host yourself.'
+  when:
+    - 'lfops__reboot_now | d(false) | bool'

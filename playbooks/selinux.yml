@@ -22,6 +22,26 @@
       when:
         - 'not selinux__skip_policycoreutils | d(false)'
 
+    - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
+      when:
+        - 'not selinux__skip_postfix | d(false)'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not selinux__skip_mailto_root | d(false)'
+
+    # deployed before the selinux role, so the schedule-reboot command is in place when a
+    # SELinux state change requests a reboot
+    - role: 'linuxfabrik.lfops.schedule_reboot'
+      when:
+        - 'not selinux__skip_schedule_reboot | d(false)'
+
     - role: 'linuxfabrik.lfops.selinux'
 
 

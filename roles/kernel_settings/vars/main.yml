@@ -1,4 +1,0 @@
-# Collected in __shared__end_of_play_messages and printed once at the end of the play, see
-# roles/shared/tasks/print-messages.yml. Kept in one place because the role both prints it inline
-# and appends it there.
-__kernel_settings__end_of_play_message: 'kernel_settings: Please restart the server manually to apply new kernel settings.'

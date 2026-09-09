@@ -1,0 +1,33 @@
+# The modules the role blocks, in inventory order, using the same rule as the template that writes
+# the modprobe configuration: an entry is blocked unless its `enabled` is true. Reading `enabled`
+# through `map(attribute=..., default=false)` and `bool` keeps that rule identical to the
+# template's `not (item['enabled'] | d(false) | bool)`, including for an entry that carries no
+# `enabled` key at all.
+__kernel_modules__blocked_module_names: '{{
+    kernel_modules__modules__combined_var | map(attribute="name") | list
+    | zip(kernel_modules__modules__combined_var
+          | map(attribute="enabled", default=false) | map("bool") | list)
+    | rejectattr(1) | map(attribute=0) | list
+  }}'
+
+# The modules the running kernel has loaded, one per line of /proc/modules with the name in the
+# first space-separated field. /proc/modules spells every name with underscores, whatever modprobe
+# accepts on the command line ("firewire-core" is listed as "firewire_core"), so the blocked names
+# are normalised the same way before the two lists are compared.
+# Verified against Linux 5.14 on Rocky 9.8.
+#
+# split/first rather than regex_replace on purpose: in a single-quoted YAML scalar a backslash is
+# literal, so the "\S" of a character class would have to be written unescaped to survive into the
+# regex, which reads like a typo and invites the next person to "fix" it back into silence.
+__kernel_modules__loaded_module_names: '{{
+    (__kernel_modules__proc_modules_result["content"] | d("") | b64decode).splitlines()
+    | map("split", " ") | map("first") | list
+  }}'
+
+# Blocking a module keeps it from being loaded from now on, but one that is already loaded stays
+# loaded until the host reboots. Only then is the change actually in effect, so only then is a
+# reboot worth asking for: a host that never loaded any of them is already in the target state.
+__kernel_modules__loaded_blocked_module_names: '{{
+    __kernel_modules__blocked_module_names | map("replace", "-", "_") | list
+    | intersect(__kernel_modules__loaded_module_names)
+  }}'

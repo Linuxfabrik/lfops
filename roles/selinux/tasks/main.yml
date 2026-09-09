@@ -25,6 +25,20 @@
 
 - block:
 
+  # a precondition, not a result: the host cannot perform the reboot lfops__reboot_now asks of it,
+  # so the run is refused before /etc/selinux/config is rewritten rather than after.
+  - name: 'Assert that a reboot is possible'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'assert-reboot-possible.yml'
+
+  tags:
+    # use 'always' so the check runs whichever section of the role the operator selected.
+    - 'always'
+
+
+- block:
+
   - name: 'Combined SELinux modules:'
     ansible.builtin.debug:
       var: 'selinux__modules__combined_var'
@@ -293,6 +307,23 @@
     ansible.posix.selinux:
       policy: '{{ selinux__policy }}'
       state: '{{ selinux__state }}'
+    register: '__selinux__setenforce_result'
+
+  # The module reports reboot_required whenever SELinux has to be switched on or off, which the
+  # running kernel cannot do. It keeps reporting it until the host has actually rebooted, so the
+  # request is additionally gated on this run having changed something: the run that rewrites
+  # /etc/selinux/config files the request, every run after it stays quiet while the reboot is
+  # still pending. The spool file lives in /run and outlives those runs.
+  - name: 'Request a reboot'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'request-reboot.yml'
+    vars:
+      shared__reboot_reason: 'selinux'
+      shared__reboot_detail: 'SELinux state changed'
+    when:
+      - '__selinux__setenforce_result is changed'
+      - '__selinux__setenforce_result["reboot_required"] | d(false) | bool'
 
   tags:
     - 'selinux'

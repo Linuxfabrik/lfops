@@ -198,6 +198,9 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `crypto_policy__skip_postfix`
+* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `crypto_policy__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `crypto_policy__skip_schedule_reboot`
 * [crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy)
 
 
@@ -516,6 +519,9 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `kernel_modules__skip_postfix`
+* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `kernel_modules__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `kernel_modules__skip_schedule_reboot`
 * [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules)
 
 
@@ -1031,6 +1037,9 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `selinux__skip_policycoreutils`
+* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `selinux__skip_postfix`
+* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `selinux__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `selinux__skip_schedule_reboot`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)
 
 
@@ -1041,6 +1050,11 @@ Calls the following roles (in order):
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network): `setup_basic__skip_network`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_basic__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_basic__skip_repo_epel`
+* [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`
+* [mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx): `setup_basic__skip_mailx`
+* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `setup_basic__skip_postfix`
+* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `setup_basic__skip_mailto_root`
+* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `setup_basic__skip_schedule_reboot`
 * [crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy): `setup_basic__skip_crypto_policy`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_basic__skip_policycoreutils`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_basic__skip_selinux`
@@ -1048,7 +1062,6 @@ Calls the following roles (in order):
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_basic__skip_kernel_settings`
 * [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps): `setup_basic__skip_core_dumps`
 * [systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald): `setup_basic__skip_systemd_journald`
-* [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone): `setup_basic__skip_timezone`
 * [logrotate](https://github.com/Linuxfabrik/lfops/tree/main/roles/logrotate): `setup_basic__skip_logrotate`
 * [rsyslog](https://github.com/Linuxfabrik/lfops/tree/main/roles/rsyslog): `setup_basic__skip_rsyslog`
@@ -1068,10 +1081,6 @@ Calls the following roles (in order):
 * [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd): `setup_basic__skip_sshd`
 * [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login): `setup_basic__skip_login`
 * [firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall): `setup_basic__skip_firewall`
-* [mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx): `setup_basic__skip_mailx`
-* [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `setup_basic__skip_postfix`
-* [mailto_root](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailto_root): `setup_basic__skip_mailto_root`
-* [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot): `setup_basic__skip_schedule_reboot`
 * [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update): `setup_basic__skip_system_update`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `setup_basic__skip_python_venv`
 * [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity): `setup_basic__skip_duplicity`

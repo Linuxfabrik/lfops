@@ -28,6 +28,15 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 * Loads LFOps-wide platform variables from the shared role's *own* `vars/<name>.yml` files (`role_path`, not the calling role), using the same least-to-most-specific order as `platform-variables.yml`. Imported in every playbook's `pre_tasks` so the variables are available to all roles in the play.
 * Parameters: none.
 
+`assert-reboot-possible.yml` and `request-reboot.yml`
+
+* The two halves of the reboot pattern, see the "Reboots" section of the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). `assert-reboot-possible.yml` belongs in the calling role's validation block: it refuses `lfops__reboot_now` on a host without `/usr/local/sbin/schedule-reboot` before the role writes anything, and registers the stat result the other file reads. `request-reboot.yml` files the reboot request, performs the reboot right away when `lfops__reboot_now` is set, or reports the pending reboot to the operator when the mechanism is not deployed. Include it gated on the calling role's own "a reboot is needed" condition.
+* Parameters of `assert-reboot-possible.yml`: none.
+* Parameters of `request-reboot.yml`:
+
+    * `shared__reboot_reason`: Mandatory. Spool file name, by convention the role name.
+    * `shared__reboot_detail`: Mandatory. What changed, in lower case. Goes into the notification mail and into the message the operator sees.
+
 `clone-lib-repo.yml`
 
 * Clones the [Linuxfabrik Python Libraries](https://github.com/Linuxfabrik/lib) to `/tmp/ansible.lib-repo` on the Ansible controller (`delegate_to: localhost`, serialized with `throttle: 1`, `--check`-safe). Includes a rescue path that wipes the directory and retries on failure (e.g. when an existing checkout is on a different ref).

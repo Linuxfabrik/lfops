@@ -22,23 +22,12 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
-  - name: 'stat /usr/local/sbin/schedule-reboot'
-    ansible.builtin.stat:
-      path: '/usr/local/sbin/schedule-reboot'
-    register: '__bootloader__schedule_reboot_stat_result'
-
-  # a precondition, not a result: the host cannot perform the reboot this mode asks of it, so the
-  # run is refused before the boot entries are written rather than after. Deliberately not gated
-  # on whether this run changes anything, so the contradiction surfaces on every run instead of
-  # on the one run that happens to need a reboot.
-  - name: 'Assert that the schedule-reboot mechanism is deployed'
-    ansible.builtin.assert:
-      that:
-        - '__bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
-      quiet: true
-      fail_msg: 'lfops__reboot_now is set, but /usr/local/sbin/schedule-reboot is missing. Run the schedule_reboot role, or unset the variable and reboot the host yourself.'
-    when:
-      - 'lfops__reboot_now | d(false) | bool'
+  # a precondition, not a result: the host cannot perform the reboot lfops__reboot_now asks of it,
+  # so the run is refused before the boot entries are written rather than after.
+  - name: 'Assert that a reboot is possible'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'assert-reboot-possible.yml'
 
   tags:
     # use 'always' so the validation runs even when other roles reference these variables.
@@ -72,84 +61,15 @@
   - name: 'Perform platform specific tasks'
     ansible.builtin.include_tasks: '{{ ansible_facts["os_family"] }}.yml'
 
-  # absolute path on purpose: the default sudoers of the Red Hat family sets
-  # `secure_path = /sbin:/bin:/usr/sbin:/usr/bin`, which leaves /usr/local/sbin out, so the bare
-  # command name is not found under `become: true`. Verified against sudo on Rocky 9.
-  - name: '/usr/local/sbin/schedule-reboot bootloader "kernel command line changed"'
-    ansible.builtin.command:
-      argv:
-        - '/usr/local/sbin/schedule-reboot'
-        - 'bootloader'
-        - 'kernel command line changed'
-    register: '__bootloader__schedule_reboot_result'
-    changed_when: '__bootloader__schedule_reboot_result["rc"] == 0'
+  - name: 'Request a reboot'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'request-reboot.yml'
+    vars:
+      shared__reboot_reason: 'bootloader'
+      shared__reboot_detail: 'kernel command line changed'
     when:
       - '__bootloader__reboot_needed | bool'
-      - 'not (lfops__reboot_now | d(false) | bool)'
-      - '__bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
-
-  # --now files the same request and additionally starts the actor, which mails the
-  # administrators, sets the Icinga downtime, waits out the grace period and reboots. That drops
-  # the connection, so the task cannot be waited on. Killing the async wrapper does not stop the
-  # systemd unit, so the reboot happens either way.
-  - name: '/usr/local/sbin/schedule-reboot --now bootloader "kernel command line changed"'
-    ansible.builtin.command:
-      argv:
-        - '/usr/local/sbin/schedule-reboot'
-        - '--now'
-        - 'bootloader'
-        - 'kernel command line changed'
-    async: 1
-    poll: 0 # fire and forget: the reboot drops the connection, do not wait on it
-    changed_when: true # with poll: 0 the result is the async handle, not the command's rc
-    when:
-      - '__bootloader__reboot_needed | bool'
-      - 'lfops__reboot_now | d(false) | bool'
-
-  # wait for the host to be gone before waiting for it to return, instead of assuming it went
-  # down within a fixed delay. do-reboot mails the administrators and calls the Icinga API before
-  # it sleeps the grace period, so the moment the host actually goes down is not bounded: a slow
-  # sendmail or an unreachable Icinga endpoint delays it. Without this task the connection check
-  # below can succeed against the still-running host, report the reboot as done and let the play
-  # continue into a host that goes down moments later.
-  - name: 'Wait for the host to go down'
-    ansible.builtin.wait_for:
-      host: '{{ ansible_host | d(inventory_hostname) }}'
-      port: '{{ ansible_port | d(22) }}'
-      state: 'stopped'
-      timeout: '{{ (schedule_reboot__reboot_grace_period | d(60) | int) + 300 }}'
-    delegate_to: 'localhost'
-    become: false
-    when:
-      - '__bootloader__reboot_needed | bool'
-      - 'lfops__reboot_now | d(false) | bool'
-
-  # without this, every role after this one in the play runs against a host that is going down
-  - name: 'Wait for the host to come back after the reboot'
-    ansible.builtin.wait_for_connection:
-      delay: 5
-      sleep: 5
-      timeout: 300
-    when:
-      - '__bootloader__reboot_needed | bool'
-      - 'lfops__reboot_now | d(false) | bool'
-
-  - name: 'Report that a manual reboot is required'
-    ansible.builtin.debug:
-      msg: '{{ __bootloader__end_of_play_message }}'
-    when:
-      - '__bootloader__reboot_needed | bool'
-      - 'not __bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
-
-  # printed again as one block above the PLAY RECAP, see roles/shared/tasks/print-messages.yml.
-  # The inline message above stays for plays outside this collection, which do not import the
-  # printer in their post_tasks.
-  - name: 'Collect the message for the end of the play'
-    ansible.builtin.set_fact:
-      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__bootloader__end_of_play_message] }}'
-    when:
-      - '__bootloader__reboot_needed | bool'
-      - 'not __bootloader__schedule_reboot_stat_result["stat"]["exists"] | bool'
 
   tags:
     - 'bootloader'

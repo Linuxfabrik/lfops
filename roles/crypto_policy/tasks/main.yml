@@ -1,5 +1,18 @@
 - block:
 
+  # a precondition, not a result: the host cannot perform the reboot lfops__reboot_now asks of it,
+  # so the run is refused before the policy is switched rather than after.
+  - name: 'Assert that a reboot is possible'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'assert-reboot-possible.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Deploy /etc/crypto-policies/policies/modules/*.pmod'
     ansible.builtin.template:
       backup: true
@@ -24,7 +37,23 @@
 
   - name: 'update-crypto-policies --set "{{ crypto_policy__policy }}"'
     ansible.builtin.command: 'update-crypto-policies --set "{{ crypto_policy__policy }}"'
+    register: '__crypto_policy__set_result'
+    changed_when: '__crypto_policy__set_result["rc"] == 0'
     when: 'crypto_policy__current_policy_result["stdout"] != crypto_policy__policy'
+
+  # "Note: System-wide crypto policies are applied on application start-up. It is recommended to
+  # restart the system for the change of policies to fully take place." is what the command itself
+  # prints. Everything already running keeps the old policy until it is restarted, so the host is
+  # in a mixed state until the reboot. Verified against crypto-policies 20260224 on Rocky 9.8.
+  - name: 'Request a reboot'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'request-reboot.yml'
+    vars:
+      shared__reboot_reason: 'crypto_policy'
+      shared__reboot_detail: 'system-wide crypto policy changed'
+    when:
+      - '__crypto_policy__set_result is changed'
 
   tags:
     - 'crypto_policy'

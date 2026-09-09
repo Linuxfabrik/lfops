@@ -457,16 +457,52 @@ The resulting behaviour, from the operator's point of view:
 
 The last two rows are the point of the pattern: a reboot the operator explicitly asked for must not degrade into a debug message, and a deploy whose reboot request was lost must not report success.
 
-[roles/bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader) is the reference implementation. Its `tasks/main.yml` covers every row of the table above, in two places: the precondition assert sits in the validation block at the top, the reboot tasks themselves at the end. Copy both and replace the reason (`bootloader`), the detail text and the role-internal variable that says a reboot is needed.
+The pattern lives in two task files of the `shared` role, so there is one implementation to fix when something about it is wrong. A consuming role wires them in at two points, and never spells out the mechanism itself:
 
-Notes on that pattern:
+* `shared/tasks/assert-reboot-possible.yml` goes into the role's validation block, tagged `always`.
+* `shared/tasks/request-reboot.yml` goes where the role knows whether it changed something, gated on that condition.
+
+```yaml
+# roles/example/tasks/main.yml, in the validation block
+  # a precondition, not a result: the host cannot perform the reboot lfops__reboot_now asks of it,
+  # so the run is refused before anything is written rather than after.
+  - name: 'Assert that a reboot is possible'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'assert-reboot-possible.yml'
+
+  tags:
+    - 'always'
+```
+
+```yaml
+# roles/example/tasks/main.yml, after the change was made
+  - name: 'Request a reboot'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'request-reboot.yml'
+    vars:
+      shared__reboot_reason: 'example'
+      shared__reboot_detail: 'kernel command line changed'
+    when:
+      - '__example__reboot_needed | bool'
+```
+
+[roles/bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader) is the reference implementation; [roles/crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy), [roles/kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules) and [roles/selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux) are the other consumers.
+
+Choosing the condition is the part the shared files cannot do for you:
+
+* **Gate on this run having changed something, not on the host still needing a reboot.** The two differ whenever the signal stays true until the host reboots, which is the normal case for a state the running kernel cannot change: `ansible.posix.selinux` keeps reporting `reboot_required` on every run until SELinux is actually switched on. Requesting on that alone reports a change on every run, fails the Molecule `idempotence` step, and buys nothing, because the spool file lives in `/run` and outlives those runs. Requesting on the run that made the change is enough, and it is what makes "nothing changed, no request and no message" the first row of the table above.
+* **Do not request a reboot for a change with no runtime effect.** A configuration file that blocks a kernel module needs a reboot only when one of those modules is currently loaded; without that check every fresh host would reboot for a default that changes nothing on it. `roles/kernel_modules` reads `/proc/modules` for exactly that reason.
+* **Do not use `ansible.builtin.reboot`.** It bypasses the notification mail, the Icinga downtime and the coalescing with other pending requests, and it leaves the host's reboot state invisible to `schedule_reboot`.
+* **Check mode is safe without extra guards**, since `ansible.builtin.command` does not run under `--check`. A check run reports the pending change and touches nothing.
+
+Why `request-reboot.yml` is built the way it is, for whoever has to change it:
 
 * **Fire and forget is mandatory, not an optimisation.** `--now` starts `schedule-reboot.service`, whose actor sends the notification, sets the downtime, sleeps the grace period and reboots. A synchronous task would die on the dropped connection and fail the run after a reboot that actually succeeded. Killing the async wrapper does not stop the systemd unit, so the reboot happens either way.
 * **Wait for the host to go down before waiting for it to come back.** A `wait_for` on the SSH port with `state: 'stopped'`, delegated to the controller, has to sit between the two. Waiting only for the host to return looks equivalent but is not: the actor mails the administrators and calls the Icinga API before it sleeps the grace period, so the moment the host goes down is not bounded by any delay the role can compute. A slow `sendmail` or an unreachable Icinga endpoint is enough for the connection check to succeed against the still-running host, report the reboot as done, and let the play continue into a host that goes down moments later. On hosts reached through a jump host or a `ProxyCommand` this probes the wrong path; compare `/proc/sys/kernel/random/boot_id` before and after instead.
 * **`wait_for_connection` belongs to the same branch.** Without it, everything after the role in the play runs against a host that is going down.
-* **Do not use `ansible.builtin.reboot`.** It bypasses the notification mail, the Icinga downtime and the coalescing with other pending requests, and it leaves the host's reboot state invisible to `schedule_reboot`.
 * **Two tasks, not one with a conditional `argv`.** The two branches differ in more than the argument: only one of them is asynchronous, and only one can evaluate `rc` for `changed_when`.
-* **Check mode is safe without extra guards**, since `ansible.builtin.command` does not run under `--check`. A check run reports the pending change and touches nothing.
 * **The precondition belongs in the validation block**, next to the role's other asserts and tagged `always`, not next to the reboot tasks. Whether the host can reboot at all is a precondition of the mode the operator asked for, so it is decided before the role writes anything, and it is not gated on whether this particular run needs a reboot. Gating it there would surface the contradiction only on the run that happens to change something, which is the run that can least afford it.
 
 A role that requests reboots also has to:

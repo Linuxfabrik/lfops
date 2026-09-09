@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **playbook:crypto_policy, playbook:kernel_modules, playbook:selinux**: These playbooks run `postfix`, `mailto_root` and `schedule_reboot` before their own role, so that a change needing a reboot can request one. `mailto_root__from` and `mailto_root__to` are therefore mandatory for them; a host set up with `setup_basic` already has both. To keep a playbook as it was, set `<playbook>__skip_postfix`, `<playbook>__skip_mailto_root` and `<playbook>__skip_schedule_reboot` to `true`, for example `crypto_policy__skip_schedule_reboot: true`.
 * **role:fail2ban**: Removed `apache-404-matomo` filter and jail. The `apache-404` filter now matches all supported LogFormats including matomo and vhost_common. Remove `apache-404-matomo` entries from `fail2ban__filters__*_var` and `fail2ban__jails__*_var` in your inventory and use `apache-404` instead.
 * **role:fail2ban**: Rename `fail2ban__jail_apache_404_ignoreregex` to `fail2ban__filter_apache_404_ignoreregex` in your inventory. The regular expressions land in the `apache-404` and `apache-404-matomo` filters, which both jails share, so the old name pointed at a jail that never carried the setting. The value itself is unchanged.
 
 ### Added
 
+* **role:crypto_policy, role:kernel_modules, role:selinux**: A change that only takes effect after a reboot requests one at the maintenance window instead of being left to the operator to notice: a switched crypto policy, a blocked kernel module that is still loaded, and switching SELinux on or off. Where the reboot mechanism is not deployed, the role reports the pending reboot as before. `lfops__reboot_now` performs it in the same run.
 * Every playbook prints the manual steps a run leaves to the operator as one block directly above the `PLAY RECAP`, collected from all roles of the play instead of scattered over its output. The roles keep printing their message where it occurs as well, so a role used outside this collection still reports it.
 * **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, or applies it during the run when `lfops__reboot_now` is set, and a `--check` run reports what it would change without touching the host.
 * **role:fail2ban**: The `fail2ban:configure` tag deploys the actions, filters and jails without touching the packages.
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:setup_basic**: The mail and reboot roles run before the security roles, so a first run against a fresh host files the reboot request that a changed crypto policy, SELinux state or kernel module blocklist needs. Until now the reboot mechanism was deployed further down the playbook and such a change could only be reported to the operator.
 * **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
 
 ### Fixed

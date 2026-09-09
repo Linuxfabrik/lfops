@@ -21,12 +21,22 @@ Compiling the same source twice yields a byte-identical policy package, so the r
 
 Under `--check` the role compiles and compares as usual, since that only writes to the temporary directory. It cannot report the resulting `semodule --install` though: Ansible skips command tasks in check mode.
 
+Switching SELinux on or off is the one change the running kernel cannot perform, so it only takes effect on the next boot. The role writes `/etc/selinux/config` and, when the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) mechanism is deployed, requests a reboot at the next maintenance window (spool entry `selinux`). Without it, the role only prints a message and leaves the reboot to the operator. Switching between `enforcing` and `permissive` needs no reboot and requests none. Only the run that rewrites the configuration files the request; a later run stays quiet while the reboot is still pending.
+
+`lfops__reboot_now` makes the role reboot in the same run instead of waiting for the window. The reboot still goes through the same mechanism, so the notification mail, the Icinga downtime and the grace period all apply, and a reboot another role requested earlier in the run is carried out together with this one. The role then waits for the host to come back before the play continues. Have a look at the [README](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__reboot_now). With the variable set on a host where the `schedule_reboot` mechanism is missing, the run aborts rather than reporting a reboot it cannot perform.
+
+
+## Known Limitations
+
+* A change of `selinux__policy` (the policy type, e.g. `targeted` to `mls`) also needs a reboot, and a full relabel of the file system on top, but it does not request one. `ansible.posix.selinux` reports the policy change as a change without reporting a reboot as required, and the role does not second-guess it. Reboot and relabel such a host yourself.
+
 
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * The SELinux python bindings must be installed (role: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)).
+* Optional: the reboot mechanism should be in place (role: [linuxfabrik.lfops.schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot)), so a state change reboots the host at the maintenance window instead of waiting for a manual reboot.
 
 
 ## Tags
@@ -64,6 +74,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `selinux:setenforce`
 
 * `setenforce ...`.
+* Requests a reboot when SELinux has to be switched on or off, or performs it in the same run when `lfops__reboot_now` is set.
 * Triggers: none.
 
 `selinux:setsebool`
