@@ -317,9 +317,13 @@ Variables for `php.ini` directives and their default values, defined and support
 
 `php__ini_session_cookie_secure__group_var` / `php__ini_session_cookie_secure__host_var`
 
-* Sends the session cookie only over HTTPS. Leave off on hosts that also serve sessions over plain HTTP. [php.net](https://www.php.net/manual/en/session.configuration.php)
+* Marks the session cookie `Secure`, so a browser only ever sends it back over HTTPS. [php.net](https://www.php.net/manual/en/session.configuration.php)
+* Set it to `'Off'` for a site genuinely served over plain HTTP, which otherwise cannot log anyone in: the browser accepts the cookie and then never returns it. On a host serving both, set it for the affected pool alone via `php_value_session_cookie_secure` in `php__fpm_pools__*_var`.
+* What decides is the scheme the browser uses, not what PHP sees. A site behind a reverse proxy that terminates TLS and forwards plain HTTP is an HTTPS site for this purpose, and is exactly the case where PHP cannot work the flag out for itself.
+* Switching an HTTPS host from `'Off'` to `'On'` logs nobody out. PHP only sends `Set-Cookie` when it creates a session ID, so a running session resumes untouched and its existing cookie keeps its old attributes until the application regenerates the ID, usually at the next login, or the session expires.
 * Type: String.
-* Default: `'Off'`
+* Default: `'On'`
+* Deviates from the upstream default `Off`: without the flag the session ID travels in cleartext on any `http://` request to the host, before a redirect to HTTPS can fire, and LFOps deploys these sites behind TLS. PHP sets the flag on its own only when it sees HTTPS itself, which it does not when TLS is terminated in front of it.
 
 `php__ini_session_gc_maxlifetime__group_var` / `php__ini_session_gc_maxlifetime__host_var`
 
@@ -379,7 +383,7 @@ php__ini_opcache_validate_timestamps__host_var: 1
 php__ini_post_max_size__host_var: '8M'
 php__ini_session_cookie_httponly__host_var: 'On'
 php__ini_session_cookie_samesite__host_var: 'Lax'
-php__ini_session_cookie_secure__host_var: 'Off'
+php__ini_session_cookie_secure__host_var: 'On'
 php__ini_session_gc_maxlifetime__host_var: 1440
 php__ini_session_sid_length__host_var: 32
 php__ini_session_trans_sid_tags__host_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
