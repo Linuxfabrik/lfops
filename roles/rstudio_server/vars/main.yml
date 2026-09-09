@@ -1,0 +1,21 @@
+# Published for roles that run earlier in the play than rstudio_server. vars/main.yml is loaded
+# at play parse and visible to every role in the play, which the selinux role needs: it applies
+# the file context before this role installs the package, so the files are labelled as they are
+# written.
+
+# Posit installs rserver below /usr/lib, where it carries lib_t. systemd transitions a service
+# into unconfined_service_t only when its binary is bin_t, so with the vendor label the service
+# keeps systemd's own domain, init_t. From there the fork of a session is denied, so nobody gets
+# an R session at all while SELinux is enforcing: the sign-in works, the browser waits, and
+# rserver logs "exited with status 256 before a connection was made", while the audit log holds
+# `avc: denied { setpgid } for comm="rserver" scontext=system_u:system_r:init_t:s0`.
+#
+# Labelling the binary bin_t moves the service into unconfined_service_t, the domain RHEL keeps
+# for services that bring no policy of their own. Only rserver needs it; rsession keeps lib_t,
+# because the domain rserver then runs in may execute it.
+#
+# Verified on Rocky 8, 9 and 10 with rstudio-server 2026.08.2-200.
+rstudio_server__selinux__fcontexts__dependent_var:
+  - setype: 'bin_t'
+    target: '/usr/lib/rstudio-server/bin/rserver'
+    state: 'present'

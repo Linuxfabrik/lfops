@@ -1,0 +1,28 @@
+# Posit builds one RPM per RHEL generation and publishes x86_64 only. The package pulls in
+# nothing but `psmisc`, `sqlite` and `/bin/sh` (`rpm --query --requires`) and carries its own
+# Node.js and Boost below /usr/lib/rstudio-server, so the RHEL 9 build also runs on RHEL 10,
+# for which Posit publishes nothing (verified 2026-09 on Rocky 8, 9 and 10 with 2026.08.2-200).
+__rstudio_server__package_arch: 'x86_64'
+__rstudio_server__package_extension: 'rpm'
+
+__rstudio_server__package_filename: 'rstudio-server-rhel-{{ rstudio_server__version }}-{{ __rstudio_server__package_arch }}.{{ __rstudio_server__package_extension }}'
+
+# Posit gives the build of every generation the same file name, so the copy on the controller and
+# on the target carries the generation in its own. Without that, a play against RHEL 8 and RHEL 9
+# hosts has the second host reuse the file the first one downloaded, and the RHEL 9 build does
+# not even start on RHEL 8, where it misses `libssl.so.3`.
+__rstudio_server__local_package_filename: 'rstudio-server-{{ __rstudio_server__package_dist }}-{{ rstudio_server__version }}-{{ __rstudio_server__package_arch }}.{{ __rstudio_server__package_extension }}'
+
+__rstudio_server__download_url: '{{
+    rstudio_server__download_url if rstudio_server__download_url | length
+    else "https://download2.rstudio.org/server/" ~ __rstudio_server__package_dist ~ "/" ~ __rstudio_server__package_arch ~ "/" ~ __rstudio_server__package_filename
+  }}'
+
+# The RPM carries the build number after a "+", where the file name and the download page write
+# it after a "-" (file "2026.08.2-200" is package version "2026.08.2+200").
+__rstudio_server__package_version: '{{ rstudio_server__version | regex_replace("-(?=[^-]*$)", "+") }}'
+
+# Posit signs the RPMs with this key (`Posit Software, PBC <security-team@posit.co>`, fingerprint
+# 8B65 E5A1 07BB EFE3 BA99 C597 51C0 B5BB 19F9 2D60). Published on
+# https://rstudio.com/code-signing/ and on the public keyservers.
+__rstudio_server__gpg_key_path: '/etc/pki/rpm-gpg/RPM-GPG-KEY-posit'

@@ -1,0 +1,29 @@
+# rserver re-reads the logging and the env-vars configuration on SIGHUP, and nothing else, so a
+# change to rserver.conf takes a restart. The chain validates the configuration first, where a
+# restart with an unreadable one would leave the service down. The check reports options rserver
+# does not know; it does not validate their values.
+#
+# --check-config is the current name, --test-config the deprecated alias it replaced. Which one
+# to use depends on the pinned version: 2023.12.1-402 has --test-config only, 2026.08.2-200 warns
+# when it is used, so the installed binary is asked rather than guessed.
+- name: 'rstudio_server: rserver --check-config'
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      if /usr/lib/rstudio-server/bin/rserver --help 2>&1 | grep --quiet -- '--check-config'; then
+          /usr/lib/rstudio-server/bin/rserver --check-config
+      else
+          /usr/lib/rstudio-server/bin/rserver --test-config
+      fi
+    executable: '/bin/bash'
+  changed_when: false
+  notify: 'rstudio_server: restart rstudio-server'
+
+- name: 'rstudio_server: restart rstudio-server'
+  ansible.builtin.service:
+    name: 'rstudio-server'
+    state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
+    - '__rstudio_server__service_state_result is not defined or __rstudio_server__service_state_result is not changed'
+    - 'rstudio_server__service_state != "stopped"'

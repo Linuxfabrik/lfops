@@ -1,0 +1,268 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # Posit publishes an x86_64 build only, so this is not a matter of adding another vars file.
+  - name: 'Assert that the platform has a Posit build'
+    ansible.builtin.assert:
+      that:
+        - 'ansible_facts["architecture"] == "x86_64"'
+        - '__rstudio_server__package_dist is defined'
+      quiet: true
+      fail_msg: >-
+        RStudio Server is available for x86_64 on RHEL 8, 9 and 10 only. This host is
+        {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_major_version"] }}
+        on {{ ansible_facts["architecture"] }}.
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # rserver looks up the group at every sign-in, so it does not have to exist before the service
+  # starts. It is created here regardless, because an auth-required-user-group naming a group
+  # that does not exist refuses every user without saying why.
+  - name: 'groupadd {{ rstudio_server__conf_auth_required_user_group }}'
+    ansible.builtin.group:
+      name: '{{ rstudio_server__conf_auth_required_user_group }}'
+      state: 'present'
+      system: true
+    when:
+      - 'rstudio_server__conf_auth_required_user_group | length > 0'
+
+  tags:
+    - 'rstudio_server'
+    - 'rstudio_server:users'
+
+
+# Deployed before the package on purpose. The package writes its own rserver.conf, rsession.conf
+# and /etc/pam.d/rstudio only when none exists, and then enables and starts the service straight
+# away, so without this the service would come up once on every interface, with every account on
+# the host allowed to sign in.
+- block:
+
+  - name: 'mkdir -p /etc/rstudio'
+    ansible.builtin.file:
+      path: '/etc/rstudio'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/rstudio/rserver.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/rstudio/rserver.conf.j2'
+      dest: '/etc/rstudio/rserver.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'rstudio_server: rserver --check-config'
+
+  # A running session keeps the settings it started with, so this needs no handler: the file is
+  # read by each rsession as it starts.
+  - name: 'Deploy /etc/rstudio/rsession.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/rstudio/rsession.conf.j2'
+      dest: '/etc/rstudio/rsession.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  # Read by the PAM helper on every sign-in, so this needs no handler either.
+  - name: 'Deploy /etc/pam.d/rstudio'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/pam.d/rstudio.j2'
+      dest: '/etc/pam.d/rstudio'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'rstudio_server'
+    - 'rstudio_server:configure'
+
+
+- block:
+
+  # rserver refuses to start without a working R installation, and the package starts the
+  # service as part of its own installation, so an installation without R fails at the package
+  # rather than at the service task. Both halves are asked for: R itself, and its documentation
+  # directory, which rserver validates and which a host with `tsflags=nodocs` in its dnf.conf
+  # does not have even though R is installed. -s keeps R from echoing the expression, so that
+  # stdout is the path and nothing else.
+  - name: 'R -e R.home("doc")'
+    ansible.builtin.command: >-
+      {{ rstudio_server__conf_rsession_which_r | d("R", true) }}
+        --vanilla -s --no-save --no-restore -e 'cat(R.home("doc"))'
+    register: '__rstudio_server__r_doc_dir_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+
+  - name: 'stat the R documentation directory'
+    ansible.builtin.stat:
+      path: '{{ __rstudio_server__r_doc_dir_result["stdout"] | trim }}'
+    register: '__rstudio_server__r_doc_dir_stat_result'
+    when:
+      - '__rstudio_server__r_doc_dir_result["rc"] == 0'
+
+  - name: 'Assert that R is installed and complete'
+    ansible.builtin.assert:
+      that:
+        - '__rstudio_server__r_doc_dir_result["rc"] == 0'
+        - '__rstudio_server__r_doc_dir_stat_result["stat"]["exists"] | d(false)'
+      quiet: true
+      fail_msg: >-
+        rserver aborts at startup without R and its documentation directory. Run the `r` role
+        first. A host that installs packages with `tsflags=nodocs` has R without the directory;
+        reinstall R with `dnf reinstall --setopt=tsflags= R` there.
+
+  - name: 'Gather package facts'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false
+
+  - name: 'Set installed version fact'
+    ansible.builtin.set_fact:
+      __rstudio_server__installed_version: '{{ ansible_facts["packages"]["rstudio-server"][0]["version"] | d("") }}'
+
+  - block:
+
+    # Posit signs the RPM, so the package is installed with the GPG check on. The key is shipped
+    # with the role because Posit publishes it on a web page and on the keyservers, but at no
+    # stable URL a task could fetch.
+    - name: 'Deploy {{ __rstudio_server__gpg_key_path }}'
+      ansible.builtin.copy:
+        src: 'etc/pki/rpm-gpg/RPM-GPG-KEY-posit'
+        dest: '{{ __rstudio_server__gpg_key_path }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'rpm --import {{ __rstudio_server__gpg_key_path }}'
+      ansible.builtin.rpm_key:
+        key: '{{ __rstudio_server__gpg_key_path }}'
+        state: 'present'
+
+    - name: 'curl --output /tmp/ansible.{{ __rstudio_server__local_package_filename }} {{ __rstudio_server__download_url }}' # noqa risky-file-permissions (temporary file)
+      ansible.builtin.get_url:
+        url: '{{ __rstudio_server__download_url }}'
+        dest: '/tmp/ansible.{{ __rstudio_server__local_package_filename }}'
+        mode: 0o644
+      delegate_to: 'localhost'
+      become: false
+      changed_when: false # not an actual config change on the target
+      check_mode: false # run task even if `--check` is specified
+
+    - name: 'Copy /tmp/ansible.{{ __rstudio_server__local_package_filename }} to the target' # noqa risky-file-permissions (temporary file)
+      ansible.builtin.copy:
+        src: '/tmp/ansible.{{ __rstudio_server__local_package_filename }}'
+        dest: '/tmp/{{ __rstudio_server__local_package_filename }}'
+      changed_when: false # the install task below reports the change
+
+    # ansible.builtin.package cannot install a local file, and the dnf module is what verifies
+    # the signature of one: it enables localpkg_gpgcheck unless disable_gpg_check is set.
+    #
+    # This is also the update path: dnf resolves an install of a newer file as an upgrade of the
+    # installed package, and of an older one as a downgrade, which is all Posit documents. The
+    # package restarts the service as part of its own installation.
+    - name: 'dnf install /tmp/{{ __rstudio_server__local_package_filename }}'
+      ansible.builtin.dnf:
+        name: '/tmp/{{ __rstudio_server__local_package_filename }}'
+        state: 'present'
+
+    - name: 'rm -f /tmp/{{ __rstudio_server__local_package_filename }}'
+      ansible.builtin.file:
+        path: '/tmp/{{ __rstudio_server__local_package_filename }}'
+        state: 'absent'
+      changed_when: false
+
+    when:
+      - '__rstudio_server__installed_version != __rstudio_server__package_version'
+
+  # The file context itself comes from the selinux role, which runs earlier in the play, so a
+  # package installed just now is labelled correctly already. This catches the host that had
+  # RStudio Server before the context existed, and it notifies a restart, because a service that
+  # is running keeps the domain it started in. restorecon prints only what it changes.
+  - name: 'restorecon -v /usr/lib/rstudio-server/bin/rserver'
+    ansible.builtin.command: 'restorecon -v /usr/lib/rstudio-server/bin/rserver'
+    register: '__rstudio_server__restorecon_result'
+    changed_when: '__rstudio_server__restorecon_result["stdout"] | length > 0'
+    notify: 'rstudio_server: restart rstudio-server'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  tags:
+    - 'rstudio_server'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/systemd/system/rstudio-server.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/rstudio-server.service.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/rstudio-server.service.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/rstudio-server.service.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/rstudio-server.service.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__rstudio_server__z00_linuxfabrik_result'
+    notify: 'rstudio_server: restart rstudio-server'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__rstudio_server__z00_linuxfabrik_result is changed'
+
+  tags:
+    - 'rstudio_server'
+    - 'rstudio_server:configure'
+
+
+- block:
+
+  - name: 'systemctl {{ rstudio_server__service_enabled | bool | ternary("enable", "disable") }} rstudio-server.service'
+    ansible.builtin.service:
+      name: 'rstudio-server.service'
+      enabled: '{{ rstudio_server__service_enabled | bool }}'
+
+  - name: 'systemctl {{ rstudio_server__service_state | regex_replace("p?ed$", "") }} rstudio-server.service'
+    ansible.builtin.service:
+      name: 'rstudio-server.service'
+      state: '{{ rstudio_server__service_state }}'
+    register: '__rstudio_server__service_state_result'
+
+  tags:
+    - 'rstudio_server'
+    - 'rstudio_server:state'
+
+
+- block:
+
+  - name: 'Flush handlers so that the service can be used by other roles later'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'rstudio_server'
+    - 'rstudio_server:configure'
+    - 'rstudio_server:state'

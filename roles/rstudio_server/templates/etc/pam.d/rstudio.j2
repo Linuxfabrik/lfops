@@ -1,0 +1,20 @@
+#%PAM-1.0
+# {{ ansible_managed }}
+# 2026090901
+#
+# The package writes this file only when none exists, so this one survives an update.
+#
+# RStudio Server Open Source authenticates with pam_authenticate() and pam_acct_mgmt() and never
+# opens a PAM session, so only the `auth` and `account` stacks are consulted. Nothing here
+# creates a home directory (pam_mkhomedir would sit in the session stack), and a user without one
+# cannot work: the home directory has to exist before the first sign-in.
+
+# Refuses system accounts before their password is checked at all. rserver rejects them too
+# (auth-minimum-user-id), but only after PAM has run, so without this line a stream of failed
+# root logins through the web interface would trip pam_faillock on root and lock it out
+# everywhere else on the host.
+auth       requisite    pam_succeed_if.so uid >= {{ rstudio_server__pam_minimum_uid }} quiet
+
+# The vendor file authenticates against pam_unix alone, which leaves out SSSD and pam_faillock.
+auth       include      {{ rstudio_server__pam_include }}
+account    include      {{ rstudio_server__pam_include }}

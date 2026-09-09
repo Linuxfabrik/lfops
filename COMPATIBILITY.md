@@ -153,6 +153,7 @@ Which Ansible role is proven to run on which OS?
 | repo_rpmfusion                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |
+| rstudio_server                        |        |        |   x    |   x    |    x    |           |           |           | x86_64 only, RHEL 10 uses the RHEL 9 build   |
 | rsyslog                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | schedule_reboot                       |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | selinux                               |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |

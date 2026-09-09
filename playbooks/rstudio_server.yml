@@ -1,0 +1,72 @@
+- name: 'Playbook linuxfabrik.lfops.rstudio_server'
+  hosts:
+    - 'lfops_rstudio_server'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    # CRB (RHEL 9 and 10) / PowerTools (RHEL 8) carries the development packages the CRAN
+    # packages are built against, and on RHEL 8 also pandoc itself.
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      # CRB is shipped in the Rocky default repo file (Rocky 9+, formerly from EPEL), so enable it there only.
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
+        - 'not rstudio_server__skip_repo_baseos | d(false)'
+
+    # EPEL ships R, and pandoc on RHEL 9 and 10.
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution"] != "Fedora"'
+        - 'not rstudio_server__skip_repo_epel | d(false)'
+
+    # === SELinux ===
+
+    - role: 'linuxfabrik.lfops.policycoreutils'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not rstudio_server__skip_policycoreutils | d(false)'
+
+    # Runs before the rstudio_server role, so that the file context is in place when the package
+    # writes its files. Without it the service stays in systemd's own SELinux domain, where it
+    # cannot start a single R session.
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__fcontexts__dependent_var: '{{
+          rstudio_server__selinux__fcontexts__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not rstudio_server__skip_selinux | d(false)'
+
+    # === Application ===
+
+    # rserver does not start without R.
+    - role: 'linuxfabrik.lfops.r'
+      when:
+        - 'not rstudio_server__skip_r | d(false)'
+
+    - role: 'linuxfabrik.lfops.rstudio_server'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
