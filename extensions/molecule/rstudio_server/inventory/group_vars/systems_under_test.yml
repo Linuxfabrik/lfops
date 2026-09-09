@@ -1,0 +1,21 @@
+rstudio_server__version: '2026.08.2-200'
+
+# Neither is the default, so the verification asking the running service for them
+# proves the configuration arrives rather than merely being written to a file.
+rstudio_server__conf_www_address: '127.0.0.1'
+rstudio_server__conf_www_port: 8788
+
+# The verification signs in with an ordinary form post. With the default, the
+# browser encrypts the password with the server's public key first, which a test
+# would have to reimplement; everything behind the form (PAM, the group check,
+# the session cookie, the session launch) is the same either way.
+rstudio_server__conf_auth_encrypt_password: false
+
+# The role assumes a TLS-terminating proxy in front and marks every cookie
+# secure, which a client on plain HTTP never sends back: the sign-in would fail
+# at the CSRF check before reaching PAM. The scenario has no proxy, so it is the
+# deployment that has to turn the flag off, exactly as the README says.
+rstudio_server__conf_auth_cookies_force_secure: false
+
+rstudio_server__memory_max: '2G'
+rstudio_server__tasks_max: 500

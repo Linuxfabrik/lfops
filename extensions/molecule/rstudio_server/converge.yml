@@ -1,0 +1,32 @@
+- name: 'Converge rstudio_server playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.rstudio_server'
+
+
+# The role installs the service but does not manage accounts, so the two the
+# verification signs in with are created here. This runs after the playbook,
+# because the group one of them joins is created by the role.
+#
+# The password hash is seeded with the inventory hostname so that it stays the
+# same across runs, otherwise the idempotence step would fail on a fresh salt.
+- name: 'Create the accounts the sign-in test uses'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'useradd the test accounts'
+      ansible.builtin.user:
+        name: '{{ item["name"] }}'
+        create_home: true
+        groups: '{{ item["groups"] }}'
+        append: true
+        password: '{{ "linuxfabrik" | ansible.builtin.password_hash("sha512", (65534 | random(seed=inventory_hostname) | string)) }}'
+        shell: '/bin/bash'
+        state: 'present'
+      loop:
+        - name: 'molecule-member'
+          groups:
+            - 'rstudio-users'
+        - name: 'molecule-outsider'
+          groups: []
+      loop_control:
+        label: '{{ item["name"] }}'
