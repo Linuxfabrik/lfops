@@ -1,0 +1,6 @@
+# The message request-reboot.yml shows the operator when the schedule_reboot mechanism is not
+# deployed, and appends to __shared__end_of_play_messages. It lives here rather than in a set_fact
+# task so that both places read the same string without composing it twice. Jinja is evaluated
+# lazily, so the reference to the two request-reboot.yml parameters costs nothing in the playbooks
+# that import the shared role for something else.
+__shared__reboot_message: '{{ shared__reboot_reason | d("") }}: {{ shared__reboot_detail | d("") }}. Please reboot the server manually to apply it.'

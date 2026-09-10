@@ -18,6 +18,26 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
+      when:
+        - 'not crypto_policy__skip_postfix | d(false)'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not crypto_policy__skip_mailto_root | d(false)'
+
+    # deployed before the crypto_policy role, so the schedule-reboot command is in place when a
+    # changed crypto policy requests a reboot
+    - role: 'linuxfabrik.lfops.schedule_reboot'
+      when:
+        - 'not crypto_policy__skip_schedule_reboot | d(false)'
+
     - role: 'linuxfabrik.lfops.crypto_policy'
 
 

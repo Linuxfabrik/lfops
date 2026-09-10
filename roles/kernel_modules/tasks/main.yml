@@ -1,5 +1,18 @@
 - block:
 
+  # a precondition, not a result: the host cannot perform the reboot lfops__reboot_now asks of it,
+  # so the run is refused before the modprobe configuration is written rather than after.
+  - name: 'Assert that a reboot is possible'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'assert-reboot-possible.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Combined kernel modules'
     ansible.builtin.debug:
       var: 'kernel_modules__modules__combined_var'
@@ -15,6 +28,28 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__kernel_modules__conf_result'
+
+  - name: 'cat /proc/modules'
+    ansible.builtin.slurp:
+      src: '/proc/modules'
+    register: '__kernel_modules__proc_modules_result'
+    when:
+      - '__kernel_modules__conf_result is changed'
+
+  # Only the run that changes the configuration asks for the reboot. A later run finds the file
+  # already correct and stays quiet, even while the modules are still loaded and the reboot is
+  # still pending: the spool file lives in /run and outlives those runs.
+  - name: 'Request a reboot'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'request-reboot.yml'
+    vars:
+      shared__reboot_reason: 'kernel_modules'
+      shared__reboot_detail: 'blocked kernel modules are still loaded ({{ __kernel_modules__loaded_blocked_module_names | join(", ") }})'
+    when:
+      - '__kernel_modules__conf_result is changed'
+      - '__kernel_modules__loaded_blocked_module_names | length > 0'
 
   tags:
     - 'kernel_modules'

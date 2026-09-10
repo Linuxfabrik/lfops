@@ -37,6 +37,48 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_repo_epel | d(false)'
 
+    # === Identity ===
+    # ahead of every role that renders the host's name into a configuration file.
+    # ansible.builtin.hostname returns the new name as ansible_facts, so a role running after it
+    # sees the final ansible_facts["nodename"], while one running before it renders the name the
+    # host booted with and rewrites the file on the next run. mailto_root builds its sender
+    # canonical from that fact, and schedule_reboot its Icinga host name.
+    - role: 'linuxfabrik.lfops.hostname'
+      when:
+        - 'not setup_basic__skip_hostname | d(false)'
+
+    # === Mailing ===
+    - role: 'linuxfabrik.lfops.mailx'
+      when:
+        - 'not setup_basic__skip_mailx | d(false)'
+
+    - role: 'linuxfabrik.lfops.postfix'
+      postfix__aliases__dependent_var: '{{
+          mailto_root__postfix__aliases__dependent_var
+        }}'
+      postfix__sender_canonicals__dependent_var: '{{
+          mailto_root__postfix__sender_canonicals__dependent_var
+        }}'
+      when:
+        - 'not setup_basic__skip_postfix | d(false)'
+
+    - role: 'linuxfabrik.lfops.mailto_root'
+      when:
+        - 'not setup_basic__skip_mailto_root | d(false)'
+
+    # === Reboots ===
+    # ahead of every role that can request a reboot, so that /usr/local/sbin/schedule-reboot is
+    # already on the host when one of them changes something that only takes effect on the next
+    # boot. The security roles below are three such roles (crypto_policy, kernel_modules,
+    # selinux). Deployed later, they would only ever report the pending reboot to the operator:
+    # they file the request on the run that makes the change, and by the next run there is
+    # nothing left to change. The mailing section above it comes first in turn, because
+    # schedule_reboot takes the addresses for its notification from mailto_root and delivers it
+    # with the sendmail that postfix provides.
+    - role: 'linuxfabrik.lfops.schedule_reboot'
+      when:
+        - 'not setup_basic__skip_schedule_reboot | d(false)'
+
     # === Security ===
     - role: 'linuxfabrik.lfops.crypto_policy'
       when:
@@ -72,10 +114,6 @@
     - role: 'linuxfabrik.lfops.systemd_journald'
       when:
         - 'not setup_basic__skip_systemd_journald | d(false)'
-
-    - role: 'linuxfabrik.lfops.hostname'
-      when:
-        - 'not setup_basic__skip_hostname | d(false)'
 
     - role: 'linuxfabrik.lfops.timezone'
       when:
@@ -173,31 +211,7 @@
         - 'not setup_basic__skip_firewall | d(false)'
 
 
-    # === Mailing ===
-    - role: 'linuxfabrik.lfops.mailx'
-      when:
-        - 'not setup_basic__skip_mailx | d(false)'
-
-    - role: 'linuxfabrik.lfops.postfix'
-      postfix__aliases__dependent_var: '{{
-          mailto_root__postfix__aliases__dependent_var
-        }}'
-      postfix__sender_canonicals__dependent_var: '{{
-          mailto_root__postfix__sender_canonicals__dependent_var
-        }}'
-      when:
-        - 'not setup_basic__skip_postfix | d(false)'
-
-    - role: 'linuxfabrik.lfops.mailto_root'
-      when:
-        - 'not setup_basic__skip_mailto_root | d(false)'
-
-
     # === Automatic updates ===
-    - role: 'linuxfabrik.lfops.schedule_reboot'
-      when:
-        - 'not setup_basic__skip_schedule_reboot | d(false)'
-
     - role: 'linuxfabrik.lfops.system_update'
       when:
         - 'not setup_basic__skip_system_update | d(false)'
