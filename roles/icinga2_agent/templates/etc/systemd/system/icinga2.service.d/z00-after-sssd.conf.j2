@@ -1,8 +1,11 @@
 # {{ ansible_managed }}
-# 2026070301
+# 2026091001
 
 # Ensure Icinga 2 starts after SSSD to prevent sudo errors like
 # "problem with defaults entries" caused by sudo calls before SSSD is ready.
+# SSSD ships no sssd.target, only sssd.service (Type=notify, so this waits for
+# readiness). Verified against sssd 2.9.8 on Rocky 9, 2.12.0 on Rocky 10 and
+# 2.10.1 on Debian 13.
 
 [Unit]
-After=sssd.target
+After=sssd.service
