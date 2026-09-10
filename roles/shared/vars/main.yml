@@ -4,3 +4,9 @@
 # lazily, so the reference to the two request-reboot.yml parameters costs nothing in the playbooks
 # that import the shared role for something else.
 __shared__reboot_message: '{{ shared__reboot_reason | d("") }}: {{ shared__reboot_detail | d("") }}. Please reboot the server manually to apply it.'
+
+# The text of the reboot request, which do-reboot puts into the body of the notification mail. It
+# names the calling role, so the administrator reading the mail knows which one asked for the
+# reboot. include_role puts the caller's FQCN first into ansible_parent_role_names
+# (playbook/role_include.py in ansible-core 2.16); without a calling role the plain detail is used.
+__shared__reboot_request_detail: '{{ shared__reboot_detail | d("") }}{{ (" (" ~ ansible_parent_role_names[0] ~ " role)") if ansible_parent_role_names | d([]) | length > 0 else "" }}'

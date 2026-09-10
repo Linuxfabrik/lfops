@@ -60,6 +60,17 @@
           ansible.builtin.assert:
             that: '__molecule__reboot_request_stat_result["stat"]["exists"] | bool'
 
+        # The request file becomes the body of the notification mail, which names the role that
+        # asked for the reboot.
+        - name: 'slurp /run/schedule-reboot/bootloader'
+          ansible.builtin.slurp:
+            src: '/run/schedule-reboot/bootloader'
+          register: '__molecule__reboot_request_result'
+
+        - name: 'Assert that the request names the role'
+          ansible.builtin.assert:
+            that: '"kernel command line changed (linuxfabrik.lfops.bootloader role)" in (__molecule__reboot_request_result["content"] | ansible.builtin.b64decode)'
+
         - name: 'systemctl reboot'
           ansible.builtin.reboot:  # yamllint disable-line rule:empty-values
 

@@ -35,7 +35,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 * Parameters of `request-reboot.yml`:
 
     * `shared__reboot_reason`: Mandatory. Spool file name, by convention the role name.
-    * `shared__reboot_detail`: Mandatory. What changed, in lower case. Goes into the notification mail and into the message the operator sees.
+    * `shared__reboot_detail`: Mandatory. What changed, in lower case. Goes into the notification mail, followed by the name of the calling role, and into the message the operator sees.
 
 `clone-lib-repo.yml`
 

@@ -21,20 +21,21 @@
 #
 # Parameters:
 #   shared__reboot_reason: Mandatory. Spool file name, by convention the role name.
-#   shared__reboot_detail: Mandatory. What changed, in lower case. Goes into the notification mail
-#                          and into the message the operator sees.
+#   shared__reboot_detail: Mandatory. What changed, in lower case. Goes into the notification mail,
+#                          followed by the name of the calling role, and into the message the
+#                          operator sees.
 
 # the same request for both paths: the actor acts on it at the window, or right away through the
 # task below.
 # absolute path on purpose: the default sudoers of the Red Hat family sets
 # `secure_path = /sbin:/bin:/usr/sbin:/usr/bin`, which leaves /usr/local/sbin out, so the bare
 # command name is not found under `become: true`. Verified against sudo on Rocky 9.
-- name: '/usr/local/sbin/schedule-reboot {{ shared__reboot_reason }} "{{ shared__reboot_detail }}"'
+- name: '/usr/local/sbin/schedule-reboot {{ shared__reboot_reason }} "{{ __shared__reboot_request_detail }}"'
   ansible.builtin.command:
     argv:
       - '/usr/local/sbin/schedule-reboot'
       - '{{ shared__reboot_reason }}'
-      - '{{ shared__reboot_detail }}'
+      - '{{ __shared__reboot_request_detail }}'
   register: '__shared__schedule_reboot_result'
   changed_when: '__shared__schedule_reboot_result["rc"] == 0'
   when:
