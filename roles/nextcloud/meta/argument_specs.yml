@@ -12,7 +12,6 @@
 # playbook context is assembled (other roles' defaults / gathered facts). declaring them
 # would force those references to resolve on every role entry, even for tag runs that
 # never touch the feature, so they are validated in the tasks where they are used instead:
-#   * nextcloud__icinga2_api_user_login -> '{{ system_update__icinga2_api_user_login }}'
 #   * nextcloud__icinga2_hostname        -> '{{ ansible_facts["nodename"] }}'
 #   * nextcloud__mail_from               -> '{{ mailto_root__from }}'
 #   * nextcloud__mariadb_login           -> '{{ mariadb_server__admin_user }}'
@@ -89,6 +88,11 @@ argument_specs:
         type: 'str'
         required: false
         description: 'The URL of the Icinga2 API used to set a downtime during a server update.'
+
+      nextcloud__icinga2_api_user_login:
+        type: 'dict'
+        required: false
+        description: 'The Icinga2 API user (username/password) used to set a downtime during a Nextcloud update. Defaults to icinga2_master__downtime_api_user; downtime is skipped when neither is set.'
 
       nextcloud__mail_recipients:
         type: 'list'

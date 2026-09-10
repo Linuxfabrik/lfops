@@ -13,7 +13,7 @@ Other roles reuse this mechanism instead of rebooting themselves: they drop a re
 * **One reboot window.** `schedule_reboot__reboot_time__*` sets a single time of day at which the actor runs. Steer it per inventory group, for example an earlier window for infrastructure hosts so they reboot before the rest. Without an explicit value each host is assigned a deterministic minute within `04:00`-`04:59` (seeded by its hostname), so a fleet does not reboot in lockstep.
 * **Reboots are modelled as state.** A pending reboot is a file in `/run/schedule-reboot/`; the file name is a category and its content is included in the notification mail. Several pending reasons coalesce into a single reboot. The spool lives on tmpfs, so it clears on the reboot itself.
 * **Producers order themselves before the actor.** A role that runs work at the same window (such as a system update) declares its unit `Before=schedule-reboot.service` (order-only, no `Wants=`/`Requires=`). systemd then runs the reboot only after that work finishes; on a window where no producer runs, the actor runs alone and reboots only if a request is pending.
-* **An Icinga downtime is set around the reboot.** When `schedule_reboot__icinga2_api_user_login` is set, the actor schedules a short host downtime before rebooting, so the reboot does not raise alerts. Without it, the reboot happens without a downtime.
+* **An Icinga downtime is set around the reboot.** When `schedule_reboot__icinga2_api_user_login` or the downtime API user of the `icinga2_master` role (`icinga2_master__downtime_api_user`) is set, the actor schedules a short host downtime before rebooting, so the reboot does not raise alerts. Without it, the reboot happens without a downtime.
 * **Changing the window means redeploying the producers.** Producers might render the window into their own systemd timers at deploy time. Running this role alone after a change therefore moves the actor but leaves those timers on the old window, so the work runs at the old time while the host reboots at the new one. Run the producers in the same play, for example via the [system_update](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/system_update.yml) playbook.
 
 To request a reboot from a script or by hand:
@@ -63,13 +63,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The URL of the Icinga2 API (usually on the Icinga2 Master). Used to set a downtime for the host and all its services around the reboot.
 * Type: String.
-* Default: `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
+* Default: `'https://{{ icinga2_agent__icinga2_master_host | d(icinga2_agent__icinga2_master_cn | d("")) }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
 
 `schedule_reboot__icinga2_api_user_login`
 
-* The Icinga2 API user used to set the downtime around the reboot. When unset, no downtime is scheduled.
+* The Icinga2 API user used to set the downtime around the reboot. Defaults to the downtime API user the `icinga2_master` role creates. When neither is set, no downtime is scheduled.
 * Type: Dictionary.
-* Default: unset
+* Default: `'{{ icinga2_master__downtime_api_user | d({}) }}'`
 * Subkeys:
 
     * `username`:

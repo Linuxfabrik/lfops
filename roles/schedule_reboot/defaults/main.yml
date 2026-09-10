@@ -1,5 +1,6 @@
 schedule_reboot__enabled: true
-schedule_reboot__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
+schedule_reboot__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d(icinga2_agent__icinga2_master_cn | d("")) }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
+schedule_reboot__icinga2_api_user_login: '{{ icinga2_master__downtime_api_user | d({}) }}'
 schedule_reboot__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
 schedule_reboot__mail_from: '{{ mailto_root__from }}'
 schedule_reboot__mail_recipients: '{{ mailto_root__to }}'

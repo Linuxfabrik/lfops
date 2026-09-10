@@ -15,3 +15,12 @@ schedule_reboot__mail_subject_prefix: '[molecule] '
 # after wait_for_connection, so the default grace sleep would keep the host up past
 # the reconnect and make the check flap. The grace period itself is not under test here.
 schedule_reboot__reboot_grace_period: 0
+
+# Only the central variables of the icinga2_agent and icinga2_master roles, neither of
+# which this playbook runs: the downtime request must reach the Icinga2 API, with these
+# credentials, all the same. verify.yml runs a stand-in for the API on the host itself,
+# hence localhost.
+icinga2_agent__icinga2_master_cn: 'localhost'
+icinga2_master__downtime_api_user:
+  username: 'molecule'
+  password: 'linuxfabrik'

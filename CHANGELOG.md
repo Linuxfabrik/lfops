@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:borg_local, role:icinga2_master, role:nextcloud, role:schedule_reboot, role:tools**: `icinga2_master__downtime_api_user` creates an Icinga2 API user that may only schedule and remove downtimes, and the roles that set a downtime around a backup, a Nextcloud update or a reboot use it unless their own `*__icinga2_api_user_login` is set.
 * **role:crypto_policy, role:kernel_modules, role:selinux**: A change that only takes effect after a reboot requests one at the maintenance window instead of being left to the operator to notice: a switched crypto policy, a blocked kernel module that is still loaded, and switching SELinux on or off. Where the reboot mechanism is not deployed, the role reports the pending reboot as before. `lfops__reboot_now` performs it in the same run.
 * Every playbook prints the manual steps a run leaves to the operator as one block directly above the `PLAY RECAP`, collected from all roles of the play instead of scattered over its output. The roles keep printing their message where it occurs as well, so a role used outside this collection still reports it.
 * **role:bootloader**: New role that manages the kernel command line, for parameters that only take effect at boot time such as `psi=1`. Options are applied to every boot entry of the host, on the Red Hat family with `grubby` and on Debian and Ubuntu through a GRUB drop-in of its own. A changed command line requests a reboot at the maintenance window instead of rebooting right away, or applies it during the run when `lfops__reboot_now` is set, and a `--check` run reports what it would change without touching the host.
@@ -29,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: `nextcloud-update` sets the Icinga downtime again, taking the API user from `icinga2_master__downtime_api_user` (see Added) instead of from the `system_update__icinga2_api_user_login` removed in v8.0.0.
+* **role:borg_local, role:schedule_reboot, role:tools**: The Icinga downtime around a backup or a reboot is set again when the deploying playbook does not run `icinga2_agent` itself, such as `bootloader`, `system_update` or `tools`, and the inventory only sets the mandatory `icinga2_agent__icinga2_master_cn`.
 * **role:fail2ban**: The `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome` and `apache-noscript` jail templates can be deployed again. Using one of them aborted the run.
 
 

@@ -17,6 +17,19 @@ icinga2_master__api_users__role_var:
     password: '{{ icinga2_master__enrolment_api_user["password"] }}'
     permissions:
       - 'actions/generate-ticket'
+  # only rendered when icinga2_master__downtime_api_user is set. the two permissions are
+  # the actions the downtime scripts of borg_local, nextcloud, schedule_reboot and tools
+  # call. verified against Icinga2 2.14.6 on Debian 13: they suffice for a host downtime
+  # with all_services and for its removal, and generate-ticket is refused
+  - username: '{{ icinga2_master__downtime_api_user["username"] | d("") }}'
+    password: '{{ icinga2_master__downtime_api_user["password"] | d("") }}'
+    permissions:
+      - 'actions/remove-downtime'
+      - 'actions/schedule-downtime'
+    state: '{{
+        (icinga2_master__downtime_api_user is defined and icinga2_master__downtime_api_user | length > 0)
+        | ternary("present", "absent")
+      }}'
 icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
 icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_enable_ha: false

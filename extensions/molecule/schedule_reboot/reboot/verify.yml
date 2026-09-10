@@ -1,10 +1,86 @@
 # Destructive verify: actually reboot the host through the CLI and confirm it
-# came back (boot_id changed) with an empty spool (tmpfs cleared on reboot), and
-# that the notification do-reboot sent on the way down is a well-formed message.
+# came back (boot_id changed) with an empty spool (tmpfs cleared on reboot), that
+# the notification do-reboot sent on the way down is a well-formed message, and
+# that its downtime request reached the Icinga2 API.
 - name: 'Verify schedule_reboot performs a real reboot'
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
+
+    # A stand-in for the Icinga2 API on the host itself, listening where the inventory
+    # points (icinga2_agent__icinga2_master_cn: 'localhost'). do-reboot POSTs the
+    # downtime to it on the way down, and the stand-in writes the request to disk before
+    # answering, so it can be read back after the reboot. It has to answer: do-reboot
+    # only limits curl's connect time, so a silent endpoint would stall the reboot.
+    - name: 'mkdir -p /var/tmp/molecule-icinga2-api'
+      ansible.builtin.file:
+        path: '/var/tmp/molecule-icinga2-api'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o700
+
+    # a record left over from an earlier run must not satisfy the assert below
+    - name: 'rm -f /var/tmp/molecule-icinga2-api/requests.log'
+      ansible.builtin.file:
+        path: '/var/tmp/molecule-icinga2-api/requests.log'
+        state: 'absent'
+
+    - name: 'openssl req -x509 -newkey rsa:2048 -nodes -subj /CN=localhost'
+      ansible.builtin.command: >
+        openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=localhost
+        -keyout /var/tmp/molecule-icinga2-api/key.pem
+        -out /var/tmp/molecule-icinga2-api/cert.pem
+      args:
+        creates: '/var/tmp/molecule-icinga2-api/cert.pem'
+
+    - name: 'Deploy /var/tmp/molecule-icinga2-api/server.py'
+      ansible.builtin.copy:
+        content: |
+          import http.server
+          import os
+          import ssl
+
+          BASE = '/var/tmp/molecule-icinga2-api'
+
+
+          class Handler(http.server.BaseHTTPRequestHandler):
+              def do_POST(self):
+                  body = self.rfile.read(int(self.headers.get('Content-Length', 0)))
+                  auth = self.headers.get('Authorization', '').encode()
+                  with open(BASE + '/requests.log', 'ab') as f:
+                      f.write(self.path.encode() + b'\n' + auth + b'\n' + body + b'\n')
+                      f.flush()
+                      os.fsync(f.fileno())
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'application/json')
+                  self.end_headers()
+                  self.wfile.write(b'{"results": []}')
+
+
+          context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          context.load_cert_chain(BASE + '/cert.pem', BASE + '/key.pem')
+          server = http.server.HTTPServer(('127.0.0.1', 5665), Handler)
+          server.socket = context.wrap_socket(server.socket, server_side=True)
+          server.serve_forever()
+        dest: '/var/tmp/molecule-icinga2-api/server.py'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+
+    # the interpreter Ansible itself uses on the host; RHEL 8 has no python3 by default
+    - name: 'systemd-run --unit=molecule-icinga2-api python3 /var/tmp/molecule-icinga2-api/server.py'
+      ansible.builtin.command: >
+        systemd-run --unit=molecule-icinga2-api
+        {{ ansible_facts["discovered_interpreter_python"] | d("/usr/bin/python3") }}
+        /var/tmp/molecule-icinga2-api/server.py
+      changed_when: false
+
+    - name: 'Wait for the Icinga2 API stand-in on 127.0.0.1:5665'
+      ansible.builtin.wait_for:
+        host: '127.0.0.1'
+        port: 5665
+        timeout: 30
 
     - name: 'slurp /proc/sys/kernel/random/boot_id (before)'
       ansible.builtin.slurp:
@@ -69,3 +145,22 @@
         that: '__molecule__expected_from in (__molecule__root_mailbox_result["content"] | ansible.builtin.b64decode)'
       vars:
         __molecule__expected_from: "From: \"[molecule] "
+
+    # The stand-in is gone with the reboot, its record is not. A request that arrived
+    # proves the whole chain: the API URL derived from icinga2_agent__icinga2_master_cn
+    # and the credentials from icinga2_master__downtime_api_user, both without their
+    # roles in the play, the rendered do-reboot, and curl reaching the endpoint from
+    # schedule-reboot.service. A missing file means that nothing arrived.
+    - name: 'slurp /var/tmp/molecule-icinga2-api/requests.log'
+      ansible.builtin.slurp:
+        src: '/var/tmp/molecule-icinga2-api/requests.log'
+      register: '__molecule__icinga2_api_requests_result'
+
+    - name: 'Assert that do-reboot requested the downtime with the downtime API user'
+      ansible.builtin.assert:
+        that:
+          - '"/v1/actions/schedule-downtime" in __molecule__icinga2_api_requests'
+          - '("Basic " ~ (__molecule__expected_credentials | ansible.builtin.b64encode)) in __molecule__icinga2_api_requests'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+        __molecule__icinga2_api_requests: '{{ (__molecule__icinga2_api_requests_result["content"] | ansible.builtin.b64decode).splitlines() }}'

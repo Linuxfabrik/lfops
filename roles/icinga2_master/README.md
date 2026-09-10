@@ -107,6 +107,15 @@ icinga2_master__influxdb_login:
 * Type: String.
 * Default: `'{{ ansible_facts["nodename"] }}'`
 
+`icinga2_master__downtime_api_user`
+
+* An Icinga2 API user that may only schedule and remove downtimes (`actions/schedule-downtime`, `actions/remove-downtime`). The [borg_local](https://github.com/Linuxfabrik/lfops/tree/main/roles/borg_local), [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud), [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) and [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools) roles use it by default to set a downtime around a backup, a Nextcloud update or a reboot, unless their own `*__icinga2_api_user_login` is set.
+* Set it in `group_vars` that cover the Icinga2 master and every monitored host, since the monitored hosts read it as well. With the `linuxfabrik.lfops.bitwarden_item` lookup, pass a fixed `hostname` instead of `inventory_hostname`, so that all hosts get the same credential.
+* If `icinga2_master__api_users__*_var` contains an API user with the same `username`, both end up as one `ApiUser` and the keys set in that inventory entry win. A different `password` there makes the downtime requests of the other roles fail, and a `permissions` list there replaces the two downtime permissions, so include them when adding more. An API user with a different `username` is left alone; remove it once no host uses it any more.
+* Must be a different user than `icinga2_master__enrolment_api_user`.
+* Type: Dictionary.
+* Default: unset
+
 `icinga2_master__influxdb_database_name`
 
 * The name of the InfluxDB database.
@@ -155,13 +164,6 @@ icinga2_master__api_users__host_var:
     permissions:
       - 'objects/query/*'
       - 'status/query'
-  - username: 'downtime-user'
-    password: 'linuxfabrik'
-    permissions:
-      - 'actions/schedule-downtime'
-      - 'actions/remove-downtime'
-      - 'actions/reschedule-check'
-    state: 'present'
   - username: 'ticket-user'
     password: 'linuxfabrik'
     permissions:
@@ -181,6 +183,9 @@ icinga2_master__api_users__host_var:
     state: 'present'
 icinga2_master__bind_host: '192.0.2.12'
 icinga2_master__cn: '{{ ansible_facts["nodename"] }}'
+icinga2_master__downtime_api_user:
+  username: 'downtime-user'
+  password: 'linuxfabrik'
 icinga2_master__influxdb_database_name: 'icinga2'
 icinga2_master__influxdb_host: 'localhost'
 icinga2_master__influxdb_retention: '216d'
