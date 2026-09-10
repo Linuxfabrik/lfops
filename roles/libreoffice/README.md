@@ -22,6 +22,11 @@ When enabled, the role:
 The SELinux booleans and fcontexts this Apache integration also needs are not set by this role. The `linuxfabrik.lfops.selinux` role, wired in by the playbook, applies them (see Dependent Roles).
 
 
+## Known Limitations
+
+* The role does not run on RHEL 10, which ships no LibreOffice. EPEL 10 does not carry it either.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
