@@ -223,7 +223,8 @@ Adjust the following variables for the secondary Icinga2 master.
 
 `icinga2_master__api_ticket_login`
 
-* The Icinga2 API user which should be used to create a ticket for CSR (certificate signing request) [auto-signing](https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#generate-ticket). The user needs to have the `actions/generate-ticket` permission.
+* Only used on a secondary master (`icinga2_master__node_role: 'secondary'`). The secondary logs in on the Icinga2 API of the primary with this user and requests the ticket that gets its own certificate signed automatically ([CSR auto-signing](https://icinga.com/docs/icinga-2/latest/doc/12-icinga2-api/#generate-ticket)). The user has to exist on the primary with the `actions/generate-ticket` permission, which `icinga2_master__enrolment_api_user` has. Agents request their ticket with `icinga2_agent__icinga2_api_user_login` instead.
+* The default works when both masters have the same `icinga2_master__enrolment_api_user`. Set this variable to the credentials of the primary's enrolment user when they differ per master, for example because the `linuxfabrik.lfops.bitwarden_item` lookup uses `inventory_hostname`.
 * Type: Dictionary.
 * Default: `'{{ icinga2_master__enrolment_api_user }}'`
 
