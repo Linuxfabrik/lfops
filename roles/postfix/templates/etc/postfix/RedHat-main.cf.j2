@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026071201
+# 2026090901
 
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
@@ -30,7 +30,7 @@
 #
 # The level below is what should be used with new (not upgrade) installs.
 #
-compatibility_level = 2
+compatibility_level = {{ postfix__compatibility_level }}
 
 # SOFT BOUNCE
 #
