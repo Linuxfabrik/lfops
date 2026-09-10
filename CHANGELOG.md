@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_epel**: The role no longer aborts on RHEL 10, AlmaLinux 10 and CentOS Stream 10.
 * **role:chrony**: `chronyd` on RHEL 10 no longer logs `Could not open keyfile` on every start, since the deployed `chrony.conf` loads no key file on any release.
 * **role:nextcloud**: `nextcloud-update` sets the Icinga downtime again, taking the API user from `icinga2_master__downtime_api_user` (see Added) instead of from the `system_update__icinga2_api_user_login` removed in v8.0.0.
 * **role:borg_local, role:schedule_reboot, role:tools**: The Icinga downtime around a backup or a reboot is set again when the deploying playbook does not run `icinga2_agent` itself, such as `bootloader`, `system_update` or `tools`, and the inventory only sets the mandatory `icinga2_agent__icinga2_master_cn`.

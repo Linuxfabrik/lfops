@@ -1,3 +1,7 @@
+# Named after the os_family so that RHEL, Rocky, AlmaLinux and CentOS Stream 10 all
+# load it. Unlike 8 and 9 there is no Rocky-specific variant, because this role
+# ships no epel-cisco-openh264 repo file for 10.
+# Verified against epel-release-10 on Rocky 10.
 __repo_epel__gpg_key_dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-10'
 __repo_epel__gpg_key_url: 'https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-10'
 __repo_epel__repo_files:
