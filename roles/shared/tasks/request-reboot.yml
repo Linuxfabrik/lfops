@@ -24,6 +24,8 @@
 #   shared__reboot_detail: Mandatory. What changed, in lower case. Goes into the notification mail
 #                          and into the message the operator sees.
 
+# the same request for both paths: the actor acts on it at the window, or right away through the
+# task below.
 # absolute path on purpose: the default sudoers of the Red Hat family sets
 # `secure_path = /sbin:/bin:/usr/sbin:/usr/bin`, which leaves /usr/local/sbin out, so the bare
 # command name is not found under `become: true`. Verified against sudo on Rocky 9.
@@ -36,49 +38,26 @@
   register: '__shared__schedule_reboot_result'
   changed_when: '__shared__schedule_reboot_result["rc"] == 0'
   when:
-    - 'not (lfops__reboot_now | d(false) | bool)'
     - '__shared__schedule_reboot_stat_result["stat"]["exists"] | bool'
 
-# --now files the same request and additionally starts the actor, which mails the administrators,
-# sets the Icinga downtime, waits out the grace period and reboots. That drops the connection, so
-# the task cannot be waited on. Killing the async wrapper does not stop the systemd unit, so the
-# reboot happens either way.
-- name: '/usr/local/sbin/schedule-reboot --now {{ shared__reboot_reason }} "{{ shared__reboot_detail }}"'
-  ansible.builtin.command:
-    argv:
-      - '/usr/local/sbin/schedule-reboot'
-      - '--now'
-      - '{{ shared__reboot_reason }}'
-      - '{{ shared__reboot_detail }}'
-  async: 1
-  poll: 0 # fire and forget: the reboot drops the connection, do not wait on it
-  changed_when: true # with poll: 0 the result is the async handle, not the command's rc
-  when:
-    - 'lfops__reboot_now | d(false) | bool'
-
-# wait for the host to be gone before waiting for it to return, instead of assuming it went down
-# within a fixed delay. do-reboot mails the administrators and calls the Icinga API before it
-# sleeps the grace period, so the moment the host actually goes down is not bounded: a slow
-# sendmail or an unreachable Icinga endpoint delays it. Without this task the connection check
-# below can succeed against the still-running host, report the reboot as done and let the play
-# continue into a host that goes down moments later.
-- name: 'Wait for the host to go down'
-  ansible.builtin.wait_for:
-    host: '{{ ansible_host | d(inventory_hostname) }}'
-    port: '{{ ansible_port | d(22) }}'
-    state: 'stopped'
-    timeout: '{{ (schedule_reboot__reboot_grace_period | d(60) | int) + 300 }}'
-  delegate_to: 'localhost'
-  become: false
-  when:
-    - 'lfops__reboot_now | d(false) | bool'
-
-# without this, every role after this one in the play runs against a host that is going down
-- name: 'Wait for the host to come back after the reboot'
-  ansible.builtin.wait_for_connection:
-    delay: 5
-    sleep: 5
-    timeout: 300
+# starts the actor, which mails the administrators, sets the Icinga downtime, sleeps the grace
+# period and reboots. The reboot action only triggers it and waits: it reads
+# /proc/sys/kernel/random/boot_id before, then polls it over Ansible's own connection until it
+# changes. Not a wait_for on the SSH port delegated to the controller: that guesses the path the
+# connection takes, and on a host reached through an ssh_config alias, a jump host or a
+# ProxyCommand the probe fails to connect and counts the still-running host as down.
+# --no-block because the unit is Type=oneshot: a plain `systemctl start` (which is what
+# `schedule-reboot --now` runs) only returns once the actor reboots, and the reboot action needs
+# the command to return before it starts polling.
+# the timeout covers the grace period plus the mail and the Icinga API call, whose duration the
+# role cannot bound.
+# Verified with ansible-core 2.16 on Debian 12/13, Rocky 8/9/10 and Ubuntu 22.04/24.04/26.04
+# (Molecule bootloader/reboot_now), and on Rocky 8/9 reached through an ssh alias the controller
+# cannot resolve, with the ssh connection plugin and with Mitogen 0.3.34.
+- name: 'systemctl start --no-block schedule-reboot.service, then wait for the reboot'
+  ansible.builtin.reboot:
+    reboot_command: '/usr/bin/systemctl start --no-block schedule-reboot.service'
+    reboot_timeout: '{{ (schedule_reboot__reboot_grace_period | d(60) | int) + 300 }}'
   when:
     - 'lfops__reboot_now | d(false) | bool'
 

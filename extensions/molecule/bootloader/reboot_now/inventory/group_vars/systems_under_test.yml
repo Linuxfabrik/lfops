@@ -18,10 +18,12 @@ mailto_root__to:
 # postfix needs a relayhost; an unreachable example host is fine, the test does not deliver mail.
 postfix__relayhost: 'mail.example.com'
 
-# No grace period, so converge does not idle for a minute per host before the reboot. The
-# notification mail then usually leaves the queue only after the reboot, which this scenario does
-# not check; the schedule_reboot/reboot scenario covers the mail.
-schedule_reboot__reboot_grace_period: 0
+# Not 0: the grace period keeps the host up for a while after the actor started. A role that moved
+# on without waiting for the reboot would let converge finish while the host still runs the old
+# command line, and verify fails on that. Shorter than the default, so converge does not idle for
+# a minute per host. The notification mail then usually leaves the queue only after the reboot,
+# which this scenario does not check; the schedule_reboot/reboot scenario covers the mail.
+schedule_reboot__reboot_grace_period: 30
 
 # Reboot window far from the test run, so the schedule_reboot timer never fires mid-test. The
 # reboot under test is triggered by the role itself, not by the timer.
