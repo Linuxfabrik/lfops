@@ -169,7 +169,7 @@ nextcloud__database_name: 'nextcloud'
 nextcloud__datadir: '/data'
 
 nextcloud__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d(icinga2_agent__icinga2_master_cn | d("")) }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
-nextcloud__icinga2_api_user_login: '{{ system_update__icinga2_api_user_login }}'
+nextcloud__icinga2_api_user_login: '{{ icinga2_master__downtime_api_user | d({}) }}'
 nextcloud__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
 
 nextcloud__jobs_timeout_start_sec: '10m'

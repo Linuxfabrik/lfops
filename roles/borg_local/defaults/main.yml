@@ -34,6 +34,7 @@ borg_local__exclude_files__role_var:
   - file: '*/cache/*'
   - file: '*/log/*'
 borg_local__icinga2_api_url: 'https://{{ icinga2_agent__icinga2_master_host | d(icinga2_agent__icinga2_master_cn | d("")) }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'
+borg_local__icinga2_api_user_login: '{{ icinga2_master__downtime_api_user | d({}) }}'
 borg_local__icinga2_hostname: '{{ ansible_facts["nodename"] }}'
 borg_local__include_files__combined_var: '{{ (
       borg_local__include_files__role_var +

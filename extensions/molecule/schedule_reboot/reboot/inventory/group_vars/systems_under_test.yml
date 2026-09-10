@@ -16,10 +16,11 @@ schedule_reboot__mail_subject_prefix: '[molecule] '
 # the reconnect and make the check flap. The grace period itself is not under test here.
 schedule_reboot__reboot_grace_period: 0
 
-# Only the mandatory variable of the icinga2_agent role, which this playbook does not
-# run: the downtime request must reach the Icinga2 API all the same. verify.yml runs a
-# stand-in for the API on the host itself, hence localhost.
+# Only the central variables of the icinga2_agent and icinga2_master roles, neither of
+# which this playbook runs: the downtime request must reach the Icinga2 API, with these
+# credentials, all the same. verify.yml runs a stand-in for the API on the host itself,
+# hence localhost.
 icinga2_agent__icinga2_master_cn: 'localhost'
-schedule_reboot__icinga2_api_user_login:
+icinga2_master__downtime_api_user:
   username: 'molecule'
   password: 'linuxfabrik'

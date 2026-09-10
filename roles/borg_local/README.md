@@ -123,9 +123,9 @@ borg_local__passphrase: 'linuxfabrik'
 
 `borg_local__icinga2_api_user_login`
 
-* The Icinga2 API User to set the downtime for the corresponding ClamAV service.
+* The Icinga2 API User to set the downtime for the corresponding ClamAV service. Defaults to the downtime API user the `icinga2_master` role creates. When neither is set, no downtime is set.
 * Type: Dictionary.
-* Default: unset
+* Default: `'{{ icinga2_master__downtime_api_user | d({}) }}'`
 
 `borg_local__icinga2_hostname`
 

@@ -209,9 +209,9 @@ nextcloud__users:
 
 `nextcloud__icinga2_api_user_login`
 
-* The Icinga2 API User to set the downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script.
+* The Icinga2 API User to set the downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script. Defaults to the downtime API user the `icinga2_master` role creates. When neither is set, no downtime is set.
 * Type: Dictionary.
-* Default: `'{{ system_update__icinga2_api_user_login }}'`
+* Default: `'{{ icinga2_master__downtime_api_user | d({}) }}'`
 
 `nextcloud__icinga2_hostname`
 

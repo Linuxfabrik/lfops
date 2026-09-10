@@ -16,7 +16,7 @@ argument_specs:
       schedule_reboot__icinga2_api_user_login:
         type: 'dict'
         required: false
-        description: 'The Icinga2 API user (username/password) used to set the downtime. Downtime is skipped when unset.'
+        description: 'The Icinga2 API user (username/password) used to set the downtime. Defaults to icinga2_master__downtime_api_user; downtime is skipped when neither is set.'
 
       schedule_reboot__icinga2_hostname:
         type: 'str'

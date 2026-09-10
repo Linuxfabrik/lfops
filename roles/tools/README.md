@@ -63,9 +63,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `tools__icinga2_api_user_login`
 
-* The Icinga2 API User to set the downtime for the corresponding host and all its services in the `reboot` alias.
+* The Icinga2 API User to set the downtime for the corresponding host and all its services in the `reboot` alias. Defaults to the downtime API user the `icinga2_master` role creates. When neither is set, the alias sets no downtime.
 * Type: Dictionary.
-* Default: unset
+* Default: `'{{ icinga2_master__downtime_api_user | d({}) }}'`
 
 `tools__icinga2_hostname`
 

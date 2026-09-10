@@ -47,8 +47,9 @@
           class Handler(http.server.BaseHTTPRequestHandler):
               def do_POST(self):
                   body = self.rfile.read(int(self.headers.get('Content-Length', 0)))
+                  auth = self.headers.get('Authorization', '').encode()
                   with open(BASE + '/requests.log', 'ab') as f:
-                      f.write(self.path.encode() + b'\n' + body + b'\n')
+                      f.write(self.path.encode() + b'\n' + auth + b'\n' + body + b'\n')
                       f.flush()
                       os.fsync(f.fileno())
                   self.send_response(200)
@@ -147,14 +148,19 @@
 
     # The stand-in is gone with the reboot, its record is not. A request that arrived
     # proves the whole chain: the API URL derived from icinga2_agent__icinga2_master_cn
-    # without the icinga2_agent role in the play, the rendered do-reboot, and curl
-    # reaching the endpoint from schedule-reboot.service. A missing file means that
-    # nothing arrived.
+    # and the credentials from icinga2_master__downtime_api_user, both without their
+    # roles in the play, the rendered do-reboot, and curl reaching the endpoint from
+    # schedule-reboot.service. A missing file means that nothing arrived.
     - name: 'slurp /var/tmp/molecule-icinga2-api/requests.log'
       ansible.builtin.slurp:
         src: '/var/tmp/molecule-icinga2-api/requests.log'
       register: '__molecule__icinga2_api_requests_result'
 
-    - name: 'Assert that do-reboot requested the downtime from the Icinga2 API'
+    - name: 'Assert that do-reboot requested the downtime with the downtime API user'
       ansible.builtin.assert:
-        that: '"/v1/actions/schedule-downtime" in (__molecule__icinga2_api_requests_result["content"] | ansible.builtin.b64decode).splitlines()'
+        that:
+          - '"/v1/actions/schedule-downtime" in __molecule__icinga2_api_requests'
+          - '("Basic " ~ (__molecule__expected_credentials | ansible.builtin.b64encode)) in __molecule__icinga2_api_requests'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+        __molecule__icinga2_api_requests: '{{ (__molecule__icinga2_api_requests_result["content"] | ansible.builtin.b64decode).splitlines() }}'

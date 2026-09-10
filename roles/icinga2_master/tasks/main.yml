@@ -6,6 +6,21 @@
     - 'icinga2_master'
 
 
+# both users are rendered from icinga2_master__api_users__role_var, where the same
+# username would merge them into one ApiUser whose downtime permissions replace
+# actions/generate-ticket
+- name: 'Assert that the downtime API user is not the enrolment API user'
+  ansible.builtin.assert:
+    that:
+      - 'icinga2_master__downtime_api_user["username"] != icinga2_master__enrolment_api_user["username"]'
+    quiet: true
+    fail_msg: 'icinga2_master__downtime_api_user and icinga2_master__enrolment_api_user must be different API users. With the same username, the downtime permissions replace actions/generate-ticket and new agents can no longer be enrolled.'
+  when:
+    - 'icinga2_master__downtime_api_user is defined and icinga2_master__downtime_api_user | length > 0'
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'install OS-specific prerequisite packages # ensures correct %post ordering before the main package list is installed'
