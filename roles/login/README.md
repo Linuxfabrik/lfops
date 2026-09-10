@@ -65,7 +65,7 @@ Manual steps:
 
 * Default umask for user login sessions (`UMASK`).
 * Type: String.
-* Default: `'027'`
+* Default: `'022'`
 
 `login__passwordless_sudo_group`
 
