@@ -63,7 +63,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The URL of the Icinga2 API (usually on the Icinga2 Master). Used to set a downtime for the host and all its services around the reboot.
 * Type: String.
-* Default: `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
+* Default: `'https://{{ icinga2_agent__icinga2_master_host | d(icinga2_agent__icinga2_master_cn | d("")) }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
 
 `schedule_reboot__icinga2_api_user_login`
 

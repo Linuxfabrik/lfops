@@ -205,7 +205,7 @@ nextcloud__users:
 
 * The URL of the Icinga2 API (usually on the Icinga2 Master). This will be used to set a downtime for the corresponding host and all its services in the `/usr/local/bin/nextcloud-update` script.
 * Type: String.
-* Default: `'https://{{ icinga2_agent__icinga2_master_host | d("") }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
+* Default: `'https://{{ icinga2_agent__icinga2_master_host | d(icinga2_agent__icinga2_master_cn | d("")) }}:{{ icinga2_agent__icinga2_master_port | d(5665) }}'`
 
 `nextcloud__icinga2_api_user_login`
 
