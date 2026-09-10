@@ -58,7 +58,7 @@ __duplicity__python_venv__venvs__dependent_var:
       packages:
         - 'duplicity'
       package_requirements:
-        - 'python3.13'
+        - 'python3.13' # EPEL on RHEL 10, unlike python3.11 which is AppStream on RHEL 9
       pip_constraints:
         - 'oslo.config>=9'
         - 'oslo.i18n>=5'

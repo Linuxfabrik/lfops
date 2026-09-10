@@ -1,5 +1,25 @@
 - block:
 
+  # MariaDB publishes no RHEL 10 packages before 10.11. The repository for an older release would
+  # answer 404, and with skip_if_unavailable off that breaks every dnf transaction on the host, not
+  # only the MariaDB install. Verified on Rocky 10: 10.6 answers 404, while 10.11, 11.4 and 11.8
+  # carry MariaDB-server.
+  - name: 'Assert that MariaDB publishes packages for this RHEL release'
+    ansible.builtin.assert:
+      that:
+        - 'repo_mariadb__version is version("10.11", ">=")'
+      quiet: true
+      fail_msg: 'MariaDB {{ repo_mariadb__version }} publishes no packages for RHEL {{ ansible_facts["distribution_major_version"] }}. MariaDB ships RHEL 10 packages from 10.11 on; deploying this repository would break every dnf transaction on the host.'
+    when:
+      - 'ansible_facts["distribution"] != "Fedora"'
+      - 'ansible_facts["distribution_major_version"] | int >= 10'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Set platform/version specific variables'
     ansible.builtin.import_role:
       name: 'shared'

@@ -26,7 +26,7 @@ Which Ansible role is proven to run on which OS?
 | clamav                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
-| collabora                             |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| collabora                             |        |        |   x    |   x    |    -    |           |           |           |                                              |
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
 | core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
@@ -91,7 +91,7 @@ Which Ansible role is proven to run on which OS?
 | kvm_vm                                |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| libreoffice                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| libreoffice                           |        |        |   x    |  (x)   |    -    |           |           |           |                                              |
 | login                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35+                                   |
 | logrotate                             |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
 | logstash                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |

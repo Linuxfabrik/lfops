@@ -1,1 +1,7 @@
+# RHEL 10 ships postfix 3.8 built without Berkeley DB, so hash and btree are not
+# compiled in and lmdb is the only on-disk map type. Its stock main.cf sets the
+# matching compatibility_level. Leaving the level at the EL8 / EL9 value of 2 parses
+# and runs, but silently holds the TLS fingerprint digests at md5 instead of sha256.
+# Verified against postfix-3.8.5-10.el10_2 on Rocky 10.
+__postfix__compatibility_level: '3.8'
 __postfix__map_type: 'lmdb'

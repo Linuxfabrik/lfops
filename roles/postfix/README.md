@@ -71,6 +71,12 @@ postfix__relayhost: 'mail.example.com:587'
 * Type: String.
 * Default: `'5d'`
 
+`postfix__compatibility_level`
+
+* The compatibility level Postfix runs at on the Red Hat family. It selects which backwards-compatible defaults Postfix keeps, and defaults to the level the distribution itself ships. Lowering it on RHEL 10 brings back the older defaults, among them MD5 instead of SHA-256 for matching TLS fingerprints. On Debian and Ubuntu the variable has no effect, the deployed `main.cf` sets `3.6`.
+* Type: String.
+* Default: RHEL 8 / 9: `'2'`, RHEL 10: `'3.8'`
+
 `postfix__inet_interfaces`
 
 * The local network interface addresses that this mail system receives mail on.
@@ -367,6 +373,7 @@ postfix__aliases__host_var:
     state: 'present'
 postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
+postfix__compatibility_level: '2'
 postfix__inet_interfaces: 'all'
 postfix__inet_protocols: 'all'
 postfix__lookup_tables__host_var:

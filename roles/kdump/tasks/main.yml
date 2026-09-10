@@ -1,20 +1,42 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
+  # kdump.service ships in kexec-tools on RHEL 8 and 9, which the core group installs, but in
+  # kdump-utils on RHEL 10, which no group installs. It is only needed when kdump is to run.
+  - name: 'Install {{ __kdump__package }}'
+    ansible.builtin.package:
+      name: '{{ __kdump__package }}'
+      state: 'present'
+    when: '__kdump__wanted | bool'
+
+  # A host without kdump.service already has kdump off. When kdump is to run, a missing unit has
+  # to fail the run instead of being passed over.
   - name: 'systemctl {{ kdump__service_enabled | bool | ternary("enable", "disable") }} kdump.service'
     ansible.builtin.service:
       name: 'kdump'
-      enabled: '{{ kdump__service_enabled }}'
+      enabled: '{{ kdump__service_enabled | bool }}'
     register: '__kdump__service_enabled_result'
-    # ignore errors if the service does not exist
-    failed_when: '__kdump__service_enabled_result["failed"] is defined and __kdump__service_enabled_result["failed"] and not "Could not find the requested service" in __kdump__service_enabled_result["msg"]'
+    failed_when:
+      - '__kdump__service_enabled_result["failed"] is defined'
+      - '__kdump__service_enabled_result["failed"]'
+      - '(__kdump__wanted | bool) or "Could not find the requested service" not in __kdump__service_enabled_result["msg"] | d("")'
 
   - name: 'systemctl {{ kdump__service_state | regex_replace("p?ed$", "") }} kdump.service'
     ansible.builtin.service:
       name: 'kdump'
       state: '{{ kdump__service_state }}'
     register: '__kdump__service_state_result'
-    # ignore errors if the service does not exist
-    failed_when: '__kdump__service_state_result["failed"] is defined and __kdump__service_state_result["failed"] and not "Could not find the requested service" in __kdump__service_state_result["msg"]'
+    failed_when:
+      - '__kdump__service_state_result["failed"] is defined'
+      - '__kdump__service_state_result["failed"]'
+      - '(__kdump__wanted | bool) or "Could not find the requested service" not in __kdump__service_state_result["msg"] | d("")'
 
   tags:
     - 'kdump'

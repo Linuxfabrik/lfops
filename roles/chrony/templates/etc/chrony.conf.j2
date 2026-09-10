@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022051901
+# 2026091001
 
 {% for item in chrony__ntp_pools %}
 pool {{ item }} iburst
@@ -45,7 +45,7 @@ rtcsync
 #local stratum 10
 
 # Specify file containing keys for NTP authentication.
-keyfile /etc/chrony.keys
+#keyfile /etc/chrony.keys
 
 # Get TAI-UTC offset and leap seconds from the system tz database.
 leapsectz right/UTC

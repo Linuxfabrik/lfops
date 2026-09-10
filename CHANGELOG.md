@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:postfix**: On RHEL 10 the role deploys the compatibility level the distribution ships (`3.8`) instead of the RHEL 8 / 9 value it applied everywhere. Postfix now matches TLS fingerprints with SHA-256 instead of MD5, evaluates the relay restrictions before the recipient restrictions, and uses the neutral wording in its postscreen log lines. Re-generate any peer fingerprint pinned as MD5 in a TLS policy table, and check log parsers keyed on the old postscreen wording. Set `postfix__compatibility_level: '2'` to restore the previous behaviour. RHEL 8, RHEL 9 and Debian are unaffected.
 * **role:login**: The default umask in `/etc/login.defs` is back to the `022` the distributions ship, instead of the `027` set since v7.0.0, so files that users create in a login session are readable by other local users again. Set `login__login_defs_umask: '027'` to keep the stricter value.
 * **playbook:crypto_policy, playbook:kernel_modules, playbook:selinux**: These playbooks run `postfix`, `mailto_root` and `schedule_reboot` before their own role, so that a change needing a reboot can request one. `mailto_root__from` and `mailto_root__to` are therefore mandatory for them; a host set up with `setup_basic` already has both. To keep a playbook as it was, set `<playbook>__skip_postfix`, `<playbook>__skip_mailto_root` and `<playbook>__skip_schedule_reboot` to `true`, for example `crypto_policy__skip_schedule_reboot: true`.
 * **role:fail2ban**: Removed `apache-404-matomo` filter and jail. The `apache-404` filter now matches all supported LogFormats including matomo and vhost_common. Remove `apache-404-matomo` entries from `fail2ban__filters__*_var` and `fail2ban__jails__*_var` in your inventory and use `apache-404` instead.
@@ -31,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:kdump**: `kdump__service_enabled: true` turns kdump on on RHEL 10 as well instead of leaving it off without an error, and a kdump that is supposed to run fails the run when its service cannot be managed ([#359](https://github.com/Linuxfabrik/lfops/issues/359)).
+* **role:repo_mariadb**: On RHEL 10 the role aborts for MariaDB versions older than 10.11, which MariaDB publishes no RHEL 10 packages for, instead of deploying a repository that answers 404 and breaks every dnf transaction on the host.
+* **role:repo_epel**: The role no longer aborts on RHEL 10, AlmaLinux 10 and CentOS Stream 10.
+* **role:chrony**: `chronyd` on RHEL 10 no longer logs `Could not open keyfile` on every start, since the deployed `chrony.conf` loads no key file on any release.
 * **role:nextcloud**: `nextcloud-update` sets the Icinga downtime again, taking the API user from `icinga2_master__downtime_api_user` (see Added) instead of from the `system_update__icinga2_api_user_login` removed in v8.0.0.
 * **role:borg_local, role:schedule_reboot, role:tools**: The Icinga downtime around a backup or a reboot is set again when the deploying playbook does not run `icinga2_agent` itself, such as `bootloader`, `system_update` or `tools`, and the inventory only sets the mandatory `icinga2_agent__icinga2_master_cn`.
 * **role:fail2ban**: The `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome` and `apache-noscript` jail templates can be deployed again. Using one of them aborted the run.

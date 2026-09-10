@@ -12,6 +12,11 @@ Concretely, this role:
 *Available since LFOps `2.0.0`.*
 
 
+## Known Limitations
+
+* Teaming (`type: 'team'`) is not available on RHEL 10 and later. The upstream role aborts the run with a message pointing at bonding, so a host that carried a team connection on RHEL 9 has to be converted to `type: 'bond'` before it is upgraded.
+
+
 ## Requirements
 
 Manual steps:

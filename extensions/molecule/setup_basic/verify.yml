@@ -95,3 +95,55 @@
       loop: '{{ __molecule__postfix_postmap_query_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    - name: 'Gather the distribution facts the checks below depend on'
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+
+
+    - block:
+
+      # compatibility_level decides which defaults Postfix applies without saying so, the TLS
+      # fingerprint digest among them. RHEL 10 ships 3.8, RHEL 8 and 9 ship 2, and the role
+      # deploys the level of the distribution. Ask the running configuration for the level and
+      # for the digest it implies, since the digest is the part an administrator would notice.
+      - name: 'postconf -x -h compatibility_level smtp_tls_fingerprint_digest'
+        ansible.builtin.command: 'postconf -x -h compatibility_level smtp_tls_fingerprint_digest'
+        changed_when: false
+        register: '__molecule__postfix_compat_result'
+
+      - name: 'Assert that Postfix runs at the compatibility level of the distribution'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__postfix_compat_result["stdout_lines"] == __molecule__expected'
+          fail_msg: '{{ __molecule__postfix_compat_result["stdout_lines"] }}'
+        vars:
+          __molecule__expected: '{{ (ansible_facts["distribution_major_version"] | int >= 10) | ternary(["3.8", "sha256"], ["2", "md5"]) }}'
+
+      # RHEL 10 no longer ships /etc/chrony.keys. A chrony.conf that still pointed at it would
+      # make chronyd log "Could not open keyfile" every time it starts, and the role restarts it.
+      # Requiring chronyd's own start line as well keeps the check from passing on a journal it
+      # cannot read.
+      - name: 'Gather the service facts'
+        ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+      - name: 'Assert that chronyd.service is running'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_facts["services"]["chronyd.service"]["state"] == "running"'
+
+      - name: 'journalctl --unit chronyd.service --boot'
+        ansible.builtin.command: 'journalctl --unit chronyd.service --boot --no-pager --output cat'
+        changed_when: false
+        register: '__molecule__chronyd_journal_result'
+
+      - name: 'Assert that chronyd started without reporting a missing key file'
+        ansible.builtin.assert:
+          that:
+            - '"chronyd version" in __molecule__chronyd_journal_result["stdout"]'
+            - '"Could not open keyfile" not in __molecule__chronyd_journal_result["stdout"]'
+          fail_msg: '{{ __molecule__chronyd_journal_result["stdout_lines"] | select("search", "chronyd version|keyfile") | list }}'
+
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'

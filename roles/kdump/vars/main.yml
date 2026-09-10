@@ -1,0 +1,3 @@
+# kdump is to run when it is enabled at boot or started now. Only then does the role install the
+# package that ships kdump.service, and only then is a missing unit an error.
+__kdump__wanted: '{{ kdump__service_enabled | bool or kdump__service_state != "stopped" }}'

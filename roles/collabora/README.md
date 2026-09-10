@@ -6,6 +6,11 @@ This role installs and configures either [Collabora Online Development Edition](
 *Available since LFOps `2.0.0`.*
 
 
+## Known Limitations
+
+* The role does not run on RHEL 10. It installs the `mythes` thesaurus packages, which neither RHEL 10 nor EPEL 10 ships.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.

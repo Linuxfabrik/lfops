@@ -295,10 +295,10 @@ apache_httpd__packages__role_var:
     state: 'present'
 
   - name: 'mod_qos'
-    state: 'absent'
+    state: 'absent' # no mod_qos package on RHEL 10, in EPEL on RHEL 8 and 9
 
   - name: 'mod_security'
-    state: 'present'
+    state: 'present' # AppStream on RHEL 8 and 9, EPEL on RHEL 10, so repo_epel has to run first
 
   - name: 'mod_ssl'
     state: 'present'

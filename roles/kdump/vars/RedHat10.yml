@@ -1,0 +1,3 @@
+# RHEL 10 moved kdump.service from kexec-tools to kdump-utils, which pulls in kexec-tools and
+# makedumpfile. No comps group installs it, so a stock RHEL 10 host has no kdump service.
+__kdump__package: 'kdump-utils'

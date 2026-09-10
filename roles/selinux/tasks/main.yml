@@ -156,7 +156,10 @@
   # Compiling the same source twice yields a byte-identical policy package, so an unchanged module
   # does not have to be reinstalled. Without this comparison the role reports a change on every run,
   # for every host the module is deployed to.
-  # Verified against libsemanage 2.9 / selinux-policy 3.14.3 on Rocky 8.
+  # Verified against libsemanage 2.9 / selinux-policy 3.14.3 on Rocky 8. On Rocky 9 (libsemanage 3.6 /
+  # selinux-policy 38.1.75) and Rocky 10 (libsemanage 3.10 / selinux-policy 42.1.18) a module
+  # installed with semodule --install and read back with semodule --extract is byte-identical to the
+  # freshly built one, which is the exact comparison made below.
   - name: 'cmp the compiled SELinux modules with the installed ones'
     ansible.builtin.command:
       cmd: 'cmp --silent {{ __selinux__temp_dir_result["path"] }}/{{ item["name"] }}/{{ item["name"] }}.pp {{ __selinux__temp_dir_result["path"] }}/__installed/{{ item["name"] }}.pp'
