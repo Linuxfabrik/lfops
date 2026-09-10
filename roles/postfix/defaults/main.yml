@@ -1,4 +1,3 @@
-__postfix__map_type: 'hash'
 postfix__aliases__combined_var: '{{ (
       postfix__aliases__role_var +
       postfix__aliases__dependent_var +
