@@ -4,7 +4,7 @@ This role installs [Keycloak](https://www.keycloak.org/guides#getting-started).
 
 This role is compatible with the following Keycloak versions:
 
-* Keycloak 24
+* Keycloak 24, except on RHEL 10, which ships no OpenJDK 17
 * Keycloak 25
 * Keycloak 26
 
@@ -344,6 +344,10 @@ keycloak__version: '26.1.2'
 **Role aborts with `Keycloak <version> is not supported by this role`**
 
 * `keycloak__version` names a major version the role ships no Java mapping for. Pin the host to one of the versions listed at the top of this README, or add the mapping to the role's `vars/main.yml`.
+
+**Role aborts with `Keycloak 24 needs OpenJDK 17, which RHEL 10 does not ship`**
+
+* RHEL 10 ships no OpenJDK 17, and Keycloak supports OpenJDK 21 only from version 25 on. Use Keycloak 26 on RHEL 10 hosts.
 
 **Role fails with `Could not obtain an admin-cli token`**
 

@@ -9,6 +9,20 @@
       quiet: true
       fail_msg: 'Keycloak {{ keycloak__version }} is not supported by this role. Supported major versions: {{ __keycloak__java_package.keys() | join(", ") }}.'
 
+  # RHEL 10 ships no OpenJDK 17, and Keycloak supports OpenJDK 21 only from version 25 on (release
+  # notes 25.0.0, "Java 21 support"). Verified on Rocky 10: java-17-openjdk-headless is in no
+  # repository, java-21 and java-25 are in AppStream.
+  - name: 'Assert that this platform ships the Java runtime the Keycloak version needs'
+    ansible.builtin.assert:
+      that:
+        - 'keycloak__version.split(".")[0] != "24"'
+      quiet: true
+      fail_msg: 'Keycloak 24 needs OpenJDK 17, which RHEL {{ ansible_facts["distribution_major_version"] }} does not ship. Use Keycloak 26 on this host.'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["distribution"] != "Fedora"'
+      - 'ansible_facts["distribution_major_version"] | int >= 10'
+
   - name: 'stat /etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
     ansible.builtin.stat:
       path: '/etc/ansible/facts.d/keycloak__admin_login_bootstrapped.state'
