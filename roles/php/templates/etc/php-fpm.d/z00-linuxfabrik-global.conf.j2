@@ -1,22 +1,26 @@
 ; {{ ansible_managed }}
-; 2026090801
+; 2026090901
 
 ; The `[global]` section of the PHP-FPM configuration. It is deployed next to the pools rather
 ; than into `php-fpm.conf`, because that file belongs to the package and the two families
 ; disagree on its contents.
 ;
-; They also disagree on where they place their `include=` line, which decides who wins:
-;   RedHat  reads the pool directory BEFORE its own `[global]`, so a directive the packaged
-;           php-fpm.conf sets itself is applied after this file and overrides it.
-;   Debian  reads it AFTER, so this file would override the package.
+; They also disagree on where they place their `include=` line, which decides who wins, and
+; RHEL 10 changed sides:
+;   RHEL <= 9  reads the pool directory BEFORE its own `[global]`, so a directive the packaged
+;              php-fpm.conf sets itself is applied after this file and overrides it.
+;   RHEL 10    reads it AFTER, like Debian, so this file would override the package.
+;   Debian     reads it AFTER, so this file would override the package.
 ; `error_log`, `pid` and `daemonize` are exactly the directives the packaged php-fpm.conf sets,
-; so setting any of them here would move it on Debian and not on RedHat. None of them are set
-; below for that reason. The directives that are set are ones no packaged php-fpm.conf touches,
-; so they take effect on both families.
+; so setting any of them here would move it on Debian and RHEL 10 but not on RHEL 9. None of
+; them are set below for that reason, which keeps the outcome the same everywhere. The
+; directives that are set are ones no packaged php-fpm.conf touches, so they take effect on
+; every platform.
 ;
-; Verified with php-fpm 8.0.30-8.el9_8 on Rocky 9 and php8.4-fpm 8.4.24-1~deb13u1 on Debian 13:
-; with this file in place `php-fpm -tt` reports the three values below on both, while error_log
-; stays at the packaged path on RedHat and follows this file on Debian.
+; Verified with php-fpm 8.0.30-8.el9_8 on Rocky 9, php-fpm 8.3.33-1.el10_2 on Rocky 10 and
+; php8.4-fpm 8.4.24-1~deb13u1 on Debian 13: with this file in place `php-fpm -tt` reports the
+; three values below on all of them, while error_log stays at the packaged path on RHEL 9 and
+; follows a drop-in on RHEL 10 and Debian.
 
 [global]
 
