@@ -6,10 +6,19 @@
 # is loaded, would pass on a host where the negotiation still fails - because the module package is
 # missing, because the MPM cannot support it, or because the cipher suite makes clients fall back.
 # Every assertion below therefore comes from a request that was really made.
-- name: 'Verify apache_httpd serves HTTP/2 where it is configured to'
+#
+# The htpasswd files are checked the same way: by logging in through Apache, not by reading them.
+- name: 'Verify apache_httpd serves HTTP/2 and basic auth where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
   become: true
+  vars:
+    # the vHost that carries one basic-auth location per htpasswd file, see group_vars
+    __molecule__auth_server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
+    # The role chowns the document roots to the web server user on every run. Files this playbook
+    # adds there have to carry that owner already, otherwise the idempotence step sees the role
+    # take them back and reports it as a change.
+    __molecule__docroot_owner: '{{ (ansible_facts["os_family"] == "Debian") | ternary("www-data", "apache") }}'
   tasks:
 
     - name: 'Get the service facts'
@@ -39,8 +48,8 @@
       ansible.builtin.copy:
         content: "ok\n"
         dest: '/var/www/html/{{ item["conf_server_name"] }}/index.html'
-        owner: 'root'
-        group: 'root'
+        owner: '{{ __molecule__docroot_owner }}'
+        group: '{{ __molecule__docroot_owner }}'
         mode: 0o644
         setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
       loop: '{{ apache_httpd__vhosts__group_var }}'
@@ -122,3 +131,71 @@
         fail_msg: >-
           port 80 negotiated HTTP/{{ __molecule__apache_httpd_curl_h2c_result["stdout"] }};
           h2c is not part of apache_httpd__mod_http2_protocols
+
+    # Each htpasswd file protects the location named after it. The index.html makes a successful
+    # login end in 200 instead of in whatever an empty location would answer.
+    - name: 'mkdir -p /var/www/html/<vhost>/<htpasswd file>'
+      ansible.builtin.file:
+        path: '/var/www/html/{{ __molecule__auth_server_name }}/{{ item["path"] | basename }}'
+        state: 'directory'
+        owner: '{{ __molecule__docroot_owner }}'
+        group: '{{ __molecule__docroot_owner }}'
+        mode: 0o755
+        setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
+      loop: '{{ apache_httpd__htpasswd__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    - name: 'Deploy an index.html into every location protected by an htpasswd file'
+      ansible.builtin.copy:
+        content: "ok\n"
+        dest: '/var/www/html/{{ __molecule__auth_server_name }}/{{ item["path"] | basename }}/index.html'
+        owner: '{{ __molecule__docroot_owner }}'
+        group: '{{ __molecule__docroot_owner }}'
+        mode: 0o644
+        setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
+      loop: '{{ apache_httpd__htpasswd__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    - name: 'curl https://<vhost>/<htpasswd file>/' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__auth_server_name }}:443:127.0.0.1
+        --output /dev/null
+        --write-out '%{http_code}'
+        https://{{ __molecule__auth_server_name }}/{{ item["path"] | basename }}/
+      register: '__molecule__apache_httpd_curl_anonymous_result'
+      changed_when: false
+      loop: '{{ apache_httpd__htpasswd__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    - name: 'curl --user <username>:<password> https://<vhost>/<htpasswd file>/' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --user {{ (item["username"] ~ ":" ~ item["password"]) | quote }}
+        --resolve {{ __molecule__auth_server_name }}:443:127.0.0.1
+        --output /dev/null
+        --write-out '%{http_code}'
+        https://{{ __molecule__auth_server_name }}/{{ item["path"] | basename }}/
+      register: '__molecule__apache_httpd_curl_login_result'
+      changed_when: false
+      loop: '{{ apache_httpd__htpasswd__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    # The 401 without credentials shows that the location is really protected, so the 200 with
+    # them can only come from a file that holds the user. An entry that got merged into another
+    # one leaves its file without the user, and the login there fails.
+    - name: 'Assert the user can log in at every location protected by an htpasswd file'
+      ansible.builtin.assert:
+        that:
+          - 'item[0]["stdout"] == "401"'
+          - 'item[1]["stdout"] == "200"'
+        fail_msg: >-
+          {{ item[0]["item"]["path"] }}: answered {{ item[0]["stdout"] }} without and
+          {{ item[1]["stdout"] }} with credentials, expected 401 and 200
+      loop: '{{ __molecule__apache_httpd_curl_anonymous_result["results"] | zip(__molecule__apache_httpd_curl_login_result["results"]) | list }}'
+      loop_control:
+        label: '{{ item[0]["item"]["path"] }}'

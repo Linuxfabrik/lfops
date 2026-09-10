@@ -314,9 +314,8 @@ apache_httpd__conf_trace_enable: 'Off'
 
     * `path`:
 
-        * Optional. Path to the htpasswd file.
+        * Mandatory. Path to the htpasswd file. Part of the entry's unique identity, so the same user can be kept in several files (commonly `'/etc/httpd/.htpasswd'` on RedHat, `'/etc/apache2/.htpasswd'` on Debian and Ubuntu).
         * Type: String.
-        * Default: `'/etc/httpd/.htpasswd'`
 
     * `state`:
 
@@ -425,6 +424,7 @@ apache_httpd__conf__host_var:
 apache_httpd__htpasswd__host_var:
   - username: 'test-user'
     password: 'linuxfabrik'
+    path: '/etc/httpd/.htpasswd'
     state: 'present'
 apache_httpd__limit_vhosts:
     - 'test.example.com'

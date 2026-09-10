@@ -1,5 +1,21 @@
 apache_httpd__conf_server_admin: 'webmaster@example.com'
 
+# The same user in two htpasswd files. The username and the path together identify an entry, so
+# both entries have to reach their own file instead of being merged into one. Each file protects
+# the location of h2.example.com named after it (see the raw block below), and verify.yml logs in
+# through Apache at both, so a file that lacks the user fails the login rather than a grep. The
+# files sit outside the document roots and outside the platform-specific config directory, so one
+# path works on every target.
+apache_httpd__htpasswd__group_var:
+
+  - username: 'molecule'
+    password: 'linuxfabrik'
+    path: '/var/www/htpasswd-a'
+
+  - username: 'molecule'
+    password: 'linuxfabrik'
+    path: '/var/www/htpasswd-b'
+
 # Two TLS vHosts on the same port, differing in one key. The first inherits the server-wide
 # protocol preference (apache_httpd__mod_http2_protocols, 'h2 http/1.1'), the second overrides it
 # per vHost. verify.yml derives what it expects from exactly this: an entry carrying conf_protocols
@@ -26,6 +42,23 @@ apache_httpd__vhosts__group_var:
       SSLEngine on
       SSLCertificateFile    /etc/pki/tls/certs/h2.example.com.crt
       SSLCertificateKeyFile /etc/pki/tls/private/h2.example.com.key
+
+      # auth_basic_module, authn_file_module, authz_user_module
+      # One location per file in apache_httpd__htpasswd__group_var, named after the file.
+      <Location "/htpasswd-a/">
+          AuthType Basic
+          AuthName "molecule"
+          AuthBasicProvider file
+          AuthUserFile "/var/www/htpasswd-a"
+          Require valid-user
+      </Location>
+      <Location "/htpasswd-b/">
+          AuthType Basic
+          AuthName "molecule"
+          AuthBasicProvider file
+          AuthUserFile "/var/www/htpasswd-b"
+          Require valid-user
+      </Location>
 
   - comment: |-
       Overrides the server-wide protocol preference, so it has to stay on HTTP/1.1.

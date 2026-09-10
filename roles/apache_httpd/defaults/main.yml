@@ -165,7 +165,7 @@ apache_httpd__htpasswd__combined_var: '{{ (
       apache_httpd__htpasswd__dependent_var +
       apache_httpd__htpasswd__group_var +
       apache_httpd__htpasswd__host_var
-    ) | linuxfabrik.lfops.combine_lod(unique_key="username")
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["username", "path"])
   }}'
 
 
