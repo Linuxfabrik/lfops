@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_mariadb**: On RHEL 10 the role aborts for MariaDB versions older than 10.11, which MariaDB publishes no RHEL 10 packages for, instead of deploying a repository that answers 404 and breaks every dnf transaction on the host.
 * **role:repo_epel**: The role no longer aborts on RHEL 10, AlmaLinux 10 and CentOS Stream 10.
 * **role:chrony**: `chronyd` on RHEL 10 no longer logs `Could not open keyfile` on every start, since the deployed `chrony.conf` loads no key file on any release.
 * **role:nextcloud**: `nextcloud-update` sets the Icinga downtime again, taking the API user from `icinga2_master__downtime_api_user` (see Added) instead of from the `system_update__icinga2_api_user_login` removed in v8.0.0.

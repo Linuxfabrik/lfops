@@ -19,6 +19,7 @@ This role deploys the [MariaDB Package Repository](https://mariadb.com/docs/serv
 `repo_mariadb__version`
 
 * The MariaDB repo version to install. [Have a look at the MariaDB Download Site for the list of available releases](https://mariadb.org/download/?t=mariadb&p=mariadb&os=Linux&cpu=x86_64). Also, have a look at the [MariaDB Server Releases page](https://mariadb.com/docs/release-notes/community-server) to check which version is a "long-term support MariaDB stable" or "short-term support MariaDB development" release.
+* On RHEL 10 this has to be 10.11 or newer, since MariaDB publishes no RHEL 10 packages for older releases.
 * Type: String.
 
 Example:
@@ -50,6 +51,13 @@ repo_mariadb__basic_auth_login:
   password: 'linuxfabrik'
 repo_mariadb__mirror_url: 'https://mirror.example.com'
 ```
+
+
+## Troubleshooting
+
+**The run aborts with `MariaDB X.Y publishes no packages for RHEL 10`**
+
+* MariaDB publishes RHEL 10 packages from 10.11 on. The role stops before writing the repository file, because a repository that answers 404 breaks every dnf transaction on the host, not only the MariaDB install. Set `repo_mariadb__version` to 10.11 or newer.
 
 
 ## License
