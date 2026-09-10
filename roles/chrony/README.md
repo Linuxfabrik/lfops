@@ -9,6 +9,11 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The deployed `chrony.conf` loads no key file, so NTP sources are not authenticated with symmetric keys. RHEL 10's own `chrony.conf` does the same, while RHEL 8 and 9 load an `/etc/chrony.keys` that holds no keys.
+
+
 ## Tags
 
 `chrony`
