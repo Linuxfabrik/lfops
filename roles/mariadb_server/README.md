@@ -12,7 +12,7 @@ Note that this role does NOT let you specify a particular MariaDB server version
 
 This role is compatible with the following MariaDB versions:
 
-* 10.6 LTS
+* 10.6 LTS, except on RHEL 10, for which MariaDB publishes no 10.6 packages
 * 10.11 LTS
 * 11.4 LTS
 * 11.8 LTS

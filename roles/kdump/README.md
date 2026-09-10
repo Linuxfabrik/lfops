@@ -6,6 +6,12 @@
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The role installs no package. It only manages the state of an existing `kdump.service`, and treats a host without one as already having kdump off.
+* On RHEL 10, `kdump.service` ships in `kdump-utils`, which a default installation does not include. On RHEL 9 it ships in `kexec-tools`, which is part of the `core` group. A stock RHEL 10 host therefore has no kdump service, which satisfies this role's default. Setting `kdump__service_enabled: true` on RHEL 10 has no effect unless `kdump-utils` is installed first.
+
+
 ## Tags
 
 `kdump`

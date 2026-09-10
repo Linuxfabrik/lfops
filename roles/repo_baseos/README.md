@@ -36,9 +36,10 @@ This role deploys the BaseOS repositories, which can be used to set a custom mir
 
 `repo_baseos__security_repo_enabled__host_var` / `repo_baseos__security_repo_enabled__group_var`
 
-* Whether the Rocky Linux `security` repository should be enabled. This repository delivers critical CVE fixes and is enabled by default in LFOPS (Rocky ships it disabled). Set to `false` to opt out on a specific host or group.
+* Whether the Rocky Linux `security` repository should be enabled. This repository delivers critical CVE fixes. Set to `false` to opt out on a specific host or group.
 * Type: Bool.
 * Default: `true`
+* Deviates from the upstream default `false`: critical CVE fixes should reach a host without the operator having to opt in first.
 
 `repo_baseos__security_repo_use_upstream`
 

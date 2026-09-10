@@ -22,5 +22,5 @@ repo_baseos__security_repo_enabled__combined_var: '{{
 repo_baseos__security_repo_enabled__dependent_var: ''
 repo_baseos__security_repo_enabled__group_var: ''
 repo_baseos__security_repo_enabled__host_var: ''
-repo_baseos__security_repo_enabled__role_var: true
+repo_baseos__security_repo_enabled__role_var: true  # upstream default: false
 repo_baseos__security_repo_use_upstream: true

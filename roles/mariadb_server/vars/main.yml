@@ -1,6 +1,11 @@
 # MariaDB versions this role ships a configuration template and a vars file for. The installed version is matched
 # against this list so an unsupported one aborts with a clear message instead of a
 # missing-file error. Extend it whenever a version for a new version is added.
+#
+# On RHEL 10 only 10.11 and newer install: MariaDB publishes no RHEL 10 packages for 10.6, and
+# repo_mariadb aborts for it there. Verified on Rocky 10: the role's package list resolves to the
+# vendor MariaDB-server 11.8.9 rather than AppStream's mariadb-server 10.11.18, because the vendor
+# package obsoletes the distribution one, exactly as on RHEL 9.
 __mariadb_server__supported_versions:
   - '10.6'
   - '10.11'

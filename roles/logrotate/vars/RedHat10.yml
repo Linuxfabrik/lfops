@@ -1,1 +1,6 @@
+# Verified against logrotate-3.22.0-5.el10 and rsyslog-8.2510.0-5.el10 on Rocky 10.
+# The rsyslog snippet moved from the rsyslog-logrotate subpackage into the
+# main rsyslog package, and its postrotate switched from systemctl kill -s HUP to
+# systemctl reload; both releases define ExecReload=/usr/bin/kill -HUP $MAINPID, so
+# the signal this role sends is the same one.
 __logrotate__syslog_filename: 'rsyslog'
