@@ -14,13 +14,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'selinux'
-    - 'selinux:fcontext'
-    - 'selinux:modules'
-    - 'selinux:port'
-    - 'selinux:restorecon'
-    - 'selinux:setenforce'
-    - 'selinux:setsebool'
+    - 'always'
 
 
 - block:

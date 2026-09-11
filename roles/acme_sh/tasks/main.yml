@@ -3,9 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'acme_sh'
-    - 'acme_sh:certificates'
-    - 'acme_sh:state'
+    - 'always'
 
 
 - block:

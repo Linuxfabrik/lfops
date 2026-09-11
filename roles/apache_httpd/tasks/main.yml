@@ -3,13 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'apache_httpd'
-    - 'apache_httpd:configure'
-    - 'apache_httpd:htpasswd'
-    - 'apache_httpd:mod_security_coreruleset'
-    - 'apache_httpd:mods'
-    - 'apache_httpd:state'
-    - 'apache_httpd:vhosts'
+    - 'always'
 
 
 # Manage required system packages (Installation)

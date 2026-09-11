@@ -3,10 +3,8 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'icingaweb2'
-    - 'icingaweb2:configure'
-    - 'icingaweb2:resources'
-    - 'icingaweb2:users'
+    - 'always'
+
 
 - block:
 

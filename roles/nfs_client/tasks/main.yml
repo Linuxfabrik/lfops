@@ -3,7 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'nfs_client'
+    - 'always'
 
 
 - block:

@@ -3,8 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'redis'
-    - 'redis:state'
+    - 'always'
 
 
 - block:

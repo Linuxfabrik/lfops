@@ -3,7 +3,8 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'repo_icinga'
+    - 'always'
+
 
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'

@@ -3,7 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'icinga2_master'
+    - 'always'
 
 
 # both users are rendered from icinga2_master__api_users__role_var, where the same

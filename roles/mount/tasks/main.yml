@@ -3,7 +3,7 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'mount'
+    - 'always'
 
 
 - block:

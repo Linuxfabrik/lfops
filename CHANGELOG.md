@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:clamav, role:sshd**: `--tags clamav:configure`, `--tags clamav:state` and `--tags sshd:state` no longer abort on an undefined variable, so a restart skipped with `lfops__skip_restart_handlers` can be caught up with `--tags <role>:state` as the README describes.
 * **role:php**: A playbook that includes PHP, such as `setup_nextcloud`, no longer aborts at `Get PHP version` when it is run with another role's tags, for example `--tags apache_httpd`, against a host that has no PHP installed yet.
 * **role:kdump**: `kdump__service_enabled: true` turns kdump on on RHEL 10 as well instead of leaving it off without an error, and a kdump that is supposed to run fails the run when its service cannot be managed ([#359](https://github.com/Linuxfabrik/lfops/issues/359)).
 * **role:repo_mariadb**: On RHEL 10 the role aborts for MariaDB versions older than 10.11, which MariaDB publishes no RHEL 10 packages for, instead of deploying a repository that answers 404 and breaks every dnf transaction on the host.

@@ -3,9 +3,8 @@
     name: 'shared'
     tasks_from: 'platform-variables.yml'
   tags:
-    - 'kibana'
-    - 'kibana:configure'
-    - 'kibana:state'
+    - 'always'
+
 
 - block:
 
