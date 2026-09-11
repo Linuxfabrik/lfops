@@ -146,7 +146,7 @@ Which Ansible role is proven to run on which OS?
 | repo_monitoring_plugins               |  (x)   |  (x)   |   x    |   x    |    x    |     x     |    (x)    |    (x)    | SLES 15, SLES 16                             |
 | repo_mydumper                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
-| repo_postgresql                       |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
+| repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_redis                            |   x    |   x    |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | repo_remi                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
