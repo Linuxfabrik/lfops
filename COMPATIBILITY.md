@@ -139,7 +139,7 @@ Which Ansible role is proven to run on which OS?
 | repo_gitlab_runner                    |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_grafana                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    |                                              |
+| repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |

@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_icinga**: On Fedora the role deploys Icinga's public repository instead of failing on a release package that Icinga no longer publishes ([#360](https://github.com/Linuxfabrik/lfops/issues/360)).
 * **role:repo_postgresql**: The role no longer aborts on RHEL 10 right after deploying the repository ([#370](https://github.com/Linuxfabrik/lfops/issues/370)).
 * **role:repo_collabora_code**: The role deploys the repository on RHEL 10 instead of failing on a missing template ([#377](https://github.com/Linuxfabrik/lfops/issues/377)).
 * **role:lvm**: `growpart: true` works on minimal installations, where the role failed because nothing installed `growpart` ([#365](https://github.com/Linuxfabrik/lfops/issues/365)).
