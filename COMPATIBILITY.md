@@ -130,7 +130,7 @@ Which Ansible role is proven to run on which OS?
 | redis                                 |   x    |   x    |   x    |   x    |         |    (x)    |    (x)    |    (x)    | RHEL 10: no Redis, use the `valkey` role     |
 | repo_baseos                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_collabora                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| repo_collabora_code                   |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| repo_collabora_code                   |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_debian_base                      |  (x)   |  (x)   |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | repo_docker                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_elasticsearch                    |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |

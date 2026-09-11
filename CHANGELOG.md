@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_collabora_code**: The role deploys the repository on RHEL 10 instead of failing on a missing template ([#377](https://github.com/Linuxfabrik/lfops/issues/377)).
 * **role:lvm**: `growpart: true` works on minimal installations, where the role failed because nothing installed `growpart` ([#365](https://github.com/Linuxfabrik/lfops/issues/365)).
 * **role:icinga2_agent, role:icinga2_master**: Icinga 2 starts after SSSD at boot as intended, so its early `sudo` calls no longer fail with `problem with defaults entries`; the ordering pointed at a unit that does not exist and never took effect ([#357](https://github.com/Linuxfabrik/lfops/issues/357)).
 * **role:kdump**: `kdump__service_enabled: true` turns kdump on on RHEL 10 as well instead of leaving it off without an error, and a kdump that is supposed to run fails the run when its service cannot be managed ([#359](https://github.com/Linuxfabrik/lfops/issues/359)).
@@ -42,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:nextcloud**: `nextcloud-update` sets the Icinga downtime again, taking the API user from `icinga2_master__downtime_api_user` (see Added) instead of from the `system_update__icinga2_api_user_login` removed in v8.0.0.
 * **role:borg_local, role:schedule_reboot, role:tools**: The Icinga downtime around a backup or a reboot is set again when the deploying playbook does not run `icinga2_agent` itself, such as `bootloader`, `system_update` or `tools`, and the inventory only sets the mandatory `icinga2_agent__icinga2_master_cn`.
 * **role:fail2ban**: The `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome` and `apache-noscript` jail templates can be deployed again. Using one of them aborted the run.
+
+### Security
+
+* **role:repo_collabora_code**: dnf verifies the signatures of the Collabora packages, as Collabora's own installation instructions do, where the repository file had switched the check off.
 
 
 ## [v9.0.0] - 2026-09-09
