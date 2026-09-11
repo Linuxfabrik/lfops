@@ -62,3 +62,10 @@ grafana__service_enabled: true
 grafana__service_state: '{{ grafana__service_enabled | bool | ternary("started", "stopped") }}'
 grafana__skip_token_to_bitwarden: false
 grafana__validate_certs: true
+
+# --- publishing a dependent_var for another role ---
+# community.crypto needs the cryptography library on the managed node to generate the
+# JWT keys. Verified as python3-cryptography on Rocky 8, 9 and 10.
+grafana__python__modules__dependent_var: '{{
+    grafana__auth_jwt | bool | ternary([{"name": "python3-cryptography"}], [])
+  }}'

@@ -374,6 +374,7 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_grafana): `grafana_server__skip_repo_grafana`
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `grafana_server__skip_python`
 * [grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana)
 
 
@@ -382,6 +383,7 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_grafana): `grafana_server__skip_repo_grafana`
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `grafana_server__skip_python`
 * [grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana): `grafana_server__skip_grafana`
 * [grafana_grizzly](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana_grizzly)
 
@@ -682,6 +684,7 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_grafana): `monitoring_plugins_grafana_dashboards__skip_repo_grafana`
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `monitoring_plugins_grafana_dashboards__skip_python`
 * [grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana): `monitoring_plugins_grafana_dashboards__skip_grafana`, `monitoring_plugins_grafana_dashboards__skip_grafana_grizzly`
 * [grafana_grizzly](https://github.com/Linuxfabrik/lfops/tree/main/roles/grafana_grizzly): `monitoring_plugins_grafana_dashboards__skip_grafana_grizzly`
 * [monitoring_plugins_grafana_dashboards](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins_grafana_dashboards)
