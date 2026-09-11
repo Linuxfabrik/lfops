@@ -97,6 +97,14 @@ icingaweb2__url_host: 'monitoring.example.com'
         * Optional. Will be used as the key-value pair in the resulting ini file.
         * Type: String.
 
+`icingaweb2__cookie_secure`
+
+* Whether the session and remember-me cookies always carry the `Secure` flag, so that browsers only return them over HTTPS. `false` leaves the decision to IcingaWeb2, which sets the flag only on requests it sees arriving over HTTPS.
+* Set it to `false` for an IcingaWeb2 that browsers reach over plain HTTP, which otherwise cannot log anyone in, because browsers drop a `Secure` cookie received over HTTP.
+* Type: Bool.
+* Default: `true`
+* Deviates from the upstream default, which leaves the decision to IcingaWeb2: behind a reverse proxy that terminates TLS and talks plain HTTP to IcingaWeb2, every request looks unencrypted and the flag stays off.
+
 `icingaweb2__database_host`
 
 * The host on which the SQL database is reachable.
@@ -305,6 +313,7 @@ icingaweb2__authentications__host_var:
   - name: 'autologin'
     backend: 'external'
 icingaweb2__authentications__group_var: []
+icingaweb2__cookie_secure: false
 icingaweb2__database_host: 'localhost'
 icingaweb2__database_login_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'
@@ -455,6 +464,13 @@ icingaweb2__users__host_var:
     password: 'linuxfabrik'
 icingaweb2__users__group_var: []
 ```
+
+
+## Troubleshooting
+
+**The login form comes back after a correct password**
+
+* Browsers reach IcingaWeb2 over plain HTTP and drop its `Secure` session cookie. Serve IcingaWeb2 over HTTPS, or set `icingaweb2__cookie_secure: false`.
 
 
 ## License

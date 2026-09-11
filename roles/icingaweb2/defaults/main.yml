@@ -1,3 +1,4 @@
+icingaweb2__cookie_secure: true  # upstream default: unset (auto-detected per request)
 icingaweb2__database_host: 'localhost'
 icingaweb2__database_login_host: 'localhost'
 icingaweb2__database_name: 'icingaweb2'

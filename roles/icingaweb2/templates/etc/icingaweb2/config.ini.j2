@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2023121301
+; 2026091101
 
 [global]
 show_stacktraces = "1"
@@ -16,3 +16,10 @@ facility = "user"
 
 [themes]
 default = "{{ icingaweb2__default_theme }}"
+{% if icingaweb2__cookie_secure | bool %}
+
+; Without this, IcingaWeb2 sets the Secure flag only on requests it sees arriving
+; over HTTPS, so behind a reverse proxy that terminates TLS the flag stays off.
+[cookie]
+secure = "1"
+{% endif %}
