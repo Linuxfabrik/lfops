@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbook:kvm_host**: The playbook deploys the EPEL repository, and CRB on Rocky 9 and newer, so it no longer fails to install `genisoimage` on RHEL 9 and 10 hosts that did not have EPEL set up already ([#375](https://github.com/Linuxfabrik/lfops/issues/375)).
 * **playbook:chromium_headless, playbook:icingaweb2_module_pdfexport, playbook:repo_epel**: On Rocky 9 and newer, these playbooks enable the CRB repository together with EPEL, like every other playbook that deploys EPEL, since EPEL packages depend on packages from CRB.
 * **role:repo_icinga**: On Fedora the role deploys Icinga's public repository instead of failing on a release package that Icinga no longer publishes ([#360](https://github.com/Linuxfabrik/lfops/issues/360)).
 * **role:repo_postgresql**: The role no longer aborts on RHEL 10 right after deploying the repository ([#370](https://github.com/Linuxfabrik/lfops/issues/370)).

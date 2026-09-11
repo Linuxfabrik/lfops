@@ -546,6 +546,8 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `kvm_host__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `kvm_host__skip_repo_epel`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `kvm_host__skip_python`
 * [kvm_host](https://github.com/Linuxfabrik/lfops/tree/main/roles/kvm_host)
 

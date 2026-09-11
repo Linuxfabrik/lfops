@@ -87,7 +87,7 @@ Which Ansible role is proven to run on which OS?
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | keycloak                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
-| kvm_host                              |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
+| kvm_host                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | kvm_vm                                |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
