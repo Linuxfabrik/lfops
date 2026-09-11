@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'foreign_tags' sub-scenario, run with
+# `molecule test --scenario-name php/foreign_tags`.
+#
+# Covers a run of the php playbook limited to another role's tags against hosts without PHP, which
+# is what the setup_* playbooks do with `--tags apache_httpd`. The 'install' sub-scenario covers
+# the ordinary run.

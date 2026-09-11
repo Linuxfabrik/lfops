@@ -1,0 +1,25 @@
+# A run limited to another role's tags still runs the php role's 'always' tasks but skips its
+# install block, so they run while PHP is not installed. The setup_* playbooks do exactly that
+# when they are run with `--tags apache_httpd` to bring up the vHosts before the certificate
+# exists. A playbook cannot select tags for itself, so this play calls the playbook under test as
+# a separate ansible-playbook run against the same inventory and limit. Nothing in that run
+# installs PHP, so the hosts stay without it and every converge, the idempotence run included,
+# exercises the same path.
+- name: 'Converge php playbook limited to a foreign tag'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'ansible-playbook linuxfabrik.lfops.php --tags apache_httpd'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + ["--limit=" ~ ansible_limit | d("all"), "--tags=apache_httpd", "linuxfabrik.lfops.php"]
+          }}'
+      # a failing run would otherwise write its retry file next to the playbook, which is the
+      # repository checkout the collection is symlinked to
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      changed_when: false # reports whether the run succeeded, the run itself changes nothing

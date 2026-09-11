@@ -53,12 +53,18 @@
   # php__version wins when set: the role then manages exactly the declared version instead of
   # adopting whatever happens to be installed. Falling back to discovery keeps the previous
   # behaviour, and is the only option on RedHat, where the 'php' package always exists.
+  # Left undefined while PHP is not installed yet, which is what a fresh host looks like in a run
+  # limited to another role's tags (e.g. `setup_nextcloud --tags apache_httpd`): the install block
+  # above is filtered out there, so there is no version to discover, and reading the missing
+  # package would abort the whole play. The consuming roles guard on `is defined`.
   - name: 'Get PHP version'
     ansible.builtin.set_fact:
       __php__installed_version: '{{
           php__version if (php__version | string | length)
           else (ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d"))
         }}'
+    when:
+      - 'php__version | string | length > 0 or "php" in ansible_facts["packages"]'
 
   # 'always' as well, because the version defaults are not only the ini's: memory_limit,
   # max_execution_time and post_max_size are rendered into every pool as php_admin_value, so a
@@ -71,6 +77,7 @@
   - name: 'Load default values for {{ __php__installed_version }}'
     ansible.builtin.include_vars: 'vars/{{ __php__installed_version }}.yml'
     when:
+      - '__php__installed_version is defined'
       - '__php__installed_version in __php__supported_versions'
 
   # 'always': __php__installed_version / __php__fpm_service_name are prerequisites referenced by
