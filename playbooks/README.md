@@ -123,6 +123,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `chromium_headless__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `chromium_headless__skip_repo_epel`
 * [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless)
 
@@ -478,6 +479,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `icingaweb2_module_pdfexport__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `icingaweb2_module_pdfexport__skip_repo_epel`
 * [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): `icingaweb2_module_pdfexport__skip_chromium_headless`
 * [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport)
@@ -889,6 +891,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `repo_epel__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)
 
 
