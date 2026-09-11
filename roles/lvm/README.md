@@ -63,7 +63,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `fstype`:
 
-        * Optional. Filesystem type.
+        * Optional. Filesystem type. Note that on RHEL 10, `mkfs.xfs` refuses to create an XFS file system smaller than 300 MB.
         * Type: String.
         * Default: `'xfs'`
 
