@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lvm**: `growpart: true` works on minimal installations, where the role failed because nothing installed `growpart` ([#365](https://github.com/Linuxfabrik/lfops/issues/365)).
 * **role:icinga2_agent, role:icinga2_master**: Icinga 2 starts after SSSD at boot as intended, so its early `sudo` calls no longer fail with `problem with defaults entries`; the ordering pointed at a unit that does not exist and never took effect ([#357](https://github.com/Linuxfabrik/lfops/issues/357)).
 * **role:kdump**: `kdump__service_enabled: true` turns kdump on on RHEL 10 as well instead of leaving it off without an error, and a kdump that is supposed to run fails the run when its service cannot be managed ([#359](https://github.com/Linuxfabrik/lfops/issues/359)).
 * **role:repo_mariadb**: On RHEL 10 the role aborts for MariaDB versions older than 10.11, which MariaDB publishes no RHEL 10 packages for, instead of deploying a repository that answers 404 and breaks every dnf transaction on the host.
