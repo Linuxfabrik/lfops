@@ -6,7 +6,7 @@
 # where the result is never registered.
 - name: 'postgresql_server: restart postgresql'
   ansible.builtin.service:
-    name: 'postgresql-{{ postgresql_server__version }}'
+    name: '{{ postgresql_server__service_name }}'
     state: 'restarted'
   when:
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
