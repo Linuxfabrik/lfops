@@ -61,7 +61,7 @@
       line: "include_dir = 'conf.d'"
       regexp: '^include_dir(\s+|\s*=\s*)?''conf.d''\s*(#.*)?$'
       path: '{{ postgresql_server__data_dir }}/postgresql.conf'
-    notify: 'postgresql_server: restart posgresql'
+    notify: 'postgresql_server: restart postgresql'
 
   - name: 'mkdir -p {{ postgresql_server__data_dir }}/conf.d'
     ansible.builtin.file:
@@ -79,7 +79,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: restart posgresql'
+    notify: 'postgresql_server: restart postgresql'
 
   - name: 'Deploy {{ postgresql_server__data_dir }}/pg_hba.conf'
     ansible.builtin.template:
@@ -89,7 +89,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: restart posgresql'
+    notify: 'postgresql_server: restart postgresql'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

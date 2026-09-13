@@ -19,7 +19,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `postgresql_server`
 
 * Installs and configures PostgreSQL.
-* Triggers: posgresql.service restart.
+* Triggers: postgresql.service restart.
 
 `postgresql_server:state`
 
@@ -267,7 +267,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `postgresql_server__version`
 
-* Specifies the PostgreSQL verison to install (use only the major version number like `'14'`. The latest minor version is used). Set this when using the official PostgreSQL Repo.
+* Specifies the PostgreSQL version to install (use only the major version number like `'14'`. The latest minor version is used). Set this when using the official PostgreSQL Repo.
 * Type: String.
 * Default: `''`
 
