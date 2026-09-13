@@ -23,8 +23,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `postgresql_server`
 
-* Installs and configures PostgreSQL.
-* Triggers: postgresql.service restart, after the configuration check.
+* Installs and configures PostgreSQL, and manages its users, databases, privileges and the dump timer.
+* Triggers: PostgreSQL restart (`postgresql.service`, or `postgresql-<version>.service` with `postgresql_server__version`), after the configuration check.
 
 `postgresql_server:state`
 
@@ -68,7 +68,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `postgresql_server__conf_password_encryption`
 
-* Determines the algorithm to use to encrypt passwords when creating new users / roles. Possible options: `'scram-sha-256'`, `'md5'`.
+* Determines the algorithm to use to encrypt passwords when creating new users / roles or changing their passwords. Possible options: `'scram-sha-256'`, `'md5'`. PostgreSQL deprecates MD5 passwords and logs a warning for them.
 * Type: String.
 * Default: `'scram-sha-256'`
 
@@ -340,7 +340,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `postgresql_server__version`
 
-* Specifies the PostgreSQL version to install (use only the major version number like `'14'`. The latest minor version is used). Set this when using the official PostgreSQL Repo.
+* Specifies the PostgreSQL version to install from the official PostgreSQL Yum Repository (use only the major version number like `'17'`. The latest minor version is used). Leave it empty to install the `postgresql-server` package of the distribution instead.
 * Type: String.
 * Default: `''`
 
@@ -388,7 +388,7 @@ postgresql_server__users__host_var:
   - username: 'user1'
     password: 'linuxfabrik'
     state: 'present'
-postgresql_server__version: '14'
+postgresql_server__version: '17'
 ```
 
 
