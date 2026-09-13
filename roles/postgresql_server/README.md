@@ -160,6 +160,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
       user: 'all'
       address: '127.0.0.1/32'
       auth_method: 'scram-sha-256'
+    - type: 'host'
+      database: 'all'
+      user: 'all'
+      address: '::1/128'
+      auth_method: 'scram-sha-256'
     ```
 
 * Subkeys:

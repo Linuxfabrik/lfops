@@ -40,6 +40,13 @@ postgresql_server__pg_hba_host_entries__role_var:
     user: 'all'
     address: '127.0.0.1/32'
     auth_method: 'scram-sha-256'
+  # `localhost` also resolves to ::1, and libpq does not fall back to 127.0.0.1 when the server
+  # rejects the connection on ::1 (connection_failed() in src/interfaces/libpq/fe-connect.c).
+  - type: 'host'
+    database: 'all'
+    user: 'all'
+    address: '::1/128'
+    auth_method: 'scram-sha-256'
 postgresql_server__pg_hba_local_entries__combined_var: '{{ (
       postgresql_server__pg_hba_local_entries__role_var +
       postgresql_server__pg_hba_local_entries__dependent_var +

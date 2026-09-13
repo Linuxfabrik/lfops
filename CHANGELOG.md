@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:postgresql_server**: Clients connecting to `localhost` are accepted over IPv6 as well, where they were rejected with `no pg_hba.conf entry for host "::1"`.
 * **role:postgresql_server**: A configuration change on a PostgreSQL installed from the distribution packages restarts `postgresql.service` instead of aborting the run on a service called `postgresql-`.
 * **role:grafana**: With `grafana__auth_jwt: true`, the run no longer aborts at `generate JWT RSA private key` with `Cannot detect the required Python library cryptography` on hosts that lack it, because the playbooks deploying Grafana install `python3-cryptography` first.
 * **role:clamav, role:sshd**: `--tags clamav:configure`, `--tags clamav:state` and `--tags sshd:state` no longer abort on an undefined variable, so a restart skipped with `lfops__skip_restart_handlers` can be caught up with `--tags <role>:state` as the README describes.
