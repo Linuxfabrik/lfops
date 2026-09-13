@@ -129,7 +129,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `postgresql_server__dump_directory`
 
-* The directory where `postgresql-dump` stores its database dumps.
+* The directory where `postgresql-dump` stores its dumps: one file `dump-<database>.sql.gz` per database, and `globals.sql.gz` with the roles and tablespaces, which pg_dump does not include in a database dump. Restore `globals.sql.gz` first. The directory is emptied at the start of every dump.
 * Type: String.
 * Default: `'/backup/postgresql-dump'`
 
