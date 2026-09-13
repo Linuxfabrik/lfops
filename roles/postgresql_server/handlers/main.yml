@@ -1,3 +1,62 @@
+# The config tasks notify 'postgresql_server: validate config; restart postgresql'. Handlers that
+# listen to the same topic run in the order they are defined in this file, so the restart at the
+# end only runs once every check before it passed. A failing check aborts the run while the
+# running server keeps its current configuration.
+
+# `postgres -C` reads postgresql.conf, conf.d and postgresql.auto.conf the way the postmaster does
+# at startup, where every error is fatal, prints the value and exits before it touches the data
+# directory lock, so it is safe next to a running server (PostmasterMain() in
+# src/backend/postmaster/postmaster.c). It does not read pg_hba.conf.
+- name: 'postgresql_server: postgres -C data_directory'
+  ansible.builtin.command: '{{ __postgresql_server__bin_dir }}/postgres -D {{ postgresql_server__data_dir | quote }} -C data_directory'
+  become: true
+  become_user: 'postgres'
+  changed_when: false # read-only check
+  check_mode: false # run task even if `--check` is specified
+  listen: 'postgresql_server: validate config; restart postgresql'
+
+# pg_hba.conf has no offline check. The pg_hba_file_rules view parses the file on disk on every
+# query and reports each broken line (fill_hba_view() in src/backend/utils/adt/hbafuncs.c), so it
+# needs the running server. Its port is taken from line 4 of postmaster.pid
+# (LOCK_FILE_LINE_PORT in src/include/utils/pidfile.h) instead of postgresql_server__conf_port,
+# because a changed port only takes effect with the restart below.
+# Skipped where the restart is skipped as well: the service was just started with this
+# configuration, or it is supposed to be stopped.
+- name: 'postgresql_server: cat postmaster.pid'
+  ansible.builtin.slurp:
+    src: '{{ postgresql_server__data_dir }}/postmaster.pid'
+  register: '__postgresql_server__postmaster_pid_result'
+  failed_when: false # the server is not running, nothing to check against
+  listen: 'postgresql_server: validate config; restart postgresql'
+  when:
+    - '__postgresql_server__service_state_result is not defined or __postgresql_server__service_state_result is not changed'
+    - 'postgresql_server__state != "stopped"'
+
+- name: 'postgresql_server: SELECT line_number, error FROM pg_hba_file_rules WHERE error IS NOT NULL'
+  community.postgresql.postgresql_query:
+    port: '{{ (__postgresql_server__postmaster_pid_result["content"] | b64decode).splitlines()[3] }}'
+    login_password: '{{ postgresql_server__login_password | default(omit) }}'
+    query: 'SELECT line_number, error FROM pg_hba_file_rules WHERE error IS NOT NULL'
+  become: true
+  become_user: 'postgres'
+  register: '__postgresql_server__pg_hba_errors_result'
+  check_mode: false # read-only query, run it even if `--check` is specified
+  listen: 'postgresql_server: validate config; restart postgresql'
+  when:
+    - '__postgresql_server__postmaster_pid_result["content"] is defined'
+
+- name: 'postgresql_server: Assert that pg_hba.conf has no errors'
+  ansible.builtin.assert:
+    that:
+      - '__postgresql_server__pg_hba_errors_result["query_result"] | length == 0'
+    quiet: true
+    fail_msg: >-
+      {{ postgresql_server__data_dir }}/pg_hba.conf contains errors, PostgreSQL was not restarted:
+      {% for row in __postgresql_server__pg_hba_errors_result["query_result"] %}line {{ row["line_number"] }}: {{ row["error"] }}; {% endfor %}
+  listen: 'postgresql_server: validate config; restart postgresql'
+  when:
+    - '__postgresql_server__pg_hba_errors_result is not skipped'
+
 # skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
 # the service was just started (redundant), or if the user wants it stopped.
 # __postgresql_server__service_state_result is registered on a dedicated state-only task (not the
@@ -8,6 +67,7 @@
   ansible.builtin.service:
     name: '{{ postgresql_server__service_name }}'
     state: 'restarted'
+  listen: 'postgresql_server: validate config; restart postgresql'
   when:
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__postgresql_server__service_state_result is not defined or __postgresql_server__service_state_result is not changed'

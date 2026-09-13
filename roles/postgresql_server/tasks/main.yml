@@ -38,14 +38,37 @@
     - 'postgresql_server'
 
 
+# The names and paths only depend on postgresql_server__version, not on the state of the host, so
+# they are safe to set under every tag.
+- block:
+
+  - name: 'set internal vars for role (PostgreSQL Yum Repository)'
+    ansible.builtin.set_fact:
+      __postgresql_server__bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
+      postgresql_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
+      postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
+      postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
+    when:
+      - 'postgresql_server__version | string | length > 0'
+
+  - name: 'set internal vars for role (distribution packages)'
+    ansible.builtin.set_fact:
+      __postgresql_server__bin_dir: '/usr/bin'
+      postgresql_server__data_dir: '/var/lib/pgsql/data'
+      postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
+      postgresql_server__service_name: 'postgresql'
+    when:
+      - 'not postgresql_server__version | string | length > 0'
+
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'set internal vars for role'
     ansible.builtin.set_fact:
       postgresql_server__installed_version: '{{ postgresql_server__version }}'
-      postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
-      postgresql_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
-      postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
 
   when:
     - 'postgresql_server__version | string | length > 0'
@@ -63,12 +86,6 @@
   - name: 'Get postgresql-server version'
     ansible.builtin.set_fact:
       postgresql_server__installed_version: '{{ (ansible_facts["packages"]["postgresql-server"][0]["version"] | d(ansible_facts["packages"]["postgresql-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
-
-  - name: 'set internal vars for role'
-    ansible.builtin.set_fact:
-      postgresql_server__service_name: 'postgresql'
-      postgresql_server__data_dir: '/var/lib/pgsql/data'
-      postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
 
   when:
     - 'not postgresql_server__version | string | length > 0'
@@ -89,7 +106,7 @@
       line: "include_dir = 'conf.d'"
       regexp: '^include_dir(\s+|\s*=\s*)?''conf.d''\s*(#.*)?$'
       path: '{{ postgresql_server__data_dir }}/postgresql.conf'
-    notify: 'postgresql_server: restart postgresql'
+    notify: 'postgresql_server: validate config; restart postgresql'
 
   - name: 'mkdir -p {{ postgresql_server__data_dir }}/conf.d'
     ansible.builtin.file:
@@ -107,7 +124,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: restart postgresql'
+    notify: 'postgresql_server: validate config; restart postgresql'
 
   - name: 'Deploy {{ postgresql_server__data_dir }}/pg_hba.conf'
     ansible.builtin.template:
@@ -117,7 +134,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: restart postgresql'
+    notify: 'postgresql_server: validate config; restart postgresql'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

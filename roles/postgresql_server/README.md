@@ -6,6 +6,11 @@ This role installs and configures a [PostgreSQL](https://www.postgresql.org/) se
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* A changed `postgresql.conf`, `conf.d/z00-linuxfabrik.conf` or `pg_hba.conf` restarts PostgreSQL. Before the restart, the role checks the configuration files with `postgres -C` and asks the running server for errors in `pg_hba.conf` through the `pg_hba_file_rules` view. A broken setting aborts the run with the error message, and the running server keeps its current configuration. The file with the error is already deployed at that point: fix the inventory and run the role again before PostgreSQL is restarted for any other reason.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -19,7 +24,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `postgresql_server`
 
 * Installs and configures PostgreSQL.
-* Triggers: postgresql.service restart.
+* Triggers: postgresql.service restart, after the configuration check.
 
 `postgresql_server:state`
 
