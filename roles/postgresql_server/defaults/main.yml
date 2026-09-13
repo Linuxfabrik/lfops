@@ -18,18 +18,45 @@ postgresql_server__databases__role_var: []
 postgresql_server__dump_directory: '/backup/postgresql-dump'
 postgresql_server__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 postgresql_server__enabled: true
-postgresql_server__pg_hba_entries:
-  - type: 'local'
-    database: 'all'
-    user: 'postgres'
-    auth_method: 'peer'
-  - type: 'local'
-    database: 'all'
-    user: 'all'
+# pg_hba.conf is split by connection kind because a `local` record has no address. A `local`
+# record only matches Unix-socket connections and a `host*` record only TCP connections
+# (check_hba() in src/backend/libpq/hba.c), so rendering all local records before all host
+# records does not change which record a connection matches.
+# `type` is part of the host key because `host` matches the same TCP connection as `hostssl` or
+# `hostnossl`.
+postgresql_server__pg_hba_host_entries__combined_var: '{{ (
+      postgresql_server__pg_hba_host_entries__role_var +
+      postgresql_server__pg_hba_host_entries__dependent_var +
+      postgresql_server__pg_hba_host_entries__group_var +
+      postgresql_server__pg_hba_host_entries__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["type", "database", "user", "address"])
+  }}'
+postgresql_server__pg_hba_host_entries__dependent_var: []
+postgresql_server__pg_hba_host_entries__group_var: []
+postgresql_server__pg_hba_host_entries__host_var: []
+postgresql_server__pg_hba_host_entries__role_var:
   - type: 'host'
     database: 'all'
     user: 'all'
     address: '127.0.0.1/32'
+    auth_method: 'scram-sha-256'
+postgresql_server__pg_hba_local_entries__combined_var: '{{ (
+      postgresql_server__pg_hba_local_entries__role_var +
+      postgresql_server__pg_hba_local_entries__dependent_var +
+      postgresql_server__pg_hba_local_entries__group_var +
+      postgresql_server__pg_hba_local_entries__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["database", "user"])
+  }}'
+postgresql_server__pg_hba_local_entries__dependent_var: []
+postgresql_server__pg_hba_local_entries__group_var: []
+postgresql_server__pg_hba_local_entries__host_var: []
+postgresql_server__pg_hba_local_entries__role_var:
+  - database: 'all'
+    user: 'postgres'
+    auth_method: 'peer'
+  - database: 'all'
+    user: 'all'
+    auth_method: 'scram-sha-256'
 postgresql_server__privs__combined_var: '{{ (
       postgresql_server__privs__role_var +
       postgresql_server__privs__dependent_var +

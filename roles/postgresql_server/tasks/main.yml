@@ -1,5 +1,33 @@
 - block:
 
+  # Ansible ignores an unknown inventory variable without a word, so an inventory that still sets
+  # the replaced variable would silently deploy the role defaults instead.
+  - name: 'Assert that postgresql_server__pg_hba_entries is not set'
+    ansible.builtin.assert:
+      that:
+        - 'postgresql_server__pg_hba_entries is not defined'
+      quiet: true
+      fail_msg: 'postgresql_server__pg_hba_entries is replaced by postgresql_server__pg_hba_local_entries__*_var and postgresql_server__pg_hba_host_entries__*_var. Move the entries there, see the role README.'
+
+  # A host record without an address, or with a type PostgreSQL does not know, keeps
+  # PostgreSQL from starting at all: postmaster aborts with "could not load pg_hba.conf".
+  - name: 'Assert that every pg_hba host entry has a valid type and an address'
+    ansible.builtin.assert:
+      that:
+        - 'item["type"] in ["host", "hostgssenc", "hostnogssenc", "hostnossl", "hostssl"]'
+        - 'item["address"] | string | length > 0'
+      quiet: true
+      fail_msg: 'postgresql_server__pg_hba_host_entries: "type" must be one of host, hostgssenc, hostnogssenc, hostnossl or hostssl, and "address" must not be empty.'
+    loop: '{{ postgresql_server__pg_hba_host_entries__combined_var }}'
+    loop_control:
+      label: '{{ item["type"] }} {{ item["database"] }} {{ item["user"] }} {{ item["address"] }}'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Install postgresql{{ postgresql_server__version }}-server'
     ansible.builtin.package:
       name:

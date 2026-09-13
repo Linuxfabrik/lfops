@@ -146,37 +146,47 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: unset
 
-`postgresql_server__pg_hba_entries`
+`postgresql_server__pg_hba_host_entries__host_var` / `postgresql_server__pg_hba_host_entries__group_var`
 
-* List of [host based authentication](https://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html) entries.
+* [Client authentication](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) records for TCP/IP connections (`host`, `hostssl`, `hostnossl`, `hostgssenc`, `hostnogssenc`). Entries are identified by `type`, `database`, `user` and `address` together.
+* PostgreSQL uses the first record that matches a connection. The role renders the entries from the inventory in their inventory order, followed by the role defaults, which are catch-all records. An entry that uses the same identifying keys as a default replaces that default in place.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: Allow `scram-sha-256` for all `local` and `host`
+* Default:
+
+    ```yaml
+    - type: 'host'
+      database: 'all'
+      user: 'all'
+      address: '127.0.0.1/32'
+      auth_method: 'scram-sha-256'
+    ```
+
 * Subkeys:
 
     * `type`:
 
-        * Mandatory. Record type.
+        * Mandatory. Record type. One of `host`, `hostgssenc`, `hostnogssenc`, `hostnossl`, `hostssl`.
         * Type: String.
 
     * `database`:
 
-        * Mandatory. Specifies which database name(s) this record matches.
+        * Mandatory. Database name(s) this record matches, for example `all` or `db1,db2`.
         * Type: String.
 
     * `user`:
 
-        * Mandatory. Specifies which database user name(s) this record matches.
+        * Mandatory. Database user name(s) this record matches, for example `all` or `user1`.
         * Type: String.
 
     * `address`:
 
-        * Optional. Specifies the client machine address(es) that this record matches.
+        * Mandatory. Client address(es) this record matches, for example `192.0.2.0/24`, `all`, `samenet` or a host name.
         * Type: String.
-        * Default: `''`
 
     * `auth_method`:
 
-        * Optional. Specifies the authentication method to use when a connection matches this record.
+        * Optional. Authentication method for a connection that matches this record.
         * Type: String.
         * Default: `'scram-sha-256'`
 
@@ -185,6 +195,59 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Optional. Options for the `auth_method`.
         * Type: String.
         * Default: `''`
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
+
+`postgresql_server__pg_hba_local_entries__host_var` / `postgresql_server__pg_hba_local_entries__group_var`
+
+* [Client authentication](https://www.postgresql.org/docs/current/auth-pg-hba-conf.html) records of type `local`, for connections over the Unix-domain socket. Entries are identified by `database` and `user` together.
+* PostgreSQL uses the first record that matches a connection. The role renders the entries from the inventory in their inventory order, followed by the role defaults, which are catch-all records. An entry that uses the same identifying keys as a default replaces that default in place.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default:
+
+    ```yaml
+    - database: 'all'
+      user: 'postgres'
+      auth_method: 'peer'
+    - database: 'all'
+      user: 'all'
+      auth_method: 'scram-sha-256'
+    ```
+
+* Subkeys:
+
+    * `database`:
+
+        * Mandatory. Database name(s) this record matches, for example `all` or `db1,db2`.
+        * Type: String.
+
+    * `user`:
+
+        * Mandatory. Database user name(s) this record matches, for example `all` or `user1`.
+        * Type: String.
+
+    * `auth_method`:
+
+        * Optional. Authentication method for a connection that matches this record.
+        * Type: String.
+        * Default: `'scram-sha-256'`
+
+    * `auth_options`:
+
+        * Optional. Options for the `auth_method`.
+        * Type: String.
+        * Default: `''`
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 `postgresql_server__privs__host_var` / `postgresql_server__privs__group_var`
 
@@ -290,13 +353,17 @@ postgresql_server__dump_directory: '/backup/postgresql-dump'
 postgresql_server__dump_on_calendar: '*-*-* 21:30:00'
 postgresql_server__enabled: true
 postgresql_server__login_password: 'linuxfabrik'
-postgresql_server__pg_hba_entries:
-  - type: 'local'
-    database: 'all'
+postgresql_server__pg_hba_host_entries__host_var:
+  - type: 'hostssl'
+    database: 'database1'
+    user: 'user1'
+    address: '192.0.2.0/24'
+postgresql_server__pg_hba_local_entries__host_var:
+  - database: 'all'
     user: 'all'
-  - type: 'host'
-    database: 'all'
-    user: 'all'
+    auth_method: 'reject'
+  - database: 'database1'
+    user: 'user1'
 postgresql_server__privs__host_var:
   - privs:
       - 'CONNECT'
