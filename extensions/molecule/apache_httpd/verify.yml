@@ -8,7 +8,8 @@
 # Every assertion below therefore comes from a request that was really made.
 #
 # The htpasswd files are checked the same way: by logging in through Apache, not by reading them.
-- name: 'Verify apache_httpd serves HTTP/2 and basic auth where it is configured to'
+# So is the compression: by the Content-Encoding of a real response, not by the deflate conf.
+- name: 'Verify apache_httpd serves HTTP/2, basic auth and compression where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
   become: true
@@ -199,3 +200,40 @@
       loop: '{{ __molecule__apache_httpd_curl_anonymous_result["results"] | zip(__molecule__apache_httpd_curl_login_result["results"]) | list }}'
       loop_control:
         label: '{{ item[0]["item"]["path"] }}'
+
+    # text/markdown is in the DEFLATE list of the deflate conf, and the scenario loads mod_deflate
+    # and mod_filter (see group_vars), so a client offering gzip has to get such a response
+    # compressed. The first vHost forces the type onto markdown.txt (see group_vars). Checking the
+    # configured type list instead would pass on a host where either module is not loaded.
+    - name: 'Deploy markdown.txt into the document root of the first vHost'
+      ansible.builtin.copy:
+        content: |
+          # Markdown
+
+          A response of type text/markdown, long enough that compressing it is worth the effort.
+          A response of type text/markdown, long enough that compressing it is worth the effort.
+        dest: '/var/www/html/{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}/markdown.txt'
+        owner: '{{ __molecule__docroot_owner }}'
+        group: '{{ __molecule__docroot_owner }}'
+        mode: 0o644
+        setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
+
+    - name: 'curl --header "Accept-Encoding: gzip" https://<vhost>/markdown.txt' # noqa command-instead-of-module (ansible.builtin.uri decompresses transparently and hides the Content-Encoding)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --header 'Accept-Encoding: gzip'
+        --dump-header -
+        --output /dev/null
+        https://{{ __molecule__server_name }}/markdown.txt
+      register: '__molecule__apache_httpd_curl_deflate_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
+
+    - name: 'Assert text/markdown is served gzip-compressed'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_curl_deflate_result["stdout"] is search("^content-type: text/markdown", ignorecase=true, multiline=true)'
+          - '__molecule__apache_httpd_curl_deflate_result["stdout"] is search("^content-encoding: gzip", ignorecase=true, multiline=true)'
+        fail_msg: 'expected a gzip-compressed text/markdown response, got: {{ __molecule__apache_httpd_curl_deflate_result["stdout"] }}'
