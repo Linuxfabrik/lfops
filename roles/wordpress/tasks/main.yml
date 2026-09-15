@@ -273,19 +273,20 @@
       group: 'apache'
       mode: 0o640
 
+  # the WXR import runs only on the run that installs WordPress, as the README describes
   - name: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     ansible.builtin.command: '/usr/local/bin/wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
-    when: 'item["wxr_export"] is defined and item["wxr_export"] | length > 0'
+    when: 'wordpress__wxr_export is defined and wordpress__wxr_export | length > 0 and not wordpress__stat_result["stat"]["exists"]'
 
-  - name: 'wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
-    ansible.builtin.command: '/usr/local/bin/wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ item["wxr_export"] }}'
+  - name: 'wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ wordpress__wxr_export | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ wordpress__wxr_export | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
-    when: 'item["wxr_export"] is defined and item["wxr_export"] | length > 0'
+    when: 'wordpress__wxr_export is defined and wordpress__wxr_export | length > 0 and not wordpress__stat_result["stat"]["exists"]'
     register: 'wordpress__import_result'
     failed_when: '"Success" not in wordpress__import_result["stdout"]
       or wordpress__import_result["rc"] != 0'
@@ -293,7 +294,7 @@
   - name: 'Result of importing the wxr file'
     ansible.builtin.debug:
       var: 'wordpress__import_result["stdout"]'
-    when: 'item["wxr_export"] is defined and item["wxr_export"] | length > 0'
+    when: 'wordpress__wxr_export is defined and wordpress__wxr_export | length > 0 and not wordpress__stat_result["stat"]["exists"]'
 
   tags:
     - 'wordpress'

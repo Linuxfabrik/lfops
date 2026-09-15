@@ -178,7 +178,7 @@ wordpress__url: 'https://wordpress.example.com'
 
 `wordpress__wxr_export`
 
-* Path to a WXR export file which will be imported after installing WordPress. The file includes posts, pages, comments, custom fields, categories and tags, and can be created using the [wp-cli export function](https://developer.wordpress.org/cli/commands/export/) or the `wordpress:export` tag.
+* Path to a WXR export file on the managed host, readable by `apache`, which will be imported when the role installs WordPress. The file includes posts, pages, comments, custom fields, categories and tags, and can be created using the [wp-cli export function](https://developer.wordpress.org/cli/commands/export/) or the `wordpress:export` tag.
 * Type: String.
 * Default: unset
 
