@@ -1,0 +1,4 @@
+# Ubuntu 26.04 ships postfix 3.10, whose stock main.cf sets compatibility_level 3.9. At postfix 3.10
+# the levels 3.6 and 3.9 select the same defaults; following the package keeps later defaults in
+# step with the distribution.
+__postfix__compatibility_level: '3.9'
