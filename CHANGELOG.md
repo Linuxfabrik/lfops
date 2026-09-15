@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:gitlab_ce**: `gitlab_ce__rb_external_url` supports `https://` behind a reverse proxy that terminates TLS, and the README recommends it there. With `http://`, GitLab's session cookie goes out without the `Secure` flag.
 * **role:grafana**: The login cookie carries the `Secure` flag when `grafana__root_url` is an `https://` URL. `grafana__cookie_secure` overrides this.
 * **playbook:setup_basic**: The mail and reboot roles run before the security roles, so a first run against a fresh host files the reboot request that a changed crypto policy, SELinux state or kernel module blocklist needs. Until now the reboot mechanism was deployed further down the playbook and such a change could only be reported to the operator.
 * **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
