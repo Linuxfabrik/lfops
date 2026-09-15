@@ -8,6 +8,7 @@ This role installs and configures a [PostgreSQL](https://www.postgresql.org/) se
 
 ## How the Role Behaves
 
+* PostgreSQL is installed from the PostgreSQL Yum Repository, not from the distribution packages. The cluster lives in `/var/lib/pgsql/<version>/data` and runs as `postgresql-<version>.service`. The role does not upgrade the data: changing `postgresql_server__version` on an existing host installs and initializes a second, empty cluster next to the old one, which fails to start while the old one listens on the same port.
 * A changed `postgresql.conf`, `conf.d/z00-linuxfabrik.conf` or `pg_hba.conf` restarts PostgreSQL. Before the restart, the role checks the configuration files with `postgres -C` and asks the running server for errors in `pg_hba.conf` through the `pg_hba_file_rules` view. A broken setting aborts the run with the error message, and the running server keeps its current configuration. The file with the error is already deployed at that point: fix the inventory and run the role again before PostgreSQL is restarted for any other reason.
 
 
@@ -16,7 +17,7 @@ This role installs and configures a [PostgreSQL](https://www.postgresql.org/) se
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * The `python3-psycopg2` library must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
-* Optional: the official [PostgreSQL Yum Repository](https://yum.postgresql.org/) enabled (role: [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql)).
+* The [PostgreSQL Yum Repository](https://yum.postgresql.org/) must be enabled (role: [linuxfabrik.lfops.repo_postgresql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_postgresql)).
 
 
 ## Tags
@@ -24,7 +25,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `postgresql_server`
 
 * Installs and configures PostgreSQL, and manages its users, databases, privileges and the dump timer.
-* Triggers: PostgreSQL restart (`postgresql.service`, or `postgresql-<version>.service` with `postgresql_server__version`), after the configuration check.
+* Triggers: postgresql-<version>.service restart, after the configuration check.
 
 `postgresql_server:state`
 
@@ -50,6 +51,20 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Configures database dumping (backups).
 * Triggers: none.
+
+
+## Mandatory Role Variables
+
+`postgresql_server__version`
+
+* The major version of PostgreSQL to install from the PostgreSQL Yum Repository, for example `'18'`. The latest minor release of that version is installed.
+* Type: String.
+
+Example:
+```yaml
+# mandatory
+postgresql_server__version: '18'
+```
 
 
 ## Optional Role Variables
@@ -338,12 +353,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Type: String.
         * Default: `'present'`
 
-`postgresql_server__version`
-
-* Specifies the PostgreSQL version to install from the official PostgreSQL Yum Repository (use only the major version number like `'17'`. The latest minor version is used). Leave it empty to install the `postgresql-server` package of the distribution instead.
-* Type: String.
-* Default: `''`
-
 
 Example:
 ```yaml
@@ -388,8 +397,14 @@ postgresql_server__users__host_var:
   - username: 'user1'
     password: 'linuxfabrik'
     state: 'present'
-postgresql_server__version: '17'
 ```
+
+
+## Troubleshooting
+
+**The run aborts with `This host has a PostgreSQL cluster of the distribution package in /var/lib/pgsql/data`**
+
+* The host runs PostgreSQL from the distribution packages, which the role does not manage. Move the data to the PostgreSQL Yum Repository release before running the role, for example: dump the cluster with `pg_dumpall`, stop and disable `postgresql.service`, rename `/var/lib/pgsql/data`, run the role, and restore the dump into the new cluster.
 
 
 ## License

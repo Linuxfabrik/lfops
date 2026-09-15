@@ -89,7 +89,6 @@ postgresql_server__users__dependent_var: []
 postgresql_server__users__group_var: []
 postgresql_server__users__host_var: []
 postgresql_server__users__role_var: []
-postgresql_server__version: ''
 # -----------------------------------------------------------------------------
 
 postgresql_server__python__modules__dependent_var:

@@ -8,15 +8,8 @@
 
   vars:
 
-    # The PostgreSQL Yum Repository and the distribution package use different names and paths.
-    __molecule__postgresql_bin_dir: '{{
-        (postgresql_server__version | d("") | length > 0)
-        | ternary("/usr/pgsql-" ~ postgresql_server__version | d("") ~ "/bin", "/usr/bin")
-      }}'
-    __molecule__postgresql_service_name: '{{
-        (postgresql_server__version | d("") | length > 0)
-        | ternary("postgresql-" ~ postgresql_server__version | d("") ~ ".service", "postgresql.service")
-      }}'
+    __molecule__postgresql_bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
+    __molecule__postgresql_service_name: 'postgresql-{{ postgresql_server__version }}.service'
     __molecule__psql: '{{ __molecule__postgresql_bin_dir }}/psql --no-align --tuples-only --no-psqlrc'
     __molecule__dump_directory: '/backup/postgresql-dump'
 

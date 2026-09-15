@@ -1,5 +1,13 @@
 - block:
 
+  - name: 'Assert that postgresql_server__version is a major version'
+    ansible.builtin.assert:
+      that:
+        - 'postgresql_server__version is defined'
+        - 'postgresql_server__version | string is match("^\\d+$")'
+      quiet: true
+      fail_msg: 'postgresql_server__version is mandatory and takes the major version of PostgreSQL, for example "18".'
+
   # Ansible ignores an unknown inventory variable without a word, so an inventory that still sets
   # the replaced variable would silently deploy the role defaults instead.
   - name: 'Assert that postgresql_server__pg_hba_entries is not set'
@@ -28,6 +36,21 @@
 
 - block:
 
+  # The distribution package keeps its cluster in /var/lib/pgsql/data and listens on the same port.
+  # Installing the PostgreSQL Yum Repository release next to it would initialize a second, empty
+  # cluster that cannot start while the first one runs.
+  - name: 'stat /var/lib/pgsql/data/PG_VERSION'
+    ansible.builtin.stat:
+      path: '/var/lib/pgsql/data/PG_VERSION'
+    register: '__postgresql_server__distribution_cluster_result'
+
+  - name: 'Assert that there is no cluster of the distribution package'
+    ansible.builtin.assert:
+      that:
+        - 'not __postgresql_server__distribution_cluster_result["stat"]["exists"]'
+      quiet: true
+      fail_msg: 'This host has a PostgreSQL cluster of the distribution package in /var/lib/pgsql/data. The role only installs PostgreSQL from the PostgreSQL Yum Repository. Migrate the data first, see the Troubleshooting section of the role README.'
+
   - name: 'Install postgresql{{ postgresql_server__version }}-server'
     ansible.builtin.package:
       name:
@@ -42,56 +65,15 @@
 # they are safe to set under every tag.
 - block:
 
-  - name: 'set internal vars for role (PostgreSQL Yum Repository)'
+  - name: 'set internal vars for role'
     ansible.builtin.set_fact:
       __postgresql_server__bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
       postgresql_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
       postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
       postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
-    when:
-      - 'postgresql_server__version | string | length > 0'
-
-  - name: 'set internal vars for role (distribution packages)'
-    ansible.builtin.set_fact:
-      __postgresql_server__bin_dir: '/usr/bin'
-      postgresql_server__data_dir: '/var/lib/pgsql/data'
-      postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
-      postgresql_server__service_name: 'postgresql'
-    when:
-      - 'not postgresql_server__version | string | length > 0'
 
   tags:
     - 'always'
-
-
-- block:
-
-  - name: 'set internal vars for role'
-    ansible.builtin.set_fact:
-      postgresql_server__installed_version: '{{ postgresql_server__version }}'
-
-  when:
-    - 'postgresql_server__version | string | length > 0'
-  tags:
-    - 'postgresql_server'
-    - 'postgresql_server:state'
-
-
-- block:
-
-  - name: 'Get the list of installed packages'
-    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Get postgresql-server version'
-    ansible.builtin.set_fact:
-      postgresql_server__installed_version: '{{ (ansible_facts["packages"]["postgresql-server"][0]["version"] | d(ansible_facts["packages"]["postgresql-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
-
-  when:
-    - 'not postgresql_server__version | string | length > 0'
-  tags:
-    - 'postgresql_server'
-    - 'postgresql_server:state'
 
 
 - block:

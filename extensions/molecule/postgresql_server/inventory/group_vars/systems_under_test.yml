@@ -3,6 +3,8 @@
 # Where a value is compared in verify.yml, it deliberately differs from the role default, so the
 # check can tell "the running server uses what the inventory asked for" apart from "the running
 # server happens to use the packaged default".
+postgresql_server__version: '18'
+
 postgresql_server__conf_listen_addresses:
   - '*'
 postgresql_server__conf_max_connections: 150
