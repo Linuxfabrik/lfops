@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:bind**: Reverse lookups for private and special-use addresses, such as `10.0.0.0/8` or `fd00::/8`, are answered locally, as BIND does by default, instead of waiting for the forwarders, which also no longer see the internal addressing.
 * **role:monitoring_plugins**: A package install that fails no longer leaves the Monitoring Plugins unlocked, so a later system update cannot move them past `monitoring_plugins__version`. The lock that existed before the run is set again.
 * **role:monitoring_plugins**: A run against an unchanged host no longer reports changes for the package versionlock ([#353](https://github.com/Linuxfabrik/lfops/issues/353)).
 * **role:collabora**: A run against an unchanged host no longer reports changes for the coolwsd log file and the ownership of `/etc/coolwsd`.

@@ -157,7 +157,7 @@ bind__zones:
 
 `bind__forwarders`
 
-* List of DNS servers to which DNS queries to unknown domain names should be forwarded.
+* List of DNS servers to which DNS queries to unknown domain names should be forwarded. Reverse lookups for private and special-use addresses (RFC 1918, RFC 6303), such as `10.in-addr.arpa`, are answered locally from BIND's built-in empty zones instead (faster, independent of the forwarders, and without revealing the internal addressing to them), unless `bind__zones` contains the zone itself or a `forward` or `stub` zone below it.
 * Type: List of strings.
 * Default: `['1.0.0.1', '1.1.1.1']`
 
