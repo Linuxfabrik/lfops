@@ -156,6 +156,13 @@ wordpress__url: 'https://wordpress.example.com'
 * Type: String.
 * Default: unset
 
+`wordpress__trusted_proxies`
+
+* IP addresses of the reverse proxies in front of WordPress. Only on requests from one of them does WordPress take the client address from the `X-Forwarded-For` header, because any client can send that header. List every proxy of a chain, individual addresses only, no CIDR ranges.
+* Leave it empty for a WordPress that clients reach directly. Behind a proxy that is not listed, WordPress sees the proxy's address for every visitor, for example in comments and in login-limiting plugins.
+* Type: List of strings.
+* Default: `[]`
+
 `wordpress__version`
 
 * The WordPress version to install. Possible options: version number, `'latest'`, `'nightly'`.
@@ -181,6 +188,8 @@ wordpress__plugins:
   - name: 'Akismet'
     state: 'absent'
 wordpress__theme: 'twentysixteen'
+wordpress__trusted_proxies:
+  - '192.0.2.10'
 wordpress__version: 'latest'
 wordpress__wxr_export: '/tmp/wordpress.xml'
 ```

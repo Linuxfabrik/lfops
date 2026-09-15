@@ -7,6 +7,7 @@ wordpress__disallow_file_edit: true
 # before the role's assert can abort. The regex returns the same host for both forms.
 wordpress__install_dir: '/var/www/html/{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
 wordpress__plugins: []
+wordpress__trusted_proxies: []
 wordpress__version: 'latest'
 
 

@@ -197,24 +197,35 @@
       path: '{{ wordpress__install_dir }}/wp-config.php'
       insertbefore: ".*That's all, stop editing!.*"
       block: |
-        // 2026091501
+        // 2026091502
         // If we're behind a proxy server and using HTTPS, we need to alert Wordpress of that fact
         // see https://wordpress.org/support/article/administration-over-ssl/#using-a-reverse-proxy
         // in some setups HTTP_X_FORWARDED_PROTO might contain
         // a comma-separated list e.g. http,https
         // so check for https existence
+        // A client that sends this header itself only changes what it is served itself, so it is
+        // believed from anyone.
         define('FORCE_SSL_ADMIN', {{ (wordpress__url is match("https://")) | string | lower }});
         define('FORCE_SSL_LOGIN', {{ (wordpress__url is match("https://")) | string | lower }});
         if (array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) {
             $_SERVER['HTTPS']='on';
             $_SERVER['REQUEST_SCHEME'] = 'https';
         }
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) and !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        }
-
-        if (isset($_SERVER['HTTP_X_FORWARDED_HOST']) and !empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
-            $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
+        // The client address in X-Forwarded-For is believed only on requests from a trusted proxy,
+        // since any client can send the header. Each proxy appends the address it received the
+        // request from, so walk the list from the right and stop at the first address that is not
+        // a trusted proxy itself.
+        $lfops_trusted_proxies = {{ wordpress__trusted_proxies | to_json }};
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR']) && in_array($_SERVER['REMOTE_ADDR'], $lfops_trusted_proxies, true)) {
+            foreach (array_reverse(array_map('trim', explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']))) as $lfops_address) {
+                if (filter_var($lfops_address, FILTER_VALIDATE_IP) === false) {
+                    break;
+                }
+                $_SERVER['REMOTE_ADDR'] = $lfops_address;
+                if (!in_array($lfops_address, $lfops_trusted_proxies, true)) {
+                    break;
+                }
+            }
         }
 
   # wordpress__url is the single source for the site address. WordPress builds its links from
