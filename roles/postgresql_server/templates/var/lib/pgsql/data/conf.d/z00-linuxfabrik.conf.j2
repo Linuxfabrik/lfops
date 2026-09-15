@@ -1,5 +1,9 @@
 # {{ ansible_managed }}
-# 2026091301
+# 2026091302
+
+# Settings that only take effect when PostgreSQL is restarted (context "postmaster" in
+# pg_settings). Settings that a reload applies belong in z00-linuxfabrik-reload.conf, so that
+# changing them does not restart the server.
 
 #------------------------------------------------------------------------------
 # CONNECTIONS AND AUTHENTICATION
@@ -10,7 +14,3 @@
 listen_addresses = '{{ postgresql_server__conf_listen_addresses | d(['localhost']) | join(',') }}'
 port = {{ postgresql_server__conf_port | d(5432) }}
 max_connections = {{ postgresql_server__conf_max_connections | d(100) }}
-
-# - Authentication -
-
-password_encryption = {{ postgresql_server__conf_password_encryption | d('scram-sha-256') }}

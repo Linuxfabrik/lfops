@@ -1,7 +1,10 @@
-# The config tasks notify 'postgresql_server: validate config; restart postgresql'. Handlers that
-# listen to the same topic run in the order they are defined in this file, so the restart at the
-# end only runs once every check before it passed. A failing check aborts the run while the
-# running server keeps its current configuration.
+# The config tasks notify 'postgresql_server: validate config; restart postgresql' for settings
+# that need a restart, and 'postgresql_server: validate config; reload postgresql' for pg_hba.conf
+# and settings that a reload applies. The checks listen to both topics, and handlers run in the
+# order they are defined in this file, so the reload and the restart at the end only run once
+# every check passed. A failing check aborts the run while the running server keeps its current
+# configuration. With both topics notified, the checks run once, followed by the reload and the
+# restart.
 
 # `postgres -C` reads postgresql.conf, conf.d and postgresql.auto.conf the way the postmaster does
 # at startup, where every error is fatal, prints the value and exits before it touches the data
@@ -13,7 +16,9 @@
   become_user: 'postgres'
   changed_when: false # read-only check
   check_mode: false # run task even if `--check` is specified
-  listen: 'postgresql_server: validate config; restart postgresql'
+  listen:
+    - 'postgresql_server: validate config; reload postgresql'
+    - 'postgresql_server: validate config; restart postgresql'
 
 # pg_hba.conf has no offline check. The pg_hba_file_rules view parses the file on disk on every
 # query and reports each broken line (fill_hba_view() in src/backend/utils/adt/hbafuncs.c), so it
@@ -27,7 +32,9 @@
     src: '{{ postgresql_server__data_dir }}/postmaster.pid'
   register: '__postgresql_server__postmaster_pid_result'
   failed_when: false # the server is not running, nothing to check against
-  listen: 'postgresql_server: validate config; restart postgresql'
+  listen:
+    - 'postgresql_server: validate config; reload postgresql'
+    - 'postgresql_server: validate config; restart postgresql'
   when:
     - '__postgresql_server__service_state_result is not defined or __postgresql_server__service_state_result is not changed'
     - 'postgresql_server__state != "stopped"'
@@ -41,7 +48,9 @@
   become_user: 'postgres'
   register: '__postgresql_server__pg_hba_errors_result'
   check_mode: false # read-only query, run it even if `--check` is specified
-  listen: 'postgresql_server: validate config; restart postgresql'
+  listen:
+    - 'postgresql_server: validate config; reload postgresql'
+    - 'postgresql_server: validate config; restart postgresql'
   when:
     - '__postgresql_server__postmaster_pid_result["content"] is defined'
 
@@ -51,11 +60,24 @@
       - '__postgresql_server__pg_hba_errors_result["query_result"] | length == 0'
     quiet: true
     fail_msg: >-
-      {{ postgresql_server__data_dir }}/pg_hba.conf contains errors, PostgreSQL was not restarted:
+      {{ postgresql_server__data_dir }}/pg_hba.conf contains errors, PostgreSQL was neither reloaded nor restarted:
       {% for row in __postgresql_server__pg_hba_errors_result["query_result"] %}line {{ row["line_number"] }}: {{ row["error"] }}; {% endfor %}
-  listen: 'postgresql_server: validate config; restart postgresql'
+  listen:
+    - 'postgresql_server: validate config; reload postgresql'
+    - 'postgresql_server: validate config; restart postgresql'
   when:
     - '__postgresql_server__pg_hba_errors_result is not skipped'
+
+# A reload applies the configuration without an outage, so it is not skipped by
+# lfops__skip_restart_handlers. The remaining guards are the same as for the restart below.
+- name: 'postgresql_server: reload postgresql'
+  ansible.builtin.service:
+    name: '{{ postgresql_server__service_name }}'
+    state: 'reloaded'
+  listen: 'postgresql_server: validate config; reload postgresql'
+  when:
+    - '__postgresql_server__service_state_result is not defined or __postgresql_server__service_state_result is not changed'
+    - 'postgresql_server__state != "stopped"'
 
 # skip restart if the operator deferred restarts LFOps-wide (lfops__skip_restart_handlers), if
 # the service was just started (redundant), or if the user wants it stopped.

@@ -9,7 +9,8 @@ This role installs and configures a [PostgreSQL](https://www.postgresql.org/) se
 ## How the Role Behaves
 
 * PostgreSQL is installed from the PostgreSQL Yum Repository, not from the distribution packages. The cluster lives in `/var/lib/pgsql/<version>/data` and runs as `postgresql-<version>.service`. The role does not upgrade the data: changing `postgresql_server__version` on an existing host installs and initializes a second, empty cluster next to the old one, which fails to start while the old one listens on the same port.
-* A changed `postgresql.conf`, `conf.d/z00-linuxfabrik.conf` or `pg_hba.conf` restarts PostgreSQL. Before the restart, the role checks the configuration files with `postgres -C` and asks the running server for errors in `pg_hba.conf` through the `pg_hba_file_rules` view. A broken setting aborts the run with the error message, and the running server keeps its current configuration. The file with the error is already deployed at that point: fix the inventory and run the role again before PostgreSQL is restarted for any other reason.
+* Settings that only take effect after a restart (`postgresql_server__conf_listen_addresses`, `__conf_max_connections`, `__conf_port`) are written to `conf.d/z00-linuxfabrik.conf`, and changing them restarts PostgreSQL. `postgresql_server__conf_password_encryption` is written to `conf.d/z00-linuxfabrik-reload.conf`, and a change there or in `pg_hba.conf` only reloads PostgreSQL, which keeps open connections.
+* Before the reload or restart, the role checks the configuration files with `postgres -C` and asks the running server for errors in `pg_hba.conf` through the `pg_hba_file_rules` view. A broken setting aborts the run with the error message, and the running server keeps its current configuration. The file with the error is already deployed at that point: fix the inventory and run the role again before PostgreSQL is restarted for any other reason.
 
 
 ## Dependent Roles
@@ -25,7 +26,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `postgresql_server`
 
 * Installs and configures PostgreSQL, and manages its users, databases, privileges and the dump timer.
-* Triggers: postgresql-<version>.service restart, after the configuration check.
+* Triggers: postgresql-<version>.service reload or restart, after the configuration check.
 
 `postgresql_server:state`
 

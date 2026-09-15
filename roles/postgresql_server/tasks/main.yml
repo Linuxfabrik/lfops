@@ -98,6 +98,16 @@
       mode: 0o700
       state: 'directory'
 
+  - name: 'Deploy {{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik-reload.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'var/lib/pgsql/data/conf.d/z00-linuxfabrik-reload.conf.j2'
+      dest: '{{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik-reload.conf'
+      owner: 'postgres'
+      group: 'postgres'
+      mode: 0o600
+    notify: 'postgresql_server: validate config; reload postgresql'
+
   - name: 'Deploy {{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
     ansible.builtin.template:
       backup: true
@@ -116,7 +126,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: validate config; restart postgresql'
+    notify: 'postgresql_server: validate config; reload postgresql'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
