@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# 2026090901
+#
+# Options of the rsession processes, one per signed-in user. `rsession --help` lists them all;
+# anything without a role variable goes into rstudio_server__rsession_conf_raw.
+#
+# Read by every session as it starts, so a change reaches a running session only after it is
+# suspended or ends.
+
+# 0 lifts the limit. Uploads are written to the user's home directory, so this is the guard
+# against one user filling the file system through the web interface.
+limit-file-upload-size-mb={{ rstudio_server__conf_limit_file_upload_size_mb }}
+# Minutes an idle session is kept before it is suspended or ended, together with
+# session-timeout-suspend. Suspending writes the workspace to disk and frees the memory; the
+# user finds their variables again on the next sign-in.
+session-timeout-minutes={{ rstudio_server__conf_session_timeout_minutes }}
+session-timeout-suspend={{ rstudio_server__conf_session_timeout_suspend | bool | ternary(1, 0) }}
+{% if rstudio_server__rsession_conf_raw | length %}
+
+{{ rstudio_server__rsession_conf_raw }}
+{% endif %}

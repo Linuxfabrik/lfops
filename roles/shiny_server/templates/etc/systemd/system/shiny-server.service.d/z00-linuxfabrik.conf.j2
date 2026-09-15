@@ -1,0 +1,30 @@
+# {{ ansible_managed }}
+# 2026090901
+#
+# The package writes its unit to /etc/systemd/system/shiny-server.service and overwrites it on
+# every install and update, so every override lives here instead.
+#
+# Only the resource limits below are overridden. LimitNOFILE is deliberately not set: the
+# packaged unit sets none either, so the service runs on systemd's default of 1024 soft and
+# 524288 hard. Upstream's own init job asked for a million, but that was the legacy upstart job
+# and nothing here has been measured against a real workload, so the default stands until
+# something says otherwise.
+
+[Service]
+{% if shiny_server__memory_max | string | length %}
+# Shiny Server Open Source enforces no memory limit of its own, and a single R session can grow
+# until the host is full, without load or process count looking unusual. The R workers are
+# started through `su`, yet they stay in this control group, so the cap reaches them.
+#
+# It protects the host, not the individual session: every session of every tenant draws on the
+# same budget, and on overrun the OOM killer picks a process inside the group, which may well
+# belong to a tenant other than the one that caused it.
+MemoryMax={{ shiny_server__memory_max }}
+{% endif %}
+{% if shiny_server__tasks_max | string | length %}
+# Caps processes and threads in the control group. R forks for parallel work (parallel::mclapply
+# and anything an application shells out to), so without this a runaway application is bounded
+# only by systemd's DefaultTasksMax, which is 15% of kernel.pid_max and therefore commonly in
+# the tens of thousands.
+TasksMax={{ shiny_server__tasks_max }}
+{% endif %}

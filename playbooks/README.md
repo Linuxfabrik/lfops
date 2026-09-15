@@ -834,6 +834,15 @@ Calls the following roles (in order):
 * [qemu_guest_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/qemu_guest_agent)
 
 
+## r.yml
+
+Calls the following roles (in order):
+
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `r__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `r__skip_repo_epel`
+* [r](https://github.com/Linuxfabrik/lfops/tree/main/roles/r)
+
+
 ## redis.yml
 
 Calls the following roles (in order):
@@ -1017,6 +1026,18 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury)
+
+
+## rstudio_server.yml
+
+Calls the following roles (in order):
+
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `rstudio_server__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `rstudio_server__skip_repo_epel`
+* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `rstudio_server__skip_policycoreutils`
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `rstudio_server__skip_selinux`
+* [r](https://github.com/Linuxfabrik/lfops/tree/main/roles/r): `rstudio_server__skip_r`
+* [rstudio_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/rstudio_server)
 
 
 ## rsyslog.yml
@@ -1320,6 +1341,20 @@ Calls the following roles (in order):
 * [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login): `setup_rocketchat__skip_login`
 * [rocketchat](https://github.com/Linuxfabrik/lfops/tree/main/roles/rocketchat)
 * [podman_containers](https://github.com/Linuxfabrik/lfops/tree/main/roles/podman_containers): `setup_rocketchat__skip_podman_containers`
+
+
+## setup_shiny_server.yml
+
+Calls the following roles (in order):
+
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_shiny_server__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_shiny_server__skip_repo_epel`
+* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_shiny_server__skip_policycoreutils`
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_shiny_server__skip_selinux`
+* [r](https://github.com/Linuxfabrik/lfops/tree/main/roles/r): `setup_shiny_server__skip_r`
+* [shiny_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/shiny_server)
+* [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_shiny_server__skip_python`
+* [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_shiny_server__skip_apache_httpd`
 
 
 ## setup_wordpress.yml

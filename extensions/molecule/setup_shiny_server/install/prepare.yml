@@ -1,0 +1,48 @@
+# Replaces the shared vm-prepare.yml for this scenario (see molecule.yml), so it
+# imports it first and only adds the precondition on top.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# The role deploys the directory structure but no application code, so the test
+# provides a minimal Shiny application per location. Shiny Server decides how to
+# launch a worker from the files it finds in the application directory, and
+# answers 500 with "unknown mode" for a directory holding neither app.R nor
+# server.R, so this cannot wait until verify.
+#
+# The applications are derived from the locations rather than listed again, so
+# that the two cannot drift apart. The remove sub-scenario reuses this file, and
+# relies on it to create the directories whose removal it then asserts.
+- name: 'Prepare the tenant applications'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'mkdir -p the application directories'
+      ansible.builtin.file:
+        path: '{{ item["app_dir"] }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+      loop: '{{ shiny_server__locations__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
+
+    - name: 'Deploy the tenant applications'
+      ansible.builtin.copy:
+        content: |
+          library(shiny)
+          ui <- fluidPage(textOutput('location'), textOutput('whoami'))
+          server <- function(input, output, session) {
+            output$location <- renderText(paste('location:', '{{ item["path"] }}'))
+            output$whoami <- renderText(paste('user:', session$user))
+          }
+          shinyApp(ui, server)
+        dest: '{{ item["app_dir"] }}/app.R'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop: '{{ shiny_server__locations__group_var }}'
+      loop_control:
+        label: '{{ item["path"] }}'
