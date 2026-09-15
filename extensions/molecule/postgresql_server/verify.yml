@@ -1,0 +1,198 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state, not that individual tasks ran: every setting is read back from the running server,
+# and pg_hba.conf is proven by connections that have to succeed or be rejected.
+- name: 'Verify postgresql_server is running and uses the configured values'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+
+    __molecule__postgresql_bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
+    __molecule__postgresql_service_name: 'postgresql-{{ postgresql_server__version }}.service'
+    __molecule__psql: '{{ __molecule__postgresql_bin_dir }}/psql --no-align --tuples-only --no-psqlrc'
+    __molecule__dump_directory: '/backup/postgresql-dump'
+
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert the PostgreSQL service is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"][__molecule__postgresql_service_name]["state"] == "running"'
+          - 'ansible_facts["services"][__molecule__postgresql_service_name]["status"] == "enabled"'
+        fail_msg: '{{ __molecule__postgresql_service_name }} is {{ ansible_facts["services"][__molecule__postgresql_service_name] | d("absent") }}'
+
+    # Ask the running server what it applied, which proves the chain from group_vars through
+    # conf.d/z00-linuxfabrik.conf and the include_dir line to the server.
+    - name: 'psql --command="SHOW ..."'
+      ansible.builtin.command: '{{ __molecule__psql }} --command="SHOW {{ item["setting"] }}"'
+      become: true
+      become_user: 'postgres'
+      register: '__molecule__postgresql_show_result'
+      changed_when: false
+      loop:
+        - setting: 'listen_addresses'
+          expected: '*'
+        - setting: 'max_connections'
+          expected: '{{ postgresql_server__conf_max_connections | string }}'
+      loop_control:
+        label: '{{ item["setting"] }}'
+
+    - name: 'Assert the running server applied the configured values'
+      ansible.builtin.assert:
+        that: 'item["stdout"] == item["item"]["expected"]'
+        fail_msg: '{{ item["item"]["setting"] }} is {{ item["stdout"] }}, expected {{ item["item"]["expected"] }}'
+      loop: '{{ __molecule__postgresql_show_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["setting"] }}'
+
+    # The databases in the inventory set no locale, so they get the role default.
+    - name: 'psql --command="SELECT datcollate, datctype FROM pg_database WHERE datname = ''app''"'
+      ansible.builtin.command: '{{ __molecule__psql }} --field-separator=" " --command="SELECT datcollate, datctype FROM pg_database WHERE datname = ''app''"'
+      become: true
+      become_user: 'postgres'
+      register: '__molecule__postgresql_locale_result'
+      changed_when: false
+
+    - name: 'Assert the database was created with the C.UTF-8 locale'
+      ansible.builtin.assert:
+        that: '__molecule__postgresql_locale_result["stdout"] == "C.UTF-8 C.UTF-8"'
+        fail_msg: 'datcollate and datctype of app are {{ __molecule__postgresql_locale_result["stdout"] }}'
+
+    - name: 'psql --command="SELECT ... FROM pg_hba_file_rules WHERE error IS NOT NULL"'
+      ansible.builtin.command: '{{ __molecule__psql }} --command="SELECT line_number, error FROM pg_hba_file_rules WHERE error IS NOT NULL"'
+      become: true
+      become_user: 'postgres'
+      register: '__molecule__postgresql_hba_errors_result'
+      changed_when: false
+
+    - name: 'Assert pg_hba.conf has no errors'
+      ansible.builtin.assert:
+        that: '__molecule__postgresql_hba_errors_result["stdout"] | length == 0'
+        fail_msg: 'pg_hba.conf contains errors: {{ __molecule__postgresql_hba_errors_result["stdout"] }}'
+
+    # The IPv4 and IPv6 loopback defaults. `localhost` resolves to ::1 first, and libpq does not
+    # fall back to 127.0.0.1 when the server rejects the connection on ::1.
+    - name: 'psql over TCP as app'
+      ansible.builtin.command: '{{ __molecule__psql }} "host={{ item }} user=app dbname=app" --command="SELECT inet_client_addr()"'
+      environment:
+        PGPASSWORD: 'linuxfabrik'
+      register: '__molecule__postgresql_tcp_result'
+      changed_when: false
+      loop: '{{ ["127.0.0.1", "localhost"] + (__molecule__has_ipv6_loopback | ternary(["::1"], [])) }}'
+      vars:
+        # Gate on the loopback interface, not on ansible_facts['all_ipv6_addresses']: that fact
+        # lists the real addresses only and never contains ::1.
+        __molecule__has_ipv6_loopback: '{{ "::1" in (ansible_facts["lo"]["ipv6"] | d([]) | map(attribute="address") | list) }}'
+
+    - name: 'Assert app connects over TCP from the expected address'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in (item["item"] == "localhost") | ternary(["127.0.0.1", "::1"], [item["item"]])'
+        fail_msg: 'connecting to {{ item["item"] }} came from {{ item["stdout"] }}'
+      loop: '{{ __molecule__postgresql_tcp_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # The inventory replaces the `local all all` default with `reject` and adds `local app app`.
+    # The connection to app only works if the added entry is rendered before the defaults, the
+    # one to postgres is only rejected if the default was replaced.
+    - name: 'psql over the Unix socket as app to the database app'
+      ansible.builtin.command: '{{ __molecule__psql }} "user=app dbname=app" --command="SELECT current_user"'
+      environment:
+        PGPASSWORD: 'linuxfabrik'
+      register: '__molecule__postgresql_socket_app_result'
+      changed_when: false
+
+    - name: 'psql over the Unix socket as app to the database postgres'
+      ansible.builtin.command: '{{ __molecule__psql }} "user=app dbname=postgres" --command="SELECT current_user"'
+      environment:
+        PGPASSWORD: 'linuxfabrik'
+      register: '__molecule__postgresql_socket_postgres_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the local pg_hba entries are applied in the expected order'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__postgresql_socket_app_result["stdout"] == "app"'
+          - '__molecule__postgresql_socket_postgres_result["rc"] != 0'
+          - '"rejects connection" in __molecule__postgresql_socket_postgres_result["stderr"]'
+        fail_msg: 'socket to postgres as app: rc={{ __molecule__postgresql_socket_postgres_result["rc"] }} {{ __molecule__postgresql_socket_postgres_result["stderr"] }}'
+
+    # postgresql-dump: dump a database with content and restore it, with the tools the script is
+    # expected to use.
+    - name: 'Create a table with a row in the database app'
+      ansible.builtin.command: >-
+        {{ __molecule__psql }} "user=app dbname=app"
+        --command="CREATE TABLE IF NOT EXISTS molecule_marker (id int)"
+        --command="INSERT INTO molecule_marker SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM molecule_marker)"
+      environment:
+        PGPASSWORD: 'linuxfabrik'
+      changed_when: false
+
+    - name: 'systemctl start postgresql-dump.service'
+      ansible.builtin.systemd:
+        name: 'postgresql-dump.service'
+        state: 'started'
+      changed_when: false
+
+    - name: 'stat {{ __molecule__dump_directory }}/*.sql.gz'
+      ansible.builtin.stat:
+        path: '{{ __molecule__dump_directory }}/{{ item }}'
+      register: '__molecule__postgresql_dump_stat_result'
+      loop:
+        - 'dump-app.sql.gz'
+        - 'dump-postgres.sql.gz'
+        - 'dump-template1.sql.gz'
+        - 'dump-template_app.sql.gz'
+        - 'globals.sql.gz'
+
+    - name: 'Assert every database and the globals were dumped'
+      ansible.builtin.assert:
+        that: 'item["stat"]["exists"]'
+        fail_msg: '{{ item["item"] }} is missing'
+      loop: '{{ __molecule__postgresql_dump_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    - name: 'zcat globals.sql.gz; zcat dump-app.sql.gz'
+      ansible.builtin.command: 'zcat {{ __molecule__dump_directory }}/{{ item }}'
+      register: '__molecule__postgresql_dump_content_result'
+      changed_when: false
+      loop:
+        - 'globals.sql.gz'
+        - 'dump-app.sql.gz'
+
+    - name: 'Assert the dumps contain the role and were made with the matching pg_dump'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__postgresql_dump_content_result["results"][0]["stdout"] is search("CREATE ROLE app;")'
+          - '__molecule__postgresql_dump_content_result["results"][1]["stdout"] is search("Dumped from database version " ~ __molecule__server_major ~ "\.")'
+          - '__molecule__postgresql_dump_content_result["results"][1]["stdout"] is search("Dumped by pg_dump version " ~ __molecule__server_major ~ "\.")'
+        fail_msg: 'unexpected dump content, expected PostgreSQL {{ __molecule__server_major }}'
+      vars:
+        __molecule__server_major: '{{
+            __molecule__postgresql_dump_content_result["results"][1]["stdout"]
+            | regex_search("Dumped from database version (\d+)", "\1") | first
+          }}'
+
+    # The dumps are readable by root only, so zcat runs as root and only psql as postgres.
+    - name: 'Restore dump-app.sql.gz into the database app_restore'
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail;
+          runuser --user=postgres -- {{ __molecule__psql }} --command="DROP DATABASE IF EXISTS app_restore" &&
+          runuser --user=postgres -- {{ __molecule__psql }} --command="CREATE DATABASE app_restore OWNER app" &&
+          zcat {{ __molecule__dump_directory }}/dump-app.sql.gz | runuser --user=postgres -- {{ __molecule__psql }} --quiet --dbname=app_restore &&
+          runuser --user=postgres -- {{ __molecule__psql }} --dbname=app_restore --command="SELECT tableowner || ':' || (SELECT count(*) FROM molecule_marker) FROM pg_tables WHERE tablename = 'molecule_marker'"
+        executable: '/bin/bash'
+      register: '__molecule__postgresql_restore_result'
+      changed_when: false
+
+    - name: 'Assert the restored table has its owner and its row'
+      ansible.builtin.assert:
+        that: '__molecule__postgresql_restore_result["stdout_lines"][-1] == "app:1"'
+        fail_msg: 'restore returned {{ __molecule__postgresql_restore_result["stdout"] }} {{ __molecule__postgresql_restore_result["stderr"] }}'

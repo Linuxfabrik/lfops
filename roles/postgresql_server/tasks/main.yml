@@ -1,5 +1,56 @@
 - block:
 
+  - name: 'Assert that postgresql_server__version is a major version'
+    ansible.builtin.assert:
+      that:
+        - 'postgresql_server__version is defined'
+        - 'postgresql_server__version | string is match("^\\d+$")'
+      quiet: true
+      fail_msg: 'postgresql_server__version is mandatory and takes the major version of PostgreSQL, for example "18".'
+
+  # Ansible ignores an unknown inventory variable without a word, so an inventory that still sets
+  # the replaced variable would silently deploy the role defaults instead.
+  - name: 'Assert that postgresql_server__pg_hba_entries is not set'
+    ansible.builtin.assert:
+      that:
+        - 'postgresql_server__pg_hba_entries is not defined'
+      quiet: true
+      fail_msg: 'postgresql_server__pg_hba_entries is replaced by postgresql_server__pg_hba_local_entries__*_var and postgresql_server__pg_hba_host_entries__*_var. Move the entries there, see the role README.'
+
+  # A host record without an address, or with a type PostgreSQL does not know, keeps
+  # PostgreSQL from starting at all: postmaster aborts with "could not load pg_hba.conf".
+  - name: 'Assert that every pg_hba host entry has a valid type and an address'
+    ansible.builtin.assert:
+      that:
+        - 'item["type"] in ["host", "hostgssenc", "hostnogssenc", "hostnossl", "hostssl"]'
+        - 'item["address"] | string | length > 0'
+      quiet: true
+      fail_msg: 'postgresql_server__pg_hba_host_entries: "type" must be one of host, hostgssenc, hostnogssenc, hostnossl or hostssl, and "address" must not be empty.'
+    loop: '{{ postgresql_server__pg_hba_host_entries__combined_var }}'
+    loop_control:
+      label: '{{ item["type"] }} {{ item["database"] }} {{ item["user"] }} {{ item["address"] }}'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # The distribution package keeps its cluster in /var/lib/pgsql/data and listens on the same port.
+  # Installing the PostgreSQL Yum Repository release next to it would initialize a second, empty
+  # cluster that cannot start while the first one runs.
+  - name: 'stat /var/lib/pgsql/data/PG_VERSION'
+    ansible.builtin.stat:
+      path: '/var/lib/pgsql/data/PG_VERSION'
+    register: '__postgresql_server__distribution_cluster_result'
+
+  - name: 'Assert that there is no cluster of the distribution package'
+    ansible.builtin.assert:
+      that:
+        - 'not __postgresql_server__distribution_cluster_result["stat"]["exists"]'
+      quiet: true
+      fail_msg: 'This host has a PostgreSQL cluster of the distribution package in /var/lib/pgsql/data. The role only installs PostgreSQL from the PostgreSQL Yum Repository. Migrate the data first, see the Troubleshooting section of the role README.'
+
   - name: 'Install postgresql{{ postgresql_server__version }}-server'
     ansible.builtin.package:
       name:
@@ -10,43 +61,19 @@
     - 'postgresql_server'
 
 
+# The names and paths only depend on postgresql_server__version, not on the state of the host, so
+# they are safe to set under every tag.
 - block:
 
   - name: 'set internal vars for role'
     ansible.builtin.set_fact:
-      postgresql_server__installed_version: '{{ postgresql_server__version }}'
-      postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
+      __postgresql_server__bin_dir: '/usr/pgsql-{{ postgresql_server__version }}/bin'
       postgresql_server__data_dir: '/var/lib/pgsql/{{ postgresql_server__version }}/data'
       postgresql_server__initdb_cmd: '/usr/pgsql-{{ postgresql_server__version }}/bin/postgresql-{{ postgresql_server__version }}-setup initdb'
+      postgresql_server__service_name: 'postgresql-{{ postgresql_server__version }}'
 
-  when:
-    - 'postgresql_server__version | string | length > 0'
   tags:
-    - 'postgresql_server'
-    - 'postgresql_server:state'
-
-
-- block:
-
-  - name: 'Get the list of installed packages'
-    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Get postgresql-server version'
-    ansible.builtin.set_fact:
-      postgresql_server__installed_version: '{{ (ansible_facts["packages"]["postgresql-server"][0]["version"] | d(ansible_facts["packages"]["postgresql-server"][0]["version"])) | regex_replace("\.\d+$", "") }}' # strip the patch version
-
-  - name: 'set internal vars for role'
-    ansible.builtin.set_fact:
-      postgresql_server__service_name: 'postgresql'
-      postgresql_server__data_dir: '/var/lib/pgsql/data'
-      postgresql_server__initdb_cmd: '/usr/bin/postgresql-setup --initdb'
-
-  when:
-    - 'not postgresql_server__version | string | length > 0'
-  tags:
-    - 'postgresql_server'
-    - 'postgresql_server:state'
+    - 'always'
 
 
 - block:
@@ -61,7 +88,7 @@
       line: "include_dir = 'conf.d'"
       regexp: '^include_dir(\s+|\s*=\s*)?''conf.d''\s*(#.*)?$'
       path: '{{ postgresql_server__data_dir }}/postgresql.conf'
-    notify: 'postgresql_server: restart posgresql'
+    notify: 'postgresql_server: validate config; restart postgresql'
 
   - name: 'mkdir -p {{ postgresql_server__data_dir }}/conf.d'
     ansible.builtin.file:
@@ -71,6 +98,16 @@
       mode: 0o700
       state: 'directory'
 
+  - name: 'Deploy {{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik-reload.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'var/lib/pgsql/data/conf.d/z00-linuxfabrik-reload.conf.j2'
+      dest: '{{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik-reload.conf'
+      owner: 'postgres'
+      group: 'postgres'
+      mode: 0o600
+    notify: 'postgresql_server: validate config; reload postgresql'
+
   - name: 'Deploy {{ postgresql_server__data_dir }}/conf.d/z00-linuxfabrik.conf'
     ansible.builtin.template:
       backup: true
@@ -79,7 +116,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: restart posgresql'
+    notify: 'postgresql_server: validate config; restart postgresql'
 
   - name: 'Deploy {{ postgresql_server__data_dir }}/pg_hba.conf'
     ansible.builtin.template:
@@ -89,7 +126,7 @@
       owner: 'postgres'
       group: 'postgres'
       mode: 0o600
-    notify: 'postgresql_server: restart posgresql'
+    notify: 'postgresql_server: validate config; reload postgresql'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
@@ -143,12 +180,28 @@
 
 - block:
 
+  - name: 'SELECT datname FROM pg_database'
+    community.postgresql.postgresql_query:
+      port: '{{ postgresql_server__conf_port }}'
+      login_password: '{{ postgresql_server__login_password | default(omit) }}'
+      query: 'SELECT datname FROM pg_database'
+    become: true
+    become_user: 'postgres'
+    register: '__postgresql_server__existing_databases_result'
+    changed_when: false # read-only query
+    check_mode: false # run task even if `--check` is specified
+
+  # The locale default only applies when a database is created. postgresql_db aborts with
+  # "Changing LC_COLLATE is not supported" when it is given a locale that differs from the one of
+  # an existing database, which would break every database created with an earlier default.
+  # C.UTF-8 sorts by code point on RHEL 8, 9 and 10 alike (`LC_ALL=C.utf8 sort` verified on Rocky
+  # 8, 9 and 10), so the order does not change with an OS upgrade.
   - name: 'Create or delete PostgreSQL databases'
     community.postgresql.postgresql_db:
       port: '{{ postgresql_server__conf_port }}'
       name: '{{ item["name"] }}'
-      lc_collate: '{{ item["lc_collate"] | default("en_US.UTF-8") }}'
-      lc_ctype: '{{ item["lc_ctype"] | default("en_US.UTF-8") }}'
+      lc_collate: '{{ item["lc_collate"] | default(omit if item["name"] in __postgresql_server__existing_databases else "C.UTF-8") }}'
+      lc_ctype: '{{ item["lc_ctype"] | default(omit if item["name"] in __postgresql_server__existing_databases else "C.UTF-8") }}'
       login_password: '{{ postgresql_server__login_password | default(omit) }}'
       encoding: '{{ item["encoding"] | default("UTF-8") }}'
       template: '{{ item["template"] | default("template0") }}'
@@ -157,6 +210,8 @@
     loop: '{{ postgresql_server__databases__combined_var }}'
     become: true
     become_user: 'postgres'
+    vars:
+      __postgresql_server__existing_databases: '{{ __postgresql_server__existing_databases_result["query_result"] | map(attribute="datname") | list }}'
 
   tags:
     - 'postgresql_server'
