@@ -137,6 +137,13 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 * Type: String.
 * Default: `'lax'`
 
+`grafana__cookie_secure`
+
+* Whether the login cookie carries the `Secure` flag, so that browsers only return it over HTTPS. Grafana does not detect this on its own, neither behind a reverse proxy that terminates TLS nor with `grafana__https_config`.
+* Type: Bool.
+* Default: `true` if `grafana__root_url` starts with `https://`, otherwise `false`
+* Deviates from the upstream default `false`, which leaves the cookie without `Secure` even on an HTTPS-only site.
+
 `grafana__https_config`
 
 * Determines whether HTTPS is enabled or not.
@@ -415,6 +422,7 @@ grafana__auth_jwt__pub_key_file: '/etc/grafana/jwt.key.pub'
 grafana__bitwarden_collection_id: '00000000-0000-0000-0000-000000000000'
 grafana__bitwarden_organization_id: '00000000-0000-0000-0000-000000000000'
 grafana__cookie_samesite: 'lax'
+grafana__cookie_secure: true
 grafana__https_config:
   cert_file: '/etc/ssl/ssl-certificate.crt'
   cert_key: '/etc/ssl/ssl-certificate.key'

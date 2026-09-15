@@ -23,6 +23,16 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * PHP 7.3.6+ (**PHP 8.1 recommended** (20220930)) must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 
 
+## Post-Installation Steps
+
+* Behind a reverse proxy that terminates TLS, set `session.secure` in the site's `user/config/system.yaml`. Grav otherwise sets the `Secure` flag on its session cookies only on requests it sees arriving over HTTPS, and the proxy talks plain HTTP to it. The role does not touch this file, since it belongs to the site content. Leave it unset for a site that browsers reach over plain HTTP, which could otherwise not log anyone in to the Admin Panel.
+
+    ```yaml
+    session:
+      secure: true
+    ```
+
+
 ## Tags
 
 `grav`

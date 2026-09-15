@@ -27,3 +27,4 @@ kibana__server_security_response_headers_disable_embedding: true
 kibana__server_ssl_enabled: false
 kibana__service_enabled: true
 kibana__service_state: 'started'
+kibana__xpack_security_secure_cookies: true  # upstream default: false
