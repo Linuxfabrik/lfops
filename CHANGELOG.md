@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:wordpress**: The role creates the directory for Ansible's temporary files of the `apache` user as `/usr/share/httpd/.ansible/tmp`, instead of as `tmp` followed by two spaces. A leftover `/usr/share/httpd/.ansible/tmp  ` can be removed.
 * **role:apache_httpd**: The `wordpress` vHost blocks direct calls to the PHP files below `wp-includes/` and `wp-admin/includes/`, as its README describes. The rules never matched, so these files could be called directly.
 * **role:mariadb_server**: On RHEL 10 with a `selinux-policy-targeted` older than `42.1.18-4.el10_2.3`, MariaDB runs confined in `mysqld_t` again, so web applications such as WordPress or Nextcloud reach its socket. Until now it ran in `initrc_t` there, and PHP-FPM failed to connect until the SELinux policy was updated and MariaDB restarted.
 * **role:apache_httpd**: The role hands the content of the document root to the web server user, but leaves the directory itself to the httpd package, whose tmpfiles rule resets it to `root` on every boot and after some package installations. A second run on a fresh host no longer reports the ownership as changed.

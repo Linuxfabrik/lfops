@@ -54,7 +54,7 @@
 
   - name: 'Create $HOME/.ansible/tmp with a mode of 0700 for module remote_tmp manually'
     ansible.builtin.file:
-      path: '/usr/share/httpd/.ansible/tmp  '
+      path: '/usr/share/httpd/.ansible/tmp'
       state: 'directory'
       mode: '0700'
       owner: 'apache'
