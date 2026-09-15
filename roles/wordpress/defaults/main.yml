@@ -7,7 +7,9 @@ wordpress__disallow_file_edit: true
 # empty hostname, and setup_wordpress runs apache_httpd and selinux, which use this value,
 # before the role's assert can abort. The regex returns the same host for both forms.
 wordpress__install_dir: '/var/www/html/{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
+wordpress__on_calendar_core_minor_update: '04:{{ 59 | random(seed=inventory_hostname) }}'
 wordpress__plugins: []
+wordpress__timer_core_minor_update_enabled: true
 wordpress__trusted_proxies: []
 wordpress__version: 'latest'
 

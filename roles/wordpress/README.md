@@ -10,6 +10,10 @@ Attention: It is intended that when you call `wordpress__url` you will get a whi
 
 ## How the Role Behaves
 
+* The WordPress core, `wp-config.php` and `wp-content/mu-plugins` belong to `root`, so code running in the web server cannot modify them. `wp-content` belongs to `apache`, so plugins, themes, translations and uploads can still be installed and updated from the web interface (`FS_METHOD` is `direct`).
+* WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update.timer` installs the latest minor release daily instead, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
+* WP-CLI runs as `root` only for commands that do not load WordPress (core download, config, checksum verification). Everything that loads WordPress runs as `apache`, because loading it executes code from `wp-content`, which `apache` can write.
+* WordPress cannot write `.htaccess`, so after a change of the permalink structure in the web interface, add the rewrite rules it displays to `.htaccess` by hand.
 * The REST API only answers logged-in users. The role installs and activates the [Disable WP REST API](https://wordpress.org/plugins/disable-wp-rest-api/) plugin, and uninstalls the Disable REST API (`disable-json-api`) plugin where it is present. Anonymous requests to any route, including the routes of plugins installed later, get `401 rest_login_required`. The plugin has no settings, so a front-end feature that calls the REST API without a login, such as some contact forms, needs an exception in code.
 
 
@@ -36,7 +40,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `wordpress:file_policy`
 
-* `chown -R --changes apache:apache {{ wordpress__install_dir }}`.
+* Gives the core, `wp-config.php` and `wp-content/mu-plugins` to `root` and the rest of `wp-content` to `apache`.
 * `restorecon -Fvr {{ wordpress__install_dir }}`.
 * Triggers: none.
 
@@ -144,6 +148,12 @@ wordpress__url: 'https://wordpress.example.com'
 * Type: String.
 * Default: `/var/www/html/` followed by the host part of `wordpress__url`, for example `'/var/www/html/wordpress.example.com'`
 
+`wordpress__on_calendar_core_minor_update`
+
+* When `wordpress-core-minor-update.timer` installs the latest minor release of the WordPress core (systemd timer notation).
+* Type: String.
+* Default: `'04:{{ 59 | random(seed=inventory_hostname) }}'`
+
 `wordpress__plugins`
 
 * List of WordPress plugin slugs. To get a list of already installed plugins, use the WordPress CLI `sudo -u apache /usr/local/bin/wp plugin list --status=active`.
@@ -167,6 +177,12 @@ wordpress__url: 'https://wordpress.example.com'
 * The WordPress theme to install. Accepts a theme slug, the path to a local zip file, or a URL to a remote zip file.
 * Type: String.
 * Default: unset
+
+`wordpress__timer_core_minor_update_enabled`
+
+* Enables or disables `wordpress-core-minor-update.timer`, which installs the latest minor release of the WordPress core. With the timer disabled, the core only changes with `--tags wordpress:update`.
+* Type: Bool.
+* Default: `true`
 
 `wordpress__trusted_proxies`
 
@@ -195,12 +211,14 @@ wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true
 wordpress__install_dir: '/var/www/html/wordpress.example.com'
+wordpress__on_calendar_core_minor_update: '04:30'
 wordpress__plugins:
   - name: 'bbPress'
     state: 'present'
   - name: 'Akismet'
     state: 'absent'
 wordpress__theme: 'twentysixteen'
+wordpress__timer_core_minor_update_enabled: true
 wordpress__trusted_proxies:
   - '192.0.2.10'
 wordpress__version: 'latest'

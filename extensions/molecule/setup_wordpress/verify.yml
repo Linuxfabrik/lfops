@@ -74,6 +74,71 @@
         that: '__molecule__wordpress_app_passwords_result["stdout"] == "unavailable"'
         fail_msg: 'application passwords are {{ __molecule__wordpress_app_passwords_result["stdout"] }}'
 
+    # The web server may write wp-content, but not the core or the must-use plugins. Asked with
+    # test -w as apache, which is what PHP-FPM runs as.
+    - name: 'runuser --user=apache -- test -w <path>'
+      ansible.builtin.command:
+        argv:
+          - 'runuser'
+          - '--user=apache'
+          - '--'
+          - 'test'
+          - '-w'
+          - '{{ __molecule__wordpress_dir }}/{{ item }}'
+      register: '__molecule__wordpress_writable_result'
+      changed_when: false
+      failed_when: false
+      loop:
+        - 'index.php'
+        - 'wp-config.php'
+        - 'wp-content/mu-plugins'
+        - 'wp-content/plugins'
+        - 'wp-includes/version.php'
+
+    - name: 'Assert apache can write wp-content/plugins only'
+      ansible.builtin.assert:
+        that: '(item["rc"] == 0) == (item["item"] == "wp-content/plugins")'
+        fail_msg: '{{ item["item"] }} is {{ (item["rc"] == 0) | ternary("", "not ") }}writable for apache'
+      loop: '{{ __molecule__wordpress_writable_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # WordPress only installs plugins from the web interface without asking for FTP credentials
+    # if it writes files directly, which FS_METHOD forces while its own files belong to root
+    - name: 'wp eval get_filesystem_method()'
+      ansible.builtin.command:
+        argv:
+          - '/usr/local/bin/wp'
+          - 'eval'
+          - 'require_once ABSPATH . "wp-admin/includes/file.php"; echo get_filesystem_method();'
+          - '--path={{ __molecule__wordpress_dir }}'
+        chdir: '{{ __molecule__wordpress_dir }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_fs_method_result'
+      changed_when: false
+
+    - name: 'Assert WordPress writes plugins and themes directly'
+      ansible.builtin.assert:
+        that: '__molecule__wordpress_fs_method_result["stdout"] == "direct"'
+        fail_msg: 'get_filesystem_method() returns {{ __molecule__wordpress_fs_method_result["stdout"] }}'
+
+    # The installation is at the latest release, so the service has nothing to install, but it
+    # runs the check as apache and exits cleanly.
+    - name: 'systemctl start wordpress-core-minor-update.service'
+      ansible.builtin.command: 'systemctl start wordpress-core-minor-update.service'
+      changed_when: false
+
+    - name: 'systemctl is-enabled wordpress-core-minor-update.timer'
+      ansible.builtin.command: 'systemctl is-enabled wordpress-core-minor-update.timer'
+      register: '__molecule__wordpress_core_minor_update_timer_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the core minor update timer is enabled'
+      ansible.builtin.assert:
+        that: '__molecule__wordpress_core_minor_update_timer_result["stdout"] == "enabled"'
+        fail_msg: 'wordpress-core-minor-update.timer is {{ __molecule__wordpress_core_minor_update_timer_result["stdout"] }}'
+
     # The site over HTTP, requested like the reverse proxy in front of it would pass it on
 
     # Disable WP REST API answers anonymous REST requests with rest_login_required
@@ -282,7 +347,7 @@
     # wp-config.php holds the database password. The site working at all shows that PHP-FPM can
     # read it, this shows that other local users cannot.
     - name: 'Read wp-config.php as nobody'
-      ansible.builtin.command: 'runuser -u nobody -- cat {{ __molecule__wordpress_dir }}/wp-config.php'
+      ansible.builtin.command: 'runuser --user=nobody -- cat {{ __molecule__wordpress_dir }}/wp-config.php'
       register: '__molecule__wordpress_config_nobody_result'
       changed_when: false
       failed_when: false

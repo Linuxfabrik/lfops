@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026091501
+
+[Unit]
+Description=WordPress Core Minor Update Service
+
+[Service]
+ExecStart=/usr/local/sbin/wordpress-core-minor-update
+Type=oneshot
+User=root

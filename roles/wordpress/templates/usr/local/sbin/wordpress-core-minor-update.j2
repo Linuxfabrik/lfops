@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026091502
+#
+# Installs the latest minor release of the WordPress core in {{ wordpress__install_dir }}.
+# The core belongs to root, so WordPress cannot update itself. Only the steps that do not load
+# WordPress run as root; loading it executes code from wp-content, which the web server can
+# write, so those steps run as apache.
+
+set -o errexit -o nounset -o pipefail
+
+dir={{ wordpress__install_dir | quote }}
+
+# --no-color: without the PHP posix extension, WP-CLI cannot tell that it does not write to a
+# terminal and colours its output, which ends up as escape sequences in the journal
+
+# does not load WordPress
+current=$(/usr/local/bin/wp core version --no-color --path="$dir" --allow-root)
+echo "WordPress $current installed in $dir."
+
+# loads WordPress, therefore as apache
+available=$(runuser --user=apache -- /usr/local/bin/wp core check-update --no-color --minor --field=version --path="$dir")
+version=$(printf '%s\n' "$available" | grep --extended-regexp '^[0-9]+(\.[0-9]+)+$' | head --lines=1 || true)
+if [ -z "$version" ]; then
+    echo 'No minor release available, nothing to do.'
+    exit 0
+fi
+
+echo "Updating WordPress from $current to $version."
+# does not load WordPress; verifies the md5 checksum of the download
+/usr/local/bin/wp core download --no-color --version="$version" --skip-content --force --path="$dir" --allow-root
+echo 'Updating the database.'
+runuser --user=apache -- /usr/local/bin/wp core update-db --no-color --path="$dir"
+echo 'Verifying the checksums of the core files.'
+/usr/local/bin/wp core verify-checksums --no-color --path="$dir" --allow-root
+echo "WordPress updated from $current to $version."

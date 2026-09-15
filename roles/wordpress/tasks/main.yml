@@ -14,20 +14,32 @@
     - 'always'
 
 
+# The core and wp-config.php belong to root, so code running in the web server cannot modify
+# them; only wp-content belongs to apache. WP-CLI therefore runs as root only for commands that
+# do not load WordPress (core download, config create/get/set, core verify-checksums:
+# `@when before_wp_load`). Everything that loads WordPress runs as apache, because loading it
+# executes code from wp-content (plugins, must-use plugins, drop-ins such as object-cache.php),
+# which apache can write.
 - block:
 
   - name: 'mkdir -p {{ wordpress__install_dir }}'
     ansible.builtin.file:
       path: '{{ wordpress__install_dir }}'
       state: 'directory'
-      owner: 'apache'
-      group: 'apache'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
-  - name: 'semanage fcontext -add --type httpd_sys_rw_content_t {{ wordpress__install_dir }}(/.*)?'
+  - name: 'semanage fcontext --add --type httpd_sys_content_t {{ wordpress__install_dir }}(/.*)?'
+    community.general.sefcontext:
+      setype: 'httpd_sys_content_t'
+      target: '{{ wordpress__install_dir }}(/.*)?'
+      state: 'present'
+
+  - name: 'semanage fcontext --add --type httpd_sys_rw_content_t {{ wordpress__install_dir }}/wp-content(/.*)?'
     community.general.sefcontext:
       setype: 'httpd_sys_rw_content_t'
-      target: '{{ wordpress__install_dir }}(/.*)?'
+      target: '{{ wordpress__install_dir }}/wp-content(/.*)?'
       state: 'present'
 
   - name: 'Install WP-CLI'
@@ -60,25 +72,42 @@
       owner: 'apache'
       group: 'apache'
 
-  - name: 'wp core download --skip-content --version={{ wordpress__version | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp core download --skip-content --version={{ wordpress__version | quote }}'
+  - name: 'wp core download --skip-content --version={{ wordpress__version | quote }} --allow-root'
+    ansible.builtin.command: '/usr/local/bin/wp core download --skip-content --version={{ wordpress__version | quote }} --allow-root'
     args:
       chdir: '{{ wordpress__install_dir }}'
-    become: true
-    become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
 
   # The passwords reach WP-CLI on stdin (--prompt), not on its command line, where every local
   # user could read them in the process list. --quiet, because WP-CLI prints the completed
   # command line, password included, after prompting; errors still go to stderr.
-  - name: 'wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --prompt=dbpass --force --quiet'
-    ansible.builtin.command: '/usr/local/bin/wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --prompt=dbpass --force --quiet'
+  - name: 'wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --prompt=dbpass --force --quiet --allow-root'
+    ansible.builtin.command: '/usr/local/bin/wp config create --path={{ wordpress__install_dir | quote }} --dbhost={{ wordpress__database_host | quote }} --dbname={{ wordpress__database_name | quote }} --dbuser={{ wordpress__database_user["username"] | quote }} --prompt=dbpass --force --quiet --allow-root'
     args:
       chdir: '{{ wordpress__install_dir }}'
       stdin: '{{ wordpress__database_user["password"] }}'
-    become: true
-    become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
+
+  # wp-config.php holds the database password and the salts. PHP-FPM and WP-CLI read it as
+  # apache, other local users must not.
+  - name: 'chown root:apache {{ wordpress__install_dir }}/wp-config.php && chmod 0640 {{ wordpress__install_dir }}/wp-config.php'
+    ansible.builtin.file:
+      path: '{{ wordpress__install_dir }}/wp-config.php'
+      owner: 'root'
+      group: 'apache'
+      mode: 0o640
+
+  - name: 'mkdir -p {{ wordpress__install_dir }}/wp-content/{plugins,themes}'
+    ansible.builtin.file:
+      path: '{{ wordpress__install_dir }}/{{ item }}'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o755
+    loop:
+      - 'wp-content'
+      - 'wp-content/plugins'
+      - 'wp-content/themes'
 
   - name: 'wp core install --url={{ wordpress__url | quote }} --title={{ wordpress__site_title | quote }} --admin_user={{ wordpress__admin_user["username"] | quote }} --admin_email={{ wordpress__admin_email | quote }} --prompt=admin_password --quiet'
     ansible.builtin.command: '/usr/local/bin/wp core install --url={{ wordpress__url | quote }} --title={{ wordpress__site_title | quote }} --admin_user={{ wordpress__admin_user["username"] | quote }} --admin_email={{ wordpress__admin_email | quote }} --prompt=admin_password --quiet'
@@ -88,14 +117,6 @@
     become: true
     become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
-
-  - name: 'mkdir -p {{ wordpress__install_dir }}/wp-content/plugins'
-    ansible.builtin.file:
-      path: '{{ wordpress__install_dir }}/wp-content/plugins'
-      state: 'directory'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o755
 
   - name: 'wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
     ansible.builtin.command: '/usr/local/bin/wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
@@ -122,14 +143,6 @@
     when: 'item["state"] | d("present") != "absent"'
     loop: '{{ wordpress__plugins }}'
 
-  - name: 'mkdir {{ wordpress__install_dir }}/wp-content/themes'
-    ansible.builtin.file:
-      path: '{{ wordpress__install_dir }}/wp-content/themes'
-      state: 'directory'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o755
-
   - name: 'wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
     ansible.builtin.command: '/usr/local/bin/wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
     args:
@@ -154,44 +167,54 @@
 - block:
 
   # `wp config set` reports the constant as updated even when the value does not change, so the
-  # current values are read first and only the differing ones are set.
-  - name: 'wp config get <constant> --format=json --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp config get {{ item["name"] }} --format=json --path={{ wordpress__install_dir | quote }}'
+  # current values are read first and only the differing ones are set. WP_AUTO_UPDATE_CORE,
+  # because WordPress cannot write its core and would report every failed background update by
+  # e-mail; wordpress-core-minor-update.timer installs minor releases instead. FS_METHOD, because
+  # WordPress only writes plugins and themes directly if its own files belong to the web server
+  # user, and asks for FTP credentials otherwise.
+  - name: 'wp config get <constant> --format=json --path={{ wordpress__install_dir | quote }} --allow-root'
+    ansible.builtin.command: '/usr/local/bin/wp config get {{ item["name"] }} --format=json --path={{ wordpress__install_dir | quote }} --allow-root'
     args:
       chdir: '{{ wordpress__install_dir }}'
-    become: true
-    become_user: 'apache'
     register: 'wordpress__config_get_result'
     changed_when: false
     # rc 1: the constant is not defined yet
     failed_when: 'wordpress__config_get_result["rc"] not in [0, 1]'
     loop:
       - name: 'DISABLE_WP_CRON'
+        raw: true
         value: 'true'
       - name: 'DISALLOW_FILE_EDIT'
+        raw: true
         value: '{{ wordpress__disallow_file_edit | bool | string | lower }}'
+      - name: 'FS_METHOD'
+        raw: false
+        value: 'direct'
+      - name: 'WP_AUTO_UPDATE_CORE'
+        raw: true
+        value: 'false'
       - name: 'WP_DEBUG'
+        raw: true
         value: 'false'
     loop_control:
       label: '{{ item["name"] }}'
 
-  - name: 'wp config set {{ item["item"]["name"] }} {{ item["item"]["value"] }} --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp config set {{ item["item"]["name"] }} {{ item["item"]["value"] }} --raw --path={{ wordpress__install_dir | quote }}'
+  - name: 'wp config set {{ item["item"]["name"] }} {{ item["item"]["value"] }} --path={{ wordpress__install_dir | quote }} --allow-root'
+    ansible.builtin.command: '/usr/local/bin/wp config set {{ item["item"]["name"] }} {{ item["item"]["value"] | quote }}{{ item["item"]["raw"] | ternary(" --raw", "") }} --path={{ wordpress__install_dir | quote }} --allow-root'
     args:
       chdir: '{{ wordpress__install_dir }}'
-    become: true
-    become_user: 'apache'
-    when: 'item["stdout"] != item["item"]["value"]'
+    when: 'item["stdout"] != (item["item"]["raw"] | ternary(item["item"]["value"], item["item"]["value"] | to_json))'
     loop: '{{ wordpress__config_get_result["results"] }}'
     loop_control:
       label: '{{ item["item"]["name"] }}'
 
+  # WordPress never writes must-use plugins itself, so the directory belongs to root like the core
   - name: 'mkdir -p {{ wordpress__install_dir }}/wp-content/mu-plugins'
     ansible.builtin.file:
       path: '{{ wordpress__install_dir }}/wp-content/mu-plugins'
       state: 'directory'
-      owner: 'apache'
-      group: 'apache'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   # no backup, since the directory is served by Apache
@@ -199,8 +222,8 @@
     ansible.builtin.template:
       src: 'var/www/html/wordpress/wp-content/mu-plugins/linuxfabrik.php.j2'
       dest: '{{ wordpress__install_dir }}/wp-content/mu-plugins/linuxfabrik.php'
-      owner: 'apache'
-      group: 'apache'
+      owner: 'root'
+      group: 'root'
       mode: 0o644
 
   - name: 'find {{ wordpress__install_dir | quote }} -type d -exec chmod --changes 755 {} \;'
@@ -208,7 +231,7 @@
     register: 'wordpress__chmod_dirs_result'
     changed_when: 'wordpress__chmod_dirs_result["stdout"] | length > 0'
 
-  # wp-config.php gets its own, stricter mode further down
+  # wp-config.php has its own, stricter mode
   - name: 'find {{ wordpress__install_dir | quote }} -type f ! -name wp-config.php -exec chmod --changes 644 {} \;'
     ansible.builtin.command: 'find {{ wordpress__install_dir | quote }} -type f ! -name wp-config.php -exec chmod --changes 644 {} \;'
     register: 'wordpress__chmod_files_result'
@@ -265,6 +288,42 @@
       state: 'started'
       enabled: true
 
+  - name: 'Deploy /usr/local/sbin/wordpress-core-minor-update'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/wordpress-core-minor-update.j2'
+      dest: '/usr/local/sbin/wordpress-core-minor-update'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/wordpress-core-minor-update.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/wordpress-core-minor-update.service.j2'
+      dest: '/etc/systemd/system/wordpress-core-minor-update.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'wordpress__core_minor_update_service_result'
+
+  - name: 'Deploy /etc/systemd/system/wordpress-core-minor-update.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/wordpress-core-minor-update.timer.j2'
+      dest: '/etc/systemd/system/wordpress-core-minor-update.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: 'wordpress__core_minor_update_timer_result'
+
+  - name: 'systemctl {{ wordpress__timer_core_minor_update_enabled | bool | ternary("enable", "disable") }} wordpress-core-minor-update.timer --now'
+    ansible.builtin.systemd:
+      name: 'wordpress-core-minor-update.timer'
+      state: '{{ wordpress__timer_core_minor_update_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ wordpress__timer_core_minor_update_enabled }}'
+      daemon_reload: '{{ wordpress__core_minor_update_service_result is changed or wordpress__core_minor_update_timer_result is changed }}'
+
   - name: 'Adjust {{ wordpress__install_dir }}/wp-config.php for the potential use behind a reverse proxy'
     ansible.builtin.blockinfile:
       path: '{{ wordpress__install_dir }}/wp-config.php'
@@ -315,15 +374,6 @@
       - 'home'
       - 'siteurl'
 
-  # wp-config.php holds the database password and the salts. PHP-FPM and WP-CLI read it as
-  # apache, other local users must not.
-  - name: 'chmod 0640 {{ wordpress__install_dir }}/wp-config.php'
-    ansible.builtin.file:
-      path: '{{ wordpress__install_dir }}/wp-config.php'
-      owner: 'apache'
-      group: 'apache'
-      mode: 0o640
-
   # the WXR import runs only on the run that installs WordPress, as the README describes
   - name: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     ansible.builtin.command: '/usr/local/bin/wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
@@ -355,10 +405,33 @@
 
 - block:
 
-  - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
-    register: 'wordpress__chown_result'
-    changed_when: 'wordpress__chown_result["stdout"] | length > 0'
+  # The core, wp-config.php and wp-content/mu-plugins belong to root, the rest of wp-content to
+  # apache. --no-dereference, so a symlink does not hand its target to the other owner.
+  - name: 'chown --no-dereference root:root the core below {{ wordpress__install_dir }}'
+    ansible.builtin.command: 'find {{ __wordpress__install_dir | quote }} ( -path {{ (__wordpress__install_dir ~ "/wp-content") | quote }} -o -path {{ (__wordpress__install_dir ~ "/wp-config.php") | quote }} ) -prune -o ( ! -user root -o ! -group root ) -exec chown --changes --no-dereference root:root {} +'
+    register: 'wordpress__chown_core_result'
+    changed_when: 'wordpress__chown_core_result["stdout"] | length > 0'
+
+  - name: 'chown --no-dereference apache:apache {{ wordpress__install_dir }}/wp-content without mu-plugins'
+    ansible.builtin.command: 'find {{ (__wordpress__install_dir ~ "/wp-content") | quote }} -path {{ (__wordpress__install_dir ~ "/wp-content/mu-plugins") | quote }} -prune -o ( ! -user apache -o ! -group apache ) -exec chown --changes --no-dereference apache:apache {} +'
+    register: 'wordpress__chown_content_result'
+    changed_when: 'wordpress__chown_content_result["stdout"] | length > 0'
+
+  - name: 'chown --no-dereference root:root {{ wordpress__install_dir }}/wp-content/mu-plugins'
+    ansible.builtin.command: 'find {{ (__wordpress__install_dir ~ "/wp-content/mu-plugins") | quote }} ( ! -user root -o ! -group root ) -exec chown --changes --no-dereference root:root {} +'
+    register: 'wordpress__chown_mu_plugins_result'
+    changed_when: 'wordpress__chown_mu_plugins_result["stdout"] | length > 0'
+    # the directory only exists once the configure tasks have run
+    failed_when:
+      - 'wordpress__chown_mu_plugins_result["rc"] != 0'
+      - '"No such file or directory" not in wordpress__chown_mu_plugins_result["stderr"]'
+
+  - name: 'chown root:apache {{ wordpress__install_dir }}/wp-config.php && chmod 0640 {{ wordpress__install_dir }}/wp-config.php'
+    ansible.builtin.file:
+      path: '{{ wordpress__install_dir }}/wp-config.php'
+      owner: 'root'
+      group: 'apache'
+      mode: 0o640
 
   - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
     ansible.builtin.command: 'restorecon -Fvr {{ item }}'
@@ -367,6 +440,8 @@
     loop:
       - '{{ wordpress__install_dir }}'
 
+  vars:
+    __wordpress__install_dir: '{{ wordpress__install_dir | regex_replace("/+$", "") }}'
   tags:
     - 'wordpress'
     - 'wordpress:file_policy'
@@ -378,12 +453,11 @@
     ansible.builtin.command: '/usr/local/bin/wp cli update --yes'
     register: 'wordpress__wp_cli_update_result'
 
-  - name: 'wp core update --path={{ wordpress__install_dir | quote }} --version={{ wordpress__version | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp core update --path={{ wordpress__install_dir | quote }} --version={{ wordpress__version | quote }}'
+  # the core belongs to root, and core download does not load WordPress
+  - name: 'wp core download --skip-content --force --version={{ wordpress__version | quote }} --path={{ wordpress__install_dir | quote }} --allow-root'
+    ansible.builtin.command: '/usr/local/bin/wp core download --skip-content --force --version={{ wordpress__version | quote }} --path={{ wordpress__install_dir | quote }} --allow-root'
     args:
       chdir: '{{ wordpress__install_dir }}'
-    become: true
-    become_user: 'apache'
 
   - name: 'wp core update-db --path={{ wordpress__install_dir | quote }}'
     ansible.builtin.command: '/usr/local/bin/wp core update-db --path={{ wordpress__install_dir | quote }}'
@@ -405,11 +479,6 @@
       chdir: '{{ wordpress__install_dir }}'
     become: true
     become_user: 'apache'
-
-  - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
-    register: 'wordpress__chown_result'
-    changed_when: 'wordpress__chown_result["stdout"] | length > 0'
 
   tags:
     - 'never'
