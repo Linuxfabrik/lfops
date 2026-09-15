@@ -1,5 +1,21 @@
 - block:
 
+  # wordpress__url used to be a bare host name. Such a value still yields the right host for
+  # the vHost and the installation directory, but not the site address.
+  - name: 'Check variable constraints'
+    ansible.builtin.assert:
+      that:
+        - 'wordpress__url is match("https?://")'
+      quiet: true
+      fail_msg: 'wordpress__url must start with "http://" or "https://", got "{{ wordpress__url }}". Use "https://" for a site served over HTTPS, including behind a reverse proxy that terminates TLS.'
+
+  tags:
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
+
+- block:
+
   - name: 'mkdir -p {{ wordpress__install_dir }}'
     ansible.builtin.file:
       path: '{{ wordpress__install_dir }}'
@@ -180,14 +196,14 @@
       path: '{{ wordpress__install_dir }}/wp-config.php'
       insertbefore: ".*That's all, stop editing!.*"
       block: |
-        // 2022091601
+        // 2026091501
         // If we're behind a proxy server and using HTTPS, we need to alert Wordpress of that fact
         // see https://wordpress.org/support/article/administration-over-ssl/#using-a-reverse-proxy
         // in some setups HTTP_X_FORWARDED_PROTO might contain
         // a comma-separated list e.g. http,https
         // so check for https existence
-        define('FORCE_SSL_ADMIN', true);
-        define('FORCE_SSL_LOGIN', true);
+        define('FORCE_SSL_ADMIN', {{ (wordpress__url is match("https://")) | string | lower }});
+        define('FORCE_SSL_LOGIN', {{ (wordpress__url is match("https://")) | string | lower }});
         if (array_key_exists('HTTP_X_FORWARDED_PROTO', $_SERVER) && strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false) {
             $_SERVER['HTTPS']='on';
             $_SERVER['REQUEST_SCHEME'] = 'https';
@@ -199,6 +215,19 @@
         if (isset($_SERVER['HTTP_X_FORWARDED_HOST']) and !empty($_SERVER['HTTP_X_FORWARDED_HOST'])) {
             $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
         }
+
+  # wordpress__url is the single source for the site address. WordPress builds its links from
+  # `home` and marks its front-end login cookie Secure only if `home` is an https URL.
+  - name: 'wp option update {{ item }} {{ wordpress__url | quote }} --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp option update {{ item }} {{ wordpress__url | quote }} --path={{ wordpress__install_dir | quote }}'
+    args:
+      chdir: '{{ wordpress__install_dir }}'
+    become_user: 'apache'
+    register: 'wordpress__option_update_result'
+    changed_when: '"Updated" in wordpress__option_update_result["stdout"]'
+    loop:
+      - 'home'
+      - 'siteurl'
 
   - name: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     ansible.builtin.command: '/usr/local/bin/wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'

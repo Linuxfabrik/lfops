@@ -1,7 +1,11 @@
 wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true
-wordpress__install_dir: '/var/www/html/{{ wordpress__url }}'
+# The host part is cut out with regex_replace instead of urlsplit("hostname"). For a bare
+# host from an inventory that predates the scheme in wordpress__url, urlsplit returns an
+# empty hostname, and setup_wordpress runs apache_httpd and selinux, which use this value,
+# before the role's assert can abort. The regex returns the same host for both forms.
+wordpress__install_dir: '/var/www/html/{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
 wordpress__plugins: []
 wordpress__version: 'latest'
 
@@ -13,7 +17,8 @@ wordpress__apache_httpd__mods__dependent_var:
     enabled: true
     state: 'present'
 wordpress__apache_httpd__vhosts__dependent_var:
-  - conf_server_name: '{{ wordpress__url }}'
+  # regex_replace instead of urlsplit, see wordpress__install_dir
+  - conf_server_name: '{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
     by_role: 'wordpress'
     enabled: true
     filename: 'wordpress'

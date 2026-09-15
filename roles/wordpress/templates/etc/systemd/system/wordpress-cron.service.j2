@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2022103101
+# 2026091501
 
 [Unit]
 Description=Wordpress Cron Service
 
 [Service]
-ExecStart=/usr/bin/curl http://localhost/wp-cron.php --header 'Host: {{ wordpress__url }}' --header 'X-Forwarded-Proto: https'
+ExecStart=/usr/bin/curl http://localhost/wp-cron.php --header 'Host: {{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}' --header 'X-Forwarded-Proto: {{ wordpress__url | urlsplit("scheme") }}'
 Type=oneshot
 User=root
 

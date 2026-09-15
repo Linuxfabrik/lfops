@@ -2,7 +2,7 @@
 
 This role installs and configures the [WordPress CMS](https://wordpress.com/).
 
-Attention: It is intended that when you call `http://{wordpress__url}}` you will get a white page because no theme is installed. `http://{wordpress__url}}/wp-admin` works as expected.
+Attention: It is intended that when you call `wordpress__url` you will get a white page because no theme is installed. `wordpress__url` followed by `/wp-admin` works as expected.
 
 
 *Available since LFOps `2.0.0`.*
@@ -87,7 +87,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `wordpress__url`
 
-* The WordPress URL, without `http://` or `https://`.
+* The URL under which WordPress is reachable, including `http://` or `https://`. Use the URL your users type in the browser, which with a reverse proxy that terminates TLS in front is an `https://` URL even though Apache httpd on the host serves plain HTTP.
+* It is the single source for the site address: WordPress is installed with it, and the role sets `home` and `siteurl` to it on every run, so an address changed in the WordPress settings is set back. With `https://`, WordPress builds its links for HTTPS and marks its login cookies `Secure`, and the role forces HTTPS for the login and the admin area. The host part becomes the `ServerName` of the vHost and the default installation directory.
 * Type: String.
 
 Example:
@@ -101,7 +102,7 @@ wordpress__database_user:
   username: 'wordpress'
   password: 'linuxfabrik'
 wordpress__site_title: 'WordPress Test Site'
-wordpress__url: 'wordpress.example.com'
+wordpress__url: 'https://wordpress.example.com'
 ```
 
 
@@ -129,7 +130,7 @@ wordpress__url: 'wordpress.example.com'
 
 * The installation directory for WordPress.
 * Type: String.
-* Default: `'/var/www/html/{{ wordpress__url }}'`
+* Default: `/var/www/html/` followed by the host part of `wordpress__url`, for example `'/var/www/html/wordpress.example.com'`
 
 `wordpress__plugins`
 
@@ -173,7 +174,7 @@ Example:
 wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true
-wordpress__install_dir: '/var/www/html/{{ wordpress__url }}'
+wordpress__install_dir: '/var/www/html/wordpress.example.com'
 wordpress__plugins:
   - name: 'bbPress'
     state: 'present'
