@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:collabora**: A run against an unchanged host no longer reports changes for the coolwsd log file and the ownership of `/etc/coolwsd`.
 * **role:collabora**: The role runs on RHEL 10, since it no longer installs the distribution's `mythes` and `hunspell` dictionary packages, which Collabora does not need next to its own dictionary packages. Packages already installed are left in place ([#373](https://github.com/Linuxfabrik/lfops/issues/373)).
 * **playbook:kvm_host**: The playbook deploys the EPEL repository, and CRB on Rocky 9 and newer, so it no longer fails to install `genisoimage` on RHEL 9 and 10 hosts that did not have EPEL set up already ([#375](https://github.com/Linuxfabrik/lfops/issues/375)).
 * **playbook:chromium_headless, playbook:icingaweb2_module_pdfexport, playbook:repo_epel**: On Rocky 9 and newer, these playbooks enable the CRB repository together with EPEL, like every other playbook that deploys EPEL, since EPEL packages depend on packages from CRB.
