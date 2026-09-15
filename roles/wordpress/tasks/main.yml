@@ -214,17 +214,32 @@
     register: 'wordpress__chmod_files_result'
     changed_when: 'wordpress__chmod_files_result["stdout"] | length > 0'
 
-  - name: "wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
-    ansible.builtin.command: "/usr/local/bin/wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
+  # Disable REST API (disable-json-api) only blocks the routes that existed when its settings were
+  # saved, so routes of plugins installed later stay open to anonymous visitors. Disable WP REST
+  # API below blocks every route for them.
+  - name: "wp plugin uninstall 'disable-json-api' --deactivate --path={{ wordpress__install_dir | quote }}"
+    ansible.builtin.command: "/usr/local/bin/wp plugin uninstall 'disable-json-api' --deactivate --path={{ wordpress__install_dir | quote }}"
     args:
       chdir: '{{ wordpress__install_dir }}'
     become: true
     become_user: 'apache'
-    register: 'wordpress__disable_json_api_result'
+    register: 'wordpress__disable_json_api_uninstall_result'
+    changed_when: 'wordpress__disable_json_api_uninstall_result["rc"] == 0'
+    failed_when:
+      - 'wordpress__disable_json_api_uninstall_result["rc"] != 0'
+      - '"could not be found" not in wordpress__disable_json_api_uninstall_result["stderr"]'
+
+  - name: "wp plugin install 'disable-wp-rest-api' --path={{ wordpress__install_dir | quote }} --activate"
+    ansible.builtin.command: "/usr/local/bin/wp plugin install 'disable-wp-rest-api' --path={{ wordpress__install_dir | quote }} --activate"
+    args:
+      chdir: '{{ wordpress__install_dir }}'
+    become: true
+    become_user: 'apache'
+    register: 'wordpress__disable_wp_rest_api_result'
     # WP-CLI prints "Plugin already installed." for a present plugin, and "activated." only when
     # it had to activate it
-    changed_when: '"Plugin already installed." not in wordpress__disable_json_api_result["stdout"]
-      or "activated." in wordpress__disable_json_api_result["stdout"]'
+    changed_when: '"Plugin already installed." not in wordpress__disable_wp_rest_api_result["stdout"]
+      or "activated." in wordpress__disable_wp_rest_api_result["stdout"]'
 
   - name: 'Deploy /etc/systemd/system/wordpress-cron.service'
     ansible.builtin.template:

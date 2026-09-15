@@ -48,7 +48,8 @@
     - name: 'Assert the configured plugins and theme are active'
       ansible.builtin.assert:
         that:
-          - '"disable-json-api" in __molecule__wordpress_plugins_result["stdout_lines"]'
+          - '"disable-wp-rest-api" in __molecule__wordpress_plugins_result["stdout_lines"]'
+          - '"disable-json-api" not in __molecule__wordpress_plugins_result["stdout_lines"]'
           - '"hello-dolly" in __molecule__wordpress_plugins_result["stdout_lines"]'
           - '"akismet" not in __molecule__wordpress_plugins_result["stdout_lines"]'
           - '__molecule__wordpress_theme_result["stdout_lines"] == [wordpress__theme]'
@@ -74,6 +75,22 @@
         fail_msg: 'application passwords are {{ __molecule__wordpress_app_passwords_result["stdout"] }}'
 
     # The site over HTTP, requested like the reverse proxy in front of it would pass it on
+
+    # Disable WP REST API answers anonymous REST requests with rest_login_required
+    - name: 'GET /?rest_route=/wp/v2/users without a login'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/?rest_route=/wp/v2/users'
+        headers:
+          Host: '{{ __molecule__wordpress_host }}'
+          X-Forwarded-Proto: 'https'
+        status_code: 401
+        return_content: true
+      register: '__molecule__wordpress_rest_anonymous_result'
+
+    - name: 'Assert the REST API refuses anonymous visitors'
+      ansible.builtin.assert:
+        that: '"rest_login_required" in __molecule__wordpress_rest_anonymous_result["content"]'
+        fail_msg: 'the REST API answered: {{ __molecule__wordpress_rest_anonymous_result["content"] }}'
 
     - name: 'GET / (X-Forwarded-Proto: https)'
       ansible.builtin.uri:

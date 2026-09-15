@@ -8,6 +8,11 @@ Attention: It is intended that when you call `wordpress__url` you will get a whi
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The REST API only answers logged-in users. The role installs and activates the [Disable WP REST API](https://wordpress.org/plugins/disable-wp-rest-api/) plugin, and uninstalls the Disable REST API (`disable-json-api`) plugin where it is present. Anonymous requests to any route, including the routes of plugins installed later, get `401 rest_login_required`. The plugin has no settings, so a front-end feature that calls the REST API without a login, such as some contact forms, needs an exception in code.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
