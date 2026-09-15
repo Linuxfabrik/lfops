@@ -1,0 +1,3 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: the playbook enables SELinux booleans and file contexts, and WordPress runs on the real
+# Apache httpd, PHP-FPM and MariaDB services of the host.

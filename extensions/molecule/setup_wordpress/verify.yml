@@ -1,0 +1,278 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts what only the
+# running site can confirm, mostly through the same Apache httpd -> PHP-FPM -> WordPress path a
+# visitor takes: that WordPress uses the configured address, plugins and theme, that a login works
+# and hands out a Secure cookie, and that the hardening of the vHost, of the proxy handling and of
+# wp-config.php holds against real requests.
+- name: 'Verify WordPress serves the site with the configured settings'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+    __molecule__wordpress_dir: '/var/www/html/{{ __molecule__wordpress_host }}'
+    __molecule__wordpress_host: '{{ wordpress__url | urlsplit("hostname") }}'
+
+  tasks:
+
+    # WordPress itself, asked through WP-CLI as the web server user
+
+    - name: 'wp option get home'
+      ansible.builtin.command: '/usr/local/bin/wp option get home --path={{ __molecule__wordpress_dir }}'
+      args:
+        chdir: '{{ __molecule__wordpress_dir }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_home_result'
+      changed_when: false
+
+    - name: 'Assert WordPress uses wordpress__url as its address'
+      ansible.builtin.assert:
+        that: '__molecule__wordpress_home_result["stdout"] == wordpress__url'
+        fail_msg: 'home is "{{ __molecule__wordpress_home_result["stdout"] }}", expected "{{ wordpress__url }}"'
+
+    - name: 'wp plugin list --status=active --field=name'
+      ansible.builtin.command: '/usr/local/bin/wp plugin list --status=active --field=name --path={{ __molecule__wordpress_dir }}'
+      args:
+        chdir: '{{ __molecule__wordpress_dir }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_plugins_result'
+      changed_when: false
+
+    - name: 'wp theme list --status=active --field=name'
+      ansible.builtin.command: '/usr/local/bin/wp theme list --status=active --field=name --path={{ __molecule__wordpress_dir }}'
+      args:
+        chdir: '{{ __molecule__wordpress_dir }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_theme_result'
+      changed_when: false
+
+    - name: 'Assert the configured plugins and theme are active'
+      ansible.builtin.assert:
+        that:
+          - '"disable-json-api" in __molecule__wordpress_plugins_result["stdout_lines"]'
+          - '"hello-dolly" in __molecule__wordpress_plugins_result["stdout_lines"]'
+          - '"akismet" not in __molecule__wordpress_plugins_result["stdout_lines"]'
+          - '__molecule__wordpress_theme_result["stdout_lines"] == [wordpress__theme]'
+        fail_msg: 'active plugins: {{ __molecule__wordpress_plugins_result["stdout_lines"] }}, active theme: {{ __molecule__wordpress_theme_result["stdout_lines"] }}'
+
+    # --url sets HTTPS for WP-CLI, which application passwords require before any filter applies
+    - name: 'wp eval wp_is_application_passwords_available()'
+      ansible.builtin.command:
+        argv:
+          - '/usr/local/bin/wp'
+          - 'eval'
+          - 'echo wp_is_application_passwords_available() ? "available" : "unavailable";'
+          - '--url={{ wordpress__url }}'
+          - '--path={{ __molecule__wordpress_dir }}'
+        chdir: '{{ __molecule__wordpress_dir }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_app_passwords_result'
+      changed_when: false
+
+    - name: 'Assert application passwords are switched off'
+      ansible.builtin.assert:
+        that: '__molecule__wordpress_app_passwords_result["stdout"] == "unavailable"'
+        fail_msg: 'application passwords are {{ __molecule__wordpress_app_passwords_result["stdout"] }}'
+
+    # The site over HTTP, requested like the reverse proxy in front of it would pass it on
+
+    - name: 'GET / (X-Forwarded-Proto: https)'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/'
+        headers:
+          Host: '{{ __molecule__wordpress_host }}'
+          X-Forwarded-Proto: 'https'
+      register: '__molecule__wordpress_front_page_result'
+
+    - name: 'Assert the vHost adds its security headers'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__wordpress_front_page_result["referrer_policy"] | d("") == "strict-origin-when-cross-origin"'
+          - '__molecule__wordpress_front_page_result["x_content_type_options"] | d("") == "nosniff"'
+        fail_msg: 'Referrer-Policy: {{ __molecule__wordpress_front_page_result["referrer_policy"] | d("missing") }}, X-Content-Type-Options: {{ __molecule__wordpress_front_page_result["x_content_type_options"] | d("missing") }}'
+
+    - name: 'GET /wp-login.php over plain HTTP'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/wp-login.php'
+        headers:
+          Host: '{{ __molecule__wordpress_host }}'
+        follow_redirects: 'none'
+        status_code: 302
+      register: '__molecule__wordpress_login_http_result'
+
+    - name: 'Assert the login is redirected to HTTPS'
+      ansible.builtin.assert:
+        that: '__molecule__wordpress_login_http_result["location"] is match("https://")'
+        fail_msg: 'the login redirects to {{ __molecule__wordpress_login_http_result["location"] }}'
+
+    # WordPress hands out its login cookie only when the test cookie comes back with the form. It
+    # marks the front-end cookie Secure only if home is an https URL, which is the point here.
+    - name: 'POST /wp-login.php with {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'curl'
+          - '--silent'
+          - '--output'
+          - '/dev/null'
+          - '--dump-header'
+          - '-'
+          - '--header'
+          - 'Host: {{ __molecule__wordpress_host }}'
+          - '--header'
+          - 'X-Forwarded-Proto: https'
+          - '--cookie'
+          - 'wordpress_test_cookie=WP%20Cookie%20check'
+          - '--data-urlencode'
+          - 'log={{ wordpress__admin_user["username"] }}'
+          - '--data-urlencode'
+          - 'pwd={{ item["password"] }}'
+          - '--data-urlencode'
+          - 'testcookie=1'
+          - 'http://127.0.0.1/wp-login.php'
+      register: '__molecule__wordpress_login_result'
+      changed_when: false
+      loop:
+        - label: 'the admin credentials'
+          password: '{{ wordpress__admin_user["password"] }}'
+        - label: 'a wrong password'
+          password: 'molecule-wrong-password'
+      loop_control:
+        label: '{{ item["label"] }}'
+
+    # A failed login answers 200 with the form again, which is what the fail2ban wordpress-login
+    # filter counts.
+    - name: 'Assert the login succeeds with a Secure cookie and fails with the form again'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__wordpress_login_result["results"][0]["stdout"] is search("(?im)^HTTP/[^ ]+ 302")'
+          - '__molecule__wordpress_login_result["results"][0]["stdout"] is search("(?im)^set-cookie: wordpress_logged_in_.*; secure")'
+          - '__molecule__wordpress_login_result["results"][1]["stdout"] is search("(?im)^HTTP/[^ ]+ 200")'
+          - '__molecule__wordpress_login_result["results"][1]["stdout"] is not search("(?im)^set-cookie: wordpress_logged_in_")'
+        fail_msg: 'successful login: {{ __molecule__wordpress_login_result["results"][0]["stdout"] }} failed login: {{ __molecule__wordpress_login_result["results"][1]["stdout"] }}'
+
+    - name: 'GET /wp-includes/images/w-logo-blue.png with the referer {{ item["referer"] }}'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/wp-includes/images/w-logo-blue.png'
+        headers:
+          Host: '{{ __molecule__wordpress_host }}'
+          Referer: '{{ item["referer"] }}'
+        status_code: '{{ item["status"] }}'
+      loop:
+        - referer: '{{ wordpress__url }}/'
+          status: 200
+        - referer: 'https://hotlinker.example.net/'
+          status: 403
+
+    - name: 'GET /wp-includes/version.php'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/wp-includes/version.php'
+        headers:
+          Host: '{{ __molecule__wordpress_host }}'
+        status_code: 403
+
+    # PHP files of our own: one where uploads land, one that loads WordPress and prints what the
+    # wp-config.php proxy handling made of the request. Both are removed again, so the idempotence
+    # step sees the installation as the role left it.
+    - name: 'Probe the upload directory and the proxy handling'
+      block:
+
+        - name: 'stat {{ __molecule__wordpress_dir }}/wp-content/uploads'
+          ansible.builtin.stat:
+            path: '{{ __molecule__wordpress_dir }}/wp-content/uploads'
+          register: '__molecule__wordpress_uploads_stat_result'
+
+        - name: 'mkdir -p {{ __molecule__wordpress_dir }}/wp-content/uploads/molecule'
+          ansible.builtin.file:
+            path: '{{ __molecule__wordpress_dir }}/wp-content/uploads/molecule'
+            state: 'directory'
+            owner: 'apache'
+            group: 'apache'
+            mode: 0o755
+
+        - name: 'Deploy the PHP probes'
+          ansible.builtin.copy:
+            content: '{{ item["content"] }}'
+            dest: '{{ item["dest"] }}'
+            owner: 'apache'
+            group: 'apache'
+            mode: 0o644
+          loop:
+            - dest: '{{ __molecule__wordpress_dir }}/wp-content/uploads/molecule/molecule.php'
+              content: "<?php echo 'molecule-upload-executed';\n"
+            - dest: '{{ __molecule__wordpress_dir }}/molecule-request.php'
+              content: "<?php require __DIR__ . '/wp-load.php'; echo $_SERVER['REMOTE_ADDR'] . ' ' . $_SERVER['HTTP_HOST'];\n"
+          loop_control:
+            label: '{{ item["dest"] }}'
+
+        - name: 'GET /wp-content/uploads/molecule/molecule.php'
+          ansible.builtin.uri:
+            url: 'http://127.0.0.1/wp-content/uploads/molecule/molecule.php'
+            headers:
+              Host: '{{ __molecule__wordpress_host }}'
+            status_code: 403
+            return_content: true
+          register: '__molecule__wordpress_upload_php_result'
+
+        - name: 'Assert the PHP file below uploads did not run'
+          ansible.builtin.assert:
+            that: '"molecule-upload-executed" not in __molecule__wordpress_upload_php_result["content"]'
+
+        # 127.0.0.1 is in wordpress__trusted_proxies, so the right-most address of X-Forwarded-For
+        # that is not a trusted proxy itself becomes the client, and X-Forwarded-Host is ignored.
+        - name: 'GET /molecule-request.php from the trusted proxy address'
+          ansible.builtin.uri:
+            url: 'http://127.0.0.1/molecule-request.php'
+            headers:
+              Host: '{{ __molecule__wordpress_host }}'
+              X-Forwarded-For: '203.0.113.9, 198.51.100.7'
+              X-Forwarded-Host: 'forged.example.net'
+            return_content: true
+          register: '__molecule__wordpress_request_trusted_result'
+
+        # The VM's own address is not trusted, so X-Forwarded-For has to be ignored.
+        - name: 'GET /molecule-request.php from an untrusted address'
+          ansible.builtin.uri:
+            url: 'http://{{ ansible_facts["default_ipv4"]["address"] }}/molecule-request.php'
+            headers:
+              Host: '{{ __molecule__wordpress_host }}'
+              X-Forwarded-For: '203.0.113.9'
+            return_content: true
+          register: '__molecule__wordpress_request_untrusted_result'
+
+        - name: 'Assert X-Forwarded-For is honoured only from the trusted proxy'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__wordpress_request_trusted_result["content"] == "198.51.100.7 " ~ __molecule__wordpress_host'
+              - '__molecule__wordpress_request_untrusted_result["content"] == ansible_facts["default_ipv4"]["address"] ~ " " ~ __molecule__wordpress_host'
+            fail_msg: 'from the proxy: "{{ __molecule__wordpress_request_trusted_result["content"] }}", from elsewhere: "{{ __molecule__wordpress_request_untrusted_result["content"] }}"'
+
+      always:
+
+        - name: 'Remove the PHP probes'
+          ansible.builtin.file:
+            path: '{{ item }}'
+            state: 'absent'
+          loop:
+            - '{{ __molecule__wordpress_dir }}/molecule-request.php'
+            - '{{ __molecule__wordpress_dir }}/wp-content/uploads/molecule'
+
+        - name: 'Remove the upload directory the probe created'
+          ansible.builtin.file:
+            path: '{{ __molecule__wordpress_dir }}/wp-content/uploads'
+            state: 'absent'
+          when:
+            - 'not __molecule__wordpress_uploads_stat_result["stat"]["exists"] | d(true)'
+
+    # wp-config.php holds the database password. The site working at all shows that PHP-FPM can
+    # read it, this shows that other local users cannot.
+    - name: 'Read wp-config.php as nobody'
+      ansible.builtin.command: 'runuser -u nobody -- cat {{ __molecule__wordpress_dir }}/wp-config.php'
+      register: '__molecule__wordpress_config_nobody_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert other local users cannot read wp-config.php'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__wordpress_config_nobody_result["rc"] != 0'
+          - '"Permission denied" in __molecule__wordpress_config_nobody_result["stderr"]'
+        fail_msg: 'nobody read wp-config.php: rc={{ __molecule__wordpress_config_nobody_result["rc"] }}, {{ __molecule__wordpress_config_nobody_result["stderr"] }}'
