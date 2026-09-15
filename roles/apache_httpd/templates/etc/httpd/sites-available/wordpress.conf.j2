@@ -104,11 +104,13 @@
     RewriteRule \.(?:jpe?g|gif|png|svg|webp|zip|rar|pdf)$ - [nocase,forbidden,last]
 
     # block direct access to /wp-includes
-    RewriteRule ^wp-admin/includes/ - [nocase,forbidden,last]
-    RewriteRule !^wp-includes/ - [skip=3]
-    RewriteRule ^wp-includes/[^/]+\.php$ - [nocase,forbidden,last]
-    RewriteRule ^wp-includes/js/tinymce/langs/.+\.php - [nocase,forbidden,last]
-    RewriteRule ^wp-includes/theme-compat/ - [nocase,forbidden,last]
+    # in vHost context the URL path starts with a slash, unlike in the .htaccess context these
+    # rules are usually quoted from
+    RewriteRule ^/wp-admin/includes/ - [nocase,forbidden,last]
+    RewriteRule !^/wp-includes/ - [skip=3]
+    RewriteRule ^/wp-includes/[^/]+\.php$ - [nocase,forbidden,last]
+    RewriteRule ^/wp-includes/js/tinymce/langs/.+\.php - [nocase,forbidden,last]
+    RewriteRule ^/wp-includes/theme-compat/ - [nocase,forbidden,last]
 
     # block wordpress author scans
     RewriteCond %{QUERY_STRING} (author=\d+) [nocase]
