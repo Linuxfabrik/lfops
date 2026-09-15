@@ -401,7 +401,7 @@
     # Debian ships no unversioned php-fpm binary, the same reason the role's own config test
     # addresses the version explicitly.
     - name: 'php-fpm -tt # dump the merged configuration'
-      ansible.builtin.command: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("php-fpm", "php-fpm" ~ php__version) }} -tt'
+      ansible.builtin.command: '{{ "php-fpm" if ansible_facts["os_family"] == "RedHat" else "php-fpm" ~ php__version }} -tt'
       register: '__molecule__php_fpm_dump_result'
       changed_when: false
 

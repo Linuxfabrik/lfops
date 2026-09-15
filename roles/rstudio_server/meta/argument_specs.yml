@@ -1,0 +1,163 @@
+argument_specs:
+  main:
+    options:
+
+      rstudio_server__conf_auth_cookies_force_secure:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Mark the authentication cookies as secure even though rserver itself speaks plain HTTP.'
+
+      rstudio_server__conf_auth_encrypt_password:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Encrypt the password in the browser before it is posted to the sign-in form.'
+
+      rstudio_server__conf_auth_minimum_user_id:
+        type: 'raw'
+        required: false
+        default: 'auto'
+        description: 'Lowest uid allowed to sign in. "auto" reads UID_MIN from /etc/login.defs.'
+
+      rstudio_server__conf_auth_required_user_group:
+        type: 'str'
+        required: false
+        default: 'rstudio-users'
+        description: 'Group a user must be a member of to sign in. Comma-separated for several groups, empty for none.'
+
+      rstudio_server__conf_auth_sign_in_throttle_seconds:
+        type: 'int'
+        required: false
+        default: 5
+        description: 'Seconds a user has to wait before signing in again after signing out.'
+
+      rstudio_server__conf_auth_timeout_minutes:
+        type: 'int'
+        required: false
+        default: 60
+        description: 'Minutes an idle user stays signed in. 0 disables the timeout.'
+
+      rstudio_server__conf_limit_file_upload_size_mb:
+        type: 'int'
+        required: false
+        default: 0
+        description: 'Maximum size of a file uploaded through the web interface, in MB. 0 lifts the limit.'
+
+      rstudio_server__conf_rsession_which_r:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path to the R program the sessions run. Empty lets rserver find R itself.'
+
+      rstudio_server__conf_session_timeout_minutes:
+        type: 'int'
+        required: false
+        default: 120
+        description: 'Minutes an idle session is kept before it is suspended or ended. 0 disables the timeout.'
+
+      rstudio_server__conf_session_timeout_suspend:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Suspend the session when the timeout is reached, instead of ending it.'
+
+      rstudio_server__conf_www_address:
+        type: 'str'
+        required: false
+        default: '0.0.0.0'
+        description: 'Address rserver listens on.'
+
+      rstudio_server__conf_www_enable_origin_check:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Reject requests whose Origin names a host other than the one they were sent to.'
+
+      rstudio_server__conf_www_frame_origin:
+        type: 'str'
+        required: false
+        default: 'none'
+        description: 'Origin allowed to embed RStudio in a frame.'
+
+      rstudio_server__conf_www_port:
+        type: 'int'
+        required: false
+        default: 8787
+        description: 'Port rserver listens on.'
+
+      rstudio_server__conf_www_root_path:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Path prefix a proxy in front adds to the URL. Empty means the server is reached at "/".'
+
+      rstudio_server__conf_www_thread_pool_size:
+        type: 'int'
+        required: false
+        default: 6
+        description: 'Threads serving incoming requests.'
+
+      rstudio_server__download_url:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Full URL of the RStudio Server package. Empty derives it from the version and the platform.'
+
+      rstudio_server__memory_max:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'MemoryMax of the service unit, for example "8G". Empty leaves the setting out.'
+
+      rstudio_server__pam_include:
+        type: 'str'
+        required: false
+        default: 'password-auth'
+        description: 'PAM stack /etc/pam.d/rstudio includes for authentication and account checks.'
+
+      rstudio_server__pam_minimum_uid:
+        type: 'int'
+        required: false
+        default: 1000
+        description: 'Lowest uid PAM lets through, checked before the password is.'
+
+      rstudio_server__rserver_conf_raw:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Verbatim content appended to rserver.conf.'
+
+      rstudio_server__rsession_conf_raw:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Verbatim content appended to rsession.conf.'
+
+      rstudio_server__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Start rstudio-server.service at boot.'
+
+      rstudio_server__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Runtime state of rstudio-server.service.'
+
+      rstudio_server__tasks_max:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'TasksMax of the service unit. Empty leaves the setting out.'
+
+      rstudio_server__version:
+        type: 'str'
+        required: true
+        description: 'Version of RStudio Server to install, as it appears in the package file name.'

@@ -1,9 +1,12 @@
-- block:
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
 
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
+
+- block:
 
   - name: 'install {{ __kvm_host__packages | join (" ") }}'
     ansible.builtin.package:

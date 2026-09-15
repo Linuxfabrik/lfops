@@ -11,16 +11,12 @@
     - 'never'
 
 
-- block:
-
-  - name: 'Set platform/version specific variables'
-    ansible.builtin.import_role:
-      name: 'shared'
-      tasks_from: 'platform-variables.yml'
-
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
   tags:
-    - 'icingaweb2_module_grafana'
-    - 'icingaweb2_module_grafana:configure'
+    - 'always'
 
 
 - block:

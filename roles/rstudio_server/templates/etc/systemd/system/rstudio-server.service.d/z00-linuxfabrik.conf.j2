@@ -1,0 +1,24 @@
+# {{ ansible_managed }}
+# 2026090901
+#
+# The package writes its unit to /usr/lib/systemd/system/rstudio-server.service and overwrites it
+# on every install and update, so every override lives here instead.
+
+[Service]
+{% if rstudio_server__memory_max | string | length %}
+# Every signed-in user gets an R process of their own, and R holds its data in memory, so a
+# single careless `read.csv()` can take the host down. The sessions are forked by rserver and
+# stay in this control group, so the cap reaches them.
+#
+# It protects the host, not the individual session: all sessions draw on the same budget, and on
+# overrun the OOM killer picks a process inside the group, which may well belong to a user other
+# than the one that caused it.
+MemoryMax={{ rstudio_server__memory_max }}
+{% endif %}
+{% if rstudio_server__tasks_max | string | length %}
+# Caps processes and threads in the control group. R forks for parallel work
+# (parallel::mclapply and anything a session shells out to, the RStudio terminal included), so
+# without this the host is bounded only by systemd's DefaultTasksMax, which is 15% of
+# kernel.pid_max and therefore commonly in the tens of thousands.
+TasksMax={{ rstudio_server__tasks_max }}
+{% endif %}

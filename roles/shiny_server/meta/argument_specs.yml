@@ -1,0 +1,243 @@
+argument_specs:
+  main:
+    options:
+
+      shiny_server__conf_allow_app_override:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Allow an application directory to override server settings through its own .shiny_app.conf.'
+
+      shiny_server__conf_app_idle_timeout:
+        type: 'int'
+        required: false
+        default: 5
+        description: 'Seconds an R process without a connection keeps running. 0 disables the cleanup.'
+
+      shiny_server__conf_app_init_timeout:
+        type: 'int'
+        required: false
+        default: 60
+        description: 'Seconds an application is given to start.'
+
+      shiny_server__conf_frame_options:
+        type: 'str'
+        required: false
+        default: 'sameorigin'
+        choices:
+          - 'allow'
+          - 'deny'
+          - 'sameorigin'
+        description: 'X-Frame-Options header sent on URLs served from Shiny applications.'
+
+      shiny_server__conf_http_keepalive_timeout:
+        type: 'int'
+        required: false
+        default: 45
+        description: 'Seconds an HTTP connection stays open between requests.'
+
+      shiny_server__conf_listen_host:
+        type: 'str'
+        required: false
+        default: '127.0.0.1'
+        description: 'Address Shiny Server listens on.'
+
+      shiny_server__conf_listen_port:
+        type: 'int'
+        required: false
+        default: 3838
+        description: 'Port Shiny Server listens on.'
+
+      shiny_server__conf_preserve_logs:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Keep the log files of Shiny processes that exited successfully.'
+
+      shiny_server__conf_run_as:
+        type: 'str'
+        required: false
+        default: 'shiny'
+        description: 'Account the applications run as unless a location names its own.'
+
+      shiny_server__conf_sanitize_errors:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Send only generic error messages to the browser.'
+
+      shiny_server__conf_simple_scheduler:
+        type: 'int'
+        required: false
+        default: 100
+        description: 'Maximum number of concurrent requests per application before the server answers 503.'
+
+      shiny_server__download_url:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Full URL of the Shiny Server package. Empty derives it from the version and the platform.'
+
+      shiny_server__htpasswd_dir:
+        type: 'str'
+        required: false
+        default: '/etc/httpd'
+        description: 'Directory the per-tenant .htpasswd files are written to.'
+
+      shiny_server__locations__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Shiny Server locations. Dependent-role injection.'
+
+      shiny_server__locations__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Shiny Server locations. Group-level override.'
+
+      shiny_server__locations__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Shiny Server locations. Host-level override.'
+
+      shiny_server__log_dir:
+        type: 'str'
+        required: false
+        default: '/var/log/shiny-server'
+        description: 'Directory the application logs are written to.'
+
+      shiny_server__logrotate:
+        type: 'int'
+        required: false
+        description: 'Number of rotated application log files to keep.'
+
+      shiny_server__memory_max:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'MemoryMax of the service, covering the R workers. Empty leaves the setting out of the drop-in.'
+
+      shiny_server__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service.'
+
+      shiny_server__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of the shiny-server service.'
+
+      shiny_server__shared_dir:
+        type: 'str'
+        required: false
+        default: '/srv/shiny-server/shared'
+        description: 'Directory holding the application code shared between tenants.'
+
+      shiny_server__shared_group:
+        type: 'str'
+        required: false
+        default: 'shiny-shared'
+        description: 'Group that owns the shared code tree and that every run_as account is a member of.'
+
+      shiny_server__site_dir:
+        type: 'str'
+        required: false
+        default: '/srv/shiny-server'
+        description: 'Root directory the role creates; the shared and tenant trees live below it.'
+
+      shiny_server__tasks_max:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'TasksMax of the service, covering the R workers. Empty leaves the setting out of the drop-in.'
+
+      shiny_server__tenants_dir:
+        type: 'str'
+        required: false
+        default: '/srv/shiny-server/tenants'
+        description: 'Directory below which the per-tenant application directories live.'
+
+      shiny_server__tmp_dir:
+        type: 'str'
+        required: false
+        default: '/var/lib/shiny-server/tmp'
+        description: 'TMPDIR of the R workers, where uploaded files land.'
+
+      shiny_server__users_home_dir:
+        type: 'str'
+        required: false
+        default: '/var/lib/shiny-server/home'
+        description: 'Home directory root of the per-location run_as users.'
+
+      shiny_server__version:
+        type: 'str'
+        required: true
+        description: 'The version of Shiny Server to install.'
+
+      shiny_server__vhost_default_allowed_http_methods:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'GET'
+          - 'HEAD'
+          - 'OPTIONS'
+          - 'POST'
+        description: 'HTTP methods the generated vHosts allow.'
+
+      shiny_server__vhost_default_auth_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Protect the generated vHosts with HTTP basic authentication.'
+
+      shiny_server__vhost_default_conf_proxy_timeout:
+        type: 'int'
+        required: false
+        default: 300
+        description: 'ProxyTimeout of the generated vHosts, in seconds.'
+
+      shiny_server__vhost_default_credentials_header_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Pass the authenticated user into the application as session$user.'
+
+      shiny_server__vhost_default_virtualhost_port:
+        type: 'int'
+        required: false
+        default: 80
+        description: 'Port of the generated vHosts.'
+
+      shiny_server__vhosts__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Apache httpd vHosts, one per tenant. Dependent-role injection.'
+
+      shiny_server__vhosts__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Apache httpd vHosts, one per tenant. Group-level override.'
+
+      shiny_server__vhosts__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Apache httpd vHosts, one per tenant. Host-level override.'

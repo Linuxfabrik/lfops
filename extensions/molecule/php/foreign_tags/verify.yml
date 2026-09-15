@@ -1,0 +1,33 @@
+# The converge alone only proves that the run limited to a foreign tag did not abort. The
+# assertions below make sure that means something: the run has to have reached the hosts with that
+# tag, and the hosts have to be without PHP, since on a host that has it the version discovery
+# succeeds whatever the role does.
+- name: 'Verify the foreign-tag run reached hosts without PHP'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Get the list of installed packages'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert no PHP package is installed'
+      ansible.builtin.assert:
+        that: '__molecule__php_packages | length == 0'
+        fail_msg: 'the host has PHP, so the run did not test a host without it: {{ __molecule__php_packages | join(", ") }}'
+      vars:
+        __molecule__php_packages: '{{ ansible_facts["packages"] | list | select("match", "^php") | list | sort }}'
+
+    - name: 'slurp /var/log/linuxfabrik-lfops.log'
+      ansible.builtin.slurp:
+        src: '/var/log/linuxfabrik-lfops.log'
+      register: '__molecule__lfops_log_result'
+
+    # log-start.yml records every play together with its tag selection, so this proves the run
+    # reached the host with the foreign tag instead of matching no host at all.
+    - name: 'Assert the php playbook ran with --tags apache_httpd'
+      ansible.builtin.assert:
+        that: '__molecule__lfops_log is search("Playbook linuxfabrik\.lfops\.php: START \(Tags: \[.apache_httpd.\]")'
+        fail_msg: 'no run of the php playbook with --tags apache_httpd in /var/log/linuxfabrik-lfops.log: {{ __molecule__lfops_log }}'
+      vars:
+        __molecule__lfops_log: '{{ __molecule__lfops_log_result["content"] | ansible.builtin.b64decode }}'

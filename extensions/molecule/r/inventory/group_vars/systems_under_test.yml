@@ -1,0 +1,11 @@
+# A CRAN package the Posit Public Package Manager ships a binary for and that
+# carries compiled code, so the run also proves the build dependencies are not
+# needed for the common case.
+r__cran_packages__group_var:
+  - name: 'jsonlite'
+
+# Written to Renviron.site. verify.yml reads it back out of a fresh R process,
+# which is the only way to confirm the file is actually picked up.
+r__renviron_site__group_var:
+  - name: 'MOLECULE_R_PROBE'
+    value: '/var/lib/molecule-r-probe'

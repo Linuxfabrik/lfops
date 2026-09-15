@@ -22,17 +22,24 @@
       when:
         - 'not monitoring_plugins_grafana_dashboards__skip_repo_grafana | d(false)'
 
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          (not monitoring_plugins_grafana_dashboards__skip_grafana | d(false)) | ternary(grafana__python__modules__dependent_var, [])
+        }}'
+      when:
+        - 'not monitoring_plugins_grafana_dashboards__skip_python | d(false)'
+
     - role: 'linuxfabrik.lfops.grafana'
       grafana__provisioning_datasources__dependent_var: '{{ monitoring_plugins_grafana_dashboards__grafana__provisioning_datasources__dependent_var }}'
       when:
-        - 'not monitoring_plugins_grafana_dashboards__skip_grafana | default(false)'
+        - 'not monitoring_plugins_grafana_dashboards__skip_grafana | d(false)'
 
     - role: 'linuxfabrik.lfops.grafana_grizzly'
       grafana__provisioning_service_accounts__dependent_var: '{{
-          (not monitoring_plugins_grafana_dashboards__skip_grafana_grizzly | default(false)) | ternary(grafana_grizzly__grafana__provisioning_service_accounts__dependent_var, [])
+          (not monitoring_plugins_grafana_dashboards__skip_grafana_grizzly | d(false)) | ternary(grafana_grizzly__grafana__provisioning_service_accounts__dependent_var, [])
         }}'
       when:
-        - 'not monitoring_plugins_grafana_dashboards__skip_grafana_grizzly | default(false)'
+        - 'not monitoring_plugins_grafana_dashboards__skip_grafana_grizzly | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
 

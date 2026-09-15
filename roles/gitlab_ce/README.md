@@ -40,14 +40,15 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `gitlab_ce__rb_external_url`
 
-* The URL of your GitLab instance. Currently, only `http://` is supported by this role. If running behind a reverse proxy or on a trusted network, this is good enough.
+* The URL of your GitLab instance.
+* Behind a reverse proxy that terminates TLS, use `https://` and keep `gitlab_ce__rb_nginx_listen_https` at `false`. GitLab then still listens on plain HTTP, but builds its links for HTTPS and marks its session cookie `Secure`. With `http://`, the session cookie goes out without `Secure`.
 * Type: String.
 * Default: none
 
 Example:
 ```yaml
 # mandatory
-gitlab_ce__rb_external_url: 'http://git.example.com'
+gitlab_ce__rb_external_url: 'https://git.example.com'
 ```
 
 

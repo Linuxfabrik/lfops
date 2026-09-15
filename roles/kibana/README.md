@@ -211,6 +211,14 @@ kibana__xpack_security_encryption_key: '...'
 * Type: String.
 * Default: `'started'`
 
+`kibana__xpack_security_secure_cookies`
+
+* Whether the session cookie carries the `Secure` flag, so that browsers only return it over HTTPS. With `kibana__server_ssl_enabled: true` Kibana sets the flag regardless of this variable.
+* Set it to `false` for a Kibana that browsers reach over plain HTTP, which otherwise cannot log anyone in, because browsers drop a `Secure` cookie received over HTTP.
+* Type: Bool.
+* Default: `true`
+* Deviates from the upstream default `false`: Kibana sets the flag on its own only when it terminates TLS itself, so behind a reverse proxy that terminates TLS the session cookie would go out without it.
+
 Example:
 ```yaml
 # optional
@@ -247,6 +255,7 @@ kibana__server_ssl_enabled: true
 kibana__server_ssl_key: '/etc/pki/tls/private/kibana-server.key'
 kibana__service_enabled: true
 kibana__service_state: 'started'
+kibana__xpack_security_secure_cookies: true
 ```
 
 

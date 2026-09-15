@@ -578,7 +578,38 @@ Controlled vocabulary of standard `role_name:section` tags (alphabetical):
 * `role_name:upgrade`: Runs the post-update migration / upgrade steps after the package itself was updated.
 * `role_name:users`: Creates, updates and deletes the application or service user accounts managed by the role.
 
-The Ansible built-in tags `always` and `never` are reserved for their built-in meaning: tag the platform-variable loading and `assert` validation tasks with `always` so the variables and checks are present even when the role runs with a specific `--tags` selection.
+The Ansible built-in tags `always` and `never` are reserved for their built-in meaning. `always` marks the prerequisites the rest of the role builds on, so they are in place under any `--tags` selection:
+
+* Loading the platform variables (`shared/tasks/platform-variables.yml`).
+* `assert` validation of the inventory. Ansible already runs the `meta/argument_specs.yml` validation under `always` by itself.
+* Discovery of host state whose result another role, or another tag of the same role, needs, such as `__php__installed_version`.
+
+Tag a prerequisite `always` instead of listing the role's tags on it. Such a list misses every tag added to the role later, and a task under that tag then aborts on an undefined variable while the same task works under the role's main tag.
+
+A task tagged `always` also runs when its role is not the one the operator selected. `setup_nextcloud --tags apache_httpd` against a fresh host, the usual way to bring up the vHosts before the certificate exists, runs the `always` tasks of every role in the playbook while their install blocks are filtered out. An `always` task therefore meets hosts on which the rest of its role has never run, and has to work there:
+
+* Read host state only in a way that reports absence instead of failing: the `exists` key of `ansible.builtin.stat`, or `"php" in ansible_facts["packages"]` before `ansible_facts["packages"]["php"]`.
+* Leave a discovered fact undefined while the software is missing, and never substitute a guessed value. Every consumer guards with `is defined`, as `roles/nextcloud/vars/main.yml` does (see "OS-specific Dependent Variables").
+* Where the inventory already carries the value, such as a declared version, prefer it over discovery.
+
+```yaml
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Get PHP version'
+    ansible.builtin.set_fact:
+      __php__installed_version: '{{ ansible_facts["packages"]["php"][0]["version"] | regex_search("\d\.\d") }}'
+    when:
+      - '"php" in ansible_facts["packages"]'
+
+  tags:
+    - 'always'
+```
+
+A role whose `always` tasks read host state gets a `foreign_tags` Molecule sub-scenario, which runs the playbook with another role's tag against hosts without the software. `extensions/molecule/php/foreign_tags` is the reference.
 
 
 #### Variables

@@ -1,0 +1,26 @@
+rstudio_server__conf_auth_cookies_force_secure: true  # upstream default: false
+rstudio_server__conf_auth_encrypt_password: true
+rstudio_server__conf_auth_minimum_user_id: 'auto'
+rstudio_server__conf_auth_required_user_group: 'rstudio-users'  # upstream default: '' (every account)
+rstudio_server__conf_auth_sign_in_throttle_seconds: 5
+rstudio_server__conf_auth_timeout_minutes: 60
+rstudio_server__conf_limit_file_upload_size_mb: 0
+rstudio_server__conf_rsession_which_r: ''
+rstudio_server__conf_session_timeout_minutes: 120
+rstudio_server__conf_session_timeout_suspend: true
+rstudio_server__conf_www_address: '0.0.0.0'
+rstudio_server__conf_www_enable_origin_check: true  # upstream default: false
+rstudio_server__conf_www_frame_origin: 'none'
+rstudio_server__conf_www_port: 8787
+rstudio_server__conf_www_root_path: ''
+rstudio_server__conf_www_thread_pool_size: 6
+# Derived from rstudio_server__version and the platform in vars/RedHat.yml when empty.
+rstudio_server__download_url: ''
+rstudio_server__memory_max: ''
+rstudio_server__pam_include: 'password-auth'
+rstudio_server__pam_minimum_uid: 1000
+rstudio_server__rserver_conf_raw: ''
+rstudio_server__rsession_conf_raw: ''
+rstudio_server__service_enabled: true
+rstudio_server__service_state: 'started'
+rstudio_server__tasks_max: ''

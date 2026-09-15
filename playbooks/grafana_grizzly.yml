@@ -22,6 +22,13 @@
       when:
         - 'not grafana_server__skip_repo_grafana | d(false)'
 
+    - role: 'linuxfabrik.lfops.python'
+      python__modules__dependent_var: '{{
+          (not grafana_server__skip_grafana | d(false)) | ternary(grafana__python__modules__dependent_var, [])
+        }}'
+      when:
+        - 'not grafana_server__skip_python | d(false)'
+
     - role: 'linuxfabrik.lfops.grafana'
       grafana__provisioning_service_accounts__dependent_var: '{{
           grafana_grizzly__grafana__provisioning_service_accounts__dependent_var
