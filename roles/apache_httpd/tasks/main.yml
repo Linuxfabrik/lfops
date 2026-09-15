@@ -140,12 +140,15 @@
       mode: 'g-w'
       recurse: true
 
-  - name: 'chown -R apache:apache {{ apache_httpd__conf_document_root }}'
-    ansible.builtin.file:
-      path: '{{ apache_httpd__conf_document_root }}'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: '{{ __shared__apache_httpd_group }}'
-      recurse: true
+  # Only the content of the document root, not the directory itself: httpd's tmpfiles rule
+  # (`d /var/www/html 755 root root`) resets the directory to root:root on every boot and on every
+  # package transaction that installs a tmpfiles file, so a chown of it never lasts and breaks
+  # idempotence on a fresh host. Verified with httpd 2.4.62 on Rocky 9. --no-dereference, so a
+  # symlink in the document root does not hand its target to the web server user.
+  - name: 'chown --no-dereference apache:apache everything below {{ apache_httpd__conf_document_root }}'
+    ansible.builtin.command: 'find {{ apache_httpd__conf_document_root | quote }} -mindepth 1 \( ! -user {{ __shared__apache_httpd_user }} -o ! -group {{ __shared__apache_httpd_group }} \) -exec chown --changes --no-dereference {{ __shared__apache_httpd_user }}:{{ __shared__apache_httpd_group }} {} +'
+    register: 'apache_httpd__chown_document_root_result'
+    changed_when: 'apache_httpd__chown_document_root_result["stdout"] | length > 0'
     ignore_errors: true
     when: 'not apache_httpd__skip_document_root_chown'
 

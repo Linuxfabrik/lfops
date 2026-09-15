@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: The role hands the content of the document root to the web server user, but leaves the directory itself to the httpd package, whose tmpfiles rule resets it to `root` on every boot and after some package installations. A second run on a fresh host no longer reports the ownership as changed.
 * **role:monitoring_plugins**: A package install that fails no longer leaves the Monitoring Plugins unlocked, so a later system update cannot move them past `monitoring_plugins__version`. The lock that existed before the run is set again.
 * **role:monitoring_plugins**: A run against an unchanged host no longer reports changes for the package versionlock ([#353](https://github.com/Linuxfabrik/lfops/issues/353)).
 * **role:collabora**: A run against an unchanged host no longer reports changes for the coolwsd log file and the ownership of `/etc/coolwsd`.

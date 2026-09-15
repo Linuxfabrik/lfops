@@ -68,7 +68,7 @@ Manual steps:
 * Installs base packages and Apache packages/modules.
 * Creates the `conf-available/conf-enabled`, `mods-available/mods-enabled`, `sites-available/sites-enabled` directory structure.
 * Creates symlink for the log directory.
-* Sets ownership on the document root (`chown -R apache:apache`).
+* Sets ownership on everything below the document root (`chown --no-dereference apache:apache`), not on the document root itself.
 * Hardens permissions on the config directory (`chmod -R g-w`).
 * Ensures httpd service is in the desired state.
 * Triggers: httpd.service reload, or restart when a module is enabled or disabled (see `apache_httpd:mods`).
@@ -383,7 +383,7 @@ apache_httpd__conf_trace_enable: 'Off'
 
 `apache_httpd__skip_document_root_chown`
 
-* Set to true to skip the `chown -R apache:apache` of the document root.
+* Set to true to skip handing the content of the document root to the web server user. The document root directory itself keeps the owner the httpd package gives it, since the package's tmpfiles rule resets it on every boot anyway.
 * Type: Bool.
 * Default: `false`
 
