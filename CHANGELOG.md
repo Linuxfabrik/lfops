@@ -72,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:apache_httpd**: The `wordpress` vHost refuses to run PHP files below `wp-content/uploads`, so that a plugin flaw that lets visitors upload such a file no longer leads to code execution.
 * **role:repo_collabora_code**: dnf verifies the signatures of the Collabora packages, as Collabora's own installation instructions do, where the repository file had switched the check off.
 
 
