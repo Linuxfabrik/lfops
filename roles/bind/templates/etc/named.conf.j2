@@ -1,62 +1,85 @@
 # {{ ansible_managed }}
-# 2025070301
+# 2026091502
+#
 # https://bind9.readthedocs.io/en/latest/reference.html
+# Follows the /etc/named.conf shipped by the bind package, with the Linuxfabrik additions at the
+# end of the options block.
 
 acl "trusted" {
     localhost;
     localnets;
-    {% for item in bind__trusted_networks %}
+{% for item in bind__trusted_networks %}
     {{ item }};
-    {% endfor %}
+{% endfor %}
 };
 
 options {
+    listen-on port 53 {
+{% for item in bind__listen_on_addresses %}
+        {{ item }};
+{% endfor %}
+    };
+    listen-on-v6 port 53 { {{ bind__listen_ipv6 | ternary('any', 'none') }}; };
+    directory "/var/named";
+    dump-file "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    secroots-file "/var/named/data/named.secroots";
+    recursing-file "/var/named/data/named.recursing";
+
+    recursion {{ bind__recursion | ternary('yes', 'no') }};
+
+{% if ansible_facts['distribution_major_version'] | int == 8 %}
+{# BIND 9.11 only; later versions removed the option and always serve DNSSEC data. #}
+    dnssec-enable yes;
+{% endif %}
+    dnssec-validation {{ bind__dnssec_validation | ternary('yes', 'no') }};
+{% if bind__dnssec_validation and __bind__dnssec_validate_except | length > 0 %}
+    validate-except {
+{% for item in __bind__dnssec_validate_except %}
+        "{{ item }}";
+{% endfor %}
+    };
+{% endif %}
+
+    managed-keys-directory "/var/named/dynamic";
+{% if ansible_facts['distribution_major_version'] | int >= 9 %}
+    geoip-directory "/usr/share/GeoIP";
+{% endif %}
+
+    pid-file "/run/named/named.pid";
+    session-keyfile "/run/named/session.key";
+
+    // Linuxfabrik: internal DNS server, forwarder and cache
     allow-new-zones {{ bind__allow_new_zones | ternary('yes', 'no') }};
     allow-query-cache {
-        {% for item in bind__allow_query_cache %}
+{% for item in bind__allow_query_cache %}
         {{ item }};
-        {% endfor %}
+{% endfor %}
     };
     allow-recursion {
-        {% for item in bind__allow_recursion %}
+{% for item in bind__allow_recursion %}
         {{ item }};
-        {% endfor %}
+{% endfor %}
     };
     allow-transfer {
-        {% for item in bind__allow_transfer %}
+{% for item in bind__allow_transfer %}
         {{ item }};
-        {% endfor %}
+{% endfor %}
     };
-    directory "/var/named";
-    disable-empty-zone yes;
-    {% if ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] | int <= 8 %}
-    {# The dnssec-enable option has been obsoleted and no longer has any effect. DNSSEC responses are always enabled if signatures and other DNSSEC data are present. See https://bind9.readthedocs.io/en/v9.16.16/notes.html#removed-features #}
-    dnssec-enable no;
-    {% endif %}
-    dnssec-validation no;
-    dump-file "/var/named/data/cache_dump.db";
     forward only;
     forwarders {
-        {% for item in bind__forwarders %}
+{% for item in bind__forwarders %}
         {{ item }};
-        {% endfor %}
+{% endfor %}
     };
-    listen-on port 53 {
-        {% for item in bind__listen_on_addresses %}
-        {{ item }};
-        {% endfor %}
-    };
-    listen-on-v6 { {{ bind__listen_ipv6 | ternary('any', 'none') }}; };
-    managed-keys-directory "/var/named/dynamic";
-    memstatistics-file "/var/named/data/named_mem_stats.txt";
-    pid-file "/run/named/named.pid";
-    recursion {{ bind__recursion | ternary('yes', 'no') }};
-    {% if bind__rpz_zone is defined and bind__rpz_zone | length %}
+{% if bind__rpz_zone is defined and bind__rpz_zone | length %}
     response-policy { zone "{{ bind__rpz_zone }}"; };
-    {% endif %}
-    session-keyfile "/run/named/session.key";
-    statistics-file "/var/named/data/named_stats.txt";
+{% endif %}
     version "Linuxfabrik";
+
+    /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+    include "/etc/crypto-policies/back-ends/bind.config";
 };
 
 logging {

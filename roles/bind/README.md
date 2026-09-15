@@ -143,6 +143,18 @@ bind__zones:
 * Type: List of strings.
 * Default: `['none']`
 
+`bind__dnssec_validate_except`
+
+* List of domains below which named does not validate DNSSEC. Needed for internal zones that named gets from other servers through `bind__named_conf_raw`, and for forwarders that strip the DNSSEC records. The names of the `forward`, `static-stub` and `stub` zones in `bind__zones` are excluded automatically. Not supported on RHEL 8, which has to use `bind__dnssec_validation: false` instead.
+* Type: List of strings.
+* Default: `[]`
+
+`bind__dnssec_validation`
+
+* Enables or disables DNSSEC validation of the answers named resolves, as the bind package does. Forged or broken answers for signed zones are answered with `SERVFAIL`. Zones below a signed parent that are only served internally have to be excluded, see `bind__dnssec_validate_except`. named uses the algorithms that the system-wide crypto policy allows.
+* Type: Bool.
+* Default: `true`
+
 `bind__forwarders`
 
 * List of DNS servers to which DNS queries to unknown domain names should be forwarded.
@@ -224,6 +236,9 @@ bind__allow_recursion:
   - 'none'
 bind__allow_transfer:
   - '192.0.2.0/24'
+bind__dnssec_validate_except:
+  - 'corp.example.com'
+bind__dnssec_validation: true
 bind__forwarders:
   - '1.0.0.1'
   - '1.1.1.1'
