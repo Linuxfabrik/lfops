@@ -25,14 +25,12 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/pgdg-redhat-all.repo'
 
-  # RHEL 10 ships no module streams, where `dnf module disable` fails with "missing groups or
-  # modules: postgresql". Verified on Rocky 10.
   - name: 'dnf module disable -y postgresql # prevent the default module stream from being used'
     ansible.builtin.command: 'dnf module disable -y postgresql'
     register: 'repo_postgresql__module_disable_result'
     changed_when: "'Nothing to do' not in repo_postgresql__module_disable_result['stdout']"
-    when:
-      - 'ansible_facts["distribution_major_version"] | int < 10'
+    # RHEL 10 ships no module metadata, `dnf module disable` exits 1 there
+    when: 'ansible_facts["distribution_major_version"] | int in [8, 9]'
 
   tags:
     - 'repo_postgresql'

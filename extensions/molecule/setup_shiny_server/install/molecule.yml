@@ -1,0 +1,10 @@
+# Molecule scenario marker for the 'setup_shiny_server' scenario, run with
+# `molecule test --scenario-name setup_shiny_server`.
+#
+# It overrides the prepare step (see prepare.yml): the role deploys the directory structure but no
+# application code, and Shiny Server answers 500 for an application directory that holds neither
+# app.R nor server.R. The tenant applications therefore have to be on the host before converge
+# runs the playbook under test.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

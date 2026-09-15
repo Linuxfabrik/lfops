@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026041701
+# 2026091101
 
 # For more configuration options see the configuration guide for Kibana in
 # https://www.elastic.co/guide/index.html
@@ -188,6 +188,10 @@ server.securityResponseHeaders.disableEmbedding: {{ kibana__server_security_resp
 
 # Content Security Policy (CSP) - strict mode provides additional security against XSS attacks.
 csp.strict: {{ kibana__csp_strict | string | lower }}
+
+# Marks the session cookie as Secure. Kibana does this on its own only when it terminates TLS
+# itself (server.ssl.enabled), not behind a reverse proxy that terminates TLS in front of it.
+xpack.security.secureCookies: {{ kibana__xpack_security_secure_cookies | bool | string | lower }}
 
 # =================== Xpack Encryption Keys ===================
 # Encryption keys for saved objects, reporting, and security features.

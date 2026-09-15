@@ -1,0 +1,39 @@
+# {{ ansible_managed }}
+# 2026090902
+#
+# Options of the rserver process. `rserver --help` lists them all; anything without a role
+# variable goes into rstudio_server__rserver_conf_raw.
+#
+# rserver reads this file at startup only. `systemctl reload` (SIGHUP) re-reads the logging and
+# the env-vars configuration, not this file, so a change here needs a restart.
+
+# Cookies are marked secure whenever the connection is HTTPS. Behind a proxy that terminates
+# TLS, rserver only ever sees plain HTTP and needs to be told.
+auth-cookies-force-secure={{ rstudio_server__conf_auth_cookies_force_secure | bool | ternary(1, 0) }}
+# The browser encrypts the password with the server's public key before it is posted, so it does
+# not travel in the clear even where the connection does. Turn it off only if a proxy in front
+# mangles the form, and then only on a connection that carries TLS.
+auth-encrypt-password={{ rstudio_server__conf_auth_encrypt_password | bool | ternary(1, 0) }}
+auth-minimum-user-id={{ rstudio_server__conf_auth_minimum_user_id }}
+{% if rstudio_server__conf_auth_required_user_group | length %}
+auth-required-user-group={{ rstudio_server__conf_auth_required_user_group }}
+{% endif %}
+auth-sign-in-throttle-seconds={{ rstudio_server__conf_auth_sign_in_throttle_seconds }}
+auth-timeout-minutes={{ rstudio_server__conf_auth_timeout_minutes }}
+{% if rstudio_server__conf_rsession_which_r | length %}
+rsession-which-r={{ rstudio_server__conf_rsession_which_r }}
+{% endif %}
+www-address={{ rstudio_server__conf_www_address }}
+# Rejects a request whose Origin or Referer names a host other than the one it was sent to,
+# which is what keeps another site from driving a signed-in browser session.
+www-enable-origin-check={{ rstudio_server__conf_www_enable_origin_check | bool | ternary(1, 0) }}
+www-frame-origin={{ rstudio_server__conf_www_frame_origin }}
+www-port={{ rstudio_server__conf_www_port }}
+{% if rstudio_server__conf_www_root_path | length %}
+www-root-path={{ rstudio_server__conf_www_root_path }}
+{% endif %}
+www-thread-pool-size={{ rstudio_server__conf_www_thread_pool_size }}
+{% if rstudio_server__rserver_conf_raw | length %}
+
+{{ rstudio_server__rserver_conf_raw }}
+{% endif %}

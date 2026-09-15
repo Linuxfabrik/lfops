@@ -1,0 +1,18 @@
+# Shiny Server re-reads its configuration on SIGHUP, and the unit maps ExecReload to it, so a
+# configuration change costs no outage and needs no restart.
+- name: 'shiny_server: reload shiny-server'
+  ansible.builtin.service:
+    name: 'shiny-server'
+    state: 'reloaded'
+  when:
+    - '__shiny_server__service_state_result is not defined or __shiny_server__service_state_result is not changed'
+    - 'shiny_server__service_state != "stopped"'
+
+- name: 'shiny_server: restart shiny-server'
+  ansible.builtin.service:
+    name: 'shiny-server'
+    state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
+    - '__shiny_server__service_state_result is not defined or __shiny_server__service_state_result is not changed'
+    - 'shiny_server__service_state != "stopped"'

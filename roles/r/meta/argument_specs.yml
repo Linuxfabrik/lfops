@@ -1,0 +1,72 @@
+# r__cran_repo_url is deliberately absent: its default in defaults/main.yml references
+# __r__cran_repo_url from vars/RedHat<major>.yml, which is not loaded yet when argument_specs
+# validation runs at role entry. It is documented in the README instead.
+argument_specs:
+  main:
+    options:
+
+      r__cran_packages__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'CRAN packages to install. Dependent-role injection.'
+
+      r__cran_packages__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'CRAN packages to install. Group-level override.'
+
+      r__cran_packages__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'CRAN packages to install. Host-level override.'
+
+      r__http_user_agent_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Set HTTPUserAgent so that the Posit Public Package Manager serves binary packages.'
+
+      r__renviron_site__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Environment variables written to Renviron.site. Dependent-role injection.'
+
+      r__renviron_site__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Environment variables written to Renviron.site. Group-level override.'
+
+      r__renviron_site__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Environment variables written to Renviron.site. Host-level override.'
+
+      r__renviron_site_raw:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Verbatim content appended to Renviron.site.'
+
+      r__rprofile_site_raw:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Verbatim R code appended to Rprofile.site.'
+
+      r__skip_build_dependency_installation:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Skip the development packages needed to build CRAN packages from source.'

@@ -6,6 +6,12 @@ This role deploys the official [PostgreSQL Repo](https://www.postgresql.org/down
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* On RHEL 8 and 9, the role disables the distribution's `postgresql` module, so the PostgreSQL packages come from the PGDG repositories.
+* The PostgreSQL version repositories (`pgdg14` to `pgdg18`) get `priority=90`, ahead of dnf's default of 99. This deviates from the upstream repository file, which sets no priority: RHEL 10 AppStream ships `postgresql18-*` under the same package names as PGDG but with the distribution's file layout (`/usr/bin`, `postgresql-setup`), so without the priority dnf would install or update to whichever build has the higher version, while the `postgresql_server` role relies on the PGDG layout below `/usr/pgsql-<version>`. The common repository (`pgdg-common`) keeps the default priority, so packages such as `pgbouncer`, `barman` or `python3-psycopg2` still come from whichever repository has the newer build.
+
+
 ## Tags
 
 `repo_postgresql`

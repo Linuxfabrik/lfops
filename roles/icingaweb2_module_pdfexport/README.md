@@ -23,6 +23,7 @@ This role is tested with the following IcingaWeb2 PDF Export Module versions:
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
+* On RHEL-compatible systems, the EPEL repository must be enabled for the headless Chromium (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)), and on Rocky 9 and newer also the CRB repository (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)).
 * A headless Chromium backend must provide the remote debugging interface this module connects to (role: [linuxfabrik.lfops.chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless)).
 
 

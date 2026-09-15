@@ -191,6 +191,25 @@
       - 'mariadb_server__cnf_wsrep_on is false'
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  # RHEL 10 merges /usr/sbin into /usr/bin, and its policy looks up every /usr/sbin path under
+  # /usr/bin (file_contexts.subs_dist). mysql-selinux-1.0.14-1.el10_0 only labels
+  # /usr/sbin/mariadbd, so until the base policy defines /usr/bin/mariadbd itself, the binary
+  # keeps bin_t, mariadbd runs in initrc_t and httpd_t clients lose the socket. Verified on
+  # Rocky 10: selinux-policy-targeted-42.1.18-4.el10 lacks the entry, 42.1.18-4.el10_2.3 has
+  # it. The restorecon below relabels the binary and its handler moves a running mariadbd into
+  # mysqld_t.
+  - name: 'semanage fcontext --add --type mysqld_exec_t /usr/bin/mariadbd'
+    community.general.sefcontext:
+      setype: 'mysqld_exec_t'
+      target: '/usr/bin/mariadbd'
+      ftype: 'f'
+      state: 'present'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["distribution_major_version"] | int >= 10'
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      - 'mariadb_server__cnf_wsrep_on is false'
+
   # /var/lib/mysql(-files|-keyring)?(/.*)?             all files          system_u:object_r:mysqld_db_t:s0
   - name: 'semanage fcontext --add --type mysqld_db_t {{ mariadb_server__cnf_datadir__combined_var | ansible.builtin.regex_escape }}(-files|-keyring)?(/.*)?'
     community.general.sefcontext:

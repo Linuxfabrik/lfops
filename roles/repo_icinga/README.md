@@ -8,7 +8,7 @@ This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 
 ## Requirements
 
-* For RHEL (and compatible) hosts an [Icinga Repo Subscription](https://www.linuxfabrik.ch/en/products/icinga-subscriptions) is required.
+* For RHEL (and compatible) hosts an [Icinga Repo Subscription](https://www.linuxfabrik.ch/en/products/icinga-subscriptions) is required: set `repo_icinga__basic_auth_login`, or `repo_icinga__mirror_url` for a mirror that provides the repository. Without either, the role aborts on these hosts. Fedora hosts use the public repository.
 
 
 ## Tags

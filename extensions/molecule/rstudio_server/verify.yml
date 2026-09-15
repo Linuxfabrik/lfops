@@ -1,0 +1,215 @@
+# What only the running system can confirm is whether a user can actually sign
+# in and get an R session of their own: the PAM profile the role deploys, the
+# group gate, the session cookie and the launch of rsession under the user's own
+# account are one chain, and every link of it lives outside the files the role
+# writes. The configuration files themselves are not checked; the running
+# service is asked for the values instead.
+- name: 'Verify rstudio_server'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+
+    __molecule__rstudio_server_url: 'http://127.0.0.1:8788'
+
+    # www-verify-user-agent is on by default and sends anything that does not
+    # look like a browser to /unsupported_browser.htm.
+    __molecule__rstudio_server_user_agent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
+
+  tasks:
+
+    # The session launch below is what proves the SELinux file context of the
+    # role: without it the service stays in init_t and starts no session at all.
+    # A host that happens to run permissive would pass that assertion without
+    # proving anything, so the mode is asserted first.
+    - name: 'getenforce'
+      ansible.builtin.command: 'getenforce'
+      changed_when: false
+      register: '__molecule__rstudio_server_getenforce_result'
+
+    - name: 'Assert that SELinux is enforcing'
+      ansible.builtin.assert:
+        that: '__molecule__rstudio_server_getenforce_result["stdout"] == "Enforcing"'
+        fail_msg: 'SELinux is {{ __molecule__rstudio_server_getenforce_result["stdout"] }}, so the session test proves nothing.'
+
+    - name: 'ps -eZ' # noqa command-instead-of-module (read-only process query)
+      ansible.builtin.command: 'ps -eZ'
+      changed_when: false
+      register: '__molecule__rstudio_server_ps_result'
+
+    - name: 'Assert that rserver runs in the unconfined_service_t domain'
+      ansible.builtin.assert:
+        that: '__molecule__rstudio_server_ps_result["stdout_lines"]
+               | select("search", "unconfined_service_t.*rserver") | list | length > 0'
+        fail_msg: >-
+          rserver does not run in unconfined_service_t, so the bin_t file context of the role did not
+          reach the binary and no user will get a session.
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that rstudio-server.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["rstudio-server.service"]["state"] == "running"'
+
+    - name: 'systemctl show rstudio-server' # noqa command-instead-of-module (read-only property query)
+      ansible.builtin.command: 'systemctl show rstudio-server --property=MemoryMax --property=TasksMax'
+      changed_when: false
+      register: '__molecule__rstudio_server_unit_result'
+
+    # Proves that the drop-in reaches the running unit, which the package would
+    # have overwritten had the role templated the unit file itself.
+    - name: 'Assert that the resource limits of the drop-in are in effect'
+      ansible.builtin.assert:
+        that:
+          - '"MemoryMax=2147483648" in __molecule__rstudio_server_unit_result["stdout"]'
+          - '"TasksMax=500" in __molecule__rstudio_server_unit_result["stdout"]'
+
+    # The address and the port are not the defaults, so a service answering here
+    # is one that read the configuration the role deployed.
+    - name: 'curl {{ __molecule__rstudio_server_url }}/auth-sign-in'
+      ansible.builtin.uri:
+        url: '{{ __molecule__rstudio_server_url }}/auth-sign-in'
+        status_code: 200
+      register: '__molecule__rstudio_server_sign_in_page_result'
+
+    # A failed sign-in answers 302 as well, back to the sign-in page with an
+    # error in the query string, so the redirect target is what tells the two
+    # apart. The cookies cannot be used for it: ansible.builtin.uri returns none
+    # on a redirect it does not follow, and following it would need the session
+    # cookie the redirect is carrying.
+    - name: 'Sign in as a member of the login group'
+      ansible.builtin.uri:
+        url: '{{ __molecule__rstudio_server_url }}/auth-do-sign-in'
+        method: 'POST'
+        body_format: 'form-urlencoded'
+        body:
+          appUri: '/'
+          password: 'linuxfabrik'
+          rs-csrf-token: '{{ __molecule__rstudio_server_sign_in_page_result["cookies"]["rs-csrf-token"] }}'
+          staySignedIn: '1'
+          username: 'molecule-member'
+        headers:
+          Cookie: '{{ __molecule__rstudio_server_sign_in_page_result["cookies_string"] }}'
+        follow_redirects: 'none'
+        status_code: 302
+      register: '__molecule__rstudio_server_sign_in_result'
+
+    - name: 'Assert that the sign-in was accepted'
+      ansible.builtin.assert:
+        that: '"error=" not in __molecule__rstudio_server_sign_in_result["location"]'
+        fail_msg: 'Sign-in as molecule-member was redirected to {{ __molecule__rstudio_server_sign_in_result["location"] }}.'
+
+    - name: 'Sign in with a wrong password'
+      ansible.builtin.uri:
+        url: '{{ __molecule__rstudio_server_url }}/auth-do-sign-in'
+        method: 'POST'
+        body_format: 'form-urlencoded'
+        body:
+          appUri: '/'
+          password: 'wrong-password'
+          rs-csrf-token: '{{ __molecule__rstudio_server_sign_in_page_result["cookies"]["rs-csrf-token"] }}'
+          staySignedIn: '1'
+          username: 'molecule-member'
+        headers:
+          Cookie: '{{ __molecule__rstudio_server_sign_in_page_result["cookies_string"] }}'
+        follow_redirects: 'none'
+        status_code: 302
+      register: '__molecule__rstudio_server_wrong_password_result'
+
+    - name: 'Assert that a wrong password is refused'
+      ansible.builtin.assert:
+        that: '"error=" in __molecule__rstudio_server_wrong_password_result["location"]'
+        fail_msg: 'A wrong password was accepted.'
+
+    # The account exists and its password is right; only the membership in
+    # rstudio_server__conf_auth_required_user_group is missing. Without the group
+    # every account on the host could sign in, which is what the role's deviation
+    # from the upstream default is about.
+    - name: 'Sign in as a user outside the login group'
+      ansible.builtin.uri:
+        url: '{{ __molecule__rstudio_server_url }}/auth-do-sign-in'
+        method: 'POST'
+        body_format: 'form-urlencoded'
+        body:
+          appUri: '/'
+          password: 'linuxfabrik'
+          rs-csrf-token: '{{ __molecule__rstudio_server_sign_in_page_result["cookies"]["rs-csrf-token"] }}'
+          staySignedIn: '1'
+          username: 'molecule-outsider'
+        headers:
+          Cookie: '{{ __molecule__rstudio_server_sign_in_page_result["cookies_string"] }}'
+        follow_redirects: 'none'
+        status_code: 302
+      register: '__molecule__rstudio_server_outsider_result'
+
+    - name: 'Assert that a user outside the login group is refused'
+      ansible.builtin.assert:
+        that: '"error=" in __molecule__rstudio_server_outsider_result["location"]'
+        fail_msg: 'molecule-outsider signed in although it is not a member of rstudio-users.'
+
+    # The IDE asks for a session with this call, so it is what starts rsession;
+    # requesting the page alone does not. curl rather than ansible.builtin.uri,
+    # because the call needs the session cookie of the sign-in above and a cookie
+    # jar is the only way to carry it from one request to the next.
+    - name: 'Sign in and request an R session'
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          cookies="$(mktemp)"
+          trap 'rm --force "${cookies}"' EXIT
+          curl --silent --show-error --cookie-jar "${cookies}" --user-agent "${user_agent}" \
+              --output /dev/null "${url}/auth-sign-in"
+          token="$(awk '/rs-csrf-token/ {print $7}' "${cookies}")"
+          curl --silent --show-error --cookie "${cookies}" --cookie-jar "${cookies}" --user-agent "${user_agent}" \
+              --data-urlencode 'username=molecule-member' \
+              --data-urlencode 'password=linuxfabrik' \
+              --data-urlencode 'staySignedIn=1' \
+              --data-urlencode 'appUri=/' \
+              --data-urlencode "rs-csrf-token=${token}" \
+              --output /dev/null "${url}/auth-do-sign-in"
+          # The token is reissued with the session, so it has to be read again,
+          # and the RPC endpoint wants it in a header on top of the cookie.
+          token="$(awk '/rs-csrf-token/ {print $7}' "${cookies}")"
+          curl --silent --show-error --fail --cookie "${cookies}" --user-agent "${user_agent}" \
+              --header 'Content-Type: application/json' \
+              --header "X-RS-CSRF-Token: ${token}" \
+              --data '{"method":"client_init","params":[{"scope":{}}],"clientId":null,"clientVersion":""}' \
+              "${url}/rpc/client_init"
+        executable: '/bin/bash'
+      environment:
+        url: '{{ __molecule__rstudio_server_url }}'
+        user_agent: '{{ __molecule__rstudio_server_user_agent }}'
+      changed_when: false
+      register: '__molecule__rstudio_server_client_init_result'
+
+    - name: 'Assert that the session belongs to the signed-in user'
+      ansible.builtin.assert:
+        that: '(__molecule__rstudio_server_client_init_result["stdout"] | from_json).get("result", {}).get("systemUsername", "") == "molecule-member"'
+        fail_msg: 'client_init answered: {{ __molecule__rstudio_server_client_init_result["stdout"][:200] }}'
+
+    - name: 'Wait for the R session to start'
+      ansible.builtin.command: 'pgrep --uid molecule-member --exact rsession'
+      changed_when: false
+      register: '__molecule__rstudio_server_rsession_result'
+      retries: 15
+      delay: 2
+      until: '__molecule__rstudio_server_rsession_result["rc"] == 0'
+
+    # R runs as the user, not as a service account, which is what makes the file
+    # permissions of the host apply to what a user does in RStudio.
+    - name: 'Assert that R runs under the account of the signed-in user'
+      ansible.builtin.assert:
+        that: '__molecule__rstudio_server_rsession_result["stdout_lines"] | length > 0'
+
+    # rsession is forked by rserver and is not moved into a user slice, so the
+    # limits of the drop-in above apply to the R sessions too. That is the whole
+    # point of setting them.
+    - name: 'cat /proc/<rsession>/cgroup'
+      ansible.builtin.command: 'cat /proc/{{ __molecule__rstudio_server_rsession_result["stdout_lines"][0] }}/cgroup'
+      changed_when: false
+      register: '__molecule__rstudio_server_cgroup_result'
+
+    - name: 'Assert that the R session runs in the control group of the service'
+      ansible.builtin.assert:
+        that: '"rstudio-server.service" in __molecule__rstudio_server_cgroup_result["stdout"]'
+        fail_msg: 'The R session runs in {{ __molecule__rstudio_server_cgroup_result["stdout"] }}.'

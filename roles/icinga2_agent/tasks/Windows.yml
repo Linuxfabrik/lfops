@@ -55,10 +55,33 @@
       return_content: true
       headers:
         Accept: 'application/json'
-    ignore_errors: true
     register: 'icinga2_agent__icinga2_ticket'
+    failed_when: false # evaluated by the assert below, which says what to do
+    check_mode: false # generating a ticket changes nothing on the master
     when:
+      - 'not icinga2_agent__skip_pki_ticket | bool'
       - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length > 0'
+
+  - name: 'Assert that the agent got a PKI ticket'
+    ansible.builtin.assert:
+      that:
+        - '__icinga2_agent__pki_ticket | length > 0'
+      quiet: true
+      fail_msg: '{{ __icinga2_agent__pki_ticket_fail_msg }}'
+    when:
+      - 'not icinga2_agent__skip_pki_ticket | bool'
+
+  - name: 'Report that the certificate request has to be signed on the icinga2 master'
+    ansible.builtin.debug:
+      msg: '{{ __icinga2_agent__end_of_play_message }}'
+    when:
+      - 'icinga2_agent__skip_pki_ticket | bool'
+
+  - name: 'Collect the message for the end of the play'
+    ansible.builtin.set_fact:
+      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__icinga2_agent__end_of_play_message] }}'
+    when:
+      - 'icinga2_agent__skip_pki_ticket | bool'
 
   - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_cn }}'
     ansible.windows.win_shell: >-
@@ -78,8 +101,8 @@
       --listen '{{ icinga2_agent__bind_host }},5665'
       {% endif %}
       --trustedcert C:\ProgramData\icinga2\var\lib\icinga2\certs\master.crt
-      {% if icinga2_agent__icinga2_ticket.json is defined and icinga2_agent__icinga2_ticket.json | length %}
-      --ticket '{{ icinga2_agent__icinga2_ticket.json.results[0].ticket }}'
+      {% if __icinga2_agent__pki_ticket | length > 0 %}
+      --ticket '{{ __icinga2_agent__pki_ticket }}'
       {% endif %}
 
   - name: 'restart icinga2 service as {{ icinga2_agent__windows_service_user }}'

@@ -22,7 +22,7 @@ The setup is used as a headless browser backend for tools such as the [Icinga We
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). It provides the `chromium-headless` package. On Debian, the `chromium-headless-shell` package ships in the default repositories, so no extra repository is required.
+* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)), and on Rocky 9 and newer also the CRB repository (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). EPEL provides the `chromium-headless` package. On Debian, the `chromium-headless-shell` package ships in the default repositories, so no extra repository is required.
 
 
 ## Tags

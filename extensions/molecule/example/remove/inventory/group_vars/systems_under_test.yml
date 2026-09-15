@@ -2,9 +2,15 @@
 # state: 'absent'. This exercises the list-with-state removal pattern the LFOps
 # roles use, and gives verify.yml something concrete to assert is gone.
 #
-# In a real suite, run the install sub-scenario first to create the state, then
-# this one to remove it. As a standalone run it still demonstrates that a second
-# converge with state: 'absent' leaves the host without the plugin/user.
+# A remove sub-scenario cannot inherit the state of the install one. Molecule
+# gives every sub-scenario its own ephemeral directory, and vm-create.yml puts
+# the SSH keypair in it, so the instances created by one are unreachable from
+# the other: prepare fails with "Permission denied (publickey)". A remove
+# sub-scenario is therefore standalone and has to seed whatever it asserts is
+# gone afterwards, in its own prepare.yml. Seeding matters most for state the
+# role does not create for an entry that is already absent, such as a user
+# account; without it the assertions pass without proving anything.
+# extensions/molecule/setup_shiny_server/remove does this.
 
 example__version: '3.2.1'
 example__skip_repo_example: true

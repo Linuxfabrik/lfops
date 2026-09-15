@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026061601
+# 2026091101
 {# taken from the RPM package at https://yum.postgresql.org/repopackages/ #}
 
 #########################################################################
@@ -45,6 +45,11 @@ password={{ repo_postgresql__basic_auth_login["password"] }}
 {% endif %}
 
 # PGDG Red Hat Enterprise Linux / Rocky Linux / AlmaLinux stable repositories:
+# priority=90 in these sections is an LFOps addition, the upstream file sets none.
+# See the README of the linuxfabrik.lfops.repo_postgresql role.
+{# Verified with dnf 4.20 on Rocky 10.2: with postgresql18-server 18.3 from PGDG installed and
+   AppStream offering 18.4, `dnf upgrade` switches to the AppStream build at the default priority
+   and keeps the PGDG build at priority=90. Normal PGDG updates are unaffected. #}
 
 [pgdg18]
 name=PostgreSQL 18 for RHEL / Rocky Linux / AlmaLinux $releasever - $basearch
@@ -57,6 +62,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+priority=90
 {% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
@@ -73,6 +79,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+priority=90
 {% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
@@ -89,6 +96,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+priority=90
 {% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
@@ -105,6 +113,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+priority=90
 {% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}
@@ -121,6 +130,7 @@ enabled=1
 gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/PGDG-RPM-GPG-KEY-RHEL
 repo_gpgcheck = 1
+priority=90
 {% if repo_postgresql__mirror_url is defined and repo_postgresql__mirror_url | length and repo_postgresql__basic_auth_login is defined and repo_postgresql__basic_auth_login | length %}
 username={{ repo_postgresql__basic_auth_login["username"] }}
 password={{ repo_postgresql__basic_auth_login["password"] }}

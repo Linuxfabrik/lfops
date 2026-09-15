@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026052201
+# 2026091101
 
 [CollaboraOnline_CODE]
 name = Collabora Office YUM repo
@@ -9,7 +9,7 @@ baseurl={{ repo_collabora_code__mirror_url }}/CollaboraOnline/CODE-centos8
 baseurl = https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-centos8
 {% endif %}
 enabled = 1
-gpgcheck = 0
+gpgcheck = 1
 {% if repo_collabora_code__mirror_url is defined and repo_collabora_code__mirror_url | length and repo_collabora_code__basic_auth_login is defined and repo_collabora_code__basic_auth_login | length %}
 username={{ repo_collabora_code__basic_auth_login["username"] }}
 password={{ repo_collabora_code__basic_auth_login["password"] }}

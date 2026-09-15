@@ -35,7 +35,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
 `lvm:vg`
 
-* Growpart (if enabled), creates/resizes PVs, creates/extends/removes VGs.
+* Installs growpart, runs it (if enabled), creates/resizes PVs, creates/extends/removes VGs.
 * Triggers: none.
 
 
@@ -63,7 +63,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `fstype`:
 
-        * Optional. Filesystem type.
+        * Optional. Filesystem type. Note that on RHEL 10, `mkfs.xfs` refuses to create an XFS file system smaller than 300 MB.
         * Type: String.
         * Default: `'xfs'`
 
@@ -140,7 +140,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `growpart`:
 
-        * Optional. If `true`, automatically runs `growpart` on partition-based PVs (e.g., `/dev/vda3`) before resizing. The partition device and number are auto-detected from the PV path.
+        * Optional. If `true`, automatically runs `growpart` on partition-based PVs (e.g., `/dev/vda3`) before resizing. The partition device and number are auto-detected from the PV path. The role installs the package providing `growpart` (`cloud-utils-growpart` on RHEL, `cloud-guest-utils` on Debian and Ubuntu).
         * Type: Bool.
         * Default: `false`
 

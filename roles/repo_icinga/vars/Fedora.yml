@@ -1,1 +1,0 @@
-__repo_icinga__rpm_release_url: 'https://packages.icinga.com/fedora/icinga-rpm-release-{{ ansible_facts["distribution_major_version"] }}-latest.noarch.rpm'

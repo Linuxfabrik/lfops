@@ -1,14 +1,19 @@
 - block:
 
-  - name: 'Install {{ __repo_icinga__rpm_release_url }}'
-    ansible.builtin.package:
-      name: '{{ __repo_icinga__rpm_release_url }}'
-      state: 'present'
-      disable_gpg_check: true
+  # Icinga serves its RPM repository for RHEL and compatible distributions to subscribers
+  # only. Verified 2026-09-11: packages.icinga.com/subscription/rhel/{8,9,10} answers 401
+  # without credentials, the former public release packages answer 403/404. The Fedora
+  # repository is still public (200 for Fedora 42 to 44).
+  - name: 'Assert that a mirror or subscription credentials are set'
+    ansible.builtin.assert:
+      that:
+        - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length > 0) or
+           (repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length > 0)'
+      fail_msg: 'Icinga provides its RPM repository for RHEL and compatible distributions to subscribers only. Set repo_icinga__basic_auth_login (Icinga Repo Subscription) or repo_icinga__mirror_url.'
+      quiet: true
 
   when:
-    - 'repo_icinga__mirror_url is not defined or not repo_icinga__mirror_url | length > 0'
-    - 'repo_icinga__basic_auth_login is not defined or not repo_icinga__basic_auth_login | length > 0'
+    - 'ansible_facts["distribution"] != "Fedora"'
   tags:
     - 'repo_icinga'
 
@@ -63,7 +68,5 @@
       src: '/tmp/ansible.RPM-GPG-KEY-ICINGA'
       dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-ICINGA'
 
-  when:
-    - '(repo_icinga__mirror_url is defined and repo_icinga__mirror_url | length > 0) or (repo_icinga__basic_auth_login is defined and repo_icinga__basic_auth_login | length > 0)'
   tags:
     - 'repo_icinga'
