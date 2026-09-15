@@ -49,6 +49,19 @@
       loop_control:
         label: '{{ item["item"]["setting"] }}'
 
+    # The databases in the inventory set no locale, so they get the role default.
+    - name: 'psql --command="SELECT datcollate, datctype FROM pg_database WHERE datname = ''app''"'
+      ansible.builtin.command: '{{ __molecule__psql }} --field-separator=" " --command="SELECT datcollate, datctype FROM pg_database WHERE datname = ''app''"'
+      become: true
+      become_user: 'postgres'
+      register: '__molecule__postgresql_locale_result'
+      changed_when: false
+
+    - name: 'Assert the database was created with the C.UTF-8 locale'
+      ansible.builtin.assert:
+        that: '__molecule__postgresql_locale_result["stdout"] == "C.UTF-8 C.UTF-8"'
+        fail_msg: 'datcollate and datctype of app are {{ __molecule__postgresql_locale_result["stdout"] }}'
+
     - name: 'psql --command="SELECT ... FROM pg_hba_file_rules WHERE error IS NOT NULL"'
       ansible.builtin.command: '{{ __molecule__psql }} --command="SELECT line_number, error FROM pg_hba_file_rules WHERE error IS NOT NULL"'
       become: true

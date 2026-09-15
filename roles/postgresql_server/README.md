@@ -109,15 +109,17 @@ postgresql_server__version: '18'
 
     * `lc_collate`:
 
-        * Optional. DB Collation order.
+        * Optional. Collation order of the database. Only used when the database is created, PostgreSQL cannot change it afterwards.
         * Type: String.
-        * Default: `'en_US.UTF-8'`
+        * Default: `'C.UTF-8'`
+        * Deviates from the upstream default, the locale of the template database, which `initdb` takes from the environment of the host: `C.UTF-8` exists on every host, also where only the minimal glibc language pack is installed, and does not change its sort order with a glibc update. It sorts by code point, not by language rules (`B` before `a`); set `'en_US.UTF-8'` or another installed locale for linguistic sorting.
 
     * `lc_ctype`:
 
-        * Optional. DB Character classification.
+        * Optional. Character classification of the database. Only used when the database is created, PostgreSQL cannot change it afterwards.
         * Type: String.
-        * Default: `'en_US.UTF-8'`
+        * Default: `'C.UTF-8'`
+        * Deviates from the upstream default for the same reason as `lc_collate`.
 
     * `encoding`:
 

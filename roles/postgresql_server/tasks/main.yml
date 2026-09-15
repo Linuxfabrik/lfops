@@ -180,12 +180,28 @@
 
 - block:
 
+  - name: 'SELECT datname FROM pg_database'
+    community.postgresql.postgresql_query:
+      port: '{{ postgresql_server__conf_port }}'
+      login_password: '{{ postgresql_server__login_password | default(omit) }}'
+      query: 'SELECT datname FROM pg_database'
+    become: true
+    become_user: 'postgres'
+    register: '__postgresql_server__existing_databases_result'
+    changed_when: false # read-only query
+    check_mode: false # run task even if `--check` is specified
+
+  # The locale default only applies when a database is created. postgresql_db aborts with
+  # "Changing LC_COLLATE is not supported" when it is given a locale that differs from the one of
+  # an existing database, which would break every database created with an earlier default.
+  # C.UTF-8 sorts by code point on RHEL 8, 9 and 10 alike (`LC_ALL=C.utf8 sort` verified on Rocky
+  # 8, 9 and 10), so the order does not change with an OS upgrade.
   - name: 'Create or delete PostgreSQL databases'
     community.postgresql.postgresql_db:
       port: '{{ postgresql_server__conf_port }}'
       name: '{{ item["name"] }}'
-      lc_collate: '{{ item["lc_collate"] | default("en_US.UTF-8") }}'
-      lc_ctype: '{{ item["lc_ctype"] | default("en_US.UTF-8") }}'
+      lc_collate: '{{ item["lc_collate"] | default(omit if item["name"] in __postgresql_server__existing_databases else "C.UTF-8") }}'
+      lc_ctype: '{{ item["lc_ctype"] | default(omit if item["name"] in __postgresql_server__existing_databases else "C.UTF-8") }}'
       login_password: '{{ postgresql_server__login_password | default(omit) }}'
       encoding: '{{ item["encoding"] | default("UTF-8") }}'
       template: '{{ item["template"] | default("template0") }}'
@@ -194,6 +210,8 @@
     loop: '{{ postgresql_server__databases__combined_var }}'
     become: true
     become_user: 'postgres'
+    vars:
+      __postgresql_server__existing_databases: '{{ __postgresql_server__existing_databases_result["query_result"] | map(attribute="datname") | list }}'
 
   tags:
     - 'postgresql_server'
