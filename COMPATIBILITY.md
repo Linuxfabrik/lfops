@@ -176,7 +176,7 @@ Which Ansible role is proven to run on which OS?
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |
 | valkey                                |        |   x    |   x    |   x    |    x    |           |     x     |     x     | no Valkey in Deb 12 / Ubu 22.04              |
 | vsftpd                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| wordpress                             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| wordpress                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | yum_utils                             |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 
 Legend:
