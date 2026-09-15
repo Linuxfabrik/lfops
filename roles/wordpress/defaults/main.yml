@@ -1,3 +1,4 @@
+wordpress__application_passwords_enabled: false  # upstream default: true
 wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true

@@ -1,0 +1,11 @@
+<?php
+// {{ ansible_managed }}
+// 2026091501
+//
+// Settings of the linuxfabrik.lfops.wordpress role that WordPress offers as filters only, with
+// no constant for wp-config.php.
+
+{% if not wordpress__application_passwords_enabled | bool %}
+// Application passwords let REST API clients log in without a second factor.
+add_filter('wp_is_application_passwords_available', '__return_false');
+{% endif %}

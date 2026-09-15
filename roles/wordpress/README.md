@@ -108,6 +108,13 @@ wordpress__url: 'https://wordpress.example.com'
 
 ## Optional Role Variables
 
+`wordpress__application_passwords_enabled`
+
+* Whether users can create application passwords, with which REST API clients such as the WordPress mobile app or external integrations log in. The role switches them on or off through the must-use plugin `wp-content/mu-plugins/linuxfabrik.php`.
+* Type: Bool.
+* Default: `false`
+* Deviates from the upstream default `true`: an application password logs a client in without a second factor, so it bypasses a two-factor plugin.
+
 `wordpress__database_host`
 
 * The host on which the database is accessible.
@@ -178,6 +185,7 @@ wordpress__url: 'https://wordpress.example.com'
 Example:
 ```yaml
 # optional
+wordpress__application_passwords_enabled: true
 wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true

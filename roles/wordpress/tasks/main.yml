@@ -151,6 +151,23 @@
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'
 
+  - name: 'mkdir -p {{ wordpress__install_dir }}/wp-content/mu-plugins'
+    ansible.builtin.file:
+      path: '{{ wordpress__install_dir }}/wp-content/mu-plugins'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o755
+
+  # no backup, since the directory is served by Apache
+  - name: 'Deploy {{ wordpress__install_dir }}/wp-content/mu-plugins/linuxfabrik.php'
+    ansible.builtin.template:
+      src: 'var/www/html/wordpress/wp-content/mu-plugins/linuxfabrik.php.j2'
+      dest: '{{ wordpress__install_dir }}/wp-content/mu-plugins/linuxfabrik.php'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o644
+
   - name: 'find {{ wordpress__install_dir | quote }} -type d -exec chmod --changes 755 {} \;'
     ansible.builtin.command: 'find {{ wordpress__install_dir | quote }} -type d -exec chmod --changes 755 {} \;'
     register: 'wordpress__chmod_dirs_result'
