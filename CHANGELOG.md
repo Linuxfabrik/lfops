@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:kibana**: The session cookie always carries the `Secure` flag, also behind a reverse proxy that terminates TLS, where Kibana left the flag off. A Kibana that browsers reach over plain HTTP no longer logs anyone in until `kibana__xpack_security_secure_cookies: false` is set. Remove `xpack.security.secureCookies` from `kibana__raw` if you set it there.
 * **role:icingaweb2**: The session and remember-me cookies always carry the `Secure` flag, also behind a reverse proxy that terminates TLS and talks plain HTTP to IcingaWeb2, where IcingaWeb2 left the flag off. An IcingaWeb2 that browsers reach over plain HTTP no longer logs anyone in until `icingaweb2__cookie_secure: false` is set.
 * **role:apache_httpd**: Every entry in `apache_httpd__htpasswd__*_var` needs the `path` subkey, because the username and the path together identify an entry. Until now, entries with the same username but a different `path` were collapsed into one, so only the last file got the user; a user listed with different paths in group and host variables is now written to both files. On entries that relied on the default, set `path: '/etc/httpd/.htpasswd'` (RedHat) or `path: '/etc/apache2/.htpasswd'` (Debian and Ubuntu), otherwise the play fails with an error naming the entry.
 * **role:postfix**: On RHEL 10 the role deploys the compatibility level the distribution ships (`3.8`) instead of the RHEL 8 / 9 value it applied everywhere. Postfix now matches TLS fingerprints with SHA-256 instead of MD5, evaluates the relay restrictions before the recipient restrictions, and uses the neutral wording in its postscreen log lines. Re-generate any peer fingerprint pinned as MD5 in a TLS policy table, and check log parsers keyed on the old postscreen wording. Set `postfix__compatibility_level: '2'` to restore the previous behaviour. RHEL 8, RHEL 9 and Debian are unaffected.
@@ -33,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:apache_httpd**: Responses of type `text/markdown` are compressed like HTML, so the Markdown versions of pages that CMSs such as Grav hand to AI agents no longer go out uncompressed.
+* **role:grav**: The README lists setting `session.secure` as a manual step behind a reverse proxy that terminates TLS, where Grav sends its session cookies without the `Secure` flag.
+* **role:gitlab_ce**: `gitlab_ce__rb_external_url` supports `https://` behind a reverse proxy that terminates TLS, and the README recommends it there. With `http://`, GitLab's session cookie goes out without the `Secure` flag.
+* **role:grafana**: The login cookie carries the `Secure` flag when `grafana__root_url` is an `https://` URL. `grafana__cookie_secure` overrides this.
 * **playbook:setup_basic**: The mail and reboot roles run before the security roles, so a first run against a fresh host files the reboot request that a changed crypto policy, SELinux state or kernel module blocklist needs. Until now the reboot mechanism was deployed further down the playbook and such a change could only be reported to the operator.
 * **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
 
