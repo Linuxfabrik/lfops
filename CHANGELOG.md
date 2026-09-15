@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: Responses of type `text/markdown` are compressed like HTML, so the Markdown versions of pages that CMSs such as Grav hand to AI agents no longer go out uncompressed.
 * **role:grav**: The README lists setting `session.secure` as a manual step behind a reverse proxy that terminates TLS, where Grav sends its session cookies without the `Secure` flag.
 * **role:gitlab_ce**: `gitlab_ce__rb_external_url` supports `https://` behind a reverse proxy that terminates TLS, and the README recommends it there. With `http://`, GitLab's session cookie goes out without the `Secure` flag.
 * **role:grafana**: The login cookie carries the `Secure` flag when `grafana__root_url` is an `https://` URL. `grafana__cookie_secure` overrides this.
