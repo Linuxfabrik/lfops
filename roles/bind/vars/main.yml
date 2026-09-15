@@ -1,0 +1,15 @@
+# Answers for zones that named forwards to or stubs from other servers are validated like any
+# other, so an internal zone below a signed parent (a name under a public domain, or a TLD such
+# as .internal that the signed root proves not to exist) fails with SERVFAIL. Exclude these zones
+# from DNSSEC validation, together with the zones listed by the user.
+__bind__dnssec_validate_except: '{{
+    (
+      bind__zones
+      | selectattr("type", "defined")
+      | selectattr("type", "in", ["forward", "static-stub", "stub"])
+      | map(attribute="name")
+      | list
+      + bind__dnssec_validate_except
+    )
+    | unique
+  }}'

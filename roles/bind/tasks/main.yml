@@ -13,6 +13,18 @@
 
 - block:
 
+  # validate-except was added in BIND 9.13; `named-checkconf` on BIND 9.11 rejects it as an unknown
+  # option.
+  - name: 'Assert that no zone has to be excluded from DNSSEC validation on RHEL 8'
+    ansible.builtin.assert:
+      that:
+        - '__bind__dnssec_validate_except | length == 0'
+      fail_msg: 'BIND 9.11 on RHEL 8 cannot exclude zones from DNSSEC validation, which the forward and stub zones in bind__zones and the zones in bind__dnssec_validate_except need: {{ __bind__dnssec_validate_except | join(", ") }}. Set bind__dnssec_validation: false.'
+      quiet: true
+    when:
+      - 'ansible_facts["distribution_major_version"] | int == 8'
+      - 'bind__dnssec_validation | bool'
+
   - name: 'Deploy /etc/sysconfig/named'
     ansible.builtin.template:
       backup: true
