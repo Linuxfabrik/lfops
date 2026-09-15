@@ -85,13 +85,6 @@
 
 - block:
 
-  - name: 'install spell checker'
-    ansible.builtin.package:
-      name:
-        - 'hunspell'
-        - 'mythes'
-      state: 'present'
-
   - name: 'Combined Language Packages:'
     ansible.builtin.debug:
       var: 'collabora__language_packages__combined_var'
