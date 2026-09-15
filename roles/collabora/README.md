@@ -6,11 +6,6 @@ This role installs and configures either [Collabora Online Development Edition](
 *Available since LFOps `2.0.0`.*
 
 
-## Known Limitations
-
-* The role does not run on RHEL 10. It installs the `mythes` thesaurus packages, which neither RHEL 10 nor EPEL 10 ships.
-
-
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -36,7 +31,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 `collabora:spell_check`
 
-* Installs spell checking tools.
+* Installs the language packages (spell checking, thesaurus, hyphenation).
 * Triggers: none.
 
 `collabora:state`
@@ -196,8 +191,9 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 `collabora__language_packages__host_var` / `collabora__language_packages__group_var`
 
 * A list of dictionaries containing additional packages to be installed for language support (spell checking, thesaurus, etc).
+* Collabora also loads thesauri from the distribution's `mythes-*` packages and hyphenation patterns from its `hyphen-*` packages, and on RHEL 10 spell checking dictionaries from its `hunspell-*` packages, so these can be added here for languages or components Collabora does not ship, for example `mythes-el` for a Greek thesaurus on RHEL 8 and 9. On RHEL 8 and 9, `hunspell-*` installs into `/usr/share/myspell`, where Collabora does not look. Every language also has to be listed in `collabora__coolwsd_allowed_languages__*_var`.
 * Type: List of dictionaries.
-* Default: `dict`, `mythes` and `hunspell` for de, en, fr, it
+* Default: `collaboraoffice-dict` and `collaboraofficebasis` for de, en, fr, it
 
 * Subkeys:
 
@@ -275,15 +271,9 @@ collabora__language_packages__host_var:
     state: 'present'
   - name: 'collaboraofficebasis-el'
     state: 'present'
-  - name: 'hunspell-el'
-    state: 'present'
-  - name: 'mythes-el'
-    state: 'present'
   # es
   - name: 'collaboraoffice-dict-es'
   - name: 'collaboraofficebasis-es'
-  - name: 'hunspell-es-*'
-  - name: 'mythes-es'
 collabora__logrotate: 7
 collabora__service_enabled: true
 collabora__service_state: 'started'

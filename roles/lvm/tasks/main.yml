@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - ansible.builtin.import_tasks: 'info.yml'
   tags:
     - 'never'
@@ -18,6 +26,13 @@
     loop: '{{ lvm__vgs__combined_var }}'
     when:
       - 'item["state"] | d("present") == "absent"'
+
+  # growpart is not part of a minimal installation
+  - name: 'Install {{ __lvm__growpart_package }}'
+    ansible.builtin.package:
+      name: '{{ __lvm__growpart_package }}'
+      state: 'present'
+    register: '__lvm__growpart_package_result'
 
   - name: 'growpart ...'
     ansible.builtin.command:
@@ -48,6 +63,8 @@
     when:
       - 'item[0]["growpart"] | d(false)'
       - 'item[0]["state"] | d("present") != "absent"'
+      # in check mode the package was not actually installed, so there is no growpart to dry-run
+      - 'not (ansible_check_mode and __lvm__growpart_package_result is changed)'
       # check that it is a partition and not the whole disk
       # NVMe partitions require 'p' prefix (/dev/nvme0n1p1), standard partitions just end with number (/dev/vda3)
       - '(item[1] is ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("p[0-9]+$")) or

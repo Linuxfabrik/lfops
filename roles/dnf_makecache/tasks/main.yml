@@ -1,15 +1,7 @@
 - block:
 
-  - name: 'systemctl {{ dnf_makecache__service_enabled | bool | ternary("enable", "disable") }} dnf-makecache.service'
-    ansible.builtin.service:
-      name: 'dnf-makecache.service'
-      enabled: '{{ dnf_makecache__service_enabled | bool }}'
-
-  - name: 'systemctl {{ dnf_makecache__service_state | regex_replace("p?ed$", "") }} dnf-makecache.service'
-    ansible.builtin.service:
-      name: 'dnf-makecache.service'
-      state: '{{ dnf_makecache__service_state }}'
-
+  # dnf-makecache.service is not managed: it has no [Install] section (`systemctl is-enabled`
+  # reports `static`), it runs `dnf makecache` once and only when dnf-makecache.timer triggers it
   - name: 'systemctl {{ dnf_makecache__timer_enabled | bool | ternary("enable", "disable") }} dnf-makecache.timer'
     ansible.builtin.service:
       name: 'dnf-makecache.timer'

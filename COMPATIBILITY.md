@@ -26,7 +26,7 @@ Which Ansible role is proven to run on which OS?
 | clamav                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
-| collabora                             |        |        |   x    |   x    |    -    |           |           |           |                                              |
+| collabora                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
 | core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
@@ -87,7 +87,7 @@ Which Ansible role is proven to run on which OS?
 | kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | keycloak                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
-| kvm_host                              |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
+| kvm_host                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | kvm_vm                                |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -131,7 +131,7 @@ Which Ansible role is proven to run on which OS?
 | redis                                 |   x    |   x    |   x    |   x    |         |    (x)    |    (x)    |    (x)    | RHEL 10: no Redis, use the `valkey` role     |
 | repo_baseos                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_collabora                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| repo_collabora_code                   |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| repo_collabora_code                   |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_debian_base                      |  (x)   |  (x)   |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | repo_docker                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_elasticsearch                    |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
@@ -140,14 +140,14 @@ Which Ansible role is proven to run on which OS?
 | repo_gitlab_runner                    |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_grafana                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    |                                              |
+| repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_monitoring_plugins               |  (x)   |  (x)   |   x    |   x    |    x    |     x     |    (x)    |    (x)    | SLES 15, SLES 16                             |
 | repo_mydumper                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
-| repo_postgresql                       |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
+| repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_redis                            |   x    |   x    |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | repo_remi                             |        |        |   x    |   x    |    x    |           |           |           |                                              |

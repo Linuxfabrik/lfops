@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:dnf_makecache**: `dnf_makecache__service_enabled` and `dnf_makecache__service_state` are gone; remove them from your inventory. The role only manages `dnf-makecache.timer` now, since `dnf-makecache.service` cannot be enabled at boot and only runs when the timer triggers it. `dnf_makecache__service_enabled` never had an effect, but a run against an unchanged host reported a change for it. A host that set `dnf_makecache__service_state: 'started'` no longer runs `dnf makecache` on every run of the role. Use `dnf_makecache__timer_enabled` and `dnf_makecache__timer_state` for the periodic cache refresh.
 * **role:kibana**: The session cookie always carries the `Secure` flag, also behind a reverse proxy that terminates TLS, where Kibana left the flag off. A Kibana that browsers reach over plain HTTP no longer logs anyone in until `kibana__xpack_security_secure_cookies: false` is set. Remove `xpack.security.secureCookies` from `kibana__raw` if you set it there.
 * **role:icingaweb2**: The session and remember-me cookies always carry the `Secure` flag, also behind a reverse proxy that terminates TLS and talks plain HTTP to IcingaWeb2, where IcingaWeb2 left the flag off. An IcingaWeb2 that browsers reach over plain HTTP no longer logs anyone in until `icingaweb2__cookie_secure: false` is set.
 * **role:apache_httpd**: Every entry in `apache_httpd__htpasswd__*_var` needs the `path` subkey, because the username and the path together identify an entry. Until now, entries with the same username but a different `path` were collapsed into one, so only the last file got the user; a user listed with different paths in group and host variables is now written to both files. On entries that relied on the default, set `path: '/etc/httpd/.htpasswd'` (RedHat) or `path: '/etc/apache2/.htpasswd'` (Debian and Ubuntu), otherwise the play fails with an error naming the entry.
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:repo_postgresql**: The PostgreSQL version repositories take precedence over the distribution's packages of the same name, so on RHEL 10 an install or update no longer switches a PostgreSQL server from the PGDG build to the AppStream build, which uses a different file layout.
 * **role:apache_httpd**: Responses of type `text/markdown` are compressed like HTML, so the Markdown versions of pages that CMSs such as Grav hand to AI agents no longer go out uncompressed.
 * **role:grav**: The README lists setting `session.secure` as a manual step behind a reverse proxy that terminates TLS, where Grav sends its session cookies without the `Secure` flag.
 * **role:gitlab_ce**: `gitlab_ce__rb_external_url` supports `https://` behind a reverse proxy that terminates TLS, and the README recommends it there. With `http://`, GitLab's session cookie goes out without the `Secure` flag.
@@ -42,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: A package install that fails no longer leaves the Monitoring Plugins unlocked, so a later system update cannot move them past `monitoring_plugins__version`. The lock that existed before the run is set again.
+* **role:monitoring_plugins**: A run against an unchanged host no longer reports changes for the package versionlock ([#353](https://github.com/Linuxfabrik/lfops/issues/353)).
+* **role:collabora**: A run against an unchanged host no longer reports changes for the coolwsd log file and the ownership of `/etc/coolwsd`.
+* **role:collabora**: The role runs on RHEL 10, since it no longer installs the distribution's `mythes` and `hunspell` dictionary packages, which Collabora does not need next to its own dictionary packages. Packages already installed are left in place ([#373](https://github.com/Linuxfabrik/lfops/issues/373)).
+* **playbook:kvm_host**: The playbook deploys the EPEL repository, and CRB on Rocky 9 and newer, so it no longer fails to install `genisoimage` on RHEL 9 and 10 hosts that did not have EPEL set up already ([#375](https://github.com/Linuxfabrik/lfops/issues/375)).
+* **playbook:chromium_headless, playbook:icingaweb2_module_pdfexport, playbook:repo_epel**: On Rocky 9 and newer, these playbooks enable the CRB repository together with EPEL, like every other playbook that deploys EPEL, since EPEL packages depend on packages from CRB.
+* **role:repo_icinga**: On Fedora the role deploys Icinga's public repository instead of failing on a release package that Icinga no longer publishes ([#360](https://github.com/Linuxfabrik/lfops/issues/360)).
+* **role:repo_postgresql**: The role no longer aborts on RHEL 10 right after deploying the repository ([#370](https://github.com/Linuxfabrik/lfops/issues/370)).
+* **role:repo_collabora_code**: The role deploys the repository on RHEL 10 instead of failing on a missing template ([#377](https://github.com/Linuxfabrik/lfops/issues/377)).
+* **role:lvm**: `growpart: true` works on minimal installations, where the role failed because nothing installed `growpart` ([#365](https://github.com/Linuxfabrik/lfops/issues/365)).
+* **role:icinga2_agent, role:icinga2_master**: Icinga 2 starts after SSSD at boot as intended, so its early `sudo` calls no longer fail with `problem with defaults entries`; the ordering pointed at a unit that does not exist and never took effect ([#357](https://github.com/Linuxfabrik/lfops/issues/357)).
 * **role:grafana**: With `grafana__auth_jwt: true`, the run no longer aborts at `generate JWT RSA private key` with `Cannot detect the required Python library cryptography` on hosts that lack it, because the playbooks deploying Grafana install `python3-cryptography` first.
 * **role:clamav, role:sshd**: `--tags clamav:configure`, `--tags clamav:state` and `--tags sshd:state` no longer abort on an undefined variable, so a restart skipped with `lfops__skip_restart_handlers` can be caught up with `--tags <role>:state` as the README describes.
 * **role:php**: A playbook that includes PHP, such as `setup_nextcloud`, no longer aborts at `Get PHP version` when it is run with another role's tags, for example `--tags apache_httpd`, against a host that has no PHP installed yet.
@@ -52,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:nextcloud**: `nextcloud-update` sets the Icinga downtime again, taking the API user from `icinga2_master__downtime_api_user` (see Added) instead of from the `system_update__icinga2_api_user_login` removed in v8.0.0.
 * **role:borg_local, role:schedule_reboot, role:tools**: The Icinga downtime around a backup or a reboot is set again when the deploying playbook does not run `icinga2_agent` itself, such as `bootloader`, `system_update` or `tools`, and the inventory only sets the mandatory `icinga2_agent__icinga2_master_cn`.
 * **role:fail2ban**: The `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome` and `apache-noscript` jail templates can be deployed again. Using one of them aborted the run.
+
+### Security
+
+* **role:repo_collabora_code**: dnf verifies the signatures of the Collabora packages, as Collabora's own installation instructions do, where the repository file had switched the check off.
 
 
 ## [v9.0.0] - 2026-09-09

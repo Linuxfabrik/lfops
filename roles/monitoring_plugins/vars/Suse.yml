@@ -5,5 +5,6 @@ __monitoring_plugins__package_version_separator: '-'
 # on SLE 15 (system python3 is 3.6).
 __monitoring_plugins__source_python_interpreter: 'python3'
 __monitoring_plugins__source_python_packages: []
+__monitoring_plugins__versionlock_list_command: 'zypper locks'
 __monitoring_plugins__versionlock_lock_command: 'zypper addlock'
 __monitoring_plugins__versionlock_unlock_command: 'zypper removelock'

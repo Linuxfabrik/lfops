@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.dnf_makecache
 
-This role manages the `dnf-makecache.service` and `dnf-makecache.timer` units. By default both are disabled and stopped, which is what most servers want — DNF caches are refreshed on demand and the periodic refresh is rarely needed.
+This role manages `dnf-makecache.timer`, which periodically refreshes the DNF metadata cache. By default the timer is disabled and stopped, which is what most servers want: DNF refreshes its caches on demand, and the periodic refresh is rarely needed.
 
 This role is Red Hat-family only (DNF / YUM). It does not run on Debian / Ubuntu.
 
@@ -8,27 +8,20 @@ This role is Red Hat-family only (DNF / YUM). It does not run on Debian / Ubuntu
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The role does not manage `dnf-makecache.service`. The service cannot be enabled at boot: it has no `[Install]` section (`systemctl is-enabled` reports `static`), runs `dnf makecache` once and only when `dnf-makecache.timer` triggers it. Disabling the timer therefore also stops the periodic refresh.
+
+
 ## Tags
 
 `dnf_makecache`
 
-* Manages the dnf-makecache service and timer.
+* Manages the dnf-makecache timer.
 * Triggers: none.
 
 
 ## Optional Role Variables
-
-`dnf_makecache__service_enabled`
-
-* Whether `dnf-makecache.service` is enabled at boot, analogous to `systemctl enable / disable`.
-* Type: Bool.
-* Default: `false`
-
-`dnf_makecache__service_state`
-
-* State of `dnf-makecache.service`, analogous to `systemctl start / stop / restart / reload`.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
-* Default: `'started'` if `dnf_makecache__service_enabled` is `true`, otherwise `'stopped'`.
 
 `dnf_makecache__timer_enabled`
 
@@ -45,8 +38,6 @@ This role is Red Hat-family only (DNF / YUM). It does not run on Debian / Ubuntu
 Example:
 ```yaml
 # optional
-dnf_makecache__service_enabled: false
-dnf_makecache__service_state: 'stopped'
 dnf_makecache__timer_enabled: false
 dnf_makecache__timer_state: 'stopped'
 ```

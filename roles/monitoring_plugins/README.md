@@ -122,7 +122,7 @@ monitoring_plugins__version: '2.2.1'
 
 `monitoring_plugins__skip_package_versionlock`
 
-* By default, the version of the `linuxfabrik-monitoring-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again).
+* By default, the version of the `linuxfabrik-monitoring-plugins` are locked after installation. Setting this to `true` skips this step (and never unlocks the version pinning again). The role lifts the lock for the install and sets it again afterwards; if the install fails, a lock that existed before the run is set again, so the host does not stay unlocked.
 * Type: Bool.
 * Default: `false`
 

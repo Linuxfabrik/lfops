@@ -20,13 +20,16 @@
         - 'coolwsd'
       state: 'present'
 
-  - name: 'touch /var/log/coolwsd.log & chmod 0660 /var/log/coolwsd.log'
+  - name: 'touch /var/log/coolwsd.log & chmod 0640 /var/log/coolwsd.log'
     ansible.builtin.file:
       path: '/var/log/coolwsd.log'
       state: 'touch'
       owner: 'cool'
       group: 'cool'
       mode: 0o640
+      # only create the file, do not bump its timestamps on every run
+      access_time: 'preserve'
+      modification_time: 'preserve'
 
   tags:
     - 'collabora'
@@ -75,8 +78,10 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'chown -R cool:cool /etc/coolwsd'
-    ansible.builtin.command: 'chown -R cool:cool /etc/coolwsd'
+  - name: 'chown -R --changes cool:cool /etc/coolwsd'
+    ansible.builtin.command: 'chown -R --changes cool:cool /etc/coolwsd'
+    register: '__collabora__chown_result'
+    changed_when: '__collabora__chown_result["stdout"] | length > 0'
 
   tags:
     - 'collabora'
@@ -84,13 +89,6 @@
 
 
 - block:
-
-  - name: 'install spell checker'
-    ansible.builtin.package:
-      name:
-        - 'hunspell'
-        - 'mythes'
-      state: 'present'
 
   - name: 'Combined Language Packages:'
     ansible.builtin.debug:

@@ -6,6 +6,13 @@ This role deploys the [Extra Packages for Enterprise Linux (EPEL) Repository](ht
 *Available since LFOps `1.0.0`.*
 
 
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* On Rocky 9 and newer, the CRB repository must be enabled, because EPEL packages depend on packages from it (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)). On Rocky, AlmaLinux and CentOS 8, this role enables the equivalent PowerTools repository itself.
+
+
 ## Tags
 
 `repo_epel`

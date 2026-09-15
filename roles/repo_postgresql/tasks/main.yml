@@ -29,6 +29,8 @@
     ansible.builtin.command: 'dnf module disable -y postgresql'
     register: 'repo_postgresql__module_disable_result'
     changed_when: "'Nothing to do' not in repo_postgresql__module_disable_result['stdout']"
+    # RHEL 10 ships no module metadata, `dnf module disable` exits 1 there
+    when: 'ansible_facts["distribution_major_version"] | int in [8, 9]'
 
   tags:
     - 'repo_postgresql'

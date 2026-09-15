@@ -21,7 +21,7 @@ This role is compatible with the following Valkey versions:
 
 * The role does not pin a Valkey version. It installs whatever the enabled repositories offer, reads the installed version back from the package database, and deploys the configuration template matching that version. If no template matches, the run aborts with the list of supported versions instead of failing on a missing file.
 * The whole configuration file is templated, so local edits to `/etc/valkey/valkey.conf` are overwritten on the next run. A backup of the previous file is kept next to it.
-* The role manages TCP access only. The unix socket the RHEL packages enable by default is commented out in the deployed configuration.
+* The role manages TCP access only and leaves the unix socket disabled, as the Debian and Ubuntu packages do. This deviates from the RHEL packages, which enable `unixsocket /run/valkey/valkey.sock`: that socket gets mode `0755` from the service's umask, so only root and the `valkey` user can connect to it, and on RHEL 8 SELinux also denies the web server access to it. The role might enable it in the future if there is a use case.
 * `daemonize` and `supervised` are not exposed as role variables. Every packaged unit passes `--daemonize no --supervised systemd` on its `ExecStart` line, and the command line wins over the configuration file, so a variable for either would have had no effect on the running service.
 * On RHEL 10 there is no Redis in the distribution repositories, so this role is the drop-in replacement for [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis) there. Valkey and Redis both listen on TCP 6379 by default, so do not run both roles against the same host without changing one of the ports.
 
