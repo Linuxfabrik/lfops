@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: A package install that fails no longer leaves the Monitoring Plugins unlocked, so a later system update cannot move them past `monitoring_plugins__version`. The lock that existed before the run is set again.
 * **role:monitoring_plugins**: A run against an unchanged host no longer reports changes for the package versionlock ([#353](https://github.com/Linuxfabrik/lfops/issues/353)).
 * **role:collabora**: A run against an unchanged host no longer reports changes for the coolwsd log file and the ownership of `/etc/coolwsd`.
 * **role:collabora**: The role runs on RHEL 10, since it no longer installs the distribution's `mythes` and `hunspell` dictionary packages, which Collabora does not need next to its own dictionary packages. Packages already installed are left in place ([#373](https://github.com/Linuxfabrik/lfops/issues/373)).
