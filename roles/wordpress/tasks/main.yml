@@ -33,6 +33,7 @@
   - name: 'Install WP-CLI'
     ansible.builtin.get_url:
       url: 'https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+      checksum: 'sha512:https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar.sha512'
       dest: '/usr/local/bin/wp'
       owner: 'root'
       group: 'root'

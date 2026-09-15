@@ -74,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:wordpress**: WP-CLI is checked against the checksum its maintainers publish before it is installed, and a WP-CLI that differs from the current release is replaced by it.
 * **role:wordpress**: `wp-config.php`, which holds the database password and the salts, is readable by the `apache` user and group only, instead of by every local user.
 * **role:apache_httpd**: The `wordpress` vHost sends `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`, so browsers do not guess content types and cross-origin requests receive only the origin of the referring page.
 * **role:apache_httpd**: The `wordpress` vHost refuses to run PHP files below `wp-content/uploads`, so that a plugin flaw that lets visitors upload such a file no longer leads to code execution.
