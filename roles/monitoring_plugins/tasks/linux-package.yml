@@ -7,8 +7,19 @@
       state: 'present'
     when: '__monitoring_plugins__versionlock_package is defined and __monitoring_plugins__versionlock_package | length > 0'
 
+  - name: '{{ __monitoring_plugins__versionlock_list_command }}'
+    ansible.builtin.command: '{{ __monitoring_plugins__versionlock_list_command }}'
+    register: '__monitoring_plugins__versionlock_list_result'
+    changed_when: false # read-only
+    failed_when: false # a missing versionlock plugin (e.g. in check mode) means no lock
+    check_mode: false # run task even if `--check` is specified
+
+  # the lock is lifted so the `state: latest` install below can update within
+  # monitoring_plugins__version, and set again afterwards. Whether that changed anything is
+  # reported by the lock task, so this intermediate step never reports a change.
   - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins*'
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins*'
+    changed_when: false
     ignore_errors: true
 
   # block
@@ -36,12 +47,14 @@
       name:
         - 'linuxfabrik-monitoring-plugins{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*'
       state: 'latest' # use latest for the versionlock after
+    register: '__monitoring_plugins__package_result'
 
   - name: 'install linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*' # noqa package-latest
     ansible.builtin.package:
       name:
         - 'linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*'
       state: 'latest' # use latest for the versionlock after
+    register: '__monitoring_plugins__selinux_package_result'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
@@ -61,8 +74,15 @@
 
 - block:
 
+  # the lock changed if there was none before, or if a package was updated (a dnf lock pins
+  # the exact version). Every lock list names the package (dnf versionlock list, apt-mark
+  # showhold, zypper locks).
   - name: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins*'
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins*'
+    changed_when:
+      - '"linuxfabrik-monitoring-plugins" not in __monitoring_plugins__versionlock_list_result["stdout"] | d("")
+        or __monitoring_plugins__package_result is changed
+        or __monitoring_plugins__selinux_package_result is changed'
 
   # block
   when:
