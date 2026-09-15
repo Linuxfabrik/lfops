@@ -150,8 +150,9 @@
     register: 'wordpress__chmod_dirs_result'
     changed_when: 'wordpress__chmod_dirs_result["stdout"] | length > 0'
 
-  - name: 'find {{ wordpress__install_dir | quote }} -type f -exec chmod --changes 644 {} \;'
-    ansible.builtin.command: 'find {{ wordpress__install_dir | quote }} -type f -exec chmod --changes 644 {} \;'
+  # wp-config.php gets its own, stricter mode further down
+  - name: 'find {{ wordpress__install_dir | quote }} -type f ! -name wp-config.php -exec chmod --changes 644 {} \;'
+    ansible.builtin.command: 'find {{ wordpress__install_dir | quote }} -type f ! -name wp-config.php -exec chmod --changes 644 {} \;'
     register: 'wordpress__chmod_files_result'
     changed_when: 'wordpress__chmod_files_result["stdout"] | length > 0'
 
@@ -228,6 +229,15 @@
     loop:
       - 'home'
       - 'siteurl'
+
+  # wp-config.php holds the database password and the salts. PHP-FPM and WP-CLI read it as
+  # apache, other local users must not.
+  - name: 'chmod 0640 {{ wordpress__install_dir }}/wp-config.php'
+    ansible.builtin.file:
+      path: '{{ wordpress__install_dir }}/wp-config.php'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o640
 
   - name: 'wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     ansible.builtin.command: '/usr/local/bin/wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
