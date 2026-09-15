@@ -51,6 +51,12 @@
     # dir_module
     DirectoryIndex {{ item['conf_directory_index'] | d(apache_httpd__mod_dir_directory_index) }}
 
+    # headers_module
+    # "always", because PHP-FPM responses carry their headers in the table only "always" edits.
+    # WordPress sends both itself on some admin requests, which would otherwise duplicate them.
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-Content-Type-Options "nosniff"
+
 {% if not apache_httpd__skip_php_fpm %}
     # PHP-FPM: redirect to site-specific php-fpm pool if mod_php is not available
     # Enable http authorization headers
