@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:fail2ban**: The `wordpress-login` filter and the `z10-wordpress-login` jail ban IPs that fail to log in to WordPress too often. Enable the jail on the host whose Apache logs the visitor's address, which behind a reverse proxy is the proxy.
 * **role:rstudio_server, playbook:rstudio_server**: Add a role and playbook to install RStudio Server Open Source, the browser-based R development environment. Users sign in with their account on the host and have to be a member of a group to be let in at all, the PAM profile covers directory users where the vendor's covers local ones only, and the R sessions can be given a memory and process budget.
 * **role:shiny_server, playbook:setup_shiny_server**: Add a role and playbook to install Shiny Server Open Source and serve several tenants from one host, each with its own hostname, password file, R worker and system account, behind an Apache httpd reverse proxy that also passes the authenticated user into the application. Shiny Server itself listens on the loopback only, because it authenticates nobody and hands every client header to the application.
 * **role:r, playbook:r**: Add a role and playbook to install R and pandoc, point R at the Posit Public Package Manager so that CRAN packages arrive as prebuilt binaries instead of being compiled on the host, and install the CRAN packages an application needs.
