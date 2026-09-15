@@ -64,6 +64,7 @@
     ansible.builtin.command: '/usr/local/bin/wp core download --skip-content --version={{ wordpress__version | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
 
@@ -75,6 +76,7 @@
     args:
       chdir: '{{ wordpress__install_dir }}'
       stdin: '{{ wordpress__database_user["password"] }}'
+    become: true
     become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
 
@@ -83,6 +85,7 @@
     args:
       chdir: '{{ wordpress__install_dir }}'
       stdin: '{{ wordpress__admin_user["password"] }}'
+    become: true
     become_user: 'apache'
     when: 'not wordpress__stat_result["stat"].exists'
 
@@ -98,10 +101,12 @@
     ansible.builtin.command: '/usr/local/bin/wp plugin uninstall --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --deactivate'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
     register: 'wordpress__plugin_uninstall_result'
     # ignore errors if the plugin is not installed
     failed_when: 'wordpress__plugin_uninstall_result["failed"] is defined and wordpress__plugin_uninstall_result["failed"] and not "plugin could not be found" in wordpress__plugin_uninstall_result["stderr"]'
+    changed_when: 'wordpress__plugin_uninstall_result["rc"] == 0'
     when: 'item["state"] | d("present") == "absent"'
     loop: '{{ wordpress__plugins }}'
 
@@ -109,7 +114,11 @@
     ansible.builtin.command: '/usr/local/bin/wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
+    register: 'wordpress__plugin_install_result'
+    changed_when: '"Plugin already installed." not in wordpress__plugin_install_result["stdout"]
+      or "activated." in wordpress__plugin_install_result["stdout"]'
     when: 'item["state"] | d("present") != "absent"'
     loop: '{{ wordpress__plugins }}'
 
@@ -125,7 +134,12 @@
     ansible.builtin.command: '/usr/local/bin/wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
+    register: 'wordpress__theme_install_result'
+    # "Switched to" only appears when WP-CLI had to activate the theme
+    changed_when: '"Theme already installed." not in wordpress__theme_install_result["stdout"]
+      or "Switched to" in wordpress__theme_install_result["stdout"]'
     when: 'wordpress__theme is defined and wordpress__theme | length > 0'
 
   - name: 'restorecon -Fvr {{ wordpress__install_dir | quote }}'
@@ -139,17 +153,38 @@
 
 - block:
 
-  - name: 'wp config set WP_DEBUG false --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp config set WP_DEBUG false --raw --path={{ wordpress__install_dir | quote }}'
+  # `wp config set` reports the constant as updated even when the value does not change, so the
+  # current values are read first and only the differing ones are set.
+  - name: 'wp config get <constant> --format=json --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp config get {{ item["name"] }} --format=json --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
+    register: 'wordpress__config_get_result'
+    changed_when: false
+    # rc 1: the constant is not defined yet
+    failed_when: 'wordpress__config_get_result["rc"] not in [0, 1]'
+    loop:
+      - name: 'DISABLE_WP_CRON'
+        value: 'true'
+      - name: 'DISALLOW_FILE_EDIT'
+        value: '{{ wordpress__disallow_file_edit | bool | string | lower }}'
+      - name: 'WP_DEBUG'
+        value: 'false'
+    loop_control:
+      label: '{{ item["name"] }}'
 
-  - name: 'wp config set DISALLOW_FILE_EDIT {{ wordpress__disallow_file_edit | string | lower }} --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp config set DISALLOW_FILE_EDIT {{ wordpress__disallow_file_edit | string | lower }} --raw --path={{ wordpress__install_dir | quote }}'
+  - name: 'wp config set {{ item["item"]["name"] }} {{ item["item"]["value"] }} --raw --path={{ wordpress__install_dir | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp config set {{ item["item"]["name"] }} {{ item["item"]["value"] }} --raw --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
+    when: 'item["stdout"] != item["item"]["value"]'
+    loop: '{{ wordpress__config_get_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"]["name"] }}'
 
   - name: 'mkdir -p {{ wordpress__install_dir }}/wp-content/mu-plugins'
     ansible.builtin.file:
@@ -183,13 +218,13 @@
     ansible.builtin.command: "/usr/local/bin/wp plugin install 'disable-json-api' --path={{ wordpress__install_dir | quote }} --activate"
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
-
-  - name: 'wp config set DISABLE_WP_CRON true --raw --path={{ wordpress__install_dir | quote }}'
-    ansible.builtin.command: '/usr/local/bin/wp config set DISABLE_WP_CRON true --raw --path={{ wordpress__install_dir | quote }}'
-    args:
-      chdir: '{{ wordpress__install_dir }}'
-    become_user: 'apache'
+    register: 'wordpress__disable_json_api_result'
+    # WP-CLI prints "Plugin already installed." for a present plugin, and "activated." only when
+    # it had to activate it
+    changed_when: '"Plugin already installed." not in wordpress__disable_json_api_result["stdout"]
+      or "activated." in wordpress__disable_json_api_result["stdout"]'
 
   - name: 'Deploy /etc/systemd/system/wordpress-cron.service'
     ansible.builtin.template:
@@ -257,6 +292,7 @@
     ansible.builtin.command: '/usr/local/bin/wp option update {{ item }} {{ wordpress__url | quote }} --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
     register: 'wordpress__option_update_result'
     changed_when: '"Updated" in wordpress__option_update_result["stdout"]'
@@ -278,6 +314,7 @@
     ansible.builtin.command: '/usr/local/bin/wp plugin install wordpress-importer --path={{ wordpress__install_dir | quote }} --activate'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
     when: 'wordpress__wxr_export is defined and wordpress__wxr_export | length > 0 and not wordpress__stat_result["stat"]["exists"]'
 
@@ -285,6 +322,7 @@
     ansible.builtin.command: '/usr/local/bin/wp import --path={{ wordpress__install_dir | quote }} --authors="create" {{ wordpress__wxr_export | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
     when: 'wordpress__wxr_export is defined and wordpress__wxr_export | length > 0 and not wordpress__stat_result["stat"]["exists"]'
     register: 'wordpress__import_result'
@@ -329,24 +367,28 @@
     ansible.builtin.command: '/usr/local/bin/wp core update --path={{ wordpress__install_dir | quote }} --version={{ wordpress__version | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
 
   - name: 'wp core update-db --path={{ wordpress__install_dir | quote }}'
     ansible.builtin.command: '/usr/local/bin/wp core update-db --path={{ wordpress__install_dir | quote }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
 
   - name: 'wp plugin update --path={{ wordpress__install_dir | quote }} --all'
     ansible.builtin.command: '/usr/local/bin/wp plugin update --path={{ wordpress__install_dir | quote }} --all'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
 
   - name: 'wp theme update --path={{ wordpress__install_dir | quote }} --all'
     ansible.builtin.command: '/usr/local/bin/wp theme update --path={{ wordpress__install_dir | quote }} --all'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
 
   - name: 'chown -R --changes apache:apache {{ wordpress__install_dir | quote }}'
@@ -375,6 +417,7 @@
     ansible.builtin.command: '/usr/local/bin/wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export --max_file_size=-1'
     args:
       chdir: '{{ wordpress__install_dir }}'
+    become: true
     become_user: 'apache'
     register: 'wordpress__export_result'
     failed_when: '"Success" not in wordpress__export_result["stdout"]

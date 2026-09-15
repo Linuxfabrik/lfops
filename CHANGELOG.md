@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:wordpress**: The WP-CLI tasks run as `apache` also when Ansible connects as `root` without privilege escalation. Until now they ran as `root` there, and WP-CLI refused to run, so the installation aborted at `wp core download`.
+* **role:wordpress**: A second run no longer reports the `wp-config.php` constants, `wordpress__plugins` and `wordpress__theme` as changed when nothing changed.
 * **role:wordpress**: `wordpress__wxr_export` imports the given WXR file when the role installs WordPress. The import never ran, because the tasks looked for the path in a loop variable that does not exist.
 * **role:wordpress**: The role creates the directory for Ansible's temporary files of the `apache` user as `/usr/share/httpd/.ansible/tmp`, instead of as `tmp` followed by two spaces. A leftover `/usr/share/httpd/.ansible/tmp  ` can be removed.
 * **role:apache_httpd**: The `wordpress` vHost blocks direct calls to the PHP files below `wp-includes/` and `wp-admin/includes/`, as its README describes. The rules never matched, so these files could be called directly.
