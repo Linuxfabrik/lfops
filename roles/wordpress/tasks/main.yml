@@ -343,8 +343,18 @@
 
 - block:
 
-  - name: 'wp export --path={{ wordpress__install_dir | quote }} --dir=/tmp/ --max_file_size=-1'
-    ansible.builtin.command: '/usr/local/bin/wp export --path={{ wordpress__install_dir | quote }} --dir=/tmp/ --max_file_size=-1'
+  # The export holds unpublished content and the e-mail addresses of the users, so it goes into
+  # a directory only apache can read instead of into /tmp.
+  - name: 'mkdir -p /backup/wordpress-export'
+    ansible.builtin.file:
+      path: '/backup/wordpress-export'
+      state: 'directory'
+      owner: 'apache'
+      group: 'apache'
+      mode: 0o700
+
+  - name: 'wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export --max_file_size=-1'
+    ansible.builtin.command: '/usr/local/bin/wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export --max_file_size=-1'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become_user: 'apache'

@@ -26,7 +26,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `wordpress:export`
 
-* Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file.
+* Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file to `/backup/wordpress-export`, which only `apache` and `root` can read.
 * Triggers: none.
 
 `wordpress:file_policy`
