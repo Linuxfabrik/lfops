@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_postgresql**: The role no longer aborts on RHEL 10 at `dnf module disable -y postgresql`.
 * **role:postgresql_server**: `postgresql-dump` also saves the roles and tablespaces (`globals.sql.gz`), without which a restored database fails on every object owner, no longer skips the `postgres` database and databases whose name starts with `template`, and uses the client tools of the installed PostgreSQL version.
 * **role:postgresql_server**: Clients connecting to `localhost` are accepted over IPv6 as well, where they were rejected with `no pg_hba.conf entry for host "::1"`.
 * **role:postgresql_server**: A configuration change on a PostgreSQL installed from the distribution packages restarts `postgresql.service` instead of aborting the run on a service called `postgresql-`.
