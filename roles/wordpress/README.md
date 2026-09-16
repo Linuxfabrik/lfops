@@ -11,7 +11,7 @@ Attention: It is intended that when you call `wordpress__url` you will get a whi
 ## How the Role Behaves
 
 * The WordPress core, `wp-config.php` and `wp-content/mu-plugins` belong to `root`, so code running in the web server cannot modify them. `wp-content` belongs to `apache`, so plugins, themes, translations and uploads can still be installed and updated from the web interface (`FS_METHOD` is `direct`).
-* WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update-<instance>.timer` installs the latest minor release daily instead, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
+* WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update-<instance>.timer` installs the latest minor release daily instead and reloads a running PHP-FPM afterwards, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
 * WP-CLI runs as `root` only for commands that do not load WordPress (core download, config, checksum verification). Everything that loads WordPress runs as `apache`, because loading it executes code from `wp-content`, which `apache` can write.
 * WordPress cannot write `.htaccess`, so after a change of the permalink structure in the web interface, add the rewrite rules it displays to `.htaccess` by hand.
 * Everything that exists once per WordPress instance carries the host and path of `wordpress__url` as the name of the instance, with `/` replaced by `-` (`example.com`, `example.com-blog`): `wordpress-cron-<instance>.timer`, `wordpress-core-minor-update-<instance>.timer` and the export directory. The vHost belongs to the host name and is shared by all instances under it (`<host>.80.conf`). The role removes `wordpress-cron.timer` of older role versions, but not their vHost file `wordpress.conf`.
@@ -59,6 +59,7 @@ Several WordPress instances can share a host as pseudo hosts in the inventory: o
 `wordpress:update`
 
 * Updates the WordPress core to `wordpress__version`. Also applies all DB migrations, and updates all plugins and themes.
+* Reloads a running PHP-FPM after the core and again after the plugin and theme updates, so that OPcache does not keep serving old files.
 * Triggers: none.
 
 

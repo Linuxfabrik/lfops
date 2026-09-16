@@ -134,8 +134,73 @@
         that: '__molecule__wordpress_fs_method_result["stdout"] == "direct"'
         fail_msg: 'get_filesystem_method() returns {{ __molecule__wordpress_fs_method_result["stdout"] }}'
 
-    # The installation is at the latest release, so the service has nothing to install, but it
-    # runs the check as apache and exits cleanly.
+    # second.example.com/instance2 is installed with an older 7.0 release. Its minor update has
+    # to be served by PHP-FPM right away, although OPcache would keep the cached version.php for
+    # opcache.revalidate_freq (60) seconds without the reload in the update script. A probe that
+    # includes version.php is requested once before the update, so that the old version.php is in
+    # the cache. On the second verify run, the instance is already updated and the versions before
+    # and after are equal.
+    - name: 'Run a minor update of second.example.com/instance2 and check what PHP-FPM serves'
+      vars:
+        __molecule__wordpress_minor_dir: '/var/www/html/second.example.com/instance2'
+      block:
+
+        - name: 'Deploy {{ __molecule__wordpress_minor_dir }}/molecule-version.php'
+          ansible.builtin.copy:
+            content: "<?php include __DIR__ . '/wp-includes/version.php'; echo $wp_version;\n"
+            dest: '{{ __molecule__wordpress_minor_dir }}/molecule-version.php'
+            owner: 'root'
+            group: 'root'
+            mode: 0o644
+
+        - name: 'wp core version --path={{ __molecule__wordpress_minor_dir }} # before the update'
+          ansible.builtin.command: '/usr/local/bin/wp core version --path={{ __molecule__wordpress_minor_dir }} --allow-root'
+          register: '__molecule__wordpress_minor_before_result'
+          changed_when: false
+
+        - name: 'GET /instance2/molecule-version.php before the update'
+          ansible.builtin.uri:
+            url: 'http://127.0.0.1/instance2/molecule-version.php'
+            headers:
+              Host: 'second.example.com'
+            return_content: true
+          register: '__molecule__wordpress_minor_served_before_result'
+
+        - name: 'systemctl start wordpress-core-minor-update-second.example.com-instance2.service'
+          ansible.builtin.command: 'systemctl start wordpress-core-minor-update-second.example.com-instance2.service'
+          changed_when: false
+
+        - name: 'wp core version --path={{ __molecule__wordpress_minor_dir }} # after the update'
+          ansible.builtin.command: '/usr/local/bin/wp core version --path={{ __molecule__wordpress_minor_dir }} --allow-root'
+          register: '__molecule__wordpress_minor_after_result'
+          changed_when: false
+
+        - name: 'GET /instance2/molecule-version.php after the update'
+          ansible.builtin.uri:
+            url: 'http://127.0.0.1/instance2/molecule-version.php'
+            headers:
+              Host: 'second.example.com'
+            return_content: true
+          register: '__molecule__wordpress_minor_served_after_result'
+
+        - name: 'Assert the minor update happened and PHP-FPM serves the new version at once'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__wordpress_minor_after_result["stdout"] is version("7.0.3", ">")'
+              - '__molecule__wordpress_minor_after_result["stdout"] is version("7.1", "<")'
+              - '__molecule__wordpress_minor_served_before_result["content"] == __molecule__wordpress_minor_before_result["stdout"]'
+              - '__molecule__wordpress_minor_served_after_result["content"] == __molecule__wordpress_minor_after_result["stdout"]'
+            fail_msg: 'files: {{ __molecule__wordpress_minor_before_result["stdout"] }} -> {{ __molecule__wordpress_minor_after_result["stdout"] }}, served by PHP-FPM: {{ __molecule__wordpress_minor_served_before_result["content"] }} -> {{ __molecule__wordpress_minor_served_after_result["content"] }}'
+
+      always:
+
+        - name: 'rm -f {{ __molecule__wordpress_minor_dir }}/molecule-version.php'
+          ansible.builtin.file:
+            path: '{{ __molecule__wordpress_minor_dir }}/molecule-version.php'
+            state: 'absent'
+
+    # The other installations are at the latest release, so the service has nothing to install,
+    # but it runs the check as apache and exits cleanly.
     - name: 'systemctl start wordpress-core-minor-update-<instance>.service'
       ansible.builtin.command: 'systemctl start wordpress-core-minor-update-{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") | replace("/", "-") }}.service'
       changed_when: false

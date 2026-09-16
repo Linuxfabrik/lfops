@@ -26,9 +26,11 @@
       password: 'linuxfabrik'
     wordpress__url: 'https://second.example.com/instance1'
 
+# An older release of the 7.0 branch, so that verify.yml can run a real minor update.
 - name: 'Converge setup_wordpress playbook for the second sub-path of another host name'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
   vars:
+    wordpress__version: '7.0.3'
     wordpress__database_name: 'wordpress_instance2'
     wordpress__database_user:
       username: 'wordpress-instance2'

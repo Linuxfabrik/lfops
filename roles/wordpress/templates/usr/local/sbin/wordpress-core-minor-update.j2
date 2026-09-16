@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026091601
+# 2026091602
 #
 # Installs the latest minor release of the WordPress core in the installation directory given as
 # the only argument. Each WordPress instance on the host has its own systemd service for it.
@@ -34,6 +34,11 @@ fi
 echo "Updating WordPress from $current to $version."
 # does not load WordPress; verifies the md5 checksum of the download
 /usr/local/bin/wp core download --no-color --version="$version" --skip-content --force --path="$dir" --allow-root
+# OPcache looks for changed files only every opcache.revalidate_freq seconds, so until then
+# PHP-FPM would run old and new core files side by side. A reload lets running requests finish
+# and starts the workers with an empty cache; a stopped PHP-FPM is left alone.
+echo 'Reloading PHP-FPM, so that it drops the old core files from OPcache.'
+systemctl try-reload-or-restart php-fpm.service
 echo 'Updating the database.'
 runuser --user=apache -- /usr/local/bin/wp core update-db --no-color --path="$dir"
 echo 'Verifying the checksums of the core files.'

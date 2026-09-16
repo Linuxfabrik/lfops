@@ -498,6 +498,14 @@
     args:
       chdir: '{{ wordpress__install_dir }}'
 
+  # OPcache looks for changed files only every opcache.revalidate_freq seconds, so until then
+  # PHP-FPM would run old and new files side by side; WP-CLI clears only its own cache. A reload
+  # lets running requests finish and starts the workers with an empty cache. The command, because
+  # the service module would start a stopped PHP-FPM.
+  - name: 'systemctl try-reload-or-restart php-fpm.service'
+    ansible.builtin.command: 'systemctl try-reload-or-restart php-fpm.service' # noqa command-instead-of-module
+    changed_when: true # reloads a running PHP-FPM
+
   - name: 'wp core update-db --path={{ wordpress__install_dir | quote }}'
     ansible.builtin.command: '/usr/local/bin/wp core update-db --path={{ wordpress__install_dir | quote }}'
     args:
@@ -518,6 +526,10 @@
       chdir: '{{ wordpress__install_dir }}'
     become: true
     become_user: 'apache'
+
+  - name: 'systemctl try-reload-or-restart php-fpm.service # after the plugin and theme updates'
+    ansible.builtin.command: 'systemctl try-reload-or-restart php-fpm.service' # noqa command-instead-of-module
+    changed_when: true # reloads a running PHP-FPM
 
   tags:
     - 'never'
