@@ -1,0 +1,34 @@
+apache_httpd__conf_server_admin: 'root@localhost'
+
+mariadb_server__admin_user:
+  username: 'mariadb-admin'
+  password: 'linuxfabrik'
+
+repo_mariadb__version: '11.4'
+
+repo_remi__enabled_php_version: '8.4'
+
+# WordPress rejects an address without a dot in its domain, such as root@localhost
+wordpress__admin_email: 'webmaster@example.com'
+wordpress__admin_user:
+  username: 'wordpress-admin'
+  password: 'linuxfabrik'
+wordpress__database_user:
+  username: 'wordpress'
+  password: 'linuxfabrik'
+# One plugin to install and one that is absent and was never installed, so the install, the
+# uninstall and their change detection all run, together with a theme.
+wordpress__plugins:
+  - name: 'hello-dolly'
+    state: 'present'
+  - name: 'akismet'
+    state: 'absent'
+wordpress__site_title: 'Molecule'
+wordpress__theme: 'twentytwentyfive'
+# 127.0.0.1 stands in for the reverse proxy: verify.yml sends requests with X-Forwarded-* headers
+# both from it and from the VM's own address, which is not trusted.
+wordpress__trusted_proxies:
+  - '127.0.0.1'
+# An https URL, as behind a reverse proxy that terminates TLS. Apache on the VM serves plain HTTP,
+# so verify.yml sends X-Forwarded-Proto: https where the proxy would.
+wordpress__url: 'https://wordpress.example.com'

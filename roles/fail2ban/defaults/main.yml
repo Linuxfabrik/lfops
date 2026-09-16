@@ -19,6 +19,9 @@ fail2ban__filters__role_var:
   - filename: 'portscan'
     state: 'present'
     template: 'portscan'
+  - filename: 'wordpress-login'
+    state: 'present'
+    template: 'wordpress-login'
 fail2ban__jail_apache_404_bantime: '8h'
 fail2ban__jail_apache_404_findtime: '10s'
 fail2ban__jail_apache_404_maxretry: 10
@@ -35,6 +38,9 @@ fail2ban__jail_portscan_allowed_ports:
 fail2ban__jail_portscan_bantime: '8h'
 fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
 fail2ban__jail_sshd_bantime: '7d'
+fail2ban__jail_wordpress_login_bantime: '8h'
+fail2ban__jail_wordpress_login_findtime: '10m'
+fail2ban__jail_wordpress_login_maxretry: 5
 fail2ban__jails__combined_var: '{{ (
       fail2ban__jails__role_var +
       fail2ban__jails__dependent_var +

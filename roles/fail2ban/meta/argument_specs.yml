@@ -109,6 +109,24 @@ argument_specs:
         default: '7d'
         description: 'The ban duration for the sshd jail.'
 
+      fail2ban__jail_wordpress_login_bantime:
+        type: 'str'
+        required: false
+        default: '8h'
+        description: 'The ban duration for the wordpress-login jail.'
+
+      fail2ban__jail_wordpress_login_findtime:
+        type: 'str'
+        required: false
+        default: '10m'
+        description: 'The find time for the wordpress-login jail.'
+
+      fail2ban__jail_wordpress_login_maxretry:
+        type: 'int'
+        required: false
+        default: 5
+        description: 'The number of failed WordPress logins within the find time before an IP is banned.'
+
       fail2ban__jails__dependent_var:
         type: 'list'
         elements: 'dict'

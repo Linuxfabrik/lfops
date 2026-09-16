@@ -510,7 +510,7 @@ Types of vHosts:
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out).
 * **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
 * **redirect**: A vHost that redirects every request to `https://` on the same host, keeping the requested hostname and path. Set `virtualhost_port: 80` to redirect the plain HTTP port. Requests below `/.well-known/acme-challenge/` are excluded, so ACME/Let's Encrypt HTTP-01 challenges keep working. The `raw` variable replaces the redirect rule instead of extending it.
-* **wordpress**: A hardened vHost for a WordPress instance, adding WordPress-specific rules on top of the app-vHost hardening: hotlink protection, blocked access to `wp-config.php`, `xmlrpc.php` and the other WordPress metadata files, blocked direct access to `wp-includes`, blocked author scans, and comment-spam mitigation. It is usually injected by the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role; define it by hand only when running WordPress without that role, and then set `wordpress_url`.
+* **wordpress**: A hardened vHost for a WordPress instance, adding WordPress-specific rules on top of the app-vHost hardening: hotlink protection, blocked access to `wp-config.php`, `xmlrpc.php` and the other WordPress metadata files, blocked direct access to `wp-includes`, no PHP execution below `wp-content/uploads`, blocked author scans, comment-spam mitigation, and the `Referrer-Policy` and `X-Content-Type-Options` headers. The rules also cover WordPress installations in sub-paths of the document root, such as `/blog`. It is usually injected by the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role; define it by hand only when running WordPress without that role, and then set `wordpress_url`.
 
 "Hardened" means among other things:
 
@@ -753,7 +753,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `wordpress_url`
 
-* The URL of the WordPress site. Used by the hotlink protection and the comment-spam rules to recognize requests originating from the site itself. Set this when the vHost is defined by hand; the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role provides the fallback `wordpress__url`, and without either the vHost fails to render.
+* The URL of the WordPress site, with or without the scheme, for example `https://blog.example.com`. The hotlink protection and the comment-spam rules use its host part to recognize requests originating from the site itself. Set this when the vHost is defined by hand; the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role provides the fallback `wordpress__url`, and without either the vHost fails to render.
 * Applies to: wordpress.
 * Type: String.
 * Default: `{{ wordpress__url }}`

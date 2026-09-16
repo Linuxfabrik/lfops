@@ -61,6 +61,42 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # The wordpress-login filter ships with the role defaults, but its jail reads Apache logs this
+    # host does not have. So the deployed filter is fed sample lines through fail2ban-regex, which
+    # proves it parses and matches with the fail2ban version the role installed.
+    - name: 'fail2ban-regex against a {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'fail2ban-regex'
+          - '{{ item["line"] }}'
+          - '/etc/fail2ban/filter.d/wordpress-login.conf'
+      register: '__molecule__fail2ban_wordpress_regex_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - label: 'failed login in the combined format'
+          line: '198.51.100.1 - - [15/Sep/2026:10:00:00 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "Mozilla/5.0"'
+          matched: 1
+        - label: 'failed login to a WordPress in a sub-path'
+          line: '198.51.100.4 - - [15/Sep/2026:10:00:03 +0200] "POST /blog/wp-login.php HTTP/1.1" 200 4321 "-" "Mozilla/5.0"'
+          matched: 1
+        - label: 'failed login in the linuxfabrikio format'
+          line: '192.0.2.10 198.51.100.3 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
+          matched: 1
+        - label: 'successful login'
+          line: '198.51.100.2 - - [15/Sep/2026:10:00:01 +0200] "POST /wp-login.php HTTP/1.1" 302 0 "-" "Mozilla/5.0"'
+          matched: 0
+      loop_control:
+        label: '{{ item["label"] }}'
+
+    - name: 'Assert the wordpress-login filter matches only the failed logins'
+      ansible.builtin.assert:
+        that: 'item["stdout"] is search("Lines: 1 lines, 0 ignored, " ~ item["item"]["matched"] ~ " matched")'
+        fail_msg: '{{ item["item"]["label"] }}: {{ item["stdout"] }}'
+      loop: '{{ __molecule__fail2ban_wordpress_regex_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["label"] }}'
+
     # Proves a value from the inventory reaches the running jail, rather than the server falling
     # back to the 10m that jail.conf ships.
     - name: 'fail2ban-client get sshd bantime'

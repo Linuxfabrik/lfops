@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:wordpress**: The vHost file is named after the host of `wordpress__url`, for example `wordpress.example.com.80.conf`, instead of `wordpress.conf`. Remove the old file with `rm -f /etc/httpd/sites-{enabled,available}/wordpress.conf` and reload httpd, otherwise Apache may keep serving the site from it.
+* **role:wordpress**: The WordPress core, `wp-config.php` and `wp-content/mu-plugins` belong to `root`, so a vulnerable plugin can no longer modify them; plugins and themes can still be installed from the web interface. The core is updated by `wordpress-core-minor-update-<instance>.timer` (minor releases) and `--tags wordpress:update` instead of by WordPress itself. After a permalink change in the web interface, add the displayed rewrite rules to `.htaccess` by hand.
+* **role:wordpress**: The REST API is restricted to logged-in users by the Disable WP REST API plugin, which replaces Disable REST API (`disable-json-api`) and also blocks the routes of plugins installed later. A front-end feature that calls the REST API without a login, such as some contact forms, needs an exception in code.
+* **role:wordpress**: Application passwords are switched off, since they bypass a second factor. Set `wordpress__application_passwords_enabled: true` for integrations that use them, such as the WordPress mobile app.
+* **role:wordpress**: WordPress honours `X-Forwarded-For` only from the proxies in `wordpress__trusted_proxies` and ignores `X-Forwarded-Host`, which any client could set before. Behind a reverse proxy, list its IP address.
+* **role:wordpress**: `wordpress__url` must include the scheme, for example `https://wordpress.example.com`. The role sets the site address (`home` and `siteurl`) to it on every run, so the login cookie of an `https://` site carries the `Secure` flag, and an address changed in the WordPress settings is set back.
 * **role:icinga2_agent**: If the agent cannot get a PKI ticket from the Icinga2 master, the run aborts and names the cause and the fix. Until now the role set the agent up anyway, which also replaced the signed certificate of an agent that was already connected with an unsigned one. If you sign agent certificates on the master by hand, or do not set `icinga2_agent__icinga2_api_user_login`, set `icinga2_agent__skip_pki_ticket: true`.
 * **role:dnf_makecache**: `dnf_makecache__service_enabled` and `dnf_makecache__service_state` are gone; remove them from your inventory. The role only manages `dnf-makecache.timer` now, since `dnf-makecache.service` cannot be enabled at boot and only runs when the timer triggers it. `dnf_makecache__service_enabled` never had an effect, but a run against an unchanged host reported a change for it. A host that set `dnf_makecache__service_state: 'started'` no longer runs `dnf makecache` on every run of the role. Use `dnf_makecache__timer_enabled` and `dnf_makecache__timer_state` for the periodic cache refresh.
 * **role:kibana**: The session cookie always carries the `Secure` flag, also behind a reverse proxy that terminates TLS, where Kibana left the flag off. A Kibana that browsers reach over plain HTTP no longer logs anyone in until `kibana__xpack_security_secure_cookies: false` is set. Remove `xpack.security.secureCookies` from `kibana__raw` if you set it there.
@@ -23,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:wordpress**: Several WordPress instances can share a host as pseudo hosts in the inventory, under different host names as well as under different paths of one host name, such as `https://example.com/blog`.
+* **role:fail2ban**: The `wordpress-login` filter and `z10-wordpress-login` jail ban IPs with too many failed WordPress logins, on the host whose Apache logs the visitor's address.
 * **role:rstudio_server, playbook:rstudio_server**: Add a role and playbook to install RStudio Server Open Source, the browser-based R development environment. Users sign in with their account on the host and have to be a member of a group to be let in at all, the PAM profile covers directory users where the vendor's covers local ones only, and the R sessions can be given a memory and process budget.
 * **role:shiny_server, playbook:setup_shiny_server**: Add a role and playbook to install Shiny Server Open Source and serve several tenants from one host, each with its own hostname, password file, R worker and system account, behind an Apache httpd reverse proxy that also passes the authenticated user into the application. Shiny Server itself listens on the loopback only, because it authenticates nobody and hands every client header to the application.
 * **role:r, playbook:r**: Add a role and playbook to install R and pandoc, point R at the Posit Public Package Manager so that CRAN packages arrive as prebuilt binaries instead of being compiled on the host, and install the CRAN packages an application needs.
@@ -45,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:wordpress**: The installation no longer aborts at `wp core download` when Ansible connects as `root` without privilege escalation.
+* **role:wordpress**: A second run no longer reports the `wp-config.php` constants, `wordpress__plugins` and `wordpress__theme` as changed.
+* **role:wordpress**: The WXR file in `wordpress__wxr_export` is imported when the role installs WordPress; the import never ran before.
+* **role:wordpress**: Ansible's temporary directory for `apache` is `/usr/share/httpd/.ansible/tmp` instead of a path with two trailing spaces.
+* **role:apache_httpd**: The `wordpress` vHost blocks direct calls to the PHP files below `wp-includes/` and `wp-admin/includes/`, whose rules never matched.
 * **role:postfix**: `postfix__compatibility_level` takes effect on Debian and Ubuntu as well, and defaults to the level the distribution ships, so Debian 13 and Ubuntu 26.04 run at `3.9` instead of `3.6` ([#364](https://github.com/Linuxfabrik/lfops/issues/364)).
 * **role:mariadb_server**: On RHEL 10 with a `selinux-policy-targeted` older than `42.1.18-4.el10_2.3`, MariaDB runs confined in `mysqld_t` again, so web applications such as WordPress or Nextcloud reach its socket. Until now it ran in `initrc_t` there, and PHP-FPM failed to connect until the SELinux policy was updated and MariaDB restarted.
 * **role:apache_httpd**: The role hands the content of the document root to the web server user, but leaves the directory itself to the httpd package, whose tmpfiles rule resets it to `root` on every boot and after some package installations. A second run on a fresh host no longer reports the ownership as changed.
@@ -72,6 +85,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:wordpress**: `--tags wordpress:export` writes to `/backup/wordpress-export/<instance>`, readable by `apache` and `root` only, instead of to `/tmp`.
+* **role:wordpress**: The database and admin passwords no longer show up in the process list during the installation.
+* **role:wordpress**: WP-CLI is verified against its published checksum, and an installed WP-CLI that differs from the current release is replaced.
+* **role:wordpress**: `wp-config.php`, which holds the database password and the salts, is no longer readable by every local user.
+* **role:apache_httpd**: The `wordpress` vHost sends `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`.
+* **role:apache_httpd**: The `wordpress` vHost refuses to run PHP files below `wp-content/uploads`, so an upload flaw in a plugin no longer leads to code execution.
 * **role:repo_collabora_code**: dnf verifies the signatures of the Collabora packages, as Collabora's own installation instructions do, where the repository file had switched the check off.
 
 
