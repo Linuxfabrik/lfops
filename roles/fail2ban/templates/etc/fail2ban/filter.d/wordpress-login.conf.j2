@@ -1,15 +1,16 @@
 # {{ ansible_managed }}
-# 2026091501
+# 2026091601
 
 # Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo,
 # vhost_common). WordPress answers a failed login with the login form again (200) and a
 # successful one with a redirect (302), so a POST to wp-login.php that gets a 200 is a failure.
-# This covers the lost-password and registration forms of wp-login.php as well.
+# This covers the lost-password and registration forms of wp-login.php as well, and WordPress
+# installations in a sub-path such as /blog/wp-login.php.
 
 [Definition]
-failregex = ^<HOST> \S+ \S+ \[[^"]*"POST /wp-login\.php(?:\?[^" ]*)? HTTP/[^"]*" 200\s
-            ^(?!\d+\.\d+\.\d+\.\d+\s)[^\s:]+ <HOST> \S+ \S+ \[[^"]*"POST /wp-login\.php(?:\?[^" ]*)? HTTP/[^"]*" 200\s
-            ^<ADDR> \S+ \S+ \S+ \[[^"]*"POST /wp-login\.php(?:\?[^" ]*)? HTTP/[^"]*" 200\s
+failregex = ^<HOST> \S+ \S+ \[[^"]*"POST (?:/[^/?" ]+)*/wp-login\.php(?:\?[^" ]*)? HTTP/[^"]*" 200\s
+            ^(?!\d+\.\d+\.\d+\.\d+\s)[^\s:]+ <HOST> \S+ \S+ \[[^"]*"POST (?:/[^/?" ]+)*/wp-login\.php(?:\?[^" ]*)? HTTP/[^"]*" 200\s
+            ^<ADDR> \S+ \S+ \S+ \[[^"]*"POST (?:/[^/?" ]+)*/wp-login\.php(?:\?[^" ]*)? HTTP/[^"]*" 200\s
 ignoreregex =
 datepattern = ^[^\[]*\[({DATE})
               {^LN-BEG}

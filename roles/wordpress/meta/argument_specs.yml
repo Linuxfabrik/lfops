@@ -48,7 +48,7 @@ argument_specs:
       wordpress__install_dir:
         type: 'str'
         required: false
-        description: 'The installation directory for WordPress.'
+        description: 'The installation directory for WordPress. Has to end with the path of wordpress__url.'
 
       wordpress__on_calendar_core_minor_update:
         type: 'str'
@@ -88,7 +88,7 @@ argument_specs:
       wordpress__url:
         type: 'str'
         required: true
-        description: 'The URL under which WordPress is reachable, including the scheme.'
+        description: 'The URL under which WordPress is reachable, including the scheme and an optional path.'
 
       wordpress__version:
         type: 'str'

@@ -10,7 +10,7 @@ This role provides four additional filters:
   **Important:** in order to capture the client ip for all formats, this filter requires the ServerName to be a domain instead of an ip address when using a LogFormat where the canonical ServerName `%v` precedes the client IP `%h` (matomo, vhost_common).
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port.
-* wordpress-login: Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common), which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
+* wordpress-login: Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common), also for WordPress in a sub-path such as `/blog`, which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
 
 
 *Available since LFOps `2.0.0`.*

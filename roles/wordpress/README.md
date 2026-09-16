@@ -14,7 +14,7 @@ Attention: It is intended that when you call `wordpress__url` you will get a whi
 * WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update-<instance>.timer` installs the latest minor release daily instead, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
 * WP-CLI runs as `root` only for commands that do not load WordPress (core download, config, checksum verification). Everything that loads WordPress runs as `apache`, because loading it executes code from `wp-content`, which `apache` can write.
 * WordPress cannot write `.htaccess`, so after a change of the permalink structure in the web interface, add the rewrite rules it displays to `.htaccess` by hand.
-* Everything that exists once per WordPress instance carries the host part of `wordpress__url` as the name of the instance: `wordpress-cron-<instance>.timer`, `wordpress-core-minor-update-<instance>.timer`, the vHost file `<instance>.80.conf` and the export directory. The role removes `wordpress-cron.timer` of older role versions, but not their vHost file `wordpress.conf`.
+* Everything that exists once per WordPress instance carries the host and path of `wordpress__url` as the name of the instance, with `/` replaced by `-` (`example.com`, `example.com-blog`): `wordpress-cron-<instance>.timer`, `wordpress-core-minor-update-<instance>.timer` and the export directory. The vHost belongs to the host name and is shared by all instances under it (`<host>.80.conf`). The role removes `wordpress-cron.timer` of older role versions, but not their vHost file `wordpress.conf`.
 * The REST API only answers logged-in users. The role installs and activates the [Disable WP REST API](https://wordpress.org/plugins/disable-wp-rest-api/) plugin, and uninstalls the Disable REST API (`disable-json-api`) plugin where it is present. Anonymous requests to any route, including the routes of plugins installed later, get `401 rest_login_required`. The plugin has no settings, so a front-end feature that calls the REST API without a login, such as some contact forms, needs an exception in code.
 
 
@@ -29,8 +29,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Multiple Instances on One Host
 
-Several WordPress instances can share a host as pseudo hosts in the inventory: one inventory host per instance, all with the same `ansible_host`, each with its own `wordpress__url`, `wordpress__database_name` and `wordpress__database_user`. The instances share the web server, PHP-FPM and MariaDB, so:
+Several WordPress instances can share a host as pseudo hosts in the inventory: one inventory host per instance, all with the same `ansible_host`, each with its own `wordpress__url`, `wordpress__database_name` and `wordpress__database_user`. The instances can use different host names (`https://blog.example.com`, `https://shop.example.com`), different paths under one host name (`https://example.com/blog`, `https://example.com/shop`), or both, including an instance at the root of a host name next to instances in its sub-paths. The instances share the web server, PHP-FPM and MariaDB, so:
 
+* Instances under one host name share its vHost. Its document root is the installation directory without the path, for example `/var/www/html/example.com` for `/var/www/html/example.com/blog`, so if you set `wordpress__install_dir`, keep that part the same for all of them. Settings for this vHost in `apache_httpd__vhosts__*_var` belong into the group as well.
 * Put everything that is not specific to one instance, such as `mariadb_server__admin_user`, `php__*` or `apache_httpd__*` settings, into a group that contains all pseudo hosts of the machine, not into their `host_vars`. Pseudo hosts that disagree about a shared configuration file overwrite each other on every run. This includes values that are looked up per `inventory_hostname`, such as passwords from Bitwarden, and `mariadb_server__dump_on_calendar`, whose default depends on the `inventory_hostname`.
 * Add the pseudo hosts to `lfops_setup_wordpress` only, and the real host to all other playbooks, such as `setup_basic` or the monitoring.
 * Do not run the pseudo hosts of a machine in parallel, for example with `--forks 1` or one `--limit` after the other. Otherwise Ansible configures the same machine several times at once, which leads to package manager lock timeouts, overlapping service restarts and a broken initial MariaDB setup.
@@ -107,8 +108,8 @@ Several WordPress instances can share a host as pseudo hosts in the inventory: o
 
 `wordpress__url`
 
-* The URL under which WordPress is reachable, including `http://` or `https://`. Use the URL your users type in the browser, which with a reverse proxy that terminates TLS in front is an `https://` URL even though Apache httpd on the host serves plain HTTP.
-* It is the single source for the site address: WordPress is installed with it, and the role sets `home` and `siteurl` to it on every run, so an address changed in the WordPress settings is set back. With `https://`, WordPress builds its links for HTTPS and marks its login cookies `Secure`, and the role forces HTTPS for the login and the admin area. The host part becomes the `ServerName` of the vHost and the default installation directory.
+* The URL under which WordPress is reachable, including `http://` or `https://` and an optional path such as `/blog`, without a trailing slash. Use the URL your users type in the browser, which with a reverse proxy that terminates TLS in front is an `https://` URL even though Apache httpd on the host serves plain HTTP.
+* It is the single source for the site address: WordPress is installed with it, and the role sets `home` and `siteurl` to it on every run, so an address changed in the WordPress settings is set back. With `https://`, WordPress builds its links for HTTPS and marks its login cookies `Secure`, and the role forces HTTPS for the login and the admin area. The host part becomes the `ServerName` of the vHost, and host and path the default installation directory.
 * Type: String.
 
 Example:
@@ -155,9 +156,9 @@ wordpress__url: 'https://wordpress.example.com'
 
 `wordpress__install_dir`
 
-* The installation directory for WordPress.
+* The installation directory for WordPress. For a `wordpress__url` with a path, it has to end with that path; the part before it becomes the document root of the vHost.
 * Type: String.
-* Default: `/var/www/html/` followed by the host part of `wordpress__url`, for example `'/var/www/html/wordpress.example.com'`
+* Default: `/var/www/html/` followed by the host and path of `wordpress__url`, for example `'/var/www/html/wordpress.example.com'` or `'/var/www/html/example.com/blog'`
 
 `wordpress__on_calendar_core_minor_update`
 

@@ -11,9 +11,13 @@
   vars:
     __molecule__wordpress_dir: '/var/www/html/{{ __molecule__wordpress_host }}'
     __molecule__wordpress_host: '{{ wordpress__url | urlsplit("hostname") }}'
+    # the URLs of the instances converge.yml deploys; the names of their systemd units and their
+    # installation directories are derived from them the way the role does
     __molecule__wordpress_instances:
-      - '{{ __molecule__wordpress_host }}'
-      - 'second.example.com'
+      - '{{ wordpress__url }}'
+      - 'https://wordpress.example.com/blog'
+      - 'https://second.example.com/instance1'
+      - 'https://second.example.com/instance2'
 
   tasks:
 
@@ -78,7 +82,8 @@
         fail_msg: 'application passwords are {{ __molecule__wordpress_app_passwords_result["stdout"] }}'
 
     # The web server may write wp-content, but not the core or the must-use plugins. Asked with
-    # test -w as apache, which is what PHP-FPM runs as.
+    # test -w as apache, which is what PHP-FPM runs as. Checked for every instance, since the file
+    # policy of the instance at the root of wordpress.example.com also walks the one in /blog.
     - name: 'runuser --user=apache -- test -w <path>'
       ansible.builtin.command:
         argv:
@@ -87,24 +92,28 @@
           - '--'
           - 'test'
           - '-w'
-          - '{{ __molecule__wordpress_dir }}/{{ item }}'
+          - '/var/www/html/{{ item[0] | urlsplit("hostname") }}{{ item[0] | urlsplit("path") }}/{{ item[1] }}'
       register: '__molecule__wordpress_writable_result'
       changed_when: false
       failed_when: false
-      loop:
-        - 'index.php'
-        - 'wp-config.php'
-        - 'wp-content/mu-plugins'
-        - 'wp-content/plugins'
-        - 'wp-includes/version.php'
+      loop: '{{ __molecule__wordpress_instances | product(__molecule__wordpress_writable_paths) | list }}'
+      loop_control:
+        label: '{{ item[0] }}/{{ item[1] }}'
+      vars:
+        __molecule__wordpress_writable_paths:
+          - 'index.php'
+          - 'wp-config.php'
+          - 'wp-content/mu-plugins'
+          - 'wp-content/plugins'
+          - 'wp-includes/version.php'
 
     - name: 'Assert apache can write wp-content/plugins only'
       ansible.builtin.assert:
-        that: '(item["rc"] == 0) == (item["item"] == "wp-content/plugins")'
-        fail_msg: '{{ item["item"] }} is {{ (item["rc"] == 0) | ternary("", "not ") }}writable for apache'
+        that: '(item["rc"] == 0) == (item["item"][1] == "wp-content/plugins")'
+        fail_msg: '{{ item["item"][0] }}/{{ item["item"][1] }} is {{ (item["rc"] == 0) | ternary("", "not ") }}writable for apache'
       loop: '{{ __molecule__wordpress_writable_result["results"] }}'
       loop_control:
-        label: '{{ item["item"] }}'
+        label: '{{ item["item"][0] }}/{{ item["item"][1] }}'
 
     # WordPress only installs plugins from the web interface without asking for FTP credentials
     # if it writes files directly, which FS_METHOD forces while its own files belong to root
@@ -128,20 +137,40 @@
     # The installation is at the latest release, so the service has nothing to install, but it
     # runs the check as apache and exits cleanly.
     - name: 'systemctl start wordpress-core-minor-update-<instance>.service'
-      ansible.builtin.command: 'systemctl start wordpress-core-minor-update-{{ item }}.service'
+      ansible.builtin.command: 'systemctl start wordpress-core-minor-update-{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") | replace("/", "-") }}.service'
       changed_when: false
       loop: '{{ __molecule__wordpress_instances }}'
 
-    # converge.yml deploys a second instance on the same host, as a pseudo host in the inventory
-    # would. Each instance needs its own timers and vHost, and neither may replace the other's.
+    # The cron service requests wp-cron.php through the vHost; an instance in a sub-path needs the
+    # request under its path, which the access log of the host name shows.
+    - name: 'systemctl start wordpress-cron-<instance>.service'
+      ansible.builtin.command: 'systemctl start wordpress-cron-{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") | replace("/", "-") }}.service'
+      changed_when: false
+      loop: '{{ __molecule__wordpress_instances }}'
+
+    - name: 'grep "GET <path>/wp-cron.php HTTP/1.1" 200 /var/log/httpd/<host>-access.log'
+      ansible.builtin.command:
+        argv:
+          - 'grep'
+          - '--count'
+          - '--fixed-strings'
+          - '"GET {{ item | urlsplit("path") }}/wp-cron.php HTTP/1.1" 200 '
+          - '/var/log/httpd/{{ item | urlsplit("hostname") }}-access.log'
+      changed_when: false
+      loop: '{{ __molecule__wordpress_instances }}'
+
+    # converge.yml deploys further instances on the same host, as pseudo hosts in the inventory
+    # would. Each instance needs its own timers, and none may replace another's.
     - name: 'systemctl is-enabled <timer>'
       ansible.builtin.command: 'systemctl is-enabled {{ item }}'
       register: '__molecule__wordpress_timers_result'
       changed_when: false
       failed_when: false
-      loop: '{{ __molecule__wordpress_instances | map("regex_replace", "^", "wordpress-cron-") | map("regex_replace", "$", ".timer") | list
-        + __molecule__wordpress_instances | map("regex_replace", "^", "wordpress-core-minor-update-") | map("regex_replace", "$", ".timer") | list
+      loop: '{{ __molecule__wordpress_instance_names | map("regex_replace", "^", "wordpress-cron-") | map("regex_replace", "$", ".timer") | list
+        + __molecule__wordpress_instance_names | map("regex_replace", "^", "wordpress-core-minor-update-") | map("regex_replace", "$", ".timer") | list
         + ["wordpress-cron.timer"] }}'
+      vars:
+        __molecule__wordpress_instance_names: '{{ __molecule__wordpress_instances | map("urlsplit", "hostname") | zip(__molecule__wordpress_instances | map("urlsplit", "path") | map("replace", "/", "-")) | map("join") | list }}'
 
     - name: 'Assert every instance has its timers enabled, and the timer without an instance name is gone'
       ansible.builtin.assert:
@@ -152,13 +181,13 @@
       loop_control:
         label: '{{ item["item"] }}'
 
-    # WordPress redirects a request for another host to its own address, so a 200 with the links
-    # of the instance shows that its own vHost and installation answered
-    - name: 'GET / of each instance'
+    # WordPress redirects a request for another address to its own, so a 200 with the links of
+    # the instance shows that its own installation answered
+    - name: 'GET <path>/ of each instance'
       ansible.builtin.uri:
-        url: 'http://127.0.0.1/'
+        url: 'http://127.0.0.1{{ item | urlsplit("path") }}/'
         headers:
-          Host: '{{ item }}'
+          Host: '{{ item | urlsplit("hostname") }}'
           X-Forwarded-Proto: 'https'
         follow_redirects: 'none'
         status_code: 200
@@ -167,31 +196,32 @@
       loop: '{{ __molecule__wordpress_instances }}'
 
     - name: 'wp option get home of each instance'
-      ansible.builtin.command: '/usr/local/bin/wp option get home --path=/var/www/html/{{ item }}'
+      ansible.builtin.command: '/usr/local/bin/wp option get home --path=/var/www/html/{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") }}'
       args:
-        chdir: '/var/www/html/{{ item }}'
+        chdir: '/var/www/html/{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") }}'
       become_user: 'apache'
       register: '__molecule__wordpress_instances_home_result'
       changed_when: false
       loop: '{{ __molecule__wordpress_instances }}'
 
-    - name: 'Assert each instance is served by its own vHost and uses its own address'
+    - name: 'Assert each instance is served from its own installation and uses its own address'
       ansible.builtin.assert:
         that:
-          - 'item["stdout"] == "https://" ~ item["item"]'
-          - '("https://" ~ item["item"] ~ "/") in (__molecule__wordpress_instances_http_result["results"] | selectattr("item", "eq", item["item"]) | first)["content"]'
+          - 'item["stdout"] == item["item"]'
+          - '(item["item"] ~ "/") in (__molecule__wordpress_instances_http_result["results"] | selectattr("item", "eq", item["item"]) | first)["content"]'
         fail_msg: '{{ item["item"] }}: home is {{ item["stdout"] }}'
       loop: '{{ __molecule__wordpress_instances_home_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
 
+    # one vHost per host name, shared by the instances under it
     - name: 'stat /etc/httpd/sites-available/<vHost file>'
       ansible.builtin.stat:
         path: '/etc/httpd/sites-available/{{ item }}'
       register: '__molecule__wordpress_vhost_files_result'
-      loop: '{{ __molecule__wordpress_instances | map("regex_replace", "$", ".80.conf") | list + ["wordpress.conf"] }}'
+      loop: '{{ __molecule__wordpress_instances | map("urlsplit", "hostname") | unique | map("regex_replace", "$", ".80.conf") | list + ["wordpress.conf"] }}'
 
-    - name: 'Assert each instance has its own vHost file'
+    - name: 'Assert each host name has its own vHost file'
       ansible.builtin.assert:
         that: 'item["stat"]["exists"] == (item["item"] != "wordpress.conf")'
         fail_msg: '{{ item["item"] }} {{ item["stat"]["exists"] | ternary("exists", "is missing") }}'
@@ -304,31 +334,41 @@
         - referer: 'https://hotlinker.example.net/'
           status: 403
 
-    - name: 'GET /wp-includes/version.php'
+    - name: 'GET <path>/wp-includes/version.php of each instance'
       ansible.builtin.uri:
-        url: 'http://127.0.0.1/wp-includes/version.php'
+        url: 'http://127.0.0.1{{ item | urlsplit("path") }}/wp-includes/version.php'
         headers:
-          Host: '{{ __molecule__wordpress_host }}'
+          Host: '{{ item | urlsplit("hostname") }}'
         status_code: 403
+      loop: '{{ __molecule__wordpress_instances }}'
 
     # PHP files of our own: one where uploads land, one that loads WordPress and prints what the
     # wp-config.php proxy handling made of the request. Both are removed again, so the idempotence
-    # step sees the installation as the role left it.
+    # step sees the installation as the role left it. The upload probe runs at the root of a host
+    # name and in a sub-path of one without a root instance, whose document root differs from the
+    # installation directory.
     - name: 'Probe the upload directory and the proxy handling'
+      vars:
+        __molecule__wordpress_upload_dirs: '{{ __molecule__wordpress_upload_probe_instances | map("urlsplit", "hostname") | map("regex_replace", "^", "/var/www/html/") | zip(__molecule__wordpress_upload_probe_instances | map("urlsplit", "path")) | map("join") | list }}'
+        __molecule__wordpress_upload_probe_instances:
+          - '{{ wordpress__url }}'
+          - 'https://second.example.com/instance1'
       block:
 
-        - name: 'stat {{ __molecule__wordpress_dir }}/wp-content/uploads'
+        - name: 'stat <installation>/wp-content/uploads'
           ansible.builtin.stat:
-            path: '{{ __molecule__wordpress_dir }}/wp-content/uploads'
+            path: '{{ item }}/wp-content/uploads'
           register: '__molecule__wordpress_uploads_stat_result'
+          loop: '{{ __molecule__wordpress_upload_dirs }}'
 
-        - name: 'mkdir -p {{ __molecule__wordpress_dir }}/wp-content/uploads/molecule'
+        - name: 'mkdir -p <installation>/wp-content/uploads/molecule'
           ansible.builtin.file:
-            path: '{{ __molecule__wordpress_dir }}/wp-content/uploads/molecule'
+            path: '{{ item }}/wp-content/uploads/molecule'
             state: 'directory'
             owner: 'apache'
             group: 'apache'
             mode: 0o755
+          loop: '{{ __molecule__wordpress_upload_dirs }}'
 
         - name: 'Deploy the PHP probes'
           ansible.builtin.copy:
@@ -338,25 +378,32 @@
             group: 'apache'
             mode: 0o644
           loop:
-            - dest: '{{ __molecule__wordpress_dir }}/wp-content/uploads/molecule/molecule.php'
+            - dest: '{{ __molecule__wordpress_upload_dirs[0] }}/wp-content/uploads/molecule/molecule.php'
+              content: "<?php echo 'molecule-upload-executed';\n"
+            - dest: '{{ __molecule__wordpress_upload_dirs[1] }}/wp-content/uploads/molecule/molecule.php'
               content: "<?php echo 'molecule-upload-executed';\n"
             - dest: '{{ __molecule__wordpress_dir }}/molecule-request.php'
               content: "<?php require __DIR__ . '/wp-load.php'; echo $_SERVER['REMOTE_ADDR'] . ' ' . $_SERVER['HTTP_HOST'];\n"
           loop_control:
             label: '{{ item["dest"] }}'
 
-        - name: 'GET /wp-content/uploads/molecule/molecule.php'
+        - name: 'GET <path>/wp-content/uploads/molecule/molecule.php'
           ansible.builtin.uri:
-            url: 'http://127.0.0.1/wp-content/uploads/molecule/molecule.php'
+            url: 'http://127.0.0.1{{ item | urlsplit("path") }}/wp-content/uploads/molecule/molecule.php'
             headers:
-              Host: '{{ __molecule__wordpress_host }}'
+              Host: '{{ item | urlsplit("hostname") }}'
             status_code: 403
             return_content: true
           register: '__molecule__wordpress_upload_php_result'
+          loop: '{{ __molecule__wordpress_upload_probe_instances }}'
 
         - name: 'Assert the PHP file below uploads did not run'
           ansible.builtin.assert:
-            that: '"molecule-upload-executed" not in __molecule__wordpress_upload_php_result["content"]'
+            that: '"molecule-upload-executed" not in item["content"]'
+            fail_msg: '{{ item["item"] }}: {{ item["content"] }}'
+          loop: '{{ __molecule__wordpress_upload_php_result["results"] }}'
+          loop_control:
+            label: '{{ item["item"] }}'
 
         # 127.0.0.1 is in wordpress__trusted_proxies, so the right-most address of X-Forwarded-For
         # that is not a trusted proxy itself becomes the client, and X-Forwarded-Host is ignored.
@@ -393,16 +440,18 @@
           ansible.builtin.file:
             path: '{{ item }}'
             state: 'absent'
-          loop:
-            - '{{ __molecule__wordpress_dir }}/molecule-request.php'
-            - '{{ __molecule__wordpress_dir }}/wp-content/uploads/molecule'
+          loop: '{{ [__molecule__wordpress_dir ~ "/molecule-request.php"]
+            + __molecule__wordpress_upload_dirs | map("regex_replace", "$", "/wp-content/uploads/molecule") | list }}'
 
         - name: 'Remove the upload directory the probe created'
           ansible.builtin.file:
-            path: '{{ __molecule__wordpress_dir }}/wp-content/uploads'
+            path: '{{ item["item"] }}/wp-content/uploads'
             state: 'absent'
+          loop: '{{ __molecule__wordpress_uploads_stat_result["results"] | d([]) }}'
+          loop_control:
+            label: '{{ item["item"] }}'
           when:
-            - 'not __molecule__wordpress_uploads_stat_result["stat"]["exists"] | d(true)'
+            - 'not item["stat"]["exists"] | d(true)'
 
     # wp-config.php holds the database password. The site working at all shows that PHP-FPM can
     # read it, this shows that other local users cannot.

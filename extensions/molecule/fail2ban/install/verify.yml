@@ -77,6 +77,9 @@
         - label: 'failed login in the combined format'
           line: '198.51.100.1 - - [15/Sep/2026:10:00:00 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "Mozilla/5.0"'
           matched: 1
+        - label: 'failed login to a WordPress in a sub-path'
+          line: '198.51.100.4 - - [15/Sep/2026:10:00:03 +0200] "POST /blog/wp-login.php HTTP/1.1" 200 4321 "-" "Mozilla/5.0"'
+          matched: 1
         - label: 'failed login in the linuxfabrikio format'
           line: '192.0.2.10 198.51.100.3 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
           matched: 1

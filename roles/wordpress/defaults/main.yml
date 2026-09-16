@@ -2,11 +2,7 @@ wordpress__application_passwords_enabled: false  # upstream default: true
 wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true
-# The host part is cut out with regex_replace instead of urlsplit("hostname"). For a bare
-# host from an inventory that predates the scheme in wordpress__url, urlsplit returns an
-# empty hostname, and setup_wordpress runs apache_httpd and selinux, which use this value,
-# before the role's assert can abort. The regex returns the same host for both forms.
-wordpress__install_dir: '/var/www/html/{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
+wordpress__install_dir: '/var/www/html/{{ __wordpress__host }}{{ __wordpress__path }}'
 wordpress__on_calendar_core_minor_update: '04:{{ 59 | random(seed=inventory_hostname) }}'
 wordpress__plugins: []
 wordpress__timer_core_minor_update_enabled: true
@@ -21,8 +17,8 @@ wordpress__apache_httpd__mods__dependent_var:
     enabled: true
     state: 'present'
 wordpress__apache_httpd__vhosts__dependent_var:
-  # regex_replace instead of urlsplit, see wordpress__install_dir
-  - conf_server_name: '{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
+  # identical for all instances under one host name, so their runs do not overwrite each other
+  - conf_server_name: '{{ __wordpress__host }}'
     by_role: 'wordpress'
     enabled: true
     state: 'present'
@@ -34,7 +30,7 @@ wordpress__apache_httpd__vhosts__dependent_var:
     virtualhost_port: 80
     conf_allow_override: 'All'
     conf_directory_index: 'index.php'
-    conf_document_root: '{{ wordpress__install_dir }}'
+    conf_document_root: '{{ __wordpress__document_root }}'
     conf_options: 'FollowSymLinks'
     conf_timeout: 30
 

@@ -1,13 +1,22 @@
 - block:
 
   # wordpress__url used to be a bare host name. Such a value still yields the right host for
-  # the vHost and the installation directory, but not the site address.
+  # the vHost and the installation directory, but not the site address. The path names the
+  # systemd units of the instance, so it is limited to characters valid in a unit name.
   - name: 'Check variable constraints'
     ansible.builtin.assert:
       that:
-        - 'wordpress__url is match("https?://")'
+        - 'wordpress__url is match("https?://[^/:]+(:[0-9]+)?(/[A-Za-z0-9._-]+)*$")'
       quiet: true
-      fail_msg: 'wordpress__url must start with "http://" or "https://", got "{{ wordpress__url }}". Use "https://" for a site served over HTTPS, including behind a reverse proxy that terminates TLS.'
+      fail_msg: 'wordpress__url must be "http://" or "https://", a host name and an optional path of letters, digits, ".", "_" and "-", without a trailing slash, got "{{ wordpress__url }}". Use "https://" for a site served over HTTPS, including behind a reverse proxy that terminates TLS.'
+
+  # the vHost's DocumentRoot is the installation directory without the path of the instance
+  - name: 'Check that wordpress__install_dir ends with the path of wordpress__url'
+    ansible.builtin.assert:
+      that:
+        - 'wordpress__install_dir | regex_replace("/+$", "") is search((__wordpress__path | regex_escape) ~ "$")'
+      quiet: true
+      fail_msg: 'wordpress__install_dir must end with "{{ __wordpress__path }}", the path of wordpress__url, got "{{ wordpress__install_dir }}".'
 
   tags:
     # use 'always' so the validation runs even when other roles reference these variables.
@@ -435,8 +444,10 @@
 
   # The core, wp-config.php and wp-content/mu-plugins belong to root, the rest of wp-content to
   # apache. --no-dereference, so a symlink does not hand its target to the other owner.
+  # wp-content and wp-config.php are skipped at any depth, so that an instance installed in a
+  # sub-path of this one (/blog below /) keeps them, while its core belongs to root either way.
   - name: 'chown --no-dereference root:root the core below {{ wordpress__install_dir }}'
-    ansible.builtin.command: 'find {{ __wordpress__install_dir | quote }} ( -path {{ (__wordpress__install_dir ~ "/wp-content") | quote }} -o -path {{ (__wordpress__install_dir ~ "/wp-config.php") | quote }} ) -prune -o ( ! -user root -o ! -group root ) -exec chown --changes --no-dereference root:root {} +'
+    ansible.builtin.command: 'find {{ __wordpress__install_dir | quote }} ( -name wp-content -o -name wp-config.php ) -prune -o ( ! -user root -o ! -group root ) -exec chown --changes --no-dereference root:root {} +'
     register: '__wordpress__chown_core_result'
     changed_when: '__wordpress__chown_core_result["stdout"] | length > 0'
 
