@@ -11,10 +11,21 @@ Attention: It is intended that when you call `wordpress__url` you will get a whi
 ## How the Role Behaves
 
 * The WordPress core, `wp-config.php` and `wp-content/mu-plugins` belong to `root`, so code running in the web server cannot modify them. `wp-content` belongs to `apache`, so plugins, themes, translations and uploads can still be installed and updated from the web interface (`FS_METHOD` is `direct`).
-* WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update.timer` installs the latest minor release daily instead, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
+* WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update-<instance>.timer` installs the latest minor release daily instead, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
 * WP-CLI runs as `root` only for commands that do not load WordPress (core download, config, checksum verification). Everything that loads WordPress runs as `apache`, because loading it executes code from `wp-content`, which `apache` can write.
 * WordPress cannot write `.htaccess`, so after a change of the permalink structure in the web interface, add the rewrite rules it displays to `.htaccess` by hand.
+* Everything that exists once per WordPress instance carries the host part of `wordpress__url` as the name of the instance: `wordpress-cron-<instance>.timer`, `wordpress-core-minor-update-<instance>.timer`, the vHost file `<instance>.80.conf` and the export directory. The role removes `wordpress-cron.timer` and the vHost file `wordpress.conf` of older role versions.
 * The REST API only answers logged-in users. The role installs and activates the [Disable WP REST API](https://wordpress.org/plugins/disable-wp-rest-api/) plugin, and uninstalls the Disable REST API (`disable-json-api`) plugin where it is present. Anonymous requests to any route, including the routes of plugins installed later, get `401 rest_login_required`. The plugin has no settings, so a front-end feature that calls the REST API without a login, such as some contact forms, needs an exception in code.
+
+
+## Multiple Instances on One Host
+
+Several WordPress instances can share a host as pseudo hosts in the inventory: one inventory host per instance, all with the same `ansible_host`, each with its own `wordpress__url`, `wordpress__database_name` and `wordpress__database_user`. The instances share the web server, PHP-FPM and MariaDB, so:
+
+* Put everything that is not specific to one instance, such as `mariadb_server__admin_user`, `php__*` or `apache_httpd__*` settings, into a group that contains all pseudo hosts of the machine, not into their `host_vars`. Pseudo hosts that disagree about a shared configuration file overwrite each other on every run. This includes values that are looked up per `inventory_hostname`, such as passwords from Bitwarden, and `mariadb_server__dump_on_calendar`, whose default depends on the `inventory_hostname`.
+* Add the pseudo hosts to `lfops_setup_wordpress` only, and the real host to all other playbooks, such as `setup_basic` or the monitoring.
+* Do not run the pseudo hosts of a machine in parallel, for example with `--forks 1` or one `--limit` after the other. Otherwise Ansible configures the same machine several times at once, which leads to package manager lock timeouts, overlapping service restarts and a broken initial MariaDB setup.
+* All instances run as `apache`, so a vulnerable plugin in one instance can modify the `wp-content` and read the `wp-config.php` of every other instance on the host.
 
 
 ## Dependent Roles
@@ -35,7 +46,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `wordpress:export`
 
-* Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file to `/backup/wordpress-export`, which only `apache` and `root` can read.
+* Exports the site content (posts, pages, comments, custom fields, categories and tags) as a wxr file to `/backup/wordpress-export/<instance>`, which only `apache` and `root` can read.
 * Triggers: none.
 
 `wordpress:file_policy`
@@ -132,7 +143,7 @@ wordpress__url: 'https://wordpress.example.com'
 
 `wordpress__database_name`
 
-* The name of the database.
+* The name of the database. Each instance on a host needs its own.
 * Type: String.
 * Default: `'wordpress'`
 
@@ -150,7 +161,7 @@ wordpress__url: 'https://wordpress.example.com'
 
 `wordpress__on_calendar_core_minor_update`
 
-* When `wordpress-core-minor-update.timer` installs the latest minor release of the WordPress core (systemd timer notation).
+* When `wordpress-core-minor-update-<instance>.timer` installs the latest minor release of the WordPress core (systemd timer notation).
 * Type: String.
 * Default: `'04:{{ 59 | random(seed=inventory_hostname) }}'`
 
@@ -180,7 +191,7 @@ wordpress__url: 'https://wordpress.example.com'
 
 `wordpress__timer_core_minor_update_enabled`
 
-* Enables or disables `wordpress-core-minor-update.timer`, which installs the latest minor release of the WordPress core. With the timer disabled, the core only changes with `--tags wordpress:update`.
+* Enables or disables `wordpress-core-minor-update-<instance>.timer`, which installs the latest minor release of the WordPress core. With the timer disabled, the core only changes with `--tags wordpress:update`.
 * Type: Bool.
 * Default: `true`
 

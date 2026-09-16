@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
-# 2026091501
+# 2026091601
 
 [Unit]
-Description=Wordpress Cron Service
+Description=WordPress Cron Service for {{ __wordpress__instance }}
 
 [Service]
 ExecStart=/usr/bin/curl http://localhost/wp-cron.php --header 'Host: {{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}' --header 'X-Forwarded-Proto: {{ wordpress__url | urlsplit("scheme") }}'

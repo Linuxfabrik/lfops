@@ -1,15 +1,20 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026091502
+# 2026091601
 #
-# Installs the latest minor release of the WordPress core in {{ wordpress__install_dir }}.
+# Installs the latest minor release of the WordPress core in the installation directory given as
+# the only argument. Each WordPress instance on the host has its own systemd service for it.
 # The core belongs to root, so WordPress cannot update itself. Only the steps that do not load
 # WordPress run as root; loading it executes code from wp-content, which the web server can
 # write, so those steps run as apache.
 
 set -o errexit -o nounset -o pipefail
 
-dir={{ wordpress__install_dir | quote }}
+if [ "$#" -ne 1 ] || [ ! -f "$1/wp-includes/version.php" ]; then
+    echo "Usage: $(basename "$0") <WordPress installation directory>" >&2
+    exit 2
+fi
+dir=$1
 
 # --no-color: without the PHP posix extension, WP-CLI cannot tell that it does not write to a
 # terminal and colours its output, which ends up as escape sequences in the journal

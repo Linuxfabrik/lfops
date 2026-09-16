@@ -1,2 +1,16 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: the playbook enables SELinux booleans and file contexts, and WordPress runs on the real
+# Apache httpd, PHP-FPM and MariaDB services of the host.
 - name: 'Converge setup_wordpress playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
+
+# A second instance on the same host, as a pseudo host in the inventory would deploy it: the same
+# playbook again, with the variables of the instance overriding those from group_vars.
+- name: 'Converge setup_wordpress playbook for a second instance'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
+  vars:
+    wordpress__database_name: 'wordpress_second'
+    wordpress__database_user:
+      username: 'wordpress-second'
+      password: 'linuxfabrik'
+    wordpress__url: 'https://second.example.com'

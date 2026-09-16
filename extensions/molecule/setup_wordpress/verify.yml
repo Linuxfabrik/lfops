@@ -11,6 +11,9 @@
   vars:
     __molecule__wordpress_dir: '/var/www/html/{{ __molecule__wordpress_host }}'
     __molecule__wordpress_host: '{{ wordpress__url | urlsplit("hostname") }}'
+    __molecule__wordpress_instances:
+      - '{{ __molecule__wordpress_host }}'
+      - 'second.example.com'
 
   tasks:
 
@@ -124,20 +127,77 @@
 
     # The installation is at the latest release, so the service has nothing to install, but it
     # runs the check as apache and exits cleanly.
-    - name: 'systemctl start wordpress-core-minor-update.service'
-      ansible.builtin.command: 'systemctl start wordpress-core-minor-update.service'
+    - name: 'systemctl start wordpress-core-minor-update-<instance>.service'
+      ansible.builtin.command: 'systemctl start wordpress-core-minor-update-{{ item }}.service'
       changed_when: false
+      loop: '{{ __molecule__wordpress_instances }}'
 
-    - name: 'systemctl is-enabled wordpress-core-minor-update.timer'
-      ansible.builtin.command: 'systemctl is-enabled wordpress-core-minor-update.timer'
-      register: '__molecule__wordpress_core_minor_update_timer_result'
+    # converge.yml deploys a second instance on the same host, as a pseudo host in the inventory
+    # would. Each instance needs its own timers and vHost, and neither may replace the other's.
+    - name: 'systemctl is-enabled <timer>'
+      ansible.builtin.command: 'systemctl is-enabled {{ item }}'
+      register: '__molecule__wordpress_timers_result'
       changed_when: false
       failed_when: false
+      loop: '{{ __molecule__wordpress_instances | map("regex_replace", "^", "wordpress-cron-") | map("regex_replace", "$", ".timer") | list
+        + __molecule__wordpress_instances | map("regex_replace", "^", "wordpress-core-minor-update-") | map("regex_replace", "$", ".timer") | list
+        + ["wordpress-cron.timer"] }}'
 
-    - name: 'Assert the core minor update timer is enabled'
+    - name: 'Assert every instance has its timers enabled, and the timer without an instance name is gone'
       ansible.builtin.assert:
-        that: '__molecule__wordpress_core_minor_update_timer_result["stdout"] == "enabled"'
-        fail_msg: 'wordpress-core-minor-update.timer is {{ __molecule__wordpress_core_minor_update_timer_result["stdout"] }}'
+        # systemd before 250 prints nothing for a unit that does not exist
+        that: '(item["item"] == "wordpress-cron.timer") | ternary(item["rc"] != 0, item["stdout"] == "enabled")'
+        fail_msg: '{{ item["item"] }} is {{ item["stdout"] }}'
+      loop: '{{ __molecule__wordpress_timers_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # WordPress redirects a request for another host to its own address, so a 200 with the links
+    # of the instance shows that its own vHost and installation answered
+    - name: 'GET / of each instance'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/'
+        headers:
+          Host: '{{ item }}'
+          X-Forwarded-Proto: 'https'
+        follow_redirects: 'none'
+        status_code: 200
+        return_content: true
+      register: '__molecule__wordpress_instances_http_result'
+      loop: '{{ __molecule__wordpress_instances }}'
+
+    - name: 'wp option get home of each instance'
+      ansible.builtin.command: '/usr/local/bin/wp option get home --path=/var/www/html/{{ item }}'
+      args:
+        chdir: '/var/www/html/{{ item }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_instances_home_result'
+      changed_when: false
+      loop: '{{ __molecule__wordpress_instances }}'
+
+    - name: 'Assert each instance is served by its own vHost and uses its own address'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout"] == "https://" ~ item["item"]'
+          - '("https://" ~ item["item"] ~ "/") in (__molecule__wordpress_instances_http_result["results"] | selectattr("item", "eq", item["item"]) | first)["content"]'
+        fail_msg: '{{ item["item"] }}: home is {{ item["stdout"] }}'
+      loop: '{{ __molecule__wordpress_instances_home_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    - name: 'stat /etc/httpd/sites-available/<vHost file>'
+      ansible.builtin.stat:
+        path: '/etc/httpd/sites-available/{{ item }}'
+      register: '__molecule__wordpress_vhost_files_result'
+      loop: '{{ __molecule__wordpress_instances | map("regex_replace", "$", ".80.conf") | list + ["wordpress.conf"] }}'
+
+    - name: 'Assert each instance has its own vHost file'
+      ansible.builtin.assert:
+        that: 'item["stat"]["exists"] == (item["item"] != "wordpress.conf")'
+        fail_msg: '{{ item["item"] }} {{ item["stat"]["exists"] | ternary("exists", "is missing") }}'
+      loop: '{{ __molecule__wordpress_vhost_files_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
 
     # The site over HTTP, requested like the reverse proxy in front of it would pass it on
 

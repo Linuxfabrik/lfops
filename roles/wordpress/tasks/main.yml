@@ -169,7 +169,7 @@
   # `wp config set` reports the constant as updated even when the value does not change, so the
   # current values are read first and only the differing ones are set. WP_AUTO_UPDATE_CORE,
   # because WordPress cannot write its core and would report every failed background update by
-  # e-mail; wordpress-core-minor-update.timer installs minor releases instead. FS_METHOD, because
+  # e-mail; wordpress-core-minor-update-<instance>.timer installs minor releases instead. FS_METHOD, because
   # WordPress only writes plugins and themes directly if its own files belong to the web server
   # user, and asks for FTP credentials otherwise.
   - name: 'wp config get <constant> --format=json --path={{ wordpress__install_dir | quote }} --allow-root'
@@ -264,30 +264,95 @@
     changed_when: '"Plugin already installed." not in wordpress__disable_wp_rest_api_result["stdout"]
       or "activated." in wordpress__disable_wp_rest_api_result["stdout"]'
 
-  - name: 'Deploy /etc/systemd/system/wordpress-cron.service'
+  # Older versions of the role deployed wordpress-cron.service/.timer and the vHost file
+  # wordpress.conf without the name of the instance, so a second instance on the host replaced
+  # them. The units belong to this role and are removed. The vHost file is only removed if it
+  # serves this instance and another vHost file already does, so a vHost that still
+  # carries the old file name, for example through apache_httpd__vhosts__host_var, stays.
+  - name: 'stat /etc/systemd/system/wordpress-cron.timer'
+    ansible.builtin.stat:
+      path: '/etc/systemd/system/wordpress-cron.timer'
+    register: 'wordpress__legacy_cron_timer_stat_result'
+
+  - name: 'systemctl disable wordpress-cron.timer --now'
+    ansible.builtin.systemd:
+      name: 'wordpress-cron.timer'
+      state: 'stopped'
+      enabled: false
+    when: 'wordpress__legacy_cron_timer_stat_result["stat"]["exists"]'
+
+  - name: 'rm -f /etc/systemd/system/wordpress-cron.{service,timer}'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ item }}'
+      state: 'absent'
+    loop:
+      - 'wordpress-cron.service'
+      - 'wordpress-cron.timer'
+    register: 'wordpress__legacy_cron_remove_result'
+
+  - name: 'grep "ServerName {{ __wordpress__instance }}" /etc/httpd/sites-available/wordpress.conf'
+    ansible.builtin.find:
+      paths: '/etc/httpd/sites-available'
+      patterns: 'wordpress.conf'
+      contains: '^\s*ServerName\s+{{ __wordpress__instance | regex_escape }}\s*$'
+    register: 'wordpress__legacy_vhost_result'
+
+  # sites-available, because the find module does not look into the symlinks in sites-enabled
+  - name: 'grep "ServerName {{ __wordpress__instance }}" /etc/httpd/sites-available/*.conf, without wordpress.conf'
+    ansible.builtin.find:
+      paths: '/etc/httpd/sites-available'
+      patterns: '*.conf'
+      excludes: 'wordpress.conf'
+      contains: '^\s*ServerName\s+{{ __wordpress__instance | regex_escape }}\s*$'
+    register: 'wordpress__vhost_result'
+    when: 'wordpress__legacy_vhost_result["matched"] > 0'
+
+  - name: 'rm -f /etc/httpd/sites-{enabled,available}/wordpress.conf'
+    ansible.builtin.file:
+      path: '/etc/httpd/{{ item }}/wordpress.conf'
+      state: 'absent'
+    loop:
+      - 'sites-enabled'
+      - 'sites-available'
+    register: 'wordpress__legacy_vhost_remove_result'
+    when:
+      - 'wordpress__legacy_vhost_result["matched"] > 0'
+      - 'wordpress__vhost_result["matched"] > 0'
+
+  - name: 'systemctl reload httpd'
+    ansible.builtin.systemd:
+      name: 'httpd'
+      state: 'reloaded'
+    when: 'wordpress__legacy_vhost_remove_result is changed'
+
+  - name: 'Deploy /etc/systemd/system/wordpress-cron-{{ __wordpress__instance }}.service'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/wordpress-cron.service.j2'
-      dest: '/etc/systemd/system/wordpress-cron.service'
+      dest: '/etc/systemd/system/wordpress-cron-{{ __wordpress__instance }}.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: 'wordpress__cron_service_result'
 
-  - name: 'Deploy /etc/systemd/system/wordpress-cron.timer'
+  - name: 'Deploy /etc/systemd/system/wordpress-cron-{{ __wordpress__instance }}.timer'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/wordpress-cron.timer.j2'
-      dest: '/etc/systemd/system/wordpress-cron.timer'
+      dest: '/etc/systemd/system/wordpress-cron-{{ __wordpress__instance }}.timer'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: 'wordpress__cron_timer_result'
 
-  - name: 'systemctl enable wordpress-cron.timer --now'
+  - name: 'systemctl enable wordpress-cron-{{ __wordpress__instance }}.timer --now'
     ansible.builtin.systemd:
-      name: 'wordpress-cron.timer'
+      name: 'wordpress-cron-{{ __wordpress__instance }}.timer'
       state: 'started'
       enabled: true
+      daemon_reload: '{{ wordpress__legacy_cron_remove_result is changed or wordpress__cron_service_result is changed or wordpress__cron_timer_result is changed }}'
 
+  # shared by all instances on the host, each has its own service and timer
   - name: 'Deploy /usr/local/sbin/wordpress-core-minor-update'
     ansible.builtin.template:
       backup: true
@@ -297,29 +362,29 @@
       group: 'root'
       mode: 0o755
 
-  - name: 'Deploy /etc/systemd/system/wordpress-core-minor-update.service'
+  - name: 'Deploy /etc/systemd/system/wordpress-core-minor-update-{{ __wordpress__instance }}.service'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/wordpress-core-minor-update.service.j2'
-      dest: '/etc/systemd/system/wordpress-core-minor-update.service'
+      dest: '/etc/systemd/system/wordpress-core-minor-update-{{ __wordpress__instance }}.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: 'wordpress__core_minor_update_service_result'
 
-  - name: 'Deploy /etc/systemd/system/wordpress-core-minor-update.timer'
+  - name: 'Deploy /etc/systemd/system/wordpress-core-minor-update-{{ __wordpress__instance }}.timer'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/wordpress-core-minor-update.timer.j2'
-      dest: '/etc/systemd/system/wordpress-core-minor-update.timer'
+      dest: '/etc/systemd/system/wordpress-core-minor-update-{{ __wordpress__instance }}.timer'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: 'wordpress__core_minor_update_timer_result'
 
-  - name: 'systemctl {{ wordpress__timer_core_minor_update_enabled | bool | ternary("enable", "disable") }} wordpress-core-minor-update.timer --now'
+  - name: 'systemctl {{ wordpress__timer_core_minor_update_enabled | bool | ternary("enable", "disable") }} wordpress-core-minor-update-{{ __wordpress__instance }}.timer --now'
     ansible.builtin.systemd:
-      name: 'wordpress-core-minor-update.timer'
+      name: 'wordpress-core-minor-update-{{ __wordpress__instance }}.timer'
       state: '{{ wordpress__timer_core_minor_update_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ wordpress__timer_core_minor_update_enabled }}'
       daemon_reload: '{{ wordpress__core_minor_update_service_result is changed or wordpress__core_minor_update_timer_result is changed }}'
@@ -488,17 +553,17 @@
 - block:
 
   # The export holds unpublished content and the e-mail addresses of the users, so it goes into
-  # a directory only apache can read instead of into /tmp.
-  - name: 'mkdir -p /backup/wordpress-export'
+  # a directory only apache can read instead of into /tmp, one per instance.
+  - name: 'mkdir -p /backup/wordpress-export/{{ __wordpress__instance }}'
     ansible.builtin.file:
-      path: '/backup/wordpress-export'
+      path: '/backup/wordpress-export/{{ __wordpress__instance }}'
       state: 'directory'
       owner: 'apache'
       group: 'apache'
       mode: 0o700
 
-  - name: 'wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export --max_file_size=-1'
-    ansible.builtin.command: '/usr/local/bin/wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export --max_file_size=-1'
+  - name: 'wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export/{{ __wordpress__instance }} --max_file_size=-1'
+    ansible.builtin.command: '/usr/local/bin/wp export --path={{ wordpress__install_dir | quote }} --dir=/backup/wordpress-export/{{ __wordpress__instance | quote }} --max_file_size=-1'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become: true

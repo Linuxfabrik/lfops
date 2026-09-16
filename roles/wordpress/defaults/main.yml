@@ -25,7 +25,6 @@ wordpress__apache_httpd__vhosts__dependent_var:
   - conf_server_name: '{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
     by_role: 'wordpress'
     enabled: true
-    filename: 'wordpress'
     state: 'present'
     template: 'wordpress'
     allowed_http_methods:

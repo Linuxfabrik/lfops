@@ -1,0 +1,4 @@
+# The host part of wordpress__url names everything that exists once per WordPress instance
+# (systemd units, export directory), so several instances can share a machine as pseudo hosts in
+# the inventory. regex_replace instead of urlsplit, see wordpress__install_dir in defaults/main.yml.
+__wordpress__instance: '{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
