@@ -753,7 +753,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `wordpress_url`
 
-* The URL of the WordPress site. Used by the hotlink protection and the comment-spam rules to recognize requests originating from the site itself. Set this when the vHost is defined by hand; the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role provides the fallback `wordpress__url`, and without either the vHost fails to render.
+* The URL of the WordPress site, with or without the scheme, for example `https://blog.example.com`. The hotlink protection and the comment-spam rules use its host part to recognize requests originating from the site itself. Set this when the vHost is defined by hand; the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role provides the fallback `wordpress__url`, and without either the vHost fails to render.
 * Applies to: wordpress.
 * Type: String.
 * Default: `{{ wordpress__url }}`

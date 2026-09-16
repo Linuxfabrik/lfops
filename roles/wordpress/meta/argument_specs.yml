@@ -1,0 +1,102 @@
+argument_specs:
+  main:
+    options:
+
+      wordpress__admin_email:
+        type: 'str'
+        required: true
+        description: 'The e-mail address of the WordPress admin user.'
+
+      wordpress__admin_user:
+        type: 'dict'
+        required: true
+        description: >-
+          The WordPress admin user account. Must contain the keys `username` and `password`.
+          Typically populated via the `linuxfabrik.lfops.bitwarden_item` lookup.
+
+      wordpress__application_passwords_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether users can create application passwords.'
+
+      wordpress__database_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'The host on which the database is accessible.'
+
+      wordpress__database_name:
+        type: 'str'
+        required: false
+        default: 'wordpress'
+        description: 'The name of the database.'
+
+      wordpress__database_user:
+        type: 'dict'
+        required: true
+        description: >-
+          The database user account. Must contain the keys `username` and `password`.
+          Typically populated via the `linuxfabrik.lfops.bitwarden_item` lookup.
+
+      wordpress__disallow_file_edit:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Prevent editing of plugin and theme files in the web interface.'
+
+      wordpress__install_dir:
+        type: 'str'
+        required: false
+        description: 'The installation directory for WordPress.'
+
+      wordpress__on_calendar_core_minor_update:
+        type: 'str'
+        required: false
+        description: 'When the core minor update timer runs (systemd timer notation).'
+
+      wordpress__plugins:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'WordPress plugins to install or remove.'
+
+      wordpress__site_title:
+        type: 'str'
+        required: true
+        description: 'The WordPress site title.'
+
+      wordpress__theme:
+        type: 'str'
+        required: false
+        description: 'The WordPress theme to install.'
+
+      wordpress__timer_core_minor_update_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the core minor update timer.'
+
+      wordpress__trusted_proxies:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'IP addresses of the reverse proxies in front of WordPress.'
+
+      wordpress__url:
+        type: 'str'
+        required: true
+        description: 'The URL under which WordPress is reachable, including the scheme.'
+
+      wordpress__version:
+        type: 'str'
+        required: false
+        default: 'latest'
+        description: 'The WordPress version to install.'
+
+      wordpress__wxr_export:
+        type: 'str'
+        required: false
+        description: 'Path to a WXR export file on the managed host to import on installation.'

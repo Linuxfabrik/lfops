@@ -14,8 +14,17 @@ Attention: It is intended that when you call `wordpress__url` you will get a whi
 * WordPress therefore cannot update its core itself, and its automatic core updates are switched off (`WP_AUTO_UPDATE_CORE`). `wordpress-core-minor-update-<instance>.timer` installs the latest minor release daily instead, and `--tags wordpress:update` installs `wordpress__version`. The update button for the core in the web interface fails.
 * WP-CLI runs as `root` only for commands that do not load WordPress (core download, config, checksum verification). Everything that loads WordPress runs as `apache`, because loading it executes code from `wp-content`, which `apache` can write.
 * WordPress cannot write `.htaccess`, so after a change of the permalink structure in the web interface, add the rewrite rules it displays to `.htaccess` by hand.
-* Everything that exists once per WordPress instance carries the host part of `wordpress__url` as the name of the instance: `wordpress-cron-<instance>.timer`, `wordpress-core-minor-update-<instance>.timer`, the vHost file `<instance>.80.conf` and the export directory. The role removes `wordpress-cron.timer` and the vHost file `wordpress.conf` of older role versions.
+* Everything that exists once per WordPress instance carries the host part of `wordpress__url` as the name of the instance: `wordpress-cron-<instance>.timer`, `wordpress-core-minor-update-<instance>.timer`, the vHost file `<instance>.80.conf` and the export directory. The role removes `wordpress-cron.timer` of older role versions, but not their vHost file `wordpress.conf`.
 * The REST API only answers logged-in users. The role installs and activates the [Disable WP REST API](https://wordpress.org/plugins/disable-wp-rest-api/) plugin, and uninstalls the Disable REST API (`disable-json-api`) plugin where it is present. Anonymous requests to any route, including the routes of plugins installed later, get `401 rest_login_required`. The plugin has no settings, so a front-end feature that calls the REST API without a login, such as some contact forms, needs an exception in code.
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* A web server (for example Apache httpd) must be installed, with a virtual host configured for WordPress (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* MariaDB 10+ must be installed (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* PHP 7+ must be installed (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 
 
 ## Multiple Instances on One Host
@@ -26,15 +35,6 @@ Several WordPress instances can share a host as pseudo hosts in the inventory: o
 * Add the pseudo hosts to `lfops_setup_wordpress` only, and the real host to all other playbooks, such as `setup_basic` or the monitoring.
 * Do not run the pseudo hosts of a machine in parallel, for example with `--forks 1` or one `--limit` after the other. Otherwise Ansible configures the same machine several times at once, which leads to package manager lock timeouts, overlapping service restarts and a broken initial MariaDB setup.
 * All instances run as `apache`, so a vulnerable plugin in one instance can modify the `wp-content` and read the `wp-config.php` of every other instance on the host.
-
-
-## Dependent Roles
-
-Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
-
-* A web server (for example Apache httpd) must be installed, with a virtual host configured for WordPress (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
-* MariaDB 10+ must be installed (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
-* PHP 7+ must be installed (role: [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 
 
 ## Tags
