@@ -206,16 +206,16 @@ wordpress__url: 'https://wordpress.example.com'
 * Default: `[]`
 * Subkeys:
 
+    * `name`:
+
+        * Mandatory. Plugin slug, path to a local zip file, or URL to a remote zip file.
+        * Type: String.
+
     * `enabled`:
 
         * Optional. Activates the plugin (`true`) or keeps it installed but deactivated (`false`). With `false`, `name` has to be the plugin slug, since WP-CLI cannot deactivate a plugin by the path or URL of its zip file.
         * Type: Bool.
         * Default: `true`
-
-    * `name`:
-
-        * Mandatory. Plugin slug, path to a local zip file, or URL to a remote zip file.
-        * Type: String.
 
     * `state`:
 
