@@ -30,6 +30,7 @@ import queue
 import tempfile
 import time
 import unittest
+import unittest.mock
 from urllib.error import HTTPError
 
 _MODULE_PATH = os.path.join(
@@ -63,6 +64,38 @@ def _make_bitwarden(tmp_path='/nonexistent/lfops_bw_test_cache.json'):
     """
     bitwarden.CACHE_FILE = tmp_path
     return bitwarden.Bitwarden()
+
+
+class TestDisplayFallback(unittest.TestCase):
+    """The module falls back to a no-op display where Ansible's cannot be loaded."""
+
+    def _load_with_failing_display_import(self, exception):
+        real_import = __import__
+
+        def _import(name, *args, **kwargs):
+            if name == 'ansible.utils.display':
+                raise exception
+            return real_import(name, *args, **kwargs)
+
+        spec = importlib.util.spec_from_file_location(
+            'bitwarden_fallback', _MODULE_PATH
+        )
+        module = importlib.util.module_from_spec(spec)
+        with unittest.mock.patch('builtins.__import__', _import):
+            spec.loader.exec_module(module)
+        return module
+
+    def test_import_error_falls_back(self):
+        # AnsiballZ on a managed node without the controller's ansible package
+        module = self._load_with_failing_display_import(ImportError('no display'))
+        self.assertEqual(type(module.display).__name__, '_NoopDisplay')
+
+    def test_other_error_falls_back(self):
+        # Mitogen: the import is served, but ansible.constants cannot find base.yml
+        module = self._load_with_failing_display_import(
+            RuntimeError('Missing base YAML definition file (bad install?)')
+        )
+        self.assertEqual(type(module.display).__name__, '_NoopDisplay')
 
 
 class TestGenerate(unittest.TestCase):

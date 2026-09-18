@@ -36,9 +36,13 @@ try:
     from ansible.utils.display import Display
 
     display = Display()
-except ImportError:
+except Exception:
     # When used from a module (not a lookup plugin), this code runs inside an AnsiballZ
-    # process on the remote host where ansible.utils.display is not available.
+    # process on the remote host where ansible.utils.display is not available, so the
+    # import raises ImportError. Under Mitogen the import itself succeeds, because
+    # Mitogen serves it from the controller, but loading ansible.constants then raises
+    # AnsibleError ("Missing base YAML definition file"), since the data files are not
+    # served along. Verified with Mitogen 0.3.53 and ansible-core 2.16 on Rocky Linux 9.
     class _NoopDisplay:
         def vvv(self, msg, **kwargs):
             pass
