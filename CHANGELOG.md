@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **plugin:bitwarden_item, module:bitwarden_item**: A run against a vault that contains no items at all aborts instead of creating the first one, because `bw serve` briefly reports an empty vault after every sync ([bitwarden/clients#23283](https://github.com/bitwarden/clients/issues/23283)).
 * **role:repo_postgresql**: The PostgreSQL version repositories take precedence over the distribution's packages of the same name, so on RHEL 10 an install or update no longer switches a PostgreSQL server from the PGDG build to the AppStream build, which uses a different file layout.
 * **role:apache_httpd**: Responses of type `text/markdown` are compressed like HTML, so the Markdown versions of pages that CMSs such as Grav hand to AI agents no longer go out uncompressed.
 * **role:grav**: The README lists setting `session.secure` as a manual step behind a reverse proxy that terminates TLS, where Grav sends its session cookies without the `Secure` flag.
@@ -55,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **module:bitwarden_item**: The module works with the Mitogen strategy, where it aborted with `MODULE FAILURE` on every run, for example when the `grafana` role stores its service account tokens.
+* **plugin:bitwarden_item, module:bitwarden_item**: Running against several hosts in parallel no longer creates duplicates of a Bitwarden item, whether the item is new or has existed for a long time, so the next run no longer aborts with "Found multiple Bitwarden items".
 * **role:wordpress**: The installation no longer aborts at `wp core download` when Ansible connects as `root` without privilege escalation.
 * **role:wordpress**: A second run no longer reports the `wp-config.php` constants, `wordpress__plugins` and `wordpress__theme` as changed.
 * **role:wordpress**: The WXR file in `wordpress__wxr_export` is imported when the role installs WordPress; the import never ran before.

@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import contextlib
 import os
 import unittest
 from typing import ClassVar
@@ -48,8 +49,18 @@ class _FakeBitwarden:
     created_items: ClassVar[list] = []
     vault_status = 'unlocked'
 
+    mutex_held = False
+
     def __init__(self, *args, **kwargs):
         pass
+
+    @contextlib.contextmanager
+    def mutex(self, *args, **kwargs):
+        type(self).mutex_held = True
+        try:
+            yield self
+        finally:
+            type(self).mutex_held = False
 
     @property
     def status(self):
@@ -89,7 +100,9 @@ class _FakeBitwarden:
         return {'login': login, 'name': name, 'notes': notes}
 
     def create_item(self, item):
-        type(self).created_items.append(item)
+        type(self).created_items.append(
+            {**item, 'created_under_mutex': self.mutex_held}
+        )
         return item
 
     @staticmethod
@@ -104,6 +117,7 @@ class _BitwardenLookupTestCase(unittest.TestCase):
         _FakeBitwarden.items_by_search = []
         _FakeBitwarden.item_by_id = None
         _FakeBitwarden.created_items = []
+        _FakeBitwarden.mutex_held = False
         _FakeBitwarden.vault_status = 'unlocked'
         # a value leaking in from the caller's environment would flip the
         # default of the `create` option under the tests' feet
@@ -159,6 +173,11 @@ class TestRun(_BitwardenLookupTestCase):
         self.assertEqual(_FakeBitwarden.created_items[0]['name'], 'host - db')
         self.assertEqual(result[0]['username'], 'dba')
         self.assertEqual(result[0]['password'], 'linuxfabrik')
+
+    def test_item_is_created_under_the_mutex_and_mutex_is_released(self):
+        self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
+        self.assertTrue(_FakeBitwarden.created_items[0]['created_under_mutex'])
+        self.assertFalse(_FakeBitwarden.mutex_held)
 
     def test_missing_item_raises_when_creation_disabled(self):
         os.environ[CREATE_ENV_VAR] = 'false'
