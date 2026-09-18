@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:system_update**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:wordpress**: Several WordPress instances can share a host as pseudo hosts in the inventory, under different host names as well as under different paths of one host name, such as `https://example.com/blog`.
 * **role:fail2ban**: The `wordpress-login` filter and `z10-wordpress-login` jail ban IPs with too many failed WordPress logins, on the host whose Apache logs the visitor's address.
 * **role:rstudio_server, playbook:rstudio_server**: Add a role and playbook to install RStudio Server Open Source, the browser-based R development environment. Users sign in with their account on the host and have to be a member of a group to be let in at all, the PAM profile covers directory users where the vendor's covers local ones only, and the R sessions can be given a memory and process budget.

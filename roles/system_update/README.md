@@ -58,13 +58,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `system_update__mail_recipients_new_configfiles`
 
 * A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`).
-* Type: String.
+* Type: List of strings.
 * Default: `'{{ mailto_root__to }}'`
 
 `system_update__mail_recipients_updates`
 
 * A list of email recipients to notify about the expected updates and the report of the installed updates.
-* Type: String.
+* Type: List of strings.
 * Default: `'{{ mailto_root__to }}'`
 
 `system_update__mail_subject_hostname`

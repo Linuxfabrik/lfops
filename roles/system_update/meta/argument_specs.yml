@@ -1,0 +1,156 @@
+# argument_specs validates required variables and types automatically at role entry.
+# use this for simple "is defined" / type checks. for complex validations
+# (value ranges, cross-variable logic), use ansible.builtin.assert in the tasks.
+#
+# none of the four *_update_code options carry a default here, for two different
+# reasons. system_update__pre_update_code and system_update__post_update_code are
+# absent from defaults/main.yml on purpose, and update-and-reboot.j2 guards them with
+# "is defined"; declaring an option without a default leaves it undefined, so the
+# guard keeps working. system_update__security_pre_update_code and
+# system_update__security_post_update_code do have a default in defaults/main.yml, but
+# it is a Jinja2 expression, which argument_specs cannot evaluate.
+#
+# the three mail options default to '{{ mailto_root__* }}', which argument_specs
+# resolves at role entry, so an inventory that leaves them at their default needs
+# mailto_root__from / mailto_root__to defined even for a run with --tags
+# system_update:state. that is deliberate and costs nothing here: schedule_reboot is a
+# mandatory dependent role of this one and declares the same defaults, so every host
+# running system_update resolves them anyway. roles/nextcloud goes the other way for
+# the same construct, where no such role guarantees them.
+argument_specs:
+  main:
+    options:
+
+      system_update__cache_only:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Install updates from cache only. Requires the cache to be built beforehand.'
+
+      system_update__mail_from:
+        type: 'str'
+        required: false
+        description: 'Sender address for all notifications. Defaults to mailto_root__from.'
+
+      system_update__mail_recipients_new_configfiles:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Recipients notified about a new version of a config file (rpmnew /
+          rpmsave / dpkg-dist / ucf-dist). Defaults to mailto_root__to.
+
+      system_update__mail_recipients_updates:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Recipients notified about pending updates and about the report of the
+          installed updates. Defaults to mailto_root__to.
+
+      system_update__mail_subject_hostname:
+        type: 'str'
+        required: false
+        default: '$(hostname --short)'
+        description: 'The hostname used in the mail subject. May call bash code via $().'
+
+      system_update__mail_subject_prefix:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Prefix shown in front of the hostname in the mail subject.'
+
+      system_update__notify_and_schedule_on_calendar:
+        type: 'str'
+        required: false
+        description: >-
+          When the informational "updates pending" notification is sent. See
+          systemd.time(7). Defaults to 10:00 on the day before
+          system_update__update_day.
+
+      system_update__post_update_code:
+        type: 'str'
+        required: false
+        description: >-
+          Codeblock executed after the updates have been installed and before a
+          potential reboot. Unset by default.
+
+      system_update__pre_update_code:
+        type: 'str'
+        required: false
+        description: >-
+          Codeblock executed before the update process is started, for example to
+          check pre-conditions for updating. Unset by default.
+
+      system_update__rocketchat_msg_suffix:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Suffix appended to the Rocket.Chat notifications, for example to mention users.'
+
+      system_update__rocketchat_url:
+        type: 'str'
+        required: false
+        description: 'URL of a Rocket.Chat webhook to send update notifications to. Unset by default.'
+
+      system_update__security_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the security lane (the security-update timer). Rocky Linux only.'
+
+      system_update__security_on_calendar:
+        type: 'str'
+        required: false
+        description: >-
+          When the security lane checks for and installs security hot-fixes. See
+          systemd.time(7). Defaults to the reboot window.
+
+      system_update__security_post_update_code:
+        type: 'str'
+        required: false
+        description: >-
+          Codeblock the security lane executes after the hot-fixes have been
+          installed and before a potential reboot. Defaults to
+          system_update__post_update_code.
+
+      system_update__security_pre_update_code:
+        type: 'str'
+        required: false
+        description: >-
+          Codeblock the security lane executes before it installs the hot-fixes.
+          Defaults to system_update__pre_update_code.
+
+      system_update__security_repos:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'security'
+        description: >-
+          The repositories the security lane installs from. All other repositories
+          are disabled for the security transaction.
+
+      system_update__update_day:
+        type: 'str'
+        required: false
+        default: 'Tue'
+        description: >-
+          The weekday on which the regular (weekly) update lane runs. See
+          systemd.time(7).
+
+      system_update__update_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: >-
+          Enables or disables the regular update lane (the notify-and-schedule and
+          update-and-reboot timers).
+
+      system_update__update_on_calendar:
+        type: 'str'
+        required: false
+        description: >-
+          When the regular update lane installs the available updates. See
+          systemd.time(7). Defaults to system_update__update_day at the reboot
+          window.
