@@ -16,13 +16,17 @@ wordpress__admin_user:
 wordpress__database_user:
   username: 'wordpress'
   password: 'linuxfabrik'
-# One plugin to install and one that is absent and was never installed, so the install, the
-# uninstall and their change detection all run, together with a theme.
+# One plugin to install, one that is absent and was never installed, and one installed but
+# deactivated, so the install, the uninstall, the deactivation and their change detection all
+# run, together with a theme.
 wordpress__plugins:
   - name: 'hello-dolly'
     state: 'present'
   - name: 'akismet'
     state: 'absent'
+  - name: 'classic-editor'
+    enabled: false
+    state: 'present'
 wordpress__site_title: 'Molecule'
 wordpress__theme: 'twentytwentyfive'
 # 127.0.0.1 stands in for the reverse proxy: verify.yml sends requests with X-Forwarded-* headers

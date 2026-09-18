@@ -139,9 +139,11 @@
     changed_when: '__wordpress__plugin_uninstall_result["rc"] == 0'
     when: 'item["state"] | d("present") == "absent"'
     loop: '{{ wordpress__plugins }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
-  - name: 'wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
-    ansible.builtin.command: '/usr/local/bin/wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }} --activate'
+  - name: 'wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }}{{ (item["enabled"] | d(true) | bool) | ternary(" --activate", "") }}'
+    ansible.builtin.command: '/usr/local/bin/wp plugin install --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }}{{ (item["enabled"] | d(true) | bool) | ternary(" --activate", "") }}'
     args:
       chdir: '{{ wordpress__install_dir }}'
     become: true
@@ -151,6 +153,24 @@
       or "activated." in __wordpress__plugin_install_result["stdout"]'
     when: 'item["state"] | d("present") != "absent"'
     loop: '{{ wordpress__plugins }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  - name: 'wp plugin deactivate --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }}'
+    ansible.builtin.command: '/usr/local/bin/wp plugin deactivate --url={{ wordpress__url | quote }} {{ item["name"] | lower | quote }}'
+    args:
+      chdir: '{{ wordpress__install_dir }}'
+    become: true
+    become_user: 'apache'
+    register: '__wordpress__plugin_deactivate_result'
+    # WP-CLI prints "Plugin already deactivated." for a plugin that is not active
+    changed_when: '"Plugin already deactivated." not in __wordpress__plugin_deactivate_result["stdout"]'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'not item["enabled"] | d(true) | bool'
+    loop: '{{ wordpress__plugins }}'
+    loop_control:
+      label: '{{ item["name"] }}'
 
   - name: 'wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'
     ansible.builtin.command: '/usr/local/bin/wp theme install --url={{ wordpress__url | quote }} {{ wordpress__theme | quote }} --activate'

@@ -60,7 +60,7 @@ argument_specs:
         elements: 'dict'
         required: false
         default: []
-        description: 'WordPress plugins to install or remove.'
+        description: 'WordPress plugins to install, remove, activate or deactivate.'
 
       wordpress__site_title:
         type: 'str'
