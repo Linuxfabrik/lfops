@@ -44,6 +44,14 @@
       register: '__molecule__wordpress_plugins_result'
       changed_when: false
 
+    - name: 'wp plugin list --status=inactive --field=name'
+      ansible.builtin.command: '/usr/local/bin/wp plugin list --status=inactive --field=name --path={{ __molecule__wordpress_dir }}'
+      args:
+        chdir: '{{ __molecule__wordpress_dir }}'
+      become_user: 'apache'
+      register: '__molecule__wordpress_inactive_plugins_result'
+      changed_when: false
+
     - name: 'wp theme list --status=active --field=name'
       ansible.builtin.command: '/usr/local/bin/wp theme list --status=active --field=name --path={{ __molecule__wordpress_dir }}'
       args:
@@ -59,8 +67,10 @@
           - '"disable-json-api" not in __molecule__wordpress_plugins_result["stdout_lines"]'
           - '"hello-dolly" in __molecule__wordpress_plugins_result["stdout_lines"]'
           - '"akismet" not in __molecule__wordpress_plugins_result["stdout_lines"]'
+          - '"akismet" not in __molecule__wordpress_inactive_plugins_result["stdout_lines"]'
+          - '"classic-editor" in __molecule__wordpress_inactive_plugins_result["stdout_lines"]'
           - '__molecule__wordpress_theme_result["stdout_lines"] == [wordpress__theme]'
-        fail_msg: 'active plugins: {{ __molecule__wordpress_plugins_result["stdout_lines"] }}, active theme: {{ __molecule__wordpress_theme_result["stdout_lines"] }}'
+        fail_msg: 'active plugins: {{ __molecule__wordpress_plugins_result["stdout_lines"] }}, inactive plugins: {{ __molecule__wordpress_inactive_plugins_result["stdout_lines"] }}, active theme: {{ __molecule__wordpress_theme_result["stdout_lines"] }}'
 
     # --url sets HTTPS for WP-CLI, which application passwords require before any filter applies
     - name: 'wp eval wp_is_application_passwords_available()'

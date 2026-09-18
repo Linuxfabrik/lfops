@@ -201,10 +201,16 @@ wordpress__url: 'https://wordpress.example.com'
 
 `wordpress__plugins`
 
-* List of WordPress plugin slugs. To get a list of already installed plugins, use the WordPress CLI `sudo -u apache /usr/local/bin/wp plugin list --status=active`.
+* List of WordPress plugin slugs. To get a list of already installed plugins and whether they are active, use the WordPress CLI `sudo -u apache /usr/local/bin/wp plugin list`.
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
+
+    * `enabled`:
+
+        * Optional. Activates the plugin (`true`) or keeps it installed but deactivated (`false`). With `false`, `name` has to be the plugin slug, since WP-CLI cannot deactivate a plugin by the path or URL of its zip file.
+        * Type: Bool.
+        * Default: `true`
 
     * `name`:
 
@@ -262,6 +268,8 @@ wordpress__plugins:
     state: 'present'
   - name: 'Akismet'
     state: 'absent'
+  - name: 'classic-editor'
+    enabled: false
 wordpress__theme: 'twentysixteen'
 wordpress__timer_core_minor_update_enabled: true
 wordpress__trusted_proxies:
