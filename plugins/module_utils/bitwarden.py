@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import contextlib
 import copy
 import email.encoders
 import email.mime.application
@@ -17,6 +18,7 @@ import email.mime.multipart
 import email.mime.nonmultipart
 import email.parser
 import email.policy
+import fcntl
 import json
 import mimetypes
 import os
@@ -152,6 +154,16 @@ CACHE_DIR = os.environ.get('XDG_RUNTIME_DIR', '/tmp')  # nosec B108 - cache file
 CACHE_FILE = os.path.join(CACHE_DIR, 'lfops_bitwarden_cache.json')
 CACHE_VERSION = 2026032701
 
+# how long a process waits for another one to finish its sync, search and create
+MUTEX_TIMEOUT = 300
+
+# `bw serve` briefly reports an empty vault right after a sync, see
+# https://github.com/bitwarden/clients/issues/23283
+# Verified against bw 2026.8.0 and 2026.9.0 on Rocky Linux 9: the list recovers
+# within a few seconds, so ask again a few times before giving up.
+EMPTY_LIST_RETRIES = 5
+EMPTY_LIST_RETRY_DELAY = 2
+
 
 class BitwardenException(Exception):
     pass
@@ -163,7 +175,65 @@ class Bitwarden:
     def __init__(self, hostname='127.0.0.1', port=8087):
         self._base_url = f'http://{hostname}:{port}'
         self._cache = None
+        self._mutex_fd = None
         self._load_cache()
+
+    def _acquire_mutex(self, timeout=MUTEX_TIMEOUT):
+        """Take the mutex, waiting at most `timeout` seconds. Use mutex() instead."""
+        if self._mutex_fd is not None:
+            return
+        mutex_file = f'{CACHE_FILE}.mutex'
+        try:
+            fd = os.open(mutex_file, os.O_RDWR | os.O_CREAT, 0o600)
+        except OSError as e:
+            raise BitwardenException(
+                f'Unable to open the mutex file {mutex_file}: {to_native(e)}'
+            ) from e
+        deadline = time.time() + timeout
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.time() >= deadline:
+                    os.close(fd)
+                    raise BitwardenException(
+                        f'Another process has held {mutex_file} for more than {timeout}s. '
+                        'Check for a hanging Ansible run using the Bitwarden lookup or module'
+                    ) from None
+                time.sleep(0.2)
+        self._mutex_fd = fd
+        display.vvv(f'lfbw - acquired mutex {mutex_file}')
+        self._load_cache()
+
+    def _release_mutex(self):
+        if self._mutex_fd is None:
+            return
+        fcntl.flock(self._mutex_fd, fcntl.LOCK_UN)
+        os.close(self._mutex_fd)
+        self._mutex_fd = None
+        display.vvv('lfbw - released mutex')
+
+    @contextlib.contextmanager
+    def mutex(self, timeout=MUTEX_TIMEOUT):
+        """Let only one process at a time sync, search and create.
+
+        Ansible evaluates a lookup in one worker process per host. Without the mutex,
+        workers that all miss an item create it once each, and each one overwrites the
+        cache file with its own view of the vault. The cache is re-read once the mutex
+        is held, so a process sees what the previous holder synced or created.
+
+        Hold it only for the duration of one lookup or module run. flock() belongs to
+        the open file, not to the process, so a second Bitwarden() in the same process,
+        for example the next evaluation of the same lookup, would otherwise wait for
+        the first one. This is also why the release must not be left to the end of the
+        process: Mitogen can run modules in an interpreter that stays alive.
+        """
+        self._acquire_mutex(timeout)
+        try:
+            yield self
+        finally:
+            self._release_mutex()
 
     def _api_call(self, url_path, method='GET', body=None, body_format='json'):
         url = f'{self._base_url}/{url_path}'
@@ -306,11 +376,35 @@ class Bitwarden:
             return
         display.vvv(f'lfbw - syncing vault (force={force})')
         self._api_call('sync', method='POST')
-        result = self._api_call('list/object/items')
-        self._cache['items'] = result['data']['data']
+        self._cache['items'] = self._list_items()
         self._cache['sync_timestamp'] = time.time()
         display.vvv(f'lfbw - sync complete, cached {len(self._cache["items"])} items')
         self._save_cache()
+
+    def _list_items(self, retries=EMPTY_LIST_RETRIES, delay=EMPTY_LIST_RETRY_DELAY):
+        """Return all items of the vault. An empty list is not trusted.
+
+        Right after a sync, `bw serve` answers `list/object/items` with `success: true`
+        and no items for a few seconds. Taken at face value, every item would look
+        missing and be created again, so ask again, and give up rather than accept an
+        empty vault.
+        """
+        for attempt in range(retries + 1):
+            items = self._api_call('list/object/items')['data']['data']
+            if items:
+                return items
+            if attempt < retries:
+                display.vvv(
+                    f'lfbw - bw serve returned an empty item list, retrying in {delay}s'
+                )
+                time.sleep(delay)
+        raise BitwardenException(
+            f'`bw serve` reported an empty vault {retries + 1} times in a row. It does '
+            'that for a few seconds after a sync '
+            '(https://github.com/bitwarden/clients/issues/23283), so the list is not '
+            'trusted, since every item would look missing and be created again. If the '
+            'vault really is empty, create any item in it first'
+        )
 
     def get_items(
         self,
@@ -384,7 +478,9 @@ class Bitwarden:
         display.vvv(f'lfbw - found {len(matching_items)} matching item(s)')
         return matching_items
 
-    def get_item_by_id(self, item_id):
+    def get_item_by_id(
+        self, item_id, retries=EMPTY_LIST_RETRIES, delay=EMPTY_LIST_RETRY_DELAY
+    ):
         """Get an item by ID from Bitwarden. Looks in the cache first, then falls back to the
         API (the item may have been created externally). Returns the item; raises
         BitwardenException if the API does not know the ID.
@@ -396,8 +492,16 @@ class Bitwarden:
                 return item
         # fallback to API if not found in cache (item could have been created externally)
         display.vvv('lfbw - item not in cache, falling back to API')
-        result = self._api_call(f'object/item/{item_id}')
-        return result['data']
+        # in the same window after a sync in which `list/object/items` comes back empty,
+        # `bw serve` answers 400 for an existing item, see _list_items()
+        for attempt in range(retries + 1):
+            try:
+                return self._api_call(f'object/item/{item_id}')['data']
+            except BitwardenException:
+                if attempt == retries:
+                    raise
+                display.vvv(f'lfbw - item lookup failed, retrying in {delay}s')
+                time.sleep(delay)
 
     def generate(
         self,

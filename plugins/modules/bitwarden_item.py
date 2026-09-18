@@ -23,6 +23,8 @@ description:
     - When I(name) is omitted, a title is generated automatically as C(hostname - purpose) (e.g. C(appsrv01 - MariaDB)) or just C(hostname) when no purpose is given.
     - On success, the module returns the full Bitwarden item object. C(username) and C(password) are additionally lifted to the top level so they can be addressed without going through the C(login) sub-dictionary.
     - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive calls in the same play do not hammer the API.
+    - Module runs on the same host run one at a time, so hosts that are processed in parallel and need the same missing item create it only once.
+    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The module then asks again for about ten seconds and fails rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
 
 notes:
     - Only login items (Bitwarden type 1) are managed. Cards, secure notes and identities are out of scope.
@@ -344,83 +346,86 @@ def run_module():
     username = module.params['username']
 
     bw = Bitwarden()
+    # one module run at a time on this host, so parallel runs do not all create the
+    # same missing item
+    with bw.mutex():
+        status = bw.status
+        if status != 'unlocked':
+            module.fail_json(msg=bw.get_not_unlocked_message(status))
 
-    status = bw.status
-    if status != 'unlocked':
-        module.fail_json(msg=bw.get_not_unlocked_message(status))
+        # to be sure we are up to date
+        bw.sync()
 
-    # to be sure we are up to date
-    bw.sync()
-
-    changed = False
-    if item_id:
-        current_item = bw.get_item_by_id(item_id)
-    else:
-        name = Bitwarden.get_pretty_name(name, hostname, purpose)
-        current_items = bw.get_items(
-            name, username, folder_id, collection_id, organization_id
-        )
-
-        if len(current_items) > 1:
-            module.fail_json(
-                msg='Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.'
+        changed = False
+        if item_id:
+            current_item = bw.get_item_by_id(item_id)
+        else:
+            name = Bitwarden.get_pretty_name(name, hostname, purpose)
+            current_items = bw.get_items(
+                name, username, folder_id, collection_id, organization_id
             )
 
-        current_item = current_items[0] if current_items else None
+            if len(current_items) > 1:
+                module.fail_json(
+                    msg='Found multiple Bitwarden items with the same name/title and username, cannot decide which one to use. Aborting.'
+                )
 
-    login_uris = bw.get_template_item_login_uri(uris)
-    login = bw.get_template_item_login(username, password, login_uris)
-    target_item = bw.get_template_item(
-        name,
-        login,
-        notes,
-        organization_id,
-        collection_id,
-        folder_id,
-    )
+            current_item = current_items[0] if current_items else None
 
-    # A None password means "do not manage the password": preserve the existing
-    # item's password instead of overwriting it with null.
-    if password is None and current_item and current_item.get('login'):
-        target_item['login']['password'] = current_item['login'].get('password')
+        login_uris = bw.get_template_item_login_uri(uris)
+        login = bw.get_template_item_login(username, password, login_uris)
+        target_item = bw.get_template_item(
+            name,
+            login,
+            notes,
+            organization_id,
+            collection_id,
+            folder_id,
+        )
 
-    if current_item:
-        # check if changed, adjust if necessary
-        changed, updated_item = diff_and_update(current_item, target_item)
-        if changed and not module.check_mode:
-            result = bw.edit_item(updated_item, updated_item['id'])
-        elif changed:
-            result = updated_item
+        # A None password means "do not manage the password": preserve the existing
+        # item's password instead of overwriting it with null.
+        if password is None and current_item and current_item.get('login'):
+            target_item['login']['password'] = current_item['login'].get('password')
+
+        if current_item:
+            # check if changed, adjust if necessary
+            changed, updated_item = diff_and_update(current_item, target_item)
+            if changed and not module.check_mode:
+                result = bw.edit_item(updated_item, updated_item['id'])
+            elif changed:
+                result = updated_item
+            else:
+                result = current_item
+
         else:
-            result = current_item
-
-    else:
-        # generate a new one
-        changed = True
-        result = target_item if module.check_mode else bw.create_item(target_item)
-
-    if attachments:
-        current_attachments = {
-            current_attachment['fileName']
-            for current_attachment in result.get('attachments', [])
-        }
-        attachments_changed = False
-        for attachment in attachments:
-            if os.path.basename(attachment) not in current_attachments:
-                attachments_changed = True
-                if not module.check_mode:
-                    bw.add_attachment(result['id'], attachment)
-
-        if attachments_changed:
+            # generate a new one
             changed = True
-            # we need to fetch the item again, so that it also contains the newly added attachments
-            if not module.check_mode:
-                result = bw.get_item_by_id(result['id'])
+            result = target_item if module.check_mode else bw.create_item(target_item)
 
-    result['changed'] = changed
-    # move username and password higher for easier access
-    result['username'] = result['login']['username']
-    result['password'] = result['login']['password']
+        if attachments:
+            current_attachments = {
+                current_attachment['fileName']
+                for current_attachment in result.get('attachments', [])
+            }
+            attachments_changed = False
+            for attachment in attachments:
+                if os.path.basename(attachment) not in current_attachments:
+                    attachments_changed = True
+                    if not module.check_mode:
+                        bw.add_attachment(result['id'], attachment)
+
+            if attachments_changed:
+                changed = True
+                # we need to fetch the item again, so that it also contains the newly added attachments
+                if not module.check_mode:
+                    result = bw.get_item_by_id(result['id'])
+
+        result['changed'] = changed
+        # move username and password higher for easier access
+        result['username'] = result['login']['username']
+        result['password'] = result['login']['password']
+
     module.exit_json(**result)
 
 
