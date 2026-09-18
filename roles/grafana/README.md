@@ -396,12 +396,6 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
         * Type: String.
         * Default: `'admin@grafana.localhost'`
 
-`grafana__users_case_insensitive_login`
-
-* Have a look at https://grafana.com/blog/2022/12/12/guide-to-using-the-new-grafana-cli-user-identity-conflict-tool-in-grafana-9.3
-* Type: Bool.
-* Default: unset
-
 `grafana__validate_certs`
 
 * If set to `false`, the role will not validate SSL certificates when connecting to Grafana via `grafana__root_url`. This is useful when using self-signed certificates.
@@ -495,7 +489,6 @@ grafana__smtp_config:
   user: 'smtp-user'
   password: 'linuxfabrik'
   from_address: 'grafana@example.com'
-grafana__users_case_insensitive_login: false
 grafana__validate_certs: true
 ```
 

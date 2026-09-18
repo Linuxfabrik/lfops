@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:grafana**: `grafana__users_case_insensitive_login` is gone; remove it from your inventory. Grafana has ignored the setting since v11.0.0 and always matches logins case-insensitively.
 * **role:system_update**: `system_update__pre_update_code` and `system_update__post_update_code` now also run in the daily security lane on Rocky, around the transaction that installs the hot-fixes, where until now only the weekly lane ran them. Set `system_update__security_pre_update_code: ''` and `system_update__security_post_update_code: ''` to keep the security lane free of it, or set either to a codeblock of its own to have the two lanes do different things.
 * **role:wordpress**: The vHost file is named after the host of `wordpress__url`, for example `wordpress.example.com.80.conf`, instead of `wordpress.conf`. Remove the old file with `rm -f /etc/httpd/sites-{enabled,available}/wordpress.conf` and reload httpd, otherwise Apache may keep serving the site from it.
 * **role:wordpress**: The WordPress core, `wp-config.php` and `wp-content/mu-plugins` belong to `root`, so a vulnerable plugin can no longer modify them; plugins and themes can still be installed from the web interface. The core is updated by `wordpress-core-minor-update-<instance>.timer` (minor releases) and `--tags wordpress:update` instead of by WordPress itself. After a permalink change in the web interface, add the displayed rewrite rules to `.htaccess` by hand.
@@ -46,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
 * **plugin:bitwarden_item, module:bitwarden_item**: A run against a vault that contains no items at all aborts instead of creating the first one, because `bw serve` briefly reports an empty vault after every sync ([bitwarden/clients#23283](https://github.com/bitwarden/clients/issues/23283)).
 * **role:repo_postgresql**: The PostgreSQL version repositories take precedence over the distribution's packages of the same name, so on RHEL 10 an install or update no longer switches a PostgreSQL server from the PGDG build to the AppStream build, which uses a different file layout.
 * **role:apache_httpd**: Responses of type `text/markdown` are compressed like HTML, so the Markdown versions of pages that CMSs such as Grav hand to AI agents no longer go out uncompressed.
@@ -57,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
 * **module:bitwarden_item**: The module works with the Mitogen strategy, where it aborted with `MODULE FAILURE` on every run, for example when the `grafana` role stores its service account tokens.
 * **plugin:bitwarden_item, module:bitwarden_item**: Running against several hosts in parallel no longer creates duplicates of a Bitwarden item, whether the item is new or has existed for a long time, so the next run no longer aborts with "Found multiple Bitwarden items".
 * **role:wordpress**: The installation no longer aborts at `wp core download` when Ansible connects as `root` without privilege escalation.
