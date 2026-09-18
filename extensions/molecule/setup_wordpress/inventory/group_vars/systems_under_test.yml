@@ -25,8 +25,8 @@ wordpress__plugins:
   - name: 'akismet'
     state: 'absent'
   - name: 'classic-editor'
-    state: 'present'
     enabled: false
+    state: 'present'
 wordpress__site_title: 'Molecule'
 wordpress__theme: 'twentytwentyfive'
 # 127.0.0.1 stands in for the reverse proxy: verify.yml sends requests with X-Forwarded-* headers
