@@ -1,0 +1,401 @@
+# run after the system_update / schedule_reboot window (04:00 by default), so the check does
+# not race an update that is still changing files.
+aide__check_on_calendar: '*-*-* 06:{{ 59 | random(seed=inventory_hostname) }}:00'
+aide__rules__combined_var: '{{ (
+      aide__rules__role_var +
+      aide__rules__dependent_var +
+      aide__rules__group_var +
+      aide__rules__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+aide__rules__dependent_var: []
+aide__rules__group_var: []
+aide__rules__host_var: []
+# the rule list shipped in /etc/aide.conf by aide 0.19.2 on Rocky 9 and 10, in its original order
+# and with its comments. the order matters: within one directory aide applies the first rule
+# that matches, and combine_lod keeps an item that the inventory overrides in its place.
+aide__rules__role_var:
+  - path: '/boot'
+    attributes: 'NORMAL'
+  - path: '/bin'
+    attributes: 'NORMAL'
+  - path: '/sbin'
+    attributes: 'NORMAL'
+  - path: '/lib'
+    attributes: 'NORMAL'
+  - path: '/lib64'
+    attributes: 'NORMAL'
+  # Monitor /opt selectively to avoid noise from auto-updating applications
+  - path: '/opt'
+    attributes: 'CONTENT'
+  - path: '/usr'
+    attributes: 'NORMAL'
+  # These are too volatile
+  - path: '/usr/src'
+    type: 'negative'
+  - path: '/usr/tmp'
+    type: 'negative'
+
+  # Admins dot files constantly change, just check perms
+  - path: '/root/\..*'
+    attributes: 'PERMS'
+  - path: '/root/.xauth*'
+    type: 'negative'
+  # Not in the shipped list. Ansible creates and deletes a directory here for every task it
+  # runs as root, `aide --init` from this role included, so the database would otherwise
+  # contain a directory that is gone by the next check.
+  - path: '/root/\.ansible/tmp'
+    type: 'negative'
+  - path: '/root'
+    attributes: 'NORMAL'
+
+  # Check only permissions, inode, user and group for /etc, but
+  # cover some important files closely.
+  - path: '/etc/mtab'
+    type: 'negative'
+  # Ignore backup files
+  - path: '/etc/.*~'
+    type: 'negative'
+
+  # trusted databases
+  - path: '/etc/hosts$'
+    attributes: 'NORMAL'
+  - path: '/etc/host.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/hostname$'
+    attributes: 'NORMAL'
+  - path: '/etc/issue$'
+    attributes: 'NORMAL'
+  - path: '/etc/issue.net$'
+    attributes: 'NORMAL'
+  - path: '/etc/protocols$'
+    attributes: 'NORMAL'
+  - path: '/etc/services$'
+    attributes: 'NORMAL'
+  - path: '/etc/localtime$'
+    attributes: 'NORMAL'
+  - path: '/etc/alternatives'
+    attributes: 'NORMAL'
+  - path: '/etc/mime.types$'
+    attributes: 'NORMAL'
+  - path: '/etc/terminfo'
+    attributes: 'NORMAL'
+  - path: '/etc/exports$'
+    attributes: 'NORMAL'
+  - path: '/etc/fstab$'
+    attributes: 'NORMAL'
+  - path: '/etc/passwd$'
+    attributes: 'NORMAL'
+  - path: '/etc/group$'
+    attributes: 'NORMAL'
+  - path: '/etc/gshadow$'
+    attributes: 'NORMAL'
+  - path: '/etc/shadow$'
+    attributes: 'NORMAL'
+  - path: '/etc/subgid$'
+    attributes: 'NORMAL'
+  - path: '/etc/subuid$'
+    attributes: 'NORMAL'
+  - path: '/etc/skel'
+    attributes: 'NORMAL'
+  - path: '/etc/sssd'
+    attributes: 'NORMAL'
+  - path: '/etc/swid'
+    attributes: 'NORMAL'
+  - path: '/etc/system-release-cpe$'
+    attributes: 'NORMAL'
+  - path: '/etc/tmux.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/xattr.conf$'
+    attributes: 'NORMAL'
+
+  # networking
+  - path: '/etc/firewalld'
+    attributes: 'NORMAL'
+  - path: '/etc/NetworkManager/system-connections'
+    type: 'negative'
+  - path: '/etc/NetworkManager'
+    attributes: 'NORMAL'
+  - path: '/etc/networks$'
+    attributes: 'NORMAL'
+  - path: '/etc/dhcp'
+    attributes: 'NORMAL'
+  - path: '/etc/wpa_supplicant'
+    attributes: 'NORMAL'
+  - path: '/etc/resolv.conf$'
+    attributes: 'DATAONLY'
+
+  # logins and accounts
+  - path: '/etc/login.defs$'
+    attributes: 'NORMAL'
+  - path: '/etc/libuser.conf$'
+    attributes: 'NORMAL'
+  - path: '/var/log/faillog$'
+    attributes: 'PERMS'
+  - path: '/var/log/lastlog$'
+    attributes: 'PERMS'
+  - path: '/var/run/faillock'
+    attributes: 'PERMS'
+  - path: '/etc/pam.d'
+    attributes: 'NORMAL'
+  - path: '/etc/security'
+    attributes: 'NORMAL'
+  - path: '/etc/securetty$'
+    attributes: 'NORMAL'
+  - path: '/etc/polkit-1'
+    attributes: 'NORMAL'
+  - path: '/etc/sudo.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/sudoers$'
+    attributes: 'NORMAL'
+  - path: '/etc/sudoers.d'
+    attributes: 'NORMAL'
+
+  # Shell/X starting files
+  - path: '/etc/profile$'
+    attributes: 'NORMAL'
+  - path: '/etc/profile.d'
+    attributes: 'NORMAL'
+  - path: '/etc/bashrc$'
+    attributes: 'NORMAL'
+  - path: '/etc/bash_completion.d'
+    attributes: 'NORMAL'
+  - path: '/etc/zprofile$'
+    attributes: 'NORMAL'
+  - path: '/etc/zshrc$'
+    attributes: 'NORMAL'
+  - path: '/etc/zlogin$'
+    attributes: 'NORMAL'
+  - path: '/etc/zlogout$'
+    attributes: 'NORMAL'
+  - path: '/etc/X11'
+    attributes: 'NORMAL'
+  - path: '/etc/shells$'
+    attributes: 'NORMAL'
+
+  # Pkg manager
+  - path: '/etc/dnf'
+    attributes: 'NORMAL'
+  - path: '/etc/yum.repos.d'
+    attributes: 'NORMAL'
+
+  # auditing
+  # AIDE produces an audit record, so this becomes perpetual motion.
+  - path: '/var/log/audit'
+    attributes: 'PERMS'
+  - path: '/etc/audit'
+    attributes: 'NORMAL'
+  - path: '/etc/libaudit.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/aide.conf$'
+    attributes: 'NORMAL'
+
+  # System logs with proper logrotate handling
+  - path: '/etc/rsyslog.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/rsyslog.d'
+    attributes: 'NORMAL'
+  - path: '/etc/logrotate.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/logrotate.d'
+    attributes: 'NORMAL'
+  - path: '/etc/systemd/journald.conf$'
+    attributes: 'NORMAL'
+
+  # Log directory
+  - path: '/var/log'
+    attributes: 'LOG'
+  # Journal files - exclude xattrs and link count due to systemd journal's user.crtime_usec extended attribute changes and new directory creation
+  - path: '/var/log/journal'
+    attributes: 'LOG-xattrs-n'
+
+  - path: '/var/run/utmp'
+    attributes: 'LOG'
+
+  # secrets
+  - path: '/etc/pkcs11'
+    attributes: 'NORMAL'
+  - path: '/etc/pki'
+    attributes: 'NORMAL'
+  - path: '/etc/ssl'
+    attributes: 'NORMAL'
+  - path: '/etc/certmonger'
+    attributes: 'NORMAL'
+  - path: '/var/lib/systemd/random-seed$'
+    attributes: 'PERMS'
+
+  # init system
+  - path: '/etc/systemd'
+    attributes: 'NORMAL'
+  - path: '/etc/sysconfig'
+    attributes: 'NORMAL'
+  - path: '/etc/rc.d'
+    attributes: 'NORMAL'
+  - path: '/etc/tmpfiles.d'
+    attributes: 'NORMAL'
+  - path: '/etc/machine-id$'
+    attributes: 'NORMAL'
+
+  # boot config
+  - path: '/etc/default'
+    attributes: 'NORMAL'
+  - path: '/etc/grub.d'
+    attributes: 'NORMAL'
+  - path: '/etc/grub2.cfg$'
+    attributes: 'NORMAL'
+  - path: '/etc/dracut.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/dracut.conf.d'
+    attributes: 'NORMAL'
+
+  # glibc linker
+  - path: '/etc/ld.so.cache$'
+    attributes: 'NORMAL'
+  - path: '/etc/ld.so.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/ld.so.conf.d'
+    attributes: 'NORMAL'
+  - path: '/etc/ld.so.preload$'
+    attributes: 'NORMAL'
+
+  # kernel config
+  - path: '/etc/sysctl.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/sysctl.d'
+    attributes: 'NORMAL'
+  - path: '/etc/modprobe.d'
+    attributes: 'NORMAL'
+  - path: '/etc/modules-load.d'
+    attributes: 'NORMAL'
+  - path: '/etc/depmod.d'
+    attributes: 'NORMAL'
+  - path: '/etc/udev'
+    attributes: 'NORMAL'
+  - path: '/etc/crypttab$'
+    attributes: 'NORMAL'
+
+  #### Daemons ####
+
+  # cron jobs
+  - path: '/var/spool/at'
+    attributes: 'CONTENT'
+  - path: '/etc/at.allow$'
+    attributes: 'CONTENT'
+  - path: '/etc/at.deny$'
+    attributes: 'CONTENT'
+  - path: '/etc/anacrontab$'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.allow$'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.deny$'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.d'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.daily'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.hourly'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.monthly'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.weekly'
+    attributes: 'NORMAL'
+  - path: '/etc/crontab$'
+    attributes: 'NORMAL'
+  - path: '/var/spool/cron/root'
+    attributes: 'CONTENT'
+
+  # time keeping
+  - path: '/etc/chrony.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/chrony.keys$'
+    attributes: 'NORMAL'
+
+  # mail
+  - path: '/etc/aliases$'
+    attributes: 'NORMAL'
+  - path: '/etc/aliases.db$'
+    attributes: 'NORMAL'
+  - path: '/etc/postfix'
+    attributes: 'NORMAL'
+
+  # ssh
+  - path: '/etc/ssh/sshd_config$'
+    attributes: 'NORMAL'
+  - path: '/etc/ssh/ssh_config$'
+    attributes: 'NORMAL'
+
+  # stunnel
+  - path: '/etc/stunnel'
+    attributes: 'NORMAL'
+
+  # ftp
+  - path: '/etc/vsftpd'
+    attributes: 'CONTENT'
+
+  # printing
+  - path: '/etc/cups'
+    attributes: 'NORMAL'
+  - path: '/etc/cupshelpers'
+    attributes: 'NORMAL'
+  - path: '/etc/avahi'
+    attributes: 'NORMAL'
+
+  # web server
+  - path: '/etc/httpd'
+    attributes: 'NORMAL'
+
+  # dns
+  - path: '/etc/named'
+    attributes: 'NORMAL'
+  - path: '/etc/named.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/named.iscdlv.key$'
+    attributes: 'NORMAL'
+  - path: '/etc/named.rfc1912.zones$'
+    attributes: 'NORMAL'
+  - path: '/etc/named.root.key$'
+    attributes: 'NORMAL'
+
+  # xinetd
+  - path: '/etc/xinetd.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/xinetd.d'
+    attributes: 'NORMAL'
+
+  # IPsec
+  - path: '/etc/ipsec.conf$'
+    attributes: 'NORMAL'
+  - path: '/etc/ipsec.secrets$'
+    attributes: 'NORMAL'
+  - path: '/etc/ipsec.d'
+    attributes: 'NORMAL'
+
+  # USBGuard
+  - path: '/etc/usbguard'
+    attributes: 'NORMAL'
+
+  # Now everything else
+  - path: '/etc'
+    attributes: 'PERMS'
+
+  # This gets new/removes-old filenames daily
+  - path: '/var/log/sa'
+    type: 'negative'
+  # As we are checking it, we've truncated yesterdays size to zero.
+  - path: '/var/log/aide.log'
+    type: 'negative'
+
+  # With AIDE's default verbosity level of 5, these would give lots of
+  # warnings upon tree traversal. It might change with future version.
+  #
+  # =/lost\+found    DIR
+  # =/home           DIR
+
+  # Ditto /var/log/sa reason...
+  - path: '/var/log/httpd'
+    type: 'negative'
+  # /boot/grub2/grubenv's timestamp is getting modified continuously due to "boot_success" implementation
+  - path: '/boot/grub2/grubenv'
+    type: 'negative'
+aide__timer_enabled: true
+aide__timer_state: 'started'

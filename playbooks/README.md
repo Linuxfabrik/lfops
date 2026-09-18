@@ -20,6 +20,13 @@ Calls the following roles (in order):
 * [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh)
 
 
+## aide.yml
+
+Calls the following roles (in order):
+
+* [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide)
+
+
 ## alternatives.yml
 
 Calls the following roles (in order):

@@ -1,0 +1,213 @@
+# Verify aide on the running system: the check timer is armed, and a check against the
+# database the role created runs clean, which proves that aide reads the deployed config
+# and that the database matches it, including the role's own files. Then a file below the
+# scenario's regular rule makes the check fail and shows up in the report, while a file
+# below its negative rule does not, and neither does a file below /opt, whose default rule
+# the scenario removes. This only works if the rules from the inventory are in effect,
+# since /srv is not monitored otherwise and /opt is by default.
+# In between, the role is run again twice, each time after a change it has to revert, to
+# prove that its handler leaves the database alone in both cases where re-baselining would
+# accept unvetted changes: a database found without the role's check unit, and a last check
+# that reported changes. Finally the probe files are removed and the update-db tasks of the
+# role accept the current state, after which the failed state is cleared and the check runs
+# clean again, so the second verify after the idempotence step starts from the same state.
+- name: 'Verify aide'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'systemctl is-enabled aide-check.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled aide-check.timer'
+      register: '__molecule__aide_timer_enabled_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl is-active aide-check.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active aide-check.timer'
+      register: '__molecule__aide_timer_active_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that aide-check.timer is enabled and active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_timer_enabled_result["stdout"] == "enabled"'
+          - '__molecule__aide_timer_active_result["stdout"] == "active"'
+
+    - name: 'systemctl start aide-check.service (clean host)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+      ansible.builtin.command: 'systemctl start aide-check.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aide-check.service (clean host)' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value aide-check.service'
+      register: '__molecule__aide_clean_result'
+      changed_when: false
+
+    - name: 'cat /var/log/aide/aide.log (clean host)'
+      ansible.builtin.command: 'cat /var/log/aide/aide.log'
+      register: '__molecule__aide_clean_log_result'
+      changed_when: false
+
+    - name: 'Assert that the check on the unchanged host runs clean'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_clean_result["stdout"] == "success"'
+        fail_msg: '{{ __molecule__aide_clean_log_result["stdout"] }}'
+
+    # a database the role finds without its own check unit must not be re-baselined. removing
+    # the unit makes the host look like one with a database from a previous AIDE setup, and
+    # the role run below deploys the unit again, which notifies the handler.
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run without a check unit)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_no_unit_result'
+
+    - name: 'rm -f /etc/systemd/system/aide-check.service'
+      ansible.builtin.file:
+        path: '/etc/systemd/system/aide-check.service'
+        state: 'absent'
+
+    - name: 'systemctl daemon-reload'
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: 'Reset the end-of-play messages (run without a check unit)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the aide role (run without a check unit)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run without a check unit)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_no_unit_result'
+
+    - name: 'Assert that the database was left alone and the operator was told'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_no_unit_result["stat"]["checksum"] == __molecule__aide_db_before_no_unit_result["stat"]["checksum"]'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 1'
+
+    - name: 'mkdir -p /srv/lfops-molecule/ignored'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule/ignored'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Create a probe file below the regular rule, the negative rule and /opt'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '{{ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop:
+        - '/opt/lfops-molecule-probe'
+        - '/srv/lfops-molecule/ignored/probe'
+        - '/srv/lfops-molecule/probe'
+
+    - name: 'systemctl start aide-check.service (changed host)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+      ansible.builtin.command: 'systemctl start aide-check.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aide-check.service (changed host)' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value aide-check.service'
+      register: '__molecule__aide_changed_result'
+      changed_when: false
+
+    - name: 'cat /var/log/aide/aide.log (changed host)'
+      ansible.builtin.command: 'cat /var/log/aide/aide.log'
+      register: '__molecule__aide_changed_log_result'
+      changed_when: false
+
+    - name: 'Assert that the check fails and reports only the file below the regular rule'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_changed_result["stdout"] == "exit-code"'
+          - '"/srv/lfops-molecule/probe" in __molecule__aide_changed_log_result["stdout"]'
+          - '"/srv/lfops-molecule/ignored" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/opt/lfops-molecule-probe" not in __molecule__aide_changed_log_result["stdout"]'
+        fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
+
+    # the check is failing now, so a config change must not re-baseline the database either.
+    # the role run below reverts the hand edit, which notifies the handler.
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_failed_result'
+
+    - name: 'Edit /etc/aide.conf by hand'
+      ansible.builtin.lineinfile:
+        path: '/etc/aide.conf'
+        line: '# lfops-molecule'
+
+    - name: 'Reset the end-of-play messages (run after a failed check)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the aide role (run after a failed check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_failed_result'
+
+    - name: 'Assert that the database was left alone and the operator was told'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_failed_result["stat"]["checksum"] == __molecule__aide_db_before_failed_result["stat"]["checksum"]'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 1'
+
+    - name: 'Remove the probe files'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/opt/lfops-molecule-probe'
+        - '/srv/lfops-molecule'
+
+    # the same tasks `--tags aide:update_db` runs. they have to accept the unit and the config
+    # that the two role runs above redeployed, and clear the failed state of the last check.
+    - name: 'Run the update-db tasks of the aide role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db.yml'
+
+    - name: 'systemctl is-failed aide-check.service (after update-db)' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-failed aide-check.service'
+      register: '__molecule__aide_failed_after_update_db_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that update-db cleared the failed state'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_failed_after_update_db_result["rc"] != 0'
+
+    - name: 'systemctl start aide-check.service (restored host)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+      ansible.builtin.command: 'systemctl start aide-check.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aide-check.service (restored host)' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value aide-check.service'
+      register: '__molecule__aide_restored_result'
+      changed_when: false
+
+    - name: 'Assert that the check runs clean again once the current state was accepted'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_restored_result["stdout"] == "success"'

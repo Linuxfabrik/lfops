@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2026091801
+
+[Unit]
+Description=AIDE file integrity check
+Documentation=man:aide(1)
+
+[Service]
+Type=oneshot
+# `aide --check` exits non-zero on any finding (1 added, 2 removed, 4 changed, 14+ errors),
+# which leaves this unit in the failed state. monitoring and the system_update role rely on
+# exactly that.
+ExecStart=/usr/sbin/aide --check
+IOSchedulingClass=idle
+Nice=19

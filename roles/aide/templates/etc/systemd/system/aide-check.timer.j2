@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2026091801
+
+[Unit]
+Description=AIDE file integrity check timer
+
+[Timer]
+OnCalendar={{ aide__check_on_calendar }}
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,2 @@
+- name: 'Converge aide playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.aide'

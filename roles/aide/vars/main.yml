@@ -1,0 +1,9 @@
+# aide.conf.j2 branches on these major.minor versions: 0.16 (RHEL 8) and 0.19 (RHEL 9 and 10).
+# 0.17 reworked the config options (log_level / report_level replace verbose) and 0.19 dropped
+# `database` and the old hashsums, so a version outside this list would get a config it may
+# not parse.
+__aide__supported_versions:
+  - '0.16'
+  - '0.19'
+
+__aide__end_of_play_message: 'aide: /etc/aide.conf or the aide-check units have changed, but the AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db` to accept the current state as the new baseline.'
