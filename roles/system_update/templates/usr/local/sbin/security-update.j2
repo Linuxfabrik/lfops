@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082601
+# 2026091801
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository
 # only, then request a reboot if one is needed by dropping a file into the
@@ -39,6 +39,12 @@ send_msg () {
         "{{ system_update__rocketchat_url }}"
 {% endif %}
 }
+
+{% if system_update__security_post_update_code | length %}
+post_update_code () {
+{{ system_update__security_post_update_code | indent(4, first=True) }}
+}
+{% endif %}
 
 makecache_with_retry () {
     # Rocky's mirrorlist service intermittently answers with an empty list
@@ -120,6 +126,16 @@ elif [ "$retc" -ne 100 ]; then
     exit 1
 fi
 
+{% if system_update__security_pre_update_code | length %}
+# below the gates above, not at the top of the script: this lane runs daily and exits
+# on most days without installing anything, while the pre-update code guards a
+# transaction that is about to happen. Running it at the top would fire it (and any
+# notification or abort it carries) on every day the repository had nothing pending.
+# start raw system_update__security_pre_update_code
+{{ system_update__security_pre_update_code }}
+# end raw system_update__security_pre_update_code
+
+{% endif %}
 # install security hot-fixes from the security repo only. --disablerepo / --enablerepo
 # keeps this lane separate from the regular (weekly) update lane and from the frozen
 # mirror snapshot.
@@ -150,6 +166,16 @@ needs-restarting --reboothint > /tmp/security-reboothint 2>&1
 reboothint_rc=$?
 needs-restarting 2> /dev/null > /tmp/security-needs-restarting
 
+{% if system_update__security_post_update_code | length %}
+# below the two probes above, not above them, so that post-update code which restarts
+# an application cannot clear the reboot this run needs: needs-restarting would no
+# longer see those processes on the pre-update libraries. update-and-reboot orders the
+# two the same way, there by calling this from inside each reboot branch. One call
+# here covers every path out of the script; a failed transaction exits further up and
+# never reaches it.
+post_update_code
+
+{% endif %}
 if [ "$reboothint_rc" -eq 1 ] || [ -s /tmp/security-needs-restarting ]; then
     log "Reboot required after security update; requesting reboot via the spool"
     # request a reboot; do-reboot sends the single notification at reboot time. keep

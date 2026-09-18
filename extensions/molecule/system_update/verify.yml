@@ -2,7 +2,8 @@
 # schedule-reboot timer it pulls in are armed; the regular check lane runs clean,
 # which exercises the metadata refresh (with its transient-mirrorlist retry) before
 # any update; on Rocky the security lane exists and is a clean no-op without the
-# security repo; off Rocky the security lane is absent. sendmail (the transport the
+# security repo; off Rocky the security lane is absent, and neither lane runs the
+# pre/post update hooks without a transaction to wrap. sendmail (the transport the
 # scripts now use) is available. Finally the regular update lane itself runs twice,
 # so the second run lands on a host that is genuinely up to date and must stay quiet.
 #
@@ -11,6 +12,16 @@
 - name: 'Verify system_update timers and the security lane'
   hosts: 'systems_under_test'
   gather_facts: true
+
+  vars:
+
+    # Written by system_update__pre_update_code / __post_update_code, which the
+    # scenario inventory sets to a `touch`. Their presence is how this scenario sees
+    # whether a lane reached the hooks.
+    __molecule__update_hook_markers:
+      - '/var/tmp/molecule-system_update-post-update-code'
+      - '/var/tmp/molecule-system_update-pre-update-code'
+
   tasks:
 
     - name: 'systemctl is-enabled the regular-lane and reboot timers' # noqa command-instead-of-module (read-only state query)
@@ -69,6 +80,14 @@
         that: 'not __molecule__security_timer_stat_result["stat"]["exists"]'
       when: 'ansible_facts["distribution"] != "Rocky"'
 
+    # Clear the hook markers on every host, so the assertions below read this pass and
+    # not the update lane of the previous one (verify.yml runs again after idempotence).
+    - name: 'rm -f the update hook markers'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop: '{{ __molecule__update_hook_markers }}'
+
     # Without the security repo (system_update.yml does not pull in repo_baseos),
     # security-update must exit 0 and request no reboot.
     - name: 'systemctl start security-update.service (Rocky no-op)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
@@ -93,6 +112,25 @@
         that:
           - '__molecule__security_update_result["stdout"] == "success"'
           - 'not __molecule__security_request_stat_result["stat"]["exists"]'
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    # The security lane renders both hooks, but sits below the repo and check-update
+    # gates. With no security repo on the host it never gets there, so a hook that
+    # aborts the update or notifies on a failed pre-condition stays quiet on the days
+    # the lane has nothing to install.
+    - name: 'stat the update hook markers after the security no-op'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: '__molecule__security_hook_stat_result'
+      loop: '{{ __molecule__update_hook_markers }}'
+      when: 'ansible_facts["distribution"] == "Rocky"'
+
+    - name: 'Assert the security no-op ran neither update hook'
+      ansible.builtin.assert:
+        that: 'not item["stat"]["exists"]'
+      loop: '{{ __molecule__security_hook_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
       when: 'ansible_facts["distribution"] == "Rocky"'
 
     - name: 'stat /usr/sbin/sendmail'
@@ -146,6 +184,21 @@
     - name: 'Assert the first run completed successfully'
       ansible.builtin.assert:
         that: '__molecule__update_first_result["stdout"] == "success"'
+
+    # The regular lane runs both hooks on every run, whether or not it had anything to
+    # apply, so this holds for the second run further down as well.
+    - name: 'stat the update hook markers after the regular lane'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: '__molecule__update_hook_stat_result'
+      loop: '{{ __molecule__update_hook_markers }}'
+
+    - name: 'Assert the regular lane ran both update hooks'
+      ansible.builtin.assert:
+        that: 'item["stat"]["exists"]'
+      loop: '{{ __molecule__update_hook_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
 
     # Generous timeout: the first run may have pulled a new kernel, and the first boot
     # into it takes longer than the module's 600s default allows for on a slow host.

@@ -13,6 +13,7 @@ Reboots are not performed by the update scripts themselves. They are delegated t
 * **Updates run at the reboot window.** The regular lane (weekly) and the Rocky security lane (daily) both run at the maintenance window defined by `schedule_reboot__reboot_time__*` (the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role). When an update needs a reboot it drops a request into that role's spool; the update unit is ordered before the reboot actor, so the reboot waits for the update to finish before it runs.
 * **The regular lane only reports when it actually changed something.** On an update day where nothing was pending, it still checks whether a reboot is outstanding, but sends no "System updated without Reboot" mail. The mail it does send lists the packages of that run, not of an earlier one.
 * **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and requests no reboot. Turn the lane off entirely with `system_update__security_enabled: false`.
+* **The update hooks run in both lanes, but only around a real transaction.** `system_update__pre_update_code` and `system_update__post_update_code` are run by the regular lane and, by default, by the security lane too. The security lane fires daily and exits on most days without installing anything, so it reaches the hooks only once the `security` repository actually has hot-fixes pending. Code that aborts the update or reports a failed pre-condition therefore stays quiet on the days there is nothing to install. Where a daily hot-fix does not warrant what a weekly full update does, `system_update__security_pre_update_code` and `system_update__security_post_update_code` override the security lane's half, `''` included.
 * **A failed update stops the run.** A metadata refresh or an upgrade that exits non-zero sends a "System update failed" mail with the error output and ends the run, on both families. Nothing downstream happens: no AIDE re-baseline, no reboot request, and no success mail for a host that is left half-configured.
 * **AIDE is re-baselined only when the check was clean beforehand.** If the host runs an AIDE check lane and the update changed packages, the regular lane refreshes the AIDE database afterwards and restarts the check, so the next check does not flag every file the update touched. If the check was already reporting changes when the update started, the database is left untouched and the log is kept at `/var/log/aide/aide.log-pre-system-update`: drift that predates the update, an intrusion included, is never accepted as the new baseline.
 
@@ -86,13 +87,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `system_update__post_update_code`
 
-* This codeblock will be executed after the updates have been installed and before a potential reboot.
+* This codeblock will be executed after the updates have been installed and before a potential reboot. The security lane runs it as well, unless `system_update__security_post_update_code` says otherwise.
 * Type: String.
 * Default: unset
 
 `system_update__pre_update_code`
 
-* This codeblock will be executed before the update process is started. Can be used to check pre-conditions for updating, for example for checking cluster nodes.
+* This codeblock will be executed before the update process is started. Can be used to check pre-conditions for updating, for example for checking cluster nodes. The security lane runs it as well, unless `system_update__security_pre_update_code` says otherwise.
 * Type: String.
 * Default: unset
 
@@ -119,6 +120,18 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * When the security lane checks for and installs security hot-fixes. Defaults to the reboot window (`schedule_reboot__reboot_time__*`) so the reboot follows right after. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
 * Default: `'*-*-* {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'`
+
+`system_update__security_post_update_code`
+
+* The codeblock the security lane executes after the hot-fixes have been installed and before a potential reboot. Set it to `''` to keep the daily lane free of code the weekly lane runs, or to a codeblock of its own to have the two lanes do different things.
+* Type: String.
+* Default: `'{{ system_update__post_update_code | d("") }}'`
+
+`system_update__security_pre_update_code`
+
+* The codeblock the security lane executes before it installs the hot-fixes. Set it to `''` to keep the daily lane free of code the weekly lane runs, or to a codeblock of its own to have the two lanes do different things.
+* Type: String.
+* Default: `'{{ system_update__pre_update_code | d("") }}'`
 
 `system_update__security_repos`
 
@@ -175,6 +188,9 @@ system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__security_enabled: true
 system_update__security_on_calendar: '*-*-* 04:00'
+system_update__security_post_update_code: '' # a daily hot-fix does not warrant what the weekly lane does here
+system_update__security_pre_update_code: |- # replaces system_update__pre_update_code, it does not add to it
+  systemctl is-active --quiet pacemaker || exit 1
 system_update__security_repos:
   - 'security'
 system_update__update_day: 'Tue'
