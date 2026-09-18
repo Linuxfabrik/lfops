@@ -611,7 +611,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_custom_log`
 
-* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
+* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `csvextensive`, `csvio`, `csvsiem`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `tsvextensive`, `tsvio`, `tsvsiem`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
 * Applies to: app, localhost, proxy, wordpress.
 * Type: String.
 * Default: `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`
@@ -858,7 +858,7 @@ This module is for flexible logging of client requests. Logs are written in a cu
 
 `apache_httpd__mod_log_config_custom_log`
 
-* Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
+* Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `csvextensive`, `csvio`, `csvsiem`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `tsvextensive`, `tsvio`, `tsvsiem`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
 * Type: String.
 * Default: unset
 
