@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, with a jail that bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes. The reverse proxies listed in the Nextcloud setting `trusted_proxies` are never banned, in any jail.
+* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, where it bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes and never bans the reverse proxies listed in the Nextcloud setting `trusted_proxies`.
 * **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins or two-factor challenges, following the Nextcloud hardening guide.
 * **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
@@ -103,7 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **role:nextcloud**: A run after a failed installation installs Nextcloud, where it skipped the installer because the failed attempt had left a `config.php` behind.
-* **role:nextcloud**: A run against an unchanged host no longer restarts PHP-FPM and reports no changes.
+* **role:nextcloud**: A run against an unchanged host no longer restarts PHP-FPM and reports no change at all.
 * **role:nextcloud**: `nextcloud-update` adds missing primary keys and runs the pending mimetype migrations after an update, which Nextcloud leaves to the administrator.
 * **role:nextcloud**: A `nextcloud__datadir` other than `/data` gets the ownership and the SELinux label Nextcloud needs, which the role only ever set on `/data`.
 * **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
