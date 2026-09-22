@@ -360,9 +360,6 @@ nextcloud__timer_scan_files_enabled: true
 
 nextcloud__twofactor_enforced: true
 
-# 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'
-nextcloud__version: 'latest'
-
 # -----------------------------------------------------------------------------
 
 nextcloud__apache_httpd__mods__dependent_var:

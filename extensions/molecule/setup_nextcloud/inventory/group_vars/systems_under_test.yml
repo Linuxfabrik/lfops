@@ -29,6 +29,7 @@ nextcloud__users:
   - username: 'nextcloud-admin'
     password: 'linuxfabrik'
     group: 'admin'
+nextcloud__version: 'latest-35'
 
 postfix__relayhost: 'mail.example.com:587'
 postfix__relayhost_password: 'linuxfabrik'
