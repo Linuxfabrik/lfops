@@ -18,6 +18,12 @@ login__users__host_var:
     state: 'present'
     linger: true
 ```
+* Optional: when running rootless containers, note that the [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules) role, which `setup_basic` runs, blocks the `tun` kernel module by default. Rootless container networking (pasta, slirp4netns) needs it, so allow it in the inventory:
+```yaml
+kernel_modules__modules__host_var:
+  - name: 'tun'
+    enabled: true
+```
 
 
 ## Tags

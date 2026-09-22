@@ -136,3 +136,9 @@ kernel_modules__modules__role_var:
   # messaging.
   - name: 'tipc'
     enabled: false
+  # TUN/TAP devices (CVE-2026-81000). Breaks: OpenVPN, WireGuard in userspace, rootless
+  # Podman and Docker networking (pasta, slirp4netns), libvirt VM networking and
+  # containers that use /dev/net/tun. Rootful Docker and Podman with bridge networking
+  # keep working. Re-enable it in the inventory of hosts that need it.
+  - name: 'tun'
+    enabled: false
