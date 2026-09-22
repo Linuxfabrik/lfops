@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
 * **playbook:setup_basic**: Checks the variables of all its roles, the compiled firewall in the Firewall Builder repository and the reachability of the Icinga2 master before it changes anything on the host, so a missing prerequisite no longer aborts the run halfway through, after SSH was already hardened.
 * Handlers that a role notified before a later task failed run anyway, so a changed configuration reaches the running service; until now it stayed inactive, also across later runs, which reported no change (all playbooks).
