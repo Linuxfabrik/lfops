@@ -395,6 +395,8 @@
 
 - block:
 
+  # 0o700: the script carries the credentials of the Icinga API user, and only root can run it
+  # anyway, since it restarts services and switches to the web server user.
   - name: 'Deploy /usr/local/bin/nextcloud-update'
     ansible.builtin.template:
       backup: true
@@ -402,7 +404,7 @@
       dest: '/usr/local/bin/nextcloud-update'
       owner: 'root'
       group: 'root'
-      mode: 0o755
+      mode: 0o700
 
   tags:
     - 'nextcloud'
