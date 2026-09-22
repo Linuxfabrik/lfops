@@ -53,6 +53,25 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_policycoreutils | default(false)'
 
+    # Before the services: installing the policy build dependencies can update the SELinux policy,
+    # and a daemon started under an older policy keeps its domain until it is restarted. On a Rocky
+    # 10.0 host the first start of Valkey ended up in unconfined_service_t, and httpd_t may not
+    # connect to its socket there.
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          nextcloud__selinux__booleans__dependent_var +
+          (not setup_nextcloud__skip_fail2ban | d(true)) | ternary(fail2ban__selinux__booleans__dependent_var, [])
+        }}'
+      selinux__fcontexts__dependent_var: '{{
+          nextcloud__selinux__fcontexts__dependent_var
+        }}'
+      selinux__modules__dependent_var: '{{
+          php__selinux__modules__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_nextcloud__skip_selinux | default(false)'
+
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           apache_httpd__python__modules__dependent_var +
@@ -137,21 +156,6 @@
 
 
       # === Nextcloud Application
-    - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var: '{{
-          nextcloud__selinux__booleans__dependent_var +
-          (not setup_nextcloud__skip_fail2ban | d(true)) | ternary(fail2ban__selinux__booleans__dependent_var, [])
-        }}'
-      selinux__fcontexts__dependent_var: '{{
-          nextcloud__selinux__fcontexts__dependent_var
-        }}'
-      selinux__modules__dependent_var: '{{
-          php__selinux__modules__dependent_var
-        }}'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_selinux | default(false)'
-
     - role: 'linuxfabrik.lfops.systemd_unit'
       systemd_unit__services__dependent_var: '{{
           nextcloud__systemd_unit__services__dependent_var
