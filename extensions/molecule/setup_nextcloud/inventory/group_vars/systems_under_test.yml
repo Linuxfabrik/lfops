@@ -16,6 +16,9 @@ mariadb_server__admin_user:
   username: 'mariadb-admin'
   password: 'linuxfabrik'
 
+nextcloud__database_login:
+  username: 'nextcloud'
+  password: 'linuxfabrik'
 nextcloud__fqdn: 'nextcloud.example.com'
 nextcloud__skip_notify_push: true
 # fail2ban is off by default, since it belongs on hosts that clients reach directly. Switched on

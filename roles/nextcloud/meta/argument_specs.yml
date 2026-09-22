@@ -67,6 +67,17 @@ argument_specs:
         default: 'localhost'
         description: 'Host where MariaDB is located.'
 
+      nextcloud__database_login:
+        type: 'dict'
+        required: true
+        description: 'Login of the MariaDB user Nextcloud connects as, with the subkeys username and password.'
+
+      nextcloud__database_login_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'Host from which the MariaDB user may connect.'
+
       nextcloud__database_name:
         type: 'str'
         required: false

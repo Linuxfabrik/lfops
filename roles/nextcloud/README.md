@@ -27,7 +27,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
 * A web server (for example Apache httpd) must be installed, with a virtual host for Nextcloud (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
-* MariaDB must be installed, in a version the installed Nextcloud supports (10.11+ for Nextcloud 35) (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* MariaDB must be installed, in a version the installed Nextcloud supports (10.11+ for Nextcloud 35), with the Nextcloud database and the user from `nextcloud__database_login` (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
 * PHP must be installed, in a version the installed Nextcloud supports (8.3 to 8.5 for Nextcloud 35) (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 * Valkey must be installed on RHEL 10, Redis on the other platforms, listening on the Unix socket in `nextcloud__redis_unixsocket` (roles: [linuxfabrik.lfops.valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey), or [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
 * Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
@@ -87,6 +87,22 @@ Manual steps:
 
 ## Mandatory Role Variables
 
+`nextcloud__database_login`
+
+* The MariaDB user Nextcloud connects as. The playbook `setup_nextcloud` creates it with the privileges the Nextcloud installer would grant, on the Nextcloud database only. Nextcloud takes it over at the installation; an existing installation keeps the database user it was set up with.
+* Type: Dictionary.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
 `nextcloud__fqdn`
 
 * The FQDN of the Nextcloud instance.
@@ -128,6 +144,9 @@ Manual steps:
 Example:
 ```yaml
 # mandatory
+nextcloud__database_login:
+  username: 'nextcloud'
+  password: 'linuxfabrik'
 nextcloud__fqdn: 'cloud.example.com'
 nextcloud__users:
   # first user has to be the admin account
@@ -206,6 +225,12 @@ nextcloud__version: 'latest-35'
 * Type: String.
 * Default: `'localhost'`
 
+`nextcloud__database_login_host`
+
+* Host from which the MariaDB user in `nextcloud__database_login` may connect.
+* Type: String.
+* Default: `'localhost'`
+
 `nextcloud__database_name`
 
 * Name of the Nextcloud database in MariaDB.
@@ -253,12 +278,6 @@ nextcloud__version: 'latest-35'
 * Recipients of the monthly `ldap:show-remnants` report (users removed from LDAP that still have remnants in Nextcloud) sent by `/usr/local/bin/nextcloud-ldap-show-remnants`. Defaults to the global `mailto_root__to`. The report is always printed to stdout; when recipients are set it is additionally mailed to them.
 * Type: List.
 * Default: `'{{ mailto_root__to | d([]) }}'`
-
-`nextcloud__mariadb_login`
-
-* The user account for the database administrator. The Nextcloud setup will create its own database account.
-* Type: Dictionary.
-* Default: `'{{ mariadb_server__admin_user }}'`
 
 `nextcloud__on_calendar_app_update`
 
@@ -395,6 +414,7 @@ nextcloud__apps__host_var:
   - name: 'weather'
     state: 'absent'
 nextcloud__database_host: 'localhost'
+nextcloud__database_login_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
 nextcloud__datadir: '/data'
 nextcloud__icinga2_api_url: 'https://icinga.example.com:5665'
@@ -406,7 +426,6 @@ nextcloud__jobs_timeout_start_sec: '10m'
 nextcloud__mail_from: '{{ mailto_root__from }}'
 nextcloud__mail_recipients:
   - 'info@example.com'
-nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'
 nextcloud__on_calendar_scan_files: '*:50:15'

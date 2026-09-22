@@ -164,6 +164,7 @@ nextcloud__apps__role_var:
   # - name: 'workflowengine'
   #   state: 'disabled'
 nextcloud__database_host: 'localhost'
+nextcloud__database_login_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
 
 nextcloud__datadir: '/data'
@@ -176,8 +177,6 @@ nextcloud__jobs_timeout_start_sec: '10m'
 
 nextcloud__mail_from: '{{ mailto_root__from }}'
 nextcloud__mail_recipients: '{{ mailto_root__to | d([]) }}'
-
-nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'          # every 5 minutes
@@ -507,6 +506,22 @@ nextcloud__fail2ban__jails__dependent_var:
   - filename: 'z10-nextcloud'
     state: 'present'
     template: 'nextcloud'
+
+# The database exactly as the Nextcloud installer would create it, and a user with the privileges
+# the installer would grant its own 'oc_' user (lib/private/Setup/MySQL.php), but bound to
+# nextcloud__database_login_host instead of '%'.
+nextcloud__mariadb_server__databases__dependent_var:
+  - name: '{{ nextcloud__database_name }}'
+    collation: 'utf8mb4_bin'
+    encoding: 'utf8mb4'
+    state: 'present'
+nextcloud__mariadb_server__users__dependent_var:
+  - username: '{{ nextcloud__database_login["username"] }}'
+    password: '{{ nextcloud__database_login["password"] }}'
+    host: '{{ nextcloud__database_login_host }}'
+    priv:
+      - '{{ nextcloud__database_name | replace("_", "\_") | replace("%", "\%") }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,REFERENCES,INDEX,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES,EXECUTE,CREATE VIEW,SHOW VIEW,CREATE ROUTINE,ALTER ROUTINE,EVENT,TRIGGER'
+    state: 'present'
 
 # Has to stay above nextcloud__php__ini_max_execution_time__dependent_var so PHP's own limit
 # trips first and reports a fatal error, leaving PHP-FPM as the backstop for a worker stuck

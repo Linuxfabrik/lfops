@@ -141,6 +141,12 @@
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__databases__dependent_var: '{{
+          nextcloud__mariadb_server__databases__dependent_var
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          nextcloud__mariadb_server__users__dependent_var
+        }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
