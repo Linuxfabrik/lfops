@@ -10,11 +10,12 @@ LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" c
 
 LogFormat "%h %{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" linuxfabrikio
 
+{# Row 1 of the field tables below looks misaligned here, but lines up in the rendered file. #}
 # csvio, tsvio: based on the linuxfabrikio LogFormat, plus the Cloudflare headers
 #
 #  Field  Token                                  Name              Group
 #
-#      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}  timestamp         Transaction
+#      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}          timestamp         Transaction
 #      2  %v                                     vhost             Server
 #      3  %a                                     client_ip         Client
 #      4  %{c}a                                  peer_ip           Client
@@ -56,7 +57,7 @@ LogFormat "\
 #
 #  Field  Token                                  Name              Group
 #
-#      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}  timestamp         Transaction
+#      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}          timestamp         Transaction
 #      2  %v                                     vhost             Server
 #      3  %a                                     client_ip         Client
 #      4  %{c}a                                  peer_ip           Client
@@ -102,7 +103,7 @@ LogFormat "\
 #
 #  Field  Token                                  Name                   Group
 #
-#      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}  timestamp              Transaction
+#      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}          timestamp              Transaction
 #      2  %{UNIQUE_ID}e                          unique_id              Transaction
 #      3  %L                                     log_id                 Transaction
 #      4  %v                                     vhost                  Server
