@@ -58,7 +58,7 @@
       dest: '/usr/local/bin/borg-backup'
       owner: 'root'
       group: 'root'
-      mode: 0o755
+      mode: 0o700 # carries the credentials of the Icinga API user
 
   tags:
     - 'borg_local'
