@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
 * **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
 * **module:bitwarden_item**: The module works with the Mitogen strategy, where it aborted with `MODULE FAILURE` on every run, for example when the `grafana` role stores its service account tokens.
 * **plugin:bitwarden_item, module:bitwarden_item**: Running against several hosts in parallel no longer creates duplicates of a Bitwarden item, whether the item is new or has existed for a long time, so the next run no longer aborts with "Found multiple Bitwarden items".
