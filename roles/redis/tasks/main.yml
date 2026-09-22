@@ -33,8 +33,8 @@
       backup: true
       src: 'etc/redis/{{ redis__installed_version }}-redis.conf.j2'
       dest: '{{ __redis__config_dir }}/{{ __redis__config_file }}'
-      owner: 'root'
-      group: 'redis'
+      owner: '{{ __redis__config_file_owner }}'
+      group: '{{ __redis__config_file_group }}'
       mode: 0o640
     notify: 'redis: restart redis'
 

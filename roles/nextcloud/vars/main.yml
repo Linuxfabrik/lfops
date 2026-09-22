@@ -6,10 +6,18 @@
 # See "OS-specific Dependent Variables" in CONTRIBUTING.md.
 
 # PHP modules installed by the linuxfabrik.lfops.php role via nextcloud__php__modules__dependent_var.
+# 'present' are the modules Nextcloud 35 requires or recommends (OC_Util::checkServer(),
+# apps/settings/lib/SetupChecks/PhpModules.php), the ones the role's features need (redis for all
+# caches, ldap for user_ldap, smbclient for SMB external storage) and the ones with setup checks of
+# their own (opcache, imagick). 'absent' are modules the role used to install and Nextcloud does
+# not use here: apcu and memcached (all caches live in Redis / Valkey), bcmath (gmp covers
+# WebAuthn and SFTP) and imap (only the IMAP backend of user_external needs it). php-json is not
+# listed: it is part of PHP 8 itself, and on RHEL only a name that php-common provides, so
+# 'absent' would take PHP with it.
 __nextcloud__php__modules__dependent_var:
   RedHat:
     - name: 'php-bcmath'
-      state: 'present'
+      state: 'absent'
     - name: 'php-gd'
       state: 'present'
     - name: 'php-gmp'
@@ -19,23 +27,21 @@ __nextcloud__php__modules__dependent_var:
     # IMAP was removed from PHP core in 8.4 and ships as the PECL package php-pecl-imap there; on
     # <= 8.3 it is still the core php-imap. Pick the name from the PHP version the php role detected.
     - name: '{{ "php-pecl-imap" if __php__installed_version is version("8.4", ">=") else "php-imap" }}'
-      state: 'present'
+      state: 'absent'
     - name: 'php-intl'
-      state: 'present'
-    - name: 'php-json'
       state: 'present'
     - name: 'php-ldap'
       state: 'present'
     - name: 'php-mbstring'
       state: 'present'
     - name: 'php-memcached'
-      state: 'present'
+      state: 'absent'
     - name: 'php-mysqlnd'
       state: 'present'
     - name: 'php-opcache'
       state: 'present'
     - name: 'php-pecl-apcu'
-      state: 'present'
+      state: 'absent'
     - name: 'php-process' # posix module for oc
       state: 'present'
     - name: 'php-redis'
@@ -57,9 +63,9 @@ __nextcloud__php__modules__dependent_var:
   # no version branch is needed here.
   Debian:
     - name: 'php{{ __php__installed_version }}-apcu'
-      state: 'present'
+      state: 'absent'
     - name: 'php{{ __php__installed_version }}-bcmath'
-      state: 'present'
+      state: 'absent'
     - name: 'php{{ __php__installed_version }}-gd'
       state: 'present'
     - name: 'php{{ __php__installed_version }}-gmp'
@@ -67,7 +73,7 @@ __nextcloud__php__modules__dependent_var:
     - name: 'php{{ __php__installed_version }}-imagick'
       state: 'present'
     - name: 'php{{ __php__installed_version }}-imap'
-      state: 'present'
+      state: 'absent'
     - name: 'php{{ __php__installed_version }}-intl'
       state: 'present'
     - name: 'php{{ __php__installed_version }}-ldap'
@@ -75,7 +81,7 @@ __nextcloud__php__modules__dependent_var:
     - name: 'php{{ __php__installed_version }}-mbstring'
       state: 'present'
     - name: 'php{{ __php__installed_version }}-memcached'
-      state: 'present'
+      state: 'absent'
     - name: 'php{{ __php__installed_version }}-mysql'
       state: 'present'
     - name: 'php{{ __php__installed_version }}-redis'
@@ -96,3 +102,34 @@ nextcloud__php__modules__dependent_var: '{{
       | linuxfabrik.lfops.platform_select(ansible_facts))
     if __php__installed_version is defined else []
   }}'
+
+# What each Nextcloud major version needs, taken from the Nextcloud server source at the release
+# tag (v30.0.0 to v35.0.0): `php_min` and `php_max` (exclusive) from lib/versioncheck.php, outside
+# of which Nextcloud refuses to run, and `mariadb_min` from MIN_MARIADB in
+# apps/settings/lib/SetupChecks/SupportedDatabase.php. Nextcloud sets no minimum for the Redis or
+# Valkey server, only for the phpredis extension (4.0.0), which every supported platform exceeds.
+__nextcloud__requirements:
+  '30':
+    mariadb_min: '10.6'
+    php_max: '8.4'
+    php_min: '8.1'
+  '31':
+    mariadb_min: '10.6'
+    php_max: '8.5'
+    php_min: '8.1'
+  '32':
+    mariadb_min: '10.6'
+    php_max: '8.5'
+    php_min: '8.1'
+  '33':
+    mariadb_min: '10.6'
+    php_max: '8.6'
+    php_min: '8.2'
+  '34':
+    mariadb_min: '10.6'
+    php_max: '8.6'
+    php_min: '8.2'
+  '35':
+    mariadb_min: '10.11'
+    php_max: '8.6'
+    php_min: '8.3'

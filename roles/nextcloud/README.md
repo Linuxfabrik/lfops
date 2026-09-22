@@ -16,6 +16,9 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 
 * App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
 * This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
+* Nextcloud logs to `/var/log/nextcloud/nextcloud.log`, not to the data directory. On SELinux systems, fail2ban may only read files labeled as logs, and the fail2ban jail for Nextcloud reads this file.
+* The vHost serves plain HTTP and expects a reverse proxy in front that terminates TLS. Configure Nextcloud for it via `nextcloud__sysconfig__*_var` (see the example below), above all `trusted_proxies`: without it, Nextcloud sees every client with the address of the proxy, so its brute-force protection slows down all clients together and its log names the proxy instead of the client. The proxy also has to forward `/push/` to notify_push on port 7867 of the Nextcloud host (`/push/ws` as a WebSocket).
+* Behind a reverse proxy, Nextcloud's own brute-force protection slows down password guessing, which is why `trusted_proxies` matters. fail2ban cannot help there, since every client reaches the host from the proxy's address. On a Nextcloud host that clients reach directly, set `setup_nextcloud__skip_fail2ban: false`: the playbook then runs fail2ban with a jail that bans IPs with too many failed Nextcloud logins. The reverse proxies listed in `trusted_proxies` are never banned, in any jail.
 
 
 ## Dependent Roles
@@ -24,10 +27,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
 * A web server (for example Apache httpd) must be installed, with a virtual host for Nextcloud (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
-* MariaDB 10.6+ must be installed (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
-* PHP 8.1+ must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
-* Redis 7+ must be installed (roles: [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
+* MariaDB must be installed, in a version the installed Nextcloud supports, with the Nextcloud database and the user from `nextcloud__database_login` (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* PHP must be installed, in a version the installed Nextcloud supports (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
+* Valkey must be installed on RHEL 10, Redis on the other platforms, listening on the Unix socket in `nextcloud__redis_unixsocket` (roles: [linuxfabrik.lfops.valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey), or [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
 * Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
+* Optional: fail2ban bans IPs with too many failed logins (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)).
 * Optional: Coturn (role: [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)) provides the TURN server for Nextcloud Talk.
 
 These roles are not enabled by default; enable them via the playbook's skip variables if needed:
@@ -41,6 +45,46 @@ Manual steps:
 
 * Size the `/tmp` partition for your upload load. For example, to allow 5 simultaneous uploads of 10 GB each, set it to 50 GB+.
 * Configure the systemd service for [notify_push](https://github.com/nextcloud/notify_push).
+
+
+## Connecting Collabora Online
+
+`setup_nextcloud` installs Collabora Online (role `collabora`) on the Nextcloud host and allows `nextcloud__fqdn` as WOPI host, but leaves the connection to the reverse proxy and to Nextcloud to the inventory. The browser loads the editor from a hostname of its own, such as `office.example.com`, which the reverse proxy terminates like the Nextcloud hostname. Collabora itself serves plain HTTP on port 9980 (`collabora__coolwsd_ssl_termination: true`).
+
+On the reverse proxy, forward the Collabora hostname to port 9980 of the Nextcloud host, with the WebSockets and without decoding encoded slashes:
+
+```apache
+AllowEncodedSlashes NoDecode
+ProxyPreserveHost On
+ProxyPass           /browser http://nextcloud-host.example.com:9980/browser retry=0
+ProxyPassReverse    /browser http://nextcloud-host.example.com:9980/browser
+ProxyPass           /hosting/discovery http://nextcloud-host.example.com:9980/hosting/discovery retry=0
+ProxyPassReverse    /hosting/discovery http://nextcloud-host.example.com:9980/hosting/discovery
+ProxyPass           /hosting/capabilities http://nextcloud-host.example.com:9980/hosting/capabilities retry=0
+ProxyPassReverse    /hosting/capabilities http://nextcloud-host.example.com:9980/hosting/capabilities
+ProxyPassMatch      "/cool/(.*)/ws$" ws://nextcloud-host.example.com:9980/cool/$1/ws nocanon
+ProxyPass           /cool/adminws ws://nextcloud-host.example.com:9980/cool/adminws
+ProxyPass           /cool http://nextcloud-host.example.com:9980/cool
+ProxyPassReverse    /cool http://nextcloud-host.example.com:9980/cool
+```
+
+In Nextcloud, enable the Nextcloud Office app and point it at the Collabora hostname. Collabora calls back into Nextcloud through the reverse proxy, so the allow list names the proxy:
+
+```yaml
+nextcloud__apps__host_var:
+  - name: 'richdocuments'
+    state: 'enabled'
+nextcloud__app_configs__host_var:
+  - key: 'richdocuments public_wopi_url'
+    value: 'https://office.example.com'
+    state: 'present'
+  - key: 'richdocuments wopi_allowlist'
+    value: '192.0.2.7' # IP of the reverse proxy
+    state: 'present'
+  - key: 'richdocuments wopi_url'
+    value: 'https://office.example.com'
+    state: 'present'
+```
 
 
 ## Tags
@@ -83,6 +127,22 @@ Manual steps:
 
 ## Mandatory Role Variables
 
+`nextcloud__database_login`
+
+* The MariaDB user Nextcloud connects as. The playbook `setup_nextcloud` creates it with the privileges the Nextcloud installer would grant, on the Nextcloud database only. Nextcloud takes it over at the installation; an existing installation keeps the database user it was set up with.
+* Type: Dictionary.
+* Subkeys:
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
 `nextcloud__fqdn`
 
 * The FQDN of the Nextcloud instance.
@@ -116,9 +176,17 @@ Manual steps:
         * Type: List of strings.
         * Default: `[]`
 
+`nextcloud__version`
+
+* Which version to download for a new installation. One of `'latest-XX'`, such as `'latest-35'`, or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases. Updates of an installed Nextcloud run through `/usr/local/bin/nextcloud-update`, not through this variable.
+* Type: String.
+
 Example:
 ```yaml
 # mandatory
+nextcloud__database_login:
+  username: 'nextcloud'
+  password: 'linuxfabrik'
 nextcloud__fqdn: 'cloud.example.com'
 nextcloud__users:
   # first user has to be the admin account
@@ -132,6 +200,7 @@ nextcloud__users:
       - 'files quota "50 MB"'
       - 'firstrunwizard show 0'
       - 'settings email info@example.org'
+nextcloud__version: 'latest-35'
 ```
 
 
@@ -146,7 +215,7 @@ nextcloud__users:
 
     * `key`:
 
-        * Mandatory. The name of the config option to set.
+        * Mandatory. The app and the name of its config option, separated by a space, for example `password_policy minLength`.
         * Type: String.
 
     * `value`:
@@ -154,16 +223,17 @@ nextcloud__users:
         * Mandatory. The configuration value.
         * Type: String.
 
-    * `force`:
-
-        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
-        * Type: Bool.
-
     * `state`:
 
-        * Optional. Either `absent`, `disabled`, `enabled` or `present`. Note that `enabled` also installs the app.
+        * Optional. Either `present` or `absent`.
         * Type: String.
-        * Default: `'enabled'`
+        * Default: `'present'`
+
+    * `type`:
+
+        * Optional. The type of the configuration value. One of `array`, `boolean`, `float`, `integer` or `string`.
+        * Type: String.
+        * Default: `'string'`
 
 `nextcloud__apps__host_var` / `nextcloud__apps__group_var`
 
@@ -177,15 +247,27 @@ nextcloud__users:
         * Mandatory. The app name.
         * Type: String.
 
+    * `force`:
+
+        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
+        * Type: Bool.
+        * Default: `false`
+
     * `state`:
 
-        * Optional. State of the app, either `present` or `absent`.
+        * Optional. One of `absent` (removes the app), `disabled` (disables an enabled app), `enabled` (installs the app if needed and enables it) or `present` (installs the app, but leaves it disabled).
         * Type: String.
-        * Default: `'present'`
+        * Default: `'enabled'`
 
 `nextcloud__database_host`
 
 * Host where MariaDB is located.
+* Type: String.
+* Default: `'localhost'`
+
+`nextcloud__database_login_host`
+
+* Host from which the MariaDB user in `nextcloud__database_login` may connect.
 * Type: String.
 * Default: `'localhost'`
 
@@ -197,7 +279,7 @@ nextcloud__users:
 
 `nextcloud__datadir`
 
-* Where to store the user files.
+* Where to store the user files. Nextcloud takes it over at the installation; changing it afterwards does not move an existing data directory.
 * Type: String.
 * Default: `'/data'`
 
@@ -237,12 +319,6 @@ nextcloud__users:
 * Type: List.
 * Default: `'{{ mailto_root__to | d([]) }}'`
 
-`nextcloud__mariadb_login`
-
-* The user account for the database administrator. The Nextcloud setup will create its own database account.
-* Type: Dictionary.
-* Default: `'{{ mariadb_server__admin_user }}'`
-
 `nextcloud__on_calendar_app_update`
 
 * Time to update the Nextcloud apps. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
@@ -260,6 +336,18 @@ nextcloud__users:
 * Run interval of rescanning filesystem. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
 * Default: `'*:50:15'`
+
+`nextcloud__redis_group`
+
+* Group that may connect to the Unix socket of Redis or Valkey. The role adds the web server user to it.
+* Type: String.
+* Default: `'valkey'` on RHEL 10, `'redis'` elsewhere
+
+`nextcloud__redis_unixsocket`
+
+* Unix socket through which Nextcloud reaches Redis or Valkey for caching and file locking, the one that `setup_nextcloud` installs. Set it to `''` to connect to `127.0.0.1:6379` over TCP instead.
+* Type: String.
+* Default: `'/run/valkey/valkey.sock'` on RHEL 10, `'/run/redis/redis.sock'` on RHEL 8 and 9, `'/run/redis/redis-server.sock'` on Debian and Ubuntu
 
 `nextcloud__skip_apps`
 
@@ -338,12 +426,6 @@ nextcloud__users:
 * Type: Bool.
 * Default: `true`
 
-`nextcloud__version`
-
-* Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases.
-* Type: String.
-* Default: `'latest'`
-
 `nextcloud__vhost_virtualhost_ip`
 
 * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
@@ -372,6 +454,7 @@ nextcloud__apps__host_var:
   - name: 'weather'
     state: 'absent'
 nextcloud__database_host: 'localhost'
+nextcloud__database_login_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
 nextcloud__datadir: '/data'
 nextcloud__icinga2_api_url: 'https://icinga.example.com:5665'
@@ -383,7 +466,6 @@ nextcloud__jobs_timeout_start_sec: '10m'
 nextcloud__mail_from: '{{ mailto_root__from }}'
 nextcloud__mail_recipients:
   - 'info@example.com'
-nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'
 nextcloud__on_calendar_scan_files: '*:50:15'
@@ -426,22 +508,22 @@ nextcloud__sysconfig__host_var:
     type: 'double'
     state: 'present'
   # reverse proxy config
-  - key: 'overwrite.cli.url '
+  - key: 'overwrite.cli.url'
     value: 'https://cloud.example.com'
     state: 'present'
-  - key: 'overwritecondaddr '
+  - key: 'overwritecondaddr'
     value: '^192\.0\.2\.7$' # IP of the reverse proxy
     state: 'present'
-  - key: 'overwritehost '
+  - key: 'overwritehost'
     value: 'cloud.example.com'
     state: 'present'
-  - key: 'overwriteprotocol '
+  - key: 'overwriteprotocol'
     value: 'https'
     state: 'present'
-  - key: 'overwritewebroot '
+  - key: 'overwritewebroot'
     value: '/'
     state: 'present'
-  - key: 'trusted_proxies 0 '
+  - key: 'trusted_proxies 0'
     value: '192.0.2.7' # IP of the reverse proxy
     state: 'present'
 
@@ -449,10 +531,20 @@ nextcloud__timer_app_update_enabled: true
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 nextcloud__timer_scan_files_enabled: true
-nextcloud__version: 'latest'
 nextcloud__vhost_virtualhost_ip: '127.0.0.1'
 nextcloud__vhost_virtualhost_port: '81'
 ```
+
+## Troubleshooting
+
+`Nextcloud XX needs PHP X.Y or newer, but older than X.Z, and MariaDB XX.Y or newer.`
+
+* The role compares the installed PHP and MariaDB with what the installed Nextcloud major version requires, before it changes anything, and aborts if they do not fit. The message names the versions it expects and the ones it found. Nextcloud itself refuses to run on a PHP outside that range. Upgrade PHP (for example via `repo_remi__enabled_php_version`) or MariaDB (`repo_mariadb__version`), then run the role again.
+
+`Nextcloud XX is not supported by this role.`
+
+* The role knows the requirements of the Nextcloud major versions listed in the message only. Pin `nextcloud__version` to a supported major version for a new installation, or add the requirements of the new major version to `__nextcloud__requirements` in `vars/main.yml`.
+
 
 ## License
 

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023062801
+# 2026092201
 
 alias whatismyip="curl ipecho.net/plain"
 alias dmesg='dmesg --level=emerg,alert,crit,err --reltime'
@@ -18,34 +18,7 @@ function lf-confirm() {
 }
 
 {% if tools__icinga2_api_user_login is defined and tools__icinga2_api_user_login | length %}
-function schedule-icinga-downtime() {
-    if [ -z "$1" ]; then
-        echo 'arg 1 required! (downtime duration in s).'
-        exit 1
-    fi
-
-    if [ -z "$2" ]; then
-        comment="Downtime set per schedule-icinga-downtime."
-    else
-        comment="$2"
-    fi
-
-    START_TIME=$(date +%s)
-    END_TIME=$(( START_TIME + $1 ))
-    curl --connect-timeout 5 --insecure --silent --user '{{ tools__icinga2_api_user_login["username"] }}:{{ tools__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ tools__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
-    {
-        "type": "Host",
-        "filter": "match(\"{{ tools__icinga2_hostname }}\", host.name)",
-        "start_time": "$START_TIME",
-        "end_time": "$END_TIME",
-        "author": "{{ tools__icinga2_hostname }}",
-        "comment": "$comment",
-        "all_services": true
-    }
-EOF
-
-}
-
+# /usr/local/sbin/schedule-icinga-downtime is readable and executable by root only.
 alias reboot="lf-confirm && schedule-icinga-downtime 300 'Manual reboot' && /usr/sbin/reboot"
 {% else %}
 alias reboot="lf-confirm && /usr/sbin/reboot"

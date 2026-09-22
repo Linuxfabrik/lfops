@@ -164,6 +164,7 @@ nextcloud__apps__role_var:
   # - name: 'workflowengine'
   #   state: 'disabled'
 nextcloud__database_host: 'localhost'
+nextcloud__database_login_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
 
 nextcloud__datadir: '/data'
@@ -177,11 +178,12 @@ nextcloud__jobs_timeout_start_sec: '10m'
 nextcloud__mail_from: '{{ mailto_root__from }}'
 nextcloud__mail_recipients: '{{ mailto_root__to | d([]) }}'
 
-nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
-
 nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostname) }}'
 nextcloud__on_calendar_jobs: '*:0/5'          # every 5 minutes
 nextcloud__on_calendar_scan_files: '*:50:15'  # every hour at hh:50:15
+
+nextcloud__redis_group: '{{ __nextcloud__redis_group }}'
+nextcloud__redis_unixsocket: '{{ __nextcloud__redis_unixsocket }}'
 
 nextcloud__skip_apps: false
 nextcloud__skip_notify_push: false
@@ -236,20 +238,28 @@ nextcloud__sysconfig__role_var:
     value: '"'
     state: 'present'
   - key: 'forbidden_filename_characters 6'
-    value: '\n'
-    state: 'present'
-  - key: 'forbidden_filename_characters 7'
-    value: '\r'
-    state: 'present'
-  - key: 'forbidden_filename_characters 8'
-    value: '\u0000'
-    state: 'present'
-  - key: 'forbidden_filename_characters 9'
     value: '|'
     state: 'present'
+  # Removed from hosts that got them from earlier versions of this role: in single quotes, YAML
+  # passed '\n', '\r' and '\u0000' on as literal backslash sequences instead of control
+  # characters. Nextcloud forbids the backslash and the characters 0 to 31 in any case, so the
+  # entries never changed anything (verified against Nextcloud 35).
+  - key: 'forbidden_filename_characters 7'
+    value: ''
+    state: 'absent'
+  - key: 'forbidden_filename_characters 8'
+    value: ''
+    state: 'absent'
+  - key: 'forbidden_filename_characters 9'
+    value: ''
+    state: 'absent'
   - key: 'log_rotate_size'
     value: '10485760'
     type: 'integer'
+    state: 'present'
+  # Outside the data directory, where the SELinux policy lets fail2ban read it.
+  - key: 'logfile'
+    value: '/var/log/nextcloud/nextcloud.log'  # upstream default: <datadirectory>/nextcloud.log
     state: 'present'
   - key: 'loglevel'
     value: '2'
@@ -276,28 +286,34 @@ nextcloud__sysconfig__role_var:
     value: '0'
     type: 'integer'
     state: 'present'
-  - key: 'redis host'
-    value: '127.0.0.1'
-    state: 'present'
+  # Without 'redis port', Nextcloud connects to port 6379 of a host name and to the Unix socket of
+  # a path (lib/private/RedisFactory.php). Removing the port before changing the host keeps every
+  # step valid: a socket path in 'host' next to port 6379 makes Nextcloud, and with it every occ
+  # call including the one that would fix the port, fail at bootstrap.
   - key: 'redis port'
-    value: '6379'
-    type: 'integer'
+    value: ''
+    state: 'absent'
+  - key: 'redis host'
+    value: '{{ (nextcloud__redis_unixsocket | length > 0) | ternary(nextcloud__redis_unixsocket, "127.0.0.1") }}'
     state: 'present'
   - key: 'redis timeout'
     value: '0.5'
     type: 'double'
     state: 'present'
+  # Removed from hosts that got them from earlier versions of this role, so Nextcloud verifies the
+  # certificate of the SMTP server again. The empty 'ssl' array left behind changes nothing,
+  # since the Mailer merges the stream options into its own (verified against Nextcloud 35).
   - key: 'mail_smtpstreamoptions ssl allow_self_signed'
     value: 'true'
-    state: 'present'
+    state: 'absent'
     type: 'boolean'
   - key: 'mail_smtpstreamoptions ssl verify_peer'
     value: 'false'
-    state: 'present'
+    state: 'absent'
     type: 'boolean'
   - key: 'mail_smtpstreamoptions ssl verify_peer_name'
     value: 'false'
-    state: 'present'
+    state: 'absent'
     type: 'boolean'
   - key: 'memcache.locking'
     value: '\OC\Memcache\Redis'
@@ -313,8 +329,6 @@ nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 nextcloud__timer_scan_files_enabled: true
 
-# 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'
-nextcloud__version: 'latest'
 
 # -----------------------------------------------------------------------------
 
@@ -471,6 +485,44 @@ nextcloud__collabora__coolwsd_storage_wopi__dependent_var:
   - name: '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
     state: 'present'
 
+# The reverse proxies Nextcloud trusts must never be banned: behind a proxy, every client
+# reaches this host from the proxy's address, so a ban on it locks out everyone. Taken from
+# the `trusted_proxies` entries, so an inventory that configures the proxy for Nextcloud
+# protects it from fail2ban as well.
+nextcloud__fail2ban__jail_default_ignoreip__dependent_var: '{{
+    (nextcloud__sysconfig__combined_var
+      | selectattr("key", "match", "trusted_proxies ")
+      | selectattr("state", "undefined")
+      | map(attribute="value")
+      | list)
+    + (nextcloud__sysconfig__combined_var
+      | selectattr("key", "match", "trusted_proxies ")
+      | selectattr("state", "defined")
+      | selectattr("state", "ne", "absent")
+      | map(attribute="value")
+      | list)
+  }}'
+nextcloud__fail2ban__jails__dependent_var:
+  - filename: 'z10-nextcloud'
+    state: 'present'
+    template: 'nextcloud'
+
+# The database exactly as the Nextcloud installer would create it, and a user with the privileges
+# the installer would grant its own 'oc_' user (lib/private/Setup/MySQL.php), but bound to
+# nextcloud__database_login_host instead of '%'.
+nextcloud__mariadb_server__databases__dependent_var:
+  - name: '{{ nextcloud__database_name }}'
+    collation: 'utf8mb4_bin'
+    encoding: 'utf8mb4'
+    state: 'present'
+nextcloud__mariadb_server__users__dependent_var:
+  - username: '{{ nextcloud__database_login["username"] }}'
+    password: '{{ nextcloud__database_login["password"] }}'
+    host: '{{ nextcloud__database_login_host }}'
+    priv:
+      - '{{ nextcloud__database_name | replace("_", "\_") | replace("%", "\%") }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,REFERENCES,INDEX,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES,EXECUTE,CREATE VIEW,SHOW VIEW,CREATE ROUTINE,ALTER ROUTINE,EVENT,TRIGGER'
+    state: 'present'
+
 # Has to stay above nextcloud__php__ini_max_execution_time__dependent_var so PHP's own limit
 # trips first and reports a fatal error, leaving PHP-FPM as the backstop for a worker stuck
 # in a system call, which max_execution_time cannot interrupt. The php role defaults to 60s,
@@ -489,8 +541,11 @@ nextcloud__selinux__fcontexts__dependent_var:
   - setype: 'bin_t'
     target: '/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push'
     state: 'present'
+  - setype: 'httpd_log_t'
+    target: '/var/log/nextcloud(/.*)?'
+    state: 'present'
   - setype: 'httpd_sys_rw_content_t'
-    target: '/data(/.*)?'
+    target: '{{ nextcloud__datadir }}(/.*)?'
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/.htaccess'

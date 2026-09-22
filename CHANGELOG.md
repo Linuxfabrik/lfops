@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud**: The role removes the PHP extensions APCu, bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: all caches live in Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
+* **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
+* **role:nextcloud**: `nextcloud__version` is mandatory, for example `'latest-35'`. It only picks the release that a new installation downloads.
+* **role:nextcloud**: Nextcloud reaches Redis or Valkey through its Unix socket instead of over TCP, and the web server user joins the `redis` or `valkey` group, which may use the socket. Run the complete `setup_nextcloud` playbook rather than the `nextcloud` role alone, so that Redis or Valkey open the socket first. Set `nextcloud__redis_unixsocket: ''` to stay with TCP.
+* **role:nextcloud**: The role aborts before it changes anything when the installed PHP or MariaDB does not fit the installed Nextcloud major version, or when it does not know that major version (30 to 35 are known). For example, Nextcloud 35 needs PHP 8.3 to 8.5 and MariaDB 10.11 or newer. Upgrade PHP or MariaDB, as the error message says, before running the role again.
+* **role:nextcloud**: Nextcloud logs to `/var/log/nextcloud/nextcloud.log` instead of `nextcloud.log` in the data directory, since fail2ban cannot read the data directory under SELinux. Adjust log shippers and monitoring that read the old file, and remove it once it is no longer needed.
+* **role:nextcloud**: Nextcloud verifies the certificate of the SMTP server, where the role had switched the check off. If your mail server presents a self-signed certificate, make Nextcloud trust it, or set `mail_smtpstreamoptions ssl allow_self_signed` to `true` and `mail_smtpstreamoptions ssl verify_peer` and `mail_smtpstreamoptions ssl verify_peer_name` to `false` in `nextcloud__sysconfig__host_var` to keep the previous behaviour.
 * **role:kernel_modules**: The `tun` kernel module is blocked by default (CVE-2026-81000, [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011)). This stops OpenVPN, WireGuard in userspace, rootless Podman and Docker networking and libvirt VM networking after the next reboot, which the role requests on hosts where `tun` is loaded. Before running the role, add `kernel_modules__modules__host_var: [{name: 'tun', enabled: true}]` to the inventory of every such host. Rootful Docker and Podman with bridge networking are not affected.
 * **role:grafana**: `grafana__users_case_insensitive_login` is gone; remove it from your inventory. Grafana has ignored the setting since v11.0.0 and always matches logins case-insensitively.
 * **role:system_update**: `system_update__pre_update_code` and `system_update__post_update_code` now also run in the daily security lane on Rocky, around the transaction that installs the hot-fixes, where until now only the weekly lane ran them. Set `system_update__security_pre_update_code: ''` and `system_update__security_post_update_code: ''` to keep the security lane free of it, or set either to a codeblock of its own to have the two lanes do different things.
@@ -32,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:collabora**: Support Collabora Online CODE 26.04.4.
+* **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
+* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, where it bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes and never bans the reverse proxies listed in the Nextcloud setting `trusted_proxies`.
+* **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins or two-factor challenges, following the Nextcloud hardening guide.
 * **role:wordpress**: Entries in `wordpress__plugins` accept `enabled: false`, which keeps a plugin installed but deactivated.
 * **role:system_update**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:wordpress**: Several WordPress instances can share a host as pseudo hosts in the inventory, under different host names as well as under different paths of one host name, such as `https://example.com/blog`.
@@ -48,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
 * **plugin:bitwarden_item, module:bitwarden_item**: A run against a vault that contains no items at all aborts instead of creating the first one, because `bw serve` briefly reports an empty vault after every sync ([bitwarden/clients#23283](https://github.com/bitwarden/clients/issues/23283)).
 * **role:repo_postgresql**: The PostgreSQL version repositories take precedence over the distribution's packages of the same name, so on RHEL 10 an install or update no longer switches a PostgreSQL server from the PGDG build to the AppStream build, which uses a different file layout.
@@ -60,6 +72,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
+* **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
+* **role:nextcloud**: A run after a failed installation installs Nextcloud, where it skipped the installer because the failed attempt had left a `config.php` behind.
+* **role:nextcloud**: A run against an unchanged host no longer restarts PHP-FPM and reports no change at all.
+* **role:nextcloud**: `nextcloud-update` adds missing primary keys and runs the pending mimetype migrations after an update, which Nextcloud leaves to the administrator.
+* **role:nextcloud**: A `nextcloud__datadir` other than `/data` gets the ownership and the SELinux label Nextcloud needs, which the role only ever set on `/data`.
+* **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
 * **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
 * **module:bitwarden_item**: The module works with the Mitogen strategy, where it aborted with `MODULE FAILURE` on every run, for example when the `grafana` role stores its service account tokens.
 * **plugin:bitwarden_item, module:bitwarden_item**: Running against several hosts in parallel no longer creates duplicates of a Bitwarden item, whether the item is new or has existed for a long time, so the next run no longer aborts with "Found multiple Bitwarden items".
@@ -95,6 +114,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
+* **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
+* **role:nextcloud**: `/usr/local/bin/nextcloud-update`, which holds the credentials of the Icinga API user, is readable by root only.
+* **role:nextcloud**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.
 * **role:wordpress**: `--tags wordpress:export` writes to `/backup/wordpress-export/<instance>`, readable by `apache` and `root` only, instead of to `/tmp`.
 * **role:wordpress**: The database and admin passwords no longer show up in the process list during the installation.

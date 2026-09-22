@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024061301
+# 2026092201
 
 # Redis v7.0 configuration file.
 #
@@ -157,6 +157,10 @@ tcp-backlog 511
 #
 # unixsocket /run/redis.sock
 # unixsocketperm 700
+{% if redis__conf_unixsocket | length > 0 %}
+unixsocket {{ redis__conf_unixsocket }}
+unixsocketperm {{ redis__conf_unixsocketperm }}
+{% endif %}
 
 # Close the connection after a client is idle for N seconds (0 to disable)
 timeout 0

@@ -8,6 +8,8 @@ redis__conf_maxmemory_policy: 'noeviction'
 redis__conf_port: 6379
 redis__conf_protected_mode: 'yes'
 redis__conf_replica_serve_stale_data: 'yes'
+redis__conf_unixsocket: '{{ __redis__conf_unixsocket }}'  # upstream default: /run/redis/redis.sock on RHEL, off on Debian / Ubuntu
+redis__conf_unixsocketperm: '770'  # upstream default: unset, the mode then follows the umask
 
 redis__service_enabled: true
 redis__service_limit_nofile: 10240

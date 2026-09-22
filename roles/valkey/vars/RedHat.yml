@@ -1,6 +1,11 @@
 __valkey__conf_logfile: '/var/log/valkey/valkey.log'
+__valkey__conf_unixsocket: '/run/valkey/valkey.sock'
 __valkey__config_dir: '/etc/valkey'
 __valkey__config_file: 'valkey.conf'
+# The package's tmpfiles.d rule (Z /etc/valkey ~0750 valkey root) resets the ownership to this on
+# every boot and every systemd-tmpfiles run, so the role keeps it rather than fighting it.
+__valkey__config_file_group: 'root'
+__valkey__config_file_owner: 'valkey'
 __valkey__data_dir: '/var/lib/valkey'
 __valkey__group: 'valkey'
 __valkey__package: 'valkey'

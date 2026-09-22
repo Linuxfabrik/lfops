@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026081401
+# 2026092201
 
 # Valkey v9.0 configuration file.
 #
@@ -170,7 +170,10 @@ tcp-backlog 511
 # unixsocket /run/valkey/valkey-server.sock
 # unixsocketgroup wheel
 # unixsocketperm 700
-{# RHEL package default: unixsocket /run/valkey/valkey.sock #}
+{% if valkey__conf_unixsocket | length > 0 %}
+unixsocket {{ valkey__conf_unixsocket }}
+unixsocketperm {{ valkey__conf_unixsocketperm }}
+{% endif %}
 
 # Close the connection after a client is idle for N seconds (0 to disable)
 timeout 0

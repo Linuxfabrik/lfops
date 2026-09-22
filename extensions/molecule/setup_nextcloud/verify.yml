@@ -38,6 +38,30 @@
         fail_msg: 'status.php did not report installed. response: {{ __molecule__nextcloud_statusphp_result["content"] | d("") }}'
 
 
+# Nextcloud connects as nextcloud__database_login, which the playbook creates for localhost only,
+# instead of the "oc_" user that the installer creates for any host when it gets the database
+# administrator.
+- name: 'Verify Nextcloud uses its own database user'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get dbuser'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get dbuser'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_dbuser_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud connects as nextcloud__database_login'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_dbuser_result["stdout"] == nextcloud__database_login["username"]'
+        fail_msg: 'Nextcloud connects as {{ __molecule__nextcloud_dbuser_result["stdout"] }}'
+
+
 # The role installs mysql-selinux so mariadbd gets `mysqld_exec_t` (MDEV-30520). Assert the domain
 # of the running process, not the label on the file: only that tells `mysqld_t` apart from
 # `initrc_t` and the `unconfined_service_t` that used to mask a missing label.
@@ -73,3 +97,182 @@
         fail_msg: 'mariadbd runs as "{{ __molecule__mariadbd_label_result["stdout"] | trim }}" instead of mysqld_t, so the mysqld_exec_t label on the binary is missing.'
       when:
         - '__molecule__mariadbd_label_result is not skipped'
+
+
+# Nextcloud keeps its caches and file locks in Redis / Valkey and reaches it through the Unix
+# socket (a path in 'redis host'), which only the members of the server's group may use. Nextcloud's own memcache
+# check writes a value and reads it back (CLI, as the web server user), and a PROPFIND takes a
+# shared lock through Apache and PHP-FPM, so both paths have to get through the socket.
+- name: 'Verify Nextcloud reaches Redis / Valkey through the Unix socket'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get redis host'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get redis host'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_redis_host_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud connects through the Unix socket'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_redis_host_result["stdout"] is match("/")'
+        fail_msg: 'redis host is {{ __molecule__nextcloud_redis_host_result["stdout"] }}, so Nextcloud connects over TCP'
+
+    - name: 'php occ setupchecks --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ setupchecks --output=json'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_setupchecks_result'
+      changed_when: false
+      # setupchecks exits non-zero as soon as any check warns, which is not what this play tests
+      failed_when: '__molecule__nextcloud_setupchecks_result["stdout"] | length == 0'
+
+    - name: 'Assert the memcache check could write and read a value'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_memcache_check["severity"] == "success"'
+        fail_msg: '{{ __molecule__nextcloud_memcache_check | to_json }}'
+      vars:
+        # selected by the end of its name, the key holds the PHP namespace with its backslashes
+        __molecule__nextcloud_memcache_check: '{{
+            (__molecule__nextcloud_setupchecks_result["stdout"] | from_json)["system"]
+            | dict2items
+            | selectattr("key", "search", "MemcacheConfigured$")
+            | map(attribute="value")
+            | first
+          }}'
+
+    - name: 'PROPFIND /remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/ through Apache and PHP-FPM'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/'
+        method: 'PROPFIND'
+        url_username: '{{ nextcloud__users[0]["username"] }}'
+        url_password: '{{ nextcloud__users[0]["password"] }}'
+        force_basic_auth: true
+        headers:
+          Depth: '1'
+          Host: '{{ nextcloud__fqdn }}'
+        status_code: 207
+
+
+# nextcloud-update carries the credentials of the Icinga API user, and only root runs it.
+- name: 'Verify nextcloud-update is readable by root only'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'stat /usr/local/bin/nextcloud-update'
+      ansible.builtin.stat:
+        path: '/usr/local/bin/nextcloud-update'
+      register: '__molecule__nextcloud_update_stat_result'
+
+    - name: 'Assert that nextcloud-update is readable by root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_update_stat_result["stat"]["mode"] == "0700"'
+          - '__molecule__nextcloud_update_stat_result["stat"]["pw_name"] == "root"'
+        fail_msg: '/usr/local/bin/nextcloud-update is {{ __molecule__nextcloud_update_stat_result["stat"] | d("missing") | to_json }}'
+
+
+# The SMTP TLS overrides that earlier versions of the role set are gone, so Nextcloud verifies the
+# certificate of the mail server again. `config:system:get` exits 1 for a key that does not exist.
+- name: 'Verify Nextcloud verifies the SMTP server certificate'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get mail_smtpstreamoptions ssl {{ item }}'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get mail_smtpstreamoptions ssl {{ item }}'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_smtp_result'
+      changed_when: false
+      failed_when: false
+      loop:
+        - 'allow_self_signed'
+        - 'verify_peer'
+        - 'verify_peer_name'
+
+    - name: 'Assert no SMTP TLS check is switched off'
+      ansible.builtin.assert:
+        that: 'item["rc"] == 1'
+        fail_msg: 'mail_smtpstreamoptions ssl {{ item["item"] }} is set to {{ item["stdout"] }}'
+      loop: '{{ __molecule__nextcloud_smtp_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+
+# systemd resolves the unit a timer starts, so this is the timer as systemd runs it, not as the
+# file reads.
+- name: 'Verify the LDAP remnants timer starts the LDAP remnants report'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Get the properties of nextcloud-ldap-show-remnants.timer'
+      ansible.builtin.systemd:
+        name: 'nextcloud-ldap-show-remnants.timer'
+      register: '__molecule__nextcloud_ldap_timer_result'
+      check_mode: true
+
+    - name: 'Assert the timer triggers nextcloud-ldap-show-remnants.service'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_ldap_timer_result["status"]["Triggers"] == "nextcloud-ldap-show-remnants.service"'
+        fail_msg: 'the timer triggers {{ __molecule__nextcloud_ldap_timer_result["status"]["Triggers"] }}'
+
+
+# A failed login sent through the "proxy" (the host itself, see trusted_proxies in the inventory)
+# proves the whole chain at once: Nextcloud takes the client address from X-Forwarded-For, logs
+# to /var/log/nextcloud, SELinux lets fail2ban read that file, and the jail counts the client.
+# The proxy itself has to be in ignoreip, since banning it would lock out every client.
+- name: 'Verify fail2ban counts failed Nextcloud logins and never bans the proxy'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'GET /remote.php/dav/ with wrong credentials, as 203.0.113.9 behind the proxy'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/'
+        url_username: '{{ nextcloud__users[0]["username"] }}'
+        url_password: 'wrong-password'
+        force_basic_auth: true
+        headers:
+          Host: '{{ nextcloud__fqdn }}'
+          X-Forwarded-For: '203.0.113.9'
+        status_code: 401
+
+    - name: 'fail2ban-client status nextcloud'
+      ansible.builtin.command: 'fail2ban-client status nextcloud'
+      register: '__molecule__nextcloud_fail2ban_status_result'
+      changed_when: false
+      # fail2ban polls the log file, so the failure shows up with a short delay
+      until: '__molecule__nextcloud_fail2ban_status_result["stdout"] is search("Total failed:\\s+[1-9]")'
+      retries: 10
+      delay: 2
+
+    - name: 'Assert the jail reads the Nextcloud log'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_fail2ban_status_result["stdout"] is search("File list:\\s+/var/log/nextcloud/nextcloud.log")'
+        fail_msg: '{{ __molecule__nextcloud_fail2ban_status_result["stdout"] }}'
+
+    - name: 'fail2ban-client get nextcloud ignoreip'
+      ansible.builtin.command: 'fail2ban-client get nextcloud ignoreip'
+      register: '__molecule__nextcloud_fail2ban_ignoreip_result'
+      changed_when: false
+
+    - name: 'Assert the trusted proxy is never banned'
+      ansible.builtin.assert:
+        that: '"127.0.0.1" in __molecule__nextcloud_fail2ban_ignoreip_result["stdout"]'
+        fail_msg: '{{ __molecule__nextcloud_fail2ban_ignoreip_result["stdout"] }}'
