@@ -138,8 +138,10 @@
       path: '/var/www/html/nextcloud/occ'
       mode: 0o755
 
-  - name: 'restorecon -Fvr {{ nextcloud__datadir }} /var/log/nextcloud /var/www/html/nextcloud'
-    ansible.builtin.command: 'restorecon -Fvr {{ nextcloud__datadir | quote }} /var/log/nextcloud /var/www/html/nextcloud'
+  # Without --force: that would also reset the SELinux user of every file the installer and
+  # Nextcloud create later, which the targeted policy ignores, and report a change on every run.
+  - name: 'restorecon -vr {{ nextcloud__datadir }} /var/log/nextcloud /var/www/html/nextcloud'
+    ansible.builtin.command: 'restorecon -vr {{ nextcloud__datadir | quote }} /var/log/nextcloud /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length > 0'
     when:
@@ -213,6 +215,7 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__sysconfig__combined_var }}'
+    register: '__nextcloud__sysconfig_result'
 
   # do this straight after the installation to get NC up and running
   # otherwise subsequent occ commands might fail
@@ -220,6 +223,8 @@
     ansible.builtin.service:
       name: '{{ __nextcloud__php_fpm_service_name }}'
       state: 'restarted'
+    when:
+      - '__nextcloud__redis_group_result is changed or __nextcloud__sysconfig_result is changed'
 
   tags:
     - 'nextcloud'
@@ -245,6 +250,17 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__apps__combined_var }}'
+    register: '__nextcloud__apps_result'
+
+  # Apps installed just now miss the file contexts that differ from their directory, such as bin_t
+  # on the notify_push binary.
+  - name: 'restorecon -vr /var/www/html/nextcloud/apps'
+    ansible.builtin.command: 'restorecon -vr /var/www/html/nextcloud/apps'
+    register: '__nextcloud__restorecon_apps_result'
+    changed_when: '__nextcloud__restorecon_apps_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      - '__nextcloud__apps_result is changed'
 
   - name: 'Get Nextcloud config list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
@@ -265,11 +281,14 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__app_configs__combined_var }}'
+    register: '__nextcloud__app_configs_result'
 
   - name: 'restart {{ __nextcloud__php_fpm_service_name }}'
     ansible.builtin.service:
       name: '{{ __nextcloud__php_fpm_service_name }}'
       state: 'restarted'
+    when:
+      - '__nextcloud__apps_result is changed or __nextcloud__app_configs_result is changed'
 
   when:
     - 'not nextcloud__skip_apps'
@@ -356,14 +375,27 @@
       mode: 0o644
     notify: 'nextcloud: systemctl daemon-reload'
 
-  - name: 'Set background job to "cron"'
-    ansible.builtin.command: |
-      php occ background:cron
+  - name: 'php occ config:app:get core backgroundjobs_mode'
+    ansible.builtin.command: 'php occ config:app:get core backgroundjobs_mode'
     args:
       chdir: '/var/www/html/nextcloud/'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
-    # changed_when: there is no easy way to check for changes
+    register: '__nextcloud__backgroundjobs_mode_result'
+    changed_when: false
+    # exits 1 while the key is unset, which is the "ajax" default
+    failed_when: '__nextcloud__backgroundjobs_mode_result["rc"] not in [0, 1]'
+    check_mode: false
+
+  - name: 'php occ background:cron'
+    ansible.builtin.command: 'php occ background:cron'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # only runs while the mode is not cron yet
+    when:
+      - '__nextcloud__backgroundjobs_mode_result["stdout"] != "cron"'
 
   - name: 'Deploy /usr/local/bin/nextcloud-app-update'
     ansible.builtin.template:
