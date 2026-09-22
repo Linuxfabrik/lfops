@@ -38,6 +38,35 @@
         port: '{{ valkey__conf_port | d(6379) }}'
         timeout: 30
 
+    # The socket is what local clients such as Nextcloud connect through. Its path is read back
+    # from the running server, and the PING over it proves the server actually listens there.
+    - name: 'valkey-cli CONFIG GET unixsocket'
+      ansible.builtin.command: '{{ __molecule__valkey_cli }} CONFIG GET unixsocket'
+      register: '__molecule__valkey_unixsocket_result'
+      changed_when: false
+
+    - name: 'valkey-cli -s <unixsocket> PING'
+      ansible.builtin.command: '{{ __molecule__valkey_cli }} -s {{ __molecule__valkey_unixsocket }} PING'
+      register: '__molecule__valkey_socket_ping_result'
+      changed_when: false
+      vars:
+        __molecule__valkey_unixsocket: '{{ __molecule__valkey_unixsocket_result["stdout_lines"][1] }}'
+
+    - name: 'stat the Unix socket'
+      ansible.builtin.stat:
+        path: '{{ __molecule__valkey_unixsocket_result["stdout_lines"][1] }}'
+      register: '__molecule__valkey_socket_stat_result'
+
+    # 0770 and the valkey group: a role that needs access adds its service user to that group,
+    # and nobody else reaches the socket.
+    - name: 'Assert valkey answers on its Unix socket, which only its group may use'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__valkey_socket_ping_result["stdout"] == "PONG"'
+          - '__molecule__valkey_socket_stat_result["stat"]["mode"] == "0770"'
+          - '__molecule__valkey_socket_stat_result["stat"]["gr_name"] == "valkey"'
+        fail_msg: 'CONFIG GET unixsocket: {{ __molecule__valkey_unixsocket_result["stdout_lines"] | to_json }} - stat: {{ __molecule__valkey_socket_stat_result["stat"] | d({}) | to_json }}'
+
     # The bind default carries the upstream '-::1', where the '-' makes the address optional. Two
     # halves to that: it answers on the IPv6 loopback where the host has one (asserted here), and
     # it merely warns where the host has none, instead of aborting - which the service assertion
@@ -60,20 +89,25 @@
 
     # The regression this role was split out for: on RHEL 10 the config file was deployed with a
     # hardcoded `redis` group while the package creates a `valkey` one, so the run died with
-    # "chgrp failed: failed to look up group redis". Assert the ownership the package expects.
+    # "chgrp failed: failed to look up group redis". Assert the ownership the package expects,
+    # which on RHEL is the valkey:root that its tmpfiles.d rule restores at every boot, and on
+    # Debian and Ubuntu the root:valkey their package ships.
     - name: 'stat /etc/valkey/valkey.conf'
       ansible.builtin.stat:
         path: '/etc/valkey/valkey.conf'
       register: '__molecule__valkey_conf_result'
 
-    - name: 'Assert the config file is owned by root:valkey and not world-readable'
+    - name: 'Assert the config file has the ownership of the package and is not world-readable'
       ansible.builtin.assert:
         that:
           - '__molecule__valkey_conf_result["stat"]["exists"]'
-          - '__molecule__valkey_conf_result["stat"]["pw_name"] == "root"'
-          - '__molecule__valkey_conf_result["stat"]["gr_name"] == "valkey"'
+          - '__molecule__valkey_conf_result["stat"]["pw_name"] == __molecule__valkey_conf_owner'
+          - '__molecule__valkey_conf_result["stat"]["gr_name"] == __molecule__valkey_conf_group'
           - '__molecule__valkey_conf_result["stat"]["mode"] == "0640"'
-        fail_msg: '/etc/valkey/valkey.conf is {{ __molecule__valkey_conf_result["stat"] | d("missing") }}'
+        fail_msg: '/etc/valkey/valkey.conf is {{ __molecule__valkey_conf_result["stat"] | d("missing") | to_json }}'
+      vars:
+        __molecule__valkey_conf_group: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("root", "valkey") }}'
+        __molecule__valkey_conf_owner: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("valkey", "root") }}'
 
     # The systemd drop-in is only proven by what the unit ends up with, not by the file on disk.
     - name: 'systemctl show {{ __molecule__valkey_service_name }} --property=LimitNOFILE' # noqa command-instead-of-module (read-only state query)
