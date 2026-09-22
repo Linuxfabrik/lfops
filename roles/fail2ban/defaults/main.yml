@@ -35,6 +35,7 @@ fail2ban__jail_default_action: |-
 # 1.1.0-6.el9 on Rocky 9: `fail2ban-client get sshd actions` reports iptables-multiport.
 fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip: []
+fail2ban__jail_default_ignoreip__dependent_var: []
 fail2ban__jail_default_rocketchat_hook: ''
 fail2ban__jail_nextcloud_bantime: '8h'
 fail2ban__jail_nextcloud_findtime: '10m'

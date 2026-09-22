@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, where it bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes and never bans the reverse proxies listed in the Nextcloud setting `trusted_proxies`.
 * **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins or two-factor challenges, following the Nextcloud hardening guide.
 * **role:chrony**: chronyd can serve as a public NTP server, for example in the NTP Pool, with response rate limiting (`chrony__ratelimit`) and room for many clients (`chrony__clientloglimit`).
 * **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.

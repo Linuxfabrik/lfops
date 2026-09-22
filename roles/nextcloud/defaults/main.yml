@@ -483,6 +483,28 @@ nextcloud__collabora__coolwsd_storage_wopi__dependent_var:
   - name: '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
     state: 'present'
 
+# The reverse proxies Nextcloud trusts must never be banned: behind a proxy, every client
+# reaches this host from the proxy's address, so a ban on it locks out everyone. Taken from
+# the `trusted_proxies` entries, so an inventory that configures the proxy for Nextcloud
+# protects it from fail2ban as well.
+nextcloud__fail2ban__jail_default_ignoreip__dependent_var: '{{
+    (nextcloud__sysconfig__combined_var
+      | selectattr("key", "match", "trusted_proxies ")
+      | selectattr("state", "undefined")
+      | map(attribute="value")
+      | list)
+    + (nextcloud__sysconfig__combined_var
+      | selectattr("key", "match", "trusted_proxies ")
+      | selectattr("state", "defined")
+      | selectattr("state", "ne", "absent")
+      | map(attribute="value")
+      | list)
+  }}'
+nextcloud__fail2ban__jails__dependent_var:
+  - filename: 'z10-nextcloud'
+    state: 'present'
+    template: 'nextcloud'
+
 # The database exactly as the Nextcloud installer would create it, and a user with the privileges
 # the installer would grant its own 'oc_' user (lib/private/Setup/MySQL.php), but bound to
 # nextcloud__database_login_host instead of '%'.
