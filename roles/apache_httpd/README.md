@@ -858,7 +858,7 @@ This module is for flexible logging of client requests. Logs are written in a cu
 
 Besides the common formats, the role provides structured formats for log shippers and SIEMs, each as a semicolon-separated CSV (`csv*`) and a tab-separated TSV (`tsv*`) variant with identical columns:
 
-* `csvio` / `tsvio`: the fields of `linuxfabrikio` (15 columns).
+* `csvio` / `tsvio`: the fields of `linuxfabrikio` (without the identd user), plus server name and peer IP (15 columns).
 * `csvextensive` / `tsvextensive`: additionally method, URI, query string, protocol, original status and request duration (21 columns).
 * `csvsiem` / `tsvsiem`: additionally unique request ID, error log ID, server port, PID, content type, connection status, keep-alive count and the TLS session details (33 columns).
 
