@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud**: The role aborts before it changes anything when the installed PHP or MariaDB does not fit the installed Nextcloud major version, or when it does not know that major version (30 to 35 are known). For example, Nextcloud 35 needs PHP 8.3 to 8.5 and MariaDB 10.11 or newer. Upgrade PHP or MariaDB, as the error message says, before running the role again.
 * **role:nextcloud**: Nextcloud verifies the certificate of the SMTP server, where the role had switched the check off. If your mail server presents a self-signed certificate, make Nextcloud trust it, or set `mail_smtpstreamoptions ssl allow_self_signed` to `true` and `mail_smtpstreamoptions ssl verify_peer` and `mail_smtpstreamoptions ssl verify_peer_name` to `false` in `nextcloud__sysconfig__host_var` to keep the previous behaviour.
 * **playbook:setup_icinga2_master, playbook:setup_nextcloud**: MariaDB runs with `skip_name_resolve = ON`, so accounts bound to a host name no longer log in. Move them to an IP address, or set `mariadb_server__cnf_skip_name_resolve__host_var`.
 * **role:mariadb_server**: `table_definition_cache` defaults to 600 instead of 400, which needs a restart of MariaDB.
