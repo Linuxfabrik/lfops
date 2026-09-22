@@ -856,6 +856,18 @@ apache_httpd__mods__host_var:
 
 This module is for flexible logging of client requests. Logs are written in a customizable format, and may be written directly to a file, or to an external program. Conditional logging is provided so that individual requests may be included or excluded from the logs based on characteristics of the request.
 
+Besides the common formats, the role provides structured formats for log shippers and SIEMs, each as a semicolon-separated CSV (`csv*`) and a tab-separated TSV (`tsv*`) variant with identical columns:
+
+* `csvio` / `tsvio`: the fields of `linuxfabrikio` (15 columns).
+* `csvextensive` / `tsvextensive`: additionally method, URI, query string, protocol, original status and request duration (21 columns).
+* `csvsiem` / `tsvsiem`: additionally unique request ID, error log ID, server port, PID, content type, connection status, keep-alive count and the TLS session details (33 columns).
+
+All of them start with an ISO 8601 timestamp with microseconds and end with the Cloudflare `CF-Ray` and `CF-Connecting-IP` request headers. The column list is documented in `templates/etc/httpd/conf-available/logio.conf.j2`. Things to consider:
+
+* Missing values are logged as `-`, for example the TLS fields on plain HTTP or the Cloudflare fields without Cloudflare in front of the server.
+* In the CSV formats every field is enclosed in double quotes, and Apache escapes a double quote inside a value as `\"`, not as `""`. Configure the CSV parser with a backslash as escape character. The TSV formats need no quoting, since Apache escapes tabs in values as `\t`.
+* The fail2ban filters of the `fail2ban` role do not match these formats.
+
 `apache_httpd__mod_log_config_custom_log`
 
 * Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `csvextensive`, `csvio`, `csvsiem`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `tsvextensive`, `tsvio`, `tsvsiem`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
