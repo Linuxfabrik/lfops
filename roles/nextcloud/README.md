@@ -29,7 +29,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * A web server (for example Apache httpd) must be installed, with a virtual host for Nextcloud (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
 * MariaDB must be installed, in a version the installed Nextcloud supports (10.11+ for Nextcloud 35) (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
 * PHP must be installed, in a version the installed Nextcloud supports (8.3 to 8.5 for Nextcloud 35) (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
-* Redis 7+ must be installed (roles: [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
+* Valkey must be installed on RHEL 10, Redis on the other platforms, listening on the Unix socket in `nextcloud__redis_unixsocket` (roles: [linuxfabrik.lfops.valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey), or [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
 * Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
 * Optional: fail2ban bans IPs with too many failed logins (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)).
 * Optional: Coturn (role: [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)) provides the TURN server for Nextcloud Talk.
@@ -271,6 +271,18 @@ nextcloud__users:
 * Run interval of rescanning filesystem. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
 * Default: `'*:50:15'`
+
+`nextcloud__redis_group`
+
+* Group that may connect to the Unix socket of Redis or Valkey. The role adds the web server user to it.
+* Type: String.
+* Default: `'valkey'` on RHEL 10, `'redis'` elsewhere
+
+`nextcloud__redis_unixsocket`
+
+* Unix socket through which Nextcloud reaches Redis or Valkey for caching and file locking, the one that `setup_nextcloud` installs. Set it to `''` to connect to `127.0.0.1:6379` over TCP instead.
+* Type: String.
+* Default: `'/run/valkey/valkey.sock'` on RHEL 10, `'/run/redis/redis.sock'` on RHEL 8 and 9, `'/run/redis/redis-server.sock'` on Debian and Ubuntu
 
 `nextcloud__skip_apps`
 

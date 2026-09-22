@@ -183,6 +183,9 @@ nextcloud__on_calendar_app_update: '06,18,23:{{ 59 | random(seed=inventory_hostn
 nextcloud__on_calendar_jobs: '*:0/5'          # every 5 minutes
 nextcloud__on_calendar_scan_files: '*:50:15'  # every hour at hh:50:15
 
+nextcloud__redis_group: '{{ __nextcloud__redis_group }}'
+nextcloud__redis_unixsocket: '{{ __nextcloud__redis_unixsocket }}'
+
 nextcloud__skip_apps: false
 nextcloud__skip_notify_push: false
 
@@ -284,12 +287,15 @@ nextcloud__sysconfig__role_var:
     value: '0'
     type: 'integer'
     state: 'present'
-  - key: 'redis host'
-    value: '127.0.0.1'
-    state: 'present'
+  # Without 'redis port', Nextcloud connects to port 6379 of a host name and to the Unix socket of
+  # a path (lib/private/RedisFactory.php). Removing the port before changing the host keeps every
+  # step valid: a socket path in 'host' next to port 6379 makes Nextcloud, and with it every occ
+  # call including the one that would fix the port, fail at bootstrap.
   - key: 'redis port'
-    value: '6379'
-    type: 'integer'
+    value: ''
+    state: 'absent'
+  - key: 'redis host'
+    value: '{{ (nextcloud__redis_unixsocket | length > 0) | ternary(nextcloud__redis_unixsocket, "127.0.0.1") }}'
     state: 'present'
   - key: 'redis timeout'
     value: '0.5'

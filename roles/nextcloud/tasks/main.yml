@@ -184,6 +184,17 @@
 
 - block:
 
+  # The socket is open to the members of the Redis / Valkey group only. The PHP-FPM restart below
+  # gives the workers the new group.
+  - name: 'usermod --append --groups {{ nextcloud__redis_group }} {{ __shared__apache_httpd_user }}'
+    ansible.builtin.user:
+      name: '{{ __shared__apache_httpd_user }}'
+      groups: '{{ nextcloud__redis_group }}'
+      append: true
+    register: '__nextcloud__redis_group_result'
+    when:
+      - 'nextcloud__redis_unixsocket | length > 0'
+
   - name: 'Get Nextcloud config list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
     become: true
