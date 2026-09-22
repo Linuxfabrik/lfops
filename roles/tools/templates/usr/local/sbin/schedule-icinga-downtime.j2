@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026092201
+
+# Sets an Icinga downtime for this host and all its services. Readable by root only, since it
+# carries the credentials of the Icinga API user; /etc/profile.d/alias.sh, which every login
+# shell reads, only calls it.
+
+set -o nounset
+
+if [ -z "${1:-}" ]; then
+    echo 'Usage: schedule-icinga-downtime SECONDS [COMMENT]' >&2
+    exit 1
+fi
+comment="${2:-Downtime set per schedule-icinga-downtime.}"
+
+START_TIME=$(date +%s)
+END_TIME=$(( START_TIME + $1 ))
+
+# The credentials reach curl as a header read from a pipe that the printf builtin fills, so they
+# never show up in the process list the way `curl --user` would put them there.
+curl \
+    --connect-timeout 5 \
+    --insecure \
+    --silent \
+    --header @<(printf 'Authorization: Basic %s\n' '{{ (tools__icinga2_api_user_login["username"] ~ ":" ~ tools__icinga2_api_user_login["password"]) | b64encode }}') \
+    --header 'Accept: application/json' \
+    --request POST '{{ tools__icinga2_api_url }}/v1/actions/schedule-downtime' \
+    --data-binary @- 1> /dev/null << EOT
+{
+    "type": "Host",
+    "filter": "match(\"{{ tools__icinga2_hostname }}\", host.name)",
+    "start_time": "$START_TIME",
+    "end_time": "$END_TIME",
+    "author": "{{ tools__icinga2_hostname }}",
+    "comment": "$comment",
+    "all_services": true
+}
+EOT
