@@ -238,7 +238,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-* **role:borg_local, role:schedule_reboot, role:tools**: The password of the Icinga API user no longer shows up in the process list or in a file that every local user can read, and neither does the Rocket.Chat webhook of `schedule_reboot`. `schedule-icinga-downtime` is a command in `/usr/local/sbin` for root instead of a shell function in `/etc/profile.d/alias.sh`.
+* **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
 * **role:openvpn_server**: The server negotiates TLS 1.2 only with forward secrecy and checks client certificates against OpenSSL security level 2 ([#358](https://github.com/Linuxfabrik/lfops/issues/358)).
 * **role:apache_httpd**: The OWASP Core Rule Set archive is checked against a SHA-256 checksum before it is deployed, so a tampered or corrupted download aborts the run.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
