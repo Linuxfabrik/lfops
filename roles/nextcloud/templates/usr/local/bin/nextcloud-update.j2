@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026052001
+# 2026092201
 
 set -euo pipefail
 
@@ -221,11 +221,33 @@ else
 fi
 
 echo
+echo 'db:add-missing-primary-keys'
+echo '---------------------------'
+if ! grep -q "db_add_missing_primary_keys_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:add-missing-primary-keys
+    echo "db_add_missing_primary_keys_done" >> "${STATE_FILE}"
+else
+    echo 'skipping.'
+fi
+
+echo
 echo 'db:convert-filecache-bigint --no-interaction'
 echo '--------------------------------------------'
 if ! grep -q "db_convert_filecache_bigint_done" "${STATE_FILE}"; then
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:convert-filecache-bigint --no-interaction
     echo "db_convert_filecache_bigint_done" >> "${STATE_FILE}"
+else
+    echo 'skipping.'
+fi
+
+# The expensive repair steps include the mimetype migrations, which Nextcloud does not run
+# during an upgrade because they can take long on large instances.
+echo
+echo 'maintenance:repair --include-expensive'
+echo '--------------------------------------'
+if ! grep -q "maintenance_repair_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:repair --include-expensive
+    echo "maintenance_repair_done" >> "${STATE_FILE}"
 else
     echo 'skipping.'
 fi

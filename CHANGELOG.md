@@ -155,6 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: `nextcloud-update` adds missing primary keys and runs the pending mimetype migrations after an update, which Nextcloud leaves to the administrator.
 * **role:nextcloud**: A `nextcloud__datadir` other than `/data` gets the ownership and the SELinux label Nextcloud needs, which the role only ever set on `/data`.
 * **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
