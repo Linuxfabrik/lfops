@@ -8,6 +8,8 @@ valkey__conf_maxmemory_policy: 'noeviction'
 valkey__conf_port: 6379
 valkey__conf_protected_mode: 'yes'
 valkey__conf_replica_serve_stale_data: 'yes'
+valkey__conf_unixsocket: '{{ __valkey__conf_unixsocket }}'  # upstream default: /run/valkey/valkey.sock on RHEL, off on Debian / Ubuntu
+valkey__conf_unixsocketperm: '770'  # upstream default: unset, the mode then follows the umask
 
 valkey__service_enabled: true
 valkey__service_limit_nofile: 10240  # upstream default: 10240 on RHEL, 65535 on Debian / Ubuntu

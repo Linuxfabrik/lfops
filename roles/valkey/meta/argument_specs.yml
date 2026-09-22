@@ -101,6 +101,12 @@ argument_specs:
         required: false
         description: 'TLS port to listen on. Set valkey__conf_port to 0 to only listen with TLS.'
 
+      valkey__conf_unixsocketperm:
+        type: 'str'
+        required: false
+        default: '770'
+        description: 'Permissions of the Unix socket.'
+
       valkey__kernel_settings__sysctl__dependent_var:
         type: 'list'
         elements: 'dict'
