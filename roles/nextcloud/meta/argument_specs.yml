@@ -14,7 +14,6 @@
 # never touch the feature, so they are validated in the tasks where they are used instead:
 #   * nextcloud__icinga2_hostname        -> '{{ ansible_facts["nodename"] }}'
 #   * nextcloud__mail_from               -> '{{ mailto_root__from }}'
-#   * nextcloud__mariadb_login           -> '{{ mariadb_server__admin_user }}'
 argument_specs:
   main:
     options:
@@ -66,6 +65,17 @@ argument_specs:
         required: false
         default: 'localhost'
         description: 'Host where MariaDB is located.'
+
+      nextcloud__database_login:
+        type: 'dict'
+        required: true
+        description: 'Login of the MariaDB user Nextcloud connects as, with the subkeys username and password.'
+
+      nextcloud__database_login_host:
+        type: 'str'
+        required: false
+        default: 'localhost'
+        description: 'Host from which the MariaDB user may connect.'
 
       nextcloud__database_name:
         type: 'str'
