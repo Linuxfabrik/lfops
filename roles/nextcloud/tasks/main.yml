@@ -147,6 +147,20 @@
     when:
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # Asked instead of checking for config.php, which Nextcloud writes at the start of the
+  # installation, so a failed attempt would otherwise make every later run skip the installer.
+  - name: 'php occ status --output=json'
+    ansible.builtin.command: 'php occ status --output=json'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    register: '__nextcloud__status_result'
+    changed_when: false
+    check_mode: false
+    when:
+      - '__nextcloud__version_php_result["stat"]["exists"]'
+
   # The passwords reach occ on stdin, not on its command line, where every local user could
   # read them in the process list. Without --database-pass and --admin-pass, occ asks for
   # the database password first and the admin password second, and without a TTY it reads
@@ -162,12 +176,15 @@
         --database-user '{{ nextcloud__mariadb_login["username"] }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-      creates: '/var/www/html/nextcloud/config/config.php'
       stdin: |-
         {{ nextcloud__mariadb_login["password"] }}
         {{ nextcloud__users[0]["password"] }}
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # only runs while Nextcloud is not installed
+    when:
+      - '__nextcloud__status_result is not skipped'
+      - 'not (__nextcloud__status_result["stdout"] | from_json)["installed"]'
 
   - name: 'Convert some database columns to big int'
     ansible.builtin.command: |
