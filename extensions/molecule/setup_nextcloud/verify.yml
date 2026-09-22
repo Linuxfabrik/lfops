@@ -75,6 +75,68 @@
         - '__molecule__mariadbd_label_result is not skipped'
 
 
+# Nextcloud keeps its caches and file locks in Redis / Valkey and reaches it through the Unix
+# socket (a path in 'redis host'), which only the members of the server's group may use. Nextcloud's own memcache
+# check writes a value and reads it back (CLI, as the web server user), and a PROPFIND takes a
+# shared lock through Apache and PHP-FPM, so both paths have to get through the socket.
+- name: 'Verify Nextcloud reaches Redis / Valkey through the Unix socket'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get redis host'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get redis host'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_redis_host_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud connects through the Unix socket'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_redis_host_result["stdout"] is match("/")'
+        fail_msg: 'redis host is {{ __molecule__nextcloud_redis_host_result["stdout"] }}, so Nextcloud connects over TCP'
+
+    - name: 'php occ setupchecks --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ setupchecks --output=json'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_setupchecks_result'
+      changed_when: false
+      # setupchecks exits non-zero as soon as any check warns, which is not what this play tests
+      failed_when: '__molecule__nextcloud_setupchecks_result["stdout"] | length == 0'
+
+    - name: 'Assert the memcache check could write and read a value'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_memcache_check["severity"] == "success"'
+        fail_msg: '{{ __molecule__nextcloud_memcache_check | to_json }}'
+      vars:
+        # selected by the end of its name, the key holds the PHP namespace with its backslashes
+        __molecule__nextcloud_memcache_check: '{{
+            (__molecule__nextcloud_setupchecks_result["stdout"] | from_json)["system"]
+            | dict2items
+            | selectattr("key", "search", "MemcacheConfigured$")
+            | map(attribute="value")
+            | first
+          }}'
+
+    - name: 'PROPFIND /remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/ through Apache and PHP-FPM'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/'
+        method: 'PROPFIND'
+        url_username: '{{ nextcloud__users[0]["username"] }}'
+        url_password: '{{ nextcloud__users[0]["password"] }}'
+        force_basic_auth: true
+        headers:
+          Depth: '1'
+          Host: '{{ nextcloud__fqdn }}'
+        status_code: 207
+
+
 # The SMTP TLS overrides that earlier versions of the role set are gone, so Nextcloud verifies the
 # certificate of the mail server again. `config:system:get` exits 1 for a key that does not exist.
 - name: 'Verify Nextcloud verifies the SMTP server certificate'
