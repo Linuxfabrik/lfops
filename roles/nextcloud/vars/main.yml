@@ -96,3 +96,34 @@ nextcloud__php__modules__dependent_var: '{{
       | linuxfabrik.lfops.platform_select(ansible_facts))
     if __php__installed_version is defined else []
   }}'
+
+# What each Nextcloud major version needs, taken from the Nextcloud server source at the release
+# tag (v30.0.0 to v35.0.0): `php_min` and `php_max` (exclusive) from lib/versioncheck.php, outside
+# of which Nextcloud refuses to run, and `mariadb_min` from MIN_MARIADB in
+# apps/settings/lib/SetupChecks/SupportedDatabase.php. Nextcloud sets no minimum for the Redis or
+# Valkey server, only for the phpredis extension (4.0.0), which every supported platform exceeds.
+__nextcloud__requirements:
+  '30':
+    mariadb_min: '10.6'
+    php_max: '8.4'
+    php_min: '8.1'
+  '31':
+    mariadb_min: '10.6'
+    php_max: '8.5'
+    php_min: '8.1'
+  '32':
+    mariadb_min: '10.6'
+    php_max: '8.5'
+    php_min: '8.1'
+  '33':
+    mariadb_min: '10.6'
+    php_max: '8.6'
+    php_min: '8.2'
+  '34':
+    mariadb_min: '10.6'
+    php_max: '8.6'
+    php_min: '8.2'
+  '35':
+    mariadb_min: '10.11'
+    php_max: '8.6'
+    php_min: '8.3'

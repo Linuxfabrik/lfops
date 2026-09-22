@@ -28,6 +28,62 @@
       remote_src: true
       creates: '/var/www/html/nextcloud/config'
 
+  # Checked against the unpacked code rather than nextcloud__version, which may just say
+  # 'latest', and on every run, so a PHP or MariaDB that falls below what the installed
+  # Nextcloud needs stops the run before the role touches the instance.
+  - name: 'stat /var/www/html/nextcloud/version.php'
+    ansible.builtin.stat:
+      path: '/var/www/html/nextcloud/version.php'
+    register: '__nextcloud__version_php_result'
+
+  - block:
+
+    - name: 'Get the Nextcloud major version and the PHP version'
+      ansible.builtin.command:
+        argv:
+          - 'php'
+          - '--run'
+          - 'require "/var/www/html/nextcloud/version.php"; echo $OC_Version[0], " ", PHP_VERSION;'
+      register: '__nextcloud__versions_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Get the MariaDB version'
+      ansible.mariadb.mariadb_info:
+        login_user: '{{ nextcloud__mariadb_login["username"] }}'
+        login_password: '{{ nextcloud__mariadb_login["password"] }}'
+        login_host: '{{ nextcloud__database_host }}'
+        login_unix_socket: '{{ (nextcloud__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+        filter: 'version'
+      register: '__nextcloud__mariadb_info_result'
+      check_mode: false
+
+    - name: 'Assert that PHP and MariaDB meet the requirements of the installed Nextcloud'
+      ansible.builtin.assert:
+        that:
+          - '__nextcloud__major_version in __nextcloud__requirements'
+          - '__nextcloud__php_version is version(__nextcloud__requirements[__nextcloud__major_version]["php_min"], ">=")'
+          - '__nextcloud__php_version is version(__nextcloud__requirements[__nextcloud__major_version]["php_max"], "<")'
+          - '__nextcloud__mariadb_version is version(__nextcloud__requirements[__nextcloud__major_version]["mariadb_min"], ">=")'
+        quiet: true
+        fail_msg: >-
+          {% if __nextcloud__major_version not in __nextcloud__requirements -%}
+          Nextcloud {{ __nextcloud__major_version }} is not supported by this role.
+          Supported versions: {{ __nextcloud__requirements | list | join(", ") }}.
+          {%- else -%}
+          Nextcloud {{ __nextcloud__major_version }} needs
+          PHP {{ __nextcloud__requirements[__nextcloud__major_version]["php_min"] }} or newer, but older than {{ __nextcloud__requirements[__nextcloud__major_version]["php_max"] }},
+          and MariaDB {{ __nextcloud__requirements[__nextcloud__major_version]["mariadb_min"] }} or newer.
+          Found PHP {{ __nextcloud__php_version }} and MariaDB {{ __nextcloud__mariadb_version }}.
+          {%- endif %}
+      vars:
+        __nextcloud__major_version: '{{ __nextcloud__versions_result["stdout"].split()[0] }}'
+        __nextcloud__mariadb_version: '{{ __nextcloud__mariadb_info_result["version"]["full"] | regex_search("^[0-9.]+") }}'
+        __nextcloud__php_version: '{{ __nextcloud__versions_result["stdout"].split()[1] }}'
+
+    when:
+      - '__nextcloud__version_php_result["stat"]["exists"]'
+
   - name: 'Deploy /var/www/html/nextcloud/config/objectstore.config.php (storage backend)'
     ansible.builtin.template:
       backup: true

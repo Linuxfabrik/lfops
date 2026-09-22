@@ -27,8 +27,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
 * A web server (for example Apache httpd) must be installed, with a virtual host for Nextcloud (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
-* MariaDB 10.6+ must be installed (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
-* PHP 8.1+ must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
+* MariaDB must be installed, in a version the installed Nextcloud supports (10.11+ for Nextcloud 35) (role: [linuxfabrik.lfops.mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server)).
+* PHP must be installed, in a version the installed Nextcloud supports (8.3 to 8.5 for Nextcloud 35) (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 * Redis 7+ must be installed (roles: [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
 * Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
 * Optional: fail2ban bans IPs with too many failed logins (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)).
@@ -464,6 +464,17 @@ nextcloud__version: 'latest'
 nextcloud__vhost_virtualhost_ip: '127.0.0.1'
 nextcloud__vhost_virtualhost_port: '81'
 ```
+
+## Troubleshooting
+
+`Nextcloud 35 needs PHP 8.3 or newer, but older than 8.6, and MariaDB 10.11 or newer.`
+
+* The role compares the installed PHP and MariaDB with what the installed Nextcloud major version requires, before it changes anything, and aborts if they do not fit. Nextcloud itself refuses to run on a PHP outside that range. Upgrade PHP (for example via `repo_remi__enabled_php_version`) or MariaDB (`repo_mariadb__version`), then run the role again.
+
+`Nextcloud 36 is not supported by this role.`
+
+* The role knows the requirements of the Nextcloud major versions listed in the message only. Pin `nextcloud__version` to a supported major version for a new installation, or add the requirements of the new major version to `__nextcloud__requirements` in `vars/main.yml`.
+
 
 ## License
 
