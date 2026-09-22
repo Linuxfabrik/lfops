@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud**: The role removes the PHP extensions APCu, bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: all caches live in Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
 * **role:nextcloud**: `nextcloud__version` is mandatory, for example `'latest-35'`. It only picks the release that a new installation downloads.
 * **role:nextcloud**: Nextcloud reaches Redis or Valkey through its Unix socket instead of over TCP, and the web server user joins the `redis` or `valkey` group, which may use the socket. Run the complete `setup_nextcloud` playbook rather than the `nextcloud` role alone, so that Redis or Valkey open the socket first. Set `nextcloud__redis_unixsocket: ''` to stay with TCP.
@@ -72,7 +73,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* **role:nextcloud**: The role no longer installs the APCu PHP extension, which Nextcloud does not use, since the role keeps all its caches in Redis or Valkey. Hosts keep an APCu that is already installed.
 * **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
 * **role:monitoring_plugins**: On Linux, the role no longer stops the Icinga2 agent while it deploys the plugins, so a run no longer interrupts the monitoring of the host.
