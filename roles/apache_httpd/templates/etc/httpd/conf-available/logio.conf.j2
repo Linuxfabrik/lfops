@@ -10,7 +10,7 @@ LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" c
 
 LogFormat "%h %{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" linuxfabrikio
 
-# csvio, tsvio: based on linuxfabrikio logformat with additional cloudflare headers
+# csvio, tsvio: based on the linuxfabrikio LogFormat, plus the Cloudflare headers
 #
 #  Field  Token                                  Name              Group
 #
@@ -52,7 +52,7 @@ LogFormat "\
 %{CF-RAY}i\t%{CF-Connecting-IP}i\
 " tsvio
 
-# csvextensive, tsvextensive: based on gelf logformat with additional cloudflare headers
+# csvextensive, tsvextensive: based on the gelf LogFormat in log_config.conf, plus the Cloudflare headers
 #
 #  Field  Token                                  Name              Group
 #
@@ -98,9 +98,9 @@ LogFormat "\
 %{CF-RAY}i\t%{CF-Connecting-IP}i\
 " tsvextensive
 
-# csvsiem, tsvsiem: most comprehensive logformat useful for siem
+# csvsiem, tsvsiem: the most comprehensive LogFormat, meant for a SIEM
 #
-#  Field  Token                                  Name              Group
+#  Field  Token                                  Name                   Group
 #
 #      1  {{ '%{%FT%T}t.%{usec_frac}t%{%z}t' }}  timestamp              Transaction
 #      2  %{UNIQUE_ID}e                          unique_id              Transaction
