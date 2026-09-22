@@ -287,17 +287,20 @@ nextcloud__sysconfig__role_var:
     value: '0.5'
     type: 'double'
     state: 'present'
+  # Removed from hosts that got them from earlier versions of this role, so Nextcloud verifies the
+  # certificate of the SMTP server again. The empty 'ssl' array left behind changes nothing,
+  # since the Mailer merges the stream options into its own (verified against Nextcloud 35).
   - key: 'mail_smtpstreamoptions ssl allow_self_signed'
     value: 'true'
-    state: 'present'
+    state: 'absent'
     type: 'boolean'
   - key: 'mail_smtpstreamoptions ssl verify_peer'
     value: 'false'
-    state: 'present'
+    state: 'absent'
     type: 'boolean'
   - key: 'mail_smtpstreamoptions ssl verify_peer_name'
     value: 'false'
-    state: 'present'
+    state: 'absent'
     type: 'boolean'
   - key: 'memcache.locking'
     value: '\OC\Memcache\Redis'
