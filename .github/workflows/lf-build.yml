@@ -68,10 +68,15 @@ jobs:
         run: |
           echo "GITHUB_REPOSITORY_OWNER_LOWERCASE=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
+      # A fixed Python, so the hash-pinned requirements below match the
+      # interpreter they are installed into.
+      - name: 'Set up Python'
+        uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' # v7.0.0
+        with:
+          python-version: '3.12'
+
       - name: 'Install Ansible Builder'
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible-builder==3.1.1
+        run: 'pip install --require-hashes --requirement .github/ansible-builder/requirements.txt'
 
       - name: 'Strip badges from README.md (not rendered correctly on Galaxy)'
         run: |
