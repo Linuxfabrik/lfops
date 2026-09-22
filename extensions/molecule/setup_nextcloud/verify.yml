@@ -73,3 +73,23 @@
         fail_msg: 'mariadbd runs as "{{ __molecule__mariadbd_label_result["stdout"] | trim }}" instead of mysqld_t, so the mysqld_exec_t label on the binary is missing.'
       when:
         - '__molecule__mariadbd_label_result is not skipped'
+
+
+# systemd resolves the unit a timer starts, so this is the timer as systemd runs it, not as the
+# file reads.
+- name: 'Verify the LDAP remnants timer starts the LDAP remnants report'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Get the properties of nextcloud-ldap-show-remnants.timer'
+      ansible.builtin.systemd:
+        name: 'nextcloud-ldap-show-remnants.timer'
+      register: '__molecule__nextcloud_ldap_timer_result'
+      check_mode: true
+
+    - name: 'Assert the timer triggers nextcloud-ldap-show-remnants.service'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_ldap_timer_result["status"]["Triggers"] == "nextcloud-ldap-show-remnants.service"'
+        fail_msg: 'the timer triggers {{ __molecule__nextcloud_ldap_timer_result["status"]["Triggers"] }}'

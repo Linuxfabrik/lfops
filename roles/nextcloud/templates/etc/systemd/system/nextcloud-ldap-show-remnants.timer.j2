@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2022100401
+# 2026092201
 
 [Unit]
 Description=Nextcloud LDAP Show Remnants Service
 
 [Timer]
 OnCalendar=monthly
-Unit=nextcloud-app-update.service
+Unit=nextcloud-ldap-show-remnants.service
 
 [Install]
 WantedBy=timers.target
