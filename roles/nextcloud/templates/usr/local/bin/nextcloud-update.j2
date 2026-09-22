@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026092201
+# 2026092202
 
 set -euo pipefail
 
@@ -29,6 +29,9 @@ END_TIME=$(( START_TIME + 1800 ))
 mkdir -p "${TMP_DIR}"
 touch "${STATE_FILE}"
 
+# The Icinga API credentials reach curl as a header read from a pipe that the printf builtin
+# fills, so they never show up in the process list the way `curl --user` would put them there.
+
 {% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 echo
 echo 'set icinga2 downtime'
@@ -38,7 +41,7 @@ if ! grep -q "set_icinga2_downtime_done" "${STATE_FILE}"; then
     --connect-timeout 5 \
     --insecure \
     --silent \
-    --user "{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}" \
+    --header @<(printf 'Authorization: Basic %s\n' '{{ (nextcloud__icinga2_api_user_login["username"] ~ ":" ~ nextcloud__icinga2_api_user_login["password"]) | b64encode }}') \
     --header 'Accept: application/json' \
     --request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/schedule-downtime' \
     --data-binary @- 1> /dev/null << EOF
@@ -269,7 +272,7 @@ if ! grep -q "remove_icinga2_downtime_done" "${STATE_FILE}"; then
     --connect-timeout 5 \
     --insecure \
     --silent \
-    --user '{{ nextcloud__icinga2_api_user_login["username"] }}:{{ nextcloud__icinga2_api_user_login["password"] }}' \
+    --header @<(printf 'Authorization: Basic %s\n' '{{ (nextcloud__icinga2_api_user_login["username"] ~ ":" ~ nextcloud__icinga2_api_user_login["password"]) | b64encode }}') \
     --header 'Accept: application/json' \
     --request POST '{{ nextcloud__icinga2_api_url  }}/v1/actions/remove-downtime' \
     --data-binary @- 1> /dev/null << EOF

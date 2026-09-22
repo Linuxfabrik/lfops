@@ -302,6 +302,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
 * **role:nextcloud**: `/usr/local/bin/nextcloud-update`, which holds the credentials of the Icinga API user, is readable by root only.
 * **role:nextcloud**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.
