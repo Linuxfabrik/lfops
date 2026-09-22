@@ -69,21 +69,25 @@
     when:
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # The passwords reach occ on stdin, not on its command line, where every local user could
+  # read them in the process list. Without --database-pass and --admin-pass, occ asks for
+  # the database password first and the admin password second, and without a TTY it reads
+  # one line of stdin per question (verified with Nextcloud 35.0.0 on Rocky 10).
   - name: 'Run the Nextcloud installer'
-    # installation hangs without "--admin-user" and "--admin-pass"
     ansible.builtin.command: >-
       php occ maintenance:install
-        --admin-pass '{{ nextcloud__users.0.password }}'
-        --admin-user '{{ nextcloud__users.0.username }}'
+        --admin-user '{{ nextcloud__users[0]["username"] }}'
         --data-dir '{{ nextcloud__datadir }}'
         --database 'mysql'
         --database-host '{{ nextcloud__database_host }}'
         --database-name '{{ nextcloud__database_name }}'
-        --database-user '{{ nextcloud__mariadb_login.username }}'
-        --database-pass '{{ nextcloud__mariadb_login.password }}'
+        --database-user '{{ nextcloud__mariadb_login["username"] }}'
     args:
       chdir: '/var/www/html/nextcloud/'
       creates: '/var/www/html/nextcloud/config/config.php'
+      stdin: |-
+        {{ nextcloud__mariadb_login["password"] }}
+        {{ nextcloud__users[0]["password"] }}
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
 
