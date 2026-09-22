@@ -187,6 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
 * **role:nextcloud**: `/usr/local/bin/nextcloud-update`, which holds the credentials of the Icinga API user, is readable by root only.
 * **role:nextcloud**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
