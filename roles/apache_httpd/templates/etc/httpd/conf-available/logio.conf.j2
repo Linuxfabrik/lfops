@@ -84,7 +84,7 @@ LogFormat "\
 \"%a\";\"%{c}a\";\"%{X-Forwarded-For}i\";\"%u\";\
 \"%r\";\"%m\";\"%U\";\"%q\";\"%H\";\"%{Referer}i\";\"%{User-Agent}i\";\
 \"%s\";\"%>s\";\
-\"%O\";\"%D\";\
+\"%b\";\"%I\";\"%O\";\"%D\";\
 \"%{CF-RAY}i\";\"%{CF-Connecting-IP}i\"\
 " csvextensive
 
@@ -94,7 +94,7 @@ LogFormat "\
 %a\t%{c}a\t%{X-Forwarded-For}i\t%u\t\
 %r\t%m\t%U\t%q\t%H\t%{Referer}i\t%{User-Agent}i\t\
 %s\t%>s\t\
-%O\t%D\t\
+%b\t%I\t%O\t%D\t\
 %{CF-RAY}i\t%{CF-Connecting-IP}i\
 " tsvextensive
 
