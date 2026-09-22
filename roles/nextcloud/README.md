@@ -146,7 +146,7 @@ nextcloud__users:
 
     * `key`:
 
-        * Mandatory. The name of the config option to set.
+        * Mandatory. The app and the name of its config option, separated by a space, for example `password_policy minLength`.
         * Type: String.
 
     * `value`:
@@ -154,16 +154,17 @@ nextcloud__users:
         * Mandatory. The configuration value.
         * Type: String.
 
-    * `force`:
-
-        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
-        * Type: Bool.
-
     * `state`:
 
-        * Optional. Either `absent`, `disabled`, `enabled` or `present`. Note that `enabled` also installs the app.
+        * Optional. Either `present` or `absent`.
         * Type: String.
-        * Default: `'enabled'`
+        * Default: `'present'`
+
+    * `type`:
+
+        * Optional. The type of the configuration value. One of `array`, `boolean`, `float`, `integer` or `string`.
+        * Type: String.
+        * Default: `'string'`
 
 `nextcloud__apps__host_var` / `nextcloud__apps__group_var`
 
@@ -177,11 +178,17 @@ nextcloud__users:
         * Mandatory. The app name.
         * Type: String.
 
+    * `force`:
+
+        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
+        * Type: Bool.
+        * Default: `false`
+
     * `state`:
 
-        * Optional. State of the app, either `present` or `absent`.
+        * Optional. One of `absent` (removes the app), `disabled` (disables an enabled app), `enabled` (installs the app if needed and enables it) or `present` (installs the app, but leaves it disabled).
         * Type: String.
-        * Default: `'present'`
+        * Default: `'enabled'`
 
 `nextcloud__database_host`
 
@@ -426,22 +433,22 @@ nextcloud__sysconfig__host_var:
     type: 'double'
     state: 'present'
   # reverse proxy config
-  - key: 'overwrite.cli.url '
+  - key: 'overwrite.cli.url'
     value: 'https://cloud.example.com'
     state: 'present'
-  - key: 'overwritecondaddr '
+  - key: 'overwritecondaddr'
     value: '^192\.0\.2\.7$' # IP of the reverse proxy
     state: 'present'
-  - key: 'overwritehost '
+  - key: 'overwritehost'
     value: 'cloud.example.com'
     state: 'present'
-  - key: 'overwriteprotocol '
+  - key: 'overwriteprotocol'
     value: 'https'
     state: 'present'
-  - key: 'overwritewebroot '
+  - key: 'overwritewebroot'
     value: '/'
     state: 'present'
-  - key: 'trusted_proxies 0 '
+  - key: 'trusted_proxies 0'
     value: '192.0.2.7' # IP of the reverse proxy
     state: 'present'
 
