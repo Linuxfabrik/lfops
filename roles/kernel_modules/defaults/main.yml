@@ -9,32 +9,130 @@ kernel_modules__modules__combined_var: '{{ (
 kernel_modules__modules__dependent_var: []
 kernel_modules__modules__group_var: []
 kernel_modules__modules__host_var: []
+# Each entry names why the module is blocked and what stops working. "CIS" marks the
+# modules the CIS Benchmarks recommend disabling. The others are rarely used code that
+# an unprivileged user can get loaded, directly or through a user namespace, and that
+# has a history of local privilege escalations. "Not built on RHEL 9/10" means the entry
+# only matters on other distributions such as Debian and Ubuntu. Dependent modules are
+# listed explicitly so they stay blocked when their base module is re-enabled.
 kernel_modules__modules__role_var:
+  # IPv6 over IEEE 802.15.4 radios. Breaks: Zigbee / Thread style IoT radio hardware.
+  - name: '6lowpan'
+    enabled: false
+  # Legacy PF_KEY IPsec interface. Breaks: racoon / ipsec-tools, not libreswan or
+  # strongSwan.
+  - name: 'af_key'
+    enabled: false
+  # IPsec Authentication Header (CVE-2026-80844 for ah6). Breaks: IPsec using AH; ESP is
+  # not affected.
+  - name: 'ah4'
+    enabled: false
+  - name: 'ah6'
+    enabled: false
+  # CIS. Asynchronous Transfer Mode networking. Breaks: ATM network cards and old DSL
+  # modems that use ATM. Not built on RHEL 10.
   - name: 'atm'
     enabled: false
+  # Any user can open a Bluetooth socket and load the whole stack. Breaks: Bluetooth on
+  # laptops and workstations.
+  - name: 'bluetooth'
+    enabled: false
+  # CIS. Controller Area Network bus. Breaks: CAN bus hardware (automotive, industrial).
   - name: 'can'
     enabled: false
+  # Protocols on top of CAN (CVE-2021-3609 for can-bcm). Breaks: CAN bus hardware.
+  - name: 'can-bcm'
+    enabled: false
+  - name: 'can-gw'
+    enabled: false
+  - name: 'can-isotp'
+    enabled: false
+  - name: 'can-j1939'
+    enabled: false
+  - name: 'can-raw'
+    enabled: false
+  # CIS. Compressed read-only filesystem for embedded systems. Breaks: mounting cramfs
+  # images. Not built on RHEL 9/10.
   - name: 'cramfs'
     enabled: false
+  # CIS. Datagram Congestion Control Protocol (CVE-2017-6074). Breaks: applications
+  # using DCCP, practically none. Not built on RHEL 9/10.
   - name: 'dccp'
     enabled: false
+  # CIS. FireWire bus, whose devices get direct memory access. Breaks: FireWire devices
+  # and storage. Not built on RHEL 9/10.
   - name: 'firewire-core'
     enabled: false
   - name: 'firewire-ohci'
     enabled: false
   - name: 'firewire-sbp2'
     enabled: false
+  # CIS. Veritas VxFS filesystem. Breaks: mounting VxFS volumes. Not built on RHEL 9/10.
   - name: 'freevxfs'
     enabled: false
+  # CIS. Apple HFS and HFS+ filesystems. Breaks: mounting Mac-formatted disks. Not built
+  # on RHEL 9/10.
   - name: 'hfs'
     enabled: false
   - name: 'hfsplus'
     enabled: false
+  # IEEE 802.15.4 low-power radio. Breaks: Zigbee / Thread style IoT radio hardware.
+  - name: 'ieee802154'
+    enabled: false
+  - name: 'ieee802154_socket'
+    enabled: false
+  # CIS. Flash filesystem for embedded systems. Breaks: mounting JFFS2 images. Not built
+  # on RHEL 9/10.
   - name: 'jffs2'
     enabled: false
+  # Kernel L2TP. Breaks: L2TP/IPsec VPNs (xl2tpd, NetworkManager-l2tp); OpenVPN and
+  # WireGuard are not affected.
+  - name: 'l2tp_core'
+    enabled: false
+  - name: 'l2tp_eth'
+    enabled: false
+  - name: 'l2tp_ip'
+    enabled: false
+  - name: 'l2tp_ip6'
+    enabled: false
+  - name: 'l2tp_netlink'
+    enabled: false
+  - name: 'l2tp_ppp'
+    enabled: false
+  # MPLS. Breaks: MPLS routing.
+  - name: 'mpls_iptunnel'
+    enabled: false
+  - name: 'mpls_router'
+    enabled: false
+  # TTY line discipline for GSM modem multiplexing (CVE-2023-6546). Breaks: multiplexing
+  # a cellular modem's serial port into several channels.
+  - name: 'n_gsm'
+    enabled: false
+  # TTY line discipline any user can load via a pty (CVE-2017-2636). Breaks: synchronous
+  # HDLC serial cards.
+  - name: 'n_hdlc'
+    enabled: false
+  # PPP over Ethernet (CVE-2026-68121). Breaks: PPPoE dial-up, such as a host acting as
+  # DSL router. Other PPP users like openfortivpn keep working.
+  - name: 'pppoe'
+    enabled: false
+  # Kernel PPTP. Breaks: PPTP VPNs (pptpd, accel-ppp); GRE tunnels via ip_gre keep
+  # working.
+  - name: 'pptp'
+    enabled: false
+  # CIS. Reliable Datagram Sockets (CVE-2010-3904). Breaks: Oracle RAC and other RDS
+  # cluster interconnects. Not built on RHEL 9/10.
   - name: 'rds'
     enabled: false
+  # CIS. Stream Control Transmission Protocol. Breaks: SCTP applications such as telco
+  # signalling (Diameter, SIGTRAN).
   - name: 'sctp'
     enabled: false
+  # SCTP socket diagnostics (CVE-2026-74469). Breaks: SCTP sockets in the output of
+  # `ss`.
+  - name: 'sctp_diag'
+    enabled: false
+  # CIS. Transparent Inter-Process Communication (CVE-2022-0435). Breaks: TIPC cluster
+  # messaging.
   - name: 'tipc'
     enabled: false
