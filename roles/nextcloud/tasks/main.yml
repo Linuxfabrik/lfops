@@ -54,7 +54,7 @@
       group: '{{ __shared__apache_httpd_group }}'
       mode: 0o750
     loop:
-      - '/data'
+      - '{{ nextcloud__datadir }}'
       - '/var/www/html/nextcloud/data'
 
   - name: 'chmod +x /var/www/html/nextcloud/occ'
@@ -62,8 +62,8 @@
       path: '/var/www/html/nextcloud/occ'
       mode: 0o755
 
-  - name: 'restorecon -Fvr /data /var/www/html/nextcloud'
-    ansible.builtin.command: 'restorecon -Fvr /data /var/www/html/nextcloud'
+  - name: 'restorecon -Fvr {{ nextcloud__datadir }} /var/www/html/nextcloud'
+    ansible.builtin.command: 'restorecon -Fvr {{ nextcloud__datadir | quote }} /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length > 0'
     when:

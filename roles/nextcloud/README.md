@@ -197,7 +197,7 @@ nextcloud__users:
 
 `nextcloud__datadir`
 
-* Where to store the user files.
+* Where to store the user files. Nextcloud takes it over at the installation; changing it afterwards does not move an existing data directory.
 * Type: String.
 * Default: `'/data'`
 

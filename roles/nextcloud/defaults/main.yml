@@ -490,7 +490,7 @@ nextcloud__selinux__fcontexts__dependent_var:
     target: '/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push'
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
-    target: '/data(/.*)?'
+    target: '{{ nextcloud__datadir }}(/.*)?'
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/.htaccess'
