@@ -44,5 +44,23 @@
       - 'history.sh'
       - 'prompt.sh'
 
+  - name: 'Deploy /usr/local/sbin/schedule-icinga-downtime'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/schedule-icinga-downtime.j2'
+      dest: '/usr/local/sbin/schedule-icinga-downtime'
+      owner: 'root'
+      group: 'root'
+      mode: 0o700
+    when:
+      - 'tools__icinga2_api_user_login is defined and tools__icinga2_api_user_login | length > 0'
+
+  - name: 'rm -f /usr/local/sbin/schedule-icinga-downtime'
+    ansible.builtin.file:
+      path: '/usr/local/sbin/schedule-icinga-downtime'
+      state: 'absent'
+    when:
+      - 'not (tools__icinga2_api_user_login is defined and tools__icinga2_api_user_login | length > 0)'
+
   tags:
     - 'tools'
