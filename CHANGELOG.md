@@ -155,6 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: A `nextcloud__datadir` other than `/data` gets the ownership and the SELinux label Nextcloud needs, which the role only ever set on `/data`.
 * **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
