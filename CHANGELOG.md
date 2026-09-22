@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud**: Nextcloud verifies the certificate of the SMTP server, where the role had switched the check off. If your mail server presents a self-signed certificate, make Nextcloud trust it, or set `mail_smtpstreamoptions ssl allow_self_signed` to `true` and `mail_smtpstreamoptions ssl verify_peer` and `mail_smtpstreamoptions ssl verify_peer_name` to `false` in `nextcloud__sysconfig__host_var` to keep the previous behaviour.
 * **playbook:setup_icinga2_master, playbook:setup_nextcloud**: MariaDB runs with `skip_name_resolve = ON`, so accounts bound to a host name no longer log in. Move them to an IP address, or set `mariadb_server__cnf_skip_name_resolve__host_var`.
 * **role:mariadb_server**: `table_definition_cache` defaults to 600 instead of 400, which needs a restart of MariaDB.
 * **role:duplicity, playbook:duplicity, playbook:setup_basic**: On a host where `duba` is not installed yet, the run aborts unless `/tmp` has 1024 MiB free, since smaller filesystems fail the backup. Grow `/tmp` with `lvm__lvs__host_var`, or set `lfops__skip_disk_space_check` to skip the check.
