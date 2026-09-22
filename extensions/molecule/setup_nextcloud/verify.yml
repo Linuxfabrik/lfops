@@ -75,6 +75,37 @@
         - '__molecule__mariadbd_label_result is not skipped'
 
 
+# The SMTP TLS overrides that earlier versions of the role set are gone, so Nextcloud verifies the
+# certificate of the mail server again. `config:system:get` exits 1 for a key that does not exist.
+- name: 'Verify Nextcloud verifies the SMTP server certificate'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get mail_smtpstreamoptions ssl {{ item }}'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get mail_smtpstreamoptions ssl {{ item }}'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_smtp_result'
+      changed_when: false
+      failed_when: false
+      loop:
+        - 'allow_self_signed'
+        - 'verify_peer'
+        - 'verify_peer_name'
+
+    - name: 'Assert no SMTP TLS check is switched off'
+      ansible.builtin.assert:
+        that: 'item["rc"] == 1'
+        fail_msg: 'mail_smtpstreamoptions ssl {{ item["item"] }} is set to {{ item["stdout"] }}'
+      loop: '{{ __molecule__nextcloud_smtp_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+
 # systemd resolves the unit a timer starts, so this is the timer as systemd runs it, not as the
 # file reads.
 - name: 'Verify the LDAP remnants timer starts the LDAP remnants report'
