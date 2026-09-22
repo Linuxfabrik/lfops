@@ -32,8 +32,8 @@
       backup: true
       src: 'etc/valkey/{{ valkey__installed_version }}-valkey.conf.j2'
       dest: '{{ __valkey__config_dir }}/{{ __valkey__config_file }}'
-      owner: 'root'
-      group: '{{ __valkey__group }}'
+      owner: '{{ __valkey__config_file_owner }}'
+      group: '{{ __valkey__config_file_group }}'
       mode: 0o640
     notify: 'valkey: restart valkey'
 
