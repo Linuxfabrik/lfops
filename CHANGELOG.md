@@ -122,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
 * **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
 * **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
 * **role:gitlab_ce**: A changed `gitlab-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
