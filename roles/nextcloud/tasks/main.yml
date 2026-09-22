@@ -57,13 +57,33 @@
       - '{{ nextcloud__datadir }}'
       - '/var/www/html/nextcloud/data'
 
+  - name: 'mkdir -p /var/log/nextcloud'
+    ansible.builtin.file:
+      path: '/var/log/nextcloud'
+      state: 'directory'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o750
+
+  # Nextcloud silently falls back to the data directory if it cannot create the configured log
+  # file itself, which would leave the fail2ban jail without a log to read.
+  - name: 'touch /var/log/nextcloud/nextcloud.log'
+    ansible.builtin.file:
+      path: '/var/log/nextcloud/nextcloud.log'
+      state: 'touch'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o640
+      access_time: 'preserve'
+      modification_time: 'preserve'
+
   - name: 'chmod +x /var/www/html/nextcloud/occ'
     ansible.builtin.file:
       path: '/var/www/html/nextcloud/occ'
       mode: 0o755
 
-  - name: 'restorecon -Fvr {{ nextcloud__datadir }} /var/www/html/nextcloud'
-    ansible.builtin.command: 'restorecon -Fvr {{ nextcloud__datadir | quote }} /var/www/html/nextcloud'
+  - name: 'restorecon -Fvr {{ nextcloud__datadir }} /var/log/nextcloud /var/www/html/nextcloud'
+    ansible.builtin.command: 'restorecon -Fvr {{ nextcloud__datadir | quote }} /var/log/nextcloud /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length > 0'
     when:

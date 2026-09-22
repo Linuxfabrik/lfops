@@ -255,6 +255,10 @@ nextcloud__sysconfig__role_var:
     value: '10485760'
     type: 'integer'
     state: 'present'
+  # Outside the data directory, where the SELinux policy lets fail2ban read it.
+  - key: 'logfile'
+    value: '/var/log/nextcloud/nextcloud.log'  # upstream default: <datadirectory>/nextcloud.log
+    state: 'present'
   - key: 'loglevel'
     value: '2'
     type: 'integer'
@@ -495,6 +499,9 @@ nextcloud__selinux__booleans__dependent_var:
 nextcloud__selinux__fcontexts__dependent_var:
   - setype: 'bin_t'
     target: '/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push'
+    state: 'present'
+  - setype: 'httpd_log_t'
+    target: '/var/log/nextcloud(/.*)?'
     state: 'present'
   - setype: 'httpd_sys_rw_content_t'
     target: '{{ nextcloud__datadir }}(/.*)?'
