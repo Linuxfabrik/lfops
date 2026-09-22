@@ -155,6 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
 * **role:network**: `network_state` applies on hosts whose active connection profile, such as `cloud-init eth0` or `System eth0`, still stores DNS servers, instead of aborting with `ipv6.dns: this property is not allowed for 'method=disabled'`. DNS servers that `dns-resolver` does not list are removed from that profile.

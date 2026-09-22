@@ -153,3 +153,23 @@
     - name: 'systemctl start mariadb-dump.service' # noqa command-instead-of-module (starts the oneshot dump and waits for it to finish)
       ansible.builtin.command: 'systemctl start mariadb-dump.service'
       changed_when: false
+
+
+# systemd resolves the unit a timer starts, so this is the timer as systemd runs it, not as the
+# file reads.
+- name: 'Verify the LDAP remnants timer starts the LDAP remnants report'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Get the properties of nextcloud-ldap-show-remnants.timer'
+      ansible.builtin.systemd:
+        name: 'nextcloud-ldap-show-remnants.timer'
+      register: '__molecule__nextcloud_ldap_timer_result'
+      check_mode: true
+
+    - name: 'Assert the timer triggers nextcloud-ldap-show-remnants.service'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_ldap_timer_result["status"]["Triggers"] == "nextcloud-ldap-show-remnants.service"'
+        fail_msg: 'the timer triggers {{ __molecule__nextcloud_ldap_timer_result["status"]["Triggers"] }}'
