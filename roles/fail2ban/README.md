@@ -4,11 +4,12 @@ This role installs and configures [fail2ban](https://www.fail2ban.org).
 
 Filters and jails are defined in the inventory (`fail2ban__filters__*_var` / `fail2ban__jails__*_var`). Each entry either references one of the templates shipped with the role, or uses the `raw` template to deploy an arbitrary filter or jail definition.
 
-This role provides four additional filters:
+This role provides five additional filters:
 
 * apache-404: Matches HTTP 404 responses in Apache access logs (combined, combinedio, common, fail2ban, linuxfabrikio, matomo, vhost_common). Can be used to ban IPs causing excessive 404 errors.
   **Important:** in order to capture the client ip for all formats, this filter requires the ServerName to be a domain instead of an ip address when using a LogFormat where the canonical ServerName `%v` precedes the client IP `%h` (matomo, vhost_common).
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
+* nextcloud: Matches failed logins and failed two-factor challenges in the Nextcloud log (`nextcloud.log`), the filter from the [Nextcloud hardening guide](https://docs.nextcloud.com/server/stable/admin_manual/installation/harden_server.html#setup-fail2ban). The `z10-nextcloud` jail bans IPs that fail too often. Nextcloud logs the address of the client, also behind a reverse proxy listed in its `trusted_proxies`, so the jail runs on the Nextcloud host. There it only keeps out clients that connect to the host directly: traffic that comes through the proxy arrives from the proxy's address, which the ban does not cover.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port.
 * wordpress-login: Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common), also for WordPress in a sub-path such as `/blog`, which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
 
@@ -38,6 +39,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 ## Requirements
 
 * Optional: The `apache-*` jails read the Apache logs below `/var/log/httpd/`.
+* Optional: The `nextcloud` jail reads `fail2ban__jail_nextcloud_logpath`. On SELinux systems, fail2ban may only read files labeled as logs, which is why the `nextcloud` role writes the Nextcloud log to `/var/log/nextcloud/` instead of the data directory. fail2ban does not start while the log file is missing.
 * Optional: The `portscan` filter matches the kernel log of an iptables firewall that logs denied packets, as fwbuilder generates it, read through the systemd journal. Without such a firewall the jail never bans.
 
 
@@ -71,7 +73,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The fail2ban filter definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `apache-404`, `apache-dos`, `portscan`, `wordpress-login`
+* Default: `apache-404`, `apache-dos`, `nextcloud`, `portscan`, `wordpress-login`
 * Subkeys:
 
     * `filename`:
@@ -136,6 +138,30 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * The incoming Rocket.Chat hook which will be used to send a notification on bans. For this to work `rocketchat` has to be in the action, have a look at `fail2ban__jail_default_action` (example below).
 * Type: String.
 * Default: `''`
+
+`fail2ban__jail_nextcloud_bantime`
+
+* The ban duration for the nextcloud jail.
+* Type: String.
+* Default: `'8h'`
+
+`fail2ban__jail_nextcloud_findtime`
+
+* The find time for the nextcloud jail. An IP is banned if it fails to log in `fail2ban__jail_nextcloud_maxretry` times within this duration.
+* Type: String.
+* Default: `'10m'`
+
+`fail2ban__jail_nextcloud_logpath`
+
+* The Nextcloud log file the nextcloud jail reads.
+* Type: String.
+* Default: `'/var/log/nextcloud/nextcloud.log'`
+
+`fail2ban__jail_nextcloud_maxretry`
+
+* The number of failed Nextcloud logins within `fail2ban__jail_nextcloud_findtime` before an IP is banned.
+* Type: Integer.
+* Default: `5`
 
 `fail2ban__jail_portscan_allowed_ports`
 
@@ -243,6 +269,10 @@ fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip:
   - '192.0.2.1/32' # ansible deployment host
 fail2ban__jail_default_rocketchat_hook: ''
+fail2ban__jail_nextcloud_bantime: '8h'
+fail2ban__jail_nextcloud_findtime: '10m'
+fail2ban__jail_nextcloud_logpath: '/var/log/nextcloud/nextcloud.log'
+fail2ban__jail_nextcloud_maxretry: 5
 fail2ban__jail_portscan_allowed_ports:
   - 22
 fail2ban__jail_portscan_bantime: '8h'
