@@ -28,6 +28,8 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 * This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
 * `/usr/local/bin/nextcloud-update` sets an Icinga2 downtime with the login from `nextcloud__icinga2_api_user_login`, which is stored as the systemd credential `nextcloud-update-icinga2-login.curlrc`. With systemd 251 and newer (RHEL 9 and newer, Debian 12 and newer, Ubuntu 24.04 and newer), it is encrypted in `/etc/credstore.encrypted/` with the host key `/var/lib/systemd/credential.secret`, which the backup does not include. On RHEL 8 and Ubuntu 22.04, it stays in plain text in `/etc/credstore/`, readable by root only. `nextcloud-update` therefore has to run as root. With a TPM2 chip, the credential is bound to the Secure Boot state: after a firmware or Secure Boot change, `nextcloud-update` updates Nextcloud without a downtime until the role runs again.
 * Nextcloud logs to `/var/log/nextcloud/nextcloud.log`, not to the data directory. On SELinux systems, fail2ban may only read files labeled as logs, and the fail2ban jail for Nextcloud reads this file.
+* The vHost serves plain HTTP and expects a reverse proxy in front that terminates TLS. Configure Nextcloud for it via `nextcloud__sysconfig__*_var` (see the example below), above all `trusted_proxies`: without it, Nextcloud sees every client with the address of the proxy, so its brute-force protection slows down all clients together and its log names the proxy instead of the client. The proxy also has to forward `/push/` to notify_push on port 7867 of the Nextcloud host (`/push/ws` as a WebSocket).
+* Behind a reverse proxy, Nextcloud's own brute-force protection slows down password guessing, which is why `trusted_proxies` matters. fail2ban cannot help there, since every client reaches the host from the proxy's address. On a Nextcloud host that clients reach directly, set `setup_nextcloud__skip_fail2ban: false`: the playbook then runs fail2ban with a jail that bans IPs with too many failed Nextcloud logins. The reverse proxies listed in `trusted_proxies` are never banned, in any jail.
 
 
 ## Known Limitations
@@ -50,6 +52,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 These roles are not enabled by default; enable them via the playbook's skip variables if needed:
 
 * The Collabora repository (role: [linuxfabrik.lfops.repo_collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora)) serves the Collabora packages from the official Collabora repository instead of the CODE repository.
+* fail2ban (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)) bans IPs with too many failed logins, on a Nextcloud host that clients reach directly.
 
 
 ## Requirements

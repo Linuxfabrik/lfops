@@ -96,6 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, where it bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes and never bans the reverse proxies listed in the Nextcloud setting `trusted_proxies`.
 * **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins or two-factor challenges, following the Nextcloud hardening guide.
 * **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.

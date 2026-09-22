@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026112401
+# 2026112501
 
 [DEFAULT]
 action     = {{ fail2ban__jail_default_action | indent(width=13, first=false) }}
@@ -9,7 +9,7 @@ action     = {{ fail2ban__jail_default_action | indent(width=13, first=false) }}
 action_kill = %(default/action)s
               ss-kill[port="%(port)s"]
 banaction  = {{ fail2ban__jail_default_banaction }}
-ignoreip   = {{ fail2ban__jail_default_ignoreip | join(' ') }}
+ignoreip   = {{ (fail2ban__jail_default_ignoreip + fail2ban__jail_default_ignoreip__dependent_var) | unique | join(' ') }}
 protocol   = tcp
 rocketchat-hook = {{ fail2ban__jail_default_rocketchat_hook }}
 # A jail whose logpath matches no file is skipped with an error instead of
