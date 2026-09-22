@@ -3,3 +3,5 @@ __nextcloud__required_packages:
   - 'jq'
   - 'openldap-clients'
   - 'samba-client'
+
+__nextcloud__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'

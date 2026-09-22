@@ -3,3 +3,5 @@ __nextcloud__required_packages:
   - 'jq'
   - 'ldap-utils'
   - 'smbclient'
+
+__nextcloud__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
