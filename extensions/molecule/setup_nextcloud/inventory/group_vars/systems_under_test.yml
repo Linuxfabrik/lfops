@@ -31,6 +31,7 @@ nextcloud__users:
   - username: 'nextcloud-admin'
     password: 'linuxfabrik'
     group: 'admin'
+nextcloud__version: 'latest-35'
 
 repo_mariadb__version: '11.4'
 

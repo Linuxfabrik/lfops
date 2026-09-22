@@ -120,6 +120,11 @@ Manual steps:
         * Type: List of strings.
         * Default: `[]`
 
+`nextcloud__version`
+
+* Which version to download for a new installation. One of `'latest-XX'`, such as `'latest-35'`, or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases. Updates of an installed Nextcloud run through `/usr/local/bin/nextcloud-update`, not through this variable.
+* Type: String.
+
 Example:
 ```yaml
 # mandatory
@@ -136,6 +141,7 @@ nextcloud__users:
       - 'files quota "50 MB"'
       - 'firstrunwizard show 0'
       - 'settings email info@example.org'
+nextcloud__version: 'latest-35'
 ```
 
 
@@ -361,12 +367,6 @@ nextcloud__users:
 * Type: Bool.
 * Default: `true`
 
-`nextcloud__version`
-
-* Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases.
-* Type: String.
-* Default: `'latest'`
-
 `nextcloud__vhost_virtualhost_ip`
 
 * Used within the `<VirtualHost {{ virtualhost_ip }}:{{ virtualhost_port }}>` directive.
@@ -472,7 +472,6 @@ nextcloud__timer_app_update_enabled: true
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 nextcloud__timer_scan_files_enabled: true
-nextcloud__version: 'latest'
 nextcloud__vhost_virtualhost_ip: '127.0.0.1'
 nextcloud__vhost_virtualhost_port: '81'
 ```
