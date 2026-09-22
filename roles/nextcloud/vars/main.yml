@@ -34,8 +34,6 @@ __nextcloud__php__modules__dependent_var:
       state: 'present'
     - name: 'php-opcache'
       state: 'present'
-    - name: 'php-pecl-apcu'
-      state: 'present'
     - name: 'php-process' # posix module for oc
       state: 'present'
     - name: 'php-redis'
@@ -49,15 +47,13 @@ __nextcloud__php__modules__dependent_var:
   # Sury's schedule - so they would drag a second PHP runtime onto the host, exactly as the
   # php-imap metapackage already did. Always build the name from the version the php role manages.
   # Differences from the RedHat list:
-  #   * php-mysqlnd  -> mysql, php-pecl-apcu -> apcu (different upstream package names)
+  #   * php-mysqlnd  -> mysql (different upstream package name)
   #   * php-opcache  dropped: php<version>-opcache is pulled in by the php base package already
   #   * php-process  dropped: the posix extension is built into the Debian php-cli/-common packages
   #   * php-json     dropped: JSON is compiled into PHP 8 core (php-json is only a transitional dummy)
   # imap is core on <= 8.3 and PECL on >= 8.4, but Sury names the versioned package uniformly, so
   # no version branch is needed here.
   Debian:
-    - name: 'php{{ __php__installed_version }}-apcu'
-      state: 'present'
     - name: 'php{{ __php__installed_version }}-bcmath'
       state: 'present'
     - name: 'php{{ __php__installed_version }}-gd'
