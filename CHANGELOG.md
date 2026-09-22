@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The role no longer installs the APCu PHP extension, which Nextcloud does not use, since the role keeps all its caches in Redis or Valkey. Hosts keep an APCu that is already installed.
 * **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
 * **plugin:bitwarden_item, module:bitwarden_item**: A run against a vault that contains no items at all aborts instead of creating the first one, because `bw serve` briefly reports an empty vault after every sync ([bitwarden/clients#23283](https://github.com/bitwarden/clients/issues/23283)).
