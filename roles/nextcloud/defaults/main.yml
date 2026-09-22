@@ -482,6 +482,28 @@ nextcloud__collabora__coolwsd_storage_wopi__dependent_var:
   - name: '{{ nextcloud__fqdn | regex_replace("\.", "\.") }}'
     state: 'present'
 
+# The reverse proxies Nextcloud trusts must never be banned: behind a proxy, every client
+# reaches this host from the proxy's address, so a ban on it locks out everyone. Taken from
+# the `trusted_proxies` entries, so an inventory that configures the proxy for Nextcloud
+# protects it from fail2ban as well.
+nextcloud__fail2ban__jail_default_ignoreip__dependent_var: '{{
+    (nextcloud__sysconfig__combined_var
+      | selectattr("key", "match", "trusted_proxies ")
+      | selectattr("state", "undefined")
+      | map(attribute="value")
+      | list)
+    + (nextcloud__sysconfig__combined_var
+      | selectattr("key", "match", "trusted_proxies ")
+      | selectattr("state", "defined")
+      | selectattr("state", "ne", "absent")
+      | map(attribute="value")
+      | list)
+  }}'
+nextcloud__fail2ban__jails__dependent_var:
+  - filename: 'z10-nextcloud'
+    state: 'present'
+    template: 'nextcloud'
+
 # Has to stay above nextcloud__php__ini_max_execution_time__dependent_var so PHP's own limit
 # trips first and reports a fatal error, leaving PHP-FPM as the backstop for a worker stuck
 # in a system call, which max_execution_time cannot interrupt. The php role defaults to 60s,

@@ -18,6 +18,15 @@ mariadb_server__admin_user:
 
 nextcloud__fqdn: 'nextcloud.example.com'
 nextcloud__skip_notify_push: true
+# fail2ban is off by default, since it belongs on hosts that clients reach directly. Switched on
+# here so verify.yml can prove the jail sees failed logins and never bans the proxy.
+setup_nextcloud__skip_fail2ban: false
+# The host itself stands in for the reverse proxy, so verify.yml can send a failed login "through
+# the proxy" with X-Forwarded-For and check that fail2ban counts the client, not the proxy.
+nextcloud__sysconfig__group_var:
+  - key: 'trusted_proxies 0'
+    value: '127.0.0.1'
+    state: 'present'
 nextcloud__users:
   - username: 'nextcloud-admin'
     password: 'linuxfabrik'

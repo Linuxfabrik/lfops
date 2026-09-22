@@ -17,6 +17,8 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 * App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
 * This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
 * Nextcloud logs to `/var/log/nextcloud/nextcloud.log`, not to the data directory. On SELinux systems, fail2ban may only read files labeled as logs, and the fail2ban jail for Nextcloud reads this file.
+* The vHost serves plain HTTP and expects a reverse proxy in front that terminates TLS. Configure Nextcloud for it via `nextcloud__sysconfig__*_var` (see the example below), above all `trusted_proxies`: without it, Nextcloud sees every client with the address of the proxy, so its brute-force protection slows down all clients together and its log names the proxy instead of the client. The proxy also has to forward `/push/` to notify_push on port 7867 of the Nextcloud host (`/push/ws` as a WebSocket).
+* Behind a reverse proxy, Nextcloud's own brute-force protection slows down password guessing, which is why `trusted_proxies` matters. fail2ban cannot help there, since every client reaches the host from the proxy's address. On a Nextcloud host that clients reach directly, set `setup_nextcloud__skip_fail2ban: false`: the playbook then runs fail2ban with a jail that bans IPs with too many failed Nextcloud logins. The reverse proxies listed in `trusted_proxies` are never banned, in any jail.
 
 
 ## Dependent Roles
@@ -29,6 +31,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * PHP 8.1+ must be installed (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 * Redis 7+ must be installed (roles: [linuxfabrik.lfops.repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
 * Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
+* Optional: fail2ban bans IPs with too many failed logins (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)).
 * Optional: Coturn (role: [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)) provides the TURN server for Nextcloud Talk.
 
 These roles are not enabled by default; enable them via the playbook's skip variables if needed:
