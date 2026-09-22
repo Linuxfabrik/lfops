@@ -47,6 +47,46 @@ Manual steps:
 * Configure the systemd service for [notify_push](https://github.com/nextcloud/notify_push).
 
 
+## Connecting Collabora Online
+
+`setup_nextcloud` installs Collabora Online (role `collabora`) on the Nextcloud host and allows `nextcloud__fqdn` as WOPI host, but leaves the connection to the reverse proxy and to Nextcloud to the inventory. The browser loads the editor from a hostname of its own, such as `office.example.com`, which the reverse proxy terminates like the Nextcloud hostname. Collabora itself serves plain HTTP on port 9980 (`collabora__coolwsd_ssl_termination: true`).
+
+On the reverse proxy, forward the Collabora hostname to port 9980 of the Nextcloud host, with the WebSockets and without decoding encoded slashes:
+
+```apache
+AllowEncodedSlashes NoDecode
+ProxyPreserveHost On
+ProxyPass           /browser http://nextcloud-host.example.com:9980/browser retry=0
+ProxyPassReverse    /browser http://nextcloud-host.example.com:9980/browser
+ProxyPass           /hosting/discovery http://nextcloud-host.example.com:9980/hosting/discovery retry=0
+ProxyPassReverse    /hosting/discovery http://nextcloud-host.example.com:9980/hosting/discovery
+ProxyPass           /hosting/capabilities http://nextcloud-host.example.com:9980/hosting/capabilities retry=0
+ProxyPassReverse    /hosting/capabilities http://nextcloud-host.example.com:9980/hosting/capabilities
+ProxyPassMatch      "/cool/(.*)/ws$" ws://nextcloud-host.example.com:9980/cool/$1/ws nocanon
+ProxyPass           /cool/adminws ws://nextcloud-host.example.com:9980/cool/adminws
+ProxyPass           /cool http://nextcloud-host.example.com:9980/cool
+ProxyPassReverse    /cool http://nextcloud-host.example.com:9980/cool
+```
+
+In Nextcloud, enable the Nextcloud Office app and point it at the Collabora hostname. Collabora calls back into Nextcloud through the reverse proxy, so the allow list names the proxy:
+
+```yaml
+nextcloud__apps__host_var:
+  - name: 'richdocuments'
+    state: 'enabled'
+nextcloud__app_configs__host_var:
+  - key: 'richdocuments public_wopi_url'
+    value: 'https://office.example.com'
+    state: 'present'
+  - key: 'richdocuments wopi_allowlist'
+    value: '192.0.2.7' # IP of the reverse proxy
+    state: 'present'
+  - key: 'richdocuments wopi_url'
+    value: 'https://office.example.com'
+    state: 'present'
+```
+
+
 ## Tags
 
 `nextcloud`
