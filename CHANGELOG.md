@@ -383,6 +383,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: `/usr/local/bin/nextcloud-update`, which holds the credentials of the Icinga API user, is readable by root only.
 * **role:nextcloud**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:nextcloud**: The installation aborts unless Nextcloud signed the downloaded release archive.
 * **role:borg_local**: The repository passphrase and the Icinga2 API login are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/borg/borg-passphrase` and `/usr/local/bin/borg-backup`, so the passphrase is no longer readable in the backup it protects. The old files and their copies are deleted. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. `source /etc/borg/borg.conf` followed by `borg` still works for restores, as root.
