@@ -192,9 +192,8 @@ argument_specs:
 
       nextcloud__version:
         type: 'str'
-        required: false
-        default: 'latest'
-        description: "Which version to install. One of 'latest', 'latest-XX' or 'nextcloud-XX.X.XX'."
+        required: true
+        description: "Which version to download for a new installation. One of 'latest-XX' or 'nextcloud-XX.X.XX'."
 
       nextcloud__vhost_virtualhost_ip:
         type: 'str'
