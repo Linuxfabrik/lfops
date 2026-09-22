@@ -155,6 +155,26 @@
       changed_when: false
 
 
+# nextcloud-update carries the credentials of the Icinga API user, and only root runs it.
+- name: 'Verify nextcloud-update is readable by root only'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'stat /usr/local/bin/nextcloud-update'
+      ansible.builtin.stat:
+        path: '/usr/local/bin/nextcloud-update'
+      register: '__molecule__nextcloud_update_stat_result'
+
+    - name: 'Assert that nextcloud-update is readable by root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_update_stat_result["stat"]["mode"] == "0700"'
+          - '__molecule__nextcloud_update_stat_result["stat"]["pw_name"] == "root"'
+        fail_msg: '/usr/local/bin/nextcloud-update is {{ __molecule__nextcloud_update_stat_result["stat"] | d("missing") | to_json }}'
+
+
 # systemd resolves the unit a timer starts, so this is the timer as systemd runs it, not as the
 # file reads.
 - name: 'Verify the LDAP remnants timer starts the LDAP remnants report'
