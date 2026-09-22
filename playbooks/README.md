@@ -1313,7 +1313,6 @@ Calls the following roles (in order):
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_nextcloud__skip_repo_epel`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_nextcloud__skip_policycoreutils`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_nextcloud__skip_python`
-* [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban): `setup_nextcloud__skip_fail2ban`
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_nextcloud__skip_kernel_settings`
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_nextcloud__skip_apache_httpd`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `setup_nextcloud__skip_repo_remi`
@@ -1326,6 +1325,7 @@ Calls the following roles (in order):
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_nextcloud__skip_selinux`
 * [systemd_unit](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_unit): `nextcloud__skip_systemd_unit`
 * [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud)
+* [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban): `setup_nextcloud__skip_fail2ban` (default: `true`)
 * [repo_collabora_code](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora_code): `setup_nextcloud__skip_repo_collabora_code`
 * [repo_collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora): `setup_nextcloud__skip_repo_collabora` (default: `true`), `setup_nextcloud__skip_repo_collabora_code`
 * [collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora): `setup_nextcloud__skip_collabora`

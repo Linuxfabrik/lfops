@@ -124,3 +124,49 @@
       ansible.builtin.assert:
         that: '__molecule__nextcloud_ldap_timer_result["status"]["Triggers"] == "nextcloud-ldap-show-remnants.service"'
         fail_msg: 'the timer triggers {{ __molecule__nextcloud_ldap_timer_result["status"]["Triggers"] }}'
+
+
+# A failed login sent through the "proxy" (the host itself, see trusted_proxies in the inventory)
+# proves the whole chain at once: Nextcloud takes the client address from X-Forwarded-For, logs
+# to /var/log/nextcloud, SELinux lets fail2ban read that file, and the jail counts the client.
+# The proxy itself has to be in ignoreip, since banning it would lock out every client.
+- name: 'Verify fail2ban counts failed Nextcloud logins and never bans the proxy'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'GET /remote.php/dav/ with wrong credentials, as 203.0.113.9 behind the proxy'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/'
+        url_username: '{{ nextcloud__users[0]["username"] }}'
+        url_password: 'wrong-password'
+        force_basic_auth: true
+        headers:
+          Host: '{{ nextcloud__fqdn }}'
+          X-Forwarded-For: '203.0.113.9'
+        status_code: 401
+
+    - name: 'fail2ban-client status nextcloud'
+      ansible.builtin.command: 'fail2ban-client status nextcloud'
+      register: '__molecule__nextcloud_fail2ban_status_result'
+      changed_when: false
+      # fail2ban polls the log file, so the failure shows up with a short delay
+      until: '__molecule__nextcloud_fail2ban_status_result["stdout"] is search("Total failed:\\s+[1-9]")'
+      retries: 10
+      delay: 2
+
+    - name: 'Assert the jail reads the Nextcloud log'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_fail2ban_status_result["stdout"] is search("File list:\\s+/var/log/nextcloud/nextcloud.log")'
+        fail_msg: '{{ __molecule__nextcloud_fail2ban_status_result["stdout"] }}'
+
+    - name: 'fail2ban-client get nextcloud ignoreip'
+      ansible.builtin.command: 'fail2ban-client get nextcloud ignoreip'
+      register: '__molecule__nextcloud_fail2ban_ignoreip_result'
+      changed_when: false
+
+    - name: 'Assert the trusted proxy is never banned'
+      ansible.builtin.assert:
+        that: '"127.0.0.1" in __molecule__nextcloud_fail2ban_ignoreip_result["stdout"]'
+        fail_msg: '{{ __molecule__nextcloud_fail2ban_ignoreip_result["stdout"] }}'

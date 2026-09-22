@@ -129,7 +129,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__jail_default_ignoreip`
 
-* List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it).
+* List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it). Other roles add to this list, for example the `nextcloud` role adds the reverse proxies from its `trusted_proxies`, so a jail never bans them.
 * Type: List of strings.
 * Default: `[]`
 
