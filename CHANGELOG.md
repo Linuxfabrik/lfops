@@ -96,6 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins or two-factor challenges, following the Nextcloud hardening guide.
 * **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
 * **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.

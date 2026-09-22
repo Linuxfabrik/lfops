@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026112501
+
+# action_kill (z00-defaults.conf) also closes the open connections of a banned
+# client.
+[nextcloud]
+action   = %(action_kill)s
+bantime  = {{ fail2ban__jail_nextcloud_bantime }}
+enabled  = true
+findtime = {{ fail2ban__jail_nextcloud_findtime }}
+logpath  = {{ fail2ban__jail_nextcloud_logpath }}
+maxretry = {{ fail2ban__jail_nextcloud_maxretry }}
+port     = http,https
