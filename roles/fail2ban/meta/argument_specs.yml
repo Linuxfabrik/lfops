@@ -90,6 +90,30 @@ argument_specs:
         default: ''
         description: 'The incoming Rocket.Chat hook used to send a notification on bans.'
 
+      fail2ban__jail_nextcloud_bantime:
+        type: 'str'
+        required: false
+        default: '8h'
+        description: 'The ban duration for the nextcloud jail.'
+
+      fail2ban__jail_nextcloud_findtime:
+        type: 'str'
+        required: false
+        default: '10m'
+        description: 'The find time for the nextcloud jail.'
+
+      fail2ban__jail_nextcloud_logpath:
+        type: 'str'
+        required: false
+        default: '/var/log/nextcloud/nextcloud.log'
+        description: 'The Nextcloud log file the nextcloud jail reads.'
+
+      fail2ban__jail_nextcloud_maxretry:
+        type: 'int'
+        required: false
+        default: 5
+        description: 'The number of failed Nextcloud logins within the find time before an IP is banned.'
+
       fail2ban__jail_portscan_allowed_ports:
         type: 'list'
         required: false
