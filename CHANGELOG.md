@@ -137,6 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The role removes the PHP extensions APCu, bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: all caches live in Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Icinga DB Web shows up to 65536 characters of a plugin output instead of 20000, so long check outputs are no longer cut off.
 * **role:aide, role:system_update**: AIDE always runs with the lowest CPU and I/O priority, also where the role and the update scripts call it directly, so it yields to everything else on the host.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.
