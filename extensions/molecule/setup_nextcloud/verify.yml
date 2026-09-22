@@ -38,6 +38,30 @@
         fail_msg: 'status.php did not report installed. response: {{ __molecule__nextcloud_statusphp_result["content"] | d("") }}'
 
 
+# Nextcloud connects as nextcloud__database_login, which the playbook creates for localhost only,
+# instead of the "oc_" user that the installer creates for any host when it gets the database
+# administrator.
+- name: 'Verify Nextcloud uses its own database user'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get dbuser'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get dbuser'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_dbuser_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud connects as nextcloud__database_login'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_dbuser_result["stdout"] == nextcloud__database_login["username"]'
+        fail_msg: 'Nextcloud connects as {{ __molecule__nextcloud_dbuser_result["stdout"] }}'
+
+
 # The role installs mysql-selinux so mariadbd gets `mysqld_exec_t` (MDEV-30520). Assert the domain
 # of the running process, not the label on the file: only that tells `mysqld_t` apart from
 # `initrc_t` and the `unconfined_service_t` that used to mask a missing label.
