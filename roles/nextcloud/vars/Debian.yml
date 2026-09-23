@@ -4,5 +4,6 @@ __nextcloud__required_packages:
   - 'ldap-utils'
   - 'smbclient'
 
+__nextcloud__mysql_login_unix_socket: '/run/mysqld/mysqld.sock'
 __nextcloud__redis_group: 'redis'
 __nextcloud__redis_unixsocket: '/run/redis/redis-server.sock'
