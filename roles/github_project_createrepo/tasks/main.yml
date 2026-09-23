@@ -35,70 +35,81 @@
       enabled: '{{ github_project_createrepo__timer_enabled }}'
       state: '{{ github_project_createrepo__timer_enabled | bool | ternary("started", "stopped") }}'
 
+  # The service only ever writes below base_path/relative_target_path (downloads, pruning,
+  # `createrepo --update`). Owning exactly these directories is all it needs, so it cannot
+  # touch anything else served from base_path. The web server reads through "other".
   - name: 'mkdir {{ github_project_createrepo__base_path }}'
     ansible.builtin.file:
       path: '{{ github_project_createrepo__base_path }}'
       state: 'directory'
-      owner: '{{ github_project_createrepo__webserver_user }}'
-      group: '{{ github_project_createrepo__webserver_user }}'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
-  - name: 'setfacl --recursive --modify user:{{ github_project_createrepo__webserver_user }}:rwx {{ github_project_createrepo__base_path }}'
-    ansible.posix.acl:
-      entity: '{{ github_project_createrepo__webserver_user }}'
-      etype: 'user'
-      path: '{{ github_project_createrepo__base_path }}'
-      permissions: 'rwx'
-      recursive: true
-      state: 'present'
+  # ansible.builtin.file gives missing parent directories the owner of the target, so the
+  # parents are created as root first.
+  - name: 'mkdir --parents {{ github_project_createrepo__base_path }}/<parent of relative_target_path>'
+    ansible.builtin.file:
+      path: '{{ github_project_createrepo__base_path }}/{{ item["relative_target_path"] | dirname }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop: '{{ github_project_createrepo__github_repos }}'
+    loop_control:
+      label: '{{ item["relative_target_path"] }}'
+    when:
+      - 'item["relative_target_path"] | dirname | length > 0'
 
-  - name: 'setfacl --default --recursive --modify user:{{ github_project_createrepo__webserver_user }}:rwx {{ github_project_createrepo__base_path }}'
-    ansible.posix.acl:
-      default: true
-      entity: '{{ github_project_createrepo__webserver_user }}'
-      etype: 'user'
-      path: '{{ github_project_createrepo__base_path }}'
-      permissions: 'rwx'
-      recursive: true
-      state: 'present'
+  - name: 'mkdir {{ github_project_createrepo__base_path }}/<relative_target_path>'
+    ansible.builtin.file:
+      path: '{{ github_project_createrepo__base_path }}/{{ item["relative_target_path"] }}'
+      state: 'directory'
+      owner: 'github-project-createrepo'
+      group: 'github-project-createrepo'
+      mode: 0o755
+    loop: '{{ github_project_createrepo__github_repos }}'
+    loop_control:
+      label: '{{ item["relative_target_path"] }}'
 
-  - name: 'setfacl --recursive --modify group:{{ github_project_createrepo__webserver_user }}:rx {{ github_project_createrepo__base_path }}'
-    ansible.posix.acl:
-      entity: '{{ github_project_createrepo__webserver_user }}'
-      etype: 'group'
-      path: '{{ github_project_createrepo__base_path }}'
-      permissions: 'rx'
-      recursive: true
-      state: 'present'
+  - name: 'chown -R --changes github-project-createrepo:github-project-createrepo {{ github_project_createrepo__base_path }}/<relative_target_path>'
+    ansible.builtin.command: 'chown -R --changes github-project-createrepo:github-project-createrepo {{ (github_project_createrepo__base_path ~ "/" ~ item["relative_target_path"]) | quote }}'
+    register: '__github_project_createrepo__chown_result'
+    changed_when: '__github_project_createrepo__chown_result["stdout"] | length > 0'
+    loop: '{{ github_project_createrepo__github_repos }}'
+    loop_control:
+      label: '{{ item["relative_target_path"] }}'
 
-  - name: 'setfacl --default --recursive --modify group:{{ github_project_createrepo__webserver_user }}:rx {{ github_project_createrepo__base_path }}'
-    ansible.posix.acl:
-      default: true
-      entity: '{{ github_project_createrepo__webserver_user }}'
-      etype: 'group'
-      path: '{{ github_project_createrepo__base_path }}'
-      permissions: 'rx'
-      recursive: true
-      state: 'present'
+  # Up to LFOps v9.0.0 the role granted the service and the web server rwx on the whole of
+  # base_path, recursively and as default ACL. Remove them. If no one else uses ACLs below
+  # base_path, drop the ACLs entirely, so the leftover masks do not linger.
+  - name: 'getfacl --recursive --skip-base --absolute-names {{ github_project_createrepo__base_path }}'
+    ansible.builtin.command: 'getfacl --recursive --skip-base --absolute-names {{ github_project_createrepo__base_path | quote }}'
+    register: '__github_project_createrepo__getfacl_result'
+    changed_when: false
+    check_mode: false # run task even if `--check` is specified
 
-  - name: 'setfacl --recursive --modify user:github-project-createrepo:rwx {{ github_project_createrepo__base_path }}'
-    ansible.posix.acl:
-      entity: 'github-project-createrepo'
-      etype: 'user'
-      path: '{{ github_project_createrepo__base_path }}'
-      permissions: 'rwx'
-      recursive: true
-      state: 'present'
+  - name: 'setfacl --recursive --remove-all {{ github_project_createrepo__base_path }}'
+    ansible.builtin.command: 'setfacl --recursive --remove-all {{ github_project_createrepo__base_path | quote }}'
+    changed_when: true # only runs while there are entries to remove
+    when:
+      - '__github_project_createrepo__acl_names | length > 0'
+      - '__github_project_createrepo__acl_names | difference(__github_project_createrepo__legacy_acl_names) | length == 0'
 
-  - name: 'setfacl --default --recursive --modify user:github-project-createrepo:rwx --default {{ github_project_createrepo__base_path }}'
-    ansible.posix.acl:
-      default: true
-      entity: 'github-project-createrepo'
-      etype: 'user'
-      path: '{{ github_project_createrepo__base_path }}'
-      permissions: 'rwx'
-      recursive: true
-      state: 'present'
+  - name: 'setfacl --recursive --remove <legacy entries> {{ github_project_createrepo__base_path }}'
+    ansible.builtin.command: >-
+      setfacl --recursive
+      --remove user:github-project-createrepo
+      --remove default:user:github-project-createrepo
+      --remove user:{{ __shared__apache_httpd_user }}
+      --remove default:user:{{ __shared__apache_httpd_user }}
+      --remove group:{{ __shared__apache_httpd_group }}
+      --remove default:group:{{ __shared__apache_httpd_group }}
+      {{ github_project_createrepo__base_path | quote }}
+    changed_when: true # only runs while there are entries to remove
+    when:
+      - '__github_project_createrepo__acl_names | intersect(__github_project_createrepo__legacy_acl_names) | length > 0'
+      - '__github_project_createrepo__acl_names | difference(__github_project_createrepo__legacy_acl_names) | length > 0'
 
   tags:
     - 'github_project_createrepo'

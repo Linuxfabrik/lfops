@@ -59,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **playbook:setup_basic**: The mail and reboot roles run before the security roles, so a first run against a fresh host files the reboot request that a changed crypto policy, SELinux state or kernel module blocklist needs. Until now the reboot mechanism was deployed further down the playbook and such a change could only be reported to the operator.
 * **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
 
+### Removed
+
+* **role:github_project_createrepo**: `github_project_createrepo__webserver_user` is gone, since the web server no longer gets an ACL entry; remove it from your inventory.
+
 ### Fixed
 
 * **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
@@ -96,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.
 * **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.
 * **role:wordpress**: `--tags wordpress:export` writes to `/backup/wordpress-export/<instance>`, readable by `apache` and `root` only, instead of to `/tmp`.
 * **role:wordpress**: The database and admin passwords no longer show up in the process list during the installation.

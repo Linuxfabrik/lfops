@@ -1,0 +1,13 @@
+# the names in the named ACL entries below base_path, see tasks/main.yml
+__github_project_createrepo__acl_names: '{{
+    __github_project_createrepo__getfacl_result["stdout"]
+    | d("")
+    | regex_findall("(?m)^(?:default:)?(?:user|group):([^:]+):")
+    | unique
+  }}'
+
+# the ACL entries that LFOps up to v9.0.0 granted on base_path
+__github_project_createrepo__legacy_acl_names:
+  - 'github-project-createrepo'
+  - '{{ __shared__apache_httpd_group }}'
+  - '{{ __shared__apache_httpd_user }}'

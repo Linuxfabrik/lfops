@@ -6,6 +6,13 @@ This role installs and configures [github_project_createrepo](https://github.com
 *Available since LFOps `3.0.0`.*
 
 
+## How the Role Behaves
+
+* The service runs as the unprivileged `github-project-createrepo` user and may only write to the repositories it maintains: every `relative_target_path` belongs to that user, while `github_project_createrepo__base_path` and the directories leading to the repositories belong to `root`. Nothing else served from `github_project_createrepo__base_path`, such as a repository signing key, can be changed by the service.
+* The web server needs no special access, it reads the repositories through the permissions for all users.
+* ACL entries that this role granted up to LFOps `v9.0.0` on `github_project_createrepo__base_path` for the service and the web server are removed. If no other ACL entries exist below it, the ACLs are removed entirely.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -24,7 +31,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `github_project_createrepo:configure`
 
-* Deploys `/etc/github_project_createrepo.yml`.
+* Deploys `/etc/github-project-createrepo.yml`.
 * Triggers: none.
 
 
@@ -66,18 +73,11 @@ github_project_createrepo__github_repos:
 * Type: Bool.
 * Default: `true`
 
-`github_project_createrepo__webserver_user`
-
-* The user under which the webserver runs. Will be used to set the correct FACL entries so that both users can access the files.
-* Type: String.
-* Default: `'apache'`
-
 Example:
 ```yaml
 # optional
 github_project_createrepo__base_path: '/var/www/html/github-repos'
 github_project_createrepo__timer_enabled: true
-github_project_createrepo__webserver_user: 'nginx'
 ```
 
 
