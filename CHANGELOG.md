@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:collabora**: Add support for Collabora Online CODE 26.04.4.
 * **role:wordpress**: Entries in `wordpress__plugins` accept `enabled: false`, which keeps a plugin installed but deactivated.
 * **role:system_update**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:wordpress**: Several WordPress instances can share a host as pseudo hosts in the inventory, under different host names as well as under different paths of one host name, such as `https://example.com/blog`.
