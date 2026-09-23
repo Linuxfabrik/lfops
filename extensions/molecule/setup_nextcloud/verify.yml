@@ -100,9 +100,10 @@
 
 
 # Nextcloud keeps its caches and file locks in Redis / Valkey and reaches it through the Unix
-# socket (a path in 'redis host'), which only the members of the server's group may use. Nextcloud's own memcache
-# check writes a value and reads it back (CLI, as the web server user), and a PROPFIND takes a
-# shared lock through Apache and PHP-FPM, so both paths have to get through the socket.
+# socket (a path in 'redis host'), which only the members of the server's group may use.
+# Nextcloud's own memcache check writes a value and reads it back (CLI, as the web server user),
+# and a PROPFIND takes a shared lock through Apache and PHP-FPM, so both paths have to get
+# through the socket.
 - name: 'Verify Nextcloud reaches Redis / Valkey through the Unix socket'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -122,6 +123,40 @@
       ansible.builtin.assert:
         that: '__molecule__nextcloud_redis_host_result["stdout"] is match("/")'
         fail_msg: 'redis host is {{ __molecule__nextcloud_redis_host_result["stdout"] }}, so Nextcloud connects over TCP'
+
+    - name: 'stat {{ __molecule__nextcloud_redis_host_result["stdout"] }}'
+      ansible.builtin.stat:
+        path: '{{ __molecule__nextcloud_redis_host_result["stdout"] }}'
+      register: '__molecule__nextcloud_redis_socket_stat_result'
+
+    # 0770 and the server's group: the web server user gets in as a member of that group, nobody
+    # else does. Rocky 8 and 9 run Redis, Rocky 10 runs Valkey, so the group names the server.
+    - name: 'Assert the socket is open to the group of Redis / Valkey only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_redis_socket_stat_result["stat"]["issock"]'
+          - '__molecule__nextcloud_redis_socket_stat_result["stat"]["mode"] == "0770"'
+          - '__molecule__nextcloud_redis_socket_stat_result["stat"]["gr_name"] in ["redis", "valkey"]'
+        fail_msg: '{{ __molecule__nextcloud_redis_socket_stat_result["stat"] | d("missing") | to_json }}'
+
+    - name: 'stat /etc/{{ __molecule__redis_server }}/{{ __molecule__redis_server }}.conf'
+      ansible.builtin.stat:
+        path: '/etc/{{ __molecule__redis_server }}/{{ __molecule__redis_server }}.conf'
+      register: '__molecule__nextcloud_redis_conf_stat_result'
+      vars:
+        __molecule__redis_server: '{{ __molecule__nextcloud_redis_socket_stat_result["stat"]["gr_name"] }}'
+
+    # The package's tmpfiles.d rule restores <server>:root at every boot. A role that deployed any
+    # other ownership would report the config file as changed on the first run after a reboot.
+    - name: 'Assert the config file keeps the ownership the package restores at boot'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_redis_conf_stat_result["stat"]["pw_name"] == __molecule__redis_server'
+          - '__molecule__nextcloud_redis_conf_stat_result["stat"]["gr_name"] == "root"'
+          - '__molecule__nextcloud_redis_conf_stat_result["stat"]["mode"] == "0640"'
+        fail_msg: '{{ __molecule__nextcloud_redis_conf_stat_result["stat"] | d("missing") | to_json }}'
+      vars:
+        __molecule__redis_server: '{{ __molecule__nextcloud_redis_socket_stat_result["stat"]["gr_name"] }}'
 
     - name: 'php occ setupchecks --output=json'
       ansible.builtin.command: 'php /var/www/html/nextcloud/occ setupchecks --output=json'
