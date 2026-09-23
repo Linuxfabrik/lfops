@@ -31,12 +31,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * PHP must be installed, in a version the installed Nextcloud supports (roles: [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php)).
 * Valkey must be installed on RHEL 10, Redis on the other platforms, listening on the Unix socket in `nextcloud__redis_unixsocket` (roles: [linuxfabrik.lfops.valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey), or [linuxfabrik.lfops.repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi) and [linuxfabrik.lfops.redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)).
 * Optional: Collabora (role: [linuxfabrik.lfops.collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora)) provides online document editing.
-* Optional: fail2ban bans IPs with too many failed logins (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)).
 * Optional: Coturn (role: [linuxfabrik.lfops.coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)) provides the TURN server for Nextcloud Talk.
 
 These roles are not enabled by default; enable them via the playbook's skip variables if needed:
 
 * The Collabora repository (role: [linuxfabrik.lfops.repo_collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora)) serves the Collabora packages from the official Collabora repository instead of the CODE repository.
+* fail2ban (role: [linuxfabrik.lfops.fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)) bans IPs with too many failed logins, on a Nextcloud host that clients reach directly.
 
 
 ## Requirements
@@ -535,13 +535,14 @@ nextcloud__vhost_virtualhost_ip: '127.0.0.1'
 nextcloud__vhost_virtualhost_port: '81'
 ```
 
+
 ## Troubleshooting
 
-`Nextcloud XX needs PHP X.Y or newer, but older than X.Z, and MariaDB XX.Y or newer.`
+**The run aborts with `Nextcloud XX needs PHP X.Y or newer, but older than X.Z, and MariaDB XX.Y or newer.`**
 
 * The role compares the installed PHP and MariaDB with what the installed Nextcloud major version requires, before it changes anything, and aborts if they do not fit. The message names the versions it expects and the ones it found. Nextcloud itself refuses to run on a PHP outside that range. Upgrade PHP (for example via `repo_remi__enabled_php_version`) or MariaDB (`repo_mariadb__version`), then run the role again.
 
-`Nextcloud XX is not supported by this role.`
+**The run aborts with `Nextcloud XX is not supported by this role.`**
 
 * The role knows the requirements of the Nextcloud major versions listed in the message only. Pin `nextcloud__version` to a supported major version for a new installation, or add the requirements of the new major version to `__nextcloud__requirements` in `vars/main.yml`.
 
