@@ -28,9 +28,10 @@
       remote_src: true
       creates: '/var/www/html/nextcloud/config'
 
-  # Checked against the unpacked code rather than nextcloud__version, which may just say
-  # 'latest', and on every run, so a PHP or MariaDB that falls below what the installed
-  # Nextcloud needs stops the run before the role touches the instance.
+  # Checked against the unpacked code rather than nextcloud__version, which only picks the
+  # download of a new installation and names at most the major version ('latest-35'), and on
+  # every run, so a PHP or MariaDB that falls below what the installed Nextcloud needs stops
+  # the run before the role touches the instance.
   - name: 'stat /var/www/html/nextcloud/version.php'
     ansible.builtin.stat:
       path: '/var/www/html/nextcloud/version.php'
