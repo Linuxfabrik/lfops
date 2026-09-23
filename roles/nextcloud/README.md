@@ -541,13 +541,14 @@ nextcloud__vhost_virtualhost_ip: '127.0.0.1'
 nextcloud__vhost_virtualhost_port: '81'
 ```
 
+
 ## Troubleshooting
 
-`Nextcloud XX needs PHP X.Y or newer, but older than X.Z, and MariaDB XX.Y or newer.`
+**The run aborts with `Nextcloud XX needs PHP X.Y or newer, but older than X.Z, and MariaDB XX.Y or newer.`**
 
 * The role compares the installed PHP and MariaDB with what the installed Nextcloud major version requires, before it changes anything, and aborts if they do not fit. The message names the versions it expects and the ones it found. Nextcloud itself refuses to run on a PHP outside that range. Upgrade PHP (for example via `repo_remi__enabled_php_version`) or MariaDB (`repo_mariadb__version`), then run the role again.
 
-`Nextcloud XX is not supported by this role.`
+**The run aborts with `Nextcloud XX is not supported by this role.`**
 
 * The role knows the requirements of the Nextcloud major versions listed in the message only. Pin `nextcloud__version` to a supported major version for a new installation, or add the requirements of the new major version to `__nextcloud__requirements` in `vars/main.yml`.
 
