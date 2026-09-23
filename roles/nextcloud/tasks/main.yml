@@ -53,7 +53,7 @@
         login_user: '{{ nextcloud__database_login["username"] }}'
         login_password: '{{ nextcloud__database_login["password"] }}'
         login_host: '{{ nextcloud__database_host }}'
-        login_unix_socket: '{{ (nextcloud__database_host == "localhost") | ternary("/var/lib/mysql/mysql.sock", omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+        login_unix_socket: '{{ (nextcloud__database_host == "localhost") | ternary(__nextcloud__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
         filter: 'version'
       register: '__nextcloud__mariadb_info_result'
       check_mode: false
