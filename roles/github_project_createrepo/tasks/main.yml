@@ -46,20 +46,16 @@
       group: 'root'
       mode: 0o755
 
-  # ansible.builtin.file gives missing parent directories the owner of the target, so the
-  # parents are created as root first.
-  - name: 'mkdir --parents {{ github_project_createrepo__base_path }}/<parent of relative_target_path>'
+  # ansible.builtin.file gives missing parent directories the owner of the target, so every
+  # directory between base_path and a repository is created (or corrected) as root first.
+  - name: 'mkdir {{ github_project_createrepo__base_path }}/<directories leading to relative_target_path>'
     ansible.builtin.file:
-      path: '{{ github_project_createrepo__base_path }}/{{ item["relative_target_path"] | dirname }}'
+      path: '{{ github_project_createrepo__base_path }}/{{ item }}'
       state: 'directory'
       owner: 'root'
       group: 'root'
       mode: 0o755
-    loop: '{{ github_project_createrepo__github_repos }}'
-    loop_control:
-      label: '{{ item["relative_target_path"] }}'
-    when:
-      - 'item["relative_target_path"] | dirname | length > 0'
+    loop: '{{ __github_project_createrepo__parent_dirs }}'
 
   - name: 'mkdir {{ github_project_createrepo__base_path }}/<relative_target_path>'
     ansible.builtin.file:

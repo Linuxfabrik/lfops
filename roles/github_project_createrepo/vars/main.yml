@@ -11,3 +11,14 @@ __github_project_createrepo__legacy_acl_names:
   - 'github-project-createrepo'
   - '{{ __shared__apache_httpd_group }}'
   - '{{ __shared__apache_httpd_user }}'
+
+# every directory between base_path and a relative_target_path, e.g. 'mydumper' and
+# 'mydumper/el' for 'mydumper/el/9'
+__github_project_createrepo__parent_dirs: '{%- set __dirs = [] -%}
+    {%- for __repo in github_project_createrepo__github_repos -%}
+      {%- set __parts = __repo["relative_target_path"].split("/") -%}
+      {%- for __i in range(1, __parts | length) -%}
+        {%- set _ = __dirs.append(__parts[:__i] | join("/")) -%}
+      {%- endfor -%}
+    {%- endfor -%}
+    {{ __dirs | unique }}'
