@@ -17,3 +17,10 @@ postfix__sender_canonicals__host_var:
 setup_basic__skip_duplicity: true
 setup_basic__skip_repo_icinga: true
 setup_basic__skip_icinga2_agent: true
+
+# Deploys schedule-icinga-downtime. Nothing listens on the URL, the script only has to exist and
+# keep the credentials to root. The password is unique so verify.yml can search for it.
+tools__icinga2_api_url: 'https://127.0.0.1:5665'
+tools__icinga2_api_user_login:
+  username: 'downtime-api'
+  password: 'linuxfabrik-downtime-api'

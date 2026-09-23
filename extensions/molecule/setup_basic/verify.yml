@@ -147,3 +147,48 @@
 
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
+
+
+# The Icinga API credentials live in /usr/local/sbin/schedule-icinga-downtime, which only root may
+# read. A login shell of an unprivileged user sources /etc/profile.d/alias.sh, where they used to
+# be, so it must neither see them nor be able to run the script.
+- name: 'Verify the Icinga API credentials of the tools role are readable by root only'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'stat /usr/local/sbin/schedule-icinga-downtime'
+      ansible.builtin.stat:
+        path: '/usr/local/sbin/schedule-icinga-downtime'
+      register: '__molecule__schedule_icinga_downtime_stat_result'
+
+    - name: 'Assert that schedule-icinga-downtime is readable by root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__schedule_icinga_downtime_stat_result["stat"]["mode"] == "0700"'
+          - '__molecule__schedule_icinga_downtime_stat_result["stat"]["pw_name"] == "root"'
+        fail_msg: '/usr/local/sbin/schedule-icinga-downtime is {{ __molecule__schedule_icinga_downtime_stat_result["stat"] | d("missing") | to_json }}'
+
+    - name: 'runuser --user nobody -- bash --login -c "alias; declare -f; /usr/local/sbin/schedule-icinga-downtime 60"'
+      ansible.builtin.command:
+        argv:
+          - 'runuser'
+          - '--user'
+          - 'nobody'
+          - '--'
+          - 'bash'
+          - '--login'
+          - '-c'
+          - 'alias; declare -f; /usr/local/sbin/schedule-icinga-downtime 60'
+      register: '__molecule__nobody_login_shell_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that an unprivileged login shell neither sees nor uses the credentials'
+      ansible.builtin.assert:
+        that:
+          - '"alias reboot=" in __molecule__nobody_login_shell_result["stdout"]'
+          - '"linuxfabrik-downtime-api" not in __molecule__nobody_login_shell_result["stdout"]'
+          - '"Permission denied" in __molecule__nobody_login_shell_result["stderr"]'
+        fail_msg: '{{ __molecule__nobody_login_shell_result | to_json }}'
