@@ -97,6 +97,13 @@ icingaweb2__url_host: 'monitoring.example.com'
         * Optional. Will be used as the key-value pair in the resulting ini file.
         * Type: String.
 
+`icingaweb2__cookie_path`
+
+- The path the session and remember-me cookies are valid for, so that browsers only return them for URLs below it. An empty string leaves the decision to IcingaWeb2, which uses its base URL. With the vHost this role deploys, IcingaWeb2 lives under `/icingaweb2`, so the cookie path is `/icingaweb2/`.
+- Set it to `/` if other applications on the same host name need the IcingaWeb2 session, for example an IcingaWeb2 module or a reverse proxy that rewrites the path.
+- Type: String.
+- Default: `''`
+
 `icingaweb2__cookie_secure`
 
 * Whether the session and remember-me cookies always carry the `Secure` flag, so that browsers only return them over HTTPS. `false` leaves the decision to IcingaWeb2, which sets the flag only on requests it sees arriving over HTTPS.
@@ -313,6 +320,7 @@ icingaweb2__authentications__host_var:
   - name: 'autologin'
     backend: 'external'
 icingaweb2__authentications__group_var: []
+icingaweb2__cookie_path: "/"
 icingaweb2__cookie_secure: false
 icingaweb2__database_host: 'localhost'
 icingaweb2__database_login_host: 'localhost'

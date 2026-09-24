@@ -5,6 +5,17 @@
   tags:
     - 'always'
 
+- block:
+
+  - name: 'Check variable constraints'
+    ansible.builtin.assert:
+      that:
+        - 'icingaweb2__cookie_path | length == 0 or icingaweb2__cookie_path is match("/")'
+      quiet: true
+      fail_msg: 'icingaweb2__cookie_path must be empty or start with "/", for example "/" or "/icingaweb2/", got "{{ icingaweb2__cookie_path }}".'
+
+  tags:
+    - 'always'
 
 - block:
 
