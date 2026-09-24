@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026091801
+# 2026092401
 
 ##################### Grafana Configuration Example #####################
 #
@@ -2046,6 +2046,9 @@ default_datasource_uid =
 ; preinstall_sync =
 # Disables preinstall feature. It has the same effect as setting preinstall to an empty list.
 ; preinstall_disabled = false
+# Enable automatic updates for preinstalled plugins on startup.
+# When enabled, preinstalled plugins without a pinned version will be updated to the latest version.
+preinstall_auto_update = {{ grafana__preinstall_auto_update | bool | string | lower }}
 
 #################################### Marketplace ####################################
 [marketplace]

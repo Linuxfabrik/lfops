@@ -32,7 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
+* **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
+* **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.4.
 * **role:wordpress**: Entries in `wordpress__plugins` accept `enabled: false`, which keeps a plugin installed but deactivated.
 * **role:system_update**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
@@ -50,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:grafana**: Grafana no longer updates its preinstalled plugins on every start, so datasources such as InfluxDB and Prometheus no longer disappear from the web interface when the plugin download server is unreachable.
 * **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
 * **plugin:bitwarden_item, module:bitwarden_item**: A run against a vault that contains no items at all aborts instead of creating the first one, because `bw serve` briefly reports an empty vault after every sync ([bitwarden/clients#23283](https://github.com/bitwarden/clients/issues/23283)).
 * **role:repo_postgresql**: The PostgreSQL version repositories take precedence over the distribution's packages of the same name, so on RHEL 10 an install or update no longer switches a PostgreSQL server from the PGDG build to the AppStream build, which uses a different file layout.
