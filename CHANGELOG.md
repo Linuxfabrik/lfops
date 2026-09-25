@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:fail2ban**: An empty `fail2ban__jail_portscan_allowed_ports` exempts no port, so the `portscan` jail bans every denied connection attempt instead of none.
 * **role:fail2ban**: The `portscan` jail no longer bans a server that a local proxy talks to because the firewall logged a late TCP packet or an ICMP error from it, for example the final FIN of a half-closed connection.
 * **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
 * **module:bitwarden_item**: The module works with the Mitogen strategy, where it aborted with `MODULE FAILURE` on every run, for example when the `grafana` role stores its service account tokens.

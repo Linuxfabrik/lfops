@@ -99,16 +99,17 @@
 
     # Same approach for the portscan filter, whose jail reads the kernel log of a firewall this
     # host does not run. The filter gets its ports and addresses from the jail, so the sample
-    # lines are fed with the same parameters the role default produces (allowed port 22). What is
-    # asserted is which packet counts as a scan: one that opens a connection, on a port that is
-    # not allowed. Reply traffic of a TCP connection the firewall no longer tracks and ICMP errors
-    # must not match, otherwise the jail bans the servers a local proxy talks to.
+    # lines are fed with the same parameters the role default produces (allowed port 22) unless a
+    # case sets its own. What is asserted is which packet counts as a scan: one that opens a
+    # connection, on a port that is not allowed. Reply traffic of a TCP connection the firewall no
+    # longer tracks and ICMP errors must not match, otherwise the jail bans the servers a local
+    # proxy talks to.
     - name: 'fail2ban-regex against a {{ item["label"] }}'
       ansible.builtin.command:
         argv:
           - 'fail2ban-regex'
           - '{{ item["line"] }}'
-          - '/etc/fail2ban/filter.d/portscan.conf[server-ips="192\.0\.2\.5", allowed-ports="22"]'
+          - '/etc/fail2ban/filter.d/portscan.conf[server-ips="192\.0\.2\.5", allowed-ports="{{ item["allowed_ports"] | d("22") }}"]'
       register: '__molecule__fail2ban_portscan_regex_result'
       changed_when: false
       check_mode: false
@@ -151,6 +152,12 @@
         - label: 'ICMP error quoting a TCP SYN this host sent'
           line: 'Sep 15 10:00:11 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.12 DST=192.0.2.5 LEN=88 TOS=0x00 PREC=0xC0 TTL=64 ID=12 PROTO=ICMP TYPE=3 CODE=3 [SRC=192.0.2.5 DST=198.51.100.12 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=6 DF PROTO=TCP SPT=51000 DPT=443 WINDOW=64240 RES=0x00 SYN URGP=0 ]'
           matched: 0
+        # What the jail passes for an empty fail2ban__jail_portscan_allowed_ports: no port is
+        # allowed, so even port 22 counts.
+        - label: 'TCP connection attempt to port 22 with no allowed port'
+          line: 'Sep 15 10:00:12 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.13 DST=192.0.2.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=13 DF PROTO=TCP SPT=34436 DPT=22 WINDOW=64240 RES=0x00 SYN URGP=0'
+          allowed_ports: '(?!)'
+          matched: 1
       loop_control:
         label: '{{ item["label"] }}'
 

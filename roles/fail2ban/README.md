@@ -139,7 +139,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__jail_portscan_allowed_ports`
 
-* A list of ports which are allowed to be accessed. IPs accessing these ports will not be blocked. The ports are matched exactly and apply to TCP and UDP alike, so `22` exempts port 22 and not 2222. Note: This setting is for the portscan jail.
+* Ports on which a connection attempt that the firewall denies does not lead to a ban in the portscan jail. The jail only sees packets the firewall denied, so a port that is open to everyone never triggers it, whether it is listed or not. List the ports that the firewall opens to some sources only, such as SSH restricted to an admin network, so that others trying them are blocked without being banned. The ports are matched exactly and apply to TCP and UDP alike, so `22` exempts port 22 and not 2222. An empty list exempts no port.
 * Type: List of numbers.
 * Default: `[22]`
 
