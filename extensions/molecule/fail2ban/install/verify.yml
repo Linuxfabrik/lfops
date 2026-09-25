@@ -97,6 +97,71 @@
       loop_control:
         label: '{{ item["item"]["label"] }}'
 
+    # Same approach for the portscan filter, whose jail reads the kernel log of a firewall this
+    # host does not run. The filter gets its ports and addresses from the jail, so the sample
+    # lines are fed with the same parameters the role default produces (allowed port 22). What is
+    # asserted is which packet counts as a scan: one that opens a connection, on a port that is
+    # not allowed. Reply traffic of a TCP connection the firewall no longer tracks and ICMP errors
+    # must not match, otherwise the jail bans the servers a local proxy talks to.
+    - name: 'fail2ban-regex against a {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'fail2ban-regex'
+          - '{{ item["line"] }}'
+          - '/etc/fail2ban/filter.d/portscan.conf[server-ips="192\.0\.2\.5", allowed-ports="22"]'
+      register: '__molecule__fail2ban_portscan_regex_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - label: 'TCP connection attempt to a port that is not allowed'
+          line: 'Sep 15 10:00:00 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.1 DST=192.0.2.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=1 DF PROTO=TCP SPT=34436 DPT=23 WINDOW=64240 RES=0x00 SYN URGP=0'
+          matched: 1
+        - label: 'TCP connection attempt to the allowed port'
+          line: 'Sep 15 10:00:01 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.2 DST=192.0.2.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=2 DF PROTO=TCP SPT=34436 DPT=22 WINDOW=64240 RES=0x00 SYN URGP=0'
+          matched: 0
+        - label: 'TCP connection attempt to a port that only starts like the allowed one'
+          line: 'Sep 15 10:00:02 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.3 DST=192.0.2.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=3 DF PROTO=TCP SPT=34436 DPT=2222 WINDOW=64240 RES=0x00 SYN URGP=0'
+          matched: 1
+        - label: 'TCP connection attempt with ECN to a port that is not allowed'
+          line: 'Sep 15 10:00:05 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.6 DST=192.0.2.5 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=6 DF PROTO=TCP SPT=34436 DPT=23 WINDOW=64240 RES=0x00 CWR ECE SYN URGP=0'
+          matched: 1
+        - label: 'late FIN of a half-closed connection to a web server'
+          line: 'Sep 15 10:00:03 host kernel: RULE 34 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.4 DST=192.0.2.5 LEN=52 TOS=0x00 PREC=0x00 TTL=53 ID=4 DF PROTO=TCP SPT=443 DPT=51832 WINDOW=501 RES=0x00 ACK FIN URGP=0'
+          matched: 0
+        - label: 'late RST from a web server'
+          line: 'Sep 15 10:00:06 host kernel: RULE 34 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.7 DST=192.0.2.5 LEN=40 TOS=0x00 PREC=0x00 TTL=53 ID=7 DF PROTO=TCP SPT=443 DPT=51832 WINDOW=0 RES=0x00 RST URGP=0'
+          matched: 0
+        - label: 'late SYN-ACK from a web server'
+          line: 'Sep 15 10:00:07 host kernel: RULE 34 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.8 DST=192.0.2.5 LEN=60 TOS=0x00 PREC=0x00 TTL=53 ID=8 DF PROTO=TCP SPT=443 DPT=51832 WINDOW=65160 RES=0x00 ACK SYN URGP=0'
+          matched: 0
+        - label: 'SYN/FIN scan'
+          line: 'Sep 15 10:00:08 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.9 DST=192.0.2.5 LEN=40 TOS=0x00 PREC=0x00 TTL=64 ID=9 PROTO=TCP SPT=34436 DPT=23 WINDOW=1024 RES=0x00 SYN FIN URGP=0'
+          matched: 0
+        - label: 'UDP packet to a port that is not allowed'
+          line: 'Sep 15 10:00:04 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.5 DST=192.0.2.5 LEN=48 TOS=0x00 PREC=0x00 TTL=64 ID=5 PROTO=UDP SPT=34436 DPT=161 LEN=28'
+          matched: 1
+        # Known limitation: the log line holds no connection state, so a late UDP reply looks
+        # like a UDP scan and is banned.
+        - label: 'late UDP reply from a DNS server'
+          line: 'Sep 15 10:00:09 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.10 DST=192.0.2.5 LEN=48 TOS=0x00 PREC=0x00 TTL=64 ID=10 PROTO=UDP SPT=53 DPT=51000 LEN=28'
+          matched: 1
+        - label: 'ICMP error quoting a UDP packet this host sent'
+          line: 'Sep 15 10:00:10 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.11 DST=192.0.2.5 LEN=76 TOS=0x00 PREC=0xC0 TTL=64 ID=11 PROTO=ICMP TYPE=3 CODE=3 [SRC=192.0.2.5 DST=198.51.100.11 LEN=48 TOS=0x00 PREC=0x00 TTL=64 ID=5 PROTO=UDP SPT=51000 DPT=53 LEN=28 ]'
+          matched: 0
+        - label: 'ICMP error quoting a TCP SYN this host sent'
+          line: 'Sep 15 10:00:11 host kernel: RULE 10 -- DENY IN=eth0 OUT= MAC=00 SRC=198.51.100.12 DST=192.0.2.5 LEN=88 TOS=0x00 PREC=0xC0 TTL=64 ID=12 PROTO=ICMP TYPE=3 CODE=3 [SRC=192.0.2.5 DST=198.51.100.12 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=6 DF PROTO=TCP SPT=51000 DPT=443 WINDOW=64240 RES=0x00 SYN URGP=0 ]'
+          matched: 0
+      loop_control:
+        label: '{{ item["label"] }}'
+
+    - name: 'Assert the portscan filter matches only the connection attempts'
+      ansible.builtin.assert:
+        that: 'item["stdout"] is search("Lines: 1 lines, 0 ignored, " ~ item["item"]["matched"] ~ " matched")'
+        fail_msg: '{{ item["item"]["label"] }}: {{ item["stdout"] }}'
+      loop: '{{ __molecule__fail2ban_portscan_regex_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["label"] }}'
+
     # Proves a value from the inventory reaches the running jail, rather than the server falling
     # back to the 10m that jail.conf ships.
     - name: 'fail2ban-client get sshd bantime'
