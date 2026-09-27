@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:monitoring_plugins**: The source install downloads the Python dependencies on the Ansible controller, which therefore needs pip for the Python that runs Ansible and access to PyPI; the targets no longer need Internet access.
 * **role:kernel_modules**: The `tun` kernel module is blocked by default (CVE-2026-81000, [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011)). This stops OpenVPN, WireGuard in userspace, rootless Podman and Docker networking and libvirt VM networking after the next reboot, which the role requests on hosts where `tun` is loaded. Before running the role, add `kernel_modules__modules__host_var: [{name: 'tun', enabled: true}]` to the inventory of every such host. Rootful Docker and Podman with bridge networking are not affected.
 * **role:grafana**: `grafana__users_case_insensitive_login` is gone; remove it from your inventory. Grafana has ignored the setting since v11.0.0 and always matches logins case-insensitively.
 * **role:system_update**: `system_update__pre_update_code` and `system_update__post_update_code` now also run in the daily security lane on Rocky, around the transaction that installs the hot-fixes, where until now only the weekly lane ran them. Set `system_update__security_pre_update_code: ''` and `system_update__security_post_update_code: ''` to keep the security lane free of it, or set either to a codeblock of its own to have the two lanes do different things.
@@ -53,6 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **playbook:icinga2_agent, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins repository is only registered for `monitoring_plugins__install_method: 'package'`.
+* **role:monitoring_plugins**: The source install removes plugins that an earlier run deployed and the checked-out version no longer carries.
+* **role:monitoring_plugins**: The source install deploys the dependency versions pinned in the monitoring-plugins lockfiles and, for a release, the Linuxfabrik library release they pin, instead of the newest versions of both.
 * **role:fail2ban**: The `portscan` jail no longer bans TCP scans that send no plain SYN, such as FIN, NULL, Xmas and ACK scans, since they find no open port on a stateful firewall.
 * **role:grafana**: Grafana no longer updates its preinstalled plugins on every start, so datasources such as InfluxDB and Prometheus no longer disappear from the web interface when the plugin download server is unreachable.
 * **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
@@ -71,6 +74,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: The source install no longer reports a change on every run once the plugins have run.
+* **role:monitoring_plugins**: The source install no longer clears the setuid bit of the distribution's `check_icmp` and `check_dhcp` on every run.
+* **role:monitoring_plugins**: `--tags monitoring_plugins:remove` no longer aborts on Debian and Ubuntu, and also removes the version lock of the SELinux package, the SELinux policy module, the Debian conffiles and every file a release of the plugins ever installed.
+* **role:monitoring_plugins**: The source install sets `nagios_run_sudo` and loads the SELinux policy module, so plugins run through sudo under enforcing SELinux on RHEL 8 and 9.
+* **role:monitoring_plugins**: The source install of a release before 8.0.0 no longer fails on the missing logging sudoers file.
 * **role:fail2ban**: An empty `fail2ban__jail_portscan_allowed_ports` exempts no port, so the `portscan` jail bans every denied connection attempt instead of none.
 * **role:fail2ban**: The `portscan` jail no longer bans a server that a local proxy talks to because the firewall logged a late TCP packet or an ICMP error from it, for example the final FIN of a half-closed connection.
 * **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
@@ -108,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
 * **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.
 * **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.
 * **role:wordpress**: `--tags wordpress:export` writes to `/backup/wordpress-export/<instance>`, readable by `apache` and `root` only, instead of to `/tmp`.

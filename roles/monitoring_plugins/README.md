@@ -15,7 +15,12 @@ Notes:
 
 * **Source install builds a virtual environment.** With `monitoring_plugins__install_method: 'source'`, the role deploys the plugins into a self-contained Python virtual environment under `/usr/lib64/linuxfabrik-monitoring-plugins/venv` and rewrites the plugin shebangs to that interpreter, mirroring the layout of the rpm/deb package. Check, event and notification plugins all land flat in `/usr/lib64/nagios/plugins`, and their assets in `/usr/lib64/nagios/plugins/assets`, which is where the Icinga command definitions expect them.
 * **The role provisions a suitable Python itself.** On RHEL 8 the system Python is 3.6, which is too old. The role installs Python 3.9 (package `python39`) and builds the virtual environment with it, so a source install works on RHEL 8 without any manual Python setup. Every other supported platform already ships Python 3.9 or newer and is used as-is. A virtual environment left behind by an earlier run with a different Python is rebuilt.
-* **Source tracks the newest code, the package tracks releases.** Unlike the rpm/deb package, which is frozen at each release, the source install pulls the newest third-party dependencies (unpinned) and deploys the newest Linuxfabrik library straight from its GitHub repository. The dependencies of that library are installed alongside the ones the plugins declare themselves. The Linuxfabrik library is an independent project with its own version numbers, so it is always deployed from its `main` branch regardless of `monitoring_plugins__version`. Which plugin code is deployed follows `monitoring_plugins__version` (`dev` deploys the `main` branch, a version deploys that tag).
+* **The source install needs no Internet access on the target.** The Ansible controller clones the monitoring-plugins and Linuxfabrik library repositories, downloads every Python dependency as a wheel for the interpreter, architecture and glibc of each target, and copies everything over. pip on the target installs from those files only, so air-gapped hosts are provisioned like any other.
+* **Dependencies are pinned and verified.** The source install uses the lockfiles of the monitoring-plugins checkout, which pin every package to an exact version and to the checksums of its files, the same set CI tests the plugins against and the rpm/deb packages ship. pip refuses any file whose checksum does not match. A later run moves an existing venv to the versions of the current lockfile.
+* **Which code is deployed follows `monitoring_plugins__version`.** A release deploys that tag of the plugins and the Linuxfabrik library release its lockfiles pin. `dev` deploys the `main` branch of both repositories, and the dependencies of the library's `main` branch take precedence over the ones the plugin lockfile resolved.
+* **SELinux.** On RHEL with SELinux enabled, the source install loads the same policy module as the `linuxfabrik-monitoring-plugins-selinux` package and switches on `nagios_run_sudo`, which the plugins need to run through sudo. RHEL 10 carries no nagios policy and has no such boolean, so there only the module is loaded.
+* **The sudoers drop-ins are validated.** They are only put in place once `visudo` accepts them, since a broken file in `/etc/sudoers.d` locks every user out of sudo, not just the monitoring user.
+* **The source install records what it placed.** It writes `/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt` in the same format as the one-line installer, so either tool can remove what the other installed. A plugin that an earlier run deployed and that the checkout no longer carries is removed.
 * **Plugins are owned by root, readable by the monitoring user.** The whitelisted plugins run as root through sudo, so the plugins, the bundled library and the virtual environment are owned by root and are only readable and executable for the monitoring user. Ownership and modes are set explicitly on every run and do not depend on the umask of the Ansible controller, so a re-run also repairs a host that was left in a broken state.
 * **Bash completion for the plugins.** Both install methods place `/etc/bash_completion.d/linuxfabrik-monitoring-plugins`, which completes the command line options of every plugin in the plugin directory. The package ships it, the source install copies it from the checkout. It is only read on a host that has the `bash-completion` package, which this role does not install on your behalf.
 * **Legacy cleanup.** An earlier version of this role installed the source dependencies into the home directories of root and the icinga user via `pip --user`. On the next run the role removes those leftovers (only packages under the respective `~/.local`, never system packages), since the virtual environment supersedes them.
@@ -29,7 +34,7 @@ Notes:
 |----------|---------|----------------|--------------|
 | Linux    | Binaries from rpm/deb package (**default**) | `monitoring_plugins__install_method: 'package'` | Deploy the [Repository for the Monitoring Plugins](https://repo.linuxfabrik.ch/monitoring-plugins/). This can be done using the [linuxfabrik.lfops.repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins) role. If you use the [monitoring_plugins Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/monitoring_plugins.yml), this is automatically done for you.<br/><br/>By default, this role installs the latest available package from the repository. It enables version lock / version pinning for the installed package. This prevents automatic updates from causing inconsistencies between the installed plugins and the configuration of the monitoring system (e.g. outdated Icinga Director configuration). Updating plugins should be done in a controlled manner along with updating the monitoring server configuration. See `monitoring_plugins__skip_package_versionlock` for details. |
 | Linux    | Binaries from zip | Currently not supported by this role | |
-| Linux    | Source Code | `monitoring_plugins__install_method: 'source'` | None. The role provisions a suitable Python itself (it installs Python 3.9 on RHEL 8, where the system Python is 3.6) and deploys the plugins into a self-contained virtual environment. See "How the Role Behaves" above. |
+| Linux    | Source Code | `monitoring_plugins__install_method: 'source'` | See "Requirements" below. The role provisions a suitable Python on the target itself (it installs Python 3.9 on RHEL 8, where the system Python is 3.6) and deploys the plugins into a self-contained virtual environment. See "How the Role Behaves" above. |
 | Windows  | Binaries from msi (**default**) | `monitoring_plugins__install_method: 'package'` | Icinga2 Agent is required. |
 | Windows  | Binaries from zip | `monitoring_plugins__install_method: 'archive'` | Since you cannot change files that are currently used by a process in Windows, when running against a Windows host, this role first stops the Icinga2 service, deploys the plugins and starts the service again. Optionally, it sets a downtime for each host. Have a look at the optional role variables below for this. |
 | Windows  | Source Code | Currently not supported by this role | |
@@ -38,6 +43,31 @@ Notes:
 ## Requirements
 
 * See table above (depends on the use case).
+* Source install: outbound access from the controller to GitHub and PyPI. The targets need neither.
+* Source install: glibc 2.17 or newer on the target, since the dependencies are installed from manylinux wheels.
+
+Manual steps:
+
+* Source install: install pip for the Python that runs Ansible on the controller. To download through a proxy or from a PyPI mirror, set the usual pip environment variables (`HTTPS_PROXY`, `PIP_INDEX_URL`) for `ansible-playbook`.
+
+
+## Switching from the Package to the Source Install
+
+1. Set `monitoring_plugins__install_method: 'source'` for the host.
+2. Remove the package, its version lock, the package repository and its signing key:
+
+    ```bash
+    ansible-playbook --inventory=inventory linuxfabrik.lfops.monitoring_plugins \
+        --tags=monitoring_plugins:remove,repo_monitoring_plugins:remove --limit=myhost
+    ```
+
+3. Deploy the source install:
+
+    ```bash
+    ansible-playbook --inventory=inventory linuxfabrik.lfops.monitoring_plugins --limit=myhost
+    ```
+
+The playbooks only register the package repository for `monitoring_plugins__install_method: 'package'`, so a later run of `setup_basic` or `icinga2_agent` does not bring it back.
 
 
 ## Tags
@@ -54,7 +84,7 @@ Notes:
 
 `monitoring_plugins:remove`
 
-* Removes the Linuxfabrik Monitoring Plugins.
+* Removes the Linuxfabrik Monitoring Plugins, whether installed as a package, by this role from source, by the one-line installer or by hand: the packages including their version locks (purged on Debian and Ubuntu), everything listed in the install manifest, every file any release ever placed into `/usr/lib64/nagios/plugins` unless another package owns it, the virtual environment, the sudoers drop-ins, the bash completion and the SELinux policy module. `nagios_run_sudo` is left as it is. Custom plugins are kept unless they carry the name of a Linuxfabrik plugin.
 * Triggers: none.
 
 

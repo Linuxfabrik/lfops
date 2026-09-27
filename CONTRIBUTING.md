@@ -391,6 +391,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 
     * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
 
+* Download on the controller, not on the target. Release artifacts, Git checkouts and language packages are fetched with `delegate_to: 'localhost'` and copied over, so a target without Internet access can be provisioned like any other and only the controller needs outbound access. Say in the README's "How the Role Behaves" who needs network access to what. `roles/example` shows the pattern for a release tarball, and "Roles with Special Features" below lists the one for Python dependencies.
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
 * Prefer a `chown -R --changes` command over `ansible.builtin.file` with `recurse: true`; the module's recursive mode is slow on large trees. Register the result and derive `changed_when` from the `--changes` output for idempotency:
 
@@ -1117,6 +1118,11 @@ Before adding an `allow` rule to a role, work out what the rule buys an attacker
 #### Permission management via `find -exec chmod`
 
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
+
+
+#### Python dependencies for air-gapped targets
+
+* [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): Installs a hash-pinned lockfile into a venv on a target that has no access to PyPI. The target reports its exact Python version (`platform.python_version()`, since pip reads a bare `3.9` as 3.9.0, which packages such as cryptography exclude) and its glibc version (`platform.libc_ver()`). The controller runs `pip download --no-deps --require-hashes --implementation cp --python-version <full version>` with one `--platform manylinux_2_<n>_<arch>` for every glibc minor from 17 up to the target's plus `manylinux2014_<arch>`, because pip does not widen a manylinux tag to the older ones on its own. The files land below a root-owned path on the target, never in `/tmp`: pip installs whatever that directory offers, and the requirements file in it carries the very hashes pip checks against. `--no-deps` is what lets pip fetch a pure-Python sdist despite `--platform`; the build backend for such a package (`setuptools`, `wheel` and their dependencies) is downloaded with `--only-binary=:all:` into the same directory, where the isolated build on the target finds it. The target installs with `ansible.builtin.pip` and `extra_args: '--no-index --find-links <dir> --require-hashes'`, which keeps pip off the network and moves an existing venv to the pinned versions on every run.
 
 
 #### Reboot requests

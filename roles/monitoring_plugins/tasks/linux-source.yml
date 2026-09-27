@@ -7,16 +7,49 @@
     vars:
       shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
-  # The Linuxfabrik library and the monitoring plugins are independent projects with their
-  # own, unrelated version numbers, so the library version is deliberately NOT derived from
-  # `monitoring_plugins__version`. Matching the "newest, unpinned" dependency policy of the
-  # source install, the library is always deployed from its main branch.
+  # The lockfiles of a release resolve the dependencies of exactly the linuxfabrik-lib release
+  # they pin, so a release gets that library, not whatever its main branch holds today. `dev`
+  # tracks the main branch of both repositories, as the one-line installer does.
+  # Every lockfile pins the library, and all of them the same release. Collect the distinct pins
+  # and let the assert below refuse anything but exactly one, instead of silently taking the first.
+  - name: 'Read the linuxfabrik-lib versions the lockfiles of the checkout pin'
+    ansible.builtin.shell:
+      cmd: |
+        set -o pipefail
+        # no match is for the assert below to report, not a shell error
+        { grep --no-filename --only-matching --extended-regexp \
+            '^linuxfabrik-lib==[0-9][0-9.]*' lockfiles/*/requirements.txt || true; } \
+          | cut --delimiter='=' --fields=3 | sort --unique
+      chdir: '/tmp/ansible.monitoring-plugins-repo'
+      executable: '/bin/bash'
+    delegate_to: 'localhost'
+    become: false
+    register: '__monitoring_plugins__lib_pin_result'
+    changed_when: false # read-only
+    check_mode: false # run task even if `--check` is specified
+    when:
+      - 'monitoring_plugins__version != "dev"'
+
+  - name: 'Make sure the lockfiles of the checkout pin exactly one linuxfabrik-lib release'
+    ansible.builtin.assert:
+      that:
+        - '__monitoring_plugins__lib_pin_result["stdout_lines"] | length == 1'
+      fail_msg: >-
+        The lockfiles of monitoring-plugins {{ monitoring_plugins__version }} pin
+        {{ __monitoring_plugins__lib_pin_result["stdout_lines"] | join(", ") | d("no", true) }}
+        linuxfabrik-lib, so the matching library cannot be determined.
+    when:
+      - 'monitoring_plugins__version != "dev"'
+
   - name: 'Clone the lib repo'
     ansible.builtin.import_role:
       name: 'shared'
       tasks_from: 'clone-lib-repo.yml'
     vars:
-      shared__lib_version: 'dev'
+      shared__lib_version: '{{
+          "dev" if monitoring_plugins__version == "dev"
+          else __monitoring_plugins__lib_pin_result["stdout_lines"][0]
+        }}'
 
   # Mirrors `build/install-plugins.sh` of the monitoring-plugins repo, which is what the rpm and
   # deb packages run: every `<tree>/<name>/<name>` executable of check-plugins, event-plugins and
@@ -59,11 +92,14 @@
         fi
         sed -i '1s|^#!.*python.*|#!/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python|' \
           /tmp/ansible.monitoring-plugins-repo-flattened/plugins/*
+        # the plugin names, for the install manifest
+        ls -1 /tmp/ansible.monitoring-plugins-repo-flattened/plugins
       chdir: '/tmp/ansible.monitoring-plugins-repo'
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    register: '__monitoring_plugins__flattened_plugins'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
@@ -170,11 +206,7 @@
 # Provision a suitable Python and build a self-contained venv, mirroring the rpm/deb
 # package. On RHEL 8 the system python3 is 3.6, too old for the plugins, so the role
 # installs python3.9 (package `python39`) and uses it; every other supported platform
-# already ships python3 >= 3.9. Unlike the package (built once per release with pinned
-# dependencies), the source install pulls the newest third-party dependencies from
-# `requirements.in` and deploys the newest Linuxfabrik library straight from GitHub (see
-# below). The plugin code itself follows the `monitoring_plugins__version` ref (`dev` ->
-# main) instead of a frozen release.
+# already ships python3 >= 3.9.
 - block:
 
   - name: 'Install the Python interpreter and venv support for the source install'
@@ -184,21 +216,206 @@
     when:
       - '__monitoring_plugins__source_python_packages | length > 0'
 
-  - name: '{{ __monitoring_plugins__source_python_interpreter }} --version'
-    ansible.builtin.command: '{{ __monitoring_plugins__source_python_interpreter }} --version'
-    register: '__monitoring_plugins__source_python_version_result'
+  # The controller downloads the dependencies for this interpreter, so it needs the exact
+  # version (cryptography, for one, excludes 3.9.0 and 3.9.1, and pip reads a bare `3.9` as
+  # 3.9.0) and the glibc version, which bounds the manylinux wheels the host can load.
+  - name: 'Read the Python and glibc versions of {{ __monitoring_plugins__source_python_interpreter }}'
+    ansible.builtin.command:
+      argv:
+        - '{{ __monitoring_plugins__source_python_interpreter }}'
+        - '-c'
+        - 'import platform; print(platform.python_version()); print(platform.libc_ver()[0]); print(platform.libc_ver()[1])'
+    register: '__monitoring_plugins__source_python_result'
     changed_when: false
     check_mode: false # run task even if `--check` is specified
+
+  - name: 'Remember the Python and glibc versions of the target'
+    ansible.builtin.set_fact:
+      __monitoring_plugins__source_python_version: '{{ __monitoring_plugins__source_python_result["stdout_lines"][0] }}'
+      __monitoring_plugins__source_py_tag: 'py{{ __monitoring_plugins__source_python_result["stdout_lines"][0].split(".")[0:2] | join("") }}'
+      __monitoring_plugins__source_libc: '{{ __monitoring_plugins__source_python_result["stdout_lines"][1] }}'
+      __monitoring_plugins__source_glibc_version: '{{ __monitoring_plugins__source_python_result["stdout_lines"][2] | d("") }}'
 
   - name: 'Make sure the source venv interpreter is Python 3.9 or newer'
     ansible.builtin.assert:
       that:
-        - '__monitoring_plugins__source_python_version_result["stdout"].split()[1] is version("3.9", ">=")'
+        - '__monitoring_plugins__source_python_version is version("3.9", ">=")'
       fail_msg: >-
         {{ __monitoring_plugins__source_python_interpreter }} is
-        {{ __monitoring_plugins__source_python_version_result["stdout"].split()[1] }},
+        {{ __monitoring_plugins__source_python_version }},
         but the monitoring plugins need Python 3.9 or newer. Install a newer Python
         and point __monitoring_plugins__source_python_interpreter at it.
+
+  - name: 'Make sure the target runs on glibc'
+    ansible.builtin.assert:
+      that:
+        - '__monitoring_plugins__source_libc == "glibc"'
+        - '__monitoring_plugins__source_glibc_version is version("2.17", ">=")'
+      fail_msg: >-
+        The source install needs glibc 2.17 or newer, because the dependencies are installed
+        from manylinux wheels. {{ __monitoring_plugins__source_python_interpreter }} reports
+        "{{ __monitoring_plugins__source_libc }} {{ __monitoring_plugins__source_glibc_version }}".
+
+  tags:
+    - 'monitoring_plugins'
+
+
+# The target never talks to PyPI. The controller downloads every dependency for the target's
+# interpreter, architecture and glibc, and pushes them, so a host without Internet access can be
+# provisioned just like any other. Every package is pinned to a version and to the sha256 of its
+# artifacts by the lockfiles of the checkout, which is what CI tests the plugins against and what
+# the rpm/deb packages and the one-line installer ship.
+- block:
+
+  - name: 'Check whether the checkout ships a lockfile for Python {{ __monitoring_plugins__source_python_version }}'
+    ansible.builtin.stat:
+      path: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
+    delegate_to: 'localhost'
+    become: false
+    register: '__monitoring_plugins__lockfile_result'
+    changed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Fail if there is no lockfile for the interpreter of the target'
+    ansible.builtin.assert:
+      that:
+        - '__monitoring_plugins__lockfile_result["stat"]["exists"] | bool'
+      fail_msg: >-
+        monitoring-plugins {{ monitoring_plugins__version }} ships no lockfile for
+        {{ __monitoring_plugins__source_py_tag }}, the interpreter of this host.
+
+  - name: 'Check whether the library ships a lockfile for Python {{ __monitoring_plugins__source_python_version }}'
+    ansible.builtin.stat:
+      path: '/tmp/ansible.lib-repo/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
+    delegate_to: 'localhost'
+    become: false
+    register: '__monitoring_plugins__lib_lockfile_result'
+    changed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  # One directory per combination the downloads depend on, so hosts that differ in any of them
+  # never mix their wheels, and hosts that match share one download.
+  - name: 'Set the controller paths of the dependencies'
+    ansible.builtin.set_fact:
+      __monitoring_plugins__wheel_dir: '{{
+          "/tmp/ansible.monitoring-plugins-wheels/"
+          ~ monitoring_plugins__version
+          ~ "-" ~ __monitoring_plugins__source_python_version
+          ~ "-" ~ ansible_facts["architecture"]
+          ~ "-glibc" ~ __monitoring_plugins__source_glibc_version
+        }}'
+
+  - name: 'mkdir -p {{ __monitoring_plugins__wheel_dir }}'
+    ansible.builtin.file:
+      path: '{{ __monitoring_plugins__wheel_dir }}'
+      state: 'directory'
+      mode: 0o755
+    delegate_to: 'localhost'
+    become: false
+    changed_when: false # no change on the remote host
+    check_mode: false # run task even if `--check` is specified
+
+  # The plugin lockfile resolves the dependencies of the released linuxfabrik-lib. With `dev`,
+  # the library comes from its main branch, which can need a package or a version no release
+  # declares yet, so its own lockfile is layered on top and wins where both pin a package. The
+  # library itself is deployed from its checkout below, so it is left out of the venv.
+  - name: 'Merge the lockfiles into the requirements of the venv'
+    ansible.builtin.command:
+      argv: '{{
+          [ansible_playbook_python, role_path ~ "/files/merge-lockfiles.py",
+           "--exclude", "linuxfabrik-lib",
+           "--output", __monitoring_plugins__wheel_dir ~ "/requirements.txt",
+           "/tmp/ansible.monitoring-plugins-repo/lockfiles/" ~ __monitoring_plugins__source_py_tag ~ "/requirements.txt"]
+          + (["/tmp/ansible.lib-repo/lockfiles/" ~ __monitoring_plugins__source_py_tag ~ "/requirements.txt"]
+             if monitoring_plugins__version == "dev" and __monitoring_plugins__lib_lockfile_result["stat"]["exists"] | bool
+             else [])
+        }}'
+    delegate_to: 'localhost'
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    changed_when: false # no change on the remote host
+    check_mode: false # run task even if `--check` is specified
+
+  # --platform takes no range, and pip does not widen a manylinux tag to the older ones on its
+  # own (cffi, for one, only publishes manylinux_2_17 wheels), so every tag from the oldest
+  # manylinux baseline up to the glibc of the target is listed. With --platform, pip only
+  # accepts --no-deps or --only-binary=:all:. --no-deps is right here, the lockfile is complete,
+  # and it lets pip fetch a pure-Python sdist that has no wheel (PySmbClient).
+  - name: 'Download the dependencies for the target on the controller'
+    ansible.builtin.command:
+      argv: '{{
+          [ansible_playbook_python, "-m", "pip", "download",
+           "--disable-pip-version-check", "--quiet",
+           "--no-deps", "--require-hashes",
+           "--implementation", "cp",
+           "--python-version", __monitoring_plugins__source_python_version,
+           "--dest", __monitoring_plugins__wheel_dir,
+           "--requirement", __monitoring_plugins__wheel_dir ~ "/requirements.txt"]
+          + __monitoring_plugins__platform_args
+        }}'
+    vars:
+      __monitoring_plugins__platform_args: '{{
+          (range(17, (__monitoring_plugins__source_glibc_version.split(".")[1] | int) + 1)
+            | map("string")
+            | map("regex_replace", "^", "--platform=manylinux_2_")
+            | map("regex_replace", "$", "_" ~ ansible_facts["architecture"])
+            | list)
+          + ["--platform=manylinux2014_" ~ ansible_facts["architecture"]]
+        }}'
+    delegate_to: 'localhost'
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    changed_when: false # no change on the remote host
+    check_mode: false # run task even if `--check` is specified
+
+  # A package without a wheel is built on the target, and pip installs the build backend into
+  # an isolated environment of its own. With --no-index it looks for that backend in the same
+  # directory, so it has to be there. It resolves its own dependencies (wheel needs packaging),
+  # which pip only allows together with --only-binary=:all:.
+  - name: 'Download the build backend for packages without a wheel on the controller'
+    ansible.builtin.command:
+      argv: '{{
+          [ansible_playbook_python, "-m", "pip", "download",
+           "--disable-pip-version-check", "--quiet",
+           "--only-binary=:all:",
+           "--implementation", "cp",
+           "--python-version", __monitoring_plugins__source_python_version,
+           "--platform=any",
+           "--dest", __monitoring_plugins__wheel_dir,
+           "setuptools", "wheel"]
+        }}'
+    delegate_to: 'localhost'
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    changed_when: false # no change on the remote host
+    check_mode: false # run task even if `--check` is specified
+
+  # pip installs whatever this directory offers as root, and the requirements file in it carries
+  # the very hashes pip checks against. It therefore lives below a root-owned path: in /tmp, a
+  # local user who created the directory first would own it and could swap both.
+  - name: 'mkdir -p /usr/lib64/linuxfabrik-monitoring-plugins/wheels'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    loop:
+      - '/usr/lib64/linuxfabrik-monitoring-plugins'
+      - '/usr/lib64/linuxfabrik-monitoring-plugins/wheels'
+
+  - name: 'rsync the dependencies to the remote host'
+    ansible.posix.synchronize:
+      src: '{{ __monitoring_plugins__wheel_dir }}/'
+      dest: '/usr/lib64/linuxfabrik-monitoring-plugins/wheels/'
+      mode: 'push'
+      delete: true
+      rsync_opts:
+        - '--checksum'
+        - '--chmod=D755,F644'
+        - '--no-group'
+        - '--no-owner'
+        - '--no-times'
 
   tags:
     - 'monitoring_plugins'
@@ -263,7 +480,9 @@
   # The Linuxfabrik library is deployed straight from its GitHub repo (not via pip),
   # into the plugin directory. The plugins import it as `lib.*`, which resolves because a
   # script's own directory is first on sys.path, so `lib/` next to the plugins wins over
-  # any site-packages copy. Development cruft is left behind via the excludes.
+  # any site-packages copy. Development cruft is left behind via the excludes. `__pycache__` is
+  # excluded as well, which also keeps `delete` away from it: Python writes it there as soon as a
+  # plugin runs as root, and removing it again would report a change on every run.
   - name: 'rsync the Linuxfabrik library from GitHub to /usr/lib64/nagios/plugins/lib/'
     ansible.posix.synchronize:
       src: '/tmp/ansible.lib-repo/'
@@ -278,6 +497,7 @@
         - '--no-times'
         - '--exclude=.git'
         - '--exclude=.github'
+        - '--exclude=__pycache__'
         - '--exclude=dist'
         - '--exclude=lockfiles'
         - '--exclude=tests'
@@ -293,6 +513,40 @@
       # `example` was deployed along with the other check plugins; the packages skip it.
       - '/usr/lib64/nagios/plugins/example'
       - '/usr/lib64/nagios/plugins/notifications'
+
+  # A plugin that an earlier run deployed and that the checkout no longer carries was renamed or
+  # dropped upstream. Left in place it would still run, untested and unmaintained, under a name
+  # a command definition may still point at.
+  - name: 'Check whether a previous run left an install manifest'
+    ansible.builtin.stat:
+      path: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+    register: '__monitoring_plugins__previous_manifest_stat'
+
+  - name: 'Read the install manifest of the previous run'
+    ansible.builtin.slurp:
+      src: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+    register: '__monitoring_plugins__previous_manifest'
+    when:
+      - '__monitoring_plugins__previous_manifest_stat["stat"]["exists"] | bool'
+
+  - name: 'Remove the plugins the checkout no longer carries'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    vars:
+      __monitoring_plugins__deployed_plugin_paths: '{{
+          __monitoring_plugins__flattened_plugins["stdout_lines"]
+          | map("regex_replace", "^", "/usr/lib64/nagios/plugins/")
+          | list
+        }}'
+    loop: '{{
+        (__monitoring_plugins__previous_manifest["content"] | d("") | b64decode).splitlines()
+        | select("match", "^/usr/lib64/nagios/plugins/[^/]+$")
+        | reject("search", "/[.][.]?$")
+        | reject("in", ["/usr/lib64/nagios/plugins/assets", "/usr/lib64/nagios/plugins/lib"])
+        | reject("in", __monitoring_plugins__deployed_plugin_paths)
+        | list
+      }}'
 
   tags:
     - 'monitoring_plugins'
@@ -313,46 +567,33 @@
 
   - name: 'Remove a venv that was built with another Python'
     ansible.builtin.file:
-      path: '/usr/lib64/linuxfabrik-monitoring-plugins'
+      path: '/usr/lib64/linuxfabrik-monitoring-plugins/venv'
       state: 'absent'
     when:
       - '__monitoring_plugins__venv_python_version_result["rc"] == 0'
       - '__monitoring_plugins__venv_python_version_result["stdout"].split()[1].split(".")[0:2]
-         != __monitoring_plugins__source_python_version_result["stdout"].split()[1].split(".")[0:2]'
+         != __monitoring_plugins__source_python_version.split(".")[0:2]'
 
-  # linuxfabrik-lib is removed here because the library is deployed from GitHub above; the
-  # rest of `requirements.in` (unpinned) provides the newest third-party dependencies.
-  - name: 'Deploy the venv requirements (requirements.in without linuxfabrik-lib)'
-    ansible.builtin.copy:
-      content: |
-        {{ lookup("ansible.builtin.file", "/tmp/ansible.monitoring-plugins-repo/requirements.in").split("\n")
-           | reject("match", "^linuxfabrik-lib")
-           | join("\n") }}
-      dest: '/tmp/ansible.monitoring-plugins-requirements.txt'
-      mode: 0o644
-
-  # Dropping linuxfabrik-lib also drops everything the library itself needs (httpx, pymysql,
-  # pypsrp, PySmbClient, pywinrm), because none of those is a direct dependency of the plugins.
-  # Without them `lib.url.fetch()` answers `Python module "httpx" is not installed` and every
-  # check that speaks HTTP or MySQL fails, so the library's own dependency list is deployed
-  # alongside. The two lists overlap, which is why they go into separate pip calls.
-  - name: 'Deploy the venv requirements of the Linuxfabrik library'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.lib-repo/requirements.in'
-      dest: '/tmp/ansible.monitoring-plugins-lib-requirements.txt'
-      mode: 0o644
-
-  - name: 'Create the dependency venv and install the newest plugin dependencies into it'
+  # --no-index keeps pip off the network entirely, and --require-hashes makes it refuse any
+  # artifact whose sha256 the lockfile does not list. Every requirement is pinned to an exact
+  # version, so a later run moves an existing venv to the versions of the current lockfile, in
+  # either direction.
+  - name: 'Create the dependency venv and install the pinned dependencies into it'
     ansible.builtin.pip:
-      requirements: '/tmp/ansible.monitoring-plugins-requirements.txt'
+      requirements: '/usr/lib64/linuxfabrik-monitoring-plugins/wheels/requirements.txt'
+      extra_args: '--no-index --find-links /usr/lib64/linuxfabrik-monitoring-plugins/wheels --require-hashes'
       virtualenv: '/usr/lib64/linuxfabrik-monitoring-plugins/venv'
       virtualenv_command: '{{ __monitoring_plugins__source_python_interpreter }} -m venv'
 
-  - name: 'Install the dependencies of the Linuxfabrik library into the venv'
-    ansible.builtin.pip:
-      requirements: '/tmp/ansible.monitoring-plugins-lib-requirements.txt'
-      virtualenv: '/usr/lib64/linuxfabrik-monitoring-plugins/venv'
-      virtualenv_command: '{{ __monitoring_plugins__source_python_interpreter }} -m venv'
+  # Compile the library with the interpreter the plugins run under, as the packages do for their
+  # venv. Otherwise the first plugin run writes the bytecode itself, and the new files inherit
+  # `lib_t` from the directory where the nagios policy of RHEL 8 and 9 expects
+  # `nagios_unconfined_plugin_exec_t`, so the next run of this role relabels them. Only changed
+  # modules are compiled. Verified on Rocky 8 and 9.
+  - name: 'python -m compileall /usr/lib64/nagios/plugins/lib'
+    ansible.builtin.command: '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python -m compileall /usr/lib64/nagios/plugins/lib'
+    register: '__monitoring_plugins__compileall_result'
+    changed_when: '"Compiling" in __monitoring_plugins__compileall_result["stdout"]'
 
   tags:
     - 'monitoring_plugins'
@@ -365,8 +606,22 @@
   # owned any of them it could edit a plugin, a lib module or the venv Python and gain
   # arbitrary root code execution. The monitoring user only needs to traverse, read and
   # execute, which the 0755/0644 modes already grant.
-  - name: 'chown --recursive --changes root the plugins and the venv'
-    ansible.builtin.command: 'chown --recursive --changes root:root /usr/lib64/nagios/plugins /usr/lib64/linuxfabrik-monitoring-plugins'
+  #
+  # Only what this role deployed is chowned, never the whole plugin directory: it is shared with
+  # the distribution's own plugins, and chown clears the setuid bit of check_icmp and check_dhcp
+  # even when the owner does not change, without `--changes` reporting anything. Verified with
+  # coreutils 8.32 on Rocky 9.
+  - name: 'chown --recursive --changes root the deployed plugins, the library and the venv'
+    ansible.builtin.command:
+      argv: '{{
+          ["chown", "--recursive", "--changes", "root:root",
+           "/usr/lib64/linuxfabrik-monitoring-plugins",
+           "/usr/lib64/nagios/plugins/assets",
+           "/usr/lib64/nagios/plugins/lib"]
+          + (__monitoring_plugins__flattened_plugins["stdout_lines"]
+             | map("regex_replace", "^", "/usr/lib64/nagios/plugins/")
+             | list)
+        }}'
     register: '__monitoring_plugins__chown_result'
     changed_when: '__monitoring_plugins__chown_result["stdout"] | length > 0'
 
@@ -381,26 +636,40 @@
     register: '__monitoring_plugins__chmod_result'
     changed_when: '__monitoring_plugins__chmod_result["stdout"] | length > 0'
 
-  - name: 'restorecon -Fvr the plugins and the venv'
-    ansible.builtin.command: 'restorecon -Fvr /usr/lib64/nagios/plugins/ /usr/lib64/linuxfabrik-monitoring-plugins/'
+  # Without -F: only the type matters to the policy. -F also resets the SELinux user, and every
+  # .pyc that Python writes when root runs a plugin carries unconfined_u instead of system_u, so
+  # each run would relabel them and report a change. Verified on Rocky 10.
+  - name: 'restorecon -vr the plugins and the venv'
+    ansible.builtin.command: 'restorecon -vr /usr/lib64/nagios/plugins/ /usr/lib64/linuxfabrik-monitoring-plugins/'
     register: '__monitoring_plugins__restorecon_result'
     changed_when:
       - '__monitoring_plugins__restorecon_result["stdout"] | length > 0'
     when:
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # visudo checks each drop-in before it goes live: a broken file in /etc/sudoers.d locks every
+  # user out of sudo, not just the monitoring user.
   - name: 'Copy the /etc/sudoers.d/linuxfabrik-monitoring-plugins file to the server'
     ansible.builtin.copy:
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
       # same file name as the rpm/deb packages
       dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
       mode: 0o440
+      validate: 'visudo -cf %s'
 
   - name: 'Find out which sudo implementation the server runs'
     ansible.builtin.command: 'sudo --version'
     changed_when: false
     failed_when: false
     register: '__monitoring_plugins__sudo_version'
+
+  - name: 'Check whether the checkout ships the logging sudoers file'
+    ansible.builtin.stat:
+      path: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
+    delegate_to: 'localhost'
+    become: false
+    changed_when: false
+    register: '__monitoring_plugins__sudoers_logging_source'
 
   # The Defaults that keep the plugin calls out of the authentication log ship in a drop-in of
   # their own, because sudo-rs knows none of them and prints a warning for each on every sudo
@@ -412,8 +681,11 @@
       src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
       dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
       mode: 0o440
+      validate: 'visudo -cf %s'
     when:
       - '"sudo-rs" not in __monitoring_plugins__sudo_version["stdout"]'
+      # a pinned `monitoring_plugins__version` can predate the logging file
+      - '__monitoring_plugins__sudoers_logging_source["stat"]["exists"] | bool'
 
   # A host upgraded in place to a release that switched to sudo-rs, Ubuntu 26.04 for example,
   # would otherwise keep the companion and warn about it on every sudo call.
@@ -467,6 +739,100 @@
     loop:
       - 'icinga2-plugins'
       - 'monitoring-plugins'
+
+  tags:
+    - 'monitoring_plugins'
+
+
+# The policy module the -selinux package loads, and the boolean it sets on its first install.
+# Without `nagios_run_sudo` every plugin that runs through sudo fails under enforcing SELinux.
+# The boolean comes from the distribution's nagios policy, which RHEL 10 does not carry, so it is
+# only set where it exists. The module is CIL, which semodule loads without a policy compiler on
+# the host; a pinned `monitoring_plugins__version` that predates it ships none.
+- block:
+
+  - name: 'Check whether the checkout ships the SELinux policy module'
+    ansible.builtin.stat:
+      path: '/tmp/ansible.monitoring-plugins-repo/assets/selinux/linuxfabrik-monitoring-plugins.cil'
+    delegate_to: 'localhost'
+    become: false
+    changed_when: false
+    register: '__monitoring_plugins__selinux_module_source'
+
+  - name: 'Copy the SELinux policy module to /usr/share/selinux/packages/'
+    ansible.builtin.copy:
+      src: '/tmp/ansible.monitoring-plugins-repo/assets/selinux/linuxfabrik-monitoring-plugins.cil'
+      # same path as the -selinux package
+      dest: '/usr/share/selinux/packages/linuxfabrik-monitoring-plugins.cil'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__monitoring_plugins__selinux_module_copy'
+    when:
+      - '__monitoring_plugins__selinux_module_source["stat"]["exists"] | bool'
+
+  - name: 'semodule --list'
+    ansible.builtin.command: 'semodule --list'
+    register: '__monitoring_plugins__semodule_list'
+    changed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'semodule --install /usr/share/selinux/packages/linuxfabrik-monitoring-plugins.cil'
+    ansible.builtin.command: 'semodule --install /usr/share/selinux/packages/linuxfabrik-monitoring-plugins.cil'
+    changed_when: true # only runs when the module is missing or changed
+    when:
+      - '__monitoring_plugins__selinux_module_source["stat"]["exists"] | bool'
+      - '__monitoring_plugins__selinux_module_copy is changed
+         or "linuxfabrik-monitoring-plugins" not in __monitoring_plugins__semodule_list["stdout_lines"] | map("split") | map("first") | list'
+
+  - name: 'getsebool nagios_run_sudo'
+    ansible.builtin.command: 'getsebool nagios_run_sudo'
+    register: '__monitoring_plugins__nagios_run_sudo'
+    changed_when: false
+    failed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  # setsebool rather than ansible.posix.seboolean, which needs python3-libsemanage on the
+  # target, a package a minimal RHEL 8 does not carry.
+  - name: 'setsebool -P nagios_run_sudo on'
+    ansible.builtin.command: 'setsebool -P nagios_run_sudo on'
+    changed_when: true # only runs while the boolean is off
+    when:
+      - '__monitoring_plugins__nagios_run_sudo["rc"] == 0'
+      - '__monitoring_plugins__nagios_run_sudo["stdout"] is not search("--> on$")'
+
+  when:
+    - 'ansible_facts["os_family"] == "RedHat"'
+    - 'ansible_facts["selinux"]["status"] != "disabled"'
+  tags:
+    - 'monitoring_plugins'
+
+
+# The same manifest the one-line installer writes, one absolute path per line, so either tool
+# can take back what the other placed, and `monitoring_plugins:remove` removes exactly this.
+- block:
+
+  # copy rather than template: the one-line installer runs `rm -rf` on every line of this file,
+  # so it must not carry the comment header a template gets.
+  - name: 'Write /usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+    ansible.builtin.copy:
+      content: |
+        {% for name in __monitoring_plugins__flattened_plugins["stdout_lines"] %}
+        /usr/lib64/nagios/plugins/{{ name }}
+        {% endfor %}
+        /usr/lib64/nagios/plugins/assets
+        /usr/lib64/nagios/plugins/lib
+        /etc/sudoers.d/linuxfabrik-monitoring-plugins
+        /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging
+        /etc/bash_completion.d/linuxfabrik-monitoring-plugins
+        {% if ansible_facts["os_family"] == "RedHat" %}
+        /usr/share/selinux/packages/linuxfabrik-monitoring-plugins.cil
+        {% endif %}
+        /usr/lib64/linuxfabrik-monitoring-plugins
+      dest: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
   tags:
     - 'monitoring_plugins'
