@@ -83,6 +83,26 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # Only the modules and the LICENSE of the library are deployed, the same set the release zip
+    # bundles; the documentation and development files of the repository have no business on a
+    # monitored host. `__pycache__` appears as soon as a plugin has run.
+    - name: 'List what the bundled library directory holds besides its modules'
+      ansible.builtin.find:
+        paths: '/usr/lib64/nagios/plugins/lib'
+        file_type: 'any'
+        hidden: true
+        excludes:
+          - '*.py'
+          - 'LICENSE'
+          - '__pycache__'
+      register: '__molecule__lib_extra'
+
+    - name: 'Assert the bundled library holds its modules and LICENSE only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lib_extra["files"] | length == 0'
+        fail_msg: '{{ __molecule__lib_extra["files"] | map(attribute="path") | join(", ") }} should not be deployed'
+
     # The Defaults that keep the plugin calls out of the authentication log ship in a drop-in of
     # their own, because sudo-rs knows none of them and prints a warning for each of them on
     # every sudo call by any user. The role therefore places it only where the classic sudo from

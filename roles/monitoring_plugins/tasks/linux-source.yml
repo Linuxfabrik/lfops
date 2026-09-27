@@ -465,11 +465,14 @@
         - '--no-owner'
         - '--no-times'
 
+  # `delete` takes away an asset the checkout no longer carries. The directory belongs to the
+  # monitoring plugins alone, unlike the plugin directory next to it, so nothing else is caught.
   - name: 'rsync the flattened plugin assets to remote host'
     ansible.posix.synchronize:
       src: '/tmp/ansible.monitoring-plugins-repo-flattened/assets/'
       dest: '/usr/lib64/nagios/plugins/assets/'
       mode: 'push'
+      delete: true
       rsync_opts:
         - '--checksum'
         - '--chmod=D755,F644'
@@ -480,9 +483,17 @@
   # The Linuxfabrik library is deployed straight from its GitHub repo (not via pip),
   # into the plugin directory. The plugins import it as `lib.*`, which resolves because a
   # script's own directory is first on sys.path, so `lib/` next to the plugins wins over
-  # any site-packages copy. Development cruft is left behind via the excludes. `__pycache__` is
-  # excluded as well, which also keeps `delete` away from it: Python writes it there as soon as a
-  # plugin runs as root, and removing it again would report a change on every run.
+  # any site-packages copy. Only the modules and the LICENSE go over, the same set the release
+  # zip bundles and the one-line installer installs; the rest of the repository is not needed
+  # at runtime.
+  #
+  # The first matching rule wins. `--delete-excluded` also removes what the filters leave out,
+  # which is how the documentation and development files that earlier versions of this role
+  # deployed disappear. `__pycache__` is protected from that: Python writes it there as soon as a
+  # plugin runs as root, and removing it again would report a change on every run. The protect
+  # rule is written `P_<pattern>` instead of `P <pattern>`: synchronize joins `rsync_opts` into a
+  # string without quoting and splits it again at whitespace, which leaves rsync with a bare `P`.
+  # Verified with ansible.posix 2.1.0 and rsync 3.1.3 (Rocky 8) and 3.2.7 (Rocky 9).
   - name: 'rsync the Linuxfabrik library from GitHub to /usr/lib64/nagios/plugins/lib/'
     ansible.posix.synchronize:
       src: '/tmp/ansible.lib-repo/'
@@ -495,13 +506,11 @@
         - '--no-group'
         - '--no-owner'
         - '--no-times'
-        - '--exclude=.git'
-        - '--exclude=.github'
-        - '--exclude=__pycache__'
-        - '--exclude=dist'
-        - '--exclude=lockfiles'
-        - '--exclude=tests'
-        - '--exclude=*.egg-info'
+        - '--delete-excluded'
+        - '--filter=P___pycache__/'
+        - '--include=*.py'
+        - '--include=LICENSE'
+        - '--exclude=*'
 
   - name: 'Make sure artifacts of earlier versions of this role are absent'
     ansible.builtin.file:

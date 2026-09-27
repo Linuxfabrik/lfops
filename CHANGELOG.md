@@ -74,6 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: The plugin icons for IcingaWeb2 are no longer missing when the directory `ansible-playbook` runs in contains `.svg` files.
+* **role:monitoring_plugins**: The source install deploys only the modules of the Linuxfabrik library, as the one-line installer does, removes the documentation and development files earlier runs placed next to them, and removes plugin assets the checked-out version no longer carries.
 * **role:monitoring_plugins**: The source install no longer reports a change on every run once the plugins have run.
 * **role:monitoring_plugins**: The source install no longer clears the setuid bit of the distribution's `check_icmp` and `check_dhcp` on every run.
 * **role:monitoring_plugins**: `--tags monitoring_plugins:remove` no longer aborts on Debian and Ubuntu, and also removes the version lock of the SELinux package, the SELinux policy module, the Debian conffiles and every file a release of the plugins ever installed.

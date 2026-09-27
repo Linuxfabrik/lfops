@@ -484,6 +484,7 @@ wildfly-thread-usage
 wildfly-uptime
 wildfly-version
 wildfly-xa-datasource-stats
+windows-version
 wordpress-checksums
 wordpress-security-scan
 wordpress-version
