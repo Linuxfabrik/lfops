@@ -226,6 +226,8 @@
     # === Monitoring ===
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
+        # a source install needs no package repository, and re-registering it would undo its removal
+        - 'monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags'
         - 'not setup_basic__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'
