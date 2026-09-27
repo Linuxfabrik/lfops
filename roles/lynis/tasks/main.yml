@@ -1,0 +1,72 @@
+- block:
+
+  # Lynis aborts the whole audit (ExitFatal in include/profiles) if a non-comment line of a
+  # profile contains a character outside `a-zA-Z0-9/[]()_|,.:;= -`, and it cuts the value of a
+  # setting at the first `=`. A test ID is `<CATEGORY>-<number>`, optionally followed by
+  # `:<check>` for a single check within the test (SkipAtomicTest() in include/functions).
+  # Verified against the Lynis source (3.1.8).
+  - name: 'Check the names in lynis__skip_tests'
+    ansible.builtin.assert:
+      that:
+        - 'item["name"] is match("^[A-Za-z]+-[0-9]+(:[A-Za-z0-9/\[\]()_|,.;-]+)?$")'
+      quiet: true
+      fail_msg: >-
+        lynis__skip_tests: "{{ item["name"] }}" is not a Lynis test ID. Use the ID as the lynis
+        monitoring plugin reports it, for example "NETW-3015", or "SSH-7408:loglevel" for a single
+        check within a test.
+    loop: '{{ lynis__skip_tests__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Install lynis'
+    ansible.builtin.package:
+      name: 'lynis'
+      state: 'present'
+
+  tags:
+    - 'lynis'
+
+
+- block:
+
+  - name: 'Deploy /etc/lynis/custom.prf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/lynis/custom.prf.j2'
+      dest: '/etc/lynis/custom.prf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'lynis'
+    - 'lynis:configure'
+
+
+# The Debian and Ubuntu packages install lynis.timer and enable and start it on installation, so
+# every host would run a daily audit of its own next to the one the lynis monitoring plugin runs.
+# A second audit running at the same time makes the plugin report UNKNOWN. The EPEL package only
+# ships the units as documentation, so there is nothing to manage on the Red Hat family.
+- block:
+
+  - name: 'systemctl {{ lynis__timer_enabled | bool | ternary("enable", "disable") }} lynis.timer'
+    ansible.builtin.service:
+      name: 'lynis.timer'
+      enabled: '{{ lynis__timer_enabled | bool }}'
+
+  - name: 'systemctl {{ lynis__timer_state | regex_replace("p?ed$", "") }} lynis.timer'
+    ansible.builtin.service:
+      name: 'lynis.timer'
+      state: '{{ lynis__timer_state }}'
+
+  when:
+    - 'ansible_facts["os_family"] == "Debian"'
+  tags:
+    - 'lynis'
+    - 'lynis:state'

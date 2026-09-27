@@ -110,6 +110,10 @@
       when:
         - 'not setup_basic__skip_core_dumps | d(false)'
 
+    - role: 'linuxfabrik.lfops.lynis'
+      when:
+        - 'not setup_basic__skip_lynis | d(false)'
+
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
       when:

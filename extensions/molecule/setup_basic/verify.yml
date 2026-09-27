@@ -40,6 +40,26 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # A real audit, restricted to a single test to keep it short, proves lynis finds its profile
+    # and include files and writes the report the lynis monitoring plugin reads.
+    - name: 'lynis audit system --quick --tests KRNL-5820'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests KRNL-5820'
+      args:
+        chdir: '/'
+      changed_when: false
+      register: '__molecule__lynis_audit_result'
+
+    - name: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_report_result'
+
+    - name: 'Assert that the lynis audit ran the requested test'
+      ansible.builtin.assert:
+        that:
+          - '"KRNL-5820" in __molecule__lynis_report_result["stdout"]'
+        fail_msg: '{{ __molecule__lynis_audit_result["stdout_lines"][-20:] }}'
+
     # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
     # least valid enough to start with. Queried via systemctl instead of service_facts because the
     # unit differs per family (Type=forking on RHEL, Type=oneshot with RemainAfterExit on Debian,

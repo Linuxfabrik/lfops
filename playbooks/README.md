@@ -598,6 +598,14 @@ Calls the following roles (in order):
 * [lvm](https://github.com/Linuxfabrik/lfops/tree/main/roles/lvm)
 
 
+## lynis.yml
+
+Calls the following roles (in order):
+
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `lynis__skip_repo_epel`
+* [lynis](https://github.com/Linuxfabrik/lfops/tree/main/roles/lynis)
+
+
 ## mailto_root.yml
 
 Calls the following roles (in order):
@@ -1090,6 +1098,7 @@ Calls the following roles (in order):
 * [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules): `setup_basic__skip_kernel_modules`
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_basic__skip_kernel_settings`
 * [core_dumps](https://github.com/Linuxfabrik/lfops/tree/main/roles/core_dumps): `setup_basic__skip_core_dumps`
+* [lynis](https://github.com/Linuxfabrik/lfops/tree/main/roles/lynis): `setup_basic__skip_lynis`
 * [systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald): `setup_basic__skip_systemd_journald`
 * [timezone](https://github.com/Linuxfabrik/lfops/tree/main/roles/timezone): `setup_basic__skip_timezone`
 * [logrotate](https://github.com/Linuxfabrik/lfops/tree/main/roles/logrotate): `setup_basic__skip_logrotate`

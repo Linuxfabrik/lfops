@@ -1,0 +1,44 @@
+argument_specs:
+  main:
+    options:
+
+      lynis__skip_tests__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Lynis tests to skip (`name`, optional `comment` and `state`).
+          Dependent-role injection.
+
+      lynis__skip_tests__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Lynis tests to skip (`name`, optional `comment` and `state`).'
+
+      lynis__skip_tests__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Lynis tests to skip (`name`, optional `comment` and `state`).'
+
+      lynis__timer_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether lynis.timer is enabled at boot. Debian and Ubuntu only.'
+
+      lynis__timer_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of lynis.timer. Debian and Ubuntu only. Defaults to started or
+          stopped depending on lynis__timer_enabled.

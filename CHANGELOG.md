@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook to install Lynis, which the lynis monitoring plugin needs to audit a host. `setup_basic` installs it on every host. Findings the plugin reports can be accepted per host or group with `lynis__skip_tests`, which the role writes to `/etc/lynis/custom.prf`; a hand-edited `custom.prf` is overwritten. On Debian and Ubuntu the daily audit timer of the package is switched off, so that it does not collide with the audit of the monitoring plugin.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
 * **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
