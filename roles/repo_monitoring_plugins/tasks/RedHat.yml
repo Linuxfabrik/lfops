@@ -39,3 +39,31 @@
 
   tags:
     - 'repo_monitoring_plugins'
+
+
+# `backup: true` above leaves timestamped copies next to the repo file, which dnf ignores, as it
+# only reads files ending in `.repo`. They are removed along with it.
+- block:
+
+  - name: 'Find /etc/yum.repos.d/linuxfabrik-monitoring-plugins*'
+    ansible.builtin.find:
+      paths: '/etc/yum.repos.d'
+      patterns: 'linuxfabrik-monitoring-plugins*'
+    register: '__repo_monitoring_plugins__repo_files'
+
+  - name: 'rm -f /etc/yum.repos.d/linuxfabrik-monitoring-plugins*'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __repo_monitoring_plugins__repo_files["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  - name: 'rpm --erase gpg-pubkey-39d17a78 # Linuxfabrik (Packager)'
+    ansible.builtin.rpm_key:
+      key: '0xF27988EC39D17A78'
+      state: 'absent'
+
+  tags:
+    - 'never'
+    - 'repo_monitoring_plugins:remove'

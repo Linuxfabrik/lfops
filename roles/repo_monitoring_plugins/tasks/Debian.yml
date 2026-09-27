@@ -42,3 +42,27 @@
 
   tags:
     - 'repo_monitoring_plugins'
+
+
+# `backup: true` above leaves timestamped copies next to the sources file, which apt ignores, as
+# it only reads files ending in `.list` or `.sources`. They are removed along with it.
+- block:
+
+  - name: 'Find /etc/apt/sources.list.d/linuxfabrik-monitoring-plugins*'
+    ansible.builtin.find:
+      paths: '/etc/apt/sources.list.d'
+      patterns: 'linuxfabrik-monitoring-plugins*'
+    register: '__repo_monitoring_plugins__repo_files'
+
+  - name: 'rm -f /etc/apt/sources.list.d/linuxfabrik-monitoring-plugins* /etc/apt/keyrings/linuxfabrik.asc'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop: '{{
+        __repo_monitoring_plugins__repo_files["files"] | map(attribute="path") | list
+        + ["/etc/apt/keyrings/linuxfabrik.asc"]
+      }}'
+
+  tags:
+    - 'never'
+    - 'repo_monitoring_plugins:remove'

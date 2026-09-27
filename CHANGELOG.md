@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
 * **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.4.
