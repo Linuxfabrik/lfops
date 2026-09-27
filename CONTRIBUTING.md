@@ -1268,7 +1268,7 @@ The `extensions/molecule/example` scenario mirrors the `example` role: it is a f
 
 #### Preparing the controller
 
-Three things have to be in place on the machine that runs `molecule`, once.
+Four things have to be in place on the machine that runs `molecule`, once.
 
 **The checkout has to be resolvable as a collection.** The scenarios import the playbooks under test by FQCN (`linuxfabrik.lfops.<playbook>`), so the repository has to be reachable as `linuxfabrik/lfops` in a collection path. Symlinking it keeps the checkout authoritative, so a scenario always runs the code you are editing:
 
@@ -1289,8 +1289,9 @@ sudo chown "$(id -un):$(id -gn)" /var/lib/libvirt/images-lfops-molecule
 sudo chmod 0751 /var/lib/libvirt/images-lfops-molecule
 
 # on SELinux systems, label it so qemu may open the disk images
+# (restorecon has no long options, `--recursive` fails with "invalid option")
 sudo semanage fcontext --add --type virt_image_t '/var/lib/libvirt/images-lfops-molecule(/.*)?'
-sudo restorecon --recursive --verbose /var/lib/libvirt/images-lfops-molecule
+sudo restorecon -R -v /var/lib/libvirt/images-lfops-molecule
 
 sudo virsh pool-define-as lfops-molecule dir --target /var/lib/libvirt/images-lfops-molecule
 sudo virsh pool-autostart lfops-molecule
@@ -1310,12 +1311,22 @@ If you set this up before that `setfacl` existed, the images already in the pool
 
 Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
 
+**The VMs need the libvirt network `default`.** The shared inventory attaches every VM to it. libvirt ships its definition, but a host set up with networks of its own may not have it; `virsh --connect qemu:///system net-list --all` tells. Define it from the shipped file, and give it another bridge name if `virbr0` is already taken by a network of yours:
+
+```bash
+sed "s/name='virbr0'/name='virbr1'/" /usr/share/libvirt/networks/default.xml > /tmp/default.xml
+sudo virsh net-define /tmp/default.xml
+sudo virsh net-start default
+```
+
 
 #### Running a scenario
 
 ```bash
 molecule test --scenario-name apps/install
 ```
+
+Run it from the repository root, with Molecule 26 or newer. Molecule only reads `extensions/molecule/config.yml` when it detects the collection from the root, and older releases (measured with 25.12) do not resolve sub-scenario names such as `apps/install`. Without the shared config the scenario still "passes": `create` and `prepare` are reported as missing and `converge` runs against an empty inventory.
 
 Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable. The variable is optional: unset, every target in the scenario runs. `localhost` (the hypervisor) is included automatically, so you only ever pass the targets themselves:
 
