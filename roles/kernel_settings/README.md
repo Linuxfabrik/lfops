@@ -8,6 +8,11 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* On Ubuntu 22.04 the role removes `kernel.sched_min_granularity_ns` and `kernel.sched_wakeup_granularity_ns` from the TuneD profile it builds on (a `drop` entry in its own profile). The TuneD release of Ubuntu 22.04 still sets them, the kernel no longer has them, and TuneD's own verification would otherwise fail on every run.
+
+
 ## Known Limitations
 
 * TuneD applies the settings when its daemon starts, and systemd starts `tuned.service` in parallel with other services. A service that reads kernel parameters at its own startup can therefore come up before TuneD has applied the profile and then keeps the old values for its whole runtime. `sysctl` and `tuned-adm verify` report the new values in the meantime, because both look at the current kernel state rather than at the state the service saw.
