@@ -15,7 +15,7 @@ Which Ansible role is proven to run on which OS?
 | apache_solr                           |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | apache_tomcat                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | apps                                  |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| at                                    |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
+| at                                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | audit                                 |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | bind                                  |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | blocky                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
@@ -24,7 +24,7 @@ Which Ansible role is proven to run on which OS?
 | chromium_headless                     |   x    |  (x)   |   x    |   x    |    x    |           |           |           |                                              |
 | chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | clamav                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| cloud_init                            |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| cloud_init                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | collabora                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
@@ -42,7 +42,7 @@ Which Ansible role is proven to run on which OS?
 | fail2ban                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | fangfrisch                            |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | files                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| firewall                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |    (x)    |                                              |
+| firewall                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | freeipa_client                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | freeipa_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | github_project_createrepo             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
@@ -56,7 +56,7 @@ Which Ansible role is proven to run on which OS?
 | graylog_server                        |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | haveged                               |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | hetzner_vm                            |        |        |        |        |         |           |           |           | Fedora 35+                                   |
-| hostname                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| hostname                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | icinga2_agent                         |  (x)   |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
 | icinga2_master                        |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | icinga_kubernetes                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
@@ -84,7 +84,7 @@ Which Ansible role is proven to run on which OS?
 | kdump                                 |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | kernel_modules                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| kernel_settings                       |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| kernel_settings                       |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | keycloak                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | kibana                                |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | kvm_host                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
@@ -92,13 +92,13 @@ Which Ansible role is proven to run on which OS?
 | libmaxminddb                          |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | librenms                              |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | libreoffice                           |        |        |   x    |  (x)   |    -    |           |           |           |                                              |
-| login                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35+                                   |
-| logrotate                             |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
+| login                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35+                                   |
+| logrotate                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | logstash                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | lvm                                   |        |        |  (x)   |  (x)   |    x    |           |           |           |                                              |
 | lynis                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| mailto_root                           |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| mailx                                 |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora                                       |
+| mailto_root                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
+| mailx                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
@@ -106,10 +106,10 @@ Which Ansible role is proven to run on which OS?
 | mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mongodb                               |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| monitoring_plugins                    |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Debian 9, Fedora, SLES 15, SLES 16, Windows  |
+| monitoring_plugins                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Debian 9, Fedora, SLES 15, SLES 16, Windows  |
 | monitoring_plugins_grafana_dashboards |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | moodle                                |   -    |   -    |   x    |   x    |   (x)   |           |           |           |                                              |
-| motd                                  |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| motd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mount                                 |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | network                               |   -    |   -    |   x    |   x    |    x    |           |           |           |                                              |
 | nextcloud                             |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -122,11 +122,11 @@ Which Ansible role is proven to run on which OS?
 | php                                   |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
-| postfix                               |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
+| postfix                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | postgresql_server                     |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | proxysql                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| python                                |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Windows                                      |
-| python_venv                           |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
+| python                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Windows                                      |
+| python_venv                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | qemu_guest_agent                      |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | r                                     |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | redis                                 |   x    |   x    |   x    |   x    |         |    (x)    |    (x)    |    (x)    | RHEL 10: no Redis, use the `valkey` role     |
@@ -145,7 +145,7 @@ Which Ansible role is proven to run on which OS?
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| repo_monitoring_plugins               |  (x)   |  (x)   |   x    |   x    |    x    |     x     |    (x)    |    (x)    | SLES 15, SLES 16                             |
+| repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |
 | repo_mydumper                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
 | repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -156,8 +156,8 @@ Which Ansible role is proven to run on which OS?
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |
 | rstudio_server                        |        |        |   x    |   x    |    x    |           |           |           | x86_64 only, RHEL 10 uses the RHEL 9 build   |
-| rsyslog                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| schedule_reboot                       |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| rsyslog                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
+| schedule_reboot                       |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | selinux                               |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | shared                                |        |        |        |        |         |           |           |           | controller-side helper, target OS irrelevant |
 | shell                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
@@ -165,13 +165,13 @@ Which Ansible role is proven to run on which OS?
 | snmp                                  |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | squid                                 |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
-| system_update                         |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| systemd_journald                      |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| system_update                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
+| systemd_journald                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | telegraf                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| timezone                              |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
-| tmux                                  |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| tools                                 |        |        |   x    |   x    |    x    |           |           |           | Fedora                                       |
+| timezone                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
+| tmux                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
+| tools                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | trend_micro_v1es                      |        |        |   x    |   x    |    x    |           |     x     |           |                                              |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |
