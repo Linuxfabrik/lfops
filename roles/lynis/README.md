@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.lynis
 
-This role installs [Lynis](https://cisofy.com/lynis/), the security auditing tool, and deploys `/etc/lynis/custom.prf`, which lists the Lynis tests accepted on the host. It is the prerequisite for the [lynis monitoring plugin](https://github.com/Linuxfabrik/monitoring-plugins/tree/main/check-plugins/lynis), which runs the audit on the host once a day and reports the hardening index and the Lynis findings.
+This role installs [Lynis](https://cisofy.com/lynis/), the security auditing tool, runs an audit of the host once a day through a systemd timer, and deploys `/etc/lynis/custom.prf`, which lists the Lynis tests accepted on the host. The results are left in `/var/log/lynis.log` and `/var/log/lynis-report.dat` for the [lynis monitoring plugin](https://github.com/Linuxfabrik/monitoring-plugins/tree/main/check-plugins/lynis) to evaluate.
 
 
 *Available in the next LFOps release.*
@@ -8,8 +8,10 @@ This role installs [Lynis](https://cisofy.com/lynis/), the security auditing too
 
 ## How the Role Behaves
 
-* The role installs the `lynis` package of the distribution, from EPEL on the Red Hat family and from the distribution repositories on Debian and Ubuntu. It does not run an audit itself.
-* The Debian and Ubuntu packages ship `lynis.timer` and enable it on installation, which runs a daily `lynis audit system --cronjob` of its own. The role disables and stops it by default, so that the audit of the monitoring plugin is the only one. Two audits running at the same time make the plugin report UNKNOWN. The EPEL package ships no active timer.
+* The role installs the `lynis` package of the distribution, from EPEL on the Red Hat family and from the distribution repositories on Debian and Ubuntu.
+* `lynis.timer` starts `lynis.service` once a day at `lynis__on_calendar`, which runs `lynis audit system --cronjob --quiet` as root with low CPU and I/O priority. A run takes about two minutes. A host that was down at that time catches up after the next boot (`Persistent=true`).
+* The role deploys both units to `/etc/systemd/system` on every platform. On Debian and Ubuntu they replace the `lynis.timer` and `lynis.service` the package ships, so the audit runs at the same time and with the same options everywhere.
+* Every audit overwrites `/var/log/lynis.log` and `/var/log/lynis-report.dat`. `lynis show details <TEST-ID>` explains a finding from that log.
 * `/etc/lynis/custom.prf` is fully templated from `lynis__skip_tests`. On every run it is re-rendered (a timestamped backup is kept), so a hand-edited `custom.prf` is overwritten. Every audit on the host reads it, the one of the lynis monitoring plugin included, also when the plugin audits the host over SSH from a management host.
 * To accept a finding the monitoring plugin reports, take its test ID from the plugin output. Where the plugin says "add `skip-test=NETW-3015` to `/etc/lynis/custom.prf`", add `- name: 'NETW-3015'` to `lynis__skip_tests__host_var` or `lynis__skip_tests__group_var`, and state the reason in `comment`. The finding disappears with the next audit.
 * The role validates each test ID before it writes the file. Lynis refuses to run at all if a setting line of a profile contains a character outside of letters, digits and `/[]()_|,.:;=-`, so a typo would otherwise silence the whole audit instead of one test.
@@ -33,7 +35,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Installs Lynis.
 * Deploys `/etc/lynis/custom.prf`.
-* Ensures `lynis.timer` is in the desired state (Debian and Ubuntu).
+* Deploys `lynis.service` and `lynis.timer` and ensures the timer is in the desired state.
 * Triggers: none.
 
 `lynis:configure`
@@ -41,13 +43,24 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Deploys `/etc/lynis/custom.prf`.
 * Triggers: none.
 
+`lynis:cron`
+
+* Deploys `lynis.service` and `lynis.timer` and ensures the timer is in the desired state.
+* Triggers: none.
+
 `lynis:state`
 
-* Manages the state of `lynis.timer` (Debian and Ubuntu).
+* Enables or disables `lynis.timer`.
 * Triggers: none.
 
 
 ## Optional Role Variables
+
+`lynis__on_calendar`
+
+* When `lynis.timer` runs the audit, in the calendar event format of `systemd.time(7)`.
+* Type: String.
+* Default: `'*-*-* 02:{{ 59 | random(seed=inventory_hostname) }}'`
 
 `lynis__skip_tests__host_var` / `lynis__skip_tests__group_var`
 
@@ -74,20 +87,14 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `lynis__timer_enabled`
 
-* Whether `lynis.timer` is enabled at boot. Debian and Ubuntu only.
+* Enables or disables `lynis.timer`, analogous to `systemctl enable/disable --now`.
 * Type: Bool.
-* Default: `false`
-* Deviates from the upstream default `true` on Debian and Ubuntu: the lynis monitoring plugin already runs a daily audit, and a second one at the same time makes it report UNKNOWN.
-
-`lynis__timer_state`
-
-* State of `lynis.timer`. Debian and Ubuntu only.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
-* Default: `'started'` if `lynis__timer_enabled` is `true`, otherwise `'stopped'`.
+* Default: `true`
 
 Example:
 ```yaml
 # optional
+lynis__on_calendar: '*-*-* 03:15'
 lynis__skip_tests__group_var:
   - name: 'HRDN-7222'
     comment: 'Compilers are needed on our build hosts'
@@ -97,7 +104,6 @@ lynis__skip_tests__host_var:
   - name: 'HRDN-7222'
     state: 'absent'
 lynis__timer_enabled: true
-lynis__timer_state: 'started'
 ```
 
 

@@ -49,31 +49,53 @@
           - '__molecule__lynis_log_skip_result["stdout"] | int > 0'
         fail_msg: '{{ __molecule__lynis_audit_skip_result["stdout_lines"][-20:] }}'
 
-    - name: 'Gather the distribution facts the checks below depend on'
-      ansible.builtin.setup:
-        gather_subset:
-          - '!all'
+    - name: 'systemctl is-active / is-enabled lynis.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} lynis.timer'
+      loop:
+        - 'is-active'
+        - 'is-enabled'
+      register: '__molecule__lynis_timer_result'
+      changed_when: false
+      failed_when: false
 
+    - name: 'Assert that lynis.timer is active and enabled'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in ["active", "enabled"]'
+      loop: '{{ __molecule__lynis_timer_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
 
-    - block:
+    # The Lynis Service Set of the monitoring plugins expects lynis.service to be static, that is
+    # started by the timer only and never enabled on its own.
+    - name: 'systemctl is-enabled lynis.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled lynis.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__lynis_service_enabled_result'
 
-      # Debian and Ubuntu enable lynis.timer on installation; the role turns it off so the audit of
-      # the monitoring plugin is the only one.
-      - name: 'systemctl is-active / is-enabled lynis.timer' # noqa command-instead-of-module (read-only state query)
-        ansible.builtin.command: 'systemctl {{ item }} lynis.timer'
-        loop:
-          - 'is-active'
-          - 'is-enabled'
-        register: '__molecule__lynis_timer_result'
-        changed_when: false
-        failed_when: false
+    - name: 'Assert that lynis.service is static'
+      ansible.builtin.assert:
+        that: '__molecule__lynis_service_enabled_result["stdout"] == "static"'
+        fail_msg: '{{ __molecule__lynis_service_enabled_result["stdout"] }}'
 
-      - name: 'Assert that lynis.timer is stopped and disabled'
-        ansible.builtin.assert:
-          that: 'item["stdout"] in ["inactive", "disabled"]'
-        loop: '{{ __molecule__lynis_timer_result["results"] }}'
-        loop_control:
-          label: '{{ item["item"] }}'
+    # Run the audit the way the timer does. `systemctl start` waits for a Type=oneshot unit to
+    # finish and fails if it does, so this proves the unit runs lynis successfully on the platform.
+    - name: 'rm -f /var/log/lynis-report.dat'
+      ansible.builtin.file:
+        path: '/var/log/lynis-report.dat'
+        state: 'absent'
+      changed_when: false
 
-      when:
-        - 'ansible_facts["os_family"] == "Debian"'
+    - name: 'systemctl start lynis.service' # noqa command-instead-of-module (waits for the oneshot audit)
+      ansible.builtin.command: 'systemctl start lynis.service'
+      changed_when: false
+
+    - name: 'grep ^hardening_index= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^hardening_index= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_hardening_index_result'
+
+    - name: 'Assert that the timer-driven audit wrote a complete report'
+      ansible.builtin.assert:
+        that: '__molecule__lynis_hardening_index_result["stdout"] is match("^hardening_index=[0-9]+$")'
+        fail_msg: '{{ __molecule__lynis_hardening_index_result["stdout"] }}'

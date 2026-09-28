@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   # Lynis aborts the whole audit (ExitFatal in include/profiles) if a non-comment line of a
@@ -49,24 +57,40 @@
     - 'lynis:configure'
 
 
-# The Debian and Ubuntu packages install lynis.timer and enable and start it on installation, so
-# every host would run a daily audit of its own next to the one the lynis monitoring plugin runs.
-# A second audit running at the same time makes the plugin report UNKNOWN. The EPEL package only
-# ships the units as documentation, so there is nothing to manage on the Red Hat family.
+# The role ships lynis.service and lynis.timer to /etc/systemd/system on every platform. On Debian
+# and Ubuntu they override the units of the same name the package installs to /lib/systemd/system;
+# the EPEL package only ships its units as documentation.
 - block:
 
-  - name: 'systemctl {{ lynis__timer_enabled | bool | ternary("enable", "disable") }} lynis.timer'
-    ansible.builtin.service:
+  - name: 'Deploy /etc/systemd/system/lynis.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/lynis.service.j2'
+      dest: '/etc/systemd/system/lynis.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__lynis__service_result'
+
+  - name: 'Deploy /etc/systemd/system/lynis.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/lynis.timer.j2'
+      dest: '/etc/systemd/system/lynis.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__lynis__timer_result'
+
+  - name: 'systemctl {{ lynis__timer_enabled | bool | ternary("enable", "disable") }} --now lynis.timer'
+    ansible.builtin.systemd:
       name: 'lynis.timer'
       enabled: '{{ lynis__timer_enabled | bool }}'
+      state: '{{ lynis__timer_enabled | bool | ternary("started", "stopped") }}'
+      daemon_reload: '{{ __lynis__service_result is changed or __lynis__timer_result is changed }}'
+    tags:
+      - 'lynis:state'
 
-  - name: 'systemctl {{ lynis__timer_state | regex_replace("p?ed$", "") }} lynis.timer'
-    ansible.builtin.service:
-      name: 'lynis.timer'
-      state: '{{ lynis__timer_state }}'
-
-  when:
-    - 'ansible_facts["os_family"] == "Debian"'
   tags:
     - 'lynis'
-    - 'lynis:state'
+    - 'lynis:cron'

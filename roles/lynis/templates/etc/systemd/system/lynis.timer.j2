@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026092801
+
+[Unit]
+Description=Daily Lynis security audit
+
+[Timer]
+OnCalendar={{ lynis__on_calendar }}
+Persistent=true
+Unit=lynis.service
+
+[Install]
+WantedBy=timers.target
