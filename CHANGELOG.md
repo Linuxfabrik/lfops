@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:chrony**: The role now takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed. The distribution's DHCP and `sources.d` sources are kept, and without `chrony__ntp_pools` or `chrony__ntp_servers` the distribution's default pools are used. The stale `/etc/chrony.conf` is removed.
 * **role:kernel_settings**: The role no longer aborts on Ubuntu 22.04 with `Verification failed, current system settings differ from the preset profile`. The TuneD release of Ubuntu 22.04 sets two scheduler sysctls the kernel no longer has, and the role now removes them from the profile it builds on.
 * **role:tools**: The role no longer aborts on Ubuntu with `No package matching 'cloud-utils-growpart' is available`.
 * **role:python_venv**: The role no longer aborts on Debian and Ubuntu with `Failed to import the required Python library (packaging)`.

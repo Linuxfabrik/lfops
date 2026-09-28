@@ -1,3 +1,8 @@
+# A documentation address (RFC 5737) as a source nobody else configures, so verify.yml can prove
+# that chronyd reads the chrony.conf the role deployed.
+chrony__ntp_servers:
+  - '192.0.2.1'
+
 mailto_root__from: 'root@localhost'
 mailto_root__to:
   - 'root@localhost'

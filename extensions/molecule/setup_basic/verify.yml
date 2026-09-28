@@ -73,6 +73,19 @@
         that: '__molecule__fwb_failed_result["stdout"] != "failed"'
         fail_msg: '{{ __molecule__fwb_failed_result["stdout"] }}'
 
+    # Ask chronyd for its sources instead of reading the file: on Debian and Ubuntu chronyd only
+    # reads /etc/chrony/chrony.conf, so a file deployed to the wrong path would pass a file check
+    # and leave the configured source unused.
+    - name: 'chronyc -n -c sources'
+      ansible.builtin.command: 'chronyc -n -c sources'
+      changed_when: false
+      register: '__molecule__chronyc_sources_result'
+
+    - name: 'Assert that chronyd uses the source configured in the inventory'
+      ansible.builtin.assert:
+        that: '__molecule__chronyc_sources_result["stdout_lines"] | select("search", ",192\\.0\\.2\\.1,") | list | length > 0'
+        fail_msg: '{{ __molecule__chronyc_sources_result["stdout_lines"] }}'
+
     # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
     # least valid enough to start with. Queried via systemctl instead of service_facts because the
     # unit differs per family (Type=forking on RHEL, Type=oneshot with RemainAfterExit on Debian,

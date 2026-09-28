@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'Install chrony'
@@ -5,20 +13,32 @@
       name: 'chrony'
       state: 'present'
 
-  - name: 'Deploy /etc/chrony.conf'
+  # the template mirrors the target path, which differs between the RedHat and Debian families
+  - name: 'Deploy {{ __chrony__conf_path }}'
     ansible.builtin.template:
       backup: true
-      src: 'etc/chrony.conf.j2'
-      dest: '/etc/chrony.conf'
+      src: '{{ __chrony__conf_path[1:] }}.j2'
+      dest: '{{ __chrony__conf_path }}'
+      owner: 'root'
+      group: 'root'
       mode: 0o644
-    notify: 'chrony: restart chronyd.service'
+    notify: 'chrony: restart chrony'
+
+  # earlier versions of this role deployed /etc/chrony.conf on Debian and Ubuntu as well, where
+  # chronyd never reads it. Remove it so nobody mistakes it for the active configuration.
+  - name: 'rm -f /etc/chrony.conf'
+    ansible.builtin.file:
+      path: '/etc/chrony.conf'
+      state: 'absent'
+    when:
+      - 'ansible_facts["os_family"] == "Debian"'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/chrony.conf'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ __chrony__conf_path }}'
 
   tags:
     - 'chrony'
@@ -26,14 +46,14 @@
 
 - block:
 
-  - name: 'systemctl {{ chrony__service_enabled | bool | ternary("enable", "disable") }} chronyd.service'
+  - name: 'systemctl {{ chrony__service_enabled | bool | ternary("enable", "disable") }} {{ __chrony__service_name }}'
     ansible.builtin.systemd:
-      name: 'chronyd.service'
+      name: '{{ __chrony__service_name }}'
       enabled: '{{ chrony__service_enabled }}'
 
-  - name: 'systemctl {{ chrony__service_state | regex_replace("p?ed$", "") }} chronyd.service'
+  - name: 'systemctl {{ chrony__service_state | regex_replace("p?ed$", "") }} {{ __chrony__service_name }}'
     ansible.builtin.systemd:
-      name: 'chronyd.service'
+      name: '{{ __chrony__service_name }}'
       state: '{{ chrony__service_state }}'
     register: '__chrony__service_state_result'
 

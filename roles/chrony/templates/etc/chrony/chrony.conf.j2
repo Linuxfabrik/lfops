@@ -1,0 +1,65 @@
+# {{ ansible_managed }}
+# 2026092801
+
+# Include configuration files found in /etc/chrony/conf.d.
+confdir /etc/chrony/conf.d
+
+{% for item in chrony__ntp_pools %}
+pool {{ item }} iburst
+{% endfor %}
+
+{% for item in chrony__ntp_servers %}
+server {{ item }} iburst
+{% endfor %}
+
+{% if chrony__ntp_pools | length == 0 and chrony__ntp_servers | length == 0 %}
+# No sources configured in the inventory, so keep the ones the distribution uses.
+{% for item in __chrony__distro_pools %}
+pool {{ item }}
+{% endfor %}
+{% endif %}
+
+# Use time sources from DHCP.
+sourcedir /run/chrony-dhcp
+
+# Use NTP sources found in /etc/chrony/sources.d.
+sourcedir /etc/chrony/sources.d
+
+{% for item in chrony__allow %}
+allow {{ item }}
+{% endfor %}
+
+{% if chrony__bindaddress is defined %}
+bindaddress {{ chrony__bindaddress }}
+{% endif %}
+
+{% if chrony__binddevice is defined %}
+binddevice {{ chrony__binddevice }}
+{% endif %}
+
+# This directive specify the file into which chronyd will store the rate
+# information.
+driftfile /var/lib/chrony/chrony.drift
+
+# Save NTS keys and cookies.
+ntsdumpdir /var/lib/chrony
+
+# Uncomment the following line to turn logging on.
+#log tracking measurements statistics
+
+# Log files location.
+logdir /var/log/chrony
+
+# Stop bad estimates upsetting machine clock.
+maxupdateskew 100.0
+
+# This directive enables kernel synchronisation (every 11 minutes) of the
+# real-time clock. Note that it can't be used along with the 'rtcfile' directive.
+rtcsync
+
+# Step the system clock instead of slewing it if the adjustment is larger than
+# one second, but only in the first three clock updates.
+makestep 1 3
+
+# Get TAI-UTC offset and leap seconds from the system tz database.
+{{ __chrony__leap_directive }}

@@ -22,7 +22,7 @@ Which Ansible role is proven to run on which OS?
 | bootloader                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 44                                    |
 | borg_local                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | chromium_headless                     |   x    |  (x)   |   x    |   x    |    x    |           |           |           |                                              |
-| chrony                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| chrony                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | clamav                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cloud_init                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | cockpit                               |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |

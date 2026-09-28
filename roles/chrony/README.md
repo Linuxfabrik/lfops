@@ -11,6 +11,8 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 ## How the Role Behaves
 
+* The configuration is fully templated: `/etc/chrony.conf` on the Red Hat family, `/etc/chrony/chrony.conf` on Debian and Ubuntu, each close to the file the distribution ships. Out-of-band edits are overwritten on the next run (a timestamped backup is kept).
+* On Debian and Ubuntu the configuration keeps the distribution's includes: time sources from DHCP (`/run/chrony-dhcp`), `/etc/chrony/sources.d` and `/etc/chrony/conf.d`. If neither `chrony__ntp_pools` nor `chrony__ntp_servers` is set, it uses the distribution's default pools, so the host keeps synchronising. On the Red Hat family the host then has no time source.
 * The deployed `chrony.conf` loads no key file, so NTP sources are not authenticated with symmetric keys. RHEL 10's own `chrony.conf` does the same, while RHEL 8 and 9 load an `/etc/chrony.keys` that holds no keys.
 
 
@@ -19,7 +21,7 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 `chrony`
 
 * Installs and configures chrony.
-* Triggers: chronyd.service restart.
+* Triggers: chrony service restart (`chronyd.service` on the Red Hat family, `chrony.service` on Debian and Ubuntu).
 
 `chrony:state`
 
