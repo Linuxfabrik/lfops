@@ -18,9 +18,13 @@
 
   roles:
 
-    # we need correct network settings for the rest to work
+    # we need correct network settings for the rest to work.
+    # fedora.linux_system_roles.network supports Fedora and EL only. Without a running
+    # NetworkManager, as on Debian and Ubuntu, it falls back to its initscripts provider and
+    # installs the Red Hat package network-scripts, which aborts the play there.
     - role: 'linuxfabrik.lfops.network'
       when:
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_network | d(false)'
 
     # === Basic repositories ===
@@ -190,6 +194,7 @@
 
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_yum_utils | d(false)'
 
 

@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbook:setup_basic**: The play no longer aborts on Debian and Ubuntu with `No package matching 'network-scripts' is available` or `'__yum_utils__package' is undefined`. The `network` and `yum_utils` roles run on the Red Hat family only, the only platforms they support.
 * **role:firewall**: With `firewall__firewall: 'fwbuilder'` and no `/etc/fwb.sh` on the host, `fwb.service` is no longer started, which failed and was reported as a failed unit and as a change on every run. It is disabled instead, and an earlier failure is reset.
 * **role:monitoring_plugins**: The plugin icons for IcingaWeb2 are no longer missing when the directory `ansible-playbook` runs in contains `.svg` files.
 * **role:monitoring_plugins**: The source install deploys only the modules of the Linuxfabrik library, as the one-line installer does, removes the documentation and development files earlier runs placed next to them, and removes plugin assets the checked-out version no longer carries.
