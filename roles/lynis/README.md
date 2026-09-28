@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.lynis
 
-This role installs [Lynis](https://cisofy.com/lynis/), the security auditing tool, runs an audit of the host once a day through a systemd timer, and deploys `/etc/lynis/custom.prf`, which lists the Lynis tests accepted on the host. The results are left in `/var/log/lynis.log` and `/var/log/lynis-report.dat` for the [lynis monitoring plugin](https://github.com/Linuxfabrik/monitoring-plugins/tree/main/check-plugins/lynis) to evaluate.
+This role installs [Lynis](https://cisofy.com/lynis/), the security auditing tool, runs an audit of the host once a day through a systemd timer, and deploys `/etc/lynis/custom.prf`, which lists the Lynis tests accepted on the host. The results are left in `/var/log/lynis.log` and `/var/log/lynis-report.dat` for the [lynis-logfile monitoring plugin](https://github.com/Linuxfabrik/monitoring-plugins/tree/main/check-plugins/lynis-logfile) to evaluate.
 
 
 *Available in the next LFOps release.*
@@ -12,7 +12,7 @@ This role installs [Lynis](https://cisofy.com/lynis/), the security auditing too
 * `lynis.timer` starts `lynis.service` once a day at `lynis__on_calendar`, which runs `lynis audit system --cronjob --quiet` as root with low CPU and I/O priority. A run takes about two minutes. A host that was down at that time catches up after the next boot (`Persistent=true`).
 * The role deploys both units to `/etc/systemd/system` on every platform. On Debian and Ubuntu they replace the `lynis.timer` and `lynis.service` the package ships, so the audit runs at the same time and with the same options everywhere.
 * Every audit overwrites `/var/log/lynis.log` and `/var/log/lynis-report.dat`. `lynis show details <TEST-ID>` explains a finding from that log.
-* `/etc/lynis/custom.prf` is fully templated from `lynis__skip_tests`. On every run it is re-rendered (a timestamped backup is kept), so a hand-edited `custom.prf` is overwritten. Every audit on the host reads it, the one of the lynis monitoring plugin included, also when the plugin audits the host over SSH from a management host.
+* `/etc/lynis/custom.prf` is fully templated from `lynis__skip_tests`. On every run it is re-rendered (a timestamped backup is kept), so a hand-edited `custom.prf` is overwritten. Every audit on the host reads it: the daily one of `lynis.timer`, and a network scan with the lynis monitoring plugin from a management host.
 * To accept a finding the monitoring plugin reports, take its test ID from the plugin output. Where the plugin says "add `skip-test=NETW-3015` to `/etc/lynis/custom.prf`", add `- name: 'NETW-3015'` to `lynis__skip_tests__host_var` or `lynis__skip_tests__group_var`, and state the reason in `comment`. The finding disappears with the next audit.
 * The role validates each test ID before it writes the file. Lynis refuses to run at all if a setting line of a profile contains a character outside of letters, digits and `/[]()_|,.:;=-`, so a typo would otherwise silence the whole audit instead of one test.
 
@@ -64,7 +64,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `lynis__skip_tests__host_var` / `lynis__skip_tests__group_var`
 
-* Lynis tests to skip on the host, written to `/etc/lynis/custom.prf` as `skip-test=<name>` lines. Use this to accept a finding or a suggestion, for example one the lynis monitoring plugin reports.
+* Lynis tests to skip on the host, written to `/etc/lynis/custom.prf` as `skip-test=<name>` lines. Use this to accept a finding or a suggestion, for example one the lynis-logfile monitoring plugin reports.
 * Type: List of dictionaries.
 * Default: `[]`
 * Subkeys:
