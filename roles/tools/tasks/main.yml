@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   - name: 'Install additional tools like iftop, ncdu and other (x86_64)'
@@ -13,7 +21,7 @@
     ansible.builtin.package:
       name:
         - 'bash-completion'
-        - "{{ 'cloud-guest-utils' if ansible_distribution == 'Debian' else 'cloud-utils-growpart' }}"
+        - '{{ __tools__growpart_package }}'
         - 'jq'
         - 'lsof'
         - 'nano'
