@@ -165,52 +165,28 @@
     - 'firewall:firewalld'
 
 
-# this block intentionally has no "when: firewall__firewall == fwbuilder" condition. run_once picks
-# the first host in the play - if that host does not use fwbuilder, a block-level when would cause
-# the clone to be skipped for all hosts. instead, we extract the repo url across all play hosts
-# (using select to skip undefined and empty values) and use the first truthy match.
+# One clone per repository, in a directory named after its URL, so hosts whose firewall files live
+# in different repositories each deploy their own. The first host clones; the others sharing the
+# URL fetch into the same directory, and `force` resets it to the newest commit, also after a
+# force push. Verified with ansible-core 2.16 against a local repository.
 - block:
 
-  - name: 'Remove any existing local fwb repo'
-    ansible.builtin.file:
-      path: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
-      state: 'absent'
-    changed_when: false # not a config change on the server
-    check_mode: false # run task even if `--check` is specified
-    delegate_to: 'localhost'
-    become: false
-    run_once: true
-    vars:
-      __firewall__fwbuilder_repo_url: >-
-        {{ ansible_play_hosts_all
-           | map('extract', hostvars, 'firewall__fwbuilder_repo_url')
-           | select('defined')
-           | select
-           | first
-           | default('') }}
-    when: '__firewall__fwbuilder_repo_url | length > 0'
-
-  - name: 'Clone the fwb git repo to localhost'
+  - name: 'Clone the fwb git repo to localhost' # noqa latest[git] the newest compiled firewall is what is deployed
     ansible.builtin.git:
-      repo: '{{ __firewall__fwbuilder_repo_url }}'
-      dest: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
+      repo: '{{ firewall__fwbuilder_repo_url }}'
+      dest: '{{ __firewall__fwbuilder_repo_dir }}'
       depth: 1
       single_branch: true
+      force: true
     changed_when: false # not a config change on the server
     delegate_to: 'localhost'
     become: false
-    run_once: true
+    throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
-    vars:
-      __firewall__fwbuilder_repo_url: >-
-        {{ ansible_play_hosts_all
-           | map('extract', hostvars, 'firewall__fwbuilder_repo_url')
-           | select('defined')
-           | select
-           | first
-           | default('') }}
-    when: '__firewall__fwbuilder_repo_url | length > 0'
 
+  when:
+    - 'firewall__firewall == "fwbuilder"'
+    - 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length > 0'
   tags:
     - 'firewall'
     - 'firewall:deploy_fwb_sh'
@@ -221,7 +197,7 @@
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
       backup: true
-      src: '/tmp/ansible.fwb-{{ inventory_dir | basename }}/{{ firewall__fwbuilder_fw_file }}.fw'
+      src: '{{ __firewall__fwbuilder_repo_dir }}/{{ firewall__fwbuilder_fw_file }}.fw'
       dest: '/etc/fwb.sh'
       owner: 'root'
       group: 'root'

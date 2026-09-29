@@ -389,7 +389,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
           check_mode: false # run task even if `--check` is specified
         ```
 
-    * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
+    * One case legitimately keeps `run_once`: a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`). Running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race.
 
 * Download on the controller, not on the target. Release artifacts, Git checkouts and language packages are fetched with `delegate_to: 'localhost'` and copied over, so a target without Internet access can be provisioned like any other and only the controller needs outbound access. Say in the README's "How the Role Behaves" who needs network access to what. `roles/example` shows the pattern for a release tarball, and "Roles with Special Features" below lists the one for Python dependencies.
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
