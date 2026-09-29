@@ -179,20 +179,7 @@
 
 - block:
 
-  - name: 'mkdir --parents {{ item["mount_path"] }}'
-    ansible.builtin.file:
-      path: '{{ item["mount_path"] }}'
-      state: 'directory'
-      owner: '{{ item["mount_owner"] | d("root") }}'
-      group: '{{ item["mount_group"] | d("root") }}'
-      mode: '{{ item["mount_mode"] | d("0o0755") }}'
-    loop: '{{ lvm__lvs__combined_var }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-    when:
-      - 'item["state"] | d("present") != "absent"'
-      - 'item["mount_path"] is defined'
-
+  # creates the mount point if it is missing
   - name: 'Mount /dev/{{ item["vg"] }}/{{ item["name"] }} to {{ item["mount_path"] }}'
     ansible.posix.mount:
       src: '/dev/{{ item["vg"] }}/{{ item["name"] }}'
@@ -207,6 +194,22 @@
       - 'item["state"] | d("present") != "absent"'
       - 'item["mount_path"] is defined'
     register: '__lvm__mount_result'
+
+  # after mounting, since owner and mode of the mounted file system's root are what users of the
+  # mount point see. Set on the directory underneath, they are hidden by the mount.
+  - name: 'chown {{ item["mount_owner"] | d("root") }}:{{ item["mount_group"] | d("root") }} {{ item["mount_path"] }}'
+    ansible.builtin.file:
+      path: '{{ item["mount_path"] }}'
+      state: 'directory'
+      owner: '{{ item["mount_owner"] | d("root") }}'
+      group: '{{ item["mount_group"] | d("root") }}'
+      mode: '{{ item["mount_mode"] | d("0o0755") }}'
+    loop: '{{ lvm__lvs__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["mount_path"] is defined'
 
   - name: 'restorecon -Frv {{ item["item"]["mount_path"] }}'
     ansible.builtin.command:

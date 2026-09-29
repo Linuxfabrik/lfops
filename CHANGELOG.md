@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lvm**: `mount_owner`, `mount_group` and `mount_mode` apply to the mounted file system from the first run on. Until now they only took effect on the second run, which therefore reported a change.
 * **role:lvm**: Removing an LV (`state: absent`) no longer aborts with `'dict object' has no attribute 'size'`.
 * **role:lvm**: Removing a VG (`state: absent`) no longer aborts with `could not find 'pvs' key` when the entry lists no `pvs`.
 * **role:lvm**: Shrinking an LV works. It needs `force: true` in addition to `shrink: true`; with `shrink: true` alone the run aborted.

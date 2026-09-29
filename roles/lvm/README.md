@@ -30,7 +30,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
 `lvm:mount`
 
-* Creates mount directories, mounts volumes, restorecon.
+* Mounts volumes, sets owner and mode of their mount directories, restorecon.
 * Triggers: none.
 
 `lvm:vg`
