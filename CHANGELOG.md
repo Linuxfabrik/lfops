@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lvm**: The role installs `lvm2`, so it also works on hosts installed without LVM, such as those deployed from a cloud image.
 * **role:lvm**: Creating or resizing a PV no longer fails on RHEL 8 with `SyntaxError: future feature annotations is not defined`.
 * **role:network**: Hosts without `network_connections` or `network_state` no longer run the upstream network role at all, which occasionally hung the play for good after it had finished.
 * **role:chrony**: The role now takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed. The distribution's DHCP and `sources.d` sources are kept, and without `chrony__ntp_pools` or `chrony__ntp_servers` the distribution's default pools are used. The stale `/etc/chrony.conf` is removed.

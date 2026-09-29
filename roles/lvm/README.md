@@ -35,7 +35,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
 `lvm:vg`
 
-* Installs growpart, runs it (if enabled), creates/resizes PVs, creates/extends/removes VGs.
+* Installs lvm2 and growpart, runs growpart (if enabled), creates/resizes PVs, creates/extends/removes VGs.
 * Triggers: none.
 
 
