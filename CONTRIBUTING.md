@@ -1312,11 +1312,21 @@ If you set this up before that `setfacl` existed, the images already in the pool
 
 Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
 
-**The VMs need the libvirt network `default`.** The shared inventory attaches every VM to it. libvirt ships its definition, but a host set up with networks of its own may not have it; `virsh --connect qemu:///system net-list --all` tells. Define it from the shipped file, and give it another bridge name if `virbr0` is already taken by a network of yours:
+**The VMs need the libvirt network `default`.** The shared inventory attaches every VM to it. libvirt ships its definition, but a host set up with networks of its own may not have it; `virsh --connect qemu:///system net-list --all` tells. Define it from the shipped file and have it start with the host:
 
 ```bash
-sed "s/name='virbr0'/name='virbr1'/" /usr/share/libvirt/networks/default.xml > /tmp/default.xml
+sudo virsh net-define /usr/share/libvirt/networks/default.xml
+sudo virsh net-autostart default
+sudo virsh net-start default
+```
+
+If a network of yours already uses the bridge `virbr0` or the subnet `192.168.122.0/24`, `net-start` fails because the bridge or the address is in use. Define the network from an edited copy instead, with a bridge name and a subnet that are free on your host:
+
+```bash
+sed --expression="s/name='virbr0'/name='virbr1'/" --expression='s/192\.168\.122\./192.168.123./g' \
+    /usr/share/libvirt/networks/default.xml > /tmp/default.xml
 sudo virsh net-define /tmp/default.xml
+sudo virsh net-autostart default
 sudo virsh net-start default
 ```
 
