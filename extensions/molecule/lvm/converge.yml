@@ -1,0 +1,2 @@
+- name: 'Converge lvm playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.lvm'

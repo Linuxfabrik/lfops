@@ -1,0 +1,190 @@
+- name: 'Verify the lvm playbook turned the starting layout into the target layout'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # prepare.yml created a 512 MiB partition on a 2 GiB disk and a PV on it. Anything well above
+    # that proves the partition and the PV on it were grown. growpart resizes a PV on the partition
+    # itself (maybe_lvm_resize, verified with cloud-utils-growpart 0.33 on Rocky 9), so the
+    # pvresize of the lvm_pv module finds nothing left to do here; the unit tests cover it.
+    - name: 'pvs --options vg_name,pv_size /dev/vdb1'
+      ansible.builtin.command: 'pvs --noheadings --nosuffix --units m --options vg_name,pv_size /dev/vdb1'
+      changed_when: false
+      register: '__molecule__lvm_pvs_vdb1_result'
+
+    - name: 'Assert that /dev/vdb1 is a PV of the VG "molecule" and was grown to the disk size'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_pvs_vdb1_result["stdout"].split()[0] == "molecule"'
+          - '__molecule__lvm_pvs_vdb1_result["stdout"].split()[1] | float > 1900'
+        fail_msg: '{{ __molecule__lvm_pvs_vdb1_result["stdout"] }}'
+
+    # "gone" was removed although it still held an LV, and "multi" took over its PV. The extent
+    # size is still the one "multi" was created with.
+    - name: 'vgs gone'
+      ansible.builtin.command: 'vgs gone'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__lvm_vgs_gone_result'
+
+    - name: 'pvs --select vg_name=multi --options pv_name,vg_extent_size'
+      ansible.builtin.command: 'pvs --noheadings --nosuffix --units m --select vg_name=multi --options pv_name,vg_extent_size'
+      changed_when: false
+      register: '__molecule__lvm_pvs_multi_result'
+
+    - name: 'Assert that the VG "gone" is removed and the VG "multi" was extended by its PV'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_vgs_gone_result["rc"] != 0'
+          - '__molecule__lvm_pvs_multi_result["stdout_lines"] | map("split") | map("first") | sort == ["/dev/vdc", "/dev/vdd"]'
+          - '__molecule__lvm_pvs_multi_result["stdout_lines"] | map("split") | map("last") | map("float") | unique == [8.0]'
+        fail_msg: '{{ __molecule__lvm_vgs_gone_result["stdout_lines"] + __molecule__lvm_pvs_multi_result["stdout_lines"] }}'
+
+    - name: 'lvs --options lv_size <vg>/<lv>'
+      ansible.builtin.command: 'lvs --noheadings --nosuffix --units m --options lv_size {{ item }}'
+      loop:
+        - 'molecule/data'
+        - 'molecule/owned'
+        - 'molecule/shrink'
+        - 'multi/remove'
+        - 'multi/spread'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__lvm_lvs_result'
+
+    - name: 'Assert the LV sizes: extended, created, shrunk, removed and spread over two PVs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_lv_sizes["molecule/data"] | float == 1024'
+          - '__molecule__lvm_lv_sizes["molecule/owned"] | float == 300'
+          - '__molecule__lvm_lv_sizes["molecule/shrink"] | float == 100'
+          - '__molecule__lvm_lv_sizes["multi/remove"] == ""'
+          # the two 1 GiB disks, minus what the VG metadata takes
+          - '__molecule__lvm_lv_sizes["multi/spread"] | float > 1900'
+        fail_msg: '{{ __molecule__lvm_lv_sizes | to_json }}'
+      vars:
+        __molecule__lvm_lv_sizes: >-
+          {{ dict(__molecule__lvm_lvs_result["results"] | map(attribute="item")
+            | zip(__molecule__lvm_lvs_result["results"] | map(attribute="stdout") | map("trim"))) }}
+
+    # The file systems of the LVs that grew have to have grown with them (resizefs), beyond the size
+    # the LV had after prepare.yml. Mount options changed since prepare.yml have to be in effect.
+    - name: 'findmnt --output SOURCE,FSTYPE,SIZE,OPTIONS <mount path>'
+      ansible.builtin.command: 'findmnt --noheadings --bytes --output SOURCE,FSTYPE,SIZE,OPTIONS --mountpoint {{ item["path"] }}'
+      loop:
+        # min_size in MiB: the LV size after prepare.yml, where the file system grew
+        - path: '/mnt/molecule-data'
+          source: '/dev/mapper/molecule-data'
+          min_size: 300
+        - path: '/mnt/molecule-owned'
+          source: '/dev/mapper/molecule-owned'
+          min_size: 0
+        - path: '/mnt/molecule-spread'
+          source: '/dev/mapper/multi-spread'
+          min_size: 1000
+      loop_control:
+        label: '{{ item["path"] }}'
+      changed_when: false
+      register: '__molecule__lvm_findmnt_result'
+
+    - name: 'Assert that the LVs are mounted with XFS, grown where the LV grew'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout"].split()[0] == item["item"]["source"]'
+          - 'item["stdout"].split()[1] == "xfs"'
+          - 'item["stdout"].split()[2] | int > item["item"]["min_size"] * 1024 * 1024'
+        fail_msg: '{{ item["stdout"] }}'
+      loop: '{{ __molecule__lvm_findmnt_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["path"] }}'
+
+    - name: 'Assert that /mnt/molecule-data is mounted with the options from the inventory'
+      ansible.builtin.assert:
+        that:
+          - '"nodev" in __molecule__lvm_data_options'
+          - '"noexec" in __molecule__lvm_data_options'
+          - '"nosuid" in __molecule__lvm_data_options'
+        fail_msg: '{{ __molecule__lvm_data_options }}'
+      vars:
+        __molecule__lvm_data_options: '{{ __molecule__lvm_findmnt_result["results"][0]["stdout"].split()[3].split(",") }}'
+
+    # Owner and mode have to be those of the mounted file system's root, which is what users of the
+    # mount point see, not those of the directory underneath it.
+    - name: 'stat /mnt/molecule-owned'
+      ansible.builtin.stat:
+        path: '/mnt/molecule-owned'
+      register: '__molecule__lvm_owned_stat_result'
+
+    - name: 'Assert that the mounted /mnt/molecule-owned has the owner and mode from the inventory'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_owned_stat_result["stat"]["pw_name"] == "nobody"'
+          - '__molecule__lvm_owned_stat_result["stat"]["gr_name"] == "daemon"'
+          - '__molecule__lvm_owned_stat_result["stat"]["mode"] == "0750"'
+        fail_msg: '{{ __molecule__lvm_owned_stat_result["stat"] | to_json }}'
+
+    # A freshly made file system carries no SELinux labels, restorecon has to have labelled it.
+    # `restorecon -n -v` lists what it would relabel, so no output means the labels are right.
+    - block:
+
+        - name: 'restorecon -n -v -R /mnt/molecule-owned /mnt/molecule-spread'
+          ansible.builtin.command: 'restorecon -n -v -R /mnt/molecule-owned /mnt/molecule-spread'
+          changed_when: false
+          register: '__molecule__lvm_restorecon_result'
+
+        - name: 'Assert that the mounted file systems are labelled correctly'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__lvm_restorecon_result["stdout"] | length == 0'
+            fail_msg: '{{ __molecule__lvm_restorecon_result["stdout_lines"] }}'
+
+      when:
+        - 'ansible_facts["selinux"]["status"] == "enabled"'
+
+    # A shrunk ext4 has to fit into its LV and be consistent, otherwise resizefs did not shrink it
+    # first. e2fsck -n only reads.
+    - name: 'e2fsck -f -n /dev/molecule/shrink'
+      ansible.builtin.command: 'e2fsck -f -n /dev/molecule/shrink'
+      changed_when: false
+
+    - name: 'dumpe2fs -h /dev/molecule/shrink'
+      ansible.builtin.command: 'dumpe2fs -h /dev/molecule/shrink'
+      changed_when: false
+      register: '__molecule__lvm_dumpe2fs_result'
+
+    - name: 'Assert that the ext4 file system was shrunk with its LV'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_ext4_size | int <= 100 * 1024 * 1024'
+          - '__molecule__lvm_ext4_size | int > 90 * 1024 * 1024'
+        fail_msg: '{{ __molecule__lvm_dumpe2fs_result["stdout_lines"] }}'
+      vars:
+        __molecule__lvm_ext4_size: >-
+          {{ (__molecule__lvm_dumpe2fs_result["stdout"] | regex_search("^Block count:\s+(\d+)", "\1", multiline=true) | first | int)
+            * (__molecule__lvm_dumpe2fs_result["stdout"] | regex_search("^Block size:\s+(\d+)", "\1", multiline=true) | first | int) }}
+
+    # The role rejects relative sizes before it touches anything. Run it with one and expect it to
+    # fail on exactly that check.
+    - block:
+
+        - name: 'Run the lvm role with a relative LV size'
+          ansible.builtin.include_role:
+            name: 'linuxfabrik.lfops.lvm'
+          vars:
+            lvm__lvs__group_var:
+              - name: 'data'
+                vg: 'molecule'
+                size: '+1G'
+            lvm__vgs__group_var: []
+
+        - name: 'The role accepted a relative LV size'
+          ansible.builtin.fail:
+            msg: 'The role did not reject size "+1G".'
+
+      rescue:
+
+        - name: 'Assert that the role rejected the relative size'
+          ansible.builtin.assert:
+            that:
+              - 'ansible_failed_task["name"] is search("Validate size does not start with")'
+            fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result }}'
