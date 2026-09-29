@@ -1,0 +1,64 @@
+# Additional disks per VM, so the scenario never touches the boot disk: /dev/vdb, /dev/vdc and
+# /dev/vdd, in this order.
+kvm_vm__additional_disks:
+  - name: 'lvm-b'
+    size: '2G'
+  - name: 'lvm-c'
+    size: '1G'
+  - name: 'lvm-d'
+    size: '1G'
+
+# The target layout. prepare.yml creates the starting layout, see there.
+lvm__lvs__group_var:
+  # extended from 300M, which only fits because the PV below grew. The file system has to grow
+  # with it (resizefs) and is remounted with the new options.
+  - name: 'data'
+    vg: 'molecule'
+    size: '1G'
+    mount_path: '/mnt/molecule-data'
+    mount_opts: 'nodev,noexec,nosuid'
+  # created in this run, mounted on a directory the role creates for a non-root owner. The group
+  # is not "nobody", which is called "nogroup" on Debian and Ubuntu.
+  - name: 'owned'
+    vg: 'molecule'
+    size: '300M'
+    mount_path: '/mnt/molecule-owned'
+    mount_owner: 'nobody'
+    mount_group: 'daemon'
+    mount_mode: 0o750
+  # shrunk from 150M, together with its (unmounted) ext4 file system
+  - name: 'shrink'
+    vg: 'molecule'
+    size: '100M'
+    fstype: 'ext4'
+    shrink: true
+    force: true
+  - name: 'remove'
+    vg: 'multi'
+    state: 'absent'
+    force: true
+  # created with 100%FREE, now the only LV in a VG that got a second PV. 100%VG fills both PVs;
+  # 100%FREE would set it to the size of the space that is free right now (see the README).
+  - name: 'spread'
+    vg: 'multi'
+    size: '100%VG'
+    mount_path: '/mnt/molecule-spread'
+
+lvm__vgs__group_var:
+  # the starting PV only spans the 512 MiB partition. growpart grows the partition to the whole
+  # disk and the PV with it; this is how a VM disk grown on the hypervisor is picked up.
+  - name: 'molecule'
+    pvs:
+      - '/dev/vdb1'
+    growpart: true
+  # removed with the LV that is still in it. Its PV is taken over by the VG below in the same run.
+  - name: 'gone'
+    state: 'absent'
+    force: true
+  # extended by a second PV. growpart is skipped for whole disks.
+  - name: 'multi'
+    pvs:
+      - '/dev/vdc'
+      - '/dev/vdd'
+    pesize: '8'
+    growpart: true

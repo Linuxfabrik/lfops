@@ -1,0 +1,9 @@
+# The Python 3.6 venv of the managed-node tier of the unit tests (modules, module_utils), see
+# tox.ini. pytest 6.2.5 is the last release that runs on Python 3.6, so there is nothing to update
+# here until LFOps drops RHEL 8. For the same reason Dependabot does not watch this directory: it
+# resolves with a current Python and would pick releases without Python 3.6 support. Regenerate
+# requirements.txt inside UBI 8 (Python 3.6, pip-tools < 7) with
+# `pip-compile --allow-unsafe --generate-hashes --strip-extras requirements.in`.
+#
+# ansible-core is not installed here, see ../unit-tests-py36-ansible-core.
+pytest==6.2.5

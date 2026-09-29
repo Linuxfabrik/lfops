@@ -1164,6 +1164,7 @@ Some files under `plugins/modules/` and `plugins/module_utils/` are not authored
 
     * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
     * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
+    * Local patch: `from __future__ import annotations` is replaced by `from __future__ import absolute_import, division, print_function`, since Python 3.6 does not know the former. Keep this when re-syncing.
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
 
 * `plugins/module_utils/gnupg.py` (and its `gnupg.py_LICENSE.txt`)
@@ -1203,7 +1204,7 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
 * **Two tiers**, because plugins run in different environments:
 
     * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
-    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). That tier runs inside a RHEL 8 / UBI 8 container; it is scaffolded in `tox.ini` (`[testenv:py36-target]`) and gets enabled once such tests exist.
+    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). Their tests run on the controller matrix and additionally inside a RHEL 8 / UBI 8 container (`[testenv:py36-target]` in `tox.ini`), so the test code has to be valid Python 3.6 too. See `tests/README.md`.
 
 * **How to run / verify** (the matrix of Python and ansible-core versions is driven by `tox`; see `tests/README.md` and `tox.ini`):
 
@@ -1214,7 +1215,7 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
     pytest tests/unit        # against the active interpreter (needs pytest, pyyaml, ansible-core)
     ```
 
-* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
+* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix and the Python 3.6 tier on every push and pull request.
 
 
 ### Testing

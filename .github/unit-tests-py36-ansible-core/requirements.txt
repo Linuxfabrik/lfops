@@ -1,0 +1,12 @@
+# The ansible-core whose module_utils the managed-node tier of the unit tests imports on Python 3.6,
+# see tox.ini. In production, the controller ships its own module_utils to the managed node, so the
+# modules meet exactly this code on RHEL 8. 2.16 is the last series that supports Python 3.6 on the
+# managed node; Dependabot therefore only proposes 2.16 releases (see .github/dependabot.yml).
+#
+# Only ansible-core itself is installed, with `--no-deps --target`, and put on PYTHONPATH: its
+# controller part and dependencies need Python 3.10, module_utils only need the standard library.
+# That is also why this file is not compiled with pip-compile, which would add the dependencies.
+# The hashes are those of the wheel and the sdist on PyPI.
+ansible-core==2.16.19 \
+    --hash=sha256:5125f26412039ffb99a3a7723618535ab80e6ef38944aa2453997350388f4ef4 \
+    --hash=sha256:d7a32ba0f96f9c6582b7ff159a4a6f0e694662cfc4840497c88fed63bf58cd14

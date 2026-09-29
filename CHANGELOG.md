@@ -75,6 +75,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lvm**: On Debian and Ubuntu, mounting an LV no longer fails on `restorecon`, which only runs where SELinux is enabled.
+* **role:lvm**: The role installs the tools for XFS and ext2/3/4, so creating the default XFS file system no longer fails on hosts without `mkfs.xfs`, such as those deployed from a Debian cloud image.
+* **role:lvm**: `mount_owner`, `mount_group` and `mount_mode` apply to the mounted file system from the first run on. Until now they only took effect on the second run, which therefore reported a change.
+* **role:lvm**: Removing an LV (`state: absent`) no longer aborts with `'dict object' has no attribute 'size'`.
+* **role:lvm**: Removing a VG (`state: absent`) no longer aborts with `could not find 'pvs' key` when the entry lists no `pvs`.
+* **role:lvm**: Shrinking an LV works. It needs `force: true` in addition to `shrink: true`; with `shrink: true` alone the run aborted.
+* **role:lvm**: The role installs `lvm2`, so it also works on hosts installed without LVM, such as those deployed from a cloud image.
+* **role:lvm**: Creating or resizing a PV no longer fails on RHEL 8 with `SyntaxError: future feature annotations is not defined`.
 * **role:network**: Hosts without `network_connections` or `network_state` no longer run the upstream network role at all, which occasionally hung the play for good after it had finished.
 * **role:chrony**: The role now takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed. The distribution's DHCP and `sources.d` sources are kept, and without `chrony__ntp_pools` or `chrony__ntp_servers` the distribution's default pools are used. The stale `/etc/chrony.conf` is removed.
 * **role:kernel_settings**: The role no longer aborts on Ubuntu 22.04 with `Verification failed, current system settings differ from the preset profile`. The TuneD release of Ubuntu 22.04 sets two scheduler sysctls the kernel no longer has, and the role now removes them from the profile it builds on.

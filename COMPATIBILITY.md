@@ -95,7 +95,7 @@ Which Ansible role is proven to run on which OS?
 | login                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35+                                   |
 | logrotate                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | logstash                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
-| lvm                                   |        |        |  (x)   |  (x)   |    x    |           |           |           |                                              |
+| lvm                                   |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | lynis                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mailto_root                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mailx                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
