@@ -1,0 +1,28 @@
+- name: 'Verify the switch from fwbuilder to nftables'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    # Queried via systemctl: service_facts reports a masked unit that is still running as
+    # "masked" without saying whether it runs. is-active and is-enabled answer both questions.
+    - name: 'systemctl is-active fwb.service nftables.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active fwb.service nftables.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__is_active_result'
+
+    - name: 'systemctl is-enabled fwb.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled fwb.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__fwb_is_enabled_result'
+
+    # The firewall the host switched away from must not keep running next to the new one, and must
+    # not come back at the next boot.
+    - name: 'Assert that fwb.service is stopped and masked and nftables.service is active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__is_active_result["stdout_lines"] == ["inactive", "active"]'
+          - '__molecule__fwb_is_enabled_result["stdout"] == "masked"'
+        fail_msg: '{{ __molecule__is_active_result["stdout_lines"] + [__molecule__fwb_is_enabled_result["stdout"]] }}'
