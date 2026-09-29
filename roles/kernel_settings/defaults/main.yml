@@ -9,7 +9,7 @@ kernel_settings__sysctl__combined_var: '{{ (
 kernel_settings__sysctl__dependent_var: []
 kernel_settings__sysctl__group_var: []
 kernel_settings__sysctl__host_var: []
-kernel_settings__sysctl__role_var: '{{ __kernel_settings__sysctl__role_var }}'
+kernel_settings__sysctl__role_var: '{{ __kernel_settings__sysctl__role_var }}'  # upstream default: []
 kernel_settings__sysfs__combined_var: '{{ (
       kernel_settings__sysfs__role_var +
       kernel_settings__sysfs__dependent_var +

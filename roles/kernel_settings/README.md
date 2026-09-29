@@ -10,7 +10,7 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 
 ## How the Role Behaves
 
-* On Ubuntu 22.04 the role removes `kernel.sched_min_granularity_ns` and `kernel.sched_wakeup_granularity_ns` from the TuneD profile it builds on (a `drop` entry in its own profile). The TuneD release of Ubuntu 22.04 still sets them, the kernel no longer has them, and TuneD's own verification would otherwise fail on every run.
+* On Ubuntu 22.04 the role removes `kernel.sched_min_granularity_ns` and `kernel.sched_wakeup_granularity_ns` from the TuneD profile it builds on (a `drop` entry in its own profile). The TuneD release of Ubuntu 22.04 sets them although its 5.15 kernel has neither, and TuneD's own verification would otherwise fail on every run.
 
 
 ## Known Limitations
@@ -52,15 +52,80 @@ Manual steps:
 
 ## Optional Role Variables
 
-These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time.
+These variables are intended to be used in a host / group variable file in the Ansible inventory. Note that the group variable can only be used in one group at a time. For details on the values have a look at the [linux_system_roles.kernel_settings role](https://github.com/linux-system-roles/kernel_settings/blob/master/README.md).
 
-* `kernel_settings__sysctl__host_var`, `kernel_settings__sysctl__group_var`
-* `kernel_settings__sysfs__host_var`, `kernel_settings__sysfs__group_var`
-* `kernel_settings__systemd_cpu_affinity__host_var`, `kernel_settings__systemd_cpu_affinity__group_var`
-* `kernel_settings__transparent_hugepages_defrag__host_var`, `kernel_settings__transparent_hugepages_defrag__group_var`
-* `kernel_settings__transparent_hugepages__host_var`, `kernel_settings__transparent_hugepages__group_var`
+`kernel_settings__sysctl__host_var` / `kernel_settings__sysctl__group_var`
 
-For details have a look at the available role variables from the [linux_system_roles.kernel_settings role](https://github.com/linux-system-roles/kernel_settings/blob/master/README.md).
+* sysctl settings. Entries are identified by `name`, so an entry from the inventory is merged into the default entry of the same name.
+* Type: List of dictionaries.
+* Default: on Ubuntu 22.04
+
+    ```yaml
+    - name: 'drop'
+      value: 'kernel.sched_min_granularity_ns,kernel.sched_wakeup_granularity_ns'
+    ```
+
+    `[]` on all other platforms.
+
+* Deviates from the upstream default `[]` on Ubuntu 22.04: the TuneD profile there sets two scheduler sysctls that the 5.15 kernel does not have, and TuneD's own verification would fail on every run (see "How the Role Behaves").
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the sysctl, or `drop` to remove options from the TuneD profile the role builds on. An inventory entry named `drop` replaces the value of the default one, so list the two scheduler sysctls there as well on Ubuntu 22.04.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. `absent` removes the setting from the profile.
+        * Type: String.
+        * Default: `'present'`
+
+    * `value`:
+
+        * Mandatory for `state: 'present'` entries. Value of the sysctl, or the comma-separated options for `drop`.
+        * Type: String or Number.
+
+`kernel_settings__sysfs__host_var` / `kernel_settings__sysfs__group_var`
+
+* sysfs settings. Entries are identified by `name`.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Path below `/sys`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. `absent` removes the setting from the profile.
+        * Type: String.
+        * Default: `'present'`
+
+    * `value`:
+
+        * Mandatory for `state: 'present'` entries. Value to write.
+        * Type: String or Number.
+
+`kernel_settings__systemd_cpu_affinity__host_var` / `kernel_settings__systemd_cpu_affinity__group_var`
+
+* The CPUs systemd pins its processes to, for example `'1,3,5,7'`.
+* Type: String.
+* Default: `''` (not set by the role, the TuneD profile's value applies)
+
+`kernel_settings__transparent_hugepages__host_var` / `kernel_settings__transparent_hugepages__group_var`
+
+* The transparent hugepages mode.
+* Type: String. One of `always`, `madvise`, `never`.
+* Default: `''` (not set by the role, the TuneD profile's value applies)
+
+`kernel_settings__transparent_hugepages_defrag__host_var` / `kernel_settings__transparent_hugepages_defrag__group_var`
+
+* The transparent hugepages defrag mode.
+* Type: String. One of `always`, `defer`, `defer+madvise`, `madvise`, `never`.
+* Default: `''` (not set by the role, the TuneD profile's value applies)
 
 Example:
 ```yaml
