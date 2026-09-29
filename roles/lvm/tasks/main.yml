@@ -82,8 +82,8 @@
       - 'not __lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^NOCHANGE:", multiline=true)'
 
   - name: 'pvcreate / pvresize {{ item[1] }}'
-    # we copied the upstream https://github.com/ansible-collections/community.general/blob/28b16eab66c56e69794fbf8fb3b7bd4486f7505b/plugins/modules/lvm_pv.py because it is only available in community.general collection version 12.2.0
-    # we have to us an older version because we still need to support rhel8
+    # we copied the upstream https://github.com/ansible-collections/community.general/blob/28b16eab66c56e69794fbf8fb3b7bd4486f7505b/plugins/modules/lvm_pv.py because it is only available in community.general 11.0.0 and later
+    # we have to use an older community.general because we still need to support rhel8 (see "Vendored Plugins" in CONTRIBUTING.md)
     linuxfabrik.lfops.lvm_pv:
       device: '{{ item[1] }}'
       state: 'present'

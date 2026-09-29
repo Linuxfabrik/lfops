@@ -58,7 +58,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `size`:
 
-        * Mandatory (for state=present). Absolute size of the LV (relative sizes with `+` or `-` prefix are not allowed). Supports formats like `10G`, `512M`, `100%FREE`, `50%VG`, `50%PVS`, `50%ORIGIN`.
+        * Mandatory (for state=present). Absolute size of the LV (relative sizes with `+` or `-` prefix are not allowed). Supports formats like `10G`, `512M`, `100%FREE`, `50%VG`, `50%PVS`, `50%ORIGIN`. For an LV that already exists, `N%FREE` sets it to N% of the space that is free in the VG right now, not to its current size plus that space. To have an existing LV fill its VG, use `100%VG` if it is the only LV, or an absolute size.
         * Type: String.
 
     * `fstype`:
