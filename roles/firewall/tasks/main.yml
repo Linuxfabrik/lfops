@@ -1,3 +1,32 @@
+# Validated before any firewall is stopped: without /etc/fwb.sh, fwb.service fails right after
+# `systemctl start` (Type=simple, status=203/EXEC), and the host would end up with no firewall at
+# all. With firewall__fwbuilder_repo_url set, the deploy task below fails on its own if the
+# repository has no file for this host.
+- block:
+
+  - name: 'stat /etc/fwb.sh'
+    ansible.builtin.stat:
+      path: '/etc/fwb.sh'
+    register: '__firewall__fwb_sh_stat_result'
+
+  - name: 'Assert that there is an /etc/fwb.sh for fwb.service to run'
+    ansible.builtin.assert:
+      that:
+        - '__firewall__fwb_sh_stat_result["stat"]["exists"] | bool'
+      quiet: true
+      fail_msg: >-
+        firewall__firewall is 'fwbuilder', but there is no /etc/fwb.sh, so the host would run
+        without a firewall. Deploy /etc/fwb.sh, set firewall__fwbuilder_repo_url, or set
+        firewall__firewall to the firewall this host uses.
+
+  when:
+    - 'firewall__firewall == "fwbuilder"'
+    - 'firewall__fwbuilder_repo_url is not defined or firewall__fwbuilder_repo_url | length == 0'
+  tags:
+    - 'firewall'
+    - 'firewall:deploy_fwb_sh'
+
+
 - block:
 
   - name: 'Get the list of services'
@@ -194,67 +223,25 @@
         - 'nftables'
       state: 'present'
 
-  # /etc/fwb.sh comes from firewall__fwbuilder_repo_url or is deployed by hand, so it may be
-  # missing. fwb.service is Type=simple, so `systemctl start` returns 0 even then, and the unit
-  # fails right after with status=203/EXEC. That left a failed unit on every such host and
-  # reported a change on every run. Verified with systemd 252 on Rocky 9.
-  - name: 'stat /etc/fwb.sh'
-    ansible.builtin.stat:
-      path: '/etc/fwb.sh'
-    register: '__firewall__fwb_sh_stat_result'
-
-  - name: 'systemctl disable fwb.service (there is no /etc/fwb.sh to run)'
+  # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`
+  # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
+  # The ever-first start of netfilter changes something on Linux (kernel modules or something).
+  # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
+  # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So split this up, and
+  # first stop the firewall, then start it, no matter what.
+  - name: 'Be sure fwb is enabled and not masked'
     ansible.builtin.systemd:
       name: 'fwb.service'
-      enabled: false
+      # state: 'stopped' 2025-02-28: let's try if splitting the enabling and starting is enough without stopping, to prevent service distruptions during deployment
+      # we use the handler to restart the fwb in case of changes
+      enabled: true
       masked: false
       daemon_reload: true
-    when:
-      - 'not __firewall__fwb_sh_stat_result["stat"]["exists"]'
-      - '(firewall__deploy_fwb_result | d({})) is not changed' # --check reports the deploy without doing it
 
-  # a host set up before the task above has a failed fwb.service, which a failed-units check
-  # keeps reporting until the next reboot
-  - name: 'systemctl is-failed fwb.service' # noqa command-instead-of-module (read-only state query)
-    ansible.builtin.command: 'systemctl is-failed fwb.service'
-    register: '__firewall__fwb_is_failed_result'
-    changed_when: false
-    failed_when: false
-    check_mode: false # read-only, also run in check mode
-    when:
-      - 'not __firewall__fwb_sh_stat_result["stat"]["exists"]'
-
-  - name: 'systemctl reset-failed fwb.service' # noqa command-instead-of-module (the module has no reset-failed)
-    ansible.builtin.command: 'systemctl reset-failed fwb.service'
-    changed_when: true
-    when:
-      - 'not __firewall__fwb_sh_stat_result["stat"]["exists"]'
-      - '__firewall__fwb_is_failed_result["stdout"] | d("") == "failed"'
-
-  - block:
-
-    # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`
-    # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
-    # The ever-first start of netfilter changes something on Linux (kernel modules or something).
-    # Every subsequent run of `/etc/fwb.sh start` runs flawlessly.
-    # `/etc/fwb.sh stop` doesn't change much, but also involves netfilter. So split this up, and
-    # first stop the firewall, then start it, no matter what.
-    - name: 'Be sure fwb is enabled and not masked'
-      ansible.builtin.systemd:
-        name: 'fwb.service'
-        # state: 'stopped' 2025-02-28: let's try if splitting the enabling and starting is enough without stopping, to prevent service distruptions during deployment
-        # we use the handler to restart the fwb in case of changes
-        enabled: true
-        masked: false
-        daemon_reload: true
-
-    - name: 'systemctl start fwb.service'
-      ansible.builtin.systemd:
-        name: 'fwb.service'
-        state: 'started'
-
-    when:
-      - '__firewall__fwb_sh_stat_result["stat"]["exists"] or (firewall__deploy_fwb_result | d({})) is changed'
+  - name: 'systemctl start fwb.service'
+    ansible.builtin.systemd:
+      name: 'fwb.service'
+      state: 'started'
 
   when: 'firewall__firewall == "fwbuilder"'
   tags:

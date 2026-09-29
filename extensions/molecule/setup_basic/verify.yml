@@ -60,18 +60,19 @@
           - '"KRNL-5820" in __molecule__lynis_report_result["stdout"]'
         fail_msg: '{{ __molecule__lynis_audit_result["stdout_lines"][-20:] }}'
 
-    # The scenario deploys no /etc/fwb.sh, so the firewall role must leave fwb.service alone
-    # instead of starting a unit that fails with status=203/EXEC, which a failed-units check reports.
-    - name: 'systemctl is-failed fwb.service' # noqa command-instead-of-module (read-only state query)
-      ansible.builtin.command: 'systemctl is-failed fwb.service'
+    # nftables.service is Type=oneshot with RemainAfterExit=yes on every distribution under test,
+    # so "active" means `nft -f` loaded the distribution's ruleset. The ruleset itself is empty on
+    # the Red Hat family, so listing it would prove nothing more.
+    - name: 'systemctl is-active nftables.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active nftables.service'
       changed_when: false
       failed_when: false
-      register: '__molecule__fwb_failed_result'
+      register: '__molecule__nftables_active_result'
 
-    - name: 'Assert that fwb.service has not failed'
+    - name: 'Assert that nftables.service is active'
       ansible.builtin.assert:
-        that: '__molecule__fwb_failed_result["stdout"] != "failed"'
-        fail_msg: '{{ __molecule__fwb_failed_result["stdout"] }}'
+        that: '__molecule__nftables_active_result["stdout"] == "active"'
+        fail_msg: '{{ __molecule__nftables_active_result["stdout"] }}'
 
     # Ask chronyd for its sources instead of reading the file: on Debian and Ubuntu chronyd only
     # reads /etc/chrony/chrony.conf, so a file deployed to the wrong path would pass a file check

@@ -3,6 +3,11 @@
 chrony__ntp_servers:
   - '192.0.2.1'
 
+# The default fwbuilder needs an /etc/fwb.sh this scenario cannot supply, and the role aborts
+# without it. nftables exists on every distribution under test and starts with the ruleset the
+# distribution ships.
+firewall__firewall: 'nftables'
+
 mailto_root__from: 'root@localhost'
 mailto_root__to:
   - 'root@localhost'
