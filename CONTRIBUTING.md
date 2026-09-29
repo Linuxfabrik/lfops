@@ -1164,6 +1164,7 @@ Some files under `plugins/modules/` and `plugins/module_utils/` are not authored
 
     * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
     * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
+    * Local patch: `from __future__ import annotations` is replaced by `from __future__ import absolute_import, division, print_function`, since Python 3.6 does not know the former. Keep this when re-syncing.
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
 
 * `plugins/module_utils/gnupg.py` (and its `gnupg.py_LICENSE.txt`)
