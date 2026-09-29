@@ -49,9 +49,13 @@ pytest tests/unit
 
 ## Managed-node tier (Python 3.6 / RHEL 8)
 
-CI runners no longer ship Python 3.6, so module tests have to run inside a RHEL 8 / UBI 8 container. The `[testenv:py36-target]` env in `tox.ini` is scaffolded for this but not yet enabled, since the only plugin with tests so far (`combine_lod`) is a controller-side filter. Enable it once module tests exist, for example:
+CI runners no longer ship Python 3.6, so the module tests also run inside a RHEL 8 / UBI 8 container. They import the module_utils of ansible-core 2.16, the last series that supports Python 3.6 on the managed node, which is what the controller ships to a RHEL 8 host in production. ansible-core itself needs Python 3.10, so only the package is put on `PYTHONPATH`, without its dependencies. This is what catches syntax that the RHEL 8 platform-python does not understand. The `[testenv:py36-target]` env in `tox.ini` runs it locally. tox 4 no longer runs on Python 3.6, so use tox 3 inside the container:
 
 ```bash
 podman run --rm -v "$PWD":/src:Z -w /src registry.access.redhat.com/ubi8/ubi \
-  bash -c 'dnf -y install python3 python3-pip && pip3 install tox && tox -e py36-target'
+  bash -c 'dnf -y install python3 python3-pip && pip3 install "tox<4" && tox -e py36-target'
 ```
+
+The `Linuxfabrik: Unit Tests` workflow runs the same tests in that container. Both install from the hash-pinned `.github/unit-tests-py36/requirements.txt` (pytest) and `.github/unit-tests-py36-ansible-core/requirements.txt` (ansible-core 2.16, kept current by Dependabot).
+
+Test code in this tier has to be valid Python 3.6 as well. `pyproject.toml` therefore sets a per-file ruff target of `py37` (the oldest ruff knows) for modules, module_utils and their tests, so `ruff format` does not introduce newer syntax such as parenthesized context managers.

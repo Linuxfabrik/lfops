@@ -1204,7 +1204,7 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
 * **Two tiers**, because plugins run in different environments:
 
     * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
-    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). That tier runs inside a RHEL 8 / UBI 8 container; it is scaffolded in `tox.ini` (`[testenv:py36-target]`) and gets enabled once such tests exist.
+    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). Their tests run on the controller matrix and additionally inside a RHEL 8 / UBI 8 container (`[testenv:py36-target]` in `tox.ini`), so the test code has to be valid Python 3.6 too. See `tests/README.md`.
 
 * **How to run / verify** (the matrix of Python and ansible-core versions is driven by `tox`; see `tests/README.md` and `tox.ini`):
 
@@ -1215,7 +1215,7 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
     pytest tests/unit        # against the active interpreter (needs pytest, pyyaml, ansible-core)
     ```
 
-* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
+* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix and the Python 3.6 tier on every push and pull request.
 
 
 ### Testing
