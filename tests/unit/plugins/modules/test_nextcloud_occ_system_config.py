@@ -231,6 +231,28 @@ class TestPresent(OccSystemConfigTestCase):
         self.assertFalse(result['changed'])
         self.assertEqual(self.occ.writes(), [])
 
+    def test_missing_key_is_set_to_an_empty_string(self):
+        # a missing key also reads as '', which must not count as a match
+        result = self._run(name='overwrite.cli.url', value='')
+        self.assertTrue(result['changed'])
+        self.assertEqual(len(self.occ.writes()), 1)
+        self.assertEqual(self.occ.config['overwrite.cli.url'], '')
+
+    def test_empty_string_already_set_is_left_alone(self):
+        self.occ.config = {'overwrite.cli.url': ''}
+        result = self._run(name='overwrite.cli.url', value='')
+        self.assertFalse(result['changed'])
+        self.assertEqual(self.occ.writes(), [])
+
+    def test_cached_missing_key_is_set_to_an_empty_string(self):
+        result = self._run(
+            name='overwrite.cli.url',
+            value='',
+            installed_config_json={'system': {}},
+        )
+        self.assertTrue(result['changed'])
+        self.assertEqual(len(self.occ.writes()), 1)
+
     def test_value_is_required(self):
         result = self._fail(name='default_language')
         self.assertIn('value', result['msg'])
