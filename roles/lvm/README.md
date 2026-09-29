@@ -69,19 +69,19 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `resizefs`:
 
-        * Optional. Resize the underlying filesystem when extending the LV.
+        * Optional. Resize the filesystem together with the LV.
         * Type: Bool.
         * Default: `true`
 
     * `shrink`:
 
-        * Optional. Allow shrinking the LV.
+        * Optional. Allow shrinking the LV. Also needs `force: true`. XFS cannot be shrunk.
         * Type: Bool.
         * Default: `false`
 
     * `force`:
 
-        * Optional. Force removal of LV. Only used when `state: absent`.
+        * Optional. Has to be `true` to shrink (together with `shrink: true`) or to remove (`state: absent`) the LV. The role refuses both otherwise, so that no file system is destroyed by mistake.
         * Type: Bool.
         * Default: `false`
 

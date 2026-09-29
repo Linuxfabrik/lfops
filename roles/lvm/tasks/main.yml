@@ -146,6 +146,8 @@
       lv: '{{ item["name"] }}'
       size: '{{ item["size"] }}'
       state: 'present'
+      # in the present state, lvol only uses force to allow shrinking
+      force: '{{ item["force"] | d(false) }}'
       resizefs: '{{ item["resizefs"] | d(true) }}'
       shrink: '{{ item["shrink"] | d(false) }}'
     loop: '{{ lvm__lvs__combined_var }}'
