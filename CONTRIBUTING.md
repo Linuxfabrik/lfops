@@ -389,7 +389,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
           check_mode: false # run task even if `--check` is specified
         ```
 
-    * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
+    * One case legitimately keeps `run_once`: a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`). Running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race.
 
 * Download on the controller, not on the target. Release artifacts, Git checkouts and language packages are fetched with `delegate_to: 'localhost'` and copied over, so a target without Internet access can be provisioned like any other and only the controller needs outbound access. Say in the README's "How the Role Behaves" who needs network access to what. `roles/example` shows the pattern for a release tarball, and "Roles with Special Features" below lists the one for Python dependencies.
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
@@ -1312,11 +1312,21 @@ If you set this up before that `setfacl` existed, the images already in the pool
 
 Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
 
-**The VMs need the libvirt network `default`.** The shared inventory attaches every VM to it. libvirt ships its definition, but a host set up with networks of its own may not have it; `virsh --connect qemu:///system net-list --all` tells. Define it from the shipped file, and give it another bridge name if `virbr0` is already taken by a network of yours:
+**The VMs need the libvirt network `default`.** The shared inventory attaches every VM to it. libvirt ships its definition, but a host set up with networks of its own may not have it; `virsh --connect qemu:///system net-list --all` tells. Define it from the shipped file and have it start with the host:
 
 ```bash
-sed "s/name='virbr0'/name='virbr1'/" /usr/share/libvirt/networks/default.xml > /tmp/default.xml
+sudo virsh net-define /usr/share/libvirt/networks/default.xml
+sudo virsh net-autostart default
+sudo virsh net-start default
+```
+
+If a network of yours already uses the bridge `virbr0` or the subnet `192.168.122.0/24`, `net-start` fails because the bridge or the address is in use. Define the network from an edited copy instead, with a bridge name and a subnet that are free on your host:
+
+```bash
+sed --expression="s/name='virbr0'/name='virbr1'/" --expression='s/192\.168\.122\./192.168.123./g' \
+    /usr/share/libvirt/networks/default.xml > /tmp/default.xml
 sudo virsh net-define /tmp/default.xml
+sudo virsh net-autostart default
 sudo virsh net-start default
 ```
 

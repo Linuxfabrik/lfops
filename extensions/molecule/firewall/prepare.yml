@@ -1,0 +1,30 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# A Firewall Builder script as the role expects it at /etc/fwb.sh. The scenario has no Firewall
+# Builder repository to deploy one from, and the role aborts without it. The script only has to
+# answer the start and stop the unit calls.
+- name: 'Deploy a stub /etc/fwb.sh'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Deploy /etc/fwb.sh'
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          exit 0
+        dest: '/etc/fwb.sh'
+        owner: 'root'
+        group: 'root'
+        mode: 0o500
+
+
+# The state converge starts from: a host that runs fwbuilder, with the fwb.service unit the role
+# deploys to /etc/systemd/system. Play vars take precedence over the group_vars that converge uses.
+- name: 'Set the host up with fwbuilder'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.firewall'
+  vars:
+    firewall__firewall: 'fwbuilder'

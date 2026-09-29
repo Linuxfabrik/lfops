@@ -1,5 +1,3 @@
-# Ubuntu 26.04 ships its default sources in /etc/chrony/sources.d/ubuntu-ntp-pools.sources, which
-# the template includes through sourcedir, so there is nothing to fall back to in chrony.conf.
-# It no longer ships /usr/share/zoneinfo/right/UTC either.
-__chrony__distro_pools: []
+# Ubuntu 26.04 ships no /usr/share/zoneinfo/right/UTC, and its own chrony.conf reads the leap
+# seconds from leap-seconds.list instead.
 __chrony__leap_directive: 'leapseclist /usr/share/zoneinfo/leap-seconds.list'

@@ -1,14 +1,7 @@
 # Ubuntu is loaded on top of its Debian os_family. It is kept as a full copy of Debian.yml so
-# Ubuntu-specific drift has a dedicated home, which the default sources already need.
+# Ubuntu-specific drift has a dedicated home.
 # chronyd on Debian and Ubuntu only reads /etc/chrony/chrony.conf, not /etc/chrony.conf.
 # chronyd.service is merely an alias of chrony.service there.
 __chrony__conf_path: '/etc/chrony/chrony.conf'
-# The sources Ubuntu 22.04 and 24.04 use in their own chrony.conf. Ubuntu 26.04 ships them in
-# /etc/chrony/sources.d instead, see vars/Ubuntu26.yml.
-__chrony__distro_pools:
-  - 'ntp.ubuntu.com iburst maxsources 4'
-  - '0.ubuntu.pool.ntp.org iburst maxsources 1'
-  - '1.ubuntu.pool.ntp.org iburst maxsources 1'
-  - '2.ubuntu.pool.ntp.org iburst maxsources 2'
 __chrony__leap_directive: 'leapsectz right/UTC'
 __chrony__service_name: 'chrony.service'

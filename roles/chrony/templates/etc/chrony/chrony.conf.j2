@@ -1,29 +1,23 @@
 # {{ ansible_managed }}
-# 2026092801
+# 2026092901
 
 # Include configuration files found in /etc/chrony/conf.d.
 confdir /etc/chrony/conf.d
 
+{#
+  As on the Red Hat family, the sources from the inventory are the only ones: no distribution
+  pools, no `sourcedir /run/chrony-dhcp` and no `sourcedir /etc/chrony/sources.d`. Ubuntu 26.04
+  ships its default pools in sources.d/ubuntu-ntp-pools.sources with `nts prefer`, and chronyd
+  then selects only the preferred sources (sources.c, "reduce the list again only to the
+  preferred sources"), so the inventory's servers would never be used. Verified against
+  chrony 4.8-2ubuntu1 on Ubuntu 26.04.
+#}
 {% for item in chrony__ntp_pools %}
 pool {{ item }} iburst
 {% endfor %}
-
 {% for item in chrony__ntp_servers %}
 server {{ item }} iburst
 {% endfor %}
-
-{% if chrony__ntp_pools | length == 0 and chrony__ntp_servers | length == 0 %}
-# No sources configured in the inventory, so keep the ones the distribution uses.
-{% for item in __chrony__distro_pools %}
-pool {{ item }}
-{% endfor %}
-{% endif %}
-
-# Use time sources from DHCP.
-sourcedir /run/chrony-dhcp
-
-# Use NTP sources found in /etc/chrony/sources.d.
-sourcedir /etc/chrony/sources.d
 
 {% for item in chrony__allow %}
 allow {{ item }}

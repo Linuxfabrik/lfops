@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:firewall**: With `firewall__firewall: 'fwbuilder'`, the default, the run aborts on a host that has neither `/etc/fwb.sh` nor `firewall__fwbuilder_repo_url`, before the role stops any firewall. Until now `fwb.service` failed there and the host ran without a firewall. Deploy `/etc/fwb.sh`, set `firewall__fwbuilder_repo_url`, or set `firewall__firewall` to the firewall the host uses.
+* **role:chrony**: The role takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed, so these hosts synchronised with the distribution's default pools until now. As on the Red Hat family, chronyd uses only the sources from the inventory, without the distribution's pools, DHCP sources or `/etc/chrony/sources.d`. Set `chrony__ntp_pools` or `chrony__ntp_servers` for every Debian and Ubuntu host before running the role, otherwise it is left without a time source.
 * **role:monitoring_plugins**: The source install downloads the Python dependencies on the Ansible controller, which therefore needs pip for the Python that runs Ansible and access to PyPI; the targets no longer need Internet access.
 * **role:kernel_modules**: The `tun` kernel module is blocked by default (CVE-2026-81000, [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011)). This stops OpenVPN, WireGuard in userspace, rootless Podman and Docker networking and libvirt VM networking after the next reboot, which the role requests on hosts where `tun` is loaded. Before running the role, add `kernel_modules__modules__host_var: [{name: 'tun', enabled: true}]` to the inventory of every such host. Rootful Docker and Podman with bridge networking are not affected.
 * **role:grafana**: `grafana__users_case_insensitive_login` is gone; remove it from your inventory. Grafana has ignored the setting since v11.0.0 and always matches logins case-insensitively.
@@ -34,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:aide, playbook:aide**: Add a role and playbook to install AIDE on RHEL 8, 9 and 10 and run a daily file integrity check, which leaves `aide-check.service` failed on any finding.
-* **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis and audit the host once a day through a systemd timer, leaving the results in `/var/log/lynis.log` and `/var/log/lynis-report.dat` for the lynis-logfile monitoring plugin. `setup_basic` installs it on every host. Findings can be accepted per host or group with `lynis__skip_tests`, which the role writes to `/etc/lynis/custom.prf`; a hand-edited `custom.prf` is overwritten.
+* **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
 * **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
@@ -55,9 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* **playbook:icinga2_agent, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins repository is only registered for `monitoring_plugins__install_method: 'package'`.
 * **role:monitoring_plugins**: The source install removes plugins that an earlier run deployed and the checked-out version no longer carries.
 * **role:monitoring_plugins**: The source install deploys the dependency versions pinned in the monitoring-plugins lockfiles and, for a release, the Linuxfabrik library release they pin, instead of the newest versions of both.
+* **playbook:icinga2_agent, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins repository is only registered for `monitoring_plugins__install_method: 'package'`.
 * **role:fail2ban**: The `portscan` jail no longer bans TCP scans that send no plain SYN, such as FIN, NULL, Xmas and ACK scans, since they find no open port on a stateful firewall.
 * **role:grafana**: Grafana no longer updates its preinstalled plugins on every start, so datasources such as InfluxDB and Prometheus no longer disappear from the web interface when the plugin download server is unreachable.
 * **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
@@ -76,6 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:firewall**: Hosts in one run with different `firewall__fwbuilder_repo_url` values each deploy `/etc/fwb.sh` from their own repository, instead of all from the repository of the first host.
+* **role:firewall**: `firewall__firewall: 'iptables'` no longer aborts when there is no iptables file in the inventory's `host_files`, which the README describes as optional.
+* **role:firewall**: A host switched away from `fwbuilder` or `iptables` stops, disables and masks that firewall instead of keeping it running next to the new one, and no longer reports a change on every run.
 * **module:nextcloud_occ_app**: An `occ app:list` output or `installed_apps_json` that is valid JSON but not an object aborts with a clear message instead of a Python traceback.
 * **module:nextcloud_occ_system_config**: Setting a key that does not exist yet to an empty value (`value: ''`) creates it. Until now the module reported no change and left the key missing.
 * **module:uptimerobot_mwindow_info**: Monthly maintenance windows on day 1 to 7 of the month are reported with their day numbers instead of weekday names, e.g. `1-15` instead of `mon-15`.
@@ -89,12 +94,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:lvm**: The role installs `lvm2`, so it also works on hosts installed without LVM, such as those deployed from a cloud image.
 * **role:lvm**: Creating or resizing a PV no longer fails on RHEL 8 with `SyntaxError: future feature annotations is not defined`.
 * **role:network**: Hosts without `network_connections` or `network_state` no longer run the upstream network role at all, which occasionally hung the play for good after it had finished.
-* **role:chrony**: The role now takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed. The distribution's DHCP and `sources.d` sources are kept, and without `chrony__ntp_pools` or `chrony__ntp_servers` the distribution's default pools are used. The stale `/etc/chrony.conf` is removed.
-* **role:kernel_settings**: The role no longer aborts on Ubuntu 22.04 with `Verification failed, current system settings differ from the preset profile`. The TuneD release of Ubuntu 22.04 sets two scheduler sysctls the kernel no longer has, and the role now removes them from the profile it builds on.
+* **role:kernel_settings**: The role no longer aborts on Ubuntu 22.04 with `Verification failed, current system settings differ from the preset profile`.
 * **role:tools**: The role no longer aborts on Ubuntu with `No package matching 'cloud-utils-growpart' is available`.
 * **role:python_venv**: The role no longer aborts on Debian and Ubuntu with `Failed to import the required Python library (packaging)`.
-* **playbook:setup_basic**: The play no longer aborts on Debian and Ubuntu with `No package matching 'network-scripts' is available` or `'__yum_utils__package' is undefined`. The `network` and `yum_utils` roles run on the Red Hat family only, the only platforms they support.
-* **role:firewall**: With `firewall__firewall: 'fwbuilder'` and no `/etc/fwb.sh` on the host, `fwb.service` is no longer started, which failed and was reported as a failed unit and as a change on every run. It is disabled instead, and an earlier failure is reset.
+* **playbook:setup_basic**: The play no longer aborts on Debian and Ubuntu with `No package matching 'network-scripts' is available` or `'__yum_utils__package' is undefined`, since it runs the `network` and `yum_utils` roles on the Red Hat family only.
 * **role:monitoring_plugins**: The plugin icons for IcingaWeb2 are no longer missing when the directory `ansible-playbook` runs in contains `.svg` files.
 * **role:monitoring_plugins**: The source install deploys only the modules of the Linuxfabrik library, as the one-line installer does, removes the documentation and development files earlier runs placed next to them, and removes plugin assets the checked-out version no longer carries.
 * **role:monitoring_plugins**: The source install no longer reports a change on every run once the plugins have run.
