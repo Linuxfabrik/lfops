@@ -1,0 +1,83 @@
+# {{ ansible_managed }}
+# 2026092901
+# For aide 0.16 (RHEL 8). Based on 0.19-aide.conf.j2, reduced to the options aide 0.16
+# knows. The rules are the same for every aide version and platform.
+
+@@define DBDIR /var/lib/aide
+@@define LOGDIR /var/log/aide
+
+# The location of the database to be read.
+database=file:@@{DBDIR}/aide.db.gz
+
+# The location of the database to be written.
+database_out=file:@@{DBDIR}/aide.db.new.gz
+
+# Whether to gzip the output to database
+gzip_dbout=yes
+
+# How much the report tells about each finding, see aide__conf_report_level. aide 0.16 has
+# no report_level yet, vars/main.yml translates it.
+verbose={{ __aide__verbose_levels[aide__conf_report_level] }}
+
+# The full report goes to the file, overwritten by every check. No syslog: aide 0.16 applies
+# `verbose` to every report_url, and a long report would flood syslog with one message per line.
+report_url=file:@@{LOGDIR}/aide.log
+
+# The same NORMAL as in 0.19-aide.conf.j2 (R without mtime and ctime, sha512 as the only
+# checksum), spelled out, since aide 0.16 knows neither the X group nor the caps attribute.
+# Verified against aide 0.16 on Rocky 8.
+NORMAL = p+ftype+i+l+n+u+g+s+acl+selinux+xattrs+e2fsattrs+sha512
+
+# Content only - file type and strong hash
+CONTENT = ftype+sha512
+
+# For directories, don't bother doing hashes
+DIR = ftype+p+i+l+n+u+g+acl+selinux+xattrs
+
+# Access control only
+PERMS = ftype+p+u+g+acl+selinux+xattrs
+
+# Logfiles are special, in that they often change due to log rotation
+# Track only: permissions, file type, user, group, number of links, SELinux context, extended attributes
+# Allow new files (ANF) and allow removed files (ARF) due to log rotation techniques
+LOG = p+ftype+u+g+n+ANF+ARF+selinux+xattrs
+
+# Some files get updated automatically, so the inode/ctime/mtime change
+# but we want to know when the data inside them changes
+DATAONLY = ftype+p+l+n+u+g+s+acl+selinux+xattrs+sha512
+
+{% if aide__conf_raw | length > 0 %}
+{# above the rules on purpose: groups and macros defined here are available to them, and a rule
+   here overrides the rules below that belong to the same directory. aide assigns a rule to the
+   directory its fixed path prefix lies in ('/root/\..*' to '/root', '/etc' to '/', '/etc/apt' to
+   '/etc'), checks a path against the rules of the deepest such directory first and applies
+   the first matching rule within a directory. a negative rule wins wherever it is. strrxtok()
+   and check_node_for_match() in seltree.c (gen_list.c in 0.16), verified against the aide
+   0.16.2 to 0.19.2 sources and with `aide --path-check` on aide 0.19.2. #}
+# raw
+{{ aide__conf_raw }}
+
+{% endif %}
+# Next decide what directories/files you want in the database.
+
+{% macro render_rule(rule) %}
+{% if rule['type'] | d('regular') == 'negative' %}
+!{{ rule['path'] }}
+{% elif rule['type'] | d('regular') == 'equal' %}
+={{ rule['path'] }} {{ rule['attributes'] }}
+{% else %}
+{{ rule['path'] }} {{ rule['attributes'] }}
+{% endif %}
+{% endmacro %}
+{# rules with a path of their own (from the inventory or another role) come first. combine_lod
+   appends them, and below the defaults a rule such as '/root/\.bashrc$' would never apply: it
+   belongs to the directory '/root' like the default '/root/\..* PERMS', and aide applies the
+   first matching rule within a directory. a default overridden from the inventory keeps its
+   place. #}
+{% set default_paths = aide__rules__role_var | map(attribute='path') | list %}
+{% for rule in aide__rules__combined_var if rule['state'] | d('present') != 'absent' and rule['path'] not in default_paths %}
+{{ render_rule(rule) }}
+{%- endfor %}
+{% for rule in aide__rules__combined_var if rule['state'] | d('present') != 'absent' and rule['path'] in default_paths %}
+{{ render_rule(rule) }}
+{%- endfor %}

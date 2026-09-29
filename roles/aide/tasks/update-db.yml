@@ -1,8 +1,20 @@
+# wait for a running aidecheck.service to finish, 5 minutes at most, and fail loudly after that,
+# instead of blocking the run on flock below for as long as the check takes. `systemctl
+# is-active` prints the state; it exits 0 for active only, not for activating. failed_when, not
+# `failed_when: false`, since ansible-core 2.16 moves on silently after the last retry otherwise.
+- name: 'systemctl is-active aidecheck.service (wait up to 5 minutes for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
+  ansible.builtin.command: 'systemctl is-active aidecheck.service'
+  register: '__aide__update_db_check_active_result'
+  until: '__aide__update_db_check_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
+  retries: 30
+  delay: 10
+  changed_when: false
+  failed_when: '__aide__update_db_check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+
 # the explicit "accept the current state" action, so it runs without the guard of the
-# handler. `aide --update` exits with the bitmask of what it found (1 added, 2 removed,
-# 4 changed), errors start at 14.
-- name: 'aide --update'
-  ansible.builtin.command: 'aide --update'
+# handler. flock and the exit codes are explained in handlers/main.yml.
+- name: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
+  ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
   register: '__aide__update_db_result'
   changed_when: true
   failed_when: '__aide__update_db_result["rc"] >= 8'
@@ -12,7 +24,12 @@
   changed_when: true
 
 # the database now describes the host as it is, so the finding of the last check no longer
-# applies. clearing the failed state is quicker than a full check.
-- name: 'systemctl reset-failed aide-check.service' # noqa command-instead-of-module (no module resets a failed unit)
-  ansible.builtin.command: 'systemctl reset-failed aide-check.service'
+# applies, and the report `aide --update` wrote to /var/log/aide/aide.log is replaced by a check
+# against the new database. --no-block: the run does not wait for the check.
+- name: 'systemctl reset-failed aidecheck.service' # noqa command-instead-of-module (no module resets a failed unit)
+  ansible.builtin.command: 'systemctl reset-failed aidecheck.service'
+  changed_when: true
+
+- name: 'systemctl start --no-block aidecheck.service' # noqa command-instead-of-module (the service module cannot start without waiting)
+  ansible.builtin.command: 'systemctl start --no-block aidecheck.service'
   changed_when: true

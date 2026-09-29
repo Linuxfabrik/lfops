@@ -1,5 +1,16 @@
 - block:
 
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   # a rule without `path` needs no assert here: combine_lod already aborts on an item that
   # lacks its unique key, naming the keys the item sets.
   - name: 'Check that every rule has a valid type'
@@ -29,13 +40,42 @@
     - 'always'
 
 
+# include_tasks is required here because import_tasks cannot handle dynamic variables.
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length > 0'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
+
+
 - block:
 
-  - name: 'Install aide'
-    ansible.builtin.package:
-      name:
-        - 'aide'
-      state: 'present'
+  # the aide rpm creates both directories with these permissions. the aide package of Debian
+  # and Ubuntu leaves them to aide-common, which the role does not install (see
+  # tasks/Debian.yml).
+  - name: 'mkdir -p /var/lib/aide /var/log/aide'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o700
+    loop:
+      - '/var/lib/aide'
+      - '/var/log/aide'
 
   tags:
     - 'aide'
@@ -65,6 +105,20 @@
 
 - block:
 
+  # the result of the last check is read below, so a check that is running right now has to finish
+  # first. 5 minutes at most, then the run fails. `systemctl is-active` prints the state; it
+  # exits 0 for active only, not for activating. failed_when, not `failed_when: false`, since
+  # ansible-core 2.16 moves on silently after the last retry otherwise.
+  - name: 'systemctl is-active aidecheck.service (wait up to 5 minutes for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
+    ansible.builtin.command: 'systemctl is-active aidecheck.service'
+    register: '__aide__check_active_result'
+    until: '__aide__check_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
+    retries: 30
+    delay: 10
+    changed_when: false
+    failed_when: '__aide__check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+    check_mode: false
+
   # these facts are taken before the role changes a monitored file (/etc/aide.conf, the units,
   # the timer's enable symlink), since the handler has to know the state the host was in
   # beforehand. without a database there is nothing to update: the init below creates it from
@@ -77,16 +131,16 @@
   # a database without the check unit was not created by this role (CIS hardening, a manual
   # cron job, ...), and no check of this role has ever vouched for it. re-baselining it would
   # accept everything that changed since it was created, so the handler leaves it alone.
-  - name: 'stat /etc/systemd/system/aide-check.service'
+  - name: 'stat /etc/systemd/system/aidecheck.service'
     ansible.builtin.stat:
-      path: '/etc/systemd/system/aide-check.service'
+      path: '/etc/systemd/system/aidecheck.service'
     register: '__aide__check_unit_stat_result'
 
-  # `aide --check` exits non-zero on any finding, so a failed aide-check.service is what "the
+  # `aide --check` exits non-zero on any finding, so a failed aidecheck.service is what "the
   # last check reported changes" looks like. rc 0 means failed. a unit that does not exist yet
   # reports rc 1, like one that never failed.
-  - name: 'systemctl is-failed aide-check.service' # noqa command-instead-of-module (read-only state query)
-    ansible.builtin.command: 'systemctl is-failed aide-check.service'
+  - name: 'systemctl is-failed aidecheck.service' # noqa command-instead-of-module (read-only state query)
+    ansible.builtin.command: 'systemctl is-failed aidecheck.service'
     register: '__aide__check_failed_result'
     changed_when: false
     failed_when: false
@@ -104,14 +158,30 @@
     ansible.builtin.debug:
       var: 'aide__rules__combined_var'
 
+  # validate runs against the rendered temporary file, so a config aide does not accept (an
+  # unknown group or attribute, a broken regex from the inventory or aide__conf_raw) aborts the
+  # run before it replaces /etc/aide.conf. `aide --config-check` exits with 17 on such a config.
+  # Verified with aide 0.16 on Rocky 8, 0.17.4 on Ubuntu 22.04, 0.18.3 on Debian 12 and 0.19.2
+  # on Rocky 10.
   - name: 'Deploy /etc/aide.conf'
     ansible.builtin.template:
       backup: true
-      src: 'etc/aide.conf.j2'
+      src: 'etc/{{ __aide__installed_version }}-aide.conf.j2'
       dest: '/etc/aide.conf'
       owner: 'root'
       group: 'root'
       mode: 0o600
+      validate: 'aide --config=%s --config-check'
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/logrotate.d/aide'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/aide.j2'
+      dest: '/etc/logrotate.d/aide'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
     notify: 'aide: update database'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
@@ -119,7 +189,10 @@
       name: 'shared'
       tasks_from: 'remove-rpmnew-rpmsave.yml'
     vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/aide.conf'
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/aide.conf'
+      - '/etc/logrotate.d/aide'
 
   tags:
     - 'aide'
@@ -128,22 +201,49 @@
 
 - block:
 
-  - name: 'Deploy /etc/systemd/system/aide-check.service'
+  # earlier versions of this role deployed the check as aide-check.service / aide-check.timer.
+  # the CIS benchmarks look for aidecheck.service / aidecheck.timer, so the units were renamed,
+  # and the old ones have to go, otherwise the host runs two checks.
+  - name: 'stat /etc/systemd/system/aide-check.timer'
+    ansible.builtin.stat:
+      path: '/etc/systemd/system/aide-check.timer'
+    register: '__aide__legacy_timer_stat_result'
+
+  - name: 'systemctl disable --now aide-check.timer'
+    ansible.builtin.service:
+      name: 'aide-check.timer'
+      enabled: false
+      state: 'stopped'
+    notify: 'aide: update database'
+    when:
+      - '__aide__legacy_timer_stat_result["stat"]["exists"]'
+
+  - name: 'rm -f /etc/systemd/system/aide-check.service /etc/systemd/system/aide-check.timer'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop:
+      - '/etc/systemd/system/aide-check.service'
+      - '/etc/systemd/system/aide-check.timer'
+    register: '__aide__legacy_units_result'
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/systemd/system/aidecheck.service'
     ansible.builtin.template:
       backup: true
-      src: 'etc/systemd/system/aide-check.service.j2'
-      dest: '/etc/systemd/system/aide-check.service'
+      src: 'etc/systemd/system/aidecheck.service.j2'
+      dest: '/etc/systemd/system/aidecheck.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__aide__service_unit_result'
     notify: 'aide: update database'
 
-  - name: 'Deploy /etc/systemd/system/aide-check.timer'
+  - name: 'Deploy /etc/systemd/system/aidecheck.timer'
     ansible.builtin.template:
       backup: true
-      src: 'etc/systemd/system/aide-check.timer.j2'
-      dest: '/etc/systemd/system/aide-check.timer'
+      src: 'etc/systemd/system/aidecheck.timer.j2'
+      dest: '/etc/systemd/system/aidecheck.timer'
       owner: 'root'
       group: 'root'
       mode: 0o644
@@ -154,7 +254,7 @@
     ansible.builtin.systemd:
       daemon_reload: true
     when:
-      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed'
+      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed or __aide__legacy_units_result is changed'
 
   tags:
     - 'aide'
@@ -162,18 +262,25 @@
 
 - block:
 
-  # aide-check.service is not managed: it has no [Install] section and only runs when
-  # aide-check.timer triggers it.
-  # the enable symlink lives below /etc/systemd, which the check monitors, hence the notify.
-  - name: 'systemctl {{ aide__timer_enabled | bool | ternary("enable", "disable") }} aide-check.timer'
+  # the enable symlinks live below /etc/systemd, which aide monitors, hence the notify to update
+  # the aide db.
+  # an enabled aidecheck.service runs a check after every boot, the CIS benchmarks want it
+  # enabled. it is not started here: the timer and system_update start it.
+  - name: 'systemctl {{ aide__service_enabled | bool | ternary("enable", "disable") }} aidecheck.service'
     ansible.builtin.service:
-      name: 'aide-check.timer'
+      name: 'aidecheck.service'
+      enabled: '{{ aide__service_enabled | bool }}'
+    notify: 'aide: update database'
+
+  - name: 'systemctl {{ aide__timer_enabled | bool | ternary("enable", "disable") }} aidecheck.timer'
+    ansible.builtin.service:
+      name: 'aidecheck.timer'
       enabled: '{{ aide__timer_enabled | bool }}'
     notify: 'aide: update database'
 
-  - name: 'systemctl {{ aide__timer_state | regex_replace("p?ed$", "") }} aide-check.timer'
+  - name: 'systemctl {{ aide__timer_state | regex_replace("p?ed$", "") }} aidecheck.timer'
     ansible.builtin.service:
-      name: 'aide-check.timer'
+      name: 'aidecheck.timer'
       state: '{{ aide__timer_state }}'
 
   tags:
@@ -183,16 +290,47 @@
 
 - block:
 
+  # flush_handlers runs the pending handlers of every role in the play, not only this one's.
+  # doing it before `aide --init` puts whatever the handlers of earlier roles write (setup_basic
+  # runs aide last) into the new database instead of into the first check's report. the
+  # handler of this role skips itself on a host without a database, and on a host with one the
+  # init below does nothing.
+  - name: 'Flush handlers'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+    - 'aide:state'
+
+
+- block:
+
+  # a package installation that runs while `aide --init` reads the file system leaves entries
+  # without checksums in the new database, and the first check reports them. on Debian and
+  # Ubuntu, apt-daily-upgrade.service (unattended-upgrades) typically does so on a freshly
+  # booted cloud image. units that do not exist report inactive. 5 minutes at most.
+  - name: 'systemctl is-active apt-daily.service apt-daily-upgrade.service (wait up to 5 minutes for running package jobs)' # noqa command-instead-of-module (read-only state query in a retry loop)
+    ansible.builtin.command: 'systemctl is-active apt-daily.service apt-daily-upgrade.service'
+    register: '__aide__apt_daily_active_result'
+    until: '"active" not in __aide__apt_daily_active_result["stdout_lines"] and "activating" not in __aide__apt_daily_active_result["stdout_lines"]'
+    retries: 30
+    delay: 10
+    changed_when: false
+    failed_when: '"active" in __aide__apt_daily_active_result["stdout_lines"] or "activating" in __aide__apt_daily_active_result["stdout_lines"]'
+    when:
+      - 'not __aide__db_stat_result["stat"]["exists"]'
+
   # runs after everything else the role writes to monitored paths (/etc/aide.conf, the units
   # and the timer's enable symlink under /etc/systemd), so the first check does not report the
   # role's own files as added. aide --init writes database_out, not database_in, hence the mv.
-  - name: 'aide --init'
-    ansible.builtin.command: 'aide --init'
+  - name: 'flock /run/aide.lock aide --config=/etc/aide.conf --init'
+    ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --init'
     args:
       creates: '/var/lib/aide/aide.db.gz'
     register: '__aide__init_result'
 
-  - name: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz' # noqa no-handler (the database has to be in place before the handlers run)
+  - name: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz' # noqa no-handler (a follow-up of the init above, not of a config change)
     ansible.builtin.command: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
     changed_when: true
     when:
@@ -208,14 +346,3 @@
   tags:
     - 'aide:update_db'
     - 'never'
-
-
-- block:
-
-  - name: 'Flush handlers'
-    ansible.builtin.meta: 'flush_handlers'
-
-  tags:
-    - 'aide'
-    - 'aide:configure'
-    - 'aide:state'

@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **role:aide, playbook:aide**: Add a role and playbook to install AIDE on RHEL 8, 9 and 10 and run a daily file integrity check, which leaves `aide-check.service` failed on any finding.
+* **role:aide, playbook:aide**: Add a role and playbook that install AIDE on Debian 12 and 13, RHEL 8, 9 and 10 and Ubuntu 22.04, 24.04 and 26.04 as the CIS benchmarks recommend, leaving `aidecheck.service` failed on any finding and keeping the database in step with `system_update` and `unattended-upgrades`.
 * **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.

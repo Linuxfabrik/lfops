@@ -1,9 +1,28 @@
-# aide.conf.j2 branches on these major.minor versions: 0.16 (RHEL 8) and 0.19 (RHEL 9 and 10).
-# 0.17 reworked the config options (log_level / report_level replace verbose) and 0.19 dropped
+# templates/etc/<version>-aide.conf.j2 exists for these major.minor versions: 0.16 (RHEL 8),
+# 0.17 (Ubuntu 22.04), 0.18 (Debian 12, Ubuntu 24.04) and 0.19 (Debian 13, RHEL 9 and 10,
+# Ubuntu 26.04).
+# 0.17 reworked the config options (log_level / report_level replace verbose), 0.18 added
+# num_workers, report_format and config_check_warn_unrestricted_rules, and 0.19 dropped
 # `database` and the old hashsums, so a version outside this list would get a config it may
 # not parse.
 __aide__supported_versions:
   - '0.16'
+  - '0.17'
+  - '0.18'
   - '0.19'
 
-__aide__end_of_play_message: 'aide: /etc/aide.conf or the aide-check units have changed, but the AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db` to accept the current state as the new baseline.'
+# aide 0.16 knows no report_level, only `verbose`, and prints a report line when its level is
+# at most the verbose level (error() in src/compare_db.c of v0.16.2): the summary at 0, the
+# lists of entries and the database checksums at 2, details of changed entries at 5, their
+# added and removed attributes at 6, details of added and removed entries at 7. minimal and
+# summary, and database_attributes and list_entries, therefore end up the same on 0.16.
+__aide__verbose_levels:
+  added_removed_attributes: 6
+  added_removed_entries: 7
+  changed_attributes: 5
+  database_attributes: 2
+  list_entries: 2
+  minimal: 0
+  summary: 1
+
+__aide__end_of_play_message: 'aide: /etc/aide.conf or the aidecheck units have changed, but the AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db` to accept the current state as the new baseline.'

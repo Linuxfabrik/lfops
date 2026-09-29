@@ -1,0 +1,126 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# verify.yml forces a rotation of /etc/logrotate.d/aide, and not every cloud image ships
+# logrotate (Rocky 8 and Ubuntu 26.04 do not). The role does not install it, the logrotate
+# role does.
+- name: 'Install logrotate'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Install logrotate'
+      ansible.builtin.package:
+        name:
+          - 'logrotate'
+        state: 'present'
+
+
+# verify.yml runs real unattended upgrades against the dpkg hook of the role, and not every cloud
+# image ships unattended-upgrades (Debian's do not).
+- name: 'Install unattended-upgrades'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'apt-get install --no-install-recommends unattended-upgrades'
+      ansible.builtin.apt:
+        name:
+          - 'unattended-upgrades'
+        install_recommends: false
+        state: 'present'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+
+# unattended-upgrades on a freshly booted cloud image installs packages at random moments,
+# which would add findings to the steps of verify.yml. verify.yml simulates its dpkg runs
+# instead.
+- name: 'Stop apt-daily.timer and apt-daily-upgrade.timer'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'systemctl stop apt-daily.timer apt-daily-upgrade.timer'
+      ansible.builtin.service:
+        name: '{{ item }}'
+        state: 'stopped'
+      loop:
+        - 'apt-daily.timer'
+        - 'apt-daily-upgrade.timer'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'systemctl is-active apt-daily.service apt-daily-upgrade.service (wait for a running job to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
+      ansible.builtin.command: 'systemctl is-active apt-daily.service apt-daily-upgrade.service'
+      register: '__molecule__apt_daily_active_result'
+      until: '"active" not in __molecule__apt_daily_active_result["stdout_lines"] and "activating" not in __molecule__apt_daily_active_result["stdout_lines"]'
+      retries: 180
+      delay: 10
+      changed_when: false
+      failed_when: '"active" in __molecule__apt_daily_active_result["stdout_lines"] or "activating" in __molecule__apt_daily_active_result["stdout_lines"]'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+
+# A file below /root that the database has to contain from the start, so that verify.yml can
+# change its content: the scenario's rule for it (NORMAL) reports that, the default rule
+# '/root/\..* PERMS' of the same directory would not.
+- name: 'Deploy /root/.lfops-molecule'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Deploy /root/.lfops-molecule'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/root/.lfops-molecule'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+
+# A file below /etc/cron.d that the database has to contain from the start, so that verify.yml
+# can change its content: the scenario changes the default rule '/etc/cron.d NORMAL' to PERMS,
+# which does not report that. Not every cloud image ships cron, hence the mkdir. The file is a
+# comment only, so a cron daemon finds no job in it.
+- name: 'Deploy /etc/cron.d/lfops-molecule'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'mkdir -p /etc/cron.d'
+      ansible.builtin.file:
+        path: '/etc/cron.d'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Deploy /etc/cron.d/lfops-molecule'
+      ansible.builtin.copy:
+        content: "# lfops-molecule\n"
+        dest: '/etc/cron.d/lfops-molecule'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+
+# A host that already runs the daily check of aide-common, which the role has to remove, since
+# it would overwrite the report of aidecheck.service. Without its recommended packages, which
+# would pull in a mail transport agent.
+- name: 'Install aide-common'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'apt-get install --no-install-recommends aide-common'
+      ansible.builtin.apt:
+        name:
+          - 'aide-common'
+        install_recommends: false
+        state: 'present'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'

@@ -1,0 +1,6 @@
+// {{ ansible_managed }}
+// 2026092901
+// Keeps the AIDE database in step with unattended-upgrades, see /usr/local/sbin/aide-dpkg-hook.
+// `|| true`: apt aborts the installation if a Pre-Invoke command fails.
+DPkg::Pre-Invoke { "/usr/local/sbin/aide-dpkg-hook pre || true"; };
+DPkg::Post-Invoke { "/usr/local/sbin/aide-dpkg-hook post || true"; };

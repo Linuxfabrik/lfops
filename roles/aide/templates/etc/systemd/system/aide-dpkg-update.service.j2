@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# 2026100101
+
+[Unit]
+Description=Update the AIDE database after unattended-upgrades
+Documentation=man:aide(1)
+# started by /usr/local/sbin/aide-dpkg-hook after every package set of an unattended upgrade.
+# ordered after apt-daily-upgrade.service, so that the start requests of all sets wait for the
+# upgrade to finish, and systemd runs the update once, after the last set.
+After=apt-daily-upgrade.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/aide-dpkg-hook update
+IOSchedulingClass=idle
+Nice=19

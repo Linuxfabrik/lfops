@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026100101
+
+# Keeps the AIDE database in step with the packages unattended-upgrades installs. Called by apt
+# before and after every dpkg run (DPkg::Pre-Invoke / DPkg::Post-Invoke in
+# /etc/apt/apt.conf.d/z00-linuxfabrik-aide), and by aide-dpkg-update.service:
+#
+# * pre: before the first dpkg run of an unattended-upgrade process, a check has to come out
+#   clean. A check right before, not the result of the last one, which can be many hours old:
+#   re-baselining accepts everything that changed since the check it relies on, an intrusion
+#   included.
+# * post: after a dpkg run of that process, queue aide-dpkg-update.service if the check was
+#   clean, otherwise a check. Both are ordered after apt-daily-upgrade.service and therefore
+#   start once unattended-upgrades has finished.
+# * update: update the database and start a check against it.
+#
+# unattended-upgrades installs in package sets and runs dpkg once per set (MinimalSteps, on by
+# default, upgrade_in_minimal_steps() in unattended-upgrade), so apt calls pre and post once per
+# set. Checking once per process and updating once after it keeps apt's lock from being held for
+# a check and an update per set.
+# Package changes by anything else, apt by hand included, are left to the next check, as on the
+# Red Hat family.
+# Always exits 0: apt aborts the installation if a Pre-Invoke command fails
+# (pkgDPkgPM::Go() in apt-pkg/deb/dpkgpm.cc).
+
+# "<pid>:<start time> clean|dirty" of the unattended-upgrade process whose check ran
+STATE='/run/aide-dpkg-hook.state'
+UNIT='aidecheck'
+
+log() {
+    logger --tag aide-dpkg-hook -- "$*"
+}
+
+# prints "<pid>:<start time>" of the unattended-upgrade process this hook runs under, and fails
+# if there is none. apt runs the hook through `sh -c` from within the process that installs the
+# packages, which is `/usr/bin/python3 /usr/bin/unattended-upgrade`. only the program (argv[0])
+# and the script (argv[1]) count, not any word of a command line, so that a command by hand that
+# merely mentions unattended-upgrade is not taken for it.
+# the outermost such ancestor, since python-apt forks a child of the same command line for every
+# dpkg run (InstallProgress.run() in apt/progress/base.py), which differs from set to set. the
+# start time (field 22 of /proc/<pid>/stat) tells a reused pid from the process the state file
+# was written for. Verified with unattended-upgrades 2.9.1 and python-apt 2.6 on Debian 12.
+uu_process() {
+    local pid="$PPID"
+    local found=''
+    local stat
+    local -a argv fields
+    while [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
+        { stat=$(< "/proc/${pid}/stat"); } 2>/dev/null || break
+        # the fields after the command name, which may contain spaces: state (3), ppid (4), ...
+        read -r -a fields <<< "${stat##*) }"
+        mapfile -d '' -t argv < "/proc/${pid}/cmdline" 2>/dev/null
+        if [ "${argv[0]##*/}" = 'unattended-upgrade' ] || [ "${argv[1]##*/}" = 'unattended-upgrade' ]; then
+            found="${pid}:${fields[19]}"
+        fi
+        pid="${fields[1]}"
+    done
+    [ -n "$found" ] || return 1
+    echo "$found"
+}
+
+# /run/aide.lock serialises all aide runs of LFOps, see aidecheck.service. the check runs here
+# and not through aidecheck.service, which is ordered after apt-daily-upgrade.service and
+# would therefore wait for this very run.
+aide_locked() {
+    flock /run/aide.lock {{ __aide__binary_path }} --config=/etc/aide.conf "$@" > /dev/null 2>&1
+}
+
+case "$1" in
+    pre)
+        uu=$(uu_process) || exit 0
+        # a later package set of the same unattended-upgrade process: its check already ran
+        [ "$(cut --delimiter=' ' --fields=1 "$STATE" 2>/dev/null)" = "$uu" ] && exit 0
+        rm --force "$STATE"
+        systemctl is-active --quiet "${UNIT}.timer" || exit 0
+        [ -e '/var/lib/aide/aide.db.gz' ] || exit 0
+        aide_locked --check
+        rc=$?
+        if [ "$rc" -eq 0 ]; then
+            echo "${uu} clean" > "$STATE"
+            log 'aide --check was clean before the unattended upgrade; the database will be updated once it has finished'
+        else
+            echo "${uu} dirty" > "$STATE"
+            log "aide --check exited with ${rc} before the unattended upgrade; the database will not be re-baselined, see /var/log/aide/aide.log"
+        fi
+        ;;
+    post)
+        uu=$(uu_process) || exit 0
+        systemctl is-active --quiet "${UNIT}.timer" || exit 0
+        # the aide role enables the timer before it initialises the database, and an unattended
+        # upgrade in between would otherwise start a check that can only abort, leaving the unit
+        # failed on a freshly set up host. the timer and the check after boot still fail on a
+        # missing database.
+        if [ ! -e '/var/lib/aide/aide.db.gz' ]; then
+            log 'no AIDE database yet, not starting aidecheck.service'
+            exit 0
+        fi
+        # --no-block, since both units wait for apt-daily-upgrade.service to finish. systemd
+        # merges the start requests of all package sets into one job.
+        if [ "$(cat "$STATE" 2>/dev/null)" = "${uu} clean" ]; then
+            systemctl start --no-block aide-dpkg-update.service
+        else
+            # a check through the unit, so that its state reflects the host again
+            systemctl restart --no-block "${UNIT}.service"
+        fi
+        ;;
+    update)
+        # only after a clean check of an unattended upgrade, not when the unit is started by hand
+        if [ "$(cut --delimiter=' ' --fields=2 "$STATE" 2>/dev/null)" = 'clean' ]; then
+            rm --force "$STATE"
+            # exits with the bitmask of what it found (1 added, 2 removed, 4 changed), errors
+            # from 14
+            aide_locked --update
+            rc=$?
+            if [ "$rc" -ge 8 ]; then
+                log "aide --update exited with ${rc}; the database was not re-baselined"
+            else
+                mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+                log 're-baselined the AIDE database after an unattended upgrade'
+            fi
+        fi
+        # `aide --update` wrote its own report. a check against the new database replaces it, so
+        # that the report and the state of the unit reflect the host again.
+        systemctl restart --no-block "${UNIT}.service"
+        ;;
+esac
+exit 0

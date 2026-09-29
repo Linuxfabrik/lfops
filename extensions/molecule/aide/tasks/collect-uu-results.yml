@@ -1,0 +1,49 @@
+# everything the assertions after an unattended upgrade need, read from the time that
+# reset-uu-logs.yml took
+- name: 'dpkg-query --show lfops-molecule-a lfops-molecule-b lfops-molecule-c'
+  ansible.builtin.command: "dpkg-query --show --showformat='${Version} ' lfops-molecule-a lfops-molecule-b lfops-molecule-c"
+  register: '__molecule__aide_uu_versions_result'
+  changed_when: false
+
+# unattended-upgrades logs one "applying set" line per dpkg run (Unattended-Upgrade::Debug)
+- name: 'grep --count "applying set" /var/log/unattended-upgrades/unattended-upgrades.log'
+  ansible.builtin.shell: 'grep --count "applying set" /var/log/unattended-upgrades/unattended-upgrades.log || true'
+  args:
+    executable: '/bin/bash'
+  register: '__molecule__aide_uu_sets_result'
+  changed_when: false
+
+- name: 'journalctl --identifier aide-dpkg-hook'
+  ansible.builtin.command: >-
+    journalctl
+      --since '@{{ __molecule__aide_uu_since_result["stdout"] }}'
+      --identifier aide-dpkg-hook
+      --no-pager
+      --output cat
+  register: '__molecule__aide_uu_hook_result'
+  changed_when: false
+
+# grep exits 1 when it counts nothing, hence the `|| true` after the pipe
+- name: 'journalctl --unit aide-dpkg-update.service | grep --count ^Starting'
+  ansible.builtin.shell: |
+    set -o pipefail
+    journalctl \
+        --since '@{{ __molecule__aide_uu_since_result["stdout"] }}' \
+        --unit aide-dpkg-update.service \
+        --no-pager \
+        --output cat \
+        | grep --count '^Starting' || true
+  args:
+    executable: '/bin/bash'
+  register: '__molecule__aide_uu_update_runs_result'
+  changed_when: false
+
+- name: 'systemctl show --property=Result aidecheck.service' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+  ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+  register: '__molecule__aide_uu_check_result'
+  changed_when: false
+
+- name: 'cat /var/log/aide/aide.log'
+  ansible.builtin.command: 'cat /var/log/aide/aide.log'
+  register: '__molecule__aide_uu_log_result'
+  changed_when: false
