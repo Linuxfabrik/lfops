@@ -75,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lvm**: Removing an LV (`state: absent`) no longer aborts with `'dict object' has no attribute 'size'`.
+* **role:lvm**: Removing a VG (`state: absent`) no longer aborts with `could not find 'pvs' key` when the entry lists no `pvs`.
 * **role:lvm**: Shrinking an LV works. It needs `force: true` in addition to `shrink: true`; with `shrink: true` alone the run aborted.
 * **role:lvm**: The role installs `lvm2`, so it also works on hosts installed without LVM, such as those deployed from a cloud image.
 * **role:lvm**: Creating or resizing a PV no longer fails on RHEL 8 with `SyntaxError: future feature annotations is not defined`.

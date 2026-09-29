@@ -46,7 +46,7 @@
       cmd: 'growpart {{ "--dry-run" if ansible_check_mode else "" }} {{ item[1] | ansible.builtin.regex_replace("[p]?[0-9]+$", "") }} {{ item[1] | ansible.builtin.regex_replace(".*[p]?([0-9]+)$", "\1") }}'
     # always run, since growpart supports `--dry-run`
     check_mode: false
-    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs") }}'
+    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs", skip_missing=true) }}'
     # subelements converts
     #   - name: 'rl'
     #     pvs:
@@ -88,7 +88,7 @@
       device: '{{ item[1] }}'
       state: 'present'
       resize: true
-    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs") }}'
+    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs", skip_missing=true) }}'
     loop_control:
       label: '{{ item[1] }}'
     when:
@@ -136,7 +136,7 @@
       quiet: true
     loop: '{{ lvm__lvs__combined_var }}'
     loop_control:
-      label: '{{ item["name"] }}: {{ item["size"] }}'
+      label: '{{ item["name"] }}: {{ item["size"] | d("") }}'
     when:
       - 'item["state"] | d("present") != "absent"'
 
