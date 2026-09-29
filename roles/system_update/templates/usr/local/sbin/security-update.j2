@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026091801
+# 2026091802
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository
 # only, then request a reboot if one is needed by dropping a file into the
@@ -126,6 +126,37 @@ elif [ "$retc" -ne 100 ]; then
     exit 1
 fi
 
+# The aide rpm ships no check unit, so aide-check.timer / aide-check.service are the
+# names the AIDE lane is deployed under here. aide defaults to /etc/aide.conf and keeps
+# the database gzipped. The same values as the RedHat branch of update-and-reboot, so the
+# AIDE code of both lanes stays identical.
+# Verified against aide 0.19.2 on Rocky 9.
+AIDE_CONFIG='/etc/aide.conf'
+AIDE_DB='/var/lib/aide/aide.db.gz'
+AIDE_DB_NEW='/var/lib/aide/aide.db.new.gz'
+AIDE_UNIT='aide-check'
+
+# remember whether AIDE was already reporting changes before the transaction, the same
+# way update-and-reboot does: re-baselining an already-failing check would silently
+# accept whatever drifted since the last check, an intrusion included. Two deliberate
+# differences to update-and-reboot: this sits below the gates above, since this lane runs
+# daily and would otherwise mail a failing check every day, also when there is nothing to
+# install. And the log is copied to a name of its own, since on a day both lanes run the
+# second copy would otherwise overwrite the first with a log that already contains the
+# changes of the first update.
+# Verified against aide 0.19.2 on Rocky 9 and 10 (re-baseline after a hot-fix) and aide 0.16
+# on Rocky 8 (check already failing, database left alone).
+AIDE_WAS_CLEAN=0
+if systemctl is-active --quiet "${AIDE_UNIT}.timer"; then
+    if systemctl is-failed --quiet "${AIDE_UNIT}.service"; then
+        log "${AIDE_UNIT} was already failing before the security update; the database will not be re-baselined"
+        cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-security-update
+        send_msg "$SUBJECT_PREFIX - ${AIDE_UNIT}.service state was failed before Security Update" "Please check the logfile at /var/log/aide/aide.log-pre-security-update (saved before the update ran)."
+    else
+        AIDE_WAS_CLEAN=1
+    fi
+fi
+
 {% if system_update__security_pre_update_code | length %}
 # below the gates above, not at the top of the script: this lane runs daily and exits
 # on most days without installing anything, while the pre-update code guards a
@@ -158,6 +189,15 @@ if [ "$TXN_AFTER" = "$TXN_BEFORE" ]; then
 else
     UPDATED=1
     TXN_REPORT=$(yum history info "$TXN_AFTER")
+fi
+
+# re-baseline AIDE so the database describes the patched filesystem and the next check
+# does not flag every file the hot-fix touched. Only when this run changed packages and
+# the check was passing beforehand, see above.
+if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
+    aide --config="$AIDE_CONFIG" --update 1> /dev/null
+    \mv "$AIDE_DB_NEW" "$AIDE_DB"
+    systemctl restart "${AIDE_UNIT}.service"
 fi
 
 # request a reboot if a core component (kernel, glibc, ...) needs it, or if running

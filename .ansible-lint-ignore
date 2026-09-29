@@ -1,4 +1,5 @@
 roles/acme_sh/defaults/main.yml jinja[spacing]
+roles/aide/defaults/main.yml jinja[spacing]
 roles/ansible_init/defaults/main.yml jinja[spacing]
 roles/apache_httpd/defaults/main.yml jinja[spacing]
 roles/apache_solr/defaults/main.yml jinja[spacing]

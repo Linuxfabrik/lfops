@@ -1,0 +1,40 @@
+# re-baseline after the role changed /etc/aide.conf, its own units or the timer's enable
+# symlink, otherwise the next check reports every path the new rules add or drop, and the
+# role's own files. only when a database existed before this run (a new one is initialised
+# from the new config anyway), the check unit existed as well (otherwise the database was not
+# created by this role, see tasks/main.yml), and the last check had not reported changes:
+# re-baselining then would silently accept whatever drifted, an intrusion included. this is
+# the same guard the system_update role applies after an update.
+# `aide --update` exits with the bitmask of what it found (1 added, 2 removed, 4 changed),
+# errors start at 14.
+- name: 'aide: aide --update'
+  ansible.builtin.command: 'aide --update'
+  register: '__aide__update_result'
+  changed_when: true
+  failed_when: '__aide__update_result["rc"] >= 8'
+  notify: 'aide: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
+  listen: 'aide: update database'
+  when:
+    - '__aide__db_stat_result["stat"]["exists"] | bool'
+    - '__aide__check_unit_stat_result["stat"]["exists"] | bool'
+    - '__aide__check_failed_result["rc"] != 0'
+
+- name: 'aide: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
+  ansible.builtin.command: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
+  changed_when: true
+
+- name: 'aide: report that the database was left alone'
+  ansible.builtin.debug:
+    msg: '{{ __aide__end_of_play_message }}'
+  listen: 'aide: update database'
+  when:
+    - '__aide__db_stat_result["stat"]["exists"] | bool'
+    - 'not (__aide__check_unit_stat_result["stat"]["exists"] | bool) or __aide__check_failed_result["rc"] == 0'
+
+- name: 'aide: collect the message for the end of the play'
+  ansible.builtin.set_fact:
+    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__aide__end_of_play_message] }}'
+  listen: 'aide: update database'
+  when:
+    - '__aide__db_stat_result["stat"]["exists"] | bool'
+    - 'not (__aide__check_unit_stat_result["stat"]["exists"] | bool) or __aide__check_failed_result["rc"] == 0'

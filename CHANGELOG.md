@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:aide, playbook:aide**: Add a role and playbook to install AIDE on RHEL 8, 9 and 10 and run a daily file integrity check, which leaves `aide-check.service` failed on any finding.
 * **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis and audit the host once a day through a systemd timer, leaving the results in `/var/log/lynis.log` and `/var/log/lynis-report.dat` for the lynis-logfile monitoring plugin. `setup_basic` installs it on every host. Findings can be accepted per host or group with `lynis__skip_tests`, which the role writes to `/etc/lynis/custom.prf`; a hand-edited `custom.prf` is overwritten.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
@@ -75,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: The daily security lane on Rocky refreshes the AIDE database after installing hot-fixes, like the weekly lane, so the next AIDE check no longer fails on every file a hot-fix touched.
 * **role:lvm**: On Debian and Ubuntu, mounting an LV no longer fails on `restorecon`, which only runs where SELinux is enabled.
 * **role:lvm**: The role installs the tools for XFS and ext2/3/4, so creating the default XFS file system no longer fails on hosts without `mkfs.xfs`, such as those deployed from a Debian cloud image.
 * **role:lvm**: `mount_owner`, `mount_group` and `mount_mode` apply to the mounted file system from the first run on. Until now they only took effect on the second run, which therefore reported a change.

@@ -1,0 +1,116 @@
+# {{ ansible_managed }}
+# 2026091801
+# Based on the /etc/aide.conf shipped with aide 0.19.2 on Rocky 9 and 10. The rule list is
+# the same for every version, the options and groups follow the installed aide version.
+
+@@define DBDIR /var/lib/aide
+@@define LOGDIR /var/log/aide
+
+{% if __aide__installed_version is ansible.builtin.version('0.17', '<') %}
+# The location of the database to be read.
+database=file:@@{DBDIR}/aide.db.gz
+{% else %}
+# The location of the database to be read.
+database_in=file:@@{DBDIR}/aide.db.gz
+{% endif %}
+
+# The location of the database to be written.
+database_out=file:@@{DBDIR}/aide.db.new.gz
+
+# Whether to gzip the output to database
+gzip_dbout=yes
+
+{% if __aide__installed_version is ansible.builtin.version('0.17', '<') %}
+# Default.
+verbose=5
+{% else %}
+# Database attributes to include in report (H = all compiled hashsums, default)
+database_attrs=H
+
+# Add metadata to database (version info, timestamps)
+database_add_metadata=yes
+
+# Warn about unrestricted rules during config check (default: false)
+config_check_warn_unrestricted_rules=false
+
+# Number of workers for parallel processing (default: 1, can use percentage)
+num_workers=1
+
+# Default.
+log_level=warning
+report_level=changed_attributes
+
+# Report format (plain or json)
+report_format=plain
+
+# Group files in report by added/removed/changed
+report_grouped=yes
+
+# Summarize changes in report
+report_summarize_changes=yes
+
+# Don't report if no differences found
+report_quiet=no
+
+# Report encoding (base64 is default, base16 available)
+report_base16=no
+{% endif %}
+
+report_url=file:@@{LOGDIR}/aide.log
+report_url=stdout
+
+{% if __aide__installed_version is ansible.builtin.version('0.17', '<') %}
+# aide 0.16 knows neither the sha3 / stribog hashsums nor the X group, and its R group
+# still contains md5, so the groups are spelled out here with the same attributes the
+# 0.19 definitions below resolve to.
+# Verified against aide 0.16 on Rocky 8.
+ALLXTRAHASHES = sha256+sha512
+EVERYTHING = R+ALLXTRAHASHES
+NORMAL = p+ftype+i+l+n+u+g+s+acl+selinux+xattrs+sha512
+{% else %}
+# Default groups in AIDE v0.19:
+# R = p+ftype+i+l+n+u+g+s+m+c+sha3_256+X
+# L = p+ftype+i+l+n+u+g+X
+# > = Growing file p+ftype+l+u+g+i+n+s+growing+X
+# H = all compiled in (and not deprecated) hashsums
+# X = acl+selinux+xattrs+e2fsattrs+caps (if compiled in)
+# E = Empty group
+# Use 'aide --version' to list the default compound groups.
+
+ALLXTRAHASHES = sha256+sha512+sha512_256+sha3_256+sha3_512+stribog256+stribog512
+# Everything but access time (Ie. all changes)
+EVERYTHING = R+ALLXTRAHASHES
+
+# Base + sha512 (strong)
+NORMAL = R+sha512-m-c
+{% endif %}
+
+# Content only - file type and strong hash
+CONTENT = ftype+sha512
+
+# For directories, don't bother doing hashes
+DIR = ftype+p+i+l+n+u+g+acl+selinux+xattrs
+
+# Access control only
+PERMS = ftype+p+u+g+acl+selinux+xattrs
+
+# Logfiles are special, in that they often change due to log rotation
+# Track only: permissions, file type, user, group, number of links, SELinux context, extended attributes
+# Allow new files (ANF) and allow removed files (ARF) due to log rotation techniques
+LOG = p+ftype+u+g+n+ANF+ARF+selinux+xattrs
+
+# Some files get updated automatically, so the inode/ctime/mtime change
+# but we want to know when the data inside them changes
+DATAONLY = ftype+p+l+n+u+g+s+acl+selinux+xattrs+sha256
+
+# Next decide what directories/files you want in the database.
+
+{% for rule in aide__rules__combined_var if rule['state'] | d('present') != 'absent' %}
+{% if rule['type'] | d('regular') == 'negative' %}
+!{{ rule['path'] }}
+{% elif rule['type'] | d('regular') == 'equal' %}
+={{ rule['path'] }} {{ rule['attributes'] }}
+{% else %}
+{{ rule['path'] }} {{ rule['attributes'] }}
+{% endif %}
+{% endfor %}

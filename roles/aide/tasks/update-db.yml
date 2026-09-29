@@ -1,0 +1,18 @@
+# the explicit "accept the current state" action, so it runs without the guard of the
+# handler. `aide --update` exits with the bitmask of what it found (1 added, 2 removed,
+# 4 changed), errors start at 14.
+- name: 'aide --update'
+  ansible.builtin.command: 'aide --update'
+  register: '__aide__update_db_result'
+  changed_when: true
+  failed_when: '__aide__update_db_result["rc"] >= 8'
+
+- name: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
+  ansible.builtin.command: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
+  changed_when: true
+
+# the database now describes the host as it is, so the finding of the last check no longer
+# applies. clearing the failed state is quicker than a full check.
+- name: 'systemctl reset-failed aide-check.service' # noqa command-instead-of-module (no module resets a failed unit)
+  ansible.builtin.command: 'systemctl reset-failed aide-check.service'
+  changed_when: true

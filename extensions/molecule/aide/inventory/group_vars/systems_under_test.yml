@@ -1,0 +1,10 @@
+# /srv is not in the default rule list, so a finding below it can only come from the two
+# rules added here. /opt is in the default list, and removing its rule has to take it out
+# of the check. verify.yml relies on all three.
+aide__rules__group_var:
+  - path: '/opt'
+    state: 'absent'
+  - path: '/srv/lfops-molecule'
+    attributes: 'NORMAL'
+  - path: '/srv/lfops-molecule/ignored'
+    type: 'negative'

@@ -1,0 +1,46 @@
+argument_specs:
+  main:
+    options:
+
+      aide__check_on_calendar:
+        type: 'str'
+        required: false
+        description: 'When aide-check.timer runs the AIDE check, in systemd.time(7) format.'
+
+      aide__rules__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The rules in /etc/aide.conf. Dependent-role injection.'
+
+      aide__rules__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The rules in /etc/aide.conf. Group-level override.'
+
+      aide__rules__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The rules in /etc/aide.conf. Host-level override.'
+
+      aide__timer_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether aide-check.timer is enabled at boot.'
+
+      aide__timer_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of aide-check.timer.'
