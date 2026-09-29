@@ -603,10 +603,12 @@ def _translate_mwindow_response(item):
     if 'type' in item and item['type'] is not None:
         read_type = {v: k for k, v in MWINDOW_TYPE.items()}
         item['type'] = read_type.get(item['type'], item['type'])
-    if 'value' in item and item['value'] is not None:
-        # `value` is a dash-separated list of day-IDs for weekly windows
-        # (e.g. "1-3-5"), or a list of day-of-month integers for monthly.
-        # Translate weekday IDs back to labels; leave monthly numbers alone.
+    # `value` is a dash-separated list of day-IDs for weekly windows
+    # (e.g. "1-3-5"), or a list of day-of-month integers for monthly.
+    # Translate weekday IDs back to labels; leave monthly numbers alone, as
+    # day 1 to 7 of the month would otherwise read as a weekday. `type` has
+    # already been translated to its label above.
+    if item.get('type') == 'weekly' and item.get('value') is not None:
         read_day = {v: k for k, v in MWINDOW_DAY.items()}
         if isinstance(item['value'], str) and '-' in item['value']:
             parts = []
