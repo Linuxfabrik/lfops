@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **module:uptimerobot_mwindow_info**: Monthly maintenance windows on day 1 to 7 of the month are reported with their day numbers instead of weekday names, e.g. `1-15` instead of `mon-15`.
 * **role:lvm**: On Debian and Ubuntu, mounting an LV no longer fails on `restorecon`, which only runs where SELinux is enabled.
 * **role:lvm**: The role installs the tools for XFS and ext2/3/4, so creating the default XFS file system no longer fails on hosts without `mkfs.xfs`, such as those deployed from a Debian cloud image.
 * **role:lvm**: `mount_owner`, `mount_group` and `mount_mode` apply to the mounted file system from the first run on. Until now they only took effect on the second run, which therefore reported a change.

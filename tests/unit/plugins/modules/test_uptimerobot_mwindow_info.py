@@ -177,6 +177,25 @@ class TestListMwindows(_ModuleTestCase):
         self.assertEqual(result['mwindows'][2]['start_time'], '03:30')
         self.assertEqual(result['mwindows'][2]['duration'], 120)
 
+    def test_monthly_days_one_to_seven_are_not_weekdays(self):
+        # the day-of-month range 1..7 overlaps with the weekday IDs mon..sun
+        self.fake.responses.append(
+            (
+                200,
+                _page(
+                    [
+                        _mwindow(586, 'monthly 1', 4, '1'),
+                        _mwindow(587, 'monthly 1-15', 4, '1-15'),
+                        _mwindow(588, 'monthly 7-28', 4, '7-28'),
+                    ]
+                ),
+            )
+        )
+        result = self._run({'api_key': _API_KEY})
+        self.assertEqual(
+            [w['value'] for w in result['mwindows']], ['1', '1-15', '7-28']
+        )
+
     def test_calls_get_mwindows_once(self):
         self.fake.responses.append((200, _account_page()))
         self._run({'api_key': _API_KEY})
