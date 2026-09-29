@@ -81,9 +81,12 @@
       changed_when: false
       register: '__molecule__chronyc_sources_result'
 
-    - name: 'Assert that chronyd uses the source configured in the inventory'
+    # Only that source: the role configures no distribution pools and no DHCP sources, and a
+    # distribution default next to it (Ubuntu 26.04 ships its NTS pools with `prefer` in
+    # /etc/chrony/sources.d) would take over and chronyd would never use it.
+    - name: 'Assert that chronyd uses only the source configured in the inventory'
       ansible.builtin.assert:
-        that: '__molecule__chronyc_sources_result["stdout_lines"] | select("search", ",192\\.0\\.2\\.1,") | list | length > 0'
+        that: '__molecule__chronyc_sources_result["stdout_lines"] | map("split", ",") | map(attribute=2) | list == ["192.0.2.1"]'
         fail_msg: '{{ __molecule__chronyc_sources_result["stdout_lines"] }}'
 
     # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
