@@ -251,6 +251,12 @@
       when:
         - 'not setup_basic__skip_icinga2_agent | d(false)'
 
+    # last, so that the AIDE database created on the first run contains what the roles above
+    # deployed, and a later change by any of them is reported by the next check
+    - role: 'linuxfabrik.lfops.aide'
+      when:
+        - 'not setup_basic__skip_aide | d(false)'
+
 
   post_tasks:
     - ansible.builtin.import_role:
