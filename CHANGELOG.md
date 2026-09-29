@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:system_update**: On Debian and Ubuntu, the system update no longer updates the database of an AIDE installed by hand, since it also accepted changes that were pending before the update. On such hosts the daily AIDE mail now lists the files each update changed. Deploy the aide role to have its database updated after updates again.
 * **role:grav**: The `grav:cron` tag is gone. Run the role with `--tags grav` to deploy the timers and their services, or with `--tags grav:state` to enable or disable the timers.
 * **role:firewall**: With `firewall__firewall: 'fwbuilder'`, the default, the run aborts on a host that has neither `/etc/fwb.sh` nor `firewall__fwbuilder_repo_url`, before the role stops any firewall. Until now `fwb.service` failed there and the host ran without a firewall. Deploy `/etc/fwb.sh`, set `firewall__fwbuilder_repo_url`, or set `firewall__firewall` to the firewall the host uses.
 * **role:chrony**: The role takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed, so these hosts synchronised with the distribution's default pools until now. As on the Red Hat family, chronyd uses only the sources from the inventory, without the distribution's pools, DHCP sources or `/etc/chrony/sources.d`. Set `chrony__ntp_pools` or `chrony__ntp_servers` for every Debian and Ubuntu host before running the role, otherwise it is left without a time source.
@@ -79,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: The AIDE database is only updated after an update if a check right before the update comes out clean, instead of relying on the last scheduled check, so changes made since then are no longer accepted along with the update; a check that cannot run at all is reported in a mail of its own.
 * **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.
 * **role:firewall**: Hosts in one run with different `firewall__fwbuilder_repo_url` values each deploy `/etc/fwb.sh` from their own repository, instead of all from the repository of the first host.
 * **role:firewall**: `firewall__firewall: 'iptables'` no longer aborts when there is no iptables file in the inventory's `host_files`, which the README describes as optional.

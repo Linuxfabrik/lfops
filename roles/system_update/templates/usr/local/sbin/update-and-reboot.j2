@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082601
+# 2026093001
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -94,41 +94,44 @@ log "Starting system update"
 # end raw system_update__pre_update_code
 {% endif %}
 
-{% if ansible_facts['os_family'] == 'RedHat' %}
-# The aide rpm ships no check unit at all, so aide-check.timer / aide-check.service are
-# the names the AIDE lane is deployed under here. aide defaults to /etc/aide.conf and
-# keeps the database gzipped.
-# Verified against aide 0.19.2 on Rocky 9.
+# The AIDE setup of the aide role, the same on every platform: aidecheck.timer /
+# aidecheck.service, /etc/aide.conf and a gzipped database. The aide binaries of Debian and
+# Ubuntu are built without a default config file, so --config is mandatory rather than
+# cosmetic. aide-common's dailyaidecheck.service is no check this script can rely on: it
+# mails its report and exits 0 on findings as well (`onexit success` in
+# /usr/share/aide/bin/dailyaidecheck), so it never reports a failed check.
+# Verified against aide 0.19.2 on Rocky 9 and aide-common 0.18.3 on Debian 12.
 AIDE_CONFIG='/etc/aide.conf'
 AIDE_DB='/var/lib/aide/aide.db.gz'
 AIDE_DB_NEW='/var/lib/aide/aide.db.new.gz'
-AIDE_UNIT='aide-check'
-{% endif %}
-{% if ansible_facts['os_family'] == 'Debian' %}
-# aide-common ships dailyaidecheck.timer / dailyaidecheck.service, keeps the database
-# uncompressed, and its aide binary is built without a default config file, so --config
-# is mandatory rather than cosmetic.
-# Verified against aide 0.18.3 and aide-common on Debian 12.
-AIDE_CONFIG='/etc/aide/aide.conf'
-AIDE_DB='/var/lib/aide/aide.db'
-AIDE_DB_NEW='/var/lib/aide/aide.db.new'
-AIDE_UNIT='dailyaidecheck'
-{% endif %}
+AIDE_UNIT='aidecheck'
 
-# remember whether AIDE was already reporting changes before we touch anything. the
-# re-baseline further down would otherwise accept that drift as the new baseline and
-# destroy the finding. `aide --check` exits 1 on a mismatch, so a failed check service
-# is what "the last check found changes" looks like. both families log to
-# /var/log/aide/aide.log.
-# Verified against aide 0.19.2 on Rocky 9 and aide 0.18.3 on Debian 12.
+# check before we touch anything, and only re-baseline further down if that check came out
+# clean. a check right now, not the result of the last scheduled one, which can be many hours
+# old: the re-baseline accepts everything that changed since the check it relies on, an
+# intrusion included. aide runs directly, not through aidecheck.service, which is ordered after
+# this script's service and would wait for it. /run/aide.lock serialises all aide runs of
+# LFOps. Both families log to /var/log/aide/aide.log.
+# `aide --check` exits with the bitmask of its findings (1 added, 2 removed, 4 changed) and
+# with 14 or more on an error (include/errorcodes.h), writing the error to stderr, for example
+# 18 without a database. flock passes the exit code of aide through, its own errors are 64 and
+# more. A check that could not run says nothing about the host, so it gets a mail of its own.
+# Verified against aide 0.16 on Rocky 8, 0.19.2 on Rocky 9 and 10, and 0.19.2 on Ubuntu 26.04.
 AIDE_WAS_CLEAN=0
 if systemctl is-active --quiet "${AIDE_UNIT}.timer"; then
-    if systemctl is-failed --quiet "${AIDE_UNIT}.service"; then
-        log "${AIDE_UNIT} was already failing before the update; the database will not be re-baselined"
-        cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
-        send_msg "$SUBJECT_PREFIX - ${AIDE_UNIT}.service state was failed before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
-    else
+    AIDE_CHECK_STDERR=$(flock /run/aide.lock aide --config="$AIDE_CONFIG" --check 2>&1 1> /dev/null)
+    AIDE_CHECK_RC=$?
+    if [ "$AIDE_CHECK_RC" -eq 0 ]; then
         AIDE_WAS_CLEAN=1
+    elif [ "$AIDE_CHECK_RC" -lt 8 ]; then
+        log "AIDE reported changes before the update; the database will not be re-baselined"
+        cp /var/log/aide/aide.log /var/log/aide/aide.log-pre-system-update
+        send_msg "$SUBJECT_PREFIX - AIDE reported changes before System Update" "Please check the logfile at /var/log/aide/aide.log-pre-system-update (saved before the update ran)."
+    else
+        log "AIDE check failed with exit code ${AIDE_CHECK_RC} before the update; the database will not be re-baselined"
+        send_msg "$SUBJECT_PREFIX - AIDE check failed before System Update" "The AIDE check before the update could not run (exit code ${AIDE_CHECK_RC}), so the AIDE database will not be updated after the update. Output:
+
+${AIDE_CHECK_STDERR}"
     fi
 fi
 
@@ -206,9 +209,13 @@ fi
 # and only when the check was passing beforehand: re-baselining an already-failing check
 # would silently accept whatever drifted since the last run, an intrusion included.
 if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
-    aide --config="$AIDE_CONFIG" --update 1> /dev/null
+    # /run/aide.lock serialises all aide runs of LFOps (aidecheck.service of the aide role)
+    flock /run/aide.lock aide --config="$AIDE_CONFIG" --update 1> /dev/null
     \mv "$AIDE_DB_NEW" "$AIDE_DB"
-    systemctl restart "${AIDE_UNIT}.service"
+    # --no-block: aidecheck.service is ordered after this script's service (After=), so a
+    # blocking restart would wait for this script to end, which waits for the restart. The
+    # check starts once this script has finished.
+    systemctl restart --no-block "${AIDE_UNIT}.service"
 fi
 
 # after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
