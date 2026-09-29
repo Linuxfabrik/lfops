@@ -232,6 +232,10 @@
     loop_control:
       label: '{{ item["item"]["mount_path"] }}'
     changed_when: false
+    # not `!= "disabled"`: without the SELinux Python bindings, e.g. on Debian, the status reads
+    # "Missing selinux Python library", and there is no restorecon either
+    when:
+      - 'ansible_facts["selinux"]["status"] == "enabled"'
 
   tags:
     - 'lvm'

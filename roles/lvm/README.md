@@ -87,7 +87,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `mount_path`:
 
-        * Optional. Mount point path. If specified, the directory will be created, the LV will be mounted, and `restorecon` will be run automatically on the mount path.
+        * Optional. Mount point path. If specified, the directory will be created, the LV will be mounted, and on hosts with SELinux enabled, `restorecon` will be run automatically on the mount path.
         * Type: String.
 
     * `mount_opts`:
