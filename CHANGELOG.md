@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:monitoring_plugins**: The source install downloads the Python dependencies on the Ansible controller, which therefore needs pip for the Python that runs Ansible and access to PyPI; the targets no longer need Internet access.
+* **role:kernel_modules**: The `tun` kernel module is blocked by default (CVE-2026-81000, [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011)). This stops OpenVPN, WireGuard in userspace, rootless Podman and Docker networking and libvirt VM networking after the next reboot, which the role requests on hosts where `tun` is loaded. Before running the role, add `kernel_modules__modules__host_var: [{name: 'tun', enabled: true}]` to the inventory of every such host. Rootful Docker and Podman with bridge networking are not affected.
+* **role:grafana**: `grafana__users_case_insensitive_login` is gone; remove it from your inventory. Grafana has ignored the setting since v11.0.0 and always matches logins case-insensitively.
 * **role:system_update**: `system_update__pre_update_code` and `system_update__post_update_code` now also run in the daily security lane on Rocky, around the transaction that installs the hot-fixes, where until now only the weekly lane ran them. Set `system_update__security_pre_update_code: ''` and `system_update__security_post_update_code: ''` to keep the security lane free of it, or set either to a codeblock of its own to have the two lanes do different things.
 * **role:wordpress**: The vHost file is named after the host of `wordpress__url`, for example `wordpress.example.com.80.conf`, instead of `wordpress.conf`. Remove the old file with `rm -f /etc/httpd/sites-{enabled,available}/wordpress.conf` and reload httpd, otherwise Apache may keep serving the site from it.
 * **role:wordpress**: The WordPress core, `wp-config.php` and `wp-content/mu-plugins` belong to `root`, so a vulnerable plugin can no longer modify them; plugins and themes can still be installed from the web interface. The core is updated by `wordpress-core-minor-update-<instance>.timer` (minor releases) and `--tags wordpress:update` instead of by WordPress itself. After a permalink change in the web interface, add the displayed rewrite rules to `.htaccess` by hand.
@@ -31,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:aide, playbook:aide**: Add a role and playbook to install AIDE on RHEL 8, 9 and 10 and run a daily file integrity check, which leaves `aide-check.service` failed on any finding.
+* **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis and audit the host once a day through a systemd timer, leaving the results in `/var/log/lynis.log` and `/var/log/lynis-report.dat` for the lynis-logfile monitoring plugin. `setup_basic` installs it on every host. Findings can be accepted per host or group with `lynis__skip_tests`, which the role writes to `/etc/lynis/custom.prf`; a hand-edited `custom.prf` is overwritten.
+* **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
+* **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
+* **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
+* **role:collabora**: Add support for Collabora Online CODE 26.04.4.
 * **role:wordpress**: Entries in `wordpress__plugins` accept `enabled: false`, which keeps a plugin installed but deactivated.
 * **role:system_update**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:wordpress**: Several WordPress instances can share a host as pseudo hosts in the inventory, under different host names as well as under different paths of one host name, such as `https://example.com/blog`.
@@ -47,6 +55,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:icinga2_agent, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins repository is only registered for `monitoring_plugins__install_method: 'package'`.
+* **role:monitoring_plugins**: The source install removes plugins that an earlier run deployed and the checked-out version no longer carries.
+* **role:monitoring_plugins**: The source install deploys the dependency versions pinned in the monitoring-plugins lockfiles and, for a release, the Linuxfabrik library release they pin, instead of the newest versions of both.
+* **role:fail2ban**: The `portscan` jail no longer bans TCP scans that send no plain SYN, such as FIN, NULL, Xmas and ACK scans, since they find no open port on a stateful firewall.
+* **role:grafana**: Grafana no longer updates its preinstalled plugins on every start, so datasources such as InfluxDB and Prometheus no longer disappear from the web interface when the plugin download server is unreachable.
+* **role:grafana**: `grafana.ini` follows the file that current Grafana packages ship, so deploying it only changes the settings LFOps manages. As a side effect, recording rules time out after 30 seconds instead of 10.
 * **plugin:bitwarden_item, module:bitwarden_item**: A run against a vault that contains no items at all aborts instead of creating the first one, because `bw serve` briefly reports an empty vault after every sync ([bitwarden/clients#23283](https://github.com/bitwarden/clients/issues/23283)).
 * **role:repo_postgresql**: The PostgreSQL version repositories take precedence over the distribution's packages of the same name, so on RHEL 10 an install or update no longer switches a PostgreSQL server from the PGDG build to the AppStream build, which uses a different file layout.
 * **role:apache_httpd**: Responses of type `text/markdown` are compressed like HTML, so the Markdown versions of pages that CMSs such as Grav hand to AI agents no longer go out uncompressed.
@@ -56,9 +70,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **playbook:setup_basic**: The mail and reboot roles run before the security roles, so a first run against a fresh host files the reboot request that a changed crypto policy, SELinux state or kernel module blocklist needs. Until now the reboot mechanism was deployed further down the playbook and such a change could only be reported to the operator.
 * **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
 
+### Removed
+
+* **role:github_project_createrepo**: `github_project_createrepo__webserver_user` is gone, since the web server no longer gets an ACL entry; remove it from your inventory.
+
 ### Fixed
 
 * **role:system_update**: The daily security lane on Rocky refreshes the AIDE database after installing hot-fixes, like the weekly lane, so the next AIDE check no longer fails on every file a hot-fix touched.
+* **role:lvm**: On Debian and Ubuntu, mounting an LV no longer fails on `restorecon`, which only runs where SELinux is enabled.
+* **role:lvm**: The role installs the tools for XFS and ext2/3/4, so creating the default XFS file system no longer fails on hosts without `mkfs.xfs`, such as those deployed from a Debian cloud image.
+* **role:lvm**: `mount_owner`, `mount_group` and `mount_mode` apply to the mounted file system from the first run on. Until now they only took effect on the second run, which therefore reported a change.
+* **role:lvm**: Removing an LV (`state: absent`) no longer aborts with `'dict object' has no attribute 'size'`.
+* **role:lvm**: Removing a VG (`state: absent`) no longer aborts with `could not find 'pvs' key` when the entry lists no `pvs`.
+* **role:lvm**: Shrinking an LV works. It needs `force: true` in addition to `shrink: true`; with `shrink: true` alone the run aborted.
+* **role:lvm**: The role installs `lvm2`, so it also works on hosts installed without LVM, such as those deployed from a cloud image.
+* **role:lvm**: Creating or resizing a PV no longer fails on RHEL 8 with `SyntaxError: future feature annotations is not defined`.
+* **role:network**: Hosts without `network_connections` or `network_state` no longer run the upstream network role at all, which occasionally hung the play for good after it had finished.
+* **role:chrony**: The role now takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed. The distribution's DHCP and `sources.d` sources are kept, and without `chrony__ntp_pools` or `chrony__ntp_servers` the distribution's default pools are used. The stale `/etc/chrony.conf` is removed.
+* **role:kernel_settings**: The role no longer aborts on Ubuntu 22.04 with `Verification failed, current system settings differ from the preset profile`. The TuneD release of Ubuntu 22.04 sets two scheduler sysctls the kernel no longer has, and the role now removes them from the profile it builds on.
+* **role:tools**: The role no longer aborts on Ubuntu with `No package matching 'cloud-utils-growpart' is available`.
+* **role:python_venv**: The role no longer aborts on Debian and Ubuntu with `Failed to import the required Python library (packaging)`.
+* **playbook:setup_basic**: The play no longer aborts on Debian and Ubuntu with `No package matching 'network-scripts' is available` or `'__yum_utils__package' is undefined`. The `network` and `yum_utils` roles run on the Red Hat family only, the only platforms they support.
+* **role:firewall**: With `firewall__firewall: 'fwbuilder'` and no `/etc/fwb.sh` on the host, `fwb.service` is no longer started, which failed and was reported as a failed unit and as a change on every run. It is disabled instead, and an earlier failure is reset.
+* **role:monitoring_plugins**: The plugin icons for IcingaWeb2 are no longer missing when the directory `ansible-playbook` runs in contains `.svg` files.
+* **role:monitoring_plugins**: The source install deploys only the modules of the Linuxfabrik library, as the one-line installer does, removes the documentation and development files earlier runs placed next to them, and removes plugin assets the checked-out version no longer carries.
+* **role:monitoring_plugins**: The source install no longer reports a change on every run once the plugins have run.
+* **role:monitoring_plugins**: The source install no longer clears the setuid bit of the distribution's `check_icmp` and `check_dhcp` on every run.
+* **role:monitoring_plugins**: `--tags monitoring_plugins:remove` no longer aborts on Debian and Ubuntu, and also removes the version lock of the SELinux package, the SELinux policy module, the Debian conffiles and every file a release of the plugins ever installed.
+* **role:monitoring_plugins**: The source install sets `nagios_run_sudo` and loads the SELinux policy module, so plugins run through sudo under enforcing SELinux on RHEL 8 and 9.
+* **role:monitoring_plugins**: The source install of a release before 8.0.0 no longer fails on the missing logging sudoers file.
+* **role:fail2ban**: An empty `fail2ban__jail_portscan_allowed_ports` exempts no port, so the `portscan` jail bans every denied connection attempt instead of none.
+* **role:fail2ban**: The `portscan` jail no longer bans a server that a local proxy talks to because the firewall logged a late TCP packet or an ICMP error from it, for example the final FIN of a half-closed connection.
+* **role:grafana**: The `from_name` of `grafana__smtp_config` is used as the sender name of emails, instead of the value of `skip_verify`.
 * **module:bitwarden_item**: The module works with the Mitogen strategy, where it aborted with `MODULE FAILURE` on every run, for example when the `grafana` role stores its service account tokens.
 * **plugin:bitwarden_item, module:bitwarden_item**: Running against several hosts in parallel no longer creates duplicates of a Bitwarden item, whether the item is new or has existed for a long time, so the next run no longer aborts with "Found multiple Bitwarden items".
 * **role:wordpress**: The installation no longer aborts at `wp core download` when Ansible connects as `root` without privilege escalation.
@@ -93,6 +136,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
+* **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.
+* **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.
 * **role:wordpress**: `--tags wordpress:export` writes to `/backup/wordpress-export/<instance>`, readable by `apache` and `root` only, instead of to `/tmp`.
 * **role:wordpress**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:wordpress**: WP-CLI is verified against its published checksum, and an installed WP-CLI that differs from the current release is replaced.

@@ -18,9 +18,13 @@
 
   roles:
 
-    # we need correct network settings for the rest to work
+    # we need correct network settings for the rest to work.
+    # fedora.linux_system_roles.network supports Fedora and EL only. Without a running
+    # NetworkManager, as on Debian and Ubuntu, it falls back to its initscripts provider and
+    # installs the Red Hat package network-scripts, which aborts the play there.
     - role: 'linuxfabrik.lfops.network'
       when:
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_network | d(false)'
 
     # === Basic repositories ===
@@ -110,6 +114,10 @@
       when:
         - 'not setup_basic__skip_core_dumps | d(false)'
 
+    - role: 'linuxfabrik.lfops.lynis'
+      when:
+        - 'not setup_basic__skip_lynis | d(false)'
+
     # === Sensible defaults ===
     - role: 'linuxfabrik.lfops.systemd_journald'
       when:
@@ -186,6 +194,7 @@
 
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
+        - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_yum_utils | d(false)'
 
 
@@ -226,6 +235,8 @@
     # === Monitoring ===
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
+        # a source install needs no package repository, and re-registering it would undo its removal
+        - 'monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags'
         - 'not setup_basic__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'

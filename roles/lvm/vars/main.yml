@@ -1,0 +1,10 @@
+# The package that provides mkfs for each `fstype` the community.general.filesystem module knows.
+# Only the file systems this role is tested with are listed. bcachefs, btrfs, f2fs, ocfs2, reiserfs,
+# ufs and vfat are left to the admin, since not every supported distribution ships them (RHEL 8+
+# has no btrfs, for example). lvm and swap need nothing beyond lvm2 and util-linux.
+__lvm__fstype_packages:
+  ext2: 'e2fsprogs'
+  ext3: 'e2fsprogs'
+  ext4: 'e2fsprogs'
+  ext4dev: 'e2fsprogs'
+  xfs: 'xfsprogs'

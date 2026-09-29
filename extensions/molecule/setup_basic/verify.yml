@@ -40,6 +40,52 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # A real audit, restricted to a single test to keep it short, proves lynis finds its profile
+    # and include files and writes the report the lynis monitoring plugin reads.
+    - name: 'lynis audit system --quick --tests KRNL-5820'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests KRNL-5820'
+      args:
+        chdir: '/'
+      changed_when: false
+      register: '__molecule__lynis_audit_result'
+
+    - name: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_report_result'
+
+    - name: 'Assert that the lynis audit ran the requested test'
+      ansible.builtin.assert:
+        that:
+          - '"KRNL-5820" in __molecule__lynis_report_result["stdout"]'
+        fail_msg: '{{ __molecule__lynis_audit_result["stdout_lines"][-20:] }}'
+
+    # The scenario deploys no /etc/fwb.sh, so the firewall role must leave fwb.service alone
+    # instead of starting a unit that fails with status=203/EXEC, which a failed-units check reports.
+    - name: 'systemctl is-failed fwb.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-failed fwb.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__fwb_failed_result'
+
+    - name: 'Assert that fwb.service has not failed'
+      ansible.builtin.assert:
+        that: '__molecule__fwb_failed_result["stdout"] != "failed"'
+        fail_msg: '{{ __molecule__fwb_failed_result["stdout"] }}'
+
+    # Ask chronyd for its sources instead of reading the file: on Debian and Ubuntu chronyd only
+    # reads /etc/chrony/chrony.conf, so a file deployed to the wrong path would pass a file check
+    # and leave the configured source unused.
+    - name: 'chronyc -n -c sources'
+      ansible.builtin.command: 'chronyc -n -c sources'
+      changed_when: false
+      register: '__molecule__chronyc_sources_result'
+
+    - name: 'Assert that chronyd uses the source configured in the inventory'
+      ansible.builtin.assert:
+        that: '__molecule__chronyc_sources_result["stdout_lines"] | select("search", ",192\\.0\\.2\\.1,") | list | length > 0'
+        fail_msg: '{{ __molecule__chronyc_sources_result["stdout_lines"] }}'
+
     # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
     # least valid enough to start with. Queried via systemctl instead of service_facts because the
     # unit differs per family (Type=forking on RHEL, Type=oneshot with RemainAfterExit on Debian,

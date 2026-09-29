@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+# 2026092801
+
+[Unit]
+Description=Lynis security audit
+Documentation=https://cisofy.com/documentation/lynis/
+
+[Service]
+Type=oneshot
+# start in / so that lynis does not pick up profiles from a working directory
+WorkingDirectory=/
+# --cronjob runs `audit system` without colors and pauses, --quiet leaves only the warnings in the
+# journal. The results go to /var/log/lynis.log and /var/log/lynis-report.dat.
+ExecStart={{ __lynis__binary }} audit system --cronjob --quiet
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

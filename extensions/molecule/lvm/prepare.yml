@@ -1,0 +1,65 @@
+# Replaces the shared vm-prepare.yml for this scenario (see molecule.yml), so it imports it first
+# and only adds the precondition on top.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# A partition on /dev/vdb that does not fill the disk, so the role has something to grow. sfdisk
+# comes with util-linux and is therefore on every image.
+- name: 'Create a partition that leaves room to grow on /dev/vdb'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'echo ",512M" | sfdisk --label dos /dev/vdb'
+      ansible.builtin.command:
+        cmd: 'sfdisk --label dos /dev/vdb'
+        stdin: ',512M'
+        creates: '/dev/vdb1'
+
+
+# The starting layout. converge changes it into the one in group_vars, so the scenario covers what
+# the role does to an existing setup (grow, extend, shrink, remove), not only what it creates.
+# Play vars take precedence over the inventory's group_vars.
+- name: 'Create the starting LVM layout'
+  hosts: 'systems_under_test'
+
+  vars:
+    lvm__lvs__group_var:
+      - name: 'data'
+        vg: 'molecule'
+        # mkfs.xfs on RHEL 10 refuses anything below 300 MB
+        size: '300M'
+        mount_path: '/mnt/molecule-data'
+      - name: 'shrink'
+        vg: 'molecule'
+        size: '150M'
+        fstype: 'ext4'
+      - name: 'remove'
+        vg: 'multi'
+        size: '100M'
+        fstype: 'ext4'
+      - name: 'spread'
+        vg: 'multi'
+        size: '100%FREE'
+        mount_path: '/mnt/molecule-spread'
+      - name: 'inside'
+        vg: 'gone'
+        size: '100M'
+        fstype: 'ext4'
+    lvm__vgs__group_var:
+      # no growpart yet, so the PV keeps the size of the 512 MiB partition
+      - name: 'molecule'
+        pvs:
+          - '/dev/vdb1'
+      - name: 'multi'
+        pvs:
+          - '/dev/vdc'
+        pesize: '8'
+      - name: 'gone'
+        pvs:
+          - '/dev/vdd'
+
+  roles:
+    - role: 'linuxfabrik.lfops.lvm'

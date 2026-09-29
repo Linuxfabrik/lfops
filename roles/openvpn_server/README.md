@@ -29,6 +29,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 Manual steps:
 
+* The [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules) role, which `setup_basic` runs, blocks the `tun` kernel module by default. OpenVPN needs it, so allow it in the inventory:
+```yaml
+kernel_modules__modules__host_var:
+  - name: 'tun'
+    enabled: true
+```
 * Create a certificate for the OpenVPN server and save it on the ansible control node as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/server.p12`.
 * Generate a certificate revocation list and save it on the ansible control node as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/crl.pem`.
 

@@ -188,7 +188,7 @@
     - name: 'Flatten icon files from plugin directories'
       ansible.builtin.shell: |
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/icons
-        find /tmp/ansible.monitoring-plugins-repo/check-plugins -name *.svg -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/icons/ \;
+        find /tmp/ansible.monitoring-plugins-repo/check-plugins -name '*.svg' -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/icons/ \;
         cp -- /tmp/ansible.monitoring-plugins-repo/assets/icons/*.svg /tmp/ansible.monitoring-plugins-repo-flattened/icons/
       args:
         executable: '/bin/bash'

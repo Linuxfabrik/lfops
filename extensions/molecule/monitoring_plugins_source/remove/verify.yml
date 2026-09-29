@@ -1,0 +1,130 @@
+# After the switch the host must carry nothing of the package any more: a leftover package, lock
+# or repository blocks or undoes the source install, and a leftover plugin keeps running
+# unmaintained. What the admin placed next to the plugins has to survive.
+- name: 'Verify the monitoring plugins package and its repository are gone'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Gather the minimal facts (os_family, selinux)'
+      ansible.builtin.setup:
+        gather_subset:
+          - 'min'
+
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert no Linuxfabrik plugin package is installed'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lf_packages | length == 0'
+        fail_msg: 'still installed: {{ __molecule__lf_packages | join(", ") }}'
+      vars:
+        __molecule__lf_packages: '{{ ansible_facts["packages"] | list | select("match", "^linuxfabrik-") | list }}'
+
+    # dpkg keeps a removed but not purged package, with its conffiles, the sudoers drop-in among
+    # them. package_facts does not list those, dpkg-query does.
+    - name: 'dpkg-query --show linuxfabrik-*'
+      ansible.builtin.shell:
+        cmd: |
+          dpkg-query --show --showformat='${Package} ${db:Status-Abbrev}\n' 'linuxfabrik-*' 2>/dev/null
+          exit 0
+        executable: '/bin/bash'
+      register: '__molecule__dpkg_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'Assert dpkg tracks no Linuxfabrik plugin package'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__dpkg_result["stdout"] | trim | length == 0'
+        fail_msg: '{{ __molecule__dpkg_result["stdout"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    # A lock that outlives its package blocks every later install of it at another version.
+    - name: 'List the package locks'
+      ansible.builtin.command: '{{ "dnf versionlock list" if ansible_facts["os_family"] == "RedHat" else "apt-mark showhold" }}'
+      register: '__molecule__locks'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert no Linuxfabrik package is locked'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik" not in __molecule__locks["stdout"]'
+        fail_msg: '{{ __molecule__locks["stdout"] }}'
+
+    - name: 'Find the repository files'
+      ansible.builtin.find:
+        paths:
+          - '/etc/apt/sources.list.d'
+          - '/etc/yum.repos.d'
+        patterns: 'linuxfabrik-monitoring-plugins*'
+      register: '__molecule__repo_files'
+
+    - name: 'Assert no repository file or backup of one is left'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__repo_files["files"] | length == 0'
+        fail_msg: '{{ __molecule__repo_files["files"] | map(attribute="path") | join(", ") }}'
+
+    # rpm lists every imported key as a gpg-pubkey package, versioned by its short key ID.
+    - name: 'Assert the Linuxfabrik signing key is gone from the rpm database'
+      ansible.builtin.assert:
+        that:
+          - '"39d17a78" not in ansible_facts["packages"]["gpg-pubkey"] | d([]) | map(attribute="version") | list'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Stat what the package and the source install place'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/etc/apt/keyrings/linuxfabrik.asc'
+        - '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
+        - '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
+        - '/usr/lib64/linuxfabrik-monitoring-plugins'
+        - '/usr/lib64/nagios/plugins/about-me'
+        - '/usr/lib64/nagios/plugins/assets'
+        - '/usr/lib64/nagios/plugins/cpu-usage'
+      register: '__molecule__leftovers'
+
+    - name: 'Assert none of it is left'
+      ansible.builtin.assert:
+        that:
+          - 'not item["stat"]["exists"] | bool'
+        fail_msg: '{{ item["item"] }} is still there'
+      loop: '{{ __molecule__leftovers["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    - name: 'semodule --list'
+      ansible.builtin.command: 'semodule --list'
+      register: '__molecule__semodule_list'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the SELinux policy module is unloaded'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik-monitoring-plugins" not in __molecule__semodule_list["stdout_lines"] | map("split") | map("first") | list'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: '/usr/lib64/nagios/plugins/my-custom-check'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/my-custom-check'
+      register: '__molecule__custom_check'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the custom plugin survived and still runs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__custom_check["rc"] == 0'
+          - '__molecule__custom_check["stdout"] == "OK"'
+        fail_msg: 'the removal took the custom plugin with it: {{ __molecule__custom_check["stderr"] | d("") }}'

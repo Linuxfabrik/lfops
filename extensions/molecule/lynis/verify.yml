@@ -1,0 +1,101 @@
+- name: 'Verify the lynis playbook installed a working lynis'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # Run real audits, each restricted to a single test to keep them short, instead of asking for
+    # the version: this proves lynis finds its profiles and include files, and reads the
+    # /etc/lynis/custom.prf the role deployed, which the lynis monitoring plugin relies on.
+    - name: 'lynis audit system --quick --tests KRNL-5820'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests KRNL-5820'
+      args:
+        chdir: '/'
+      changed_when: false
+      register: '__molecule__lynis_audit_result'
+
+    - name: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_report_result'
+
+    - name: 'Assert that the audit ran KRNL-5820, which the inventory does not skip'
+      ansible.builtin.assert:
+        that:
+          - '"KRNL-5820" in __molecule__lynis_report_result["stdout"]'
+        fail_msg: '{{ __molecule__lynis_audit_result["stdout_lines"][-20:] }}'
+
+    - name: 'lynis audit system --quick --tests BOOT-5122'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests BOOT-5122'
+      args:
+        chdir: '/'
+      changed_when: false
+      register: '__molecule__lynis_audit_skip_result'
+
+    - name: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_report_skip_result'
+
+    - name: 'grep "Skipped by profile setting (skip-test)" /var/log/lynis.log'
+      ansible.builtin.command: 'grep --count "Skipped by profile setting (skip-test)" /var/log/lynis.log'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__lynis_log_skip_result'
+
+    - name: 'Assert that the audit skipped BOOT-5122 because of the deployed custom.prf'
+      ansible.builtin.assert:
+        that:
+          - '"BOOT-5122" not in __molecule__lynis_report_skip_result["stdout"]'
+          - '__molecule__lynis_log_skip_result["stdout"] | int > 0'
+        fail_msg: '{{ __molecule__lynis_audit_skip_result["stdout_lines"][-20:] }}'
+
+    - name: 'systemctl is-active / is-enabled lynis.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} lynis.timer'
+      loop:
+        - 'is-active'
+        - 'is-enabled'
+      register: '__molecule__lynis_timer_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that lynis.timer is active and enabled'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in ["active", "enabled"]'
+      loop: '{{ __molecule__lynis_timer_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # The Lynis Service Set of the monitoring plugins expects lynis.service to be static, that is
+    # started by the timer only and never enabled on its own.
+    - name: 'systemctl is-enabled lynis.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled lynis.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__lynis_service_enabled_result'
+
+    - name: 'Assert that lynis.service is static'
+      ansible.builtin.assert:
+        that: '__molecule__lynis_service_enabled_result["stdout"] == "static"'
+        fail_msg: '{{ __molecule__lynis_service_enabled_result["stdout"] }}'
+
+    # Run the audit the way the timer does. `systemctl start` waits for a Type=oneshot unit to
+    # finish and fails if it does, so this proves the unit runs lynis successfully on the platform.
+    - name: 'rm -f /var/log/lynis-report.dat'
+      ansible.builtin.file:
+        path: '/var/log/lynis-report.dat'
+        state: 'absent'
+      changed_when: false
+
+    - name: 'systemctl start lynis.service' # noqa command-instead-of-module (waits for the oneshot audit)
+      ansible.builtin.command: 'systemctl start lynis.service'
+      changed_when: false
+
+    - name: 'grep ^hardening_index= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^hardening_index= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_hardening_index_result'
+
+    - name: 'Assert that the timer-driven audit wrote a complete report'
+      ansible.builtin.assert:
+        that: '__molecule__lynis_hardening_index_result["stdout"] is match("^hardening_index=[0-9]+$")'
+        fail_msg: '{{ __molecule__lynis_hardening_index_result["stdout"] }}'

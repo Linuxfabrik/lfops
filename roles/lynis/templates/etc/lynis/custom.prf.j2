@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# 2026092701
+#
+# Local additions to /etc/lynis/default.prf, read by every audit on this host, including the one
+# the lynis monitoring plugin runs.
+#
+# Accept a finding or a suggestion by skipping its test, one test per line:
+#   skip-test=NETW-3015
+# or skip only one check within a test, where the test supports it:
+#   skip-test=SSH-7408:loglevel
+# `lynis show details <TEST-ID>` explains a test. Test IDs are case-insensitive.
+#
+# Apart from comment lines (starting with `#`), Lynis refuses to run if a line contains characters
+# other than letters, digits, and / [ ] ( ) _ | , . : ; = -
+
+{% for item in lynis__skip_tests__combined_var | sort(attribute='name') if item['state'] | d('present') != 'absent' %}
+{% if item['comment'] is defined and item['comment'] | length > 0 %}
+# {{ item['comment'] | replace('\n', ' ') }}
+{% endif %}
+skip-test={{ item['name'] | upper }}
+{% endfor %}

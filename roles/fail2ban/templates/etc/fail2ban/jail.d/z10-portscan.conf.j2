@@ -1,11 +1,12 @@
 # {{ ansible_managed }}
-# 2022070501
+# 2026092501
 
 
 [portscan]
 # overriding default action to prevent rocketchat action
 action        = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
-allowed-ports = {{ fail2ban__jail_portscan_allowed_ports | join ('|') }}
+# `(?!)` never matches, so an empty list exempts no port instead of disabling the jail
+allowed-ports = {{ (fail2ban__jail_portscan_allowed_ports | join('|')) if (fail2ban__jail_portscan_allowed_ports | length > 0) else '(?!)' }}
 backend       = systemd
 bantime       = {{ fail2ban__jail_portscan_bantime }}
 enabled       = true

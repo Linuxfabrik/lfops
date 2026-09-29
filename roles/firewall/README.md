@@ -10,7 +10,7 @@ This role configures a firewall on the system. For the currently supported firew
 
 Manual steps:
 
-* When using `firewall__firewall == fwbuilder`, either manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically.
+* When using `firewall__firewall == fwbuilder`, either manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically. As long as there is no `/etc/fwb.sh`, the role leaves `fwb.service` disabled, so the host runs without a firewall.
 * When using `firewall__firewall == iptables`, optionally place an iptables config file in your inventory, which will be deployed to the system. The file has to be placed into `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables`.
 
 

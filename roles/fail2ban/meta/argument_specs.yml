@@ -95,7 +95,7 @@ argument_specs:
         required: false
         default:
           - 22
-        description: 'Ports that may be accessed without being blocked by the portscan jail.'
+        description: 'Ports on which a connection attempt the firewall denies does not lead to a ban in the portscan jail.'
 
       fail2ban__jail_portscan_bantime:
         type: 'str'

@@ -1,0 +1,42 @@
+- name: 'Playbook linuxfabrik.lfops.lynis'
+  hosts:
+    - 'lfops_lynis'
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    # lynis is packaged in EPEL on the Red Hat family, in the distribution repositories elsewhere.
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution"] != "Fedora"'
+        - 'not lynis__skip_repo_epel | d(false)'
+
+    - role: 'linuxfabrik.lfops.lynis'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'print-messages.yml'
+      tags:
+        - 'always'

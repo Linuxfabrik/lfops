@@ -1,8 +1,16 @@
 - block:
 
+  # Only when there is something to configure. The upstream module creates and destroys a
+  # NetworkManager checkpoint even for an empty configuration, and it occasionally hangs for good
+  # while Python tears down its libnm client afterwards: g_dbus_connection_signal_unsubscribe()
+  # waits on a GLib mutex, although the result has already been reported. Seen in one of three
+  # setup_basic runs with fedora.linux_system_roles 1.121.0 on Rocky 8, 9.8 (NetworkManager
+  # 1.54.3) and 10.2 (NetworkManager 1.56.0), stack taken with gdb on Rocky 9.8.
   - name: 'Use fedora.linux_system_roles.network role to configure the network'
     ansible.builtin.include_role:
       name: 'fedora.linux_system_roles.network'
+    when:
+      - '(network_connections | d([]) | length > 0) or (network_state | d({}) | length > 0)'
 
   - name: 'Remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'
     ansible.builtin.package:
