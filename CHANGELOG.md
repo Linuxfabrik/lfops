@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **module:nextcloud_occ_app**: An `occ app:list` output or `installed_apps_json` that is valid JSON but not an object aborts with a clear message instead of a Python traceback.
 * **module:nextcloud_occ_system_config**: Setting a key that does not exist yet to an empty value (`value: ''`) creates it. Until now the module reported no change and left the key missing.
 * **module:uptimerobot_mwindow_info**: Monthly maintenance windows on day 1 to 7 of the month are reported with their day numbers instead of weekday names, e.g. `1-15` instead of `mon-15`.
 * **role:lvm**: On Debian and Ubuntu, mounting an LV no longer fails on `restorecon`, which only runs where SELinux is enabled.

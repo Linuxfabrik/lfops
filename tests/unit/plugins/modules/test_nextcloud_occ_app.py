@@ -323,6 +323,17 @@ class TestErrors(OccAppTestCase):
         self.assertIn('Failed to parse JSON', result['msg'])
         self.assertEqual(self.occ.writes(), [])
 
+    def test_app_list_that_is_not_an_object_fails(self):
+        self.occ.list_stdout = '[]'
+        result = self._fail(state='enabled')
+        self.assertIn('Unexpected app list', result['msg'])
+        self.assertEqual(self.occ.writes(), [])
+
+    def test_cached_json_that_is_not_an_object_fails(self):
+        result = self._fail(state='enabled', installed_apps_json='["files"]')
+        self.assertIn('Unexpected app list', result['msg'])
+        self.assertEqual(self.occ.commands, [])
+
     def test_unparsable_cached_json_fails(self):
         result = self._fail(state='enabled', installed_apps_json='{not json')
         self.assertIn('Failed to parse installed_apps_json', result['msg'])
