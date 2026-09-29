@@ -162,6 +162,20 @@
 
 - block:
 
+  # mkfs.xfs is missing on hosts installed without XFS, e.g. from a Debian cloud image. Also
+  # covers LVs that are being removed, which does no harm.
+  - name: 'Install the tools for the file systems in use'
+    ansible.builtin.package:
+      name: '{{ __lvm__fstype_packages_in_use }}'
+      state: 'present'
+    when: '__lvm__fstype_packages_in_use | length > 0'
+    vars:
+      __lvm__fstype_packages_in_use: '{{ lvm__lvs__combined_var
+        | map(attribute="fstype", default="xfs")
+        | select("in", __lvm__fstype_packages)
+        | map("extract", __lvm__fstype_packages)
+        | unique }}'
+
   - name: 'mkfs --type {{ item["fstype"] | d("xfs") }} /dev/{{ item["vg"] }}/{{ item["name"] }}'
     community.general.filesystem:
       dev: '/dev/{{ item["vg"] }}/{{ item["name"] }}'
