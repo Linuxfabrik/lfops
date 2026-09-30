@@ -1,8 +1,9 @@
 # BOOT-5122 is skipped, KRNL-5820 is not, so verify.yml can contrast the two on one host. The
 # comment carries characters Lynis rejects on a setting line, to prove the role keeps them on a
-# comment line where they do no harm.
+# comment line where they do no harm. KRB5-1030 proves the role accepts a category with digits.
 lynis__skip_tests__group_var:
   - name: 'BOOT-5122'
     comment: 'Accepted: no GRUB password, see ticket #42 @ Linuxfabrik ("bootloader")'
+  - name: 'KRB5-1030'
   - name: 'KRNL-5820'
     state: 'absent'

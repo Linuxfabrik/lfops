@@ -19,6 +19,15 @@
   roles:
 
     # lynis is packaged in EPEL on the Red Hat family, in the distribution repositories elsewhere.
+    # EPEL packages depend on CRB, which is not enabled by default on Rocky 9+.
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
+        - 'not lynis__skip_repo_baseos | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'

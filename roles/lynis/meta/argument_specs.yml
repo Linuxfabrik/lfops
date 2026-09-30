@@ -34,4 +34,14 @@ argument_specs:
         type: 'bool'
         required: false
         default: true
-        description: 'Whether lynis.timer is enabled and started, analogous to systemctl enable/disable --now.'
+        description: 'Whether lynis.timer is enabled, analogous to systemctl enable/disable.'
+
+      lynis__timer_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of lynis.timer.'
