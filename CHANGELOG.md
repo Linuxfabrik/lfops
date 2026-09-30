@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:grav**: The `grav:cron` tag is gone. Run the role with `--tags grav` to deploy the timers and their services, or with `--tags grav:state` to enable or disable the timers.
 * **role:firewall**: With `firewall__firewall: 'fwbuilder'`, the default, the run aborts on a host that has neither `/etc/fwb.sh` nor `firewall__fwbuilder_repo_url`, before the role stops any firewall. Until now `fwb.service` failed there and the host ran without a firewall. Deploy `/etc/fwb.sh`, set `firewall__fwbuilder_repo_url`, or set `firewall__firewall` to the firewall the host uses.
 * **role:chrony**: The role takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed, so these hosts synchronised with the distribution's default pools until now. As on the Red Hat family, chronyd uses only the sources from the inventory, without the distribution's pools, DHCP sources or `/etc/chrony/sources.d`. Set `chrony__ntp_pools` or `chrony__ntp_servers` for every Debian and Ubuntu host before running the role, otherwise it is left without a time source.
 * **role:monitoring_plugins**: The source install downloads the Python dependencies on the Ansible controller, which therefore needs pip for the Python that runs Ansible and access to PyPI; the targets no longer need Internet access.

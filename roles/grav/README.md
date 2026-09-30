@@ -55,16 +55,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Create Grav User Accounts.
 * Triggers: none.
 
-`grav:cron`
-
-* Deploy `/etc/systemd/system/grav-selfupgrade.service`.
-* Deploy `/etc/systemd/system/grav-selfupgrade.timer`.
-* Deploy `/etc/systemd/system/grav-update.service`.
-* Deploy `/etc/systemd/system/grav-update.timer`.
-* `systemctl enable/disable grav-selfupgrade.timer --now`.
-* `systemctl enable/disable grav-update.timer --now`.
-* Triggers: none.
-
 `grav:state`
 
 * `systemctl enable/disable grav-selfupgrade.timer --now`.

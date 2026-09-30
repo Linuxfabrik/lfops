@@ -95,7 +95,6 @@
   tags:
     - 'aide'
     - 'aide:configure'
-    - 'aide:cron'
     - 'aide:state'
 
 
@@ -159,7 +158,6 @@
 
   tags:
     - 'aide'
-    - 'aide:cron'
 
 
 - block:
@@ -220,5 +218,4 @@
   tags:
     - 'aide'
     - 'aide:configure'
-    - 'aide:cron'
     - 'aide:state'

@@ -44,11 +44,6 @@ This role is compatible with the following aide versions:
 * Deploys `/etc/aide.conf`.
 * Triggers: AIDE database update.
 
-`aide:cron`
-
-* Deploys `aide-check.service` and `aide-check.timer`.
-* Triggers: AIDE database update.
-
 `aide:state`
 
 * Enables or disables `aide-check.timer` and sets its state.

@@ -40,11 +40,6 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Deploys `/etc/lynis/custom.prf`.
 * Triggers: none.
 
-`lynis:cron`
-
-* Deploys `lynis.service` and `lynis.timer` and ensures the timer is in the desired state.
-* Triggers: none.
-
 `lynis:state`
 
 * Manages the state of `lynis.timer` (start, stop, enable, disable).

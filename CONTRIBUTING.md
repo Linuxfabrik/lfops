@@ -564,7 +564,6 @@ Controlled vocabulary of standard `role_name:section` tags (alphabetical):
 * `role_name:certs`: Deploys and renews the role's TLS certificates and private keys.
 * `role_name:configure`: Renders and deploys the role's configuration files and applies settings. The most common section; everything that is neither install, state, nor one of the more specific sections below belongs here.
 * `role_name:containers`: Manages the role's containers and their systemd container units.
-* `role_name:cron`: Deploys the role's scheduled jobs (cron entries or systemd timers).
 * `role_name:databases`: Creates, updates and deletes the databases managed by the role.
 * `role_name:dump`: Sets up scheduled dumps / backups of the role's data.
 * `role_name:enroll`: Registers (enrolls) the node with a remote service or controller.

@@ -91,7 +91,6 @@
 
   tags:
     - 'lynis'
-    - 'lynis:cron'
 
 
 # lynis.service is not managed: it is static and only runs when lynis.timer triggers it.
