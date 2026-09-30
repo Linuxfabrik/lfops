@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10, whose `tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as an unsalted sha-256 digest instead of in clear text.
 * **role:aide, playbook:aide**: Add a role and playbook to install AIDE on RHEL 8, 9 and 10 and run a daily file integrity check, which leaves `aide-check.service` failed on any finding.
 * **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
