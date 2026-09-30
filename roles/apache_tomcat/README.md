@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.apache_tomcat
 
-This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role uses the operating system's package manager, so EPEL is a must on RHEL. Log rotation in Tomcat is disabled and is done by logrotated. This role currently supports Tomcat v9.
+This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role installs Tomcat from the distribution's AppStream repository. Log rotation in Tomcat is disabled and is done by logrotated.
 
 Optionally this role also installs:
 
@@ -14,19 +14,21 @@ Optionally this role also installs:
 
 Notes:
 
-* On RHEL 8 and compatible, it installs Tomcat 9.0.65+ and Java 1.8.0+
-* On RHEL 9 and compatible, it installs Tomcat 9.0.87+ and OpenJDK 11.0.24+ (LTS)
 * If activating AJP, this role currently sets `secretRequired` to `false`.
+
+This role is compatible with the following Tomcat versions:
+
+* 9.0 (RHEL 8, RHEL 9)
+* 10.1 (RHEL 10)
 
 
 *Available since LFOps `2.0.0`.*
 
 
-## Dependent Roles
+## How the Role Behaves
 
-Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
-
-* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* Passwords in `apache_tomcat__users__*_var` are always given in clear text. On Tomcat 10.1 the role stores them in `/etc/tomcat/tomcat-users.xml` as a sha-256 digest, because the `server.xml` it deploys configures a `MessageDigestCredentialHandler`. The digest is built without a salt and with a single iteration, so it is the value `printf '%s' '<password>' | sha256sum | cut -d' ' -f1` prints. On Tomcat 9.0 there is no credential handler and the password is stored in clear text.
+* On Tomcat 10.1 the access log omits the session ID (`%S`) that the pattern shipped by the RHEL 10 package contains, since anyone who can read the log could take over the session.
 
 
 ## Requirements
@@ -183,7 +185,7 @@ The GUI is protected against CSRF, but the text and JMX interfaces are not. To m
 
     * `password`:
 
-        * Mandatory.
+        * Mandatory. In clear text; see "How the Role Behaves" for how it is stored on the host.
         * Type: String.
 
     * `roles`:
@@ -377,7 +379,7 @@ apache_tomcat__roles__host_var:
 apache_tomcat__server_xml_ajp_port: 8009
 apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain'
 apache_tomcat__server_xml_connector_compression: 'on'
-apache_tomcat__server_xml_connector_connection_timeout: 60000
+apache_tomcat__server_xml_connector_connection_timeout: 20000
 apache_tomcat__server_xml_connector_max_threads: 200
 apache_tomcat__server_xml_connector_min_spare_threads: 10
 apache_tomcat__server_xml_connector_port: 8080
