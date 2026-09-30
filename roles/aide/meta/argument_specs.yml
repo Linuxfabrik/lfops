@@ -39,7 +39,6 @@ argument_specs:
         required: false
         default: 'started'
         choices:
-          - 'reloaded'
           - 'restarted'
           - 'started'
           - 'stopped'

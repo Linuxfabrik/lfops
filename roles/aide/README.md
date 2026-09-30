@@ -103,7 +103,7 @@ This role is compatible with the following aide versions:
 `aide__timer_state`
 
 * State of `aide-check.timer`.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Type: String. One of `restarted`, `started`, `stopped`.
 * Default: `'started'`
 
 Example:
