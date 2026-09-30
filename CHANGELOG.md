@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:duplicity**: `/var/lib/aide` is backed up by default, so that the AIDE database can be compared with a copy outside the host. Hosts without AIDE are not affected.
 * **role:monitoring_plugins**: The source install removes plugins that an earlier run deployed and the checked-out version no longer carries.
 * **role:monitoring_plugins**: The source install deploys the dependency versions pinned in the monitoring-plugins lockfiles and, for a release, the Linuxfabrik library release they pin, instead of the newest versions of both.
 * **playbook:icinga2_agent, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins repository is only registered for `monitoring_plugins__install_method: 'package'`.

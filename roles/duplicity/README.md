@@ -129,13 +129,13 @@ duplicity__swift_login:
 
 `duplicity__backup_retention_time`
 
-* The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`.
+* The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. `duba` removes a backup chain (a full backup and its incrementals) only once its newest backup is older than this, so with the defaults and one backup a day the oldest backup you can restore is between 31 and 61 days old.
 * Type: String.
 * Default: `'30D'`
 
 `duplicity__backup_sources__host_var` / `duplicity__backup_sources__group_var`
 
-* List of dictionaries with directories to backup.
+* List of dictionaries with directories to backup. `duba` skips paths that do not exist on the host.
 * Type: List of dictionaries.
 * Default:
 
@@ -144,6 +144,7 @@ duplicity__swift_login:
     * `/home`
     * `/opt`
     * `/root`
+    * `/var/lib/aide` (the AIDE database, see the [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide) role)
     * `/var/spool/cron`
 
 * Subkeys:
