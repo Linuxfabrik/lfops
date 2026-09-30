@@ -217,8 +217,17 @@ lvm__vgs__host_var:
   # pvresize and growpart
   - name: 'rl'
     pvs:
-      - '/dev/vdb3'
+      - '/dev/vda3'
     growpart: true
+```
+
+to extend an existing volume group with an additional device (`/dev/vdb`). `pvs` is the complete list of PVs of the VG, so also list the existing ones (see `pvs` on the host). PVs that are not listed are removed from the VG:
+```yaml
+lvm__vgs__host_var:
+  - name: 'rl'
+    pvs:
+      - '/dev/vda3'
+      - '/dev/vdb'
 ```
 
 grow a partition:
