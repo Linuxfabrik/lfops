@@ -79,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.
 * **role:firewall**: Hosts in one run with different `firewall__fwbuilder_repo_url` values each deploy `/etc/fwb.sh` from their own repository, instead of all from the repository of the first host.
 * **role:firewall**: `firewall__firewall: 'iptables'` no longer aborts when there is no iptables file in the inventory's `host_files`, which the README describes as optional.
 * **role:firewall**: A host switched away from `fwbuilder` or `iptables` stops, disables and masks that firewall instead of keeping it running next to the new one, and no longer reports a change on every run.
