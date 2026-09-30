@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_tomcat**: The role no longer aborts on an undefined variable when `apache_tomcat__server_xml_connector_connection_timeout` is not set in the inventory, and uses the documented default of `20000`.
 * **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.
 * **role:firewall**: Hosts in one run with different `firewall__fwbuilder_repo_url` values each deploy `/etc/fwb.sh` from their own repository, instead of all from the repository of the first host.
 * **role:firewall**: `firewall__firewall: 'iptables'` no longer aborts when there is no iptables file in the inventory's `host_files`, which the README describes as optional.
