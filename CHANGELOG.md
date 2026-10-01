@@ -78,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+* **playbook:apache_tomcat**: The playbook no longer enables the EPEL and CRB repositories or installs `policycoreutils`, none of which Tomcat needs, and `apache_tomcat__skip_repo_baseos` has no effect.
 * **role:github_project_createrepo**: `github_project_createrepo__webserver_user` is gone, since the web server no longer gets an ACL entry; remove it from your inventory.
 
 ### Fixed

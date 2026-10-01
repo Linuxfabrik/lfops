@@ -31,13 +31,6 @@ This role is compatible with the following Tomcat versions:
 * On Tomcat 10.1 the access log omits the session ID (`%S`) that the pattern shipped by the RHEL 10 package contains, since anyone who can read the log could take over the session.
 
 
-## Requirements
-
-Manual steps:
-
-* Set the required SELinux booleans and policies by running the [selinux](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/selinux.yml) playbook (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
-
-
 ## Multiple Tomcat Instances
 
 How to deploy multiple Tomcat instances on a single server using this and other roles? Imagine you want to run an 'author' and a 'public' instance. Place your config files in `host_files` (for example `host_files/{{ inventory_hostname }}/var/lib/tomcats/{author,public}/conf/{context,server}.xml` and deploy like this:
