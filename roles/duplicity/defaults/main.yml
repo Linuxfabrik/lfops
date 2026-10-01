@@ -16,7 +16,14 @@ duplicity__backup_sources__dependent_var: []
 duplicity__backup_sources__group_var: []
 duplicity__backup_sources__host_var: []
 duplicity__backup_sources__role_var:
+  # Data directories of the applications LFOps deploys. duba skips paths that do not exist, so
+  # hosts without the application are not affected. Databases are covered by their dumps below
+  # /backup, not by their data directories, since a copy of the live files cannot be restored.
   - path: '/backup'
+    divide: false
+    state: 'present'
+  # nextcloud, moodle
+  - path: '/data'
     divide: false
     state: 'present'
   - path: '/etc'
@@ -31,13 +38,54 @@ duplicity__backup_sources__role_var:
   - path: '/root'
     divide: false
     state: 'present'
+  # shiny_server
+  - path: '/srv'
+    divide: false
+    state: 'present'
   # the AIDE database, so that a copy outside the host shows whether the local one was replaced.
-  # duba skips paths that do not exist, so hosts without AIDE are not affected.
   - path: '/var/lib/aide'
+    divide: false
+    state: 'present'
+  # grafana.db (dashboards, users, API tokens, alerting)
+  - path: '/var/lib/grafana'
+    divide: false
+    state: 'present'
+  # the Icinga2 CA and the node certificates
+  - path: '/var/lib/icinga2'
+    divide: false
+    state: 'present'
+  - path: '/var/lib/shiny-server'
+    divide: false
+    state: 'present'
+  # coturn user database
+  - path: '/var/lib/turn'
+    divide: false
+    state: 'present'
+  # The mail spool is /var/mail on Debian and /var/spool/mail on RHEL, the other one is a symlink.
+  # Both are listed, because duplicity does not follow a symlinked source path and only stores the
+  # link itself (Select.Iterate() lstat()s the source; verified against duplicity 3.0.3 source).
+  - path: '/var/mail'
+    divide: false
+    state: 'present'
+  # bind zone files, journals of dynamic zones, DNSSEC keys
+  - path: '/var/named'
+    divide: false
+    state: 'present'
+  - path: '/var/solr/data'
     divide: false
     state: 'present'
   - path: '/var/spool/cron'
     divide: false
+    state: 'present'
+  - path: '/var/spool/mail'
+    divide: false
+    state: 'present'
+  # grav, moodle, nextcloud, wordpress. The repository mirrors can be rebuilt at any time.
+  - path: '/var/www/html'
+    divide: false
+    excludes:
+      - '/var/www/html/github-repos'
+      - '/var/www/html/reposync-repos'
     state: 'present'
 duplicity__excludes:
   - '**/*.git*'

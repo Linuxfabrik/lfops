@@ -304,6 +304,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 * Fail loudly. Avoid constructs that could suppress error messages, like `IfModule` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
 * Do not support software versions that are EOL.
 * When implementing a role for a new application, consider security, monitoring and backups.
+* Backups: `duplicity` backs up a fixed list of directories (`duplicity__backup_sources__role_var` in `roles/duplicity/defaults/main.yml`). If a role stores data outside of it, add the directory there and to the list in `roles/duplicity/README.md`. The setup playbooks cannot inject it via `__dependent_var`, since they do not run the `duplicity` role. Databases are backed up by a dump to `/backup` (see the `mariadb_server`, `postgresql_server`, `mongodb` and `influxdb` roles), never by their live data directory, which cannot be restored.
 * For mailing, use the `sendmail` utility, as it provides a consistent interface across distros.
 * All user-facing information should be included in the README. Comments are intended for developers only.
 * Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
