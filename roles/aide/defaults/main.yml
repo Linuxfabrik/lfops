@@ -1,6 +1,9 @@
-# run after the system_update / schedule_reboot window (04:00 by default), so the check does
-# not race an update that is still changing files.
-aide__check_on_calendar: '*-*-* 06:{{ 59 | random(seed=inventory_hostname) }}:00'
+# twice a day, both after the system_update / schedule_reboot window (04:00 by default), so the
+# check does not race an update that is still changing files. the random minute keeps the hosts
+# on one hypervisor from reading their disks at the same time.
+aide__check_on_calendar: '*-*-* 07,12:{{ 59 | random(seed=inventory_hostname) }}:00'
+aide__conf_raw: ''
+aide__conf_report_level: 'added_removed_entries'  # upstream default: changed_attributes
 aide__rules__combined_var: '{{ (
       aide__rules__role_var +
       aide__rules__dependent_var +
@@ -12,8 +15,12 @@ aide__rules__dependent_var: []
 aide__rules__group_var: []
 aide__rules__host_var: []
 # the rule list shipped in /etc/aide.conf by aide 0.19.2 on Rocky 9 and 10, in its original order
-# and with its comments. the order matters: within one directory aide applies the first rule
-# that matches, and combine_lod keeps an item that the inventory overrides in its place.
+# and with its comments, used on every platform. the order matters for rules of the same
+# directory: aide assigns a rule to the directory its fixed path prefix lies in ('/etc/hosts$'
+# and '/etc/apt' to '/etc', the catch-all '/etc' to '/') and applies the first matching rule
+# within it, and combine_lod keeps an item that the inventory overrides in its place. the Debian
+# and Ubuntu counterparts of the shipped paths sit next to them for that reason. a path a host
+# does not have is skipped.
 aide__rules__role_var:
   - path: '/boot'
     attributes: 'NORMAL'
@@ -35,6 +42,12 @@ aide__rules__role_var:
     type: 'negative'
   - path: '/usr/tmp'
     type: 'negative'
+  # Not in the shipped list. The RPM database moved to /usr/lib/sysimage/rpm on RHEL 10, and
+  # every rpm or dnf query rewrites its rpmdb.sqlite-shm. It is state, not code, as it was below
+  # /var/lib/rpm on RHEL 8 and 9 and is below /var/lib/dpkg on Debian and Ubuntu, which no rule
+  # covers. Verified with rpm 4.19 on Rocky 10.
+  - path: '/usr/lib/sysimage/rpm'
+    type: 'negative'
 
   # Admins dot files constantly change, just check perms
   - path: '/root/\..*'
@@ -45,6 +58,10 @@ aide__rules__role_var:
   # runs as root, `aide --init` from this role included, so the database would otherwise
   # contain a directory that is gone by the next check.
   - path: '/root/\.ansible/tmp'
+    type: 'negative'
+  # Not in the shipped list. Holds disposable caches only (XDG), and pip adds HTTP cache
+  # entries here whenever the python_venv role updates pip in a venv.
+  - path: '/root/\.cache'
     type: 'negative'
   - path: '/root'
     attributes: 'NORMAL'
@@ -116,14 +133,24 @@ aide__rules__role_var:
     type: 'negative'
   - path: '/etc/NetworkManager'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/netplan'
+    attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/network/'
+    attributes: 'NORMAL'
   - path: '/etc/networks$'
     attributes: 'NORMAL'
   - path: '/etc/dhcp'
     attributes: 'NORMAL'
   - path: '/etc/wpa_supplicant'
     attributes: 'NORMAL'
+  # PERMS instead of the shipped DATAONLY: DHCP clients, NetworkManager and resolvconf write the
+  # file at runtime, dhcpcd on Debian 13 only once it has its lease, after the check after boot
+  # has started. aide-common checks it without its content as well (VarFile). Verified with
+  # dhcpcd 10.1 on Debian 13.
   - path: '/etc/resolv.conf$'
-    attributes: 'DATAONLY'
+    attributes: 'PERMS'
 
   # logins and accounts
   - path: '/etc/login.defs$'
@@ -158,6 +185,9 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/etc/bashrc$'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/bash.bashrc$'
+    attributes: 'NORMAL'
   - path: '/etc/bash_completion.d'
     attributes: 'NORMAL'
   - path: '/etc/zprofile$'
@@ -178,6 +208,9 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/etc/yum.repos.d'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/apt'
+    attributes: 'NORMAL'
 
   # auditing
   # AIDE produces an audit record, so this becomes perpetual motion.
@@ -189,6 +222,35 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/etc/aide.conf$'
     attributes: 'NORMAL'
+  # Not in the shipped list. The CIS benchmarks want the audit tools checked with these
+  # attributes, spelled out, since their audit scripts look for each attribute name on the
+  # rule line. aide never walks below the /sbin symlink of a usrmerged system, so only the
+  # /usr/sbin rules take effect. The /sbin rules are there for the CIS audit script of
+  # Ubuntu 22.04, which accepts nothing else.
+  - path: '/usr/sbin/auditctl$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/usr/sbin/auditd$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/usr/sbin/augenrules$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/usr/sbin/aureport$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/usr/sbin/ausearch$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/usr/sbin/autrace$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/sbin/auditctl$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/sbin/auditd$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/sbin/augenrules$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/sbin/aureport$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/sbin/ausearch$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
+  - path: '/sbin/autrace$'
+    attributes: 'p+i+n+u+g+s+b+acl+xattrs+sha512'
 
   # System logs with proper logrotate handling
   - path: '/etc/rsyslog.conf$'
@@ -231,6 +293,9 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/etc/rc.d'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/init.d'
+    attributes: 'NORMAL'
   - path: '/etc/tmpfiles.d'
     attributes: 'NORMAL'
   - path: '/etc/machine-id$'
@@ -247,10 +312,16 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/etc/dracut.conf.d'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/initramfs-tools'
+    attributes: 'NORMAL'
 
   # glibc linker
+  # DATAONLY instead of the shipped NORMAL: ldconfig.service rebuilds the file on the first boot
+  # after an update (ConditionNeedsUpdate=/etc), with the same content in a new inode. DATAONLY
+  # still reports a changed content. Verified on Rocky 8, 9 and 10.
   - path: '/etc/ld.so.cache$'
-    attributes: 'NORMAL'
+    attributes: 'DATAONLY'
   - path: '/etc/ld.so.conf$'
     attributes: 'NORMAL'
   - path: '/etc/ld.so.conf.d'
@@ -269,6 +340,11 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/etc/depmod.d'
     attributes: 'NORMAL'
+  # Not in the shipped list. systemd-hwdb-update.service rebuilds the file on the first boot after
+  # an update (ConditionNeedsUpdate=/etc), with the same content in a new inode. DATAONLY still
+  # reports a changed content.
+  - path: '/etc/udev/hwdb.bin$'
+    attributes: 'DATAONLY'
   - path: '/etc/udev'
     attributes: 'NORMAL'
   - path: '/etc/crypttab$'
@@ -303,18 +379,31 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/var/spool/cron/root'
     attributes: 'CONTENT'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/var/spool/cron/crontabs/root'
+    attributes: 'CONTENT'
 
   # time keeping
   - path: '/etc/chrony.conf$'
     attributes: 'NORMAL'
   - path: '/etc/chrony.keys$'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/chrony/'
+    attributes: 'NORMAL'
 
   # mail
   - path: '/etc/aliases$'
     attributes: 'NORMAL'
+  # PERMS instead of the shipped NORMAL: on every start, postfix rebuilds the file from
+  # /etc/aliases, which is checked in full, if anything else (newaliases by hand or by another
+  # role) rebuilt it since its last start, and a Berkeley DB file differs byte for byte after
+  # every rebuild. /usr/libexec/postfix/aliasesdb, verified with postfix 3.5 on Rocky 8.
+  # postfix on RHEL 10 (3.8.5, built without Berkeley DB) writes /etc/aliases.lmdb instead,
+  # and postfix 3.11 upstream follows default_database_type (lmdb or cdb) as well. both
+  # already fall under the catch-all `/etc PERMS` (aide --path-check, aide 0.19.2 on Rocky 10).
   - path: '/etc/aliases.db$'
-    attributes: 'NORMAL'
+    attributes: 'PERMS'
   - path: '/etc/postfix'
     attributes: 'NORMAL'
 
@@ -343,6 +432,9 @@ aide__rules__role_var:
   # web server
   - path: '/etc/httpd'
     attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/apache2'
+    attributes: 'NORMAL'
 
   # dns
   - path: '/etc/named'
@@ -354,6 +446,9 @@ aide__rules__role_var:
   - path: '/etc/named.rfc1912.zones$'
     attributes: 'NORMAL'
   - path: '/etc/named.root.key$'
+    attributes: 'NORMAL'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/etc/bind/'
     attributes: 'NORMAL'
 
   # xinetd
@@ -394,8 +489,15 @@ aide__rules__role_var:
   # Ditto /var/log/sa reason...
   - path: '/var/log/httpd'
     type: 'negative'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/var/log/apache2'
+    type: 'negative'
   # /boot/grub2/grubenv's timestamp is getting modified continuously due to "boot_success" implementation
   - path: '/boot/grub2/grubenv'
     type: 'negative'
+  # Debian and Ubuntu counterpart, not in the shipped list
+  - path: '/boot/grub/grubenv'
+    type: 'negative'
+aide__service_enabled: true
 aide__timer_enabled: true
 aide__timer_state: 'started'

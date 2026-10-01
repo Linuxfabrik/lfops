@@ -1134,6 +1134,7 @@ Calls the following roles (in order):
 * [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): `setup_basic__skip_monitoring_plugins`
 * [repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga): `setup_basic__skip_repo_icinga`
 * [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent): `setup_basic__skip_icinga2_agent`
+* [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide): `setup_basic__skip_aide`
 
 
 ## setup_grav.yml

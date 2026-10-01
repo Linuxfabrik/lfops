@@ -31,6 +31,11 @@ duplicity__backup_sources__role_var:
   - path: '/root'
     divide: false
     state: 'present'
+  # the AIDE database, so that a copy outside the host shows whether the local one was replaced.
+  # duba skips paths that do not exist, so hosts without AIDE are not affected.
+  - path: '/var/lib/aide'
+    divide: false
+    state: 'present'
   - path: '/var/spool/cron'
     divide: false
     state: 'present'
