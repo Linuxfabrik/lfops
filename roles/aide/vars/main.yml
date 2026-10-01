@@ -25,4 +25,20 @@ __aide__verbose_levels:
   minimal: 0
   summary: 1
 
-__aide__end_of_play_message: 'aide: /etc/aide.conf or the aidecheck units have changed, but the AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db` to accept the current state as the new baseline.'
+# the guard of every database update that is not forced, the handler's and the one of
+# `--tags aide:update_db`: a database exists, the role's check unit existed (otherwise the
+# database was not created by this role), and the last check had not reported changes.
+# re-baselining otherwise would silently accept whatever drifted, an intrusion included.
+# computed from the facts tasks/check-state.yml registers, at the time of use.
+__aide__update_db_allowed: '{{
+    __aide__db_stat_result["stat"]["exists"]
+    and __aide__check_unit_stat_result["stat"]["exists"]
+    and __aide__check_failed_result["rc"] != 0
+  }}'
+# a database exists, but the guard keeps it as it is, which the operator is told about
+__aide__update_db_refused: '{{
+    __aide__db_stat_result["stat"]["exists"]
+    and not (__aide__update_db_allowed | bool)
+  }}'
+
+__aide__update_db_left_alone_message: 'aide: The AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db_force` to accept the current state as the new baseline.'

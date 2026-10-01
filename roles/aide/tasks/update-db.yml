@@ -11,8 +11,17 @@
   changed_when: false
   failed_when: '__aide__update_db_check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
 
-# the explicit "accept the current state" action, so it runs without the guard of the
-# handler. flock and the exit codes are explained in handlers/main.yml.
+# runs as it is under `--tags aide:update_db_force`, and under the guard
+# __aide__update_db_allowed (vars/main.yml) from the handler and from update-db-if-clean.yml.
+# aide's own lock does not serialise: it locks every file it writes (the report, the new
+# database) with a non-blocking fcntl(F_SETLK), so a second aide started meanwhile exits with 21
+# (LOCK_ERROR, be_init() in src/be.c) instead of waiting. flock on /run/aide.lock, which every
+# aide run of LFOps takes, makes it wait instead. the wait above only covers aidecheck.service,
+# while system_update and the dpkg hook run aide directly.
+# flock passes the exit code of aide through, its own errors are 64 and more. `aide --update`
+# exits with the bitmask of what it found (1 added, 2 removed, 4 changed), its errors start at
+# 14 (include/errorcodes.h), so `>= 8` catches the errors of both. Verified with util-linux
+# 2.37.4 and aide 0.19.2 on Rocky 9.
 - name: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
   ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
   register: '__aide__update_db_result'

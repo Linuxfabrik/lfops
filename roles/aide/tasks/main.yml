@@ -105,46 +105,10 @@
 
 - block:
 
-  # the result of the last check is read below, so a check that is running right now has to finish
-  # first. 5 minutes at most, then the run fails. `systemctl is-active` prints the state; it
-  # exits 0 for active only, not for activating. failed_when, not `failed_when: false`, since
-  # ansible-core 2.16 moves on silently after the last retry otherwise.
-  - name: 'systemctl is-active aidecheck.service (wait up to 5 minutes for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
-    ansible.builtin.command: 'systemctl is-active aidecheck.service'
-    register: '__aide__check_active_result'
-    until: '__aide__check_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
-    retries: 30
-    delay: 10
-    changed_when: false
-    failed_when: '__aide__check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
-    check_mode: false
-
-  # these facts are taken before the role changes a monitored file (/etc/aide.conf, the units,
-  # the timer's enable symlink), since the handler has to know the state the host was in
-  # beforehand. without a database there is nothing to update: the init below creates it from
-  # the new config.
-  - name: 'stat /var/lib/aide/aide.db.gz'
-    ansible.builtin.stat:
-      path: '/var/lib/aide/aide.db.gz'
-    register: '__aide__db_stat_result'
-
-  # a database without the check unit was not created by this role (CIS hardening, a manual
-  # cron job, ...), and no check of this role has ever vouched for it. re-baselining it would
-  # accept everything that changed since it was created, so the handler leaves it alone.
-  - name: 'stat /etc/systemd/system/aidecheck.service'
-    ansible.builtin.stat:
-      path: '/etc/systemd/system/aidecheck.service'
-    register: '__aide__check_unit_stat_result'
-
-  # `aide --check` exits non-zero on any finding, so a failed aidecheck.service is what "the
-  # last check reported changes" looks like. rc 0 means failed. a unit that does not exist yet
-  # reports rc 1, like one that never failed.
-  - name: 'systemctl is-failed aidecheck.service' # noqa command-instead-of-module (read-only state query)
-    ansible.builtin.command: 'systemctl is-failed aidecheck.service'
-    register: '__aide__check_failed_result'
-    changed_when: false
-    failed_when: false
-    check_mode: false
+  # taken before the role changes a monitored file (/etc/aide.conf, the units, the timer's enable
+  # symlink), since the handler has to know the state the host was in beforehand.
+  - name: 'Read the state of the last AIDE check'
+    ansible.builtin.import_tasks: 'check-state.yml'
 
   tags:
     - 'aide'
@@ -340,9 +304,15 @@
     - 'aide'
 
 
-# in a file of its own, so that the Molecule scenario can run exactly this code.
+# in files of their own, so that the Molecule scenario can run exactly this code.
+- name: 'Update the AIDE database if the last check was clean'
+  ansible.builtin.import_tasks: 'update-db-if-clean.yml'
+  tags:
+    - 'aide:update_db'
+    - 'never'
+
 - name: 'Update the AIDE database'
   ansible.builtin.import_tasks: 'update-db.yml'
   tags:
-    - 'aide:update_db'
+    - 'aide:update_db_force'
     - 'never'
