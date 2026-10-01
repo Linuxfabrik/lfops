@@ -31,7 +31,7 @@
     <!--
     <Manager pathname="SESSIONS.ser" />
     -->
-    {% if apache_tomcat__context_xml_cache_max_size is defined and apache_tomcat__context_xml_cache_max_size %}
+    {% if apache_tomcat__context_xml_cache_max_size %}
     <Resources cacheMaxSize="{{ apache_tomcat__context_xml_cache_max_size }}" />
     {% endif %}
 </Context>

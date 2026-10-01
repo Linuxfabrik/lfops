@@ -4,6 +4,10 @@ apache_tomcat__env_xms: '1024M'
 apache_tomcat__env_xmx: '1024M'
 apache_tomcat__env_xx: '+UseParallelGC'
 
+# referencing the logrotate role's variable keeps the retention consistent across the host.
+# d() is required, since role defaults are only loaded for roles that are part of the play.
+apache_tomcat__logrotate: '{{ logrotate__rotate | d(14) }}'
+
 apache_tomcat__roles__combined_var: '{{ (
       apache_tomcat__roles__role_var +
       apache_tomcat__roles__dependent_var +
