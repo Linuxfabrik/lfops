@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **roles**: Tasks that run on the Ansible controller no longer escalate via sudo when the inventory sets `ansible_become: true`, where they failed without passwordless sudo on the controller or ran as root and left root-owned files in `/tmp`.
 * **plugin:bitwarden_item, module:bitwarden_item**: A failed sync of the Bitwarden vault, such as an "HTTP Error 400: Bad Request" or a timeout of `bw serve`, is tried again after 10, 30 and 60 seconds instead of aborting the run right away.
 * **role:aide**: Before it creates the database, the role also waits for running `dnf-automatic` jobs on the Red Hat family and for the update jobs of the system_update role on every platform, not only for the apt jobs on Debian and Ubuntu. An update during the initialisation left files in the database that the first check then reported.
 * **playbook:setup_basic**: With `setup_basic__skip_duplicity` or `setup_basic__skip_glances`, the playbook no longer builds the Python venv of the skipped role, which could abort the run with a pip error on hosts that do not back up with duplicity.

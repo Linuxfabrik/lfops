@@ -43,6 +43,8 @@
       path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/logrotate.d'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false
     register: 'logrotate__custom_configs'
 

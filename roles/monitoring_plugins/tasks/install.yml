@@ -60,6 +60,8 @@
       - 'monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length > 0'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     ignore_errors: true
 
   tags:
@@ -194,6 +196,8 @@
         executable: '/bin/bash'
       delegate_to: 'localhost'
       become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
       check_mode: false # run task even if `--check` is specified
       changed_when: false # no change on the remote host
 
@@ -225,6 +229,8 @@
       path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false
     register: '__monitoring_plugins__custom_plugins'
 
@@ -273,6 +279,8 @@
       - 'monitoring_plugins__icinga2_api_password is defined and monitoring_plugins__icinga2_api_password | length > 0'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     ignore_errors: true # we still want to start the icinga2 service again
 
   tags:

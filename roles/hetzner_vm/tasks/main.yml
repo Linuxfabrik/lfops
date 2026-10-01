@@ -9,6 +9,8 @@
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'hetzner_vm__state != "absent"'
       - 'item["cidr"] is defined'
@@ -24,6 +26,8 @@
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'hetzner_vm__state != "absent"'
       - 'item["cidr"] is defined'
@@ -38,6 +42,8 @@
     loop: '{{ hetzner_vm__networks | subelements("routes", skip_missing=True) }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'hetzner_vm__state != "absent"'
 
@@ -49,6 +55,8 @@
       state: 'present'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length > 0'
       - 'hetzner_vm__state != "absent"' # cannot remove the firewall here, as it is still in use
@@ -71,6 +79,8 @@
       state: '{{ hetzner_vm__state }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
 
   - name: 'Manage the firewall of the VM'
     hetzner.hcloud.hcloud_firewall:
@@ -79,6 +89,8 @@
       state: 'absent'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'hetzner_vm__firewall_rules is defined and hetzner_vm__firewall_rules | length > 0'
       - 'hetzner_vm__state == "absent"' # cannot remove the firewall here, as it is still in use
@@ -94,6 +106,8 @@
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'hetzner_vm__state != "absent"'
       - 'item["fixed_ip"] is defined'
@@ -110,6 +124,8 @@
     loop: '{{ hetzner_vm__volumes }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
 
   tags:
     - 'hetzner_vm'

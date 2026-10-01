@@ -12,6 +12,8 @@
       checksum: '{{ apache_solr__checksum }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
     when:
@@ -24,6 +26,8 @@
       checksum: '{{ apache_solr__checksum }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
     changed_when: false # just gathering info, no actual change
     when:

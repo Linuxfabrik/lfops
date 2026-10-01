@@ -277,6 +277,8 @@
       label: '{{ item["json"]["name"] | d(item) }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'not grafana__skip_token_to_bitwarden'
       - 'not (item["skipped"] is defined and item["skipped"])'

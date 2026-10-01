@@ -43,6 +43,8 @@
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz to the server' # noqa risky-file-permissions (temp file)
@@ -127,6 +129,8 @@
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
@@ -137,6 +141,8 @@
       dest: '/tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/z00-custom.ini'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Assemble /tmp/ansible.icingaweb2-module-grafana-combined.ini' # noqa risky-file-permissions (temp file)
@@ -146,6 +152,8 @@
       delimiter: '\n\n'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 
