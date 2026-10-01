@@ -100,6 +100,20 @@
       mode: 0o644
     notify: 'apache_tomcat: restart tomcat.service'
 
+  # the package marks these as %config(noreplace), so an update leaves its own version next to
+  # them. verified with `rpm -qc` against tomcat 9.0.120 on Rocky 9 and tomcat 10.1.49 on Rocky 10.
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/sysconfig/tomcat'
+      - '/etc/tomcat/context.xml'
+      - '/etc/tomcat/logging.properties'
+      - '/etc/tomcat/server.xml'
+
   tags:
     - 'apache_tomcat'
     - 'apache_tomcat:configure'
@@ -193,6 +207,13 @@
       group: 'tomcat'
       mode: 0o640
     notify: 'apache_tomcat: restart tomcat.service'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/tomcat/tomcat-users.xml'
 
   tags:
     - 'apache_tomcat'
