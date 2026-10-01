@@ -390,6 +390,10 @@ apache_tomcat__webapps_manager_web_xml_max_request_size: 209715200
 
 ## Troubleshooting
 
+**The run aborts with `apache_tomcat__webapps_..._context_xml_allow is mandatory`**
+
+* The webapp the variable protects is installed, but the inventory does not say who may access it. Set the variable (an empty string allows localhost only), or skip the webapp with `apache_tomcat__skip_root_webapp` / `apache_tomcat__skip_admin_webapps`.
+
 **Tomcat cannot connect to its database**
 
 ```

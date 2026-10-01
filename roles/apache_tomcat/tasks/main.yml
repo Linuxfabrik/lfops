@@ -1,5 +1,26 @@
 - block:
 
+  # argument_specs cannot express that a variable is mandatory only while another one is false
+  - name: 'Assert that apache_tomcat__webapps_docs_context_xml_allow is set'
+    ansible.builtin.assert:
+      that:
+        - 'apache_tomcat__skip_root_webapp | bool or apache_tomcat__webapps_docs_context_xml_allow is defined'
+      quiet: true
+      fail_msg: 'apache_tomcat__webapps_docs_context_xml_allow is mandatory unless apache_tomcat__skip_root_webapp is true.'
+
+  - name: 'Assert that apache_tomcat__webapps_manager_context_xml_allow is set'
+    ansible.builtin.assert:
+      that:
+        - 'apache_tomcat__skip_admin_webapps | bool or apache_tomcat__webapps_manager_context_xml_allow is defined'
+      quiet: true
+      fail_msg: 'apache_tomcat__webapps_manager_context_xml_allow is mandatory unless apache_tomcat__skip_admin_webapps is true.'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Install tomcat-webapps ("ROOT" webapp)'
     ansible.builtin.package:
       name:
