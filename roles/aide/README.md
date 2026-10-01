@@ -24,19 +24,19 @@ This role is compatible with the following aide versions:
 * `aidecheck.service` runs `aide --check` at a low CPU and IO priority, by `aidecheck.timer` and after every boot, once the services have started. Any finding (added, removed or changed files) makes the check exit non-zero, which leaves `aidecheck.service` in the failed state. The [aide-logfile](https://github.com/Linuxfabrik/monitoring-plugins/tree/main/check-plugins/aide-logfile) monitoring plugin evaluates the report, and monitoring failed systemd units alerts as well. The full report is written to `/var/log/aide/aide.log`, overwritten by every check. From aide 0.17 on, a summary (whether and how many files changed) additionally goes to syslog (`journalctl --unit aidecheck.service`), from where rsyslog forwards it. aide 0.16 (RHEL 8) cannot limit the syslog report, so there the report only goes to the file. The role sends no mail.
 * `/etc/logrotate.d/aide` rotates the report weekly with `copy` instead of the `copytruncate` the RHEL package ships, which would leave `/var/log/aide/aide.log` empty until the next check, as if the check had aborted.
 * A check that is due while the [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role or `unattended-upgrades` installs packages waits until the update has finished. Conversely, `system_update` and the dpkg hook wait for a running check before they update the database. The role waits for it for 5 minutes at most and then aborts the run (see "Troubleshooting"). After every database update the role starts a check, so that `/var/log/aide/aide.log` shows the state of the host rather than the changes the update accepted.
-* When the role changes `/etc/aide.conf`, its own units or whether `aidecheck.service` or `aidecheck.timer` is enabled, it updates the database afterwards, so that the next check does not report every path the new rules add or drop. It only does so if the last check had not reported changes: re-baselining a failing check would silently accept whatever changed on the host, an intrusion included. The same applies to a database the role finds on a host where it has not deployed `aidecheck.service` yet, for example one left by a previous AIDE setup: no check of this role has vouched for it. In both cases the database is left alone and the run tells you so. Review `/var/log/aide/aide.log` or the output of `aide --check`, and accept the current state with `--tags aide:update_db`.
+* When the role changes `/etc/aide.conf`, its own units or whether `aidecheck.service` or `aidecheck.timer` is enabled, it updates the database afterwards, so that the next check does not report every path the new rules add or drop. It only does so if the last check had not reported changes: re-baselining a failing check would silently accept whatever changed on the host, an intrusion included. The same applies to a database the role finds on a host where it has not deployed `aidecheck.service` yet, for example one left by a previous AIDE setup: no check of this role has vouched for it. In both cases the database is left alone and the run tells you so. Review `/var/log/aide/aide.log` or the output of `aide --check`, and accept the current state with `--tags aide:update_db_force`.
 * The re-baseline after a change of the role accepts everything that changed since the last check, not only the change the role made. The shorter the check interval, the smaller that window.
 * Changes to monitored files made by anyone else, other LFOps roles and packages installed by hand included, are reported by the next check. The [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role knows about `aidecheck.service`: it runs a check before it updates packages and updates the database afterwards if that check was clean.
 * On Debian and Ubuntu the same applies to the updates of `unattended-upgrades`: a dpkg hook (`/usr/local/sbin/aide-dpkg-hook`, wired in by `/etc/apt/apt.conf.d/z00-linuxfabrik-aide`) runs a check before `unattended-upgrades` installs its first package, and if that check was clean, `aide-dpkg-update.service` updates the database once the upgrade has finished. `unattended-upgrades` installs in several steps, one dpkg run each, but the check and the update run only once per upgrade. The upgrade takes longer by that one check, while apt holds its lock. The hook only acts on dpkg runs of `unattended-upgrades`, so a package installed with apt by hand is reported, as on the Red Hat family. Changes made on the host while the upgrade runs are accepted along with it.
 * On Debian and Ubuntu the role creates an empty `/etc/apt/sources.list` if there is none, as on hosts with only `/etc/apt/sources.list.d/*.sources`. `unattended-upgrades` creates that file on every run otherwise, and the check before the first upgrade would report it.
-* The [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity) role backs up `/var/lib/aide` by default. An attacker with root privileges can replace the local database. The database only changes when it is updated (by this role, `--tags aide:update_db`, the system_update role or `aide-dpkg-update.service`), so a local database that differs from the backup of a day without such an update points to tampering.
+* The [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity) role backs up `/var/lib/aide` by default. An attacker with root privileges can replace the local database. The database only changes when it is updated (by this role, `--tags aide:update_db` or `aide:update_db_force`, the system_update role or `aide-dpkg-update.service`), so a local database that differs from the backup of a day without such an update points to tampering.
 * Before it creates the database, the role waits for running `apt-daily.service` and `apt-daily-upgrade.service` jobs: a package installation during `aide --init` would leave entries without checksums in the database.
 
 
 ## Known Limitations
 
 * Non-recursive negative rules (`-/path`) are not available, since aide 0.16 to 0.18 do not know them.
-* Python byte code that a package does not compile when it is installed is written on its first use and reported by the next check as added, for example below `/usr/lib/python3/dist-packages/netplan/__pycache__` on Ubuntu 22.04 after a netplan update. Review and accept it with `--tags aide:update_db`.
+* Python byte code that a package does not compile when it is installed is written on its first use and reported by the next check as added, for example below `/usr/lib/python3/dist-packages/netplan/__pycache__` on Ubuntu 22.04 after a netplan update. Review and accept it with `--tags aide:update_db_force`.
 * The CIS benchmarks for Debian 12 and Ubuntu 22.04 expect `aide-common` to be installed, and the one for Debian 12 accepts no other check than its `dailyaidecheck.timer`. The role removes `aide-common` instead, since its check never fails on a finding, so these recommendations are reported as not met there.
 * On RHEL 8 the audit script of the CIS benchmark for the audit tool rules fails whatever `/etc/aide.conf` contains: it locates the file with `whereis aide.conf`, which util-linux 2.32 answers with `/usr/sbin/aide`. The rules are in place all the same.
 
@@ -64,7 +64,13 @@ This role is compatible with the following aide versions:
 `aide:update_db`
 
 * Not run by default, only when the tag is given explicitly.
-* Updates the AIDE database to the current state of the host and clears the failed state of `aidecheck.service`. Use it after reviewing a finding, to accept the reported changes.
+* Updates the AIDE database to the current state of the host, but only if the last check had not reported changes, the same condition under which the role updates the database after a change of its own. Otherwise the database is left alone and the run tells you so. Use it routinely after a deploy, to accept what the run changed without accepting findings that were pending before it: `ansible-playbook --inventory inventory linuxfabrik.lfops.setup_basic --limit myhost --tags all,aide:update_db`. Like that update, it accepts everything that changed since the last check, not only the changes of the run.
+* Triggers: none.
+
+`aide:update_db_force`
+
+* Not run by default, only when the tag is given explicitly.
+* Updates the AIDE database to the current state of the host, whatever the last check reported, and clears the failed state of `aidecheck.service`. Use it after reviewing a finding, to accept the reported changes.
 * Triggers: none.
 
 
@@ -201,7 +207,7 @@ aide__timer_state: 'started'
 
 **`aidecheck.service` is failed**
 
-* The last check found added, removed or changed files. Read the report in `/var/log/aide/aide.log`. If the changes are expected, accept them with `ansible-playbook --inventory inventory linuxfabrik.lfops.aide --limit myhost --tags aide:update_db`.
+* The last check found added, removed or changed files. Read the report in `/var/log/aide/aide.log`. If the changes are expected, accept them with `ansible-playbook --inventory inventory linuxfabrik.lfops.aide --limit myhost --tags aide:update_db_force`.
 
 
 ## License

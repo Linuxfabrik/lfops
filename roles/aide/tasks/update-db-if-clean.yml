@@ -1,0 +1,25 @@
+# the conditional counterpart of update-db.yml: accepts the current state only under the same
+# guard as the handler (__aide__update_db_allowed in vars/main.yml), here computed from the state
+# right before the update. meant to be run routinely after a deploy, to accept what the run
+# changed without accepting findings that were pending before it. like the handler, it accepts
+# everything that changed since the last check, not only the changes of the run.
+
+- name: 'Read the state of the last AIDE check'
+  ansible.builtin.import_tasks: 'check-state.yml'
+
+- name: 'Update the AIDE database'
+  ansible.builtin.import_tasks: 'update-db.yml'
+  when:
+    - '__aide__update_db_allowed | bool'
+
+- name: 'Report that the database was left alone'
+  ansible.builtin.debug:
+    msg: '{{ __aide__update_db_left_alone_message }}'
+  when:
+    - '__aide__update_db_refused | bool'
+
+- name: 'Collect the message for the end of the play'
+  ansible.builtin.set_fact:
+    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__aide__update_db_left_alone_message] }}'
+  when:
+    - '__aide__update_db_refused | bool'

@@ -1,77 +1,30 @@
 # re-baseline after the role changed /etc/aide.conf, its own units or the timer's enable
 # symlink, otherwise the next check reports every path the new rules add or drop, and the
-# role's own files. only when a database existed before this run (a new one is initialised
-# from the new config anyway), the check unit existed as well (otherwise the database was not
-# created by this role, see tasks/main.yml), and the last check had not reported changes:
-# re-baselining then would silently accept whatever drifted, an intrusion included. unlike
-# system_update and aide-dpkg-hook, the handler does not run a fresh check first: the role
-# has already changed monitored files by now, so a fresh check would always fail, and one
-# before the changes would add a full check to every run. what changed since the last check
-# is accepted along with the role's change, see the README.
+# role's own files. only under the guard __aide__update_db_allowed (vars/main.yml), computed from
+# the state tasks/check-state.yml read before the role changed anything. unlike system_update
+# and aide-dpkg-hook, the handler does not run a fresh check first: the role has already changed
+# monitored files by now, so a fresh check would always fail, and one before the changes would
+# add a full check to every run. what changed since the last check is accepted along with the
+# role's change, see the README.
 
-# wait for a running aidecheck.service to finish, 5 minutes at most, and fail loudly after that,
-# instead of blocking the run on flock below for as long as the check takes. `systemctl
-# is-active` prints the state; it exits 0 for active only, not for activating. failed_when, not
-# `failed_when: false`, since ansible-core 2.16 moves on silently after the last retry otherwise.
-- name: 'aide: systemctl is-active aidecheck.service (wait up to 5 minutes for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
-  ansible.builtin.command: 'systemctl is-active aidecheck.service'
-  register: '__aide__handler_check_active_result'
-  until: '__aide__handler_check_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
-  retries: 30
-  delay: 10
-  changed_when: false
-  failed_when: '__aide__handler_check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+# the same tasks `--tags aide:update_db_force` runs. handlers are not filtered by tags, so the
+# included tasks also run under --tags aide:configure or aide:state.
+- name: 'aide: update the AIDE database'
+  ansible.builtin.include_tasks: 'update-db.yml'
   listen: 'aide: update database'
   when:
-    - '__aide__db_stat_result["stat"]["exists"] | bool'
-    - '__aide__check_unit_stat_result["stat"]["exists"] | bool'
-    - '__aide__check_failed_result["rc"] != 0'
-
-# aide's own lock does not serialise: it locks every file it writes (the report, the new
-# database) with a non-blocking fcntl(F_SETLK), so a second aide started meanwhile exits with 21
-# (LOCK_ERROR, be_init() in src/be.c) instead of waiting. flock on /run/aide.lock, which every
-# aide run of LFOps takes, makes it wait instead. the wait above only covers aidecheck.service,
-# while system_update and the dpkg hook run aide directly.
-# flock passes the exit code of aide through, its own errors are 64 and more. `aide --update`
-# exits with the bitmask of what it found (1 added, 2 removed, 4 changed), its errors start at
-# 14 (include/errorcodes.h), so `>= 8` catches the errors of both. Verified with util-linux
-# 2.37.4 and aide 0.19.2 on Rocky 9.
-- name: 'aide: flock /run/aide.lock aide --config=/etc/aide.conf --update'
-  ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
-  register: '__aide__update_result'
-  changed_when: true
-  failed_when: '__aide__update_result["rc"] >= 8'
-  notify: 'aide: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
-  listen: 'aide: update database'
-  when:
-    - '__aide__db_stat_result["stat"]["exists"] | bool'
-    - '__aide__check_unit_stat_result["stat"]["exists"] | bool'
-    - '__aide__check_failed_result["rc"] != 0'
-
-- name: 'aide: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
-  ansible.builtin.command: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
-  changed_when: true
-  notify: 'aide: systemctl start --no-block aidecheck.service'
-
-# `aide --update` writes its own report to /var/log/aide/aide.log. a check against the new
-# database replaces it, so the file shows the state of the host again, not the changes the
-# update accepted. --no-block: the run does not wait for the check.
-- name: 'aide: systemctl start --no-block aidecheck.service' # noqa command-instead-of-module (the service module cannot start without waiting)
-  ansible.builtin.command: 'systemctl start --no-block aidecheck.service'
-  changed_when: true
+    - '__aide__update_db_allowed | bool'
 
 - name: 'aide: report that the database was left alone'
   ansible.builtin.debug:
-    msg: '{{ __aide__end_of_play_message }}'
+    msg: '{{ __aide__update_db_left_alone_message }}'
   listen: 'aide: update database'
   when:
-    - '__aide__db_stat_result["stat"]["exists"] | bool'
-    - 'not (__aide__check_unit_stat_result["stat"]["exists"] | bool) or __aide__check_failed_result["rc"] == 0'
+    - '__aide__update_db_refused | bool'
 
 - name: 'aide: collect the message for the end of the play'
   ansible.builtin.set_fact:
-    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__aide__end_of_play_message] }}'
+    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__aide__update_db_left_alone_message] }}'
   listen: 'aide: update database'
   when:
-    - '__aide__db_stat_result["stat"]["exists"] | bool'
-    - 'not (__aide__check_unit_stat_result["stat"]["exists"] | bool) or __aide__check_failed_result["rc"] == 0'
+    - '__aide__update_db_refused | bool'

@@ -13,9 +13,13 @@
 # In between, the role is run again twice, each time after a change it has to revert, to
 # prove that its handler leaves the database alone in both cases where re-baselining would
 # accept unvetted changes: a database found without the role's check unit, and a last check
-# that reported changes. Finally the probe files are removed and the update-db tasks of the
-# role accept the current state, after which the failed state is cleared and the check runs
-# clean again, so the second verify after the idempotence step starts from the same state.
+# that reported changes. Finally the probe files are removed, the update-db-if-clean tasks of
+# the role (`--tags aide:update_db`) leave the database alone after that failed check, and the
+# update-db tasks (`--tags aide:update_db_force`) accept the current state, after which the
+# failed state is cleared and the check runs clean again. After that clean check,
+# update-db-if-clean accepts a new file and its removal, and a run of the role that reverts a
+# hand edit of /etc/aide.conf has its handler update the database, so the second verify after
+# the idempotence step starts from the same state.
 - name: 'Verify aide'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -321,7 +325,36 @@
         group: 'root'
         mode: 0o644
 
-    # the same tasks `--tags aide:update_db` runs. they have to accept the unit and the config
+    # the last check failed, so the tasks `--tags aide:update_db` runs must leave the database
+    # alone and say so
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before update-db-if-clean after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_if_clean_failed_result'
+
+    - name: 'Reset the end-of-play messages (update-db-if-clean after a failed check)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the update-db-if-clean tasks of the aide role (after a failed check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db-if-clean.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after update-db-if-clean after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_if_clean_failed_result'
+
+    - name: 'Assert that update-db-if-clean left the database alone and the operator was told'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_if_clean_failed_result["stat"]["checksum"] == __molecule__aide_db_before_if_clean_failed_result["stat"]["checksum"]'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 1'
+
+    # the same tasks `--tags aide:update_db_force` runs. they have to accept the unit and the config
     # that the two role runs above redeployed, and clear the failed state of the last check.
     - name: 'Run the update-db tasks of the aide role'
       ansible.builtin.include_role:
@@ -353,6 +386,121 @@
       ansible.builtin.assert:
         that:
           - '__molecule__aide_restored_result["stdout"] == "success"'
+
+    # after a clean check, the tasks `--tags aide:update_db` runs accept a change, as after a
+    # deploy, and accept its removal again, so that the second verify after the idempotence
+    # step starts from the same state.
+    - name: 'mkdir -p /srv/lfops-molecule'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Deploy /srv/lfops-molecule/accepted'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/srv/lfops-molecule/accepted'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before update-db-if-clean after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_if_clean_result'
+
+    - name: 'Run the update-db-if-clean tasks of the aide role (after a clean check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db-if-clean.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after update-db-if-clean after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_if_clean_result'
+
+    - name: 'Wait for the check update-db-if-clean started'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after update-db-if-clean)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_if_clean_result'
+      changed_when: false
+
+    - name: 'Assert that update-db-if-clean accepted the change'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_if_clean_result["stat"]["checksum"] != __molecule__aide_db_before_if_clean_result["stat"]["checksum"]'
+          - '__molecule__aide_if_clean_result["stdout"] == "success"'
+
+    - name: 'rm -rf /srv/lfops-molecule'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule'
+        state: 'absent'
+
+    - name: 'Run the update-db-if-clean tasks of the aide role (after cleaning up)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db-if-clean.yml'
+
+    - name: 'Wait for the check update-db-if-clean started (after cleaning up)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after cleaning up)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_if_clean_cleaned_result'
+      changed_when: false
+
+    - name: 'Assert that update-db-if-clean accepted the removal'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_if_clean_cleaned_result["stdout"] == "success"'
+
+    # the last check is clean now, so a config change of the role makes its handler update the
+    # database: the role reverts the hand edit, and the check against the new database is clean.
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_clean_run_result'
+
+    - name: 'Edit /etc/aide.conf by hand (before the run after a clean check)'
+      ansible.builtin.lineinfile:
+        path: '/etc/aide.conf'
+        line: '# lfops-molecule'
+
+    - name: 'Reset the end-of-play messages (run after a clean check)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the aide role (run after a clean check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_clean_run_result'
+
+    - name: 'Wait for the check the handler started'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_clean_run_result'
+      changed_when: false
+
+    - name: 'Assert that the handler updated the database without telling the operator anything'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_clean_run_result["stat"]["checksum"] != __molecule__aide_db_before_clean_run_result["stat"]["checksum"]'
+          - '__molecule__aide_clean_run_result["stdout"] == "success"'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 0'
 
 
 # The dpkg hook against real unattended-upgrades runs, started through apt-daily-upgrade.service
