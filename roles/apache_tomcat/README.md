@@ -210,7 +210,7 @@ The GUI is protected against CSRF, but the text and JMX interfaces are not. To m
 
 `apache_tomcat__webapps_manager_context_xml_allow`
 
-* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html) webapps.
+* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-10.1-doc/manager-howto.html) webapps.
 * Type: String.
 
 Example:
@@ -232,7 +232,7 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 `apache_tomcat__context_xml_cache_max_size`
 
-* The maximum size of the static resource cache in kilobytes. If not specified, the default value is `10240` (10 megabytes). This value may be changed while the web application is running (e.g. via JMX). If the cache is using more memory than the new limit the cache will attempt to reduce in size over time to meet the new limit. If necessary, cacheObjectMaxSize will be reduced to ensure that it is no larger than `cacheMaxSize/20`. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/resources.html)
+* The maximum size of the static resource cache in kilobytes. If not specified, the default value is `10240` (10 megabytes). This value may be changed while the web application is running (e.g. via JMX). If the cache is using more memory than the new limit the cache will attempt to reduce in size over time to meet the new limit. If necessary, cacheObjectMaxSize will be reduced to ensure that it is no larger than `cacheMaxSize/20`. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/resources.html)
 * Type: Number.
 * Default: `10240`
 
@@ -279,7 +279,7 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 `apache_tomcat__server_xml_ajp_port`
 
-* The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/ajp.html)
+* The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of 0 (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/ajp.html)
 * Type: Number.
 * Default: unset (not listening on AJP)
 
@@ -291,31 +291,31 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 `apache_tomcat__server_xml_connector_compression`
 
-* The Connector may use HTTP/1.1 GZIP compression in an attempt to save server bandwidth. The acceptable values for the parameter is "off" (disable compression), "on" (allow compression, which causes text data to be compressed), "force" (forces compression in all cases), or a numerical integer value (which is equivalent to "on", but specifies the minimum amount of data before the output is compressed). If the content-length is not known and compression is set to "on" or more aggressive, the output will also be compressed. If not specified, this attribute is set to "off". Note: There is a tradeoff between using compression (saving your bandwidth) and using the sendfile feature (saving your CPU cycles). If the connector supports the sendfile feature, e.g. the NIO connector, using sendfile will take precedence over compression. The symptoms will be that static files greater that 48 Kb will be sent uncompressed. You can turn off sendfile by setting useSendfile attribute of the connector, as documented below, or change the sendfile usage threshold in the configuration of the DefaultServlet in the default conf/web.xml or in the web.xml of your web application. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* The Connector may use HTTP/1.1 GZIP compression in an attempt to save server bandwidth. The acceptable values for the parameter is "off" (disable compression), "on" (allow compression, which causes text data to be compressed), "force" (forces compression in all cases), or a numerical integer value (which is equivalent to "on", but specifies the minimum amount of data before the output is compressed). If the content-length is not known and compression is set to "on" or more aggressive, the output will also be compressed. If not specified, this attribute is set to "off". Note: There is a tradeoff between using compression (saving your bandwidth) and using the sendfile feature (saving your CPU cycles). If the connector supports the sendfile feature, e.g. the NIO connector, using sendfile will take precedence over compression. The symptoms will be that static files greater that 48 Kb will be sent uncompressed. You can turn off sendfile by setting useSendfile attribute of the connector, as documented below, or change the sendfile usage threshold in the configuration of the DefaultServlet in the default conf/web.xml or in the web.xml of your web application. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html)
 * Type: String.
 * Default: `'on'`
 
 `apache_tomcat__server_xml_connector_connection_timeout`
 
-* The number of milliseconds this Connector will wait, after accepting a connection, for the request URI line to be presented. Use a value of `-1` to indicate no (i.e. infinite) timeout. The default value is `60000` (i.e. 60 seconds) but note that the standard `server.xml` that ships with Tomcat sets this to `20000` (i.e. 20 seconds). Unless `disableUploadTimeout` is set to `false`, this timeout will also be used when reading the request body (if any). This parameter is there specifically to fight one type of Denial-Of-Service attack, whereby some malicious client(s) create a TCP connection to the server (which has the effect of reserving some resources on the server for handling this connection), and then just sit there without sending any HTTP request on that connection. By making this delay shorter, you shorten the time during which the server resources are allocated, to serve a request that will never come. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* The number of milliseconds this Connector will wait, after accepting a connection, for the request URI line to be presented. Use a value of `-1` to indicate no (i.e. infinite) timeout. The default value is `60000` (i.e. 60 seconds) but note that the standard `server.xml` that ships with Tomcat sets this to `20000` (i.e. 20 seconds). Unless `disableUploadTimeout` is set to `false`, this timeout will also be used when reading the request body (if any). This parameter is there specifically to fight one type of Denial-Of-Service attack, whereby some malicious client(s) create a TCP connection to the server (which has the effect of reserving some resources on the server for handling this connection), and then just sit there without sending any HTTP request on that connection. By making this delay shorter, you shorten the time during which the server resources are allocated, to serve a request that will never come. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html)
 * Type: Number.
 * Default: `20000`
 
 `apache_tomcat__server_xml_connector_max_threads`
 
-* The maximum number of request processing threads to be created by this Connector, which therefore determines the maximum number of simultaneous requests that can be handled. If not specified, this attribute is set to `200`. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* The maximum number of request processing threads to be created by this Connector, which therefore determines the maximum number of simultaneous requests that can be handled. If not specified, this attribute is set to `200`. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html)
 * Type: Number.
 * Default: `200`
 
 `apache_tomcat__server_xml_connector_min_spare_threads`
 
-* The minimum number of threads always kept running. This includes both active and idle threads. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* The minimum number of threads always kept running. This includes both active and idle threads. If an executor is associated with this connector, this attribute is ignored as the connector will execute tasks using the executor rather than an internal thread pool. Note that if an executor is configured any value set for this attribute will be recorded correctly but it will be reported (e.g. via JMX) as `-1` to make clear that it is not used. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html)
 * Type: Number.
 * Default: `10`
 
 `apache_tomcat__server_xml_connector_port`
 
-* The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of `0` (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html)
+* The TCP port number on which this Connector will create a server socket and await incoming connections. Your operating system will allow only one server application to listen to a particular port number on a particular IP address. If the special value of `0` (zero) is used, then Tomcat will select a free port at random to use for this connector. This is typically only useful in embedded and testing applications. [Doc](https://tomcat.apache.org/tomcat-10.1-doc/config/http.html)
 * Type: Number.
 * Default: `8080`
 
@@ -351,13 +351,13 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 `apache_tomcat__webapps_manager_web_xml_max_file_size`
 
-* [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB.
+* [Manager App](https://tomcat.apache.org/tomcat-10.1-doc/manager-howto.html). File size limit for WAR file uploads in bytes. Defaults to 50MB.
 * Type: Number.
 * Default: `52428800`
 
 `apache_tomcat__webapps_manager_web_xml_max_request_size`
 
-* [Manager App](https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB.
+* [Manager App](https://tomcat.apache.org/tomcat-10.1-doc/manager-howto.html). Request limit in bytes. Defaults to 50MB.
 * Type: Number.
 * Default: `52428800`
 

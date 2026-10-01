@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   {{ ansible_managed }}
-  2026061201
+  2026100101
 
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -28,7 +28,7 @@
   <Listener className="org.apache.catalina.security.SecurityListener" />
   -->
   <!-- APR connector and OpenSSL support using Tomcat Native -->
-  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+  <Listener className="org.apache.catalina.core.AprLifecycleListener" />
   <!-- OpenSSL support using FFM API from Java 22 -->
   <!-- <Listener className="org.apache.catalina.core.OpenSSLLifecycleListener" /> -->
   <!-- Prevent memory leaks due to use of particular java/javax APIs-->
@@ -77,8 +77,8 @@
                maxParameterCount="1000"
                maxThreads="{{ apache_tomcat__server_xml_connector_max_threads }}"
                minSpareThreads="{{ apache_tomcat__server_xml_connector_min_spare_threads }}"
-               compression="{{ apache_tomcat__server_xml_connector_compression  }}"
-                compressableMimeType="{{ apache_tomcat__server_xml_connector_compressable_mime_types }} "
+               compression="{{ apache_tomcat__server_xml_connector_compression }}"
+               compressibleMimeType="{{ apache_tomcat__server_xml_connector_compressable_mime_types }}"
     />
     <!-- A "Connector" using the shared thread pool-->
     <!--
@@ -103,7 +103,7 @@
                >
         <SSLHostConfig>
             <Certificate certificateKeystoreFile="conf/localhost-rsa.jks"
-                         type="RSA" />
+                         certificateKeystorePassword="changeit" type="RSA" />
         </SSLHostConfig>
     </Connector>
     -->
@@ -182,8 +182,8 @@
              Note: The pattern used is equivalent to using pattern="common" -->
         <!-- disabling rotatable since we use logrotate. the "logs" directory points to /usr/share/tomcat/logs, which is a symbolic link to /var/log/tomcat -->
         <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" rotatable="false"
-                prefix="localhost_access" suffix=".log"
-                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+               prefix="localhost_access" suffix=".log"
+               pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
       </Host>
     </Engine>

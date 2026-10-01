@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   {{ ansible_managed }}
-  # 2024073101
+  2026100101
 
-  Licensed to the Apache Software Foundation (ASF) under one or more
+ Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
   The ASF licenses this file to You under the Apache License, Version 2.0
@@ -55,8 +55,15 @@
       <param-value>true</param-value>
     </init-param>
     -->
+    <!-- Uncomment this to set a sub-title for the manager web application main
+         page. It must be XML escaped, valid HTML.
+    <init-param>
+      <param-name>htmlSubTitle</param-name>
+      <param-value>Sub-Title</param-value>
+    </init-param>
+    -->
     <multipart-config>
-      <!-- 50MB max -->
+      <!-- 50 MiB max -->
       <max-file-size>{{ apache_tomcat__webapps_manager_web_xml_max_file_size }}</max-file-size>
       <max-request-size>{{ apache_tomcat__webapps_manager_web_xml_max_request_size }}</max-request-size>
       <file-size-threshold>0</file-size-threshold>

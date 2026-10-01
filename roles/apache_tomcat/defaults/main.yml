@@ -1,5 +1,9 @@
 apache_tomcat__context_xml_cache_max_size: 10240
 
+apache_tomcat__env_xms: '1024M'
+apache_tomcat__env_xmx: '1024M'
+apache_tomcat__env_xx: '+UseParallelGC'
+
 apache_tomcat__roles__combined_var: '{{ (
       apache_tomcat__roles__role_var +
       apache_tomcat__roles__dependent_var +
