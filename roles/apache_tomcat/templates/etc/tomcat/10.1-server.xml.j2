@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   {{ ansible_managed }}
-  2026093001
+  2026100101
 
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -146,7 +146,12 @@
              available for use by the Realm.  -->
         <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
                resourceName="UserDatabase">
-          <CredentialHandler className="org.apache.catalina.realm.MessageDigestCredentialHandler" algorithm="sha-256" />
+          <!-- the role stores the passwords in tomcat-users.xml as PBKDF2 hashes, see the role README -->
+          <CredentialHandler className="org.apache.catalina.realm.SecretKeyCredentialHandler"
+                             algorithm="PBKDF2WithHmacSHA512"
+                             iterations="{{ __apache_tomcat__credential_iterations }}"
+                             keyLength="512"
+                             saltLength="16" />
         </Realm>
       </Realm>
 

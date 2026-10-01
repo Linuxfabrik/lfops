@@ -3,9 +3,8 @@
 #
 # The settings are read back from the *running* Tomcat through the manager's JMX proxy, so the
 # whole chain is proven at once: group_vars, to the per-version server.xml, to the connector
-# Tomcat actually built from it. Every call authenticates as the user from group_vars, which on
-# Tomcat 10.1 also proves that the stored sha-256 digest matches what the credential handler
-# computes.
+# Tomcat actually built from it. Every call authenticates as the user from group_vars, which also
+# proves that Tomcat's credential handler accepts the PBKDF2 hash the role stored.
 - name: 'Verify Tomcat is running and uses the configured values'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -65,24 +64,20 @@
         force_basic_auth: true
         status_code: 401
 
-    # Tomcat 10.1 stores the passwords as a digest, see "How the Role Behaves" in the role README.
+    # See "How the Role Behaves" in the role README.
     - name: 'slurp /etc/tomcat/tomcat-users.xml'
       ansible.builtin.slurp:
         src: '/etc/tomcat/tomcat-users.xml'
       register: '__molecule__tomcat_users_result'
-      when:
-        - 'ansible_facts["packages"]["tomcat"][0]["version"] is version("10.1", ">=")'
 
-    - name: 'Assert tomcat-users.xml does not contain the clear-text password on Tomcat 10.1'
+    - name: 'Assert tomcat-users.xml holds a PBKDF2 hash instead of the clear-text password'
       ansible.builtin.assert:
         that:
           - '__molecule__tomcat_user["password"] not in __molecule__tomcat_users'
-          - '(__molecule__tomcat_user["password"] | hash("sha256")) in __molecule__tomcat_users'
-        fail_msg: 'tomcat-users.xml does not hold the sha-256 digest of the password, or holds the password in clear text'
+          - '__molecule__tomcat_users is search("<user username=\"" ~ __molecule__tomcat_user["username"] ~ "\" password=\"[0-9a-f]{32}\\$210000\\$[0-9a-f]{128}\"")'
+        fail_msg: 'tomcat-users.xml holds the password in clear text, or not in the <salt>$<iterations>$<key> form'
       vars:
         __molecule__tomcat_users: '{{ __molecule__tomcat_users_result["content"] | b64decode }}'
-      when:
-        - 'ansible_facts["packages"]["tomcat"][0]["version"] is version("10.1", ">=")'
 
     - name: 'curl --user molecule-script {{ __molecule__tomcat_url }}/manager/jmxproxy/?get=Catalina:type=Connector,port=...'
       ansible.builtin.uri:

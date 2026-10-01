@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
 * **role:grav**: The `grav:cron` tag is gone. Run the role with `--tags grav` to deploy the timers and their services, or with `--tags grav:state` to enable or disable the timers.
 * **role:firewall**: With `firewall__firewall: 'fwbuilder'`, the default, the run aborts on a host that has neither `/etc/fwb.sh` nor `firewall__fwbuilder_repo_url`, before the role stops any firewall. Until now `fwb.service` failed there and the host ran without a firewall. Deploy `/etc/fwb.sh`, set `firewall__fwbuilder_repo_url`, or set `firewall__firewall` to the firewall the host uses.
 * **role:chrony**: The role takes effect on Debian and Ubuntu, where chronyd reads `/etc/chrony/chrony.conf` and ignored the `/etc/chrony.conf` the role deployed, so these hosts synchronised with the distribution's default pools until now. As on the Red Hat family, chronyd uses only the sources from the inventory, without the distribution's pools, DHCP sources or `/etc/chrony/sources.d`. Set `chrony__ntp_pools` or `chrony__ntp_servers` for every Debian and Ubuntu host before running the role, otherwise it is left without a time source.
@@ -36,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10, whose `tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as an unsalted sha-256 digest instead of in clear text.
+* **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10.
 * **role:aide, playbook:aide**: Add a role and playbook to install AIDE on RHEL 8, 9 and 10 and run a daily file integrity check, which leaves `aide-check.service` failed on any finding.
 * **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.

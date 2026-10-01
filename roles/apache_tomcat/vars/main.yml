@@ -4,3 +4,9 @@
 __apache_tomcat__supported_versions:
   - '10.1'
   - '9.0'
+
+# PBKDF2-HMAC-SHA512 iterations for the passwords in tomcat-users.xml, the OWASP recommendation for
+# this algorithm. Tomcat recomputes the hash whenever it checks a password; 210000 iterations took
+# about 0.2 s per hash with OpenJDK 21 on Rocky 10. Tomcat reads the count from the stored hash, so
+# changing it here only takes effect for the hashes the role writes.
+__apache_tomcat__credential_iterations: 210000

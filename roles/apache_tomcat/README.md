@@ -27,7 +27,8 @@ This role is compatible with the following Tomcat versions:
 
 ## How the Role Behaves
 
-* Passwords in `apache_tomcat__users__*_var` are always given in clear text. On Tomcat 10.1 the role stores them in `/etc/tomcat/tomcat-users.xml` as a sha-256 digest, because the `server.xml` it deploys configures a `MessageDigestCredentialHandler`. The digest is built without a salt and with a single iteration, so it is the value `printf '%s' '<password>' | sha256sum | cut -d' ' -f1` prints. On Tomcat 9.0 there is no credential handler and the password is stored in clear text.
+* Passwords in `apache_tomcat__users__*_var` are given in clear text. The role stores them in `/etc/tomcat/tomcat-users.xml` as PBKDF2-HMAC-SHA512 hashes with 210000 iterations, and the `server.xml` it deploys configures the matching `SecretKeyCredentialHandler`. The salt is derived from the host and the username, so a re-run only changes the file when a password changes.
+* Because of these hashes, web applications cannot authenticate against `tomcat-users.xml` with HTTP DIGEST authentication; BASIC and FORM authentication work. Checking a password costs Tomcat about 0.2 s of CPU time, which adds up for scripts that call the text or JMX interface of the manager without keeping a session.
 * On Tomcat 10.1 the access log omits the session ID (`%S`) that the pattern shipped by the RHEL 10 package contains, since anyone who can read the log could take over the session.
 
 

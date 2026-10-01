@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   {{ ansible_managed }}
-  2026093001
+  2026100101
 
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -60,8 +60,8 @@
 <role rolename="{{ role['name'] }}"/>
 {% endfor %}
 
-{# the MessageDigestCredentialHandler in server.xml expects the sha-256 digest of the password #}
+{# salted per host and user, but stable across runs so the file only changes with the password #}
 {% for user in apache_tomcat__users__combined_var if user['state'] | d('present') != 'absent' %}
-<user username="{{ user['username'] }}" password="{{ user['password'] | hash('sha256') }}" roles="{{ user['roles'] | join(',') }}"/>
+<user username="{{ user['username'] }}" password="{{ user['password'] | string | linuxfabrik.lfops.tomcat_pbkdf2(salt=((inventory_hostname ~ ':' ~ user['username']) | hash('sha256'))[:32], iterations=__apache_tomcat__credential_iterations | int) }}" roles="{{ user['roles'] | join(',') }}"/>
 {% endfor %}
 </tomcat-users>
