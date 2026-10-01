@@ -78,6 +78,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'apache_tomcat: restart tomcat.service'
 
   - name: 'Deploy /etc/tomcat/context.xml'
     ansible.builtin.template:

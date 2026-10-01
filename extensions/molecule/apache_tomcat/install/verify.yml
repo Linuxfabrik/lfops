@@ -36,6 +36,25 @@
         port: '{{ apache_tomcat__server_xml_connector_port | d(8080) }}'
         timeout: 60
 
+    - name: 'systemctl show --property=MainPID --value tomcat.service'
+      ansible.builtin.command: 'systemctl show --property=MainPID --value tomcat.service'
+      register: '__molecule__tomcat_mainpid_result'
+      changed_when: false
+
+    - name: 'slurp /proc/<MainPID>/cmdline'
+      ansible.builtin.slurp:
+        src: '/proc/{{ __molecule__tomcat_mainpid_result["stdout"] | trim }}/cmdline'
+      register: '__molecule__tomcat_cmdline_result'
+
+    # The arguments in /proc/<pid>/cmdline are separated by NUL bytes, which the substring match
+    # does not care about.
+    - name: 'Assert the running JVM uses the configured heap sizes'
+      ansible.builtin.assert:
+        that:
+          - '("-Xms" ~ apache_tomcat__env_xms) in (__molecule__tomcat_cmdline_result["content"] | b64decode)'
+          - '("-Xmx" ~ apache_tomcat__env_xmx) in (__molecule__tomcat_cmdline_result["content"] | b64decode)'
+        fail_msg: 'expected -Xms{{ apache_tomcat__env_xms }} -Xmx{{ apache_tomcat__env_xmx }} on the command line of the running JVM'
+
     - name: 'Get the list of installed packages'
       ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
 

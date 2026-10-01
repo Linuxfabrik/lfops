@@ -7,6 +7,11 @@ apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,applicat
 apache_tomcat__server_xml_connector_connection_timeout: 25000
 apache_tomcat__server_xml_connector_max_threads: 150
 
+# Differ from the role defaults as well, so verify.yml can tell that the JVM reads
+# /etc/sysconfig/tomcat. Change both together: the JVM refuses to start if -Xms exceeds -Xmx.
+apache_tomcat__env_xms: '256M'
+apache_tomcat__env_xmx: '512M'
+
 # The script and JMX interfaces let verify.yml ask the running Tomcat for its effective settings.
 apache_tomcat__roles__group_var:
   - name: 'admin-script'

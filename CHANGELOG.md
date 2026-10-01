@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_tomcat**: Changing `apache_tomcat__env_xms`, `apache_tomcat__env_xmx` or `apache_tomcat__env_xx` restarts Tomcat, so the new JVM settings take effect right away instead of at the next restart.
 * **role:apache_tomcat**: `apache_tomcat__skip_admin_webapps: true` no longer aborts the run on a host with the ROOT webapp.
 * **role:apache_tomcat**: The role no longer aborts on an undefined variable when `apache_tomcat__server_xml_connector_connection_timeout`, `apache_tomcat__webapps_manager_web_xml_max_file_size` or `apache_tomcat__webapps_manager_web_xml_max_request_size` is not set in the inventory, and uses the documented defaults.
 * **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.
