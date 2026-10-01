@@ -136,7 +136,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_root_webapp'
+      - 'not apache_tomcat__skip_admin_webapps | bool'
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/META-INF/context.xml'
     ansible.builtin.template:

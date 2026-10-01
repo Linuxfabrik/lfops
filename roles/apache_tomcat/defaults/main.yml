@@ -40,3 +40,6 @@ apache_tomcat__users__dependent_var: []
 apache_tomcat__users__group_var: []
 apache_tomcat__users__host_var: []
 apache_tomcat__users__role_var: []
+
+apache_tomcat__webapps_manager_web_xml_max_file_size: 52428800
+apache_tomcat__webapps_manager_web_xml_max_request_size: 52428800

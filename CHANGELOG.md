@@ -80,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-* **role:apache_tomcat**: The role no longer aborts on an undefined variable when `apache_tomcat__server_xml_connector_connection_timeout` is not set in the inventory, and uses the documented default of `20000`.
+* **role:apache_tomcat**: `apache_tomcat__skip_admin_webapps: true` no longer aborts the run on a host with the ROOT webapp.
+* **role:apache_tomcat**: The role no longer aborts on an undefined variable when `apache_tomcat__server_xml_connector_connection_timeout`, `apache_tomcat__webapps_manager_web_xml_max_file_size` or `apache_tomcat__webapps_manager_web_xml_max_request_size` is not set in the inventory, and uses the documented defaults.
 * **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.
 * **role:firewall**: Hosts in one run with different `firewall__fwbuilder_repo_url` values each deploy `/etc/fwb.sh` from their own repository, instead of all from the repository of the first host.
 * **role:firewall**: `firewall__firewall: 'iptables'` no longer aborts when there is no iptables file in the inventory's `host_files`, which the README describes as optional.
@@ -146,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:apache_tomcat**: The host-manager webapp only accepts the clients that `apache_tomcat__webapps_manager_context_xml_allow` allows, as documented, instead of those that `apache_tomcat__webapps_docs_context_xml_allow` allows.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
 * **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.
 * **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.
