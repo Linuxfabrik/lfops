@@ -206,6 +206,13 @@ Commit scopes:
     ```
 
 * For the first commit, use the message `feat(roles/<role-name>): add role` or `feat(playbooks/<playbook-name>): add playbook`.
+* A commit that adds or changes a Molecule scenario takes the scope of the role or playbook the scenario tests, not the path of the scenario:
+
+    ```
+    test(roles/apache_tomcat): add install and foreign_tags scenarios
+    ```
+
+    Use the bare `extensions/molecule` scope only for changes to the shared Molecule setup that no single scenario owns, such as `config.yml`, the shared inventory or the provisioning playbooks.
 
 
 ### Deliverables
