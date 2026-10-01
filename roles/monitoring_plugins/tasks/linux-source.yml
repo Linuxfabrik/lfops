@@ -84,6 +84,13 @@
             -not -path '*/example/assets/*' \
             -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/assets/ \;
         done
+        # The snmp plugin reads its OID lists and MIBs from directories next to itself, so they
+        # keep their structure.
+        for dir in device-mibs device-oids; do
+          mkdir --parents "/tmp/ansible.monitoring-plugins-repo-flattened/$dir"
+          [ -d "check-plugins/snmp/$dir" ] || continue
+          cp --recursive -- "check-plugins/snmp/$dir/." "/tmp/ansible.monitoring-plugins-repo-flattened/$dir/"
+        done
         # A checkout always carries plugins. None of them means the clone produced something
         # unusable, and going on would report a successful run on a host that has no plugins.
         if [ "$(ls -1 /tmp/ansible.monitoring-plugins-repo-flattened/plugins | wc -l)" -eq 0 ]; then
@@ -102,6 +109,20 @@
     register: '__monitoring_plugins__flattened_plugins'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
+
+  # Each data file of the snmp plugin goes into the install manifest on its own rather than its
+  # directory, as the one-line installer does it: an admin puts their own device definitions
+  # there, and a removal must leave those alone.
+  - name: 'find device-mibs device-oids -type f'
+    ansible.builtin.command:
+      cmd: 'find device-mibs device-oids -type f'
+      chdir: '/tmp/ansible.monitoring-plugins-repo-flattened'
+    delegate_to: 'localhost'
+    become: false
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    register: '__monitoring_plugins__snmp_device_files'
+    check_mode: false # run task even if `--check` is specified
+    changed_when: false # read-only
 
   - name: 'Make sure rsync is installed'
     ansible.builtin.package:
@@ -439,7 +460,7 @@
       group: 'root'
       mode: 0o755
 
-  # The rsync options are the same for all three transfers below:
+  # The rsync options are the same for all transfers below:
   #
   # --chmod          forces the modes instead of inheriting them from the checkout on the
   #                  controller. A hardened controller umask (027 or 077) leaves the git working
@@ -479,6 +500,23 @@
         - '--no-group'
         - '--no-owner'
         - '--no-times'
+
+  # Without `delete`: these directories also hold the device definitions of the admin. A data
+  # file the checkout no longer carries is removed below by way of the install manifest.
+  - name: 'rsync the data files of the snmp plugin to remote host'
+    ansible.posix.synchronize:
+      src: '/tmp/ansible.monitoring-plugins-repo-flattened/{{ item }}/'
+      dest: '/usr/lib64/nagios/plugins/{{ item }}/'
+      mode: 'push'
+      rsync_opts:
+        - '--checksum'
+        - '--chmod=D755,F644'
+        - '--no-group'
+        - '--no-owner'
+        - '--no-times'
+    loop:
+      - 'device-mibs'
+      - 'device-oids'
 
   # The Linuxfabrik library is deployed straight from its GitHub repo (not via pip),
   # into the plugin directory. The plugins import it as `lib.*`, which resolves because a
@@ -557,6 +595,24 @@
         | list
       }}'
 
+  - name: 'Remove the data files of the snmp plugin the checkout no longer carries'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    vars:
+      __monitoring_plugins__deployed_snmp_device_paths: '{{
+          __monitoring_plugins__snmp_device_files["stdout_lines"]
+          | map("regex_replace", "^", "/usr/lib64/nagios/plugins/")
+          | list
+        }}'
+    loop: '{{
+        (__monitoring_plugins__previous_manifest["content"] | d("") | b64decode).splitlines()
+        | select("match", "^/usr/lib64/nagios/plugins/device-(mibs|oids)/.+$")
+        | reject("search", "/[.][.]?(/|$)")
+        | reject("in", __monitoring_plugins__deployed_snmp_device_paths)
+        | list
+      }}'
+
   tags:
     - 'monitoring_plugins'
 
@@ -627,7 +683,8 @@
            "/usr/lib64/linuxfabrik-monitoring-plugins",
            "/usr/lib64/nagios/plugins/assets",
            "/usr/lib64/nagios/plugins/lib"]
-          + (__monitoring_plugins__flattened_plugins["stdout_lines"]
+          + ((__monitoring_plugins__flattened_plugins["stdout_lines"]
+              + __monitoring_plugins__snmp_device_files["stdout_lines"])
              | map("regex_replace", "^", "/usr/lib64/nagios/plugins/")
              | list)
         }}'
@@ -827,6 +884,9 @@
     ansible.builtin.copy:
       content: |
         {% for name in __monitoring_plugins__flattened_plugins["stdout_lines"] %}
+        /usr/lib64/nagios/plugins/{{ name }}
+        {% endfor %}
+        {% for name in __monitoring_plugins__snmp_device_files["stdout_lines"] %}
         /usr/lib64/nagios/plugins/{{ name }}
         {% endfor %}
         /usr/lib64/nagios/plugins/assets

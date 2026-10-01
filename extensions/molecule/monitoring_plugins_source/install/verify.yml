@@ -83,6 +83,28 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # The snmp plugin reads its OID lists and MIBs from directories next to itself. Without
+    # them every call ends in an I/O error before any SNMP request is sent. The manifest has to
+    # list each file, so that a removal takes them away and leaves the device definitions of the
+    # admin in place.
+    - name: 'Stat the default OID list of the snmp plugin'
+      ansible.builtin.stat:
+        path: '/usr/lib64/nagios/plugins/device-oids/any-any-any.csv'
+      register: '__molecule__snmp_device_oids'
+
+    - name: 'Read the install manifest'
+      ansible.builtin.slurp:
+        src: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+      register: '__molecule__manifest'
+
+    - name: 'Assert the OID list is deployed, readable and listed in the manifest'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__snmp_device_oids["stat"]["exists"]'
+          - '__molecule__snmp_device_oids["stat"]["mode"] == "0644"'
+          - '__molecule__snmp_device_oids["stat"]["pw_name"] == "root"'
+          - '"/usr/lib64/nagios/plugins/device-oids/any-any-any.csv" in (__molecule__manifest["content"] | b64decode).splitlines()'
+
     # Only the modules and the LICENSE of the library are deployed, the same set the release zip
     # bundles; the documentation and development files of the repository have no business on a
     # monitored host. `__pycache__` appears as soon as a plugin has run.
