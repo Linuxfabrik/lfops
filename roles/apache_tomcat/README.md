@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.apache_tomcat
 
-This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/). The role installs Tomcat from the distribution's AppStream repository. Log rotation in Tomcat is disabled and is done by logrotated.
+This role installs and configures an instance of [Apache Tomcat](https://tomcat.apache.org/) from the distribution's AppStream repository.
 
 Optionally this role also installs:
 
@@ -11,10 +11,6 @@ Optionally this role also installs:
     * http://tomcat:8080/manager/status: Server Status
 
 * the home page ("ROOT" web application; default: install). When installed, it is accessible at http://tomcat:8080/.
-
-Notes:
-
-* If activating AJP, this role currently sets `secretRequired` to `false`.
 
 This role is compatible with the following Tomcat versions:
 
@@ -29,6 +25,8 @@ This role is compatible with the following Tomcat versions:
 
 * Passwords in `apache_tomcat__users__*_var` are given in clear text. The role stores them in `/etc/tomcat/tomcat-users.xml` as PBKDF2-HMAC-SHA512 hashes with 210000 iterations, and the `server.xml` it deploys configures the matching `SecretKeyCredentialHandler`. The salt is derived from the host and the username, so a re-run only changes the file when a password changes.
 * Because of these hashes, web applications cannot authenticate against `tomcat-users.xml` with HTTP DIGEST authentication; BASIC and FORM authentication work. Checking a password costs Tomcat about 0.2 s of CPU time, which adds up for scripts that call the text or JMX interface of the manager without keeping a session.
+* Tomcat's own log rotation is disabled. `/etc/logrotate.d/tomcat` rotates the logs daily instead.
+* The AJP connector is only configured when `apache_tomcat__server_xml_ajp_port` is set. It listens on `127.0.0.1` only and does not require a secret (`secretRequired="false"`), so every local process can use it.
 * On Tomcat 10.1 the access log omits the session ID (`%S`) that the pattern shipped by the RHEL 10 package contains, since anyone who can read the log could take over the session.
 
 
@@ -160,65 +158,21 @@ ansible-playbook --inventory=myinv linuxfabrik.lfops.shell
 
 ## Mandatory Role Variables
 
-Only mandatory if installing the Manager Web GUI and/or the ROOT webapp.
-
-Note that for Tomcat 7 onwards, the roles required to use the manager application were changed from the single `manager` role to the following four roles. You will need to assign the role(s) required for the functionality you wish to access:
-
-* `manager-gui`: Allows access to the HTML GUI and the status pages.
-* `manager-script`: Allows access to the text interface and the status pages.
-* `manager-jmx`: Allows access to the JMX proxy and the status pages.
-* `manager-status`: Allows access to the status pages only.
-
-The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles.
-
-`apache_tomcat__users__host_var` / `apache_tomcat__users__group_var`
-
-* Users allowed to access the Manager Web GUI.
-* Type: List of dictionaries.
-* Subkeys:
-
-    * `password`:
-
-        * Mandatory. In clear text; see "How the Role Behaves" for how it is stored on the host.
-        * Type: String.
-
-    * `roles`:
-
-        * Mandatory. Any of `admin`, `admin-gui`, `admin-script`, `manager`, `manager-gui`, `manager-script`, `manager-jmx`, `manager-status`.
-        * Type: List.
-
-    * `state`:
-
-        * Optional. Either `present` or `absent`.
-        * Type: String.
-
-    * `username`:
-
-        * Mandatory.
-        * Type: String.
-
 `apache_tomcat__webapps_docs_context_xml_allow`
 
-* A regex that describes which IP addresses are allowed to access the documentation webapp.
+* A regex that describes which IP addresses are allowed to access the documentation webapp, in addition to localhost. It is appended to the localhost pattern, so it must start with `|`. Mandatory unless `apache_tomcat__skip_root_webapp` is `true`. An empty string allows localhost only.
 * Type: String.
 
 `apache_tomcat__webapps_manager_context_xml_allow`
 
-* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-10.1-doc/manager-howto.html) webapps.
+* A regex that describes which IP addresses are allowed to access the [manager and host-manager](https://tomcat.apache.org/tomcat-10.1-doc/manager-howto.html) webapps, in addition to localhost. It is appended to the localhost pattern, so it must start with `|`. Mandatory unless `apache_tomcat__skip_admin_webapps` is `true`. An empty string allows localhost only.
 * Type: String.
 
 Example:
 ```yaml
-# only mandatory if installing the Manager Web GUI and/or the ROOT webapp
-apache_tomcat__users__host_var:
-  - username: 'tomcat-admin'
-    password: 'linuxfabrik'
-    roles:
-      - 'admin-gui'
-      - 'manager-gui'
-    state: 'present'
-apache_tomcat__webapps_docs_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\d+'
-apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\d+'
+# mandatory
+apache_tomcat__webapps_docs_context_xml_allow: '|192\.0\.2\.\d+|198\.51\.100\.\d+'
+apache_tomcat__webapps_manager_context_xml_allow: '|192\.0\.2\.\d+|198\.51\.100\.\d+'
 ```
 
 
@@ -327,8 +281,8 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 
 `apache_tomcat__service_state`
 
-* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`. Possible options: `reloaded`, `restarted`, `started`, `stopped`.
-* Type: String.
+* Changes the state of the service, analogous to `systemctl start/stop/restart/reload`.
+* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
 * Default: `'started'` if `apache_tomcat__service_enabled` is `true`, else `'stopped'`
 
 `apache_tomcat__skip_admin_webapps`
@@ -342,6 +296,43 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 * If set to `true`, installation of the ROOT webapp (the tomcat startpage) will be skipped.
 * Type: Bool.
 * Default: `false`
+
+`apache_tomcat__users__host_var` / `apache_tomcat__users__group_var`
+
+* Users allowed to access the Manager Web GUIs. You will need to assign the role(s) required for the functionality you wish to access:
+
+    * `admin-gui`: Allows access to the HTML GUI of the host-manager.
+    * `admin-script`: Allows access to the text interface of the host-manager.
+    * `manager-gui`: Allows access to the HTML GUI and the status pages.
+    * `manager-jmx`: Allows access to the JMX proxy and the status pages.
+    * `manager-script`: Allows access to the text interface and the status pages.
+    * `manager-status`: Allows access to the status pages only.
+
+    The GUI is protected against CSRF, but the text and JMX interfaces are not. To maintain CSRF protection, users with the `manager-gui` role should not be given the `manager-script` or `manager-jmx` roles.
+
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory. In clear text; see "How the Role Behaves" for how it is stored on the host.
+        * Type: String.
+
+    * `roles`:
+
+        * Mandatory. Any of `admin-gui`, `admin-script`, `manager-gui`, `manager-jmx`, `manager-script`, `manager-status`, or a role from `apache_tomcat__roles__*_var`.
+        * Type: List.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory.
+        * Type: String.
 
 `apache_tomcat__webapps_manager_web_xml_max_file_size`
 
@@ -358,8 +349,6 @@ apache_tomcat__webapps_manager_context_xml_allow: '|192\.2\.0\.\d+|10\.80\.32\.\
 Example:
 ```yaml
 # optional
-apache_tomcat__webapps_manager_web_xml_max_file_size: 209715200
-apache_tomcat__webapps_manager_web_xml_max_request_size: 209715200
 apache_tomcat__context_xml_cache_max_size: 102400
 apache_tomcat__env_xms: '1024M'
 apache_tomcat__env_xmx: '1024M'
@@ -382,6 +371,15 @@ apache_tomcat__service_enabled: true
 apache_tomcat__service_state: 'started'
 apache_tomcat__skip_admin_webapps: false
 apache_tomcat__skip_root_webapp: false
+apache_tomcat__users__host_var:
+  - username: 'tomcat-admin'
+    password: 'linuxfabrik'
+    roles:
+      - 'admin-gui'
+      - 'manager-gui'
+    state: 'present'
+apache_tomcat__webapps_manager_web_xml_max_file_size: 209715200
+apache_tomcat__webapps_manager_web_xml_max_request_size: 209715200
 ```
 
 
