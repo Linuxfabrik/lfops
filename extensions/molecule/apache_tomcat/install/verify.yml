@@ -1,0 +1,133 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state, not that individual tasks ran.
+#
+# The settings are read back from the *running* Tomcat through the manager's JMX proxy, so the
+# whole chain is proven at once: group_vars, to the per-version server.xml, to the connector
+# Tomcat actually built from it. Every call authenticates as the user from group_vars, which on
+# Tomcat 10.1 also proves that the stored sha-256 digest matches what the credential handler
+# computes.
+- name: 'Verify Tomcat is running and uses the configured values'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+
+  vars:
+
+    __molecule__tomcat_url: 'http://127.0.0.1:{{ apache_tomcat__server_xml_connector_port | d(8080) }}'
+    __molecule__tomcat_remote_url: 'http://{{ ansible_host }}:{{ apache_tomcat__server_xml_connector_port | d(8080) }}'
+    __molecule__tomcat_user: '{{ apache_tomcat__users__group_var[0] }}'
+
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert tomcat.service is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"]["tomcat.service"]["state"] == "running"'
+          - 'ansible_facts["services"]["tomcat.service"]["status"] == "enabled"'
+        fail_msg: 'tomcat.service is {{ ansible_facts["services"]["tomcat.service"] | d("absent") }}'
+
+    # Tomcat opens the port only once the connector has started, which takes a few seconds after
+    # systemd reports the unit as running.
+    - name: 'Assert Tomcat is reachable on its port'
+      ansible.builtin.wait_for:
+        host: '127.0.0.1'
+        port: '{{ apache_tomcat__server_xml_connector_port | d(8080) }}'
+        timeout: 60
+
+    - name: 'Get the list of installed packages'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'curl --user molecule-script {{ __molecule__tomcat_url }}/manager/text/serverinfo'
+      ansible.builtin.uri:
+        url: '{{ __molecule__tomcat_url }}/manager/text/serverinfo'
+        url_username: '{{ __molecule__tomcat_user["username"] }}'
+        url_password: '{{ __molecule__tomcat_user["password"] }}'
+        force_basic_auth: true
+        return_content: true
+      register: '__molecule__tomcat_serverinfo_result'
+
+    - name: 'Assert the configured user logs in to the running Tomcat'
+      ansible.builtin.assert:
+        that: '__molecule__tomcat_serverinfo_result["content"] is search("Tomcat Version: \[Apache Tomcat/" ~ (__molecule__tomcat_version | regex_escape))'
+        fail_msg: 'expected Tomcat {{ __molecule__tomcat_version }}, got: {{ __molecule__tomcat_serverinfo_result["content"] }}'
+      vars:
+        __molecule__tomcat_version: '{{ ansible_facts["packages"]["tomcat"][0]["version"] }}'
+
+    # A login that succeeds whatever the password would also pass the check above.
+    - name: 'curl --user molecule-script:wrong {{ __molecule__tomcat_url }}/manager/text/serverinfo'
+      ansible.builtin.uri:
+        url: '{{ __molecule__tomcat_url }}/manager/text/serverinfo'
+        url_username: '{{ __molecule__tomcat_user["username"] }}'
+        url_password: 'wrong'
+        force_basic_auth: true
+        status_code: 401
+
+    # Tomcat 10.1 stores the passwords as a digest, see "How the Role Behaves" in the role README.
+    - name: 'slurp /etc/tomcat/tomcat-users.xml'
+      ansible.builtin.slurp:
+        src: '/etc/tomcat/tomcat-users.xml'
+      register: '__molecule__tomcat_users_result'
+      when:
+        - 'ansible_facts["packages"]["tomcat"][0]["version"] is version("10.1", ">=")'
+
+    - name: 'Assert tomcat-users.xml does not contain the clear-text password on Tomcat 10.1'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__tomcat_user["password"] not in __molecule__tomcat_users'
+          - '(__molecule__tomcat_user["password"] | hash("sha256")) in __molecule__tomcat_users'
+        fail_msg: 'tomcat-users.xml does not hold the sha-256 digest of the password, or holds the password in clear text'
+      vars:
+        __molecule__tomcat_users: '{{ __molecule__tomcat_users_result["content"] | b64decode }}'
+      when:
+        - 'ansible_facts["packages"]["tomcat"][0]["version"] is version("10.1", ">=")'
+
+    - name: 'curl --user molecule-script {{ __molecule__tomcat_url }}/manager/jmxproxy/?get=Catalina:type=Connector,port=...'
+      ansible.builtin.uri:
+        url: '{{ __molecule__tomcat_url }}/manager/jmxproxy/?get=Catalina:type=Connector,port={{ apache_tomcat__server_xml_connector_port | d(8080) }}&att={{ item["attribute"] }}'
+        url_username: '{{ __molecule__tomcat_user["username"] }}'
+        url_password: '{{ __molecule__tomcat_user["password"] }}'
+        force_basic_auth: true
+        return_content: true
+      register: '__molecule__tomcat_jmx_result'
+      loop:
+        - attribute: 'compressibleMimeType'
+          expected: '{{ apache_tomcat__server_xml_connector_compressable_mime_types }}'
+        - attribute: 'connectionTimeout'
+          expected: '{{ apache_tomcat__server_xml_connector_connection_timeout }}'
+        - attribute: 'maxThreads'
+          expected: '{{ apache_tomcat__server_xml_connector_max_threads }}'
+      loop_control:
+        label: '{{ item["attribute"] }}'
+
+    # The proxy answers "OK - Attribute get '<mbean>' - <attribute> = <value>".
+    # Verified against Tomcat 9.0.120 on Rocky 9.
+    - name: 'Assert the running connector applied the configured values'
+      ansible.builtin.assert:
+        that: '(item["content"] | trim) is search(" - " ~ item["item"]["attribute"] ~ " = " ~ (item["item"]["expected"] | string | regex_escape) ~ "$")'
+        fail_msg: 'expected {{ item["item"]["attribute"] }} = {{ item["item"]["expected"] }}, got: {{ item["content"] }}'
+      loop: '{{ __molecule__tomcat_jmx_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["attribute"] }}'
+
+    # The RemoteAddrValve only matters for clients other than localhost, so these two calls come
+    # from the hypervisor. The manager variable admits every client and the docs variable none, so
+    # host-manager has to answer and docs has to refuse.
+    - name: 'curl --user molecule-script {{ __molecule__tomcat_remote_url }}/host-manager/text/list'
+      ansible.builtin.uri:
+        url: '{{ __molecule__tomcat_remote_url }}/host-manager/text/list'
+        url_username: '{{ __molecule__tomcat_user["username"] }}'
+        url_password: '{{ __molecule__tomcat_user["password"] }}'
+        force_basic_auth: true
+        status_code: 200
+      delegate_to: 'localhost'
+      become: false
+
+    - name: 'curl {{ __molecule__tomcat_remote_url }}/docs/'
+      ansible.builtin.uri:
+        url: '{{ __molecule__tomcat_remote_url }}/docs/'
+        status_code: 403
+      delegate_to: 'localhost'
+      become: false

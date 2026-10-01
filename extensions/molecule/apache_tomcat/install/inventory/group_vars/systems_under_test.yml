@@ -1,0 +1,28 @@
+# Variables the playbook under test needs, applied to every system under test.
+#
+# The connector values deliberately differ from the role defaults, so verify.yml can tell "the
+# running Tomcat uses what the inventory asked for" apart from "the running Tomcat happens to use
+# the packaged default".
+apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,application/json'
+apache_tomcat__server_xml_connector_connection_timeout: 25000
+apache_tomcat__server_xml_connector_max_threads: 150
+
+# The script and JMX interfaces let verify.yml ask the running Tomcat for its effective settings.
+apache_tomcat__roles__group_var:
+  - name: 'admin-script'
+  - name: 'manager-jmx'
+  - name: 'manager-script'
+
+apache_tomcat__users__group_var:
+  - username: 'molecule-script'
+    password: 'linuxfabrik'
+    roles:
+      - 'admin-script'
+      - 'manager-jmx'
+      - 'manager-script'
+
+# The documentation webapp stays local-only, while manager and host-manager accept any client.
+# verify.yml calls both from the hypervisor, so the two answers prove that each webapp uses its own
+# variable.
+apache_tomcat__webapps_docs_context_xml_allow: ''
+apache_tomcat__webapps_manager_context_xml_allow: '|.*'
