@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:apache_tomcat**: `--tags apache_tomcat:configure` no longer deploys `/etc/logrotate.d/tomcat`. Use `--tags apache_tomcat:logrotate` for it.
 * **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
 * **role:grav**: The `grav:cron` tag is gone. Run the role with `--tags grav` to deploy the timers and their services, or with `--tags grav:state` to enable or disable the timers.
 * **role:firewall**: With `firewall__firewall: 'fwbuilder'`, the default, the run aborts on a host that has neither `/etc/fwb.sh` nor `firewall__fwbuilder_repo_url`, before the role stops any firewall. Until now `fwb.service` failed there and the host ran without a firewall. Deploy `/etc/fwb.sh`, set `firewall__fwbuilder_repo_url`, or set `firewall__firewall` to the firewall the host uses.

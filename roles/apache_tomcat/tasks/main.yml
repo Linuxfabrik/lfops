@@ -99,6 +99,13 @@
       mode: 0o644
     notify: 'apache_tomcat: restart tomcat.service'
 
+  tags:
+    - 'apache_tomcat'
+    - 'apache_tomcat:configure'
+
+
+- block:
+
   - name: 'Deploy /etc/logrotate.d/tomcat'
     ansible.builtin.template:
       backup: true
@@ -110,7 +117,7 @@
 
   tags:
     - 'apache_tomcat'
-    - 'apache_tomcat:configure'
+    - 'apache_tomcat:logrotate'
 
 
 - block:

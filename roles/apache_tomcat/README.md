@@ -132,13 +132,18 @@ ansible-playbook --inventory=myinv linuxfabrik.lfops.shell
 
 `apache_tomcat`
 
-* Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure logrotating, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service.
+* Install tomcat and optional default web apps, configure Tomcat (`server.xml` and others), configure log rotation, configure access to optional web apps, create users and roles, and enable or disable the default Tomcat service.
 * Triggers: tomcat.service restart.
 
 `apache_tomcat:configure`
 
-* Configure Tomcat (`server.xml` and others), configure logrotating.
+* Configure Tomcat (`server.xml`, `/etc/sysconfig/tomcat` and others).
 * Triggers: tomcat.service restart.
+
+`apache_tomcat:logrotate`
+
+* Deploy the logrotate configuration.
+* Triggers: none.
 
 `apache_tomcat:webapps`
 
