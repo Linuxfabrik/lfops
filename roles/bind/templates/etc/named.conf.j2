@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026100202
+# 2026100203
 #
 # https://bind9.readthedocs.io/en/latest/reference.html
 # Follows the /etc/named.conf shipped by the bind package, with the Linuxfabrik additions at the
@@ -113,7 +113,7 @@ zone "{{ item }}" IN { type forward; forwarders { }; };
 zone "{{ item['name'] }}" IN {
     type {{ item['type'] | d('master') }};
 
-    {% if item['type'] | d('master') in ['hint', 'master', 'mirror', 'primary', 'redirect', 'secondary', 'stub'] %}
+    {% if item['type'] | d('master') in ['hint', 'master', 'mirror', 'primary', 'redirect', 'secondary', 'slave', 'stub'] %}
     file "{{ item['file'] | d(item['name'] ~ '.zone') }}";
     {% endif %}
 
