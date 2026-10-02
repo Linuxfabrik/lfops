@@ -53,6 +53,25 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_policycoreutils | default(false)'
 
+    # Before the services: installing the policy build dependencies can update the SELinux policy,
+    # and a daemon started under an older policy keeps its domain until it is restarted. On a Rocky
+    # 10.0 host the first start of Valkey ended up in unconfined_service_t, and httpd_t may not
+    # connect to its socket there.
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          nextcloud__selinux__booleans__dependent_var +
+          (not setup_nextcloud__skip_fail2ban | d(true)) | ternary(fail2ban__selinux__booleans__dependent_var, [])
+        }}'
+      selinux__fcontexts__dependent_var: '{{
+          nextcloud__selinux__fcontexts__dependent_var
+        }}'
+      selinux__modules__dependent_var: '{{
+          php__selinux__modules__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_nextcloud__skip_selinux | default(false)'
+
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           apache_httpd__python__modules__dependent_var +
@@ -60,10 +79,6 @@
         }}'
       when:
         - 'not setup_nextcloud__skip_python | d(false)'
-
-#     - role: 'linuxfabrik.lfops.fail2ban'
-#       when:
-#         - 'not setup_nextcloud__skip_fail2ban | d(false)'
 
     # The sysctl entries go in from both roles unconditionally: the two ship identical values and
     # combine_lod folds the duplicates back into one. Transparent hugepages is a scalar, so it has
@@ -126,6 +141,12 @@
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__databases__dependent_var: '{{
+          nextcloud__mariadb_server__databases__dependent_var
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          nextcloud__mariadb_server__users__dependent_var
+        }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
@@ -141,20 +162,6 @@
 
 
       # === Nextcloud Application
-    - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var: '{{
-          nextcloud__selinux__booleans__dependent_var
-        }}'
-      selinux__fcontexts__dependent_var: '{{
-          nextcloud__selinux__fcontexts__dependent_var
-        }}'
-      selinux__modules__dependent_var: '{{
-          php__selinux__modules__dependent_var
-        }}'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_selinux | default(false)'
-
     - role: 'linuxfabrik.lfops.systemd_unit'
       systemd_unit__services__dependent_var: '{{
           nextcloud__systemd_unit__services__dependent_var
@@ -163,6 +170,19 @@
         - 'not nextcloud__skip_systemd_unit | d(false)'
 
     - role: 'linuxfabrik.lfops.nextcloud'
+
+      # Off by default: fail2ban belongs on a host that clients reach directly, not on one behind a
+      # reverse proxy, where every client arrives from the proxy's address. After nextcloud, since
+      # fail2ban does not start while the log file of a jail is missing.
+    - role: 'linuxfabrik.lfops.fail2ban'
+      fail2ban__jail_default_ignoreip__dependent_var: '{{
+          nextcloud__fail2ban__jail_default_ignoreip__dependent_var
+        }}'
+      fail2ban__jails__dependent_var: '{{
+          nextcloud__fail2ban__jails__dependent_var
+        }}'
+      when:
+        - 'not setup_nextcloud__skip_fail2ban | d(true)'
 
       # === Online Office
     - role: 'linuxfabrik.lfops.repo_collabora_code'
