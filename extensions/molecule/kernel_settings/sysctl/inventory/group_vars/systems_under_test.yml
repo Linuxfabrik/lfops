@@ -1,4 +1,6 @@
 kernel_settings__sysctl__group_var:
+  - name: 'sunrpc.tcp_slot_table_entries'
+    value: 128
   - name: 'vm.overcommit_memory'
     value: 1
 

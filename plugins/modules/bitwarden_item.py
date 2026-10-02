@@ -23,8 +23,9 @@ description:
     - When I(name) is omitted, a title is generated automatically as C(hostname - purpose) (e.g. C(appsrv01 - MariaDB)) or just C(hostname) when no purpose is given.
     - On success, the module returns the full Bitwarden item object. C(username) and C(password) are additionally lifted to the top level so they can be addressed without going through the C(login) sub-dictionary.
     - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive calls in the same play do not hammer the API.
+    - A failed sync is tried again after 10, 30 and 60 seconds before the module fails.
     - Module runs on the same host run one at a time, so hosts that are processed in parallel and need the same missing item create it only once.
-    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The module then asks again for about ten seconds and fails rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
+    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The module then asks again for about ten seconds, counts a vault that stays empty as a failed sync, and fails after the last sync attempt rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
 
 notes:
     - Only login items (Bitwarden type 1) are managed. Cards, secure notes and identities are out of scope.

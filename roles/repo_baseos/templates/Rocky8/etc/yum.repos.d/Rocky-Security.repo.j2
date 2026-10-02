@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026061601
+# 2026100101
 
 # Rocky-Security.repo
 #
@@ -10,13 +10,17 @@
 #
 # If the mirrorlist does not work for you, you can try the commented out
 # baseurl line instead.
+#
+# Unlike the upstream file, the mirrorlist URLs carry no `$rltype`: it is empty on Rocky 8,
+# and Rocky 8 releases before 8.5 do not define it, so dnf would pass it on literally and the
+# mirrorlist answers 404. Verified with rocky-repos 8.10-1.14 and on Rocky 8.3.
 
 [security]
 name=Rocky Linux $releasever - Security
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/8/security/x86_64/os/
 {% else %}
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever$rltype
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever
 {% endif %}
 #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/security/$basearch/os/
 gpgcheck=1
@@ -34,7 +38,7 @@ name=Rocky Linux $releasever - Security Debug
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/8/security/x86_64/debug/tree/
 {% else %}
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-debug$rltype
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-debug
 {% endif %}
 #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/security/$basearch/debug/tree/
 gpgcheck=1
@@ -51,7 +55,7 @@ name=Rocky Linux $releasever - Security Source
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/8/security/source/tree/
 {% else %}
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-source$rltype
+mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-source
 {% endif %}
 #baseurl=http://dl.rockylinux.org/$contentdir/$releasever/security/source/tree/
 gpgcheck=1

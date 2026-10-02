@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* LFOps requires community.general 7.0.0 or newer (still below 9.0.0), which `ansible-galaxy collection install linuxfabrik.lfops` pulls in, while a manually maintained collection list has to be raised.
+* **plugin:bitwarden_item**: The lookup syncs the Bitwarden vault once per Ansible run instead of every 60 seconds, which makes runs with many lookups considerably faster, since each sync makes `bw serve` list the whole vault. Before it creates a missing item, it syncs again, so an item created elsewhere during the run is not created a second time.
 * **role:icingaweb2_module_generictts**: Downloads the module from Linuxfabrik, who maintain it since Icinga archived the original repository. The tarballs of v2.1.0 are identical.
 * **role:duplicity**: `/var/lib/aide` is backed up by default, so that the AIDE database can be compared with a copy outside the host. Hosts without AIDE are not affected.
 * **role:monitoring_plugins**: The source install removes plugins that an earlier run deployed and the checked-out version no longer carries.
@@ -86,6 +88,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:bitwarden_item, module:bitwarden_item**: A failed sync of the Bitwarden vault, such as an "HTTP Error 400: Bad Request" or a timeout of `bw serve`, is tried again after 10, 30 and 60 seconds instead of aborting the run right away.
+* **role:aide**: Before it creates the database, the role also waits for running `dnf-automatic` jobs on the Red Hat family and for the update jobs of the system_update role on every platform, not only for the apt jobs on Debian and Ubuntu. An update during the initialisation left files in the database that the first check then reported.
+* **playbook:setup_basic**: With `setup_basic__skip_duplicity` or `setup_basic__skip_glances`, the playbook no longer builds the Python venv of the skipped role, which could abort the run with a pip error on hosts that do not back up with duplicity.
+* **role:kernel_settings**: `sunrpc.*` settings, such as the `sunrpc.tcp_slot_table_entries` the mariadb_server role sets, survive a reboot. Until now the `sunrpc` module was not loaded again after a reboot on hosts without NFS, so TuneD could not apply the setting and the next run of the role failed in `tuned-adm verify`.
+* **role:chrony**: The role aborts if neither `chrony__ntp_pools` nor `chrony__ntp_servers` is set, instead of leaving the host without a time source.
+* **role:repo_baseos**: The Rocky Linux `security` repository works on Rocky 8 releases before 8.5, where dnf failed to download its metadata.
+* **role:monitoring_plugins**: The source install deploys the OID lists and MIBs of the `snmp` plugin, which until now failed with "No such file or directory" on every host installed this way.
 * **role:bind**: A secondary zone with `type: 'slave'` is saved to its file again, so the secondary answers it after a restart without waiting for the primary.
 * **role:bind**: Reverse lookups for private and special-use addresses, such as `10.0.0.0/8` or `fd00::/8`, are answered locally, as BIND does by default, instead of waiting for the forwarders, which also no longer see the internal addressing.
 * **role:kernel_settings**: The role works with fedora.linux_system_roles 2.5.0 and later, which a fresh installation of LFOps pulls in. Until now the run aborted with "kernel_settings_transparent_hugepages must be null, one of always, madvise, never" unless `kernel_settings__transparent_hugepages__*_var` and `kernel_settings__transparent_hugepages_defrag__*_var` were set.

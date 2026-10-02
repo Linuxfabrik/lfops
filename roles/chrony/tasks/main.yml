@@ -8,6 +8,22 @@
 
 - block:
 
+  # the deployed chrony.conf carries no source of the distribution, so without one from the
+  # inventory chronyd runs without any time source and the clock drifts unnoticed
+  - name: 'Check variable constraints'
+    ansible.builtin.assert:
+      that:
+        - '(chrony__ntp_pools | length > 0) or (chrony__ntp_servers | length > 0)'
+      quiet: true
+      fail_msg: 'Set chrony__ntp_pools or chrony__ntp_servers, otherwise chronyd has no time source.'
+
+  tags:
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
+
+- block:
+
   - name: 'Install chrony'
     ansible.builtin.package:
       name: 'chrony'

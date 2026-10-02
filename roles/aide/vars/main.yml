@@ -42,3 +42,8 @@ __aide__update_db_refused: '{{
   }}'
 
 __aide__update_db_left_alone_message: 'aide: The AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db_force` to accept the current state as the new baseline.'
+
+# the jobs of the system_update role, which install packages on every platform
+__aide__system_update_units:
+  - 'security-update.service'
+  - 'update-and-reboot.service'

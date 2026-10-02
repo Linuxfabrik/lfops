@@ -221,3 +221,14 @@
 
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
+
+    # The inventory skips duplicity. Its venv must not be built anyway: python_venv used to get the
+    # duplicity venv regardless of setup_basic__skip_duplicity, and its pip install can fail.
+    - name: 'stat /opt/python-venv/duplicity'
+      ansible.builtin.stat:
+        path: '/opt/python-venv/duplicity'
+      register: '__molecule__duplicity_venv_stat_result'
+
+    - name: 'Assert that the duplicity venv is absent while duplicity is skipped'
+      ansible.builtin.assert:
+        that: 'not __molecule__duplicity_venv_stat_result["stat"]["exists"]'

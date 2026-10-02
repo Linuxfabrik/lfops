@@ -273,15 +273,16 @@
   # a package installation that runs while `aide --init` reads the file system leaves entries
   # without checksums in the new database, and the first check reports them. on Debian and
   # Ubuntu, apt-daily-upgrade.service (unattended-upgrades) typically does so on a freshly
-  # booted cloud image. units that do not exist report inactive. 5 minutes at most.
-  - name: 'systemctl is-active apt-daily.service apt-daily-upgrade.service (wait up to 5 minutes for running package jobs)' # noqa command-instead-of-module (read-only state query in a retry loop)
-    ansible.builtin.command: 'systemctl is-active apt-daily.service apt-daily-upgrade.service'
-    register: '__aide__apt_daily_active_result'
-    until: '"active" not in __aide__apt_daily_active_result["stdout_lines"] and "activating" not in __aide__apt_daily_active_result["stdout_lines"]'
+  # booted cloud image; on the Red Hat family dnf-automatic, and on every platform the jobs of
+  # the system_update role. units that do not exist report inactive. 5 minutes at most.
+  - name: 'systemctl is-active {{ (__aide__package_job_units + __aide__system_update_units) | join(" ") }} (wait up to 5 minutes for running package jobs)' # noqa command-instead-of-module (read-only state query in a retry loop)
+    ansible.builtin.command: 'systemctl is-active {{ (__aide__package_job_units + __aide__system_update_units) | join(" ") }}'
+    register: '__aide__package_jobs_active_result'
+    until: '"active" not in __aide__package_jobs_active_result["stdout_lines"] and "activating" not in __aide__package_jobs_active_result["stdout_lines"]'
     retries: 30
     delay: 10
     changed_when: false
-    failed_when: '"active" in __aide__apt_daily_active_result["stdout_lines"] or "activating" in __aide__apt_daily_active_result["stdout_lines"]'
+    failed_when: '"active" in __aide__package_jobs_active_result["stdout_lines"] or "activating" in __aide__package_jobs_active_result["stdout_lines"]'
     when:
       - 'not __aide__db_stat_result["stat"]["exists"]'
 

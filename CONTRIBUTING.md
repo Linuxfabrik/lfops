@@ -980,11 +980,11 @@ __mariadb_server__python__modules__dependent_var:
     - name: 'python3-PyMySQL'
 mariadb_server__python__modules__dependent_var: '{{
     __mariadb_server__python__modules__dependent_var
-    | linuxfabrik.lfops.platform_select(ansible_facts)
+    | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
   }}'
 ```
 
-`vars/main.yml` is auto-loaded at play parse, visible to every role in the play, and non-overridable from inventory like other `vars/`. Jinja evaluation is lazy, so the filter only runs when a consumer actually references the public variable.
+`vars/main.yml` is auto-loaded at play parse, visible to every role in the play, and non-overridable from inventory like other `vars/`. The filter only runs when a consumer templates the public variable, but see below for what counts as that.
 
 Consumers stay simple - they reference the public variable directly, with no awareness of the selection mechanism:
 
@@ -995,7 +995,13 @@ Consumers stay simple - they reference the public variable directly, with no awa
 - role: 'linuxfabrik.lfops.mariadb_server'
 ```
 
-The filter mirrors the precedence of `shared/tasks/platform-variables.yml` (least to most specific: `os_family`, `os_family + distribution_major_version`, `os_family + distribution_version`, `distribution`, `distribution + distribution_major_version`, `distribution + distribution_version`) and returns the value of the most specific present key. Pass `default=[]` (or whatever the consumer expects) when the value is optional on platforms not listed in the dict; otherwise an unmatched call raises an error.
+The filter mirrors the precedence of `shared/tasks/platform-variables.yml` (least to most specific: `os_family`, `os_family + distribution_major_version`, `os_family + distribution_version`, `distribution`, `distribution + distribution_major_version`, `distribution + distribution_version`) and returns the value of the most specific present key. Without a `default`, a platform that matches no key raises an error.
+
+A published `__dependent_var` has to give a valid value on every host, whether or not its own role runs there. ansible-core up to 2.18 resolves every variable name of an expression before it evaluates it, so a consumer templates the value even in the untaken branch of a `ternary()` or an inline `if`. Gating the injection on a skip variable in the playbook therefore does not keep an error out. ansible-core 2.19 evaluates these lazily, but LFOps still has to run on older releases. In addition, `skip_injections: false` (see "`skip_role` Variables in Playbooks") uses the injection of a skipped role on purpose, on a host that role does not run on. So:
+
+* Always pass `default=[]` (or the empty value the consumer expects) to `platform_select` in a `__dependent_var`.
+* Guard a value that depends on runtime state, as `roles/nextcloud/vars/main.yml` does below.
+* If the publishing role cannot work without the value, it asserts its supported platforms in its own validation block, tagged `always`. The run then aborts only where that role runs, with a message that names it, instead of in the parameters of some other role. `roles/duplicity` is the reference.
 
 A `__dependent_var` has to be computable before the consuming role starts. Do not derive one from a variable that the consuming role itself only sets at runtime. A consuming role with a `meta/argument_specs.yml` templates every declared role parameter at role entry, before any of its own tasks run, and an undefined value anywhere inside the platform-keyed dictionary collapses the whole dictionary, so `platform_select` aborts the play with `input must be a dict keyed by platform identifier, got AnsibleUndefined`.
 

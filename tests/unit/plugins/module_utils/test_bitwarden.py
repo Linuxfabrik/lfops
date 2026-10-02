@@ -360,6 +360,98 @@ class TestEmptyListIsNotTrusted(unittest.TestCase):
         self.assertEqual(len(calls), 3)
 
 
+_SYNC_BAD_REQUEST = HTTPError(
+    'http://127.0.0.1:8087/sync', 400, 'Bad Request', {}, None
+)
+
+
+class TestSyncIsRetried(unittest.TestCase):
+    """bw serve occasionally fails a sync with HTTP 400 or a timeout, then recovers."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bw = _make_bitwarden(os.path.join(self._tmp.name, 'cache.json'))
+        self._orig_open_url = bitwarden.open_url
+        self._sleep = unittest.mock.patch.object(bitwarden.time, 'sleep')
+        self.sleep = self._sleep.start()
+
+    def tearDown(self):
+        self._sleep.stop()
+        bitwarden.open_url = self._orig_open_url
+        self._tmp.cleanup()
+
+    def test_bad_request_is_retried(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _SYNC_BAD_REQUEST, _SYNCED, _items(_LOGIN_ITEM)
+        )
+        self.bw.sync(force=True)
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(self.sleep.call_args_list, [unittest.mock.call(10)])
+        self.assertEqual(self.bw.get_items('host - db', username='dba'), [_LOGIN_ITEM])
+
+    def test_timeout_is_retried(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _SYNCED, TimeoutError('timed out'), _SYNCED, _items(_LOGIN_ITEM)
+        )
+        self.bw.sync(force=True)
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(self.sleep.call_args_list, [unittest.mock.call(10)])
+
+    def test_last_error_aborts(self):
+        bitwarden.open_url, calls = _serve_in_order(*[_SYNC_BAD_REQUEST] * 4)
+        with self.assertRaises(bitwarden.BitwardenException) as ctx:
+            self.bw.sync(force=True)
+        self.assertEqual(len(calls), 4)
+        self.assertEqual([c[0][0] for c in self.sleep.call_args_list], [10, 30, 60])
+        self.assertIn('400', str(ctx.exception))
+        # a failed sync leaves the cache as it was
+        self.assertEqual(self.bw._cache['sync_timestamp'], 0)
+
+
+class TestSyncOncePerRun(unittest.TestCase):
+    """Listing all items is slow, so the lookup syncs once per Ansible run."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bw = _make_bitwarden(os.path.join(self._tmp.name, 'cache.json'))
+        self._orig_open_url = bitwarden.open_url
+
+    def tearDown(self):
+        bitwarden.open_url = self._orig_open_url
+        self._tmp.cleanup()
+
+    def test_second_sync_of_a_run_is_skipped(self):
+        bitwarden.open_url, calls = _serve_in_order(_SYNCED, _items(_LOGIN_ITEM))
+        self.assertTrue(self.bw.sync(run_id='4242:1'))
+        # well past the interval, which does not apply with a run ID
+        self.bw._cache['sync_timestamp'] -= 3600
+        self.assertFalse(self.bw.sync(run_id='4242:1'))
+        self.assertEqual(len(calls), 2)
+
+    def test_next_run_syncs_again(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _SYNCED, _items(_LOGIN_ITEM), _SYNCED, _items(_LOGIN_ITEM)
+        )
+        self.bw.sync(run_id='4242:1')
+        self.assertTrue(self.bw.sync(run_id='4343:2'))
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(self.bw._cache['sync_run_id'], '4343:2')
+
+    def test_without_run_id_the_interval_applies(self):
+        bitwarden.open_url, calls = _serve_in_order(_SYNCED, _items(_LOGIN_ITEM))
+        self.bw.sync()
+        self.assertFalse(self.bw.sync())
+        self.assertEqual(len(calls), 2)
+
+    def test_force_syncs_within_a_run(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _SYNCED, _items(_LOGIN_ITEM), _SYNCED, _items(_LOGIN_ITEM)
+        )
+        self.bw.sync(run_id='4242:1')
+        self.assertTrue(self.bw.sync(force=True, run_id='4242:1'))
+        self.assertEqual(len(calls), 4)
+
+
 def _create_if_missing(cache_file, created):
     """Worker for TestMutex: the lookup's search-then-create, run in its own process."""
     bitwarden.CACHE_FILE = cache_file

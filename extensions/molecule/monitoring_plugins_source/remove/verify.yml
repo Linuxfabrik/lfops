@@ -89,6 +89,7 @@
         - '/usr/lib64/nagios/plugins/about-me'
         - '/usr/lib64/nagios/plugins/assets'
         - '/usr/lib64/nagios/plugins/cpu-usage'
+        - '/usr/lib64/nagios/plugins/device-oids'
       register: '__molecule__leftovers'
 
     - name: 'Assert none of it is left'

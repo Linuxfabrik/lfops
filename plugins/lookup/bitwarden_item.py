@@ -23,9 +23,10 @@ description:
     - On success, the plugin returns the full Bitwarden item object. C(username) and C(password) are additionally lifted to the top level so they can be addressed without going through the C(login) sub-dictionary.
     - When I(name) is omitted, a title is generated automatically as C(hostname - purpose) (e.g. C(dbserver - MariaDB)) or just C(hostname) when no purpose is given.
     - Generated passwords use Python's C(secrets) module (cryptographically strong RNG), not the Bitwarden generator. This lifts the 128-character limit and allows arbitrary character sets, including hex.
-    - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive lookups in the same play do not hammer the API.
+    - Items are read from a local on-disk cache backed by C(bw serve). The cache is synced once per Ansible run, since listing all items takes C(bw serve) up to half a minute; where the run cannot be identified (no C(/proc) on the controller), at most every 60 seconds. An item missing from the cache is looked up again after a fresh sync before it is created, so an item created elsewhere during a long run is not created twice.
+    - A failed sync is tried again after 10, 30 and 60 seconds before the lookup fails.
     - Lookups on the same controller run one at a time, so hosts that are processed in parallel and need the same missing item create it only once.
-    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The plugin then asks again for about ten seconds and fails rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
+    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The plugin then asks again for about ten seconds, counts a vault that stays empty as a failed sync, and fails after the last sync attempt rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
 
 notes:
     - Lookups are evaluated by the templating engine on the controller and have no notion of check mode, so a run with C(--check) creates a missing item for real. Set I(create) to C(false) to turn that into a failure.
@@ -298,6 +299,8 @@ username:
     sample: 'root'
 """
 
+import os
+
 from ansible.errors import AnsibleError
 from ansible.plugins.lookup import LookupBase
 from ansible.utils.display import Display
@@ -309,6 +312,36 @@ display = Display()  # log prefix "lfbwlp" = Linuxfabrik Bitwarden Lookup Plugin
 
 # https://docs.ansible.com/ansible/latest/dev_guide/developing_plugins.html#developing-lookup-plugins
 # inspired by the lookup plugins lastpass (same topic) and redis (more modern)
+
+
+def _read_proc(pid, name):
+    with open(f'/proc/{pid}/{name}', 'rb') as f:
+        return f.read()
+
+
+def get_run_id():
+    """Identify the Ansible run this lookup is evaluated in, or return None.
+
+    Ansible forks its workers from the process of `ansible-playbook` without exec, so
+    they carry the same command line. Walking up the parents while the command line
+    stays the same ends at that process; its PID and start time identify the run, the
+    start time guards against a reused PID. Verified with ansible-core 2.16 on Fedora
+    44, with the linear and the mitogen_linear (Mitogen 0.3.44) strategies: all workers
+    of a run got the same ID, and every run a different one. Without /proc, for example
+    on a macOS controller, there is no ID, and the caller falls back to a sync interval.
+    """
+    try:
+        pid = os.getpid()
+        cmdline = _read_proc(pid, 'cmdline')
+        while True:
+            # the fields after the command name, which itself may contain ") "
+            fields = _read_proc(pid, 'stat').rsplit(b')', 1)[1].split()
+            ppid = int(fields[1])
+            if ppid <= 1 or _read_proc(ppid, 'cmdline') != cmdline:
+                return f'{pid}:{int(fields[19])}'
+            pid = ppid
+    except (OSError, ValueError, IndexError):
+        return None
 
 
 class LookupModule(LookupBase):
@@ -328,7 +361,8 @@ class LookupModule(LookupBase):
             raise AnsibleError(bw.get_not_unlocked_message(status))
         display.vvv('lfbwlp - run - bitwarden vault is unlocked')
 
-        bw.sync()
+        run_id = get_run_id()
+        synced = bw.sync(run_id=run_id)
 
         ret = []
         for term in terms:
@@ -372,6 +406,16 @@ class LookupModule(LookupBase):
             result = bw.get_items(
                 name, username, folder_id, collection_id, organization_id
             )
+            if not result and not synced:
+                # the cache is only synced once per run, so an item created since then
+                # outside of this run would be missing from it and created a second time
+                display.vvv(
+                    'lfbwlp - run - not in the cache, syncing before creating it'
+                )
+                synced = bw.sync(force=True, run_id=run_id)
+                result = bw.get_items(
+                    name, username, folder_id, collection_id, organization_id
+                )
 
             if len(result) > 1:
                 raise AnsibleError(

@@ -30,7 +30,7 @@ This role is compatible with the following aide versions:
 * On Debian and Ubuntu the same applies to the updates of `unattended-upgrades`: a dpkg hook (`/usr/local/sbin/aide-dpkg-hook`, wired in by `/etc/apt/apt.conf.d/z00-linuxfabrik-aide`) runs a check before `unattended-upgrades` installs its first package, and if that check was clean, `aide-dpkg-update.service` updates the database once the upgrade has finished. `unattended-upgrades` installs in several steps, one dpkg run each, but the check and the update run only once per upgrade. The upgrade takes longer by that one check, while apt holds its lock. The hook only acts on dpkg runs of `unattended-upgrades`, so a package installed with apt by hand is reported, as on the Red Hat family. Changes made on the host while the upgrade runs are accepted along with it.
 * On Debian and Ubuntu the role creates an empty `/etc/apt/sources.list` if there is none, as on hosts with only `/etc/apt/sources.list.d/*.sources`. `unattended-upgrades` creates that file on every run otherwise, and the check before the first upgrade would report it.
 * The [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity) role backs up `/var/lib/aide` by default. An attacker with root privileges can replace the local database. The database only changes when it is updated (by this role, `--tags aide:update_db` or `aide:update_db_force`, the system_update role or `aide-dpkg-update.service`), so a local database that differs from the backup of a day without such an update points to tampering.
-* Before it creates the database, the role waits for running `apt-daily.service` and `apt-daily-upgrade.service` jobs: a package installation during `aide --init` would leave entries without checksums in the database.
+* Before it creates the database, the role waits for running package jobs: `apt-daily.service` and `apt-daily-upgrade.service` on Debian and Ubuntu, `dnf-automatic.service` and `dnf-automatic-install.service` on the Red Hat family, and `security-update.service` and `update-and-reboot.service` of the [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role everywhere. A package installation during `aide --init` would leave entries without checksums in the database.
 
 
 ## Known Limitations
@@ -203,7 +203,7 @@ aide__timer_state: 'started'
 
 **The run aborts at a task that waits up to 5 minutes**
 
-* An AIDE check (`aidecheck.service`) or an `apt-daily` job was still running after 5 minutes. A check takes longer on a large file system or a busy disk. Wait until `systemctl is-active aidecheck.service apt-daily.service apt-daily-upgrade.service` no longer reports `active` or `activating`, then run the role again.
+* An AIDE check (`aidecheck.service`) or a package job was still running after 5 minutes. A check takes longer on a large file system or a busy disk. Wait until `systemctl is-active aidecheck.service` and the package jobs the task names no longer report `active` or `activating`, then run the role again.
 
 **`aidecheck.service` is failed**
 
