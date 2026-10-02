@@ -402,7 +402,7 @@ class TestSyncIsRetried(unittest.TestCase):
         with self.assertRaises(bitwarden.BitwardenException) as ctx:
             self.bw.sync(force=True)
         self.assertEqual(len(calls), 4)
-        self.assertEqual([c.args[0] for c in self.sleep.call_args_list], [10, 30, 60])
+        self.assertEqual([c[0][0] for c in self.sleep.call_args_list], [10, 30, 60])
         self.assertIn('400', str(ctx.exception))
         # a failed sync leaves the cache as it was
         self.assertEqual(self.bw._cache['sync_timestamp'], 0)
