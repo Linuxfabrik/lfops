@@ -263,6 +263,8 @@
 
   delegate_to: 'localhost'
   become: false
+  vars:
+    ansible_become: false # noqa var-naming[pattern]
   tags:
     - 'never'
     - 'opensearch:generate_certs'

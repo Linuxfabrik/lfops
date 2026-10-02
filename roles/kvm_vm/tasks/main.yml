@@ -17,6 +17,8 @@
 
   delegate_to: 'localhost'
   become: false
+  vars:
+    ansible_become: false # noqa var-naming[pattern]
   tags:
     - 'kvm_vm'
 

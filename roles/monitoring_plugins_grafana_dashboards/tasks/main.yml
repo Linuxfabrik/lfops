@@ -37,6 +37,8 @@
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host

@@ -14,6 +14,8 @@
       state: 'present'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
       - 'infomaniak_vm__state != "absent"'
@@ -39,6 +41,8 @@
     loop: '{{ infomaniak_vm__security_group_rules }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
       - 'infomaniak_vm__state != "absent"'
@@ -64,6 +68,8 @@
       state: 'present' # we only use state present, as other vms could use the network too
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     loop: '{{ infomaniak_vm__networks }}'
     when: 'infomaniak_vm__state != "absent"'
 
@@ -85,6 +91,8 @@
       state: 'present' # we only use state present, as other vms could use the network too
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state != "absent"'
@@ -110,6 +118,8 @@
       state: 'present'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     loop: '{{ infomaniak_vm__networks }}'
     loop_control:
       label: 'name={{ item["name"] }}, port_name={{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
@@ -145,6 +155,8 @@
       volume_type: 'CEPH_1_{{ infomaniak_vm__separate_boot_volume_type }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'infomaniak_vm__separate_boot_volume_size is defined and infomaniak_vm__separate_boot_volume_size | string | length > 0'
 
@@ -168,6 +180,8 @@
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'infomaniak_vm__separate_boot_volume_size is defined and infomaniak_vm__separate_boot_volume_size | string | length > 0'
 
@@ -191,6 +205,8 @@
       auto_ip: false # not all VMs need to have a public ip
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'infomaniak_vm__separate_boot_volume_size is not defined or not infomaniak_vm__separate_boot_volume_size | string | length > 0'
 
@@ -209,6 +225,8 @@
       state: 'absent'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     loop: '{{ infomaniak_vm__networks }}'
     when:
       - 'infomaniak_vm__state == "absent"'
@@ -228,6 +246,8 @@
       state: 'absent'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'infomaniak_vm__security_group_rules is defined and infomaniak_vm__security_group_rules | length > 0'
       - 'infomaniak_vm__state == "absent"'

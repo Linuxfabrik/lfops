@@ -86,6 +86,14 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
 
 If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-core 2.16**. If all your managed nodes have Python >= 3.8 (e.g. RHEL 9+, Debian 12+, Ubuntu 22.04+), you can use **ansible-core 2.18** for the latest features.
 
+**Set the Python interpreter of the managed nodes.** Since ansible-core 2.17, Ansible no longer prefers the system Python of the distribution, but the newest `python3.X` from its list of known versions that it finds on the host. Some roles install an additional Python, for example duplicity (Python 3.11 on RHEL 9, Python 3.13 on RHEL 10). From the next run on, Ansible then runs its modules under that Python, which lacks the Python libraries of the distribution, and roles such as kernel_settings, monitoring_plugins and python_venv fail. Pin the system Python in the inventory for all hosts except RHEL 8, where ansible-core 2.16 already picks `/usr/libexec/platform-python`:
+
+```yaml
+ansible_python_interpreter: '/usr/bin/python3'
+```
+
+Tasks that run on the Ansible controller are not affected by this setting, they use the Python that runs Ansible.
+
 
 ## Installation
 

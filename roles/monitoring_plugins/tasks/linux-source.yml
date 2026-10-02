@@ -24,6 +24,8 @@
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     register: '__monitoring_plugins__lib_pin_result'
     changed_when: false # read-only
     check_mode: false # run task even if `--check` is specified
@@ -105,6 +107,8 @@
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     register: '__monitoring_plugins__flattened_plugins'
     check_mode: false # run task even if `--check` is specified
@@ -119,6 +123,8 @@
       chdir: '/tmp/ansible.monitoring-plugins-repo-flattened'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     register: '__monitoring_plugins__snmp_device_files'
     check_mode: false # run task even if `--check` is specified
@@ -150,6 +156,8 @@
       path: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false
     register: '__monitoring_plugins__legacy_lockfile'
 
@@ -293,6 +301,8 @@
       path: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     register: '__monitoring_plugins__lockfile_result'
     changed_when: false
     check_mode: false # run task even if `--check` is specified
@@ -310,6 +320,8 @@
       path: '/tmp/ansible.lib-repo/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     register: '__monitoring_plugins__lib_lockfile_result'
     changed_when: false
     check_mode: false # run task even if `--check` is specified
@@ -333,6 +345,8 @@
       mode: 0o755
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # no change on the remote host
     check_mode: false # run task even if `--check` is specified
 
@@ -353,6 +367,8 @@
         }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     changed_when: false # no change on the remote host
     check_mode: false # run task even if `--check` is specified
@@ -375,6 +391,7 @@
           + __monitoring_plugins__platform_args
         }}'
     vars:
+      ansible_become: false # noqa var-naming[pattern]
       __monitoring_plugins__platform_args: '{{
           (range(17, (__monitoring_plugins__source_glibc_version.split(".")[1] | int) + 1)
             | map("string")
@@ -407,6 +424,8 @@
         }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     changed_when: false # no change on the remote host
     check_mode: false # run task even if `--check` is specified
@@ -734,6 +753,8 @@
       path: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false
     register: '__monitoring_plugins__sudoers_logging_source'
 
@@ -770,6 +791,8 @@
       path: '/tmp/ansible.monitoring-plugins-repo/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false
     register: '__monitoring_plugins__bash_completion_source'
 
@@ -822,6 +845,8 @@
       path: '/tmp/ansible.monitoring-plugins-repo/assets/selinux/linuxfabrik-monitoring-plugins.cil'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false
     register: '__monitoring_plugins__selinux_module_source'
 

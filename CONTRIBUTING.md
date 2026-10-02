@@ -366,7 +366,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 * When you must use `ansible.builtin.shell`, pin the interpreter with `executable: '/bin/bash'` (in the task's `args:`, or as a sibling of `cmd:`). On Debian `/bin/sh` is `dash`, which rejects bashisms such as `set -o pipefail`, `[[ ... ]]` and `source` (Debian 12's dash errors on `set -o pipefail` outright); pinning bash keeps shell tasks working across the Red Hat family and Debian/Ubuntu. Use `/bin/bash`, not `/usr/bin/bash`, so it resolves with or without usrmerge.
 * Do not use `state: 'latest'` for the `ansible.builtin.package` module as this is not idempotent. Always use `state: 'present'`.
 * Always use `delegate_to: 'localhost'` instead of `local_action`.
-* Always set `become: false` on every task delegated to localhost. When a play sets `become: true` at the play level (not typical for lfops, but useful if others import our roles in their playbooks), it propagates to delegated tasks too and tries to escalate via sudo on the Ansible controller. On a controller without passwordless sudo this fails with `sudo: a password is required`, even though the delegated task only writes to `/tmp` or hits a remote API and does not need root locally. Example:
+* Always set both `become: false` and `vars: ansible_become: false` on every task (or block) delegated to localhost. Otherwise the task escalates via sudo on the Ansible controller: `become: true` at the play level propagates to delegated tasks, and `ansible_become: true` in the inventory, the usual way to run LFOps, even overrides the `become: false` keyword, since a connection variable takes precedence over the keyword. The task variable in turn overrides the inventory. On a controller without passwordless sudo the task fails with `sudo: a password is required`; with it, the task runs as root, leaves root-owned files in `/tmp` and loses most of the environment of the `ansible-playbook` call, since sudo resets it, although it only writes to `/tmp` or hits a remote API. Verified with ansible-core 2.16 and 2.18. Example:
 
     ```yaml
     - name: 'curl --output /tmp/ansible.example.tar.gz https://example.com/releases/example.tar.gz'
@@ -376,6 +376,8 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
         mode: 0o644
       delegate_to: 'localhost'
       become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
       changed_when: false # not an actual config change on the target
       check_mode: false # run task even if `--check` is specified
     ```
@@ -393,6 +395,8 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
             depth: 1
           delegate_to: 'localhost'
           become: false
+          vars:
+            ansible_become: false # noqa var-naming[pattern]
           throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
           check_mode: false # run task even if `--check` is specified
         ```

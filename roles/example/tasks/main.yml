@@ -132,9 +132,10 @@
 
   # download on the controller (`delegate_to: 'localhost'`) and copy to the target afterwards,
   # so that targets without internet access can still be provisioned.
-  # always set `become: false` on tasks delegated to localhost. otherwise `become: true`
-  # from the playbook level propagates and triggers sudo on the controller, which is
-  # unneeded for a download into /tmp and usually fails because no sudo password is set.
+  # always set `become: false` and the task variable `ansible_become: false` on tasks
+  # delegated to localhost. otherwise `become: true` from the playbook level, or
+  # `ansible_become: true` from the inventory (which beats the keyword), triggers sudo on the
+  # controller, which is unneeded for a download into /tmp and fails without a sudo password.
   # do not use `run_once: true` here. `run_once` binds the task to the first host of the
   # batch and evaluates any `when` against that host, so a host that skips the role (or a
   # block-level `when`) on the first host skips the download for everyone. `get_url` writes
@@ -148,6 +149,8 @@
       mode: 0o644
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # not an actual config change on the target
     check_mode: false # run task even if `--check` is specified
 

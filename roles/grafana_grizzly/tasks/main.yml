@@ -14,6 +14,8 @@
       check_mode: false # run task even if `--check` is specified
       delegate_to: 'localhost'
       become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
       run_once: true
 
     - name: 'Store the latest release version'
@@ -30,6 +32,8 @@
       mode: 0o644
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 

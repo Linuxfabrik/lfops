@@ -103,6 +103,8 @@
       mode: 0o600
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # not an actual config change to the server
 
   tags:
