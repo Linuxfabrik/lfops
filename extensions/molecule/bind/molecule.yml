@@ -1,0 +1,3 @@
+# Molecule scenario marker. The shared config.yml already provisions libvirt/KVM VMs: the
+# secondaries fetch their zones from the primaries over the network, which needs each host to
+# be reachable on its own address.
