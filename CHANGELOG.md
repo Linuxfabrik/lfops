@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
 * **playbook:setup_basic**: Installs AIDE on every host, which checks file integrity twice a day and after every boot; skip it with `setup_basic__skip_aide`.
 * **role:aide, playbook:aide**: Add a role and playbook that install AIDE on Debian 12 and 13, RHEL 8, 9 and 10 and Ubuntu 22.04, 24.04 and 26.04 as the CIS benchmarks recommend, leaving `aidecheck.service` failed on any finding and keeping the database in step with `system_update` and `unattended-upgrades`.
 * **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`.
