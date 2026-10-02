@@ -6,6 +6,11 @@ This role installs and configures [bind](https://www.isc.org/bind/) as a DNS ser
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* `/etc/named.conf` follows the file that the bind package ships, with two deliberate differences: named listens on all IPv4 addresses instead of only on `127.0.0.1` (see `bind__listen_on_addresses`), and it does not restrict queries globally to `localhost` with `allow-query`. Instead, the `trusted` ACL (localhost, the local networks and `bind__trusted_networks`) controls who may use the cache and recursion (`bind__allow_query_cache`, `bind__allow_recursion`) and who may query the zones in `bind__zones`. Zones that named builds in itself, such as the empty reverse zones for private addresses, answer every client that can reach the server.
+
+
 ## Tags
 
 `bind`
@@ -186,15 +191,17 @@ bind__zones:
 
 `bind__listen_ipv6`
 
-* Enables or disables listening on IPv6.
+* Enables or disables listening on IPv6. If `true`, named listens on all IPv6 addresses.
 * Type: Bool.
 * Default: `false`
+* Deviates from the upstream default, which listens on `::1` only: the role serves IPv4 clients by default, and `true` covers the IPv6 clients of a network instead of only the local host.
 
 `bind__listen_on_addresses`
 
 * List of addresses on which the server will listen. This indirectly sets the listening interface(s).
 * Type: List of strings.
 * Default: `['any']`
+* Deviates from the upstream default `['127.0.0.1']`: the role sets up a DNS server for the network, which the clients cannot reach on the loopback address.
 
 `bind__named_conf_raw`
 

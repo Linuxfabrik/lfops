@@ -1,9 +1,10 @@
 # {{ ansible_managed }}
-# 2026091503
+# 2026100201
 #
 # https://bind9.readthedocs.io/en/latest/reference.html
 # Follows the /etc/named.conf shipped by the bind package, with the Linuxfabrik additions at the
-# end of the options block.
+# end of the options block. Deliberately not taken over: the loopback-only listen-on and
+# listen-on-v6 and `allow-query { localhost; }`, see "How the Role Behaves" in the README.
 
 acl "trusted" {
     localhost;
