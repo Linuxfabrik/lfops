@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
 * **role:aide**: The AIDE check no longer fails on hosts with fwupd, where it reported `/etc/fwupd/fwupd.conf` as changed after the first start of the fwupd daemon.
 * **role:aide**: The AIDE check no longer fails on hosts with an EFI system partition, where it reported the files below `/boot/efi` as changed a while after the database was created.
 * **role:system_update**: The security lane installs hot-fixes that need a newer package from BaseOS or AppStream, such as the kernel on Rocky 8.3, instead of failing on every run.
@@ -173,6 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
 * **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.
 * **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.
