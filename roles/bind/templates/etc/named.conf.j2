@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026100201
+# 2026100202
 #
 # https://bind9.readthedocs.io/en/latest/reference.html
 # Follows the /etc/named.conf shipped by the bind package, with the Linuxfabrik additions at the
@@ -98,12 +98,16 @@ zone "." IN {
 include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 
+{% if bind__recursion | bool %}
 // Linuxfabrik: `forward only` keeps named from creating its automatic empty zones, so lookups for
 // private and special-use reverse zones would go to the forwarders. Not forwarding these zones
 // brings the empty zones back.
+{# Without recursion, named creates no empty zones at all (empty-zones-enable defaults to the
+   recursion setting, bin/named/server.c), so these zones would have no effect. #}
 {% for item in __bind__empty_zones_without_forwarding %}
 zone "{{ item }}" IN { type forward; forwarders { }; };
 {% endfor %}
+{% endif %}
 
 {% for item in bind__zones %}
 zone "{{ item['name'] }}" IN {
