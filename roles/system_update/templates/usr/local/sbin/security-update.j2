@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026100201
+# 2026100202
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository,
 # together with the dependencies they need from the other enabled repositories,
@@ -106,25 +106,29 @@ if [ "$have_repo" -eq 0 ]; then
 fi
 
 # refresh the security repo metadata first, retrying transient mirrorlist failures;
-# check-update and upgrade below then run against the freshly cached metadata.
+# the listing and the upgrade below then run against the freshly cached metadata.
 if ! makecache_with_retry --disablerepo="*" --enablerepo="$REPOS"; then
     log "Security metadata refresh failed; see /tmp/makecache-stderr"
     send_msg "$SUBJECT_PREFIX - Security update check failed" "$(</tmp/makecache-stderr)"
     exit 1
 fi
 
-# only act when the security repo actually has updates pending. check-update exits
-# 100 if updates are available, 0 if there is nothing to do, 1 on error. exit quietly
-# on 0 so the daily timer does not send a "Nothing to do" mail.
-yum --disablerepo="*" --enablerepo="$REPOS" check-update 1> /dev/null 2> /tmp/security-check-stderr
-retc=$?
-if [ "$retc" -eq 0 ]; then
-    log "No security updates pending; nothing to do"
-    exit 0
-elif [ "$retc" -ne 100 ]; then
+# only act when the security repo actually has updates pending, and list the latest version
+# of each, which the upgrade below installs. exit quietly if there are none, so the daily
+# timer does not send a "Nothing to do" mail. This gate sits above the AIDE check and the
+# pre-update code, so both only run when there is something to install, and the post-update
+# code further down always runs after the pre-update code. Unlike `check-update`, `repoquery
+# --upgrades` does not list a package that only obsoletes an installed one, so this lane
+# leaves such a package to the regular (weekly) update lane.
+if ! yum repoquery --upgrades --latest-limit 1 --disablerepo="*" --enablerepo="$REPOS" --queryformat '%{name}-%{evr}.%{arch}\n' 1> /tmp/security-update-packages 2> /tmp/security-check-stderr; then
     log "Security update check failed; see /tmp/security-check-stderr"
     send_msg "$SUBJECT_PREFIX - Security update check failed" "$(</tmp/security-check-stderr)"
     exit 1
+fi
+SECURITY_PKGS=$(sort --unique /tmp/security-update-packages)
+if [ -z "$SECURITY_PKGS" ]; then
+    log "No security updates pending; nothing to do"
+    exit 0
 fi
 
 # The AIDE setup of the aide role, with the same values as update-and-reboot, so the AIDE
@@ -172,23 +176,13 @@ fi
 # end raw system_update__security_pre_update_code
 
 {% endif %}
-# Install exactly the versions the security repo has updates for, but resolve them with all
-# enabled repositories: a hot-fix can need a newer package that only BaseOS or AppStream
-# carries, such as the kernel of the security repo on Rocky 8.3, which requires a newer
-# linux-firmware. Upgrading with the security repo alone then fails with "nothing provides".
-# The exact name-version-release keeps this lane to the hot-fixes and what they need: by name
-# only, dnf would pick the newest version of any enabled repo, which is the job of the
-# regular (weekly) update lane. Verified with dnf 4 on Rocky 8.3, 9.4 and 10.0.
-if ! yum repoquery --upgrades --latest-limit 1 --disablerepo="*" --enablerepo="$REPOS" --queryformat '%{name}-%{evr}.%{arch}\n' 1> /tmp/security-update-packages 2> /tmp/security-update-stderr; then
-    log "Listing the security updates failed; see /tmp/security-update-stderr"
-    send_msg "$SUBJECT_PREFIX - Security update failed" "$(</tmp/security-update-stderr)"
-    exit 1
-fi
-SECURITY_PKGS=$(sort --unique /tmp/security-update-packages)
-if [ -z "$SECURITY_PKGS" ]; then
-    log "No security updates pending; nothing to do"
-    exit 0
-fi
+# Install exactly the versions the security repo has updates for, listed above, but resolve
+# them with all enabled repositories: a hot-fix can need a newer package that only BaseOS or
+# AppStream carries, such as the kernel of the security repo on Rocky 8.3, which requires a
+# newer linux-firmware. Upgrading with the security repo alone then fails with "nothing
+# provides". The exact name-version-release keeps this lane to the hot-fixes and what they
+# need: by name only, dnf would pick the newest version of any enabled repo, which is the job
+# of the regular (weekly) update lane. Verified with dnf 4 on Rocky 8.3, 9.4 and 10.0.
 log "Applying security hot-fixes from $REPOS: ${SECURITY_PKGS//$'\n'/ }"
 TXN_BEFORE=$(last_txn_id)
 # word splitting of $SECURITY_PKGS is intended, one argument per package
@@ -199,7 +193,7 @@ if ! yum -y upgrade $SECURITY_PKGS 1> /tmp/security-update 2> /tmp/security-upda
     exit 1
 fi
 
-# check-update having found something does not guarantee a transaction: the package can
+# the listing having found something does not guarantee a transaction: the package can
 # be gone from the repo by now, held by a versionlock, or unsatisfiable, in which case
 # the upgrade above exits 0 having done nothing.
 TXN_AFTER=$(last_txn_id)
