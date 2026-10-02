@@ -3,3 +3,7 @@ kernel_settings__sysctl__group_var:
     value: 128
   - name: 'vm.overcommit_memory'
     value: 1
+
+# set, to check that a value reaches the kernel; systemd_cpu_affinity and
+# transparent_hugepages_defrag stay unset, to check that fedora.linux_system_roles accepts that
+kernel_settings__transparent_hugepages__group_var: 'madvise'

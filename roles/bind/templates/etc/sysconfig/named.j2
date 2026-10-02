@@ -2,4 +2,4 @@
 # 2024082901
 
 # disable IPv6
-OPTIONS='{{ bind__listen_ipv6 | ternary("", "-4") }}'
+OPTIONS='{{ bind__listen_ipv6 | bool | ternary("", "-4") }}'

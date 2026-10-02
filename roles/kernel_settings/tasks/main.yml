@@ -29,15 +29,32 @@
       state: 'present'
     when: 'kernel_settings__sysctl__combined_var | selectattr("name", "match", "^sunrpc\.") | list | length > 0'  # if there is at least one key starting with "sunrpc."
 
+  # fedora.linux_system_roles >= 2.5.0 accepts only null (leave the setting alone) for an unset
+  # value and rejects the empty string our defaults carry, while a template cannot hand a role a
+  # null (`{{ none }}` and `omit` arrive as strings, verified with ansible-core 2.16 and 2.18).
+  # So pass a value only if it is set; otherwise the null from the role's own defaults applies.
+  # Older versions treat both alike.
+  - name: 'Pass systemd_cpu_affinity to the kernel_settings role if it is set'
+    ansible.builtin.set_fact:
+      kernel_settings_systemd_cpu_affinity: '{{ kernel_settings__systemd_cpu_affinity__combined_var }}' # noqa var-naming[pattern]
+    when: 'kernel_settings__systemd_cpu_affinity__combined_var | string | length'
+
+  - name: 'Pass transparent_hugepages to the kernel_settings role if it is set'
+    ansible.builtin.set_fact:
+      kernel_settings_transparent_hugepages: '{{ kernel_settings__transparent_hugepages__combined_var }}' # noqa var-naming[pattern]
+    when: 'kernel_settings__transparent_hugepages__combined_var | string | length'
+
+  - name: 'Pass transparent_hugepages_defrag to the kernel_settings role if it is set'
+    ansible.builtin.set_fact:
+      kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__transparent_hugepages_defrag__combined_var }}' # noqa var-naming[pattern]
+    when: 'kernel_settings__transparent_hugepages_defrag__combined_var | string | length'
+
   - name: 'Use fedora.linux_system_roles.kernel_settings role to configure the kernel settings'
     ansible.builtin.include_role:
       name: 'fedora.linux_system_roles.kernel_settings'
     vars:
       kernel_settings_sysctl: '{{ kernel_settings__sysctl__combined_var }}' # noqa var-naming[pattern]
       kernel_settings_sysfs: '{{ kernel_settings__sysfs__combined_var }}' # noqa var-naming[pattern]
-      kernel_settings_systemd_cpu_affinity: '{{ kernel_settings__systemd_cpu_affinity__combined_var }}' # noqa var-naming[pattern]
-      kernel_settings_transparent_hugepages: '{{ kernel_settings__transparent_hugepages__combined_var }}' # noqa var-naming[pattern]
-      kernel_settings_transparent_hugepages_defrag: '{{ kernel_settings__transparent_hugepages_defrag__combined_var }}' # noqa var-naming[pattern]
 
   tags:
     - 'kernel_settings'

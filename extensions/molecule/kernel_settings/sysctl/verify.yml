@@ -12,6 +12,20 @@
         that: '__molecule__sysctl_vm_overcommit_memory_result["content"] | ansible.builtin.b64decode | int == 1'
 
 
+- name: 'Verify transparent_hugepages is set'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'Read /sys/kernel/mm/transparent_hugepage/enabled'
+      ansible.builtin.slurp:
+        src: '/sys/kernel/mm/transparent_hugepage/enabled'
+      register: '__molecule__transparent_hugepage_enabled_result'
+
+    - name: 'Assert that transparent hugepages are set to madvise'
+      ansible.builtin.assert:
+        that: '"[madvise]" in (__molecule__transparent_hugepage_enabled_result["content"] | ansible.builtin.b64decode)'
+
+
 # The sunrpc sysctls only exist while the sunrpc module is loaded. Nothing else loads it on a host
 # without NFS, so check after a reboot that the module comes back on its own and TuneD applies the
 # value again.
