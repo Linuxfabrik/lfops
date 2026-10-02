@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:icingaweb2_module_generictts**: Downloads the module from Linuxfabrik, who maintain it since Icinga archived the original repository. The tarballs of v2.1.0 are identical.
 * **role:duplicity**: `/var/lib/aide` is backed up by default, so that the AIDE database can be compared with a copy outside the host. Hosts without AIDE are not affected.
 * **role:monitoring_plugins**: The source install removes plugins that an earlier run deployed and the checked-out version no longer carries.
 * **role:monitoring_plugins**: The source install deploys the dependency versions pinned in the monitoring-plugins lockfiles and, for a release, the Linuxfabrik library release they pin, instead of the newest versions of both.
