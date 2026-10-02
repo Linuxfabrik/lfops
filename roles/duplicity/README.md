@@ -155,7 +155,7 @@ duplicity__swift_login:
     * `/var/named` (BIND zone files, journals of dynamic zones, DNSSEC keys)
     * `/var/solr/data` (Apache Solr cores)
     * `/var/spool/cron`
-    * `/var/www/html` (Grav, Moodle, Nextcloud, WordPress), without the repository mirrors in `/var/www/html/github-repos` and `/var/www/html/reposync-repos`
+    * `/var/www` (Grav, Moodle, Nextcloud, WordPress), without the repository mirrors in `/var/www/html/github-repos` and `/var/www/html/reposync-repos`
 
     To keep a large directory out of the backup on a host, for example `/data` on a KVM host storing its VM images there, set it to `state: 'absent'`.
 

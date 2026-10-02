@@ -81,7 +81,7 @@ duplicity__backup_sources__role_var:
     divide: false
     state: 'present'
   # grav, moodle, nextcloud, wordpress. The repository mirrors can be rebuilt at any time.
-  - path: '/var/www/html'
+  - path: '/var/www'
     divide: false
     excludes:
       - '/var/www/html/github-repos'
