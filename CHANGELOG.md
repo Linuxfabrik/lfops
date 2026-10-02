@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* LFOps requires community.general 7.0.0 or newer (still below 9.0.0), which `ansible-galaxy collection install linuxfabrik.lfops` pulls in, while a manually maintained collection list has to be raised.
 * **plugin:bitwarden_item**: The lookup syncs the Bitwarden vault once per Ansible run instead of every 60 seconds, which makes runs with many lookups considerably faster, since each sync makes `bw serve` list the whole vault. Before it creates a missing item, it syncs again, so an item created elsewhere during the run is not created a second time.
 * **role:icingaweb2_module_generictts**: Downloads the module from Linuxfabrik, who maintain it since Icinga archived the original repository. The tarballs of v2.1.0 are identical.
 * **role:duplicity**: `/var/lib/aide` is backed up by default, so that the AIDE database can be compared with a copy outside the host. Hosts without AIDE are not affected.
