@@ -42,17 +42,27 @@
       group: 'root'
       mode: 0o744
 
+  # Fedora 42 and later merge sbin into bin, /usr/local/sbin is a symlink to bin there
+  # (shipped by the filesystem package, verified on Fedora 44). /usr/local/bin/update-and-reboot
+  # is then the script deployed above, not a stale copy.
+  - name: 'stat /usr/local/sbin'
+    ansible.builtin.stat:
+      path: '/usr/local/sbin'
+    register: '__system_update__usr_local_sbin_stat'
+
   # the scripts used to live in /usr/local/bin; remove the stale copies after relocating
   # them to FHS-correct /usr/local/sbin (admin commands) and /usr/local/libexec (helpers).
   - name: 'rm -f the pre-FHS /usr/local/bin script locations'
     ansible.builtin.file:
       path: '{{ item }}'
       state: 'absent'
-    loop:
-      - '/usr/local/bin/notify-and-schedule'
-      - '/usr/local/bin/security-reboot'
-      - '/usr/local/bin/security-update'
-      - '/usr/local/bin/update-and-reboot'
+    loop: '{{
+        ["/usr/local/bin/notify-and-schedule",
+         "/usr/local/bin/security-reboot",
+         "/usr/local/bin/security-update"]
+        + ([] if __system_update__usr_local_sbin_stat["stat"]["islnk"] | d(false)
+           else ["/usr/local/bin/update-and-reboot"])
+      }}'
 
   - name: 'Deploy /etc/systemd/system/notify-and-schedule.service'
     ansible.builtin.template:
