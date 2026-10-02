@@ -108,6 +108,29 @@
         mode: 0o644
 
 
+# A file on the EFI system partition that the database has to contain from the start, so that
+# verify.yml can show that the default rule '/boot/efi DATAONLY' ignores the inode numbers vfat
+# hands out anew, but still reports a changed content. No owner, group or mode: vfat has none
+# per file, the mount options set them.
+- name: 'Deploy /boot/efi/lfops-molecule'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'findmnt --noheadings --output FSTYPE /boot/efi'
+      ansible.builtin.command: 'findmnt --noheadings --output FSTYPE /boot/efi'
+      register: '__molecule__efi_fstype_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Deploy /boot/efi/lfops-molecule'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/boot/efi/lfops-molecule'
+      when:
+        - '__molecule__efi_fstype_result["stdout"] == "vfat"'
+
+
 # A host that already runs the daily check of aide-common, which the role has to remove, since
 # it would overwrite the report of aidecheck.service. Without its recommended packages, which
 # would pull in a mail transport agent.

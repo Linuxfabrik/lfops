@@ -118,8 +118,10 @@ This role is compatible with the following aide versions:
     * `!/usr/lib/sysimage/rpm` is added. The RPM database lives there on RHEL 10, and every rpm or dnf query rewrites it.
     * The audit tool rules of the CIS benchmarks are added.
     * `/etc/ld.so.cache` and `/etc/udev/hwdb.bin` are checked without their inode (`DATAONLY`), since systemd rebuilds both on the first boot after an update.
+    * `/boot/efi` is checked without the inode (`DATAONLY`), since the kernel assigns new inode numbers on the vfat EFI system partition at runtime.
     * `/etc/aliases.db` is checked for permissions only (`PERMS`), since postfix on the Red Hat family rebuilds it on its start.
     * `/etc/resolv.conf` is checked for permissions only (`PERMS`), since DHCP clients and NetworkManager rewrite it at runtime.
+    * `/etc/fwupd/fwupd.conf` is checked without its mode, since fwupd sets the file to 0640 whenever its daemon starts.
 
 * Subkeys:
 

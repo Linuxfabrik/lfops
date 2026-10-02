@@ -24,6 +24,13 @@ aide__rules__host_var: []
 aide__rules__role_var:
   - path: '/boot'
     attributes: 'NORMAL'
+  # Not in the shipped list. The EFI system partition is vfat, which stores no inode numbers:
+  # the kernel assigns a new one whenever it reads a file in again (iunique() in
+  # fat_build_inode(), fs/fat/inode.c), so NORMAL reports every file below it as changed once
+  # its inode has been dropped from the cache. DATAONLY still reports a changed content.
+  # Verified on Debian 13, Rocky 8, Rocky 9 and Ubuntu 24.04.
+  - path: '/boot/efi'
+    attributes: 'DATAONLY'
   - path: '/bin'
     attributes: 'NORMAL'
   - path: '/sbin'
@@ -468,6 +475,14 @@ aide__rules__role_var:
   # USBGuard
   - path: '/etc/usbguard'
     attributes: 'NORMAL'
+
+  # Not in the shipped list. PERMS without the mode and its ACL: fwupd 1.9.1 and later sets the
+  # file to 0640 whenever its daemon starts (fu_config_ensure_permissions() in
+  # libfwupdplugin/fu-config.c), while the package ships it with 0644, so the first start after
+  # `aide --init` or after an update of fwupd was reported. Verified on Rocky 9, Ubuntu 24.04
+  # and Ubuntu 26.04.
+  - path: '/etc/fwupd/fwupd\.conf$'
+    attributes: 'ftype+u+g+selinux+xattrs'
 
   # Now everything else
   - path: '/etc'
