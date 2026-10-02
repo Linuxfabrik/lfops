@@ -17,6 +17,8 @@
     ansible.builtin.get_url:
       url: 'https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
       dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

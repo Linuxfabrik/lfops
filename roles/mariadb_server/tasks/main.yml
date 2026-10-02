@@ -899,6 +899,8 @@
     ansible.builtin.get_url:
       url: 'https://github.com/FromDual/mariadb-sys/archive/refs/heads/master.tar.gz'
       dest: '/tmp/ansible.mariadb-sys-schema.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

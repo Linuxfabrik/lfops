@@ -6,6 +6,8 @@
       url: '{{ __repo_opensearch__gpgkey_url[repo_opensearch__version__combined_var] }}'
       dest: '/tmp/ansible.opensearch.pgp'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

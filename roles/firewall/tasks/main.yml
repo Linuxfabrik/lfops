@@ -178,6 +178,8 @@
       depth: 1
       single_branch: true
       force: true
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     changed_when: false # not a config change on the server
     delegate_to: 'localhost'
     become: false

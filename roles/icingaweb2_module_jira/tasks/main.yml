@@ -28,6 +28,8 @@
     ansible.builtin.get_url:
       url: '{{ icingaweb2_module_jira__url }}'
       dest: '/tmp/ansible.icingaweb2-module-jira-{{ icingaweb2_module_jira__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

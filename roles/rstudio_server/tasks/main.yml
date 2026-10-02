@@ -161,6 +161,8 @@
         url: '{{ __rstudio_server__download_url }}'
         dest: '/tmp/ansible.{{ __rstudio_server__local_package_filename }}'
         mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       delegate_to: 'localhost'
       become: false
       vars:

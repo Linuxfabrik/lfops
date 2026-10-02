@@ -224,6 +224,8 @@
       # https://github.com/opensearch-project/ansible-playbook/blob/29bc5280fcd5e62ecf5594dc8de7aec26ff3d3de/roles/linux/opensearch/tasks/security.yml#L26
       url: 'https://search.maven.org/remotecontent?filepath=com/floragunn/search-guard-tlstool/1.5/search-guard-tlstool-1.5.tar.gz'
       dest: '/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
 
   - name: 'tar xzf -C /tmp/opensearch-certs/tmp/opensearch-certs/search-guard-tlstool.tar.gz'
     ansible.builtin.unarchive:

@@ -15,6 +15,8 @@
       dest: '/tmp/ansible.lib-repo'
       version: '{{ __shared__lib_version }}'
       depth: 1
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:
@@ -41,6 +43,8 @@
         dest: '/tmp/ansible.lib-repo'
         version: '{{ __shared__lib_version }}'
         depth: 1
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       delegate_to: 'localhost'
       become: false
       vars:

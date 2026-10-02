@@ -5,6 +5,8 @@
       repo: '{{ ansible_init__url }}'
       dest: '{{ ansible_init__ansinv_path }}'
       version: '{{ ansible_init__version }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     ignore_errors: true
 
   - name: 'Update ../lfops'
@@ -12,6 +14,8 @@
       repo: '{{ ansible_init__lfops_url }}'
       dest: '{{ ansible_init__ansinv_path }}../lfops'
       version: 'main'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     ignore_errors: true
 
   tags:
@@ -36,6 +40,8 @@
       repo: '{{ item["url"] }}'
       dest: '{{ ansible_init__ansinv_path }}/{{ item["name"] }}'
       version: '{{ item["version"] |d("main") }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     loop: '{{ ansible_init__inventories }}'
     ignore_errors: true
 
@@ -50,6 +56,8 @@
       repo: '{{ item["url"] }}'
       dest: '{{ ansible_init__ansinv_path }}../roles/{{ item["name"] }}'
       version: '{{ item["version"] |d("main") }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     loop: '{{ ansible_init__roles }}'
     ignore_errors: true
 

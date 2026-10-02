@@ -28,6 +28,8 @@
     ansible.builtin.get_url:
       url: '{{ icinga_kubernetes_web__url }}'
       dest: '/tmp/ansible.icingaweb2-kubernetes-web-{{ icinga_kubernetes_web__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

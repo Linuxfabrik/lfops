@@ -5,6 +5,8 @@
       repo: 'https://github.com/Linuxfabrik/github-project-createrepo.git'
       dest: '/opt/github-project-createrepo'
       force: false
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
 
   - name: 'useradd --system --home-dir /opt/github-project-createrepo --shell /bin/false github-project-createrepo'
     ansible.builtin.user:

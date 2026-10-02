@@ -10,6 +10,8 @@
       url: 'https://archive.apache.org/dist/solr/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
       dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
       checksum: '{{ apache_solr__checksum }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:
@@ -24,6 +26,8 @@
       url: 'https://archive.apache.org/dist/lucene/solr/{{ apache_solr__version }}/solr-{{ apache_solr__version }}.tgz'
       dest: '/tmp/solr-{{ apache_solr__version }}.tgz'
       checksum: '{{ apache_solr__checksum }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

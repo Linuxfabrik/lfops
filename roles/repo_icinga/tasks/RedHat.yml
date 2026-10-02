@@ -58,6 +58,8 @@
     ansible.builtin.get_url:
       url: 'https://packages.icinga.com/icinga.key'
       dest: '/tmp/ansible.RPM-GPG-KEY-ICINGA'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

@@ -21,6 +21,8 @@
     ansible.builtin.rpm_key:
       state: 'present'
       key: 'https://packages.icinga.com/icinga.key'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
 
   - name: 'deploy the icinga-release repo (mirror: {{ repo_icinga__mirror_url }})'
     ansible.builtin.template:
