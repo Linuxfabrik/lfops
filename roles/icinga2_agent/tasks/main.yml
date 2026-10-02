@@ -102,6 +102,15 @@
 
 - block:
 
+  # `icinga2 node setup` creates a new key and certificate every time, which the master has to
+  # sign again, and needs an agent restart. So it only runs when the agent needs it: its
+  # certificate is missing, expired or not signed by the CA of the master, the master presents
+  # a different certificate (for example after a rebuild), or the setup parameters changed.
+  - name: 'stat /var/lib/icinga2/certs/master.crt'
+    ansible.builtin.stat:
+      path: '/var/lib/icinga2/certs/master.crt'
+    register: '__icinga2_agent__master_cert_before_result'
+
   - name: 'save PKI cert from {{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }}'
     ansible.builtin.command: >-
       icinga2 pki save-cert
@@ -110,6 +119,38 @@
       --key local.key
       --cert local.crt
       --trustedcert /var/lib/icinga2/certs/master.crt
+    changed_when: false # a changed master certificate is detected below and triggers the node setup
+
+  - name: 'stat /var/lib/icinga2/certs/master.crt'
+    ansible.builtin.stat:
+      path: '/var/lib/icinga2/certs/master.crt'
+    register: '__icinga2_agent__master_cert_after_result'
+
+  # Exits with 2 if the certificate is missing or not signed by the CA, which includes an
+  # expired certificate. Verified against the Icinga2 source (lib/cli/pkiverifycommand.cpp).
+  - name: 'icinga2 pki verify --cert /var/lib/icinga2/certs/{{ icinga2_agent__cn }}.crt --cacert /var/lib/icinga2/certs/ca.crt'
+    ansible.builtin.command: 'icinga2 pki verify --cert /var/lib/icinga2/certs/{{ icinga2_agent__cn }}.crt --cacert /var/lib/icinga2/certs/ca.crt'
+    register: '__icinga2_agent__pki_verify_result'
+    changed_when: false # read-only
+    failed_when: false # evaluated below
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'cat /var/lib/icinga2/linuxfabrik-node-setup.sha256'
+    ansible.builtin.command: 'cat /var/lib/icinga2/linuxfabrik-node-setup.sha256'
+    register: '__icinga2_agent__node_setup_checksum_result'
+    changed_when: false # read-only
+    failed_when: false # a missing file means the node setup never ran with this role
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Decide whether the node setup is needed'
+    ansible.builtin.set_fact:
+      __icinga2_agent__node_setup_needed: '{{
+          __icinga2_agent__pki_verify_result["rc"] != 0
+          or __icinga2_agent__master_cert_before_result["stat"]["checksum"] | d("")
+             != __icinga2_agent__master_cert_after_result["stat"]["checksum"] | d("")
+          or __icinga2_agent__node_setup_checksum_result["stdout"] | d("") | trim
+             != __icinga2_agent__node_setup_args | hash("sha256")
+        }}'
 
   - name: 'Get PKI ticket from the icinga2 master'
     ansible.builtin.uri:
@@ -131,6 +172,7 @@
     failed_when: false # evaluated by the assert below, which says what to do
     check_mode: false # generating a ticket changes nothing on the master
     when:
+      - '__icinga2_agent__node_setup_needed | bool'
       - 'not icinga2_agent__skip_pki_ticket | bool'
       - 'icinga2_agent__icinga2_api_user_login is defined and icinga2_agent__icinga2_api_user_login | length > 0'
 
@@ -141,46 +183,47 @@
       quiet: true
       fail_msg: '{{ __icinga2_agent__pki_ticket_fail_msg }}'
     when:
+      - '__icinga2_agent__node_setup_needed | bool'
       - 'not icinga2_agent__skip_pki_ticket | bool'
 
   - name: 'Report that the certificate request has to be signed on the icinga2 master'
     ansible.builtin.debug:
       msg: '{{ __icinga2_agent__end_of_play_message }}'
     when:
+      - '__icinga2_agent__node_setup_needed | bool'
       - 'icinga2_agent__skip_pki_ticket | bool'
 
   - name: 'Collect the message for the end of the play'
     ansible.builtin.set_fact:
       __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__icinga2_agent__end_of_play_message] }}'
     when:
+      - '__icinga2_agent__node_setup_needed | bool'
       - 'icinga2_agent__skip_pki_ticket | bool'
 
   - name: 'execute icinga2 node setup as {{ icinga2_agent__cn }} against {{ icinga2_agent__icinga2_master_cn }}'
     ansible.builtin.command: >-
       icinga2 node setup
-      --zone {{ icinga2_agent__zone }}
-      --endpoint {{ icinga2_agent__icinga2_master_cn }},{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
-      {% for item in icinga2_agent__additional_icinga2_master_endpoints %}
-      --endpoint {{ item["host"] }},{{ item["host"] }},{{ item["port"] | d(5665) }}
-      {% endfor %}
-      --parent_host {{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
-      --parent_zone {{ icinga2_agent__parent_zone }}
-      --cn {{ icinga2_agent__cn }}
-      --accept-config
-      --accept-commands
-      --disable-confd
-      {% if icinga2_agent__bind_host is defined and icinga2_agent__bind_host | length %}
-      --listen {{ icinga2_agent__bind_host }},5665
-      {% endif %}
-      --trustedcert /var/lib/icinga2/certs/master.crt
+      {{ __icinga2_agent__node_setup_args }}
       {% if __icinga2_agent__pki_ticket | length > 0 %}
       --ticket '{{ __icinga2_agent__pki_ticket }}'
       {% endif %}
+    when:
+      - '__icinga2_agent__node_setup_needed | bool'
 
   - name: 'systemctl restart icinga2'
     ansible.builtin.systemd:
       name: 'icinga2'
       state: 'restarted'
+    when:
+      - '__icinga2_agent__node_setup_needed | bool'
+
+  - name: 'Deploy /var/lib/icinga2/linuxfabrik-node-setup.sha256'
+    ansible.builtin.copy:
+      content: '{{ __icinga2_agent__node_setup_args | hash("sha256") }}'
+      dest: '/var/lib/icinga2/linuxfabrik-node-setup.sha256'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
   - name: 'add host to icinga director at {{ icinga2_agent__icingaweb2_url }}/director/host'
     ansible.builtin.uri:
@@ -197,11 +240,20 @@
           "display_name": "{{ icinga2_agent__director_host_object_display_name }}",
           "imports": {{ icinga2_agent__director_host_object_import | to_json }},
         }
-      status_code: 201
+      status_code:
+        - 201
+        - 422
       body_format: 'json'
       headers:
         Accept: 'application/json'
       validate_certs: '{{ icinga2_agent__validate_certs }}'
+    register: '__icinga2_agent__director_host_result'
+    # The Director answers 422 "Trying to recreate icinga_host" for a host it already has, which
+    # is the expected answer on every run after the first one.
+    changed_when: '__icinga2_agent__director_host_result["status"] == 201'
+    failed_when:
+      - '__icinga2_agent__director_host_result["status"] != 201'
+      - '"Trying to recreate" not in __icinga2_agent__director_host_result["json"]["error"] | d("")'
     ignore_errors: true
     when:
       - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length > 0'

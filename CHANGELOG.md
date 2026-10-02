@@ -65,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones and GitHub release lookups, are retried up to three times, so a brief outage of a download source no longer aborts the run (all roles).
 * **role:monitoring_plugins**: On Linux, the role no longer stops the Icinga2 agent while it deploys the plugins, so a run no longer interrupts the monitoring of the host.
+* **role:icinga2_agent**: The role runs `icinga2 node setup` and restarts the agent only when the agent needs a new certificate or its settings changed, instead of on every run.
 * LFOps requires community.general 7.0.0 or newer (still below 9.0.0), which `ansible-galaxy collection install linuxfabrik.lfops` pulls in, while a manually maintained collection list has to be raised.
 * **plugin:bitwarden_item**: The lookup syncs the Bitwarden vault once per Ansible run instead of every 60 seconds, which makes runs with many lookups considerably faster, since each sync makes `bw serve` list the whole vault. Before it creates a missing item, it syncs again, so an item created elsewhere during the run is not created a second time.
 * **role:icingaweb2_module_generictts**: Downloads the module from Linuxfabrik, who maintain it since Icinga archived the original repository. The tarballs of v2.1.0 are identical.

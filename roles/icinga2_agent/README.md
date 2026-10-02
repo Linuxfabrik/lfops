@@ -11,9 +11,9 @@ Currently, this role only works if the host can reach the Icinga2 master API.
 ## How the Role Behaves
 
 * The agent certificate is signed by the Icinga2 master. The role requests a ticket for the agent's CN from the master API (`icinga2_agent__icinga2_api_user_login`) and passes it to `icinga2 node setup`, so the master signs the certificate right away ([CSR auto-signing](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#distributed-monitoring-setup-csr-auto-signing)).
-* `icinga2 node setup` runs on every run of the role (tags `icinga2_agent` and `icinga2_agent:node_setup`), and each time creates a new key and certificate for the agent. With a ticket, the master signs it again. Without one, the agent is left with an unsigned certificate, even if it was connected before.
-* If the role cannot get a ticket, the run therefore aborts before `icinga2 node setup` and says why.
-* With `icinga2_agent__skip_pki_ticket: true`, the role requests no ticket and sets the agent up without one. Its certificate request then has to be signed on the master by hand ([on-demand CSR signing](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#distributed-monitoring-setup-on-demand-csr-signing)). Since every run creates a new request, it has to be signed again after each run.
+* `icinga2 node setup` (tags `icinga2_agent` and `icinga2_agent:node_setup`) creates a new key and certificate for the agent each time it runs, so the role only runs it, requests a ticket for it and restarts the agent when one of these applies: the agent certificate is missing, expired or not signed by the CA of the master, the master presents a different certificate than before (for example after it was rebuilt), or one of the `icinga2_agent__*` settings passed to `icinga2 node setup` changed. A hash of these settings is kept in `/var/lib/icinga2/linuxfabrik-node-setup.sha256`; delete the file to force a new node setup.
+* If the role cannot get a ticket, the run aborts before `icinga2 node setup` and says why, since without one the agent would be left with an unsigned certificate, even if it was connected before.
+* With `icinga2_agent__skip_pki_ticket: true`, the role requests no ticket and sets the agent up without one. Its certificate request then has to be signed on the master by hand ([on-demand CSR signing](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#distributed-monitoring-setup-on-demand-csr-signing)). Until it is signed, every run creates a new request.
 
 
 ## Dependent Roles
@@ -44,8 +44,8 @@ Manual steps:
 
 `icinga2_agent:node_setup`
 
-* Runs the `icinga2 node setup` and registers the host in the Director.
-* Triggers: icinga2.service restart.
+* Runs the `icinga2 node setup` if the agent needs it (see "How the Role Behaves") and registers the host in the Director.
+* Triggers: icinga2.service restart, if the node setup ran.
 
 `icinga2_agent:state`
 

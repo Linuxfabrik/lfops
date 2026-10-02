@@ -44,3 +44,22 @@ __icinga2_agent__end_of_play_message: >-
   and `icinga2 ca sign <fingerprint>`, using the newest request for CN
   "{{ icinga2_agent__cn }}". Every run of this role creates a new request that has to be
   signed again.
+
+# The parameters of `icinga2 node setup` without the ticket, which changes on every request. A
+# hash of it is kept on the host, so a change of the parameters triggers a new node setup.
+__icinga2_agent__node_setup_args: >-
+  --zone {{ icinga2_agent__zone }}
+  --endpoint {{ icinga2_agent__icinga2_master_cn }},{{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
+  {% for item in icinga2_agent__additional_icinga2_master_endpoints %}
+  --endpoint {{ item["host"] }},{{ item["host"] }},{{ item["port"] | d(5665) }}
+  {% endfor %}
+  --parent_host {{ icinga2_agent__icinga2_master_host }},{{ icinga2_agent__icinga2_master_port }}
+  --parent_zone {{ icinga2_agent__parent_zone }}
+  --cn {{ icinga2_agent__cn }}
+  --accept-config
+  --accept-commands
+  --disable-confd
+  {% if icinga2_agent__bind_host is defined and icinga2_agent__bind_host | length %}
+  --listen {{ icinga2_agent__bind_host }},5665
+  {% endif %}
+  --trustedcert /var/lib/icinga2/certs/master.crt
