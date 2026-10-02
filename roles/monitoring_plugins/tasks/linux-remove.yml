@@ -141,12 +141,11 @@
 
   # The data directories of the snmp plugin go once they are empty, as with the one-line
   # installer. Device definitions an admin put there keep them in place.
-  - name: 'find /usr/lib64/nagios/plugins/{{ item }} -depth -type d -empty -delete'
+  - name: 'find /usr/lib64/nagios/plugins/{{ item }} -type d -empty -delete -print'
     ansible.builtin.command:
       argv:
         - 'find'
         - '/usr/lib64/nagios/plugins/{{ item }}'
-        - '-depth'
         - '-type'
         - 'd'
         - '-empty'
