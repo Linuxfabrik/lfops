@@ -3,7 +3,10 @@
 # which exercises the metadata refresh (with its transient-mirrorlist retry) before
 # any update; on Rocky the security lane exists and is a clean no-op without the
 # security repo; off Rocky the security lane is absent, and neither lane runs the
-# pre/post update hooks without a transaction to wrap. sendmail (the transport the
+# pre/post update hooks without a transaction to wrap. On Rocky, a fixture security
+# repository then proves that the lane installs a hot-fix whose dependency only BaseOS
+# provides, runs both hooks around it, and exits before the hooks once nothing is
+# left to install. sendmail (the transport the
 # scripts now use) is available. Finally the regular update lane itself runs twice,
 # so the second run lands on a host that is genuinely up to date and must stay quiet.
 #
@@ -114,7 +117,7 @@
           - 'not __molecule__security_request_stat_result["stat"]["exists"]'
       when: 'ansible_facts["distribution"] == "Rocky"'
 
-    # The security lane renders both hooks, but sits below the repo and check-update
+    # The security lane renders both hooks, but sits below the repo and pending-update
     # gates. With no security repo on the host it never gets there, so a hook that
     # aborts the update or notifies on a failed pre-condition stays quiet on the days
     # the lane has nothing to install.
@@ -132,6 +135,209 @@
       loop_control:
         label: '{{ item["item"] }}'
       when: 'ansible_facts["distribution"] == "Rocky"'
+
+
+    # The security lane against a fixture repository with the id "lfops-security-test",
+    # which the scenario inventory sets as system_update__security_repos, built on the host:
+    # * lfops-security-test 1.0 is installed and the repository offers 2.0, which requires
+    #   zsh. zsh is not on the cloud images and only BaseOS provides it, so the lane has to
+    #   resolve the hot-fix with all enabled repositories.
+    # * lfops-security-test-old is installed and the repository offers
+    #   lfops-security-test-ng, which obsoletes it. `check-update` counts that as pending,
+    #   `repoquery --upgrades` does not. Once the hot-fix is in, the lane therefore has to
+    #   find nothing to do and exit before the update hooks, not run the pre-update hook and
+    #   then stop.
+    # Verified against dnf 4.14 on Rocky 9. The always section removes the repository and
+    # the fixture packages again, so the regular lane below and the second verify pass after
+    # idempotence start from the same state.
+    - block:
+
+      - name: 'dnf install createrepo_c rpm-build'
+        ansible.builtin.package:
+          name:
+            - 'createrepo_c'
+            - 'rpm-build'
+          state: 'present'
+
+      - name: 'mkdir -p the fixture directories'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'directory'
+          owner: 'root'
+          group: 'root'
+          mode: 0o755
+        loop:
+          - '/root/lfops-security-test/SPECS'
+          - '/root/lfops-security-test/repo'
+
+      - name: 'Deploy /root/lfops-security-test/SPECS/lfops-security-test.spec'
+        ansible.builtin.copy:
+          content: |
+            Name:      %{pkgname}
+            Version:   %{pkgversion}
+            Release:   1
+            Summary:   LFOps fixture for the system_update security lane
+            License:   Unlicense
+            BuildArch: noarch
+            %if 0%{?withdep}
+            Requires:  zsh
+            %endif
+            %if 0%{?obsoletes:1}
+            Obsoletes: %{obsoletes}
+            %endif
+
+            %description
+            Fixture for the system_update security lane test.
+
+            %files
+          dest: '/root/lfops-security-test/SPECS/lfops-security-test.spec'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'rpmbuild {{ item["name"] }}-{{ item["version"] }}'
+        ansible.builtin.command: >-
+          rpmbuild
+          --define "_topdir /root/lfops-security-test"
+          --define "pkgname {{ item["name"] }}"
+          --define "pkgversion {{ item["version"] }}"
+          {{ item["defines"] }}
+          -bb /root/lfops-security-test/SPECS/lfops-security-test.spec
+        args:
+          creates: '/root/lfops-security-test/RPMS/noarch/{{ item["name"] }}-{{ item["version"] }}-1.noarch.rpm'
+        loop:
+          - name: 'lfops-security-test'
+            version: '1.0'
+            defines: ''
+          - name: 'lfops-security-test'
+            version: '2.0'
+            defines: '--define "withdep 1"'
+          - name: 'lfops-security-test-ng'
+            version: '1.0'
+            defines: '--define "obsoletes lfops-security-test-old"'
+          - name: 'lfops-security-test-old'
+            version: '1.0'
+            defines: ''
+
+      - name: 'cp the offered packages into the fixture repository'
+        ansible.builtin.copy:
+          remote_src: true
+          src: '/root/lfops-security-test/RPMS/noarch/{{ item }}'
+          dest: '/root/lfops-security-test/repo/{{ item }}'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+        loop:
+          - 'lfops-security-test-2.0-1.noarch.rpm'
+          - 'lfops-security-test-ng-1.0-1.noarch.rpm'
+
+      - name: 'createrepo_c /root/lfops-security-test/repo'
+        ansible.builtin.command: 'createrepo_c /root/lfops-security-test/repo'
+        args:
+          creates: '/root/lfops-security-test/repo/repodata/repomd.xml'
+
+      - name: 'dnf install the outdated and the to-be-obsoleted fixture packages'
+        ansible.builtin.package:
+          name:
+            - '/root/lfops-security-test/RPMS/noarch/lfops-security-test-1.0-1.noarch.rpm'
+            - '/root/lfops-security-test/RPMS/noarch/lfops-security-test-old-1.0-1.noarch.rpm'
+          state: 'present'
+          disable_gpg_check: true
+
+      - name: 'Deploy /etc/yum.repos.d/lfops-security-test.repo'
+        ansible.builtin.copy:
+          content: |
+            # Fixture repository for the system_update security lane test. The id has to
+            # match system_update__security_repos in the scenario inventory.
+            [lfops-security-test]
+            name=lfops-security-test
+            baseurl=file:///root/lfops-security-test/repo
+            enabled=1
+            gpgcheck=0
+          dest: '/etc/yum.repos.d/lfops-security-test.repo'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'rm -f the update hook markers'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop: '{{ __molecule__update_hook_markers }}'
+
+      - name: 'systemctl start security-update.service (hot-fix that needs zsh from BaseOS)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+        ansible.builtin.command: 'systemctl start security-update.service'
+        changed_when: false
+
+      - name: 'systemctl show --property=Result security-update.service' # noqa command-instead-of-module (no module reads a oneshot Result)
+        ansible.builtin.command: 'systemctl show --property=Result --value security-update.service'
+        register: '__molecule__security_hotfix_result'
+        changed_when: false
+
+      - name: 'Gather the package facts'
+        ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+      - name: 'stat the update hook markers after the hot-fix'
+        ansible.builtin.stat:
+          path: '{{ item }}'
+        register: '__molecule__security_hotfix_hook_stat_result'
+        loop: '{{ __molecule__update_hook_markers }}'
+
+      - name: 'Assert the lane installed the hot-fix with its BaseOS dependency, ran both hooks and left the obsoleter alone'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__security_hotfix_result["stdout"] == "success"'
+            - 'ansible_facts["packages"]["lfops-security-test"][0]["version"] == "2.0"'
+            - '"zsh" in ansible_facts["packages"]'
+            - '"lfops-security-test-old" in ansible_facts["packages"]'
+            - '"lfops-security-test-ng" not in ansible_facts["packages"]'
+            - '__molecule__security_hotfix_hook_stat_result["results"] | map(attribute="stat.exists") | list == [true, true]'
+
+      - name: 'rm -f the update hook markers'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop: '{{ __molecule__update_hook_markers }}'
+
+      - name: 'systemctl start security-update.service (only the obsoleter is left)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+        ansible.builtin.command: 'systemctl start security-update.service'
+        changed_when: false
+
+      - name: 'systemctl show --property=Result security-update.service' # noqa command-instead-of-module (no module reads a oneshot Result)
+        ansible.builtin.command: 'systemctl show --property=Result --value security-update.service'
+        register: '__molecule__security_obsoleter_result'
+        changed_when: false
+
+      - name: 'stat the update hook markers after the run with only the obsoleter left'
+        ansible.builtin.stat:
+          path: '{{ item }}'
+        register: '__molecule__security_obsoleter_hook_stat_result'
+        loop: '{{ __molecule__update_hook_markers }}'
+
+      - name: 'Assert the lane found nothing to do and ran neither update hook'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__security_obsoleter_result["stdout"] == "success"'
+            - '__molecule__security_obsoleter_hook_stat_result["results"] | map(attribute="stat.exists") | list == [false, false]'
+
+      always:
+
+      - name: 'rm -f /etc/yum.repos.d/lfops-security-test.repo'
+        ansible.builtin.file:
+          path: '/etc/yum.repos.d/lfops-security-test.repo'
+          state: 'absent'
+
+      # removes zsh as well, since dnf installed it as a dependency only
+      - name: 'dnf remove the fixture packages'
+        ansible.builtin.package:
+          name:
+            - 'lfops-security-test'
+            - 'lfops-security-test-ng'
+            - 'lfops-security-test-old'
+          state: 'absent'
+
+      when:
+        - 'ansible_facts["distribution"] == "Rocky"'
 
     - name: 'stat /usr/sbin/sendmail'
       ansible.builtin.stat:
