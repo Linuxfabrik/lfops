@@ -1,0 +1,318 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # a rule without `path` needs no assert here: combine_lod already aborts on an item that
+  # lacks its unique key, naming the keys the item sets.
+  - name: 'Check that every rule has a valid type'
+    ansible.builtin.assert:
+      that:
+        - 'item["type"] | d("regular") in ["equal", "negative", "regular"]'
+      quiet: true
+      fail_msg: 'aide__rules: the rule for "{{ item["path"] }}" has type "{{ item["type"] | d("regular") }}". Supported types: equal, negative, regular.'
+    loop: '{{ aide__rules__combined_var }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  - name: 'Check that every regular and equal rule has attributes'
+    ansible.builtin.assert:
+      that:
+        - 'item["attributes"] is defined and item["attributes"] | length > 0'
+      quiet: true
+      fail_msg: 'aide__rules: the rule for "{{ item["path"] }}" needs `attributes`, since it is of type "{{ item["type"] | d("regular") }}".'
+    loop: '{{ aide__rules__combined_var }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["type"] | d("regular") in ["equal", "regular"]'
+
+  tags:
+    - 'always'
+
+
+# include_tasks is required here because import_tasks cannot handle dynamic variables.
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length > 0'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
+
+
+- block:
+
+  # the aide rpm creates both directories with these permissions. the aide package of Debian
+  # and Ubuntu leaves them to aide-common, which the role does not install (see
+  # tasks/Debian.yml).
+  - name: 'mkdir -p /var/lib/aide /var/log/aide'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o700
+    loop:
+      - '/var/lib/aide'
+      - '/var/log/aide'
+
+  tags:
+    - 'aide'
+
+
+- block:
+
+  - name: 'Gather package facts'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false
+
+  - name: 'Set installed version fact'
+    ansible.builtin.set_fact:
+      __aide__installed_version: '{{ ansible_facts["packages"]["aide"][0]["version"] | regex_search("^\d+\.\d+") }}'
+
+  - name: 'Assert that this role supports the installed version'
+    ansible.builtin.assert:
+      that:
+        - '__aide__installed_version in __aide__supported_versions'
+      quiet: true
+      fail_msg: 'aide {{ __aide__installed_version }} is not supported by this role. Supported versions: {{ __aide__supported_versions | join(", ") }}.'
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+
+
+- block:
+
+  # taken before the role changes a monitored file (/etc/aide.conf, the units, the timer's enable
+  # symlink), since the handler has to know the state the host was in beforehand.
+  - name: 'Read the state of the last AIDE check'
+    ansible.builtin.import_tasks: 'check-state.yml'
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+    - 'aide:state'
+
+
+- block:
+
+  - name: 'Combined Rules'
+    ansible.builtin.debug:
+      var: 'aide__rules__combined_var'
+
+  # validate runs against the rendered temporary file, so a config aide does not accept (an
+  # unknown group or attribute, a broken regex from the inventory or aide__conf_raw) aborts the
+  # run before it replaces /etc/aide.conf. `aide --config-check` exits with 17 on such a config.
+  # Verified with aide 0.16 on Rocky 8, 0.17.4 on Ubuntu 22.04, 0.18.3 on Debian 12 and 0.19.2
+  # on Rocky 10.
+  - name: 'Deploy /etc/aide.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/{{ __aide__installed_version }}-aide.conf.j2'
+      dest: '/etc/aide.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+      validate: 'aide --config=%s --config-check'
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/logrotate.d/aide'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/aide.j2'
+      dest: '/etc/logrotate.d/aide'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'aide: update database'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/aide.conf'
+      - '/etc/logrotate.d/aide'
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+
+
+- block:
+
+  # earlier versions of this role deployed the check as aide-check.service / aide-check.timer.
+  # the CIS benchmarks look for aidecheck.service / aidecheck.timer, so the units were renamed,
+  # and the old ones have to go, otherwise the host runs two checks.
+  - name: 'stat /etc/systemd/system/aide-check.timer'
+    ansible.builtin.stat:
+      path: '/etc/systemd/system/aide-check.timer'
+    register: '__aide__legacy_timer_stat_result'
+
+  - name: 'systemctl disable --now aide-check.timer'
+    ansible.builtin.service:
+      name: 'aide-check.timer'
+      enabled: false
+      state: 'stopped'
+    notify: 'aide: update database'
+    when:
+      - '__aide__legacy_timer_stat_result["stat"]["exists"]'
+
+  - name: 'rm -f /etc/systemd/system/aide-check.service /etc/systemd/system/aide-check.timer'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop:
+      - '/etc/systemd/system/aide-check.service'
+      - '/etc/systemd/system/aide-check.timer'
+    register: '__aide__legacy_units_result'
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/systemd/system/aidecheck.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/aidecheck.service.j2'
+      dest: '/etc/systemd/system/aidecheck.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__service_unit_result'
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/systemd/system/aidecheck.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/aidecheck.timer.j2'
+      dest: '/etc/systemd/system/aidecheck.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__timer_unit_result'
+    notify: 'aide: update database'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler (the timer tasks below need the new units)
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed or __aide__legacy_units_result is changed'
+
+  tags:
+    - 'aide'
+
+
+- block:
+
+  # the enable symlinks live below /etc/systemd, which aide monitors, hence the notify to update
+  # the aide db.
+  # an enabled aidecheck.service runs a check after every boot, the CIS benchmarks want it
+  # enabled. it is not started here: the timer and system_update start it.
+  - name: 'systemctl {{ aide__service_enabled | bool | ternary("enable", "disable") }} aidecheck.service'
+    ansible.builtin.service:
+      name: 'aidecheck.service'
+      enabled: '{{ aide__service_enabled | bool }}'
+    notify: 'aide: update database'
+
+  - name: 'systemctl {{ aide__timer_enabled | bool | ternary("enable", "disable") }} aidecheck.timer'
+    ansible.builtin.service:
+      name: 'aidecheck.timer'
+      enabled: '{{ aide__timer_enabled | bool }}'
+    notify: 'aide: update database'
+
+  - name: 'systemctl {{ aide__timer_state | regex_replace("p?ed$", "") }} aidecheck.timer'
+    ansible.builtin.service:
+      name: 'aidecheck.timer'
+      state: '{{ aide__timer_state }}'
+
+  tags:
+    - 'aide'
+    - 'aide:state'
+
+
+- block:
+
+  # flush_handlers runs the pending handlers of every role in the play, not only this one's.
+  # doing it before `aide --init` puts whatever the handlers of earlier roles write (setup_basic
+  # runs aide last) into the new database instead of into the first check's report. the
+  # handler of this role skips itself on a host without a database, and on a host with one the
+  # init below does nothing.
+  - name: 'Flush handlers'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'aide'
+    - 'aide:configure'
+    - 'aide:state'
+
+
+- block:
+
+  # a package installation that runs while `aide --init` reads the file system leaves entries
+  # without checksums in the new database, and the first check reports them. on Debian and
+  # Ubuntu, apt-daily-upgrade.service (unattended-upgrades) typically does so on a freshly
+  # booted cloud image. units that do not exist report inactive. 5 minutes at most.
+  - name: 'systemctl is-active apt-daily.service apt-daily-upgrade.service (wait up to 5 minutes for running package jobs)' # noqa command-instead-of-module (read-only state query in a retry loop)
+    ansible.builtin.command: 'systemctl is-active apt-daily.service apt-daily-upgrade.service'
+    register: '__aide__apt_daily_active_result'
+    until: '"active" not in __aide__apt_daily_active_result["stdout_lines"] and "activating" not in __aide__apt_daily_active_result["stdout_lines"]'
+    retries: 30
+    delay: 10
+    changed_when: false
+    failed_when: '"active" in __aide__apt_daily_active_result["stdout_lines"] or "activating" in __aide__apt_daily_active_result["stdout_lines"]'
+    when:
+      - 'not __aide__db_stat_result["stat"]["exists"]'
+
+  # runs after everything else the role writes to monitored paths (/etc/aide.conf, the units
+  # and the timer's enable symlink under /etc/systemd), so the first check does not report the
+  # role's own files as added. aide --init writes database_out, not database_in, hence the mv.
+  - name: 'flock /run/aide.lock aide --config=/etc/aide.conf --init'
+    ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --init'
+    args:
+      creates: '/var/lib/aide/aide.db.gz'
+    register: '__aide__init_result'
+
+  - name: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz' # noqa no-handler (a follow-up of the init above, not of a config change)
+    ansible.builtin.command: 'mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz'
+    changed_when: true
+    when:
+      - '__aide__init_result is changed'
+
+  tags:
+    - 'aide'
+
+
+# in files of their own, so that the Molecule scenario can run exactly this code.
+- name: 'Update the AIDE database if the last check was clean'
+  ansible.builtin.import_tasks: 'update-db-if-clean.yml'
+  tags:
+    - 'aide:update_db'
+    - 'never'
+
+- name: 'Update the AIDE database'
+  ansible.builtin.import_tasks: 'update-db.yml'
+  tags:
+    - 'aide:update_db_force'
+    - 'never'

@@ -83,6 +83,26 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # Only the modules and the LICENSE of the library are deployed, the same set the release zip
+    # bundles; the documentation and development files of the repository have no business on a
+    # monitored host. `__pycache__` appears as soon as a plugin has run.
+    - name: 'List what the bundled library directory holds besides its modules'
+      ansible.builtin.find:
+        paths: '/usr/lib64/nagios/plugins/lib'
+        file_type: 'any'
+        hidden: true
+        excludes:
+          - '*.py'
+          - 'LICENSE'
+          - '__pycache__'
+      register: '__molecule__lib_extra'
+
+    - name: 'Assert the bundled library holds its modules and LICENSE only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lib_extra["files"] | length == 0'
+        fail_msg: '{{ __molecule__lib_extra["files"] | map(attribute="path") | join(", ") }} should not be deployed'
+
     # The Defaults that keep the plugin calls out of the authentication log ship in a drop-in of
     # their own, because sudo-rs knows none of them and prints a warning for each of them on
     # every sudo call by any user. The role therefore places it only where the classic sudo from
@@ -138,3 +158,75 @@
         fail_msg: >-
           sudo answered "{{ __molecule__sudo_run["stderr"] | trim }}" on a call that has nothing
           to do with monitoring, so one of our sudoers drop-ins does not parse here
+
+    # The venv has to hold exactly the versions the lockfiles pin. The requirements file the role
+    # pushed is the only record of the merged pins on the host; a version that differs from it
+    # means pip resolved something on its own, which the hash-pinned install rules out.
+    - name: 'Compare the venv with the pinned requirements'
+      ansible.builtin.command:
+        argv:
+          - '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+          - '-c'
+          - |
+            import importlib.metadata, re, sys
+            wrong = []
+            for line in open('/usr/lib64/linuxfabrik-monitoring-plugins/wheels/requirements.txt'):
+                match = re.match(r'([A-Za-z0-9][A-Za-z0-9._-]*)==(\S+)', line)
+                if not match:
+                    continue
+                try:
+                    installed = importlib.metadata.version(match.group(1))
+                except importlib.metadata.PackageNotFoundError:
+                    installed = 'missing'
+                if installed != match.group(2):
+                    wrong.append(f'{match.group(1)} {installed} instead of {match.group(2)}')
+            print('\n'.join(wrong))
+            sys.exit(1 if wrong else 0)
+      register: '__molecule__venv_pins'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the venv holds exactly the pinned versions'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__venv_pins["rc"] == 0'
+        fail_msg: '{{ __molecule__venv_pins["stdout"] }}{{ __molecule__venv_pins["stderr"] }}'
+
+    # Without `nagios_run_sudo` every plugin that runs through sudo fails under enforcing SELinux.
+    # RHEL 10 carries no nagios policy and therefore no such boolean.
+    - name: 'getsebool nagios_run_sudo'
+      ansible.builtin.command: 'getsebool nagios_run_sudo'
+      register: '__molecule__nagios_run_sudo'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert nagios_run_sudo is on wherever it exists'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nagios_run_sudo["stdout"] is search("--> on$")'
+        fail_msg: '{{ __molecule__nagios_run_sudo["stdout"] }}'
+      when:
+        - '__molecule__nagios_run_sudo["rc"] == 0'
+
+    # Only RHEL gets the module, and only where SELinux is enabled.
+    - name: 'Gather the minimal facts (os_family, selinux)'
+      ansible.builtin.setup:
+        gather_subset:
+          - 'min'
+
+    - name: 'semodule --list'
+      ansible.builtin.command: 'semodule --list'
+      register: '__molecule__semodule_list'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the SELinux policy module is loaded'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik-monitoring-plugins" in __molecule__semodule_list["stdout_lines"] | map("split") | map("first") | list'
+        fail_msg: 'the linuxfabrik-monitoring-plugins SELinux module is not loaded'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'

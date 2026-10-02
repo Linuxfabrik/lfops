@@ -11,7 +11,10 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 ## How the Role Behaves
 
-* The deployed `chrony.conf` loads no key file, so NTP sources are not authenticated with symmetric keys. RHEL 10's own `chrony.conf` does the same, while RHEL 8 and 9 load an `/etc/chrony.keys` that holds no keys.
+* The configuration is fully templated: `/etc/chrony.conf` on the Red Hat family, `/etc/chrony/chrony.conf` on Debian and Ubuntu, each close to the file the distribution ships. Out-of-band edits are overwritten on the next run (a timestamped backup is kept).
+* chronyd uses only the sources from `chrony__ntp_pools` and `chrony__ntp_servers`. If neither is set, the host has no time source. The distribution's default pools, time sources from DHCP and, on Debian and Ubuntu, `/etc/chrony/sources.d` are not used. Ubuntu 26.04 ships its default pools in `/etc/chrony/sources.d`, where chronyd would prefer them over every source from the inventory.
+* On Debian and Ubuntu, drop-ins in `/etc/chrony/conf.d` are read at the beginning of the deployed `chrony.conf`, so the role's settings win over a drop-in that sets the same directive. Debian 13 and Ubuntu 26.04 read them at the end of their own `chrony.conf`, where a drop-in would win. Directives that add something instead of replacing it still take effect from a drop-in: a `pool`, `server` or `sourcedir` there adds time sources next to the ones from the inventory, and with the `prefer` option chronyd uses only those. Likewise, `allow` and `deny` add access rules.
+* The deployed `chrony.conf` loads no key file, so NTP sources are not authenticated with symmetric keys. RHEL 10's own `chrony.conf` does the same, while RHEL 8 and 9, Debian and Ubuntu load a key file that holds no keys (`/etc/chrony.keys`, `/etc/chrony/chrony.keys`).
 
 
 ## Tags
@@ -19,7 +22,7 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 `chrony`
 
 * Installs and configures chrony.
-* Triggers: chronyd.service restart.
+* Triggers: chrony service restart (`chronyd.service` on the Red Hat family, `chrony.service` on Debian and Ubuntu).
 
 `chrony:state`
 
@@ -29,7 +32,7 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 ## Mandatory Role Variables
 
-This role does not have any mandatory variables. However, either `chrony__ntp_pools` or `chrony__ntp_servers` should be set to enable time synchronisation.
+This role does not have any mandatory variables. However, either `chrony__ntp_pools` or `chrony__ntp_servers` has to be set, otherwise the host has no time source.
 
 
 ## Optional Role Variables

@@ -123,7 +123,7 @@ apache_httpd__vhosts__host_var:
     conf_document_root: '/var/www/html/blog.example.com'
     conf_options: 'FollowSymLinks'
     conf_server_name: 'blog.example.com'
-    wordpress_url: 'blog.example.com'
+    wordpress_url: 'https://blog.example.com'
 ```
 
 

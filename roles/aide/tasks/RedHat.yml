@@ -1,0 +1,10 @@
+- block:
+
+  - name: 'Install aide'
+    ansible.builtin.package:
+      name:
+        - 'aide'
+      state: 'present'
+
+  tags:
+    - 'aide'

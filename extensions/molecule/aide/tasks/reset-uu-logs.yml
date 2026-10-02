@@ -1,0 +1,18 @@
+# the assertions after an unattended upgrade count the package sets and the messages of the hook
+# of that one run only: the log of unattended-upgrades is emptied, and the journal is read from
+# the time taken here on. a time with nanoseconds, not a journal cursor: `--after-cursor`
+# combined with `--identifier` returns nothing with systemd 252 on Debian 12, while `--since`
+# takes fractional seconds (systemd 249 on Ubuntu 22.04 and newer).
+- name: 'truncate --size=0 /var/log/unattended-upgrades/unattended-upgrades.log'
+  ansible.builtin.shell: |
+    if [ -e /var/log/unattended-upgrades/unattended-upgrades.log ]; then
+        truncate --size=0 /var/log/unattended-upgrades/unattended-upgrades.log
+    fi
+  args:
+    executable: '/bin/bash'
+  changed_when: true
+
+- name: 'date +%s.%N'
+  ansible.builtin.command: 'date +%s.%N'
+  register: '__molecule__aide_uu_since_result'
+  changed_when: false

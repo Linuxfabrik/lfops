@@ -109,7 +109,7 @@ GitHub Actions in `.github/workflows/` are pinned by commit SHA, not by tag. Dep
 Python packages installed via `pip` inside workflows follow a two-tier policy:
 
 - `pre-commit` is installed from a hash-pinned requirements file at `.github/pre-commit/requirements.txt`, generated with `pip-compile --allow-unsafe --generate-hashes --strip-extras` from `.github/pre-commit/requirements.in`. Dependabot's `pip` ecosystem watches that directory and maintains both files.
-- One-shot installs such as `ansible-builder`, `build`, `mkdocs`, `pdoc`, and `ruff` in release, docs, or test workflows are version-pinned only (`package==X.Y.Z`) and kept fresh by Dependabot. Scorecard's `pipCommand not pinned by hash` findings for these are considered acceptable risk and may be dismissed.
+- Every other tool a workflow installs with `pip` (`ansible-builder`, `build`, `mkdocs`, `pdoc`, `ruff`, `tox`, ...) follows the same model: a version pin in `.github/<name>/requirements.in`, a hash-pinned `requirements.txt` generated from it the same way, `pip install --require-hashes --requirement .github/<name>/requirements.txt` in the workflow, and a Dependabot `pip` entry for that directory. Dependabot does not read `run:` lines, so a version pinned there (`package==X.Y.Z`) is never updated, and a Scorecard `pipCommand not pinned by hash` finding on it is a real one.
 
 
 ### Coding Conventions
@@ -206,6 +206,13 @@ Commit scopes:
     ```
 
 * For the first commit, use the message `feat(roles/<role-name>): add role` or `feat(playbooks/<playbook-name>): add playbook`.
+* A commit that adds or changes a Molecule scenario takes the scope of the role or playbook the scenario tests, not the path of the scenario:
+
+    ```
+    test(roles/apache_tomcat): add install and foreign_tags scenarios
+    ```
+
+    Use the bare `extensions/molecule` scope only for changes to the shared Molecule setup that no single scenario owns, such as `config.yml`, the shared inventory or the provisioning playbooks.
 
 
 ### Deliverables
@@ -304,6 +311,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 * Fail loudly. Avoid constructs that could suppress error messages, like `IfModule` in Apache HTTPd. This makes debugging and troubleshooting a lot easier.
 * Do not support software versions that are EOL.
 * When implementing a role for a new application, consider security, monitoring and backups.
+* Backups: `duplicity` backs up a fixed list of directories (`duplicity__backup_sources__role_var` in `roles/duplicity/defaults/main.yml`). If a role stores data outside of it, add the directory there and to the list in `roles/duplicity/README.md`. The setup playbooks cannot inject it via `__dependent_var`, since they do not run the `duplicity` role. Databases are backed up by a dump to `/backup` (see the `mariadb_server`, `postgresql_server`, `mongodb` and `influxdb` roles), never by their live data directory, which cannot be restored.
 * For mailing, use the `sendmail` utility, as it provides a consistent interface across distros.
 * All user-facing information should be included in the README. Comments are intended for developers only.
 * Avoid breaking changes as far as possible, but don't let them stand in the way of improvements.
@@ -389,8 +397,9 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
           check_mode: false # run task even if `--check` is specified
         ```
 
-    * Two cases legitimately keep `run_once`. First, a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`); running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race. Second, a task whose `when` is deliberately computed across `ansible_play_hosts_all` (not against the first host), so the first-host-skip problem does not apply (see `roles/firewall/tasks/main.yml`).
+    * One case legitimately keeps `run_once`: a single read-only lookup whose result is shared to all hosts (e.g. querying a GitHub release API once and storing the version with `set_fact`). Running it per host would only multiply API calls and risk rate limiting, and there is no shared-path race.
 
+* Download on the controller, not on the target. Release artifacts, Git checkouts and language packages are fetched with `delegate_to: 'localhost'` and copied over, so a target without Internet access can be provisioned like any other and only the controller needs outbound access. Say in the README's "How the Role Behaves" who needs network access to what. `roles/example` shows the pattern for a release tarball, and "Roles with Special Features" below lists the one for Python dependencies.
 * Always provide `changed_when`, `creates`, or `removes` for `ansible.builtin.command` and `ansible.builtin.shell` tasks to ensure idempotency. Use `changed_when: false` for read-only commands.
 * Prefer a `chown -R --changes` command over `ansible.builtin.file` with `recurse: true`; the module's recursive mode is slow on large trees. Register the result and derive `changed_when` from the `--changes` output for idempotency:
 
@@ -563,7 +572,6 @@ Controlled vocabulary of standard `role_name:section` tags (alphabetical):
 * `role_name:certs`: Deploys and renews the role's TLS certificates and private keys.
 * `role_name:configure`: Renders and deploys the role's configuration files and applies settings. The most common section; everything that is neither install, state, nor one of the more specific sections below belongs here.
 * `role_name:containers`: Manages the role's containers and their systemd container units.
-* `role_name:cron`: Deploys the role's scheduled jobs (cron entries or systemd timers).
 * `role_name:databases`: Creates, updates and deletes the databases managed by the role.
 * `role_name:dump`: Sets up scheduled dumps / backups of the role's data.
 * `role_name:enroll`: Registers (enrolls) the node with a remote service or controller.
@@ -1119,6 +1127,11 @@ Before adding an `allow` rule to a role, work out what the rule buys an attacker
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav): Four separate `chmod` passes (files `664`, `bin/` `775`, directories `775`, plus a setgid pass on directories), each registered with `changed_when` based on the `--changes` output for idempotency.
 
 
+#### Python dependencies for air-gapped targets
+
+* [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): Installs a hash-pinned lockfile into a venv on a target that has no access to PyPI. The target reports its exact Python version (`platform.python_version()`, since pip reads a bare `3.9` as 3.9.0, which packages such as cryptography exclude) and its glibc version (`platform.libc_ver()`). The controller runs `pip download --no-deps --require-hashes --implementation cp --python-version <full version>` with one `--platform manylinux_2_<n>_<arch>` for every glibc minor from 17 up to the target's plus `manylinux2014_<arch>`, because pip does not widen a manylinux tag to the older ones on its own. The files land below a root-owned path on the target, never in `/tmp`: pip installs whatever that directory offers, and the requirements file in it carries the very hashes pip checks against. `--no-deps` is what lets pip fetch a pure-Python sdist despite `--platform`; the build backend for such a package (`setuptools`, `wheel` and their dependencies) is downloaded with `--only-binary=:all:` into the same directory, where the isolated build on the target finds it. The target installs with `ansible.builtin.pip` and `extra_args: '--no-index --find-links <dir> --require-hashes'`, which keeps pip off the network and moves an existing venv to the pinned versions on every run.
+
+
 #### Reboot requests
 
 * [bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader): Never reboots the host itself. A changed kernel command line is registered with the `schedule_reboot` mechanism and applied at the maintenance window, and `lfops__reboot_now` performs it during the run instead, by starting the actor and waiting for the host's boot ID to change. "Reboots" above carries the full pattern and its traps.
@@ -1158,6 +1171,7 @@ Some files under `plugins/modules/` and `plugins/module_utils/` are not authored
 
     * Upstream: <https://github.com/ansible-collections/community.general> (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), released in community.general 11.0.0).
     * Reason: community.general 11.0.0 requires ansible-core >= 2.18, which LFOps does not yet mandate (RHEL 8 / Python 3.6 still supported).
+    * Local patch: `from __future__ import annotations` is replaced by `from __future__ import absolute_import, division, print_function`, since Python 3.6 does not know the former. Keep this when re-syncing.
     * Drop when: LFOps raises its minimum ansible-core to >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm` accordingly.
 
 * `plugins/module_utils/gnupg.py` (and its `gnupg.py_LICENSE.txt`)
@@ -1197,7 +1211,7 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
 * **Two tiers**, because plugins run in different environments:
 
     * Controller plugins (`plugins/filter/`, `plugins/lookup/`) are evaluated on the Ansible controller and only ever see the controller's Python (>= 3.10). They run on the standard CI matrix.
-    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). That tier runs inside a RHEL 8 / UBI 8 container; it is scaffolded in `tox.ini` (`[testenv:py36-target]`) and gets enabled once such tests exist.
+    * Managed-node plugins (`plugins/modules/`, `plugins/module_utils/`) are executed on the target host and must keep working down to the oldest managed-node Python we maintain (Python 3.6 on RHEL 8). Their tests run on the controller matrix and additionally inside a RHEL 8 / UBI 8 container (`[testenv:py36-target]` in `tox.ini`), so the test code has to be valid Python 3.6 too. See `tests/README.md`.
 
 * **How to run / verify** (the matrix of Python and ansible-core versions is driven by `tox`; see `tests/README.md` and `tox.ini`):
 
@@ -1208,7 +1222,7 @@ Unit tests are **mandatory** for every in-house plugin. Any pull request that ad
     pytest tests/unit        # against the active interpreter (needs pytest, pyyaml, ansible-core)
     ```
 
-* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix on every push and pull request.
+* The `Linuxfabrik: Unit Tests` workflow runs the controller matrix and the Python 3.6 tier on every push and pull request.
 
 
 ### Testing
@@ -1262,7 +1276,7 @@ The `extensions/molecule/example` scenario mirrors the `example` role: it is a f
 
 #### Preparing the controller
 
-Three things have to be in place on the machine that runs `molecule`, once.
+Four things have to be in place on the machine that runs `molecule`, once.
 
 **The checkout has to be resolvable as a collection.** The scenarios import the playbooks under test by FQCN (`linuxfabrik.lfops.<playbook>`), so the repository has to be reachable as `linuxfabrik/lfops` in a collection path. Symlinking it keeps the checkout authoritative, so a scenario always runs the code you are editing:
 
@@ -1283,8 +1297,9 @@ sudo chown "$(id -un):$(id -gn)" /var/lib/libvirt/images-lfops-molecule
 sudo chmod 0751 /var/lib/libvirt/images-lfops-molecule
 
 # on SELinux systems, label it so qemu may open the disk images
+# (restorecon has no long options, `--recursive` fails with "invalid option")
 sudo semanage fcontext --add --type virt_image_t '/var/lib/libvirt/images-lfops-molecule(/.*)?'
-sudo restorecon --recursive --verbose /var/lib/libvirt/images-lfops-molecule
+sudo restorecon -R -v /var/lib/libvirt/images-lfops-molecule
 
 sudo virsh pool-define-as lfops-molecule dir --target /var/lib/libvirt/images-lfops-molecule
 sudo virsh pool-autostart lfops-molecule
@@ -1304,12 +1319,32 @@ If you set this up before that `setfacl` existed, the images already in the pool
 
 Do not run `virsh pool-build` on it. That applies the pool's declared `<permissions><mode>`, which is the `chmod` this setup exists to avoid. Keep the directory outside your home as well: under `qemu:///system` qemu runs as its own user and cannot traverse a `0700` home directory.
 
+**The VMs need the libvirt network `default`.** The shared inventory attaches every VM to it. libvirt ships its definition, but a host set up with networks of its own may not have it; `virsh --connect qemu:///system net-list --all` tells. Define it from the shipped file and have it start with the host:
+
+```bash
+sudo virsh net-define /usr/share/libvirt/networks/default.xml
+sudo virsh net-autostart default
+sudo virsh net-start default
+```
+
+If a network of yours already uses the bridge `virbr0` or the subnet `192.168.122.0/24`, `net-start` fails because the bridge or the address is in use. Define the network from an edited copy instead, with a bridge name and a subnet that are free on your host:
+
+```bash
+sed --expression="s/name='virbr0'/name='virbr1'/" --expression='s/192\.168\.122\./192.168.123./g' \
+    /usr/share/libvirt/networks/default.xml > /tmp/default.xml
+sudo virsh net-define /tmp/default.xml
+sudo virsh net-autostart default
+sudo virsh net-start default
+```
+
 
 #### Running a scenario
 
 ```bash
 molecule test --scenario-name apps/install
 ```
+
+Run it from the repository root, with Molecule 26 or newer. Molecule only reads `extensions/molecule/config.yml` when it detects the collection from the root, and older releases (measured with 25.12) do not resolve sub-scenario names such as `apps/install`. Without the shared config the scenario still "passes": `create` and `prepare` are reported as missing and `converge` runs against an empty inventory.
 
 Tests can be run against a subset of targets by providing them as a comma-separated list via the project-specific `LFOPS_TEST_TARGETS` environment variable. The variable is optional: unset, every target in the scenario runs. `localhost` (the hypervisor) is included automatically, so you only ever pass the targets themselves:
 

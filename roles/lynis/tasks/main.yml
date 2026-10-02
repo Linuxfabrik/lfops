@@ -1,0 +1,111 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
+- block:
+
+  # Lynis aborts the whole audit (ExitFatal in include/profiles) if a non-comment line of a
+  # profile contains a character outside `a-zA-Z0-9/[]()_|,.:;= -`, and it cuts the value of a
+  # setting at the first `=`. A test ID is `<CATEGORY>-<number>`, optionally followed by
+  # `:<check>` for a single check within the test (SkipAtomicTest() in include/functions).
+  # The category may contain digits (`KRB5-1030`).
+  # Verified against the Lynis source (3.1.8).
+  - name: 'Check the names in lynis__skip_tests'
+    ansible.builtin.assert:
+      that:
+        - 'item["name"] is match("^[A-Za-z0-9]+-[0-9]+(:[A-Za-z0-9/\[\]()_|,.;-]+)?$")'
+      quiet: true
+      fail_msg: >-
+        lynis__skip_tests: "{{ item["name"] }}" is not a Lynis test ID. Use the ID as the lynis
+        monitoring plugin reports it, for example "NETW-3015", or "SSH-7408:loglevel" for a single
+        check within a test.
+    loop: '{{ lynis__skip_tests__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Install lynis'
+    ansible.builtin.package:
+      name: 'lynis'
+      state: 'present'
+
+  tags:
+    - 'lynis'
+
+
+- block:
+
+  - name: 'Deploy /etc/lynis/custom.prf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/lynis/custom.prf.j2'
+      dest: '/etc/lynis/custom.prf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  tags:
+    - 'lynis'
+    - 'lynis:configure'
+
+
+# The role ships lynis.service and lynis.timer to /etc/systemd/system on every platform. On Debian
+# and Ubuntu they override the units of the same name the package installs to /lib/systemd/system;
+# the EPEL package only ships its units as documentation.
+- block:
+
+  - name: 'Deploy /etc/systemd/system/lynis.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/lynis.service.j2'
+      dest: '/etc/systemd/system/lynis.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__lynis__service_result'
+
+  - name: 'Deploy /etc/systemd/system/lynis.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/lynis.timer.j2'
+      dest: '/etc/systemd/system/lynis.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__lynis__timer_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler (the state tasks below need the new units)
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__lynis__service_result is changed or __lynis__timer_result is changed'
+
+  tags:
+    - 'lynis'
+
+
+# lynis.service is not managed: it is static and only runs when lynis.timer triggers it.
+- block:
+
+  - name: 'systemctl {{ lynis__timer_enabled | bool | ternary("enable", "disable") }} lynis.timer'
+    ansible.builtin.service:
+      name: 'lynis.timer'
+      enabled: '{{ lynis__timer_enabled | bool }}'
+
+  - name: 'systemctl {{ lynis__timer_state | regex_replace("p?ed$", "") }} lynis.timer'
+    ansible.builtin.service:
+      name: 'lynis.timer'
+      state: '{{ lynis__timer_state }}'
+
+  tags:
+    - 'lynis'
+    - 'lynis:state'

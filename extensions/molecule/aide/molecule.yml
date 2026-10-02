@@ -1,0 +1,8 @@
+# Molecule scenario marker for the 'aide' scenario, run with
+# `molecule test --scenario-name aide`.
+#
+# It overrides the prepare step (see prepare.yml), which deploys a file the database has to
+# contain before the role creates it.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

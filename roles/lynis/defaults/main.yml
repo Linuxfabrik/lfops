@@ -1,0 +1,16 @@
+lynis__on_calendar: '*-*-* 02:{{ 59 | random(seed=inventory_hostname) }}'  # upstream default: 'daily'
+
+lynis__skip_tests__combined_var: '{{ (
+      lynis__skip_tests__role_var +
+      lynis__skip_tests__dependent_var +
+      lynis__skip_tests__group_var +
+      lynis__skip_tests__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+lynis__skip_tests__dependent_var: []
+lynis__skip_tests__group_var: []
+lynis__skip_tests__host_var: []
+lynis__skip_tests__role_var: []
+
+lynis__timer_enabled: true
+lynis__timer_state: 'started'

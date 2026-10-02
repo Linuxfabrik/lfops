@@ -24,6 +24,8 @@ description:
     - When I(name) is omitted, a title is generated automatically as C(hostname - purpose) (e.g. C(dbserver - MariaDB)) or just C(hostname) when no purpose is given.
     - Generated passwords use Python's C(secrets) module (cryptographically strong RNG), not the Bitwarden generator. This lifts the 128-character limit and allows arbitrary character sets, including hex.
     - Items are read from a local on-disk cache backed by C(bw serve). A cached C(bw sync) is performed at most every 60 seconds, so consecutive lookups in the same play do not hammer the API.
+    - Lookups on the same controller run one at a time, so hosts that are processed in parallel and need the same missing item create it only once.
+    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The plugin then asks again for about ten seconds and fails rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
 
 notes:
     - Lookups are evaluated by the templating engine on the controller and have no notion of check mode, so a run with C(--check) creates a missing item for real. Set I(create) to C(false) to turn that into a failure.
@@ -315,6 +317,12 @@ class LookupModule(LookupBase):
 
         bw = Bitwarden()
 
+        # one lookup at a time on this controller, so parallel workers do not all
+        # create the same missing item
+        with bw.mutex():
+            return self._run_under_mutex(bw, terms)
+
+    def _run_under_mutex(self, bw, terms):
         status = bw.status
         if status != 'unlocked':
             raise AnsibleError(bw.get_not_unlocked_message(status))

@@ -22,6 +22,7 @@ grafana__plugins__dependent_var: []
 grafana__plugins__group_var: []
 grafana__plugins__host_var: []
 grafana__plugins__role_var: []
+grafana__preinstall_auto_update: false  # upstream default: true
 grafana__provisioning_dashboards__combined_var: '{{ (
       grafana__provisioning_dashboards__role_var +
       grafana__provisioning_dashboards__dependent_var +

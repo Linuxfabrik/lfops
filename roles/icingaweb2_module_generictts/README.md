@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.icingaweb2_module_generictts
 
-This role installs and enables the [IcingaWeb2 GenericTTS Module](https://github.com/Icinga/icingaweb2-module-generictts). The module rewrites ticket patterns (configurable regular expressions) found in Icinga acknowledgements, downtimes and comments into clickable links pointing at the configured trouble-ticket system.
+This role installs and enables the [IcingaWeb2 GenericTTS Module](https://github.com/Linuxfabrik/icingaweb2-module-generictts). The module rewrites ticket patterns (configurable regular expressions) found in Icinga acknowledgements, downtimes and comments into clickable links pointing at the configured trouble-ticket system.
 
 This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
@@ -19,7 +19,7 @@ This role is tested with the following IcingaWeb2 GenericTTS Module versions:
 
 ## Requirements
 
-* The Ansible controller must have Internet access (downloads from `https://github.com/Icinga/icingaweb2-module-generictts/archive/`).
+* The Ansible controller must have Internet access (downloads from `https://github.com/Linuxfabrik/icingaweb2-module-generictts/archive/`).
 
 Manual steps:
 
@@ -38,7 +38,7 @@ Manual steps:
 
 `icingaweb2_module_generictts__version`
 
-* The module version to install. Possible options: https://github.com/Icinga/icingaweb2-module-generictts/releases.
+* The module version to install. Possible options: https://github.com/Linuxfabrik/icingaweb2-module-generictts/tags.
 * Type: String.
 
 Example:
@@ -53,15 +53,15 @@ icingaweb2_module_generictts__version: 'v2.1.0'
 
 `icingaweb2_module_generictts__url`
 
-* The URL from which the module tarball is downloaded. Override only if you mirror the upstream GitHub release elsewhere.
+* The URL from which the module tarball is downloaded. Override only if you mirror the module tarballs elsewhere.
 * Type: String.
-* Default: `'https://github.com/Icinga/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz'`
+* Default: `'https://github.com/Linuxfabrik/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz'`
 
 Example:
 
 ```yaml
 # optional
-icingaweb2_module_generictts__url: 'https://github.com/Linuxfabrik/icingaweb2-module-generictts/archive/{{ icingaweb2_module_generictts__version }}.tar.gz'
+icingaweb2_module_generictts__url: 'https://mirror.example.com/icingaweb2-module-generictts/{{ icingaweb2_module_generictts__version }}.tar.gz'
 ```
 
 

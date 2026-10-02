@@ -16,9 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Controller-side plugins (filter, lookup). The managed-node tier
-        # (modules on RHEL 8 / Python 3.6) needs a UBI 8 container and is
-        # scaffolded in tox.ini, not run here yet.
+        # Controller-side plugins (filter, lookup). The module tests run
+        # here as well; their Python 3.6 run is the managed-node job below.
         python-version:
           - '3.9'
           - '3.10'
@@ -60,3 +59,50 @@ jobs:
         # `-f pyXYZ` selects every tox env carrying this Python's factor,
         # e.g. py311 -> py311-ansible215/216/217/218.
         run: 'tox --discover "${{ steps.target-python.outputs.python-path }}" -f "py$(echo "${{ matrix.python-version }}" | tr -d ".")"'
+
+  managed-node-plugins:
+    name: 'Managed-node plugins (RHEL 8, Python 3.6)'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1' # v2.21.1
+        with:
+          egress-policy: 'audit'
+
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1' # v7.0.1
+
+      # Only to fetch ansible-core below; the tests themselves run on the
+      # Python 3.6 in the container.
+      - name: 'Set up Python'
+        uses: 'actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97' # v7.0.0
+        with:
+          python-version: '3.13'
+
+      # The tests import the module_utils of the controller's ansible-core,
+      # which is what the modules meet on a RHEL 8 host. ansible-core itself
+      # needs Python 3.10, so it is installed here, without dependencies, and
+      # handed to the container read-only.
+      - name: 'Install ansible-core for its module_utils'
+        run: >-
+          pip install --require-hashes --no-deps
+          --target "${RUNNER_TEMP}/ansible-core"
+          --requirement .github/unit-tests-py36-ansible-core/requirements.txt
+
+      # Modules run on the managed node, down to the platform-python 3.6 of
+      # RHEL 8, which no runner ships. Same test run as the py36-target env in
+      # tox.ini, without tox, since tox 4 does not run on Python 3.6.
+      - name: 'Run the module tests on UBI 8'
+        run: |
+          docker run --rm --volume "${PWD}:/src:ro" --workdir /src \
+            --volume "${RUNNER_TEMP}/ansible-core:/opt/ansible-core:ro" \
+            --env PYTHONPATH=/opt/ansible-core \
+            --env PYTEST_ADDOPTS='-p no:cacheprovider' \
+            registry.access.redhat.com/ubi8/ubi \
+            bash -c '
+              set -o errexit
+              dnf --assumeyes --quiet install python3 python3-pip
+              python3 -m venv /tmp/venv
+              /tmp/venv/bin/pip install --require-hashes --requirement .github/unit-tests-py36/requirements.txt
+              /tmp/venv/bin/pytest tests/unit/plugins/modules tests/unit/plugins/module_utils
+            '

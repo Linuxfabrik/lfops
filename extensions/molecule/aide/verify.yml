@@ -1,0 +1,800 @@
+# Verify aide on the running system: the check timer is armed, aide-common (installed by
+# prepare.yml on Debian and Ubuntu) is gone, and a check against the database the role created
+# runs clean, which proves that aide reads the deployed config and that the database matches it,
+# including the role's own files. A forced log rotation leaves that report in place. A config
+# aide rejects aborts the role before it replaces
+# /etc/aide.conf. Then a file below the scenario's regular rule makes the check fail and shows
+# up in the report with all its attributes (report level added_removed_entries), while files
+# below its negative rules (one in the rule list, one in aide__conf_raw) do not, and neither
+# does a file below /opt, whose default rule the scenario removes. A content change of
+# /root/.lfops-molecule is reported, which only its own rule does, not the default '/root/\..*
+# PERMS' of the same directory. This only works if the rules and the raw part from the inventory
+# are in effect, since /srv is not monitored otherwise and /opt is by default.
+# In between, the role is run again twice, each time after a change it has to revert, to
+# prove that its handler leaves the database alone in both cases where re-baselining would
+# accept unvetted changes: a database found without the role's check unit, and a last check
+# that reported changes. Finally the probe files are removed, the update-db-if-clean tasks of
+# the role (`--tags aide:update_db`) leave the database alone after that failed check, and the
+# update-db tasks (`--tags aide:update_db_force`) accept the current state, after which the
+# failed state is cleared and the check runs clean again. After that clean check,
+# update-db-if-clean accepts a new file and its removal, and a run of the role that reverts a
+# hand edit of /etc/aide.conf has its handler update the database, so the second verify after
+# the idempotence step starts from the same state.
+- name: 'Verify aide'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'systemctl is-enabled aidecheck.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled aidecheck.timer'
+      register: '__molecule__aide_timer_enabled_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl is-active aidecheck.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active aidecheck.timer'
+      register: '__molecule__aide_timer_active_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that aidecheck.timer is enabled and active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_timer_enabled_result["stdout"] == "enabled"'
+          - '__molecule__aide_timer_active_result["stdout"] == "active"'
+
+    # the package, not its timer: aide-common on Ubuntu 22.04 runs its check from
+    # /etc/cron.daily/aide and has no timer at all.
+    - name: 'dpkg-query --show aide-common'
+      ansible.builtin.command: "dpkg-query --show --showformat='${db:Status-Status}' aide-common"
+      register: '__molecule__aide_common_result'
+      changed_when: false
+      failed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'stat /etc/aide/aide.conf'
+      ansible.builtin.stat:
+        path: '/etc/aide/aide.conf'
+      register: '__molecule__aide_common_conf_result'
+
+    - name: 'Assert that aide-common, its daily check and its configuration are gone'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_common_result["stdout"] | d("") != "installed"'
+          - 'not __molecule__aide_common_conf_result["stat"]["exists"]'
+        fail_msg: '{{ __molecule__aide_common_result["stdout"] | d("") }}'
+
+    - name: 'systemctl start --wait aidecheck.service (clean host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aidecheck.service (clean host)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_clean_result'
+      changed_when: false
+
+    - name: 'cat /var/log/aide/aide.log (clean host)'
+      ansible.builtin.command: 'cat /var/log/aide/aide.log'
+      register: '__molecule__aide_clean_log_result'
+      changed_when: false
+
+    - name: 'Assert that the check on the unchanged host runs clean'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_clean_result["stdout"] == "success"'
+        fail_msg: '{{ __molecule__aide_clean_log_result["stdout"] }}'
+
+    # the rotation must leave the report of the last check in place: an empty aide.log looks like
+    # an aborted check. a state file of its own, so the host's logrotate state stays as it is.
+    # aide empties the file when a check starts, so a check started meanwhile (by the dpkg hook
+    # after unattended-upgrades) has to finish first.
+    - name: 'systemctl is-active aidecheck.service (wait for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
+      ansible.builtin.command: 'systemctl is-active aidecheck.service'
+      register: '__molecule__aide_active_result'
+      until: '__molecule__aide_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
+      retries: 180
+      delay: 5
+      changed_when: false
+      failed_when: '__molecule__aide_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+
+    - name: 'logrotate --force --state /tmp/lfops-molecule-logrotate.state /etc/logrotate.d/aide'
+      ansible.builtin.command: 'logrotate --force --state /tmp/lfops-molecule-logrotate.state /etc/logrotate.d/aide'
+      changed_when: true
+
+    - name: 'stat /var/log/aide/aide.log /var/log/aide/aide.log.1'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/var/log/aide/aide.log'
+        - '/var/log/aide/aide.log.1'
+      register: '__molecule__aide_rotated_result'
+
+    - name: 'Assert that the rotation copied the report and left it in place'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_rotated_result["results"][0]["stat"]["size"] > 0'
+          - '__molecule__aide_rotated_result["results"][1]["stat"]["exists"]'
+
+    # a config aide does not accept must abort the run before it replaces /etc/aide.conf.
+    - name: 'sha256sum /etc/aide.conf (before the run with a broken config)'
+      ansible.builtin.stat:
+        path: '/etc/aide.conf'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_conf_before_broken_result'
+
+    - block:
+
+      - name: 'Run the aide role with a rule that uses an undefined group'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.aide'
+        vars:
+          aide__conf_raw: '/srv/lfops-molecule-broken LFOPSMOLECULEUNDEFINED'
+
+      - name: 'Fail, since the role accepted a broken config'
+        ansible.builtin.fail:
+          msg: 'The aide role deployed a config that aide --config-check rejects.'
+
+      rescue:
+
+      - name: 'Assert that the role failed on the config check, not on the task above'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] == "Deploy /etc/aide.conf"'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    - name: 'sha256sum /etc/aide.conf (after the run with a broken config)'
+      ansible.builtin.stat:
+        path: '/etc/aide.conf'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_conf_after_broken_result'
+
+    - name: 'Assert that /etc/aide.conf is unchanged'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_conf_after_broken_result["stat"]["checksum"] == __molecule__aide_conf_before_broken_result["stat"]["checksum"]'
+
+    # a database the role finds without its own check unit must not be re-baselined. removing
+    # the unit makes the host look like one with a database from a previous AIDE setup, and
+    # the role run below deploys the unit again, which notifies the handler.
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run without a check unit)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_no_unit_result'
+
+    - name: 'rm -f /etc/systemd/system/aidecheck.service'
+      ansible.builtin.file:
+        path: '/etc/systemd/system/aidecheck.service'
+        state: 'absent'
+
+    - name: 'systemctl daemon-reload'
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: 'Reset the end-of-play messages (run without a check unit)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the aide role (run without a check unit)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run without a check unit)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_no_unit_result'
+
+    - name: 'Assert that the database was left alone and the operator was told'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_no_unit_result["stat"]["checksum"] == __molecule__aide_db_before_no_unit_result["stat"]["checksum"]'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 1'
+
+    - name: 'mkdir -p /srv/lfops-molecule/ignored /srv/lfops-molecule/raw-ignored'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+      loop:
+        - '/srv/lfops-molecule/ignored'
+        - '/srv/lfops-molecule/raw-ignored'
+
+    - name: 'Create a probe file below the regular rule, both negative rules and /opt'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '{{ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop:
+        - '/opt/lfops-molecule-probe'
+        - '/srv/lfops-molecule/ignored/probe'
+        - '/srv/lfops-molecule/probe'
+        - '/srv/lfops-molecule/raw-ignored/probe'
+
+    - name: 'Change the content of /root/.lfops-molecule'
+      ansible.builtin.copy:
+        content: 'lfops-molecule-changed'
+        dest: '/root/.lfops-molecule'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    # the same owner, group and mode, so PERMS from the inventory sees no change, while the
+    # default NORMAL would report the new size, inode and checksum.
+    - name: 'Change the content of /etc/cron.d/lfops-molecule'
+      ansible.builtin.copy:
+        content: "# lfops-molecule-changed\n"
+        dest: '/etc/cron.d/lfops-molecule'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'systemctl start --wait aidecheck.service (changed host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aidecheck.service (changed host)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_changed_result'
+      changed_when: false
+
+    - name: 'cat /var/log/aide/aide.log (changed host)'
+      ansible.builtin.command: 'cat /var/log/aide/aide.log'
+      register: '__molecule__aide_changed_log_result'
+      changed_when: false
+
+    - name: 'Assert that the check fails and reports only the files below the inventory rules'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_changed_result["stdout"] == "exit-code"'
+          - '"/srv/lfops-molecule/probe" in __molecule__aide_changed_log_result["stdout"]'
+          # the details of an added file only appear from report level added_removed_entries on,
+          # the role's default
+          - '"File: /srv/lfops-molecule/probe" in __molecule__aide_changed_log_result["stdout"]'
+          - '"/root/.lfops-molecule" in __molecule__aide_changed_log_result["stdout"]'
+          - '"/srv/lfops-molecule/ignored" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/srv/lfops-molecule/raw-ignored" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/opt/lfops-molecule-probe" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/etc/cron.d/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
+        fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
+
+    # the check is failing now, so a config change must not re-baseline the database either.
+    # the role run below reverts the hand edit, which notifies the handler.
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_failed_result'
+
+    - name: 'Edit /etc/aide.conf by hand'
+      ansible.builtin.lineinfile:
+        path: '/etc/aide.conf'
+        line: '# lfops-molecule'
+
+    - name: 'Reset the end-of-play messages (run after a failed check)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the aide role (run after a failed check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_failed_result'
+
+    - name: 'Assert that the database was left alone and the operator was told'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_failed_result["stat"]["checksum"] == __molecule__aide_db_before_failed_result["stat"]["checksum"]'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 1'
+
+    - name: 'Remove the probe files'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/opt/lfops-molecule-probe'
+        - '/srv/lfops-molecule'
+
+    # back to the content prepare.yml deployed, so the second verify after the idempotence step
+    # changes it again.
+    - name: 'Restore the content of /root/.lfops-molecule'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/root/.lfops-molecule'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'Restore the content of /etc/cron.d/lfops-molecule'
+      ansible.builtin.copy:
+        content: "# lfops-molecule\n"
+        dest: '/etc/cron.d/lfops-molecule'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    # the last check failed, so the tasks `--tags aide:update_db` runs must leave the database
+    # alone and say so
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before update-db-if-clean after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_if_clean_failed_result'
+
+    - name: 'Reset the end-of-play messages (update-db-if-clean after a failed check)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the update-db-if-clean tasks of the aide role (after a failed check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db-if-clean.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after update-db-if-clean after a failed check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_if_clean_failed_result'
+
+    - name: 'Assert that update-db-if-clean left the database alone and the operator was told'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_if_clean_failed_result["stat"]["checksum"] == __molecule__aide_db_before_if_clean_failed_result["stat"]["checksum"]'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 1'
+
+    # the same tasks `--tags aide:update_db_force` runs. they have to accept the unit and the config
+    # that the two role runs above redeployed, and clear the failed state of the last check.
+    - name: 'Run the update-db tasks of the aide role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db.yml'
+
+    - name: 'systemctl is-failed aidecheck.service (after update-db)' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-failed aidecheck.service'
+      register: '__molecule__aide_failed_after_update_db_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that update-db cleared the failed state'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_failed_after_update_db_result["rc"] != 0'
+
+    - name: 'systemctl start --wait aidecheck.service (restored host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aidecheck.service (restored host)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_restored_result'
+      changed_when: false
+
+    - name: 'Assert that the check runs clean again once the current state was accepted'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_restored_result["stdout"] == "success"'
+
+    # after a clean check, the tasks `--tags aide:update_db` runs accept a change, as after a
+    # deploy, and accept its removal again, so that the second verify after the idempotence
+    # step starts from the same state.
+    - name: 'mkdir -p /srv/lfops-molecule'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Deploy /srv/lfops-molecule/accepted'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/srv/lfops-molecule/accepted'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before update-db-if-clean after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_if_clean_result'
+
+    - name: 'Run the update-db-if-clean tasks of the aide role (after a clean check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db-if-clean.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after update-db-if-clean after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_if_clean_result'
+
+    - name: 'Wait for the check update-db-if-clean started'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after update-db-if-clean)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_if_clean_result'
+      changed_when: false
+
+    - name: 'Assert that update-db-if-clean accepted the change'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_if_clean_result["stat"]["checksum"] != __molecule__aide_db_before_if_clean_result["stat"]["checksum"]'
+          - '__molecule__aide_if_clean_result["stdout"] == "success"'
+
+    - name: 'rm -rf /srv/lfops-molecule'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule'
+        state: 'absent'
+
+    - name: 'Run the update-db-if-clean tasks of the aide role (after cleaning up)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db-if-clean.yml'
+
+    - name: 'Wait for the check update-db-if-clean started (after cleaning up)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after cleaning up)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_if_clean_cleaned_result'
+      changed_when: false
+
+    - name: 'Assert that update-db-if-clean accepted the removal'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_if_clean_cleaned_result["stdout"] == "success"'
+
+    # the last check is clean now, so a config change of the role makes its handler update the
+    # database: the role reverts the hand edit, and the check against the new database is clean.
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_clean_run_result'
+
+    - name: 'Edit /etc/aide.conf by hand (before the run after a clean check)'
+      ansible.builtin.lineinfile:
+        path: '/etc/aide.conf'
+        line: '# lfops-molecule'
+
+    - name: 'Reset the end-of-play messages (run after a clean check)'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    - name: 'Run the aide role (run after a clean check)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run after a clean check)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_clean_run_result'
+
+    - name: 'Wait for the check the handler started'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_clean_run_result'
+      changed_when: false
+
+    - name: 'Assert that the handler updated the database without telling the operator anything'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_clean_run_result["stat"]["checksum"] != __molecule__aide_db_before_clean_run_result["stat"]["checksum"]'
+          - '__molecule__aide_clean_run_result["stdout"] == "success"'
+          - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 0'
+
+
+# The dpkg hook against real unattended-upgrades runs, started through apt-daily-upgrade.service
+# as the timer does. A local repository publishes three independent test packages, which
+# unattended-upgrades installs in three package sets (one dpkg run each), and its configuration
+# allows that repository only. On a clean host the hook checks once before the first set and the
+# database is updated once after the last one, so that the check runs clean afterwards. Drift
+# from before the upgrade keeps the database as it is, and the check reports the drift together
+# with the packages. Packages installed with apt by hand, and an unattended upgrade without a
+# database, leave the hook alone.
+- name: 'Verify the dpkg hook of aide against unattended-upgrades (Debian and Ubuntu)'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - block:
+
+      # builds the next version of lfops-molecule-a, -b and -c into a flat repository below
+      # /var/lib, which no rule monitors, and refreshes the package lists of that repository only.
+      # the version follows the installed one, so the second verify after the idempotence step
+      # publishes newer packages again.
+      - name: 'Deploy /usr/local/sbin/lfops-molecule-publish'
+        ansible.builtin.copy:
+          content: |
+            #!/bin/bash
+            set -o errexit -o nounset -o pipefail
+            repo='/var/lib/lfops-molecule-repo'
+            installed=$(dpkg-query --show --showformat='${Version}' lfops-molecule-a 2>/dev/null || true)
+            v=$(( ${installed:-0} + 1 ))
+            mkdir --parents "$repo"
+            for p in a b c; do
+                d=$(mktemp --directory)
+                mkdir --parents "$d/DEBIAN" "$d/usr/share/lfops-molecule-$p"
+                printf 'lfops-molecule-%s %s\n' "$p" "$v" > "$d/usr/share/lfops-molecule-$p/version"
+                printf 'Package: lfops-molecule-%s\nVersion: %s\nArchitecture: all\nMaintainer: Linuxfabrik <info@example.com>\nDescription: LFOps Molecule test package\n' "$p" "$v" > "$d/DEBIAN/control"
+                dpkg-deb --root-owner-group --build "$d" "$repo/lfops-molecule-${p}_${v}_all.deb" > /dev/null
+                rm --recursive --force "$d"
+            done
+            cd "$repo"
+            for f in *.deb; do
+                dpkg-deb --field "$f"
+                printf 'Filename: ./%s\nSize: %s\nSHA256: %s\n\n' "$f" "$(stat --format=%s "$f")" "$(sha256sum "$f" | cut --delimiter=' ' --fields=1)"
+            done > Packages
+            printf 'Origin: lfops-molecule\nLabel: lfops-molecule\nSuite: lfops-molecule\nCodename: lfops-molecule\nDate: %s\nArchitectures: all\nSHA256:\n %s %s Packages\n' \
+                "$(date --utc --rfc-2822)" "$(sha256sum Packages | cut --delimiter=' ' --fields=1)" "$(stat --format=%s Packages)" > Release
+            apt-get update -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/lfops-molecule.list -o Dir::Etc::sourceparts=- > /dev/null
+            echo "$v"
+          dest: '/usr/local/sbin/lfops-molecule-publish'
+          owner: 'root'
+          group: 'root'
+          mode: 0o755
+
+      - name: 'Deploy /etc/apt/sources.list.d/lfops-molecule.list'
+        ansible.builtin.copy:
+          content: "deb [trusted=yes] file:/var/lib/lfops-molecule-repo ./\n"
+          dest: '/etc/apt/sources.list.d/lfops-molecule.list'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      # only the test repository, so that unattended-upgrades installs nothing else. "always"
+      # runs it on every start of apt-daily-upgrade.service, Debug logs the package sets.
+      - name: 'Deploy /etc/apt/apt.conf.d/99lfops-molecule'
+        ansible.builtin.copy:
+          content: |
+            #clear Unattended-Upgrade::Origins-Pattern;
+            #clear Unattended-Upgrade::Allowed-Origins;
+            Unattended-Upgrade::Origins-Pattern { "origin=lfops-molecule"; };
+            Unattended-Upgrade::Debug "true";
+            APT::Periodic::Update-Package-Lists "0";
+            APT::Periodic::Unattended-Upgrade "always";
+          dest: '/etc/apt/apt.conf.d/99lfops-molecule'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'lfops-molecule-publish (first version)'
+        ansible.builtin.command: '/usr/local/sbin/lfops-molecule-publish'
+        changed_when: true
+
+      - name: 'apt-get install lfops-molecule-a lfops-molecule-b lfops-molecule-c'
+        ansible.builtin.apt:
+          name:
+            - 'lfops-molecule-a'
+            - 'lfops-molecule-b'
+            - 'lfops-molecule-c'
+          state: 'latest' # noqa package-latest (the newest version of the test packages is the point)
+
+      - name: 'Accept the test setup'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.aide'
+          tasks_from: 'update-db.yml'
+
+      - name: 'Wait for the units to finish (after accepting the test setup)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      # 1: a clean host
+      - name: 'lfops-molecule-publish (clean host)'
+        ansible.builtin.command: '/usr/local/sbin/lfops-molecule-publish'
+        register: '__molecule__aide_uu_clean_version_result'
+        changed_when: true
+
+      - name: 'Reset the logs of unattended-upgrades and the hook (clean host)'
+        ansible.builtin.include_tasks: 'tasks/reset-uu-logs.yml'
+
+      - name: 'systemctl start apt-daily-upgrade.service (clean host)' # noqa command-instead-of-module (runs the unattended upgrade and waits for it)
+        ansible.builtin.command: 'systemctl start apt-daily-upgrade.service'
+        changed_when: true
+
+      - name: 'Wait for the units to finish (clean host)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      - name: 'Collect the results (clean host)'
+        ansible.builtin.include_tasks: 'tasks/collect-uu-results.yml'
+
+      - name: 'Assert that the hook checked once and updated the database once after all package sets'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__aide_uu_versions_result["stdout"] == (__molecule__aide_uu_clean_version_result["stdout"] + " ") * 3'
+            - '__molecule__aide_uu_sets_result["stdout"] | int >= 2'
+            - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "aide --check") | list | length == 1'
+            - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "re-baselined") | list | length == 1'
+            - '__molecule__aide_uu_update_runs_result["stdout"] | int == 1'
+            - '__molecule__aide_uu_check_result["stdout"] == "success"'
+          fail_msg: '{{ __molecule__aide_uu_hook_result["stdout_lines"] + __molecule__aide_uu_log_result["stdout_lines"] }}'
+
+      # 2: drift from before the upgrade must not be accepted along with it
+      - name: 'sha256sum /var/lib/aide/aide.db.gz (before the unattended upgrade on a drifted host)'
+        ansible.builtin.stat:
+          path: '/var/lib/aide/aide.db.gz'
+          checksum_algorithm: 'sha256'
+        register: '__molecule__aide_db_before_drift_result'
+
+      - name: 'Deploy /etc/lfops-molecule-drift'
+        ansible.builtin.copy:
+          content: 'lfops-molecule'
+          dest: '/etc/lfops-molecule-drift'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'lfops-molecule-publish (drifted host)'
+        ansible.builtin.command: '/usr/local/sbin/lfops-molecule-publish'
+        changed_when: true
+
+      - name: 'Reset the logs of unattended-upgrades and the hook (drifted host)'
+        ansible.builtin.include_tasks: 'tasks/reset-uu-logs.yml'
+
+      - name: 'systemctl start apt-daily-upgrade.service (drifted host)' # noqa command-instead-of-module (runs the unattended upgrade and waits for it)
+        ansible.builtin.command: 'systemctl start apt-daily-upgrade.service'
+        changed_when: true
+
+      - name: 'Wait for the units to finish (drifted host)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      - name: 'Collect the results (drifted host)'
+        ansible.builtin.include_tasks: 'tasks/collect-uu-results.yml'
+
+      - name: 'sha256sum /var/lib/aide/aide.db.gz (after the unattended upgrade on a drifted host)'
+        ansible.builtin.stat:
+          path: '/var/lib/aide/aide.db.gz'
+          checksum_algorithm: 'sha256'
+        register: '__molecule__aide_db_after_drift_result'
+
+      - name: 'Assert that the hook checked once, left the database alone and the check reports the drift and the packages'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__aide_db_after_drift_result["stat"]["checksum"] == __molecule__aide_db_before_drift_result["stat"]["checksum"]'
+            - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "aide --check") | list | length == 1'
+            - '__molecule__aide_uu_update_runs_result["stdout"] | int == 0'
+            - '__molecule__aide_uu_check_result["stdout"] == "exit-code"'
+            - '"/etc/lfops-molecule-drift" in __molecule__aide_uu_log_result["stdout"]'
+            - '"/usr/share/lfops-molecule-a/version" in __molecule__aide_uu_log_result["stdout"]'
+          fail_msg: '{{ __molecule__aide_uu_hook_result["stdout_lines"] + __molecule__aide_uu_log_result["stdout_lines"] }}'
+
+      - name: 'rm -f /etc/lfops-molecule-drift'
+        ansible.builtin.file:
+          path: '/etc/lfops-molecule-drift'
+          state: 'absent'
+
+      - name: 'Accept the state without the drift'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.aide'
+          tasks_from: 'update-db.yml'
+
+      - name: 'Wait for the units to finish (after accepting the state without the drift)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      # 3: packages installed with apt by hand are left to the check
+      - name: 'lfops-molecule-publish (apt by hand)'
+        ansible.builtin.command: '/usr/local/sbin/lfops-molecule-publish'
+        changed_when: true
+
+      - name: 'Reset the logs of unattended-upgrades and the hook (apt by hand)'
+        ansible.builtin.include_tasks: 'tasks/reset-uu-logs.yml'
+
+      - name: 'apt-get install lfops-molecule-a lfops-molecule-b lfops-molecule-c (apt by hand)'
+        ansible.builtin.apt:
+          name:
+            - 'lfops-molecule-a'
+            - 'lfops-molecule-b'
+            - 'lfops-molecule-c'
+          state: 'latest' # noqa package-latest (the newest version of the test packages is the point)
+
+      - name: 'systemctl start aidecheck.service (apt by hand)' # noqa command-instead-of-module (the service module cannot start a unit that is not to be kept running)
+        ansible.builtin.command: 'systemctl start aidecheck.service'
+        changed_when: false
+
+      - name: 'Wait for the units to finish (apt by hand)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      - name: 'Collect the results (apt by hand)'
+        ansible.builtin.include_tasks: 'tasks/collect-uu-results.yml'
+
+      - name: 'Assert that the hook did nothing and the check reports the packages'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__aide_uu_hook_result["stdout_lines"] | length == 0'
+            - '__molecule__aide_uu_check_result["stdout"] == "exit-code"'
+            - '"/usr/share/lfops-molecule-a/version" in __molecule__aide_uu_log_result["stdout"]'
+          fail_msg: '{{ __molecule__aide_uu_hook_result["stdout_lines"] + __molecule__aide_uu_log_result["stdout_lines"] }}'
+
+      - name: 'Accept the packages installed by hand'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.aide'
+          tasks_from: 'update-db.yml'
+
+      - name: 'Wait for the units to finish (after accepting the packages installed by hand)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      # 4: an unattended upgrade between enabling the timer and `aide --init` must not start a
+      # check that can only abort: the unit would be failed on a freshly set up host
+      - name: 'mv /var/lib/aide/aide.db.gz /var/lib/aide/aide.db.gz.lfops-molecule'
+        ansible.builtin.command: 'mv /var/lib/aide/aide.db.gz /var/lib/aide/aide.db.gz.lfops-molecule'
+        changed_when: true
+
+      - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (before the unattended upgrade without a database)' # noqa command-instead-of-module (no module reads the start time of a unit)
+        ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+        register: '__molecule__aide_start_before_result'
+        changed_when: false
+
+      - name: 'lfops-molecule-publish (no database)'
+        ansible.builtin.command: '/usr/local/sbin/lfops-molecule-publish'
+        changed_when: true
+
+      - name: 'Reset the logs of unattended-upgrades and the hook (no database)'
+        ansible.builtin.include_tasks: 'tasks/reset-uu-logs.yml'
+
+      - name: 'systemctl start apt-daily-upgrade.service (no database)' # noqa command-instead-of-module (runs the unattended upgrade and waits for it)
+        ansible.builtin.command: 'systemctl start apt-daily-upgrade.service'
+        changed_when: true
+
+      - name: 'Wait for the units to finish (no database)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (after the unattended upgrade without a database)' # noqa command-instead-of-module (no module reads the start time of a unit)
+        ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+        register: '__molecule__aide_start_after_result'
+        changed_when: false
+
+      - name: 'Collect the results (no database)'
+        ansible.builtin.include_tasks: 'tasks/collect-uu-results.yml'
+
+      - name: 'mv /var/lib/aide/aide.db.gz.lfops-molecule /var/lib/aide/aide.db.gz'
+        ansible.builtin.command: 'mv /var/lib/aide/aide.db.gz.lfops-molecule /var/lib/aide/aide.db.gz'
+        changed_when: true
+
+      - name: 'Assert that the hook did not start a check without a database'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__aide_start_after_result["stdout"] == __molecule__aide_start_before_result["stdout"]'
+            - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "no AIDE database yet") | list | length > 0'
+            - '__molecule__aide_uu_update_runs_result["stdout"] | int == 0'
+          fail_msg: '{{ __molecule__aide_uu_hook_result["stdout_lines"] }}'
+
+      # back to the state the second verify after the idempotence step expects
+      - name: 'Accept the packages of the upgrade without a database'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.aide'
+          tasks_from: 'update-db.yml'
+
+      - name: 'Wait for the units to finish (after cleaning up)'
+        ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      - name: 'systemctl show --property=Result aidecheck.service (after cleaning up)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+        ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+        register: '__molecule__aide_cleaned_result'
+        changed_when: false
+
+      - name: 'Assert that the check runs clean again'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__aide_cleaned_result["stdout"] == "success"'
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'

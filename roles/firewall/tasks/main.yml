@@ -1,8 +1,40 @@
+# Validated before any firewall is stopped: without /etc/fwb.sh, fwb.service fails right after
+# `systemctl start` (Type=simple, status=203/EXEC), and the host would end up with no firewall at
+# all. With firewall__fwbuilder_repo_url set, the deploy task below fails on its own if the
+# repository has no file for this host.
+- block:
+
+  - name: 'stat /etc/fwb.sh'
+    ansible.builtin.stat:
+      path: '/etc/fwb.sh'
+    register: '__firewall__fwb_sh_stat_result'
+
+  - name: 'Assert that there is an /etc/fwb.sh for fwb.service to run'
+    ansible.builtin.assert:
+      that:
+        - '__firewall__fwb_sh_stat_result["stat"]["exists"] | bool'
+      quiet: true
+      fail_msg: >-
+        firewall__firewall is 'fwbuilder', but there is no /etc/fwb.sh, so the host would run
+        without a firewall. Deploy /etc/fwb.sh, set firewall__fwbuilder_repo_url, or set
+        firewall__firewall to the firewall this host uses.
+
+  when:
+    - 'firewall__firewall == "fwbuilder"'
+    - 'firewall__fwbuilder_repo_url is not defined or firewall__fwbuilder_repo_url | length == 0'
+  tags:
+    - 'firewall'
+    - 'firewall:deploy_fwb_sh'
+
+
 - block:
 
   - name: 'Get the list of services'
     ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
 
+  # `service` has to match the service_facts keys, which always carry the .service suffix, and
+  # `name` the value of firewall__firewall. Otherwise the item is skipped and the firewall the
+  # host switched away from keeps running next to the new one.
   - name: 'Be sure {{ item["service"] }} is stopped and disabled'
     ansible.builtin.systemd:
       name: '{{ item["service"] }}'
@@ -16,13 +48,40 @@
       - name: 'firewalld'
         service: 'firewalld.service'
       - name: 'fwbuilder'
-        service: 'fwb'
-      - name: 'iptables.service'
-        service: 'iptables'
+        service: 'fwb.service'
+      - name: 'iptables'
+        service: 'iptables.service'
       - name: 'nftables'
         service: 'nftables.service'
       - name: 'ufw'
         service: 'ufw.service'
+
+  # The role deploys fwb.service itself to /etc/systemd/system, where `systemctl mask` wants to
+  # place its /dev/null link, so masking fails with "File /etc/systemd/system/fwb.service already
+  # exists". ansible.builtin.systemd ignores that error for an existing unit and reports a change
+  # on every run instead (systemd_service.py, ansible-core 2.16). Remove the unit file first; the
+  # template in the fwbuilder block replaces the link again when the host switches back.
+  - name: 'stat /etc/systemd/system/fwb.service'
+    ansible.builtin.stat:
+      path: '/etc/systemd/system/fwb.service'
+    register: '__firewall__fwb_unit_stat_result'
+    when:
+      - 'firewall__firewall != "fwbuilder"'
+
+  - name: 'rm -f /etc/systemd/system/fwb.service'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/fwb.service'
+      state: 'absent'
+    register: '__firewall__fwb_unit_remove_result'
+    when:
+      - 'firewall__firewall != "fwbuilder"'
+      - '__firewall__fwb_unit_stat_result["stat"]["isreg"] | d(false) | bool'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__firewall__fwb_unit_remove_result is changed'
 
   - name: 'Be sure {{ item["service"] }} is masked, even if it is not installed yet'
     # prevents the service from starting even if it is installed later on
@@ -106,52 +165,28 @@
     - 'firewall:firewalld'
 
 
-# this block intentionally has no "when: firewall__firewall == fwbuilder" condition. run_once picks
-# the first host in the play - if that host does not use fwbuilder, a block-level when would cause
-# the clone to be skipped for all hosts. instead, we extract the repo url across all play hosts
-# (using select to skip undefined and empty values) and use the first truthy match.
+# One clone per repository, in a directory named after its URL, so hosts whose firewall files live
+# in different repositories each deploy their own. The first host clones; the others sharing the
+# URL fetch into the same directory, and `force` resets it to the newest commit, also after a
+# force push. Verified with ansible-core 2.16 against a local repository.
 - block:
 
-  - name: 'Remove any existing local fwb repo'
-    ansible.builtin.file:
-      path: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
-      state: 'absent'
-    changed_when: false # not a config change on the server
-    check_mode: false # run task even if `--check` is specified
-    delegate_to: 'localhost'
-    become: false
-    run_once: true
-    vars:
-      __firewall__fwbuilder_repo_url: >-
-        {{ ansible_play_hosts_all
-           | map('extract', hostvars, 'firewall__fwbuilder_repo_url')
-           | select('defined')
-           | select
-           | first
-           | default('') }}
-    when: '__firewall__fwbuilder_repo_url | length > 0'
-
-  - name: 'Clone the fwb git repo to localhost'
+  - name: 'Clone the fwb git repo to localhost' # noqa latest[git] the newest compiled firewall is what is deployed
     ansible.builtin.git:
-      repo: '{{ __firewall__fwbuilder_repo_url }}'
-      dest: '/tmp/ansible.fwb-{{ inventory_dir | basename }}'
+      repo: '{{ firewall__fwbuilder_repo_url }}'
+      dest: '{{ __firewall__fwbuilder_repo_dir }}'
       depth: 1
       single_branch: true
+      force: true
     changed_when: false # not a config change on the server
     delegate_to: 'localhost'
     become: false
-    run_once: true
+    throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
-    vars:
-      __firewall__fwbuilder_repo_url: >-
-        {{ ansible_play_hosts_all
-           | map('extract', hostvars, 'firewall__fwbuilder_repo_url')
-           | select('defined')
-           | select
-           | first
-           | default('') }}
-    when: '__firewall__fwbuilder_repo_url | length > 0'
 
+  when:
+    - 'firewall__firewall == "fwbuilder"'
+    - 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length > 0'
   tags:
     - 'firewall'
     - 'firewall:deploy_fwb_sh'
@@ -162,7 +197,7 @@
   - name: 'Deploy /etc/fwb.sh'
     ansible.builtin.copy:
       backup: true
-      src: '/tmp/ansible.fwb-{{ inventory_dir | basename }}/{{ firewall__fwbuilder_fw_file }}.fw'
+      src: '{{ __firewall__fwbuilder_repo_dir }}/{{ firewall__fwbuilder_fw_file }}.fw'
       dest: '/etc/fwb.sh'
       owner: 'root'
       group: 'root'
@@ -234,7 +269,9 @@
       owner: 'root'
       group: 'root'
       mode: 0o600
-    when: 'inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/etc/sysconfig/iptables" is file'
+    # the parentheses are needed: `is` binds tighter than `~`, and without them the condition is a
+    # non-empty string that is always true
+    when: '(inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/etc/sysconfig/iptables") is file'
     register: 'firewall__iptables_definition_result'
 
   - name: 'systemctl restart iptables.service'

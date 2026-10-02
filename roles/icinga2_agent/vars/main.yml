@@ -1,0 +1,46 @@
+# The ticket from the generate-ticket API call, empty when the call failed or was skipped.
+__icinga2_agent__pki_ticket: '{{ icinga2_agent__icinga2_ticket["json"]["results"][0]["ticket"] | d("") }}'
+
+# `uri` reports the HTTP status as `status` (-1 without an HTTP response), `win_uri` as
+# `status_code`, which it omits without an HTTP response.
+__icinga2_agent__pki_ticket_status: '{{
+    icinga2_agent__icinga2_ticket["status"]
+    | d(icinga2_agent__icinga2_ticket["status_code"])
+    | d(-1)
+    | int
+  }}'
+
+# Verified against Icinga2 2.14.6 on Debian 13: a wrong password gets 401, an API user
+# without `actions/generate-ticket` gets 404 (not 403), since the action has no object
+# type. A master without `TicketSalt` answers 500.
+__icinga2_agent__pki_ticket_hints:
+  401: 'Check the username and password in icinga2_agent__icinga2_api_user_login.'
+  404: 'Grant the API user the actions/generate-ticket permission on the Icinga2 master (Icinga2 answers 404 instead of 403 when it is missing), and check icinga2_agent__icinga2_api_url.'
+  500: 'Check the log of the Icinga2 master, which answers 500 for example when its TicketSalt constant is not set.'
+
+__icinga2_agent__pki_ticket_problem: '{{
+    "icinga2_agent__icinga2_api_user_login is not set, so no PKI ticket was requested."
+    if icinga2_agent__icinga2_ticket is skipped else
+    "Could not get a PKI ticket from " ~ icinga2_agent__icinga2_api_url ~ ": "
+    ~ (icinga2_agent__icinga2_ticket["msg"] | d("unknown error")) ~ ". "
+    ~ (__icinga2_agent__pki_ticket_hints[__icinga2_agent__pki_ticket_status | int]
+      | d("Check that " ~ icinga2_agent__icinga2_api_url ~ " is reachable from this host."))
+  }}'
+
+# `icinga2 node setup` creates a new key and a self-signed certificate on every run and
+# asks the master to sign it. Without a ticket the request waits for manual approval,
+# so an agent that was connected already loses its signed certificate.
+__icinga2_agent__pki_ticket_fail_msg: >-
+  icinga2_agent: {{ __icinga2_agent__pki_ticket_problem }}
+  Without a ticket, the Icinga2 master does not sign the agent certificate, and
+  `icinga2 node setup` would replace the signed certificate of an already connected agent
+  with an unsigned one, so the run stops here. Fix the cause and run the role again, or set
+  `icinga2_agent__skip_pki_ticket: true` to sign the certificate request on the Icinga2
+  master by hand.
+
+__icinga2_agent__end_of_play_message: >-
+  icinga2_agent: The agent requested its certificate without a ticket
+  (icinga2_agent__skip_pki_ticket). Sign it on the Icinga2 master with `icinga2 ca list`
+  and `icinga2 ca sign <fingerprint>`, using the newest request for CN
+  "{{ icinga2_agent__cn }}". Every run of this role creates a new request that has to be
+  signed again.

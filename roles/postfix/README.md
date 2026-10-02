@@ -73,9 +73,9 @@ postfix__relayhost: 'mail.example.com:587'
 
 `postfix__compatibility_level`
 
-* The compatibility level Postfix runs at on the Red Hat family. It selects which backwards-compatible defaults Postfix keeps, and defaults to the level the distribution itself ships. Lowering it on RHEL 10 brings back the older defaults, among them MD5 instead of SHA-256 for matching TLS fingerprints. On Debian and Ubuntu the variable has no effect, the deployed `main.cf` sets `3.6`.
+* The compatibility level Postfix runs at. It selects which backwards-compatible defaults Postfix keeps, and defaults to the level the distribution itself ships. Lowering it below `3.6` brings back the older defaults, among them MD5 instead of SHA-256 for matching TLS fingerprints.
 * Type: String.
-* Default: RHEL 8 / 9: `'2'`, RHEL 10: `'3.8'`
+* Default: RHEL 8 / 9: `'2'`, RHEL 10: `'3.8'`, Debian 12, Ubuntu 22.04 / 24.04: `'3.6'`, Debian 13, Ubuntu 26.04: `'3.9'`
 
 `postfix__inet_interfaces`
 

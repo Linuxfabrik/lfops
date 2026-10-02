@@ -27,6 +27,12 @@
     when:
       - 'item["state"] | d("present") == "absent"'
 
+  # the LVM tools are missing on hosts installed without LVM, e.g. from a cloud image
+  - name: 'Install lvm2'
+    ansible.builtin.package:
+      name: 'lvm2'
+      state: 'present'
+
   # growpart is not part of a minimal installation
   - name: 'Install {{ __lvm__growpart_package }}'
     ansible.builtin.package:
@@ -40,7 +46,7 @@
       cmd: 'growpart {{ "--dry-run" if ansible_check_mode else "" }} {{ item[1] | ansible.builtin.regex_replace("[p]?[0-9]+$", "") }} {{ item[1] | ansible.builtin.regex_replace(".*[p]?([0-9]+)$", "\1") }}'
     # always run, since growpart supports `--dry-run`
     check_mode: false
-    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs") }}'
+    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs", skip_missing=true) }}'
     # subelements converts
     #   - name: 'rl'
     #     pvs:
@@ -70,19 +76,19 @@
       - '(item[1] is ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("p[0-9]+$")) or
          (item[1] is not ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("[0-9]+$"))'
     register: '__lvm__growpart_result'
-    changed_when: '__lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^CHANGED:", multiline=true)'
+    changed_when: '__lvm__growpart_result["stdout"] is ansible.builtin.regex("^CHANGED:", multiline=true)'
     failed_when:
       - '__lvm__growpart_result["rc"] != 0'
-      - 'not __lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^NOCHANGE:", multiline=true)'
+      - '__lvm__growpart_result["stdout"] is not ansible.builtin.regex("^NOCHANGE:", multiline=true)'
 
   - name: 'pvcreate / pvresize {{ item[1] }}'
-    # we copied the upstream https://github.com/ansible-collections/community.general/blob/28b16eab66c56e69794fbf8fb3b7bd4486f7505b/plugins/modules/lvm_pv.py because it is only available in community.general collection version 12.2.0
-    # we have to us an older version because we still need to support rhel8
+    # we copied the upstream https://github.com/ansible-collections/community.general/blob/28b16eab66c56e69794fbf8fb3b7bd4486f7505b/plugins/modules/lvm_pv.py because it is only available in community.general 11.0.0 and later
+    # we have to use an older community.general because we still need to support rhel8 (see "Vendored Plugins" in CONTRIBUTING.md)
     linuxfabrik.lfops.lvm_pv:
       device: '{{ item[1] }}'
       state: 'present'
       resize: true
-    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs") }}'
+    loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs", skip_missing=true) }}'
     loop_control:
       label: '{{ item[1] }}'
     when:
@@ -130,7 +136,7 @@
       quiet: true
     loop: '{{ lvm__lvs__combined_var }}'
     loop_control:
-      label: '{{ item["name"] }}: {{ item["size"] }}'
+      label: '{{ item["name"] }}: {{ item["size"] | d("") }}'
     when:
       - 'item["state"] | d("present") != "absent"'
 
@@ -140,6 +146,8 @@
       lv: '{{ item["name"] }}'
       size: '{{ item["size"] }}'
       state: 'present'
+      # in the present state, lvol only uses force to allow shrinking
+      force: '{{ item["force"] | d(false) }}'
       resizefs: '{{ item["resizefs"] | d(true) }}'
       shrink: '{{ item["shrink"] | d(false) }}'
     loop: '{{ lvm__lvs__combined_var }}'
@@ -153,6 +161,20 @@
 
 
 - block:
+
+  # mkfs.xfs is missing on hosts installed without XFS, e.g. from a Debian cloud image. Also
+  # covers LVs that are being removed, which does no harm.
+  - name: 'Install the tools for the file systems in use'
+    ansible.builtin.package:
+      name: '{{ __lvm__fstype_packages_in_use }}'
+      state: 'present'
+    when: '__lvm__fstype_packages_in_use | length > 0'
+    vars:
+      __lvm__fstype_packages_in_use: '{{ lvm__lvs__combined_var
+        | map(attribute="fstype", default="xfs")
+        | select("in", __lvm__fstype_packages)
+        | map("extract", __lvm__fstype_packages)
+        | unique }}'
 
   - name: 'mkfs --type {{ item["fstype"] | d("xfs") }} /dev/{{ item["vg"] }}/{{ item["name"] }}'
     community.general.filesystem:
@@ -171,20 +193,7 @@
 
 - block:
 
-  - name: 'mkdir --parents {{ item["mount_path"] }}'
-    ansible.builtin.file:
-      path: '{{ item["mount_path"] }}'
-      state: 'directory'
-      owner: '{{ item["mount_owner"] | d("root") }}'
-      group: '{{ item["mount_group"] | d("root") }}'
-      mode: '{{ item["mount_mode"] | d("0o0755") }}'
-    loop: '{{ lvm__lvs__combined_var }}'
-    loop_control:
-      label: '{{ item["name"] }}'
-    when:
-      - 'item["state"] | d("present") != "absent"'
-      - 'item["mount_path"] is defined'
-
+  # creates the mount point if it is missing
   - name: 'Mount /dev/{{ item["vg"] }}/{{ item["name"] }} to {{ item["mount_path"] }}'
     ansible.posix.mount:
       src: '/dev/{{ item["vg"] }}/{{ item["name"] }}'
@@ -200,6 +209,22 @@
       - 'item["mount_path"] is defined'
     register: '__lvm__mount_result'
 
+  # after mounting, since owner and mode of the mounted file system's root are what users of the
+  # mount point see. Set on the directory underneath, they are hidden by the mount.
+  - name: 'chown {{ item["mount_owner"] | d("root") }}:{{ item["mount_group"] | d("root") }} {{ item["mount_path"] }}'
+    ansible.builtin.file:
+      path: '{{ item["mount_path"] }}'
+      state: 'directory'
+      owner: '{{ item["mount_owner"] | d("root") }}'
+      group: '{{ item["mount_group"] | d("root") }}'
+      mode: '{{ item["mount_mode"] | d("0o0755") }}'
+    loop: '{{ lvm__lvs__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+      - 'item["mount_path"] is defined'
+
   - name: 'restorecon -Frv {{ item["item"]["mount_path"] }}'
     ansible.builtin.command:
       cmd: 'restorecon -Frv {{ item["item"]["mount_path"] }}'
@@ -207,6 +232,10 @@
     loop_control:
       label: '{{ item["item"]["mount_path"] }}'
     changed_when: false
+    # not `!= "disabled"`: without the SELinux Python bindings, e.g. on Debian, the status reads
+    # "Missing selinux Python library", and there is no restorecon either
+    when:
+      - 'ansible_facts["selinux"]["status"] == "enabled"'
 
   tags:
     - 'lvm'

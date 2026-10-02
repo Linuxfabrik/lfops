@@ -1,0 +1,44 @@
+# templates/etc/<version>-aide.conf.j2 exists for these major.minor versions: 0.16 (RHEL 8),
+# 0.17 (Ubuntu 22.04), 0.18 (Debian 12, Ubuntu 24.04) and 0.19 (Debian 13, RHEL 9 and 10,
+# Ubuntu 26.04).
+# 0.17 reworked the config options (log_level / report_level replace verbose), 0.18 added
+# num_workers, report_format and config_check_warn_unrestricted_rules, and 0.19 dropped
+# `database` and the old hashsums, so a version outside this list would get a config it may
+# not parse.
+__aide__supported_versions:
+  - '0.16'
+  - '0.17'
+  - '0.18'
+  - '0.19'
+
+# aide 0.16 knows no report_level, only `verbose`, and prints a report line when its level is
+# at most the verbose level (error() in src/compare_db.c of v0.16.2): the summary at 0, the
+# lists of entries and the database checksums at 2, details of changed entries at 5, their
+# added and removed attributes at 6, details of added and removed entries at 7. minimal and
+# summary, and database_attributes and list_entries, therefore end up the same on 0.16.
+__aide__verbose_levels:
+  added_removed_attributes: 6
+  added_removed_entries: 7
+  changed_attributes: 5
+  database_attributes: 2
+  list_entries: 2
+  minimal: 0
+  summary: 1
+
+# the guard of every database update that is not forced, the handler's and the one of
+# `--tags aide:update_db`: a database exists, the role's check unit existed (otherwise the
+# database was not created by this role), and the last check had not reported changes.
+# re-baselining otherwise would silently accept whatever drifted, an intrusion included.
+# computed from the facts tasks/check-state.yml registers, at the time of use.
+__aide__update_db_allowed: '{{
+    __aide__db_stat_result["stat"]["exists"]
+    and __aide__check_unit_stat_result["stat"]["exists"]
+    and __aide__check_failed_result["rc"] != 0
+  }}'
+# a database exists, but the guard keeps it as it is, which the operator is told about
+__aide__update_db_refused: '{{
+    __aide__db_stat_result["stat"]["exists"]
+    and not (__aide__update_db_allowed | bool)
+  }}'
+
+__aide__update_db_left_alone_message: 'aide: The AIDE database was not updated, since the last AIDE check had reported changes or no check deployed by this role has run against the database yet. Review /var/log/aide/aide.log or the output of `aide --check`, then run the playbook with `--tags aide:update_db_force` to accept the current state as the new baseline.'

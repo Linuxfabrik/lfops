@@ -1,0 +1,23 @@
+# /srv is not in the default rule list, so a finding below it can only come from the rules
+# added here. /opt is in the default list, and removing its rule has to take it out of the
+# check. The rule for /srv/lfops-molecule uses a group that only aide__conf_raw defines, so
+# aide only accepts the config if the raw part sits above the rules. The negative rule in the
+# raw part and the one in the rule list each have to hide their probe. The rule for
+# /root/.lfops-molecule belongs to the directory '/root' like the default '/root/\..* PERMS', and
+# only reports a content change if the role renders it above the defaults. The rule for
+# /etc/cron.d changes a default from NORMAL to PERMS, so a content change below it is only
+# left unreported if the inventory value wins over the default. verify.yml relies on all of it.
+aide__conf_raw: |-
+  LFOPSMOLECULE = p+ftype+u+g+s+sha512
+  !/srv/lfops-molecule/raw-ignored
+aide__rules__group_var:
+  - path: '/root/\.lfops-molecule$'
+    attributes: 'NORMAL'
+  - path: '/etc/cron.d'
+    attributes: 'PERMS'
+  - path: '/opt'
+    state: 'absent'
+  - path: '/srv/lfops-molecule'
+    attributes: 'LFOPSMOLECULE'
+  - path: '/srv/lfops-molecule/ignored'
+    type: 'negative'

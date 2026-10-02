@@ -1,0 +1,7 @@
+# Ubuntu is loaded on top of its Debian os_family. It is kept as a full copy of Debian.yml so
+# Ubuntu-specific drift has a dedicated home.
+# chronyd on Debian and Ubuntu only reads /etc/chrony/chrony.conf, not /etc/chrony.conf.
+# chronyd.service is merely an alias of chrony.service there.
+__chrony__conf_path: '/etc/chrony/chrony.conf'
+__chrony__leap_directive: 'leapsectz right/UTC'
+__chrony__service_name: 'chrony.service'

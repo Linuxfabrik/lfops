@@ -1,0 +1,3 @@
+# Ubuntu 26.04 ships no /usr/share/zoneinfo/right/UTC, and its own chrony.conf reads the leap
+# seconds from leap-seconds.list instead.
+__chrony__leap_directive: 'leapseclist /usr/share/zoneinfo/leap-seconds.list'

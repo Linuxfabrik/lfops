@@ -1,0 +1,6 @@
+# chronyd on Debian and Ubuntu only reads /etc/chrony/chrony.conf, not /etc/chrony.conf.
+# chronyd.service is merely an alias of chrony.service there.
+__chrony__conf_path: '/etc/chrony/chrony.conf'
+# Debian 12 still ships the right/ zones, Debian 13 only leap-seconds.list, see vars/Debian13.yml.
+__chrony__leap_directive: 'leapsectz right/UTC'
+__chrony__service_name: 'chrony.service'

@@ -13,6 +13,11 @@ This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Moni
 * Deploys the Monitoring Plugins repository.
 * Triggers: none.
 
+`repo_monitoring_plugins:remove`
+
+* Removes the Monitoring Plugins repository, including the backups of its file, and the Linuxfabrik (Packager) signing key. Not run by default, only with this tag. The playbooks that deploy the monitoring plugins along with this role (`monitoring_plugins`, `icinga2_agent`, `setup_basic`, `setup_icinga2_master`) only run it for `monitoring_plugins__install_method: 'package'`, or when this tag is given.
+* Triggers: none.
+
 
 ## Optional Role Variables
 

@@ -8,6 +8,14 @@ Currently, this role only works if the host can reach the Icinga2 master API.
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The agent certificate is signed by the Icinga2 master. The role requests a ticket for the agent's CN from the master API (`icinga2_agent__icinga2_api_user_login`) and passes it to `icinga2 node setup`, so the master signs the certificate right away ([CSR auto-signing](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#distributed-monitoring-setup-csr-auto-signing)).
+* `icinga2 node setup` runs on every run of the role (tags `icinga2_agent` and `icinga2_agent:node_setup`), and each time creates a new key and certificate for the agent. With a ticket, the master signs it again. Without one, the agent is left with an unsigned certificate, even if it was connected before.
+* If the role cannot get a ticket, the run therefore aborts before `icinga2 node setup` and says why.
+* With `icinga2_agent__skip_pki_ticket: true`, the role requests no ticket and sets the agent up without one. Its certificate request then has to be signed on the master by hand ([on-demand CSR signing](https://icinga.com/docs/icinga-2/latest/doc/06-distributed-monitoring/#distributed-monitoring-setup-on-demand-csr-signing)). Since every run creates a new request, it has to be signed again after each run.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -59,7 +67,7 @@ Manual steps:
 
 `icinga2_agent__icinga2_api_user_login`
 
-* The account for generating a ticket for this agent using the Icinga2 API (API of Icinga Core). The account needs to have the `actions/generate-ticket` permission on the Icinga2 Master.
+* The account for generating a ticket for this agent using the Icinga2 API (API of Icinga Core). The account needs to have the `actions/generate-ticket` permission on the Icinga2 Master. Not used if `icinga2_agent__skip_pki_ticket` is `true`.
 * Type: Dictionary.
 
 `icinga2_agent__icinga2_master_cn`
@@ -175,6 +183,12 @@ icinga2_agent__windows_version: 'v2.12.8'
 * Type: Bool.
 * Default: `true`
 
+`icinga2_agent__skip_pki_ticket`
+
+* Do not request a ticket from the Icinga2 master, and set the agent up without one. The certificate request of the agent then has to be signed on the master by hand, after every run of the role. See "How the Role Behaves".
+* Type: Bool.
+* Default: `false`
+
 `icinga2_agent__validate_certs`
 
 * If false, TLS certificates offered by the Icinga Master will not be validated. This should only set to false used on personally controlled sites using self-signed certificates.
@@ -221,11 +235,34 @@ icinga2_agent__icingaweb2_user_login:
   username: 'enrolment-user'
 icinga2_agent__parent_zone: 'satellite01'
 icinga2_agent__service_enabled: true
+icinga2_agent__skip_pki_ticket: false
 icinga2_agent__validate_certs: true
 icinga2_agent__windows_download_path: 'D:\Downloads'
 icinga2_agent__windows_service_user: 'Icinga Service User'
 icinga2_agent__zone: 'satellite'
 ```
+
+
+## Troubleshooting
+
+**The run aborts with `icinga2_agent: Could not get a PKI ticket from ...`**
+
+* The message contains the answer of the Icinga2 master API. Fix the cause and run the role again:
+
+    * `Status code was 401`: The username or password in `icinga2_agent__icinga2_api_user_login` is wrong.
+    * `Status code was 404`: The API user lacks the `actions/generate-ticket` permission on the master; Icinga2 answers 404 instead of 403 in this case. Also check that `icinga2_agent__icinga2_api_url` points to the Icinga2 API (port 5665 by default), not to IcingaWeb2.
+    * `Status code was 500`: Check the log of the Icinga2 master. It answers 500 for example if its `TicketSalt` constant is not set.
+    * `Status code was -1`: The master API did not answer at all. Check that `icinga2_agent__icinga2_api_url` is reachable from the agent (DNS, firewall).
+
+* To sign the agent certificate on the master by hand instead, set `icinga2_agent__skip_pki_ticket: true` (see "How the Role Behaves").
+
+**The run aborts with `icinga2_agent: icinga2_agent__icinga2_api_user_login is not set`**
+
+* Set `icinga2_agent__icinga2_api_user_login`, or set `icinga2_agent__skip_pki_ticket: true` to sign the agent certificate on the master by hand.
+
+**`icinga2_agent: The agent requested its certificate without a ticket`**
+
+* `icinga2_agent__skip_pki_ticket` is `true`. On the Icinga2 master, run `icinga2 ca list`, and sign the newest request for the agent's CN with `icinga2 ca sign <fingerprint>`.
 
 
 ## License

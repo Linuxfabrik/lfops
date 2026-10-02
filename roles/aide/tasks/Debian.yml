@@ -1,0 +1,97 @@
+- block:
+
+  # ansible.builtin.apt instead of ansible.builtin.package, which cannot skip recommended
+  # packages. aide recommends aide-common, which pulls in cron and a mail transport agent
+  # (exim4 on Debian, postfix on Ubuntu) and ships a daily check of its own
+  # (dailyaidecheck.timer or /etc/cron.daily/aide) that would run next to aidecheck.timer.
+  # Verified with aide 0.17.4 to 0.19.2 on Debian 12 and 13 and Ubuntu 22.04 to 26.04.
+  - name: 'apt-get install --no-install-recommends aide'
+    ansible.builtin.apt:
+      name:
+        - 'aide'
+      install_recommends: false
+      state: 'present'
+
+  # a host that already has aide-common runs its check as well. that check mails its report and
+  # never fails on a finding, writes /var/log/aide/aide.log too, overwriting the report of
+  # aidecheck.service, and owns /var/log/aide as _aide:adm. purged, since its /etc/aide/aide.conf
+  # would otherwise stay behind unused, and the CIS audit script of Ubuntu 22.04 reads that file
+  # instead of /etc/aide.conf. the purge deletes aide-common's own /var/lib/aide/aide.db, not the
+  # aide.db.gz of this role (aide-common.postrm). Verified with aide-common 0.18.3 on Debian 12
+  # and 0.17.4 on Ubuntu 22.04.
+  - name: 'apt-get purge aide-common'
+    ansible.builtin.apt:
+      name:
+        - 'aide-common'
+      state: 'absent'
+      purge: true
+
+  # unattended-upgrades creates an empty /etc/apt/sources.list on every run if there is none, as
+  # on a host with deb822 sources only (/etc/apt/sources.list.d/*.sources): it opens its apt
+  # cache with rootdir "/" (main() in unattended-upgrade), for which python-apt creates the file
+  # (Cache._check_and_create_required_dirs() in apt/cache.py). created here, the file is in the
+  # database from the start, instead of failing the check right before the first unattended
+  # upgrade, which would keep the dpkg hook from ever updating the database.
+  # Verified with unattended-upgrades 2.9.1 and python-apt 2.6 on Debian 12.
+  - name: 'touch /etc/apt/sources.list'
+    ansible.builtin.file:
+      path: '/etc/apt/sources.list'
+      state: 'touch'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+      access_time: 'preserve'
+      modification_time: 'preserve'
+    notify: 'aide: update database'
+
+  tags:
+    - 'aide'
+
+
+- block:
+
+  # unattended-upgrades installs security updates outside the system_update role, which keeps
+  # the AIDE database in step with its own updates only. the hook does the same for
+  # unattended-upgrades, see the script.
+  - name: 'Deploy /usr/local/sbin/aide-dpkg-hook'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/aide-dpkg-hook.j2'
+      dest: '/usr/local/sbin/aide-dpkg-hook'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/apt/apt.conf.d/z00-linuxfabrik-aide'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/apt/apt.conf.d/z00-linuxfabrik-aide.j2'
+      dest: '/etc/apt/apt.conf.d/z00-linuxfabrik-aide'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'aide: update database'
+
+  # the hook queues this unit after every package set, and it updates the database once
+  # unattended-upgrades has finished, see the hook.
+  - name: 'Deploy /etc/systemd/system/aide-dpkg-update.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/aide-dpkg-update.service.j2'
+      dest: '/etc/systemd/system/aide-dpkg-update.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__dpkg_update_unit_result'
+    notify: 'aide: update database'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler (the hook may start the unit before the handlers run)
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__aide__dpkg_update_unit_result is changed'
+
+  tags:
+    - 'aide'
+    - 'aide:configure'

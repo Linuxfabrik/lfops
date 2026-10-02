@@ -154,6 +154,12 @@ def get_current_state(module, php_path, occ_path, name, installed_apps_json):
                 msg=f'Failed to parse JSON from occ app:list output: {stdout}'
             )
 
+    # `occ app:list --output=json` returns an object with `enabled` and `disabled`
+    if not isinstance(app_list, dict):
+        module.fail_json(
+            msg=f'Unexpected app list, expected a JSON object with "enabled" and "disabled": {app_list}'
+        )
+
     enabled_apps = app_list.get('enabled', {})
     disabled_apps = app_list.get('disabled', {})
 

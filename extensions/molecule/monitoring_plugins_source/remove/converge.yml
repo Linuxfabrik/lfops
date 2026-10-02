@@ -1,0 +1,61 @@
+# A playbook cannot select tags for itself, so this play calls the playbook under test as separate
+# ansible-playbook runs against the same inventory and limit, the way an admin does it. The first
+# run installs the package, the second removes it with the tags the README names. Every converge,
+# the idempotence run included, goes through the whole switch again.
+- name: 'Install the monitoring plugins from the package'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'ansible-playbook linuxfabrik.lfops.monitoring_plugins --extra-vars monitoring_plugins__install_method=package'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + ["--limit=" ~ ansible_limit | d("all"),
+               "--extra-vars=monitoring_plugins__install_method=package",
+               "linuxfabrik.lfops.monitoring_plugins"]
+          }}'
+      # a failing run would otherwise write its retry file next to the playbook, which is the
+      # repository checkout the collection is symlinked to
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      changed_when: false # reports whether the run succeeded, the run itself is not under test
+
+
+# A plugin of the admin's own, which the removal has to leave alone.
+- name: 'Place a custom plugin'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Deploy /usr/lib64/nagios/plugins/my-custom-check'
+      ansible.builtin.copy:
+        content: |
+          #!/bin/sh
+          echo 'OK'
+        dest: '/usr/lib64/nagios/plugins/my-custom-check'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+
+- name: 'Remove the package, its lock and its repository'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'ansible-playbook linuxfabrik.lfops.monitoring_plugins --tags monitoring_plugins:remove,repo_monitoring_plugins:remove'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + ["--limit=" ~ ansible_limit | d("all"),
+               "--tags=monitoring_plugins:remove,repo_monitoring_plugins:remove",
+               "linuxfabrik.lfops.monitoring_plugins"]
+          }}'
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      changed_when: false # reports whether the run succeeded, the run itself changes nothing here

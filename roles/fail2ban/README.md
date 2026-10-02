@@ -4,12 +4,13 @@ This role installs and configures [fail2ban](https://www.fail2ban.org).
 
 Filters and jails are defined in the inventory (`fail2ban__filters__*_var` / `fail2ban__jails__*_var`). Each entry either references one of the templates shipped with the role, or uses the `raw` template to deploy an arbitrary filter or jail definition.
 
-This role provides three additional filters:
+This role provides four additional filters:
 
 * apache-404: Matches HTTP 404 responses in Apache access logs (combined, combinedio, common, fail2ban, linuxfabrikio, matomo, vhost_common). Can be used to ban IPs causing excessive 404 errors.
   **Important:** in order to capture the client ip for all formats, this filter requires the ServerName to be a domain instead of an ip address when using a LogFormat where the canonical ServerName `%v` precedes the client IP `%h` (matomo, vhost_common).
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
-* portscan: Instantly blocks an IP if it accesses a non-permitted port.
+* portscan: Instantly blocks an IP if it accesses a non-permitted port. Only packets that open a connection count: a TCP SYN without ACK, PSH, RST or FIN, or any UDP packet. Reply traffic of a TCP connection the firewall no longer tracks, such as the late FIN of a half-closed connection, an RST or a mid-connection ACK, is ignored, and so are ICMP error messages, so a server that a local proxy talks to is not banned. TCP scans that send no plain SYN, such as FIN, NULL, Xmas, ACK and SYN/FIN scans, are therefore not banned either; they find no open port on a stateful firewall. A late UDP reply, for example a DNS answer that arrives after the firewall has forgotten the query, is still banned, since the kernel log cannot tell it apart from a UDP scan.
+* wordpress-login: Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common), also for WordPress in a sub-path such as `/blog`, which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
 
 
 *Available since LFOps `2.0.0`.*
@@ -70,7 +71,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The fail2ban filter definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `apache-404`, `apache-dos`, `portscan`
+* Default: `apache-404`, `apache-dos`, `portscan`, `wordpress-login`
 * Subkeys:
 
     * `filename`:
@@ -138,7 +139,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__jail_portscan_allowed_ports`
 
-* A list of ports which are allowed to be accessed. IPs accessing these ports will not be blocked. Note: This setting is for the portscan jail.
+* Ports on which a connection attempt that the firewall denies does not lead to a ban in the portscan jail. The jail only sees packets the firewall denied, so a port that is open to everyone never triggers it, whether it is listed or not. List the ports that the firewall opens to some sources only, such as SSH restricted to an admin network, so that others trying them are blocked without being banned. The ports are matched exactly and apply to TCP and UDP alike, so `22` exempts port 22 and not 2222. An empty list exempts no port.
 * Type: List of numbers.
 * Default: `[22]`
 
@@ -159,6 +160,24 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * The ban duration for the sshd jail.
 * Type: String.
 * Default: `'7d'`
+
+`fail2ban__jail_wordpress_login_bantime`
+
+* The ban duration for the wordpress-login jail.
+* Type: String.
+* Default: `'8h'`
+
+`fail2ban__jail_wordpress_login_findtime`
+
+* The find time for the wordpress-login jail. An IP is banned if it fails to log in `fail2ban__jail_wordpress_login_maxretry` times within this duration.
+* Type: String.
+* Default: `'10m'`
+
+`fail2ban__jail_wordpress_login_maxretry`
+
+* The number of failed WordPress logins within `fail2ban__jail_wordpress_login_findtime` before an IP is banned.
+* Type: Integer.
+* Default: `5`
 
 `fail2ban__jails__group_var` / `fail2ban__jails__host_var`
 
@@ -231,10 +250,16 @@ fail2ban__jail_portscan_server_ips:
   - '192.0.2.5'
   - '198.51.100.100'
 fail2ban__jail_sshd_bantime: '7d'
+fail2ban__jail_wordpress_login_bantime: '8h'
+fail2ban__jail_wordpress_login_findtime: '10m'
+fail2ban__jail_wordpress_login_maxretry: 5
 fail2ban__jails__host_var:
   - filename: 'z10-apache-dos'
     state: 'absent'
     template: 'apache-dos'
+  - filename: 'z10-wordpress-login'
+    state: 'present'
+    template: 'wordpress-login'
   - filename: 'z20-custom-apache-dos'
     state: 'present'
     template: 'raw'

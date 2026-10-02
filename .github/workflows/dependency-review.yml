@@ -20,3 +20,16 @@ jobs:
 
       - name: 'Dependency Review'
         uses: 'actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294' # v5.0.0
+        with:
+          # Advisories against the Python 3.6 lockfile in .github/unit-tests-py36, which feeds the
+          # unit tests on the Python 3.6 of RHEL 8. The test runner has to run on the same
+          # interpreter as the modules under test, and the fixed releases need a newer Python, so
+          # there is nothing to update to. The tests run in a throwaway UBI 8 container. Drop these
+          # entries once the py36 lockfile is retired together with RHEL 8 support.
+          # - GHSA-6w46-j5rx-g56g, pytest 6.2.5: other local users abusing the predictable
+          #   /tmp/pytest-of-{user} directories; the container has no other users. Fixed in pytest
+          #   9.0.3, which requires Python 3.10.
+          # - GHSA-jfmj-5v4g-7637, zipp 3.6.0 (via pytest and importlib-metadata): an infinite loop
+          #   on a crafted ZIP file opened with zipp.Path; the tests open no ZIP files. Fixed in
+          #   zipp 3.19.1, which requires Python 3.8.
+          allow-ghsas: 'GHSA-6w46-j5rx-g56g,GHSA-jfmj-5v4g-7637'

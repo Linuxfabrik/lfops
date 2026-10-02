@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026071201
+# 2026091501
 # note: adapted from /etc/postfix/main.cf.proto as /etc/postfix/main.cf is dynamically generated via debconf
 
 # Global Postfix configuration file. This file lists only a subset
@@ -36,10 +36,7 @@
 # The level below is what should be used with new (not upgrade) installs.
 #
 # compatibility_level = 3.7
-# note: taken from /etc/postfix/main.cf
-# See http://www.postfix.org/COMPATIBILITY_README.html -- default to 3.6 on
-# fresh installs.
-compatibility_level = 3.6
+compatibility_level = {{ postfix__compatibility_level }}
 
 # SOFT BOUNCE
 #

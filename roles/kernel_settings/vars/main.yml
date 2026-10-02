@@ -1,0 +1,3 @@
+# The role's own sysctl defaults. A vars/<platform>.yml overrides this where the TuneD of that
+# platform needs a correction, see vars/Ubuntu22.yml.
+__kernel_settings__sysctl__role_var: []

@@ -17,8 +17,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `mailto_root`
 
-* Configures mailto_root.
+* Sends a test mail to root and to the first address in `mailto_root__to`.
 * Triggers: none.
+* This tag does not deploy the root aliases or the sender rewrite. The playbook passes `mailto_root__from` and `mailto_root__to` to the postfix role, which deploys them. After changing either variable, run the postfix role through a playbook that includes this role, e.g. `ansible-playbook --inventory myinv linuxfabrik.lfops.mailto_root --tags postfix,mailto_root`.
 
 
 ## Mandatory Role Variables

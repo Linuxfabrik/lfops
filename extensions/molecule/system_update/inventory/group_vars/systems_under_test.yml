@@ -13,3 +13,11 @@ postfix__relayhost: 'mail.example.com'
 # Reboot window far from the test run, so neither the update nor the reboot
 # timer fires mid-test.
 schedule_reboot__reboot_time__group_var: '03:00'
+
+# Make the two update hooks observable. Both lanes render them, so the markers are
+# what verify.yml reads to tell whether a lane reached them. /var/tmp rather than
+# /tmp or /run, because the markers have to survive the reboot in verify.yml.
+system_update__post_update_code: |-
+  touch /var/tmp/molecule-system_update-post-update-code
+system_update__pre_update_code: |-
+  touch /var/tmp/molecule-system_update-pre-update-code

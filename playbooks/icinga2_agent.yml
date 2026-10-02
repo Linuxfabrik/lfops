@@ -43,6 +43,8 @@
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
         - 'ansible_facts["os_family"] != "Windows"'
+        # a source install needs no package repository, and re-registering it would undo its removal
+        - 'monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags'
         - 'not icinga2_agent__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'

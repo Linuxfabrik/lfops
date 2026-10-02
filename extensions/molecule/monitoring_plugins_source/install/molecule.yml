@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name monitoring_plugins_source/install`.
+#
+# Covers the source install of the development version, which is what a source install is for:
+# the plugins and the library from their main branches, the dependencies of both lockfiles and
+# the SELinux policy module. The 'remove' sub-scenario covers the switch from the package.

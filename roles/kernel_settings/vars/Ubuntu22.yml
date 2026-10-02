@@ -1,0 +1,15 @@
+# Ubuntu 22.04 ships tuned 2.15, whose throughput-performance profile (inherited through
+# virtual-guest, the profile `tuned-adm recommend` picks on a VM) still sets
+# kernel.sched_min_granularity_ns and kernel.sched_wakeup_granularity_ns. The 5.15 kernel has
+# neither of these sysctls, and `tuned-adm verify` fails on them although plugin_sysctl.py passes
+# ignore_missing: it hands the missing value to _verify_value() as remove_ws(None), which is the
+# string 'None', not None. fedora.linux_system_roles.kernel_settings runs that verify and aborts.
+# `drop` removes the two options from the inherited [sysctl] unit (profiles/unit.py,
+# profiles/merger.py); fedora.linux_system_roles.kernel_settings writes the entry into its profile
+# unchanged. Verified with tuned 2.15.0-1ubuntu1 and kernel 5.15.0-194 on Ubuntu 22.04. The verify
+# bug is still present in tuned 2.28.0 (reproduced on Fedora 44 with a profile setting a missing
+# sysctl). Debian 12/13 and Ubuntu 24.04+ only avoid it because their tuned profiles do not set
+# these two sysctls.
+__kernel_settings__sysctl__role_var:
+  - name: 'drop'
+    value: 'kernel.sched_min_granularity_ns,kernel.sched_wakeup_granularity_ns'

@@ -1,0 +1,9 @@
+# Molecule scenario marker for the 'firewall' scenario, run with
+# `molecule test --scenario-name firewall`.
+#
+# It overrides the prepare step (see prepare.yml): the behaviour under test is a host switching
+# from one firewall to another, so prepare sets the host up with fwbuilder first and converge then
+# switches it to the firewall from group_vars.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

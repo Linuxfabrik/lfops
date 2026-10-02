@@ -1,0 +1,47 @@
+argument_specs:
+  main:
+    options:
+
+      lynis__on_calendar:
+        type: 'str'
+        required: false
+        description: 'When lynis.timer runs the audit, in systemd.time(7) calendar event format.'
+
+      lynis__skip_tests__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Lynis tests to skip (`name`, optional `comment` and `state`).
+          Dependent-role injection.
+
+      lynis__skip_tests__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Lynis tests to skip (`name`, optional `comment` and `state`).'
+
+      lynis__skip_tests__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Lynis tests to skip (`name`, optional `comment` and `state`).'
+
+      lynis__timer_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether lynis.timer is enabled, analogous to systemctl enable/disable.'
+
+      lynis__timer_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of lynis.timer.'

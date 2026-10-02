@@ -1,0 +1,38 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: the playbook enables SELinux booleans and file contexts, and WordPress runs on the real
+# Apache httpd, PHP-FPM and MariaDB services of the host.
+- name: 'Converge setup_wordpress playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
+
+# Further instances on the same host, as pseudo hosts in the inventory would deploy them: the
+# same playbook again, with the variables of the instance overriding those from group_vars.
+# Together with the instance at the root of wordpress.example.com they cover an instance in a
+# sub-path below another instance, and two sub-paths of a host name without a root instance.
+- name: 'Converge setup_wordpress playbook for an instance in a sub-path of the first one'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
+  vars:
+    wordpress__database_name: 'wordpress_blog'
+    wordpress__database_user:
+      username: 'wordpress-blog'
+      password: 'linuxfabrik'
+    wordpress__url: 'https://wordpress.example.com/blog'
+
+- name: 'Converge setup_wordpress playbook for the first sub-path of another host name'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
+  vars:
+    wordpress__database_name: 'wordpress_instance1'
+    wordpress__database_user:
+      username: 'wordpress-instance1'
+      password: 'linuxfabrik'
+    wordpress__url: 'https://second.example.com/instance1'
+
+# An older release of the 7.0 branch, so that verify.yml can run a real minor update.
+- name: 'Converge setup_wordpress playbook for the second sub-path of another host name'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
+  vars:
+    wordpress__version: '7.0.3'
+    wordpress__database_name: 'wordpress_instance2'
+    wordpress__database_user:
+      username: 'wordpress-instance2'
+      password: 'linuxfabrik'
+    wordpress__url: 'https://second.example.com/instance2'
