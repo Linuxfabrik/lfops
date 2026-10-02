@@ -345,7 +345,7 @@ bind__zones:
 bind__zones:
   - name: 'example.com'
     file: 'forward.zone'
-    type: 'master'
+    type: 'slave'
     masters:
       - '192.0.2.2'
 
