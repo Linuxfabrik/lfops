@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026093001
+# 2026100201
 
-# Apply Rocky Linux security hot-fixes from the dedicated `security` repository
-# only, then request a reboot if one is needed by dropping a file into the
+# Apply Rocky Linux security hot-fixes from the dedicated `security` repository,
+# together with the dependencies they need from the other enabled repositories,
+# then request a reboot if one is needed by dropping a file into the
 # /run/schedule-reboot spool. This script never reboots itself; the
 # schedule-reboot.service (ordered After= this one) performs the reboot at the window.
 
@@ -171,12 +172,28 @@ fi
 # end raw system_update__security_pre_update_code
 
 {% endif %}
-# install security hot-fixes from the security repo only. --disablerepo / --enablerepo
-# keeps this lane separate from the regular (weekly) update lane and from the frozen
-# mirror snapshot.
-log "Applying security hot-fixes from: $REPOS"
+# Install exactly the versions the security repo has updates for, but resolve them with all
+# enabled repositories: a hot-fix can need a newer package that only BaseOS or AppStream
+# carries, such as the kernel of the security repo on Rocky 8.3, which requires a newer
+# linux-firmware. Upgrading with the security repo alone then fails with "nothing provides".
+# The exact name-version-release keeps this lane to the hot-fixes and what they need: by name
+# only, dnf would pick the newest version of any enabled repo, which is the job of the
+# regular (weekly) update lane. Verified with dnf 4 on Rocky 8.3, 9.4 and 10.0.
+if ! yum repoquery --upgrades --latest-limit 1 --disablerepo="*" --enablerepo="$REPOS" --queryformat '%{name}-%{evr}.%{arch}\n' 1> /tmp/security-update-packages 2> /tmp/security-update-stderr; then
+    log "Listing the security updates failed; see /tmp/security-update-stderr"
+    send_msg "$SUBJECT_PREFIX - Security update failed" "$(</tmp/security-update-stderr)"
+    exit 1
+fi
+SECURITY_PKGS=$(sort --unique /tmp/security-update-packages)
+if [ -z "$SECURITY_PKGS" ]; then
+    log "No security updates pending; nothing to do"
+    exit 0
+fi
+log "Applying security hot-fixes from $REPOS: ${SECURITY_PKGS//$'\n'/ }"
 TXN_BEFORE=$(last_txn_id)
-if ! yum --disablerepo="*" --enablerepo="$REPOS" -y upgrade 1> /tmp/security-update 2> /tmp/security-update-stderr; then
+# word splitting of $SECURITY_PKGS is intended, one argument per package
+# shellcheck disable=SC2086
+if ! yum -y upgrade $SECURITY_PKGS 1> /tmp/security-update 2> /tmp/security-update-stderr; then
     log "Security update failed; see /tmp/security-update-stderr"
     send_msg "$SUBJECT_PREFIX - Security update failed" "$(</tmp/security-update-stderr)"
     exit 1

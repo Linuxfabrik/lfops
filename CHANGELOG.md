@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: The security lane installs hot-fixes that need a newer package from BaseOS or AppStream, such as the kernel on Rocky 8.3, instead of failing on every run.
 * **role:system_update**: On Fedora 42 and later, where `/usr/local/sbin` is a link to `/usr/local/bin`, the role no longer deletes the `update-and-reboot` script right after deploying it, so the weekly update runs again.
 * **role:monitoring_plugins**: A run against an unchanged host no longer reports a change for the legacy dependency list of the source install.
 * **roles**: Tasks that run on the Ansible controller no longer escalate via sudo when the inventory sets `ansible_become: true`, where they failed without passwordless sudo on the controller or ran as root and left root-owned files in `/tmp`.
