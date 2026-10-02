@@ -168,6 +168,14 @@
         src: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
         dest: '/tmp/ansible.monitoring-plugins-legacy-requirements.txt'
         mode: 'push'
+        # same reasoning as for the plugin transfers below: compare content, not the times and
+        # owner of the controller's checkout, which differ on every run
+        rsync_opts:
+          - '--checksum'
+          - '--chmod=F644'
+          - '--no-group'
+          - '--no-owner'
+          - '--no-times'
 
     - name: 'Uninstall the former `pip --user` dependencies from root'
       ansible.builtin.shell:
