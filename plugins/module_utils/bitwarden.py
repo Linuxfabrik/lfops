@@ -47,6 +47,9 @@ except Exception:
         def vvv(self, msg, **kwargs):
             pass
 
+        def warning(self, msg, **kwargs):
+            pass
+
     display = _NoopDisplay()
 
 
@@ -158,8 +161,10 @@ CACHE_DIR = os.environ.get('XDG_RUNTIME_DIR', '/tmp')  # nosec B108 - cache file
 CACHE_FILE = os.path.join(CACHE_DIR, 'lfops_bitwarden_cache.json')
 CACHE_VERSION = 2026032701
 
-# how long a process waits for another one to finish its sync, search and create
-MUTEX_TIMEOUT = 300
+# how long a process waits for another one to finish its sync, search and create. covers a
+# sync that needs all attempts of SYNC_RETRY_DELAYS, each of which can run into the timeout
+# of open_url.
+MUTEX_TIMEOUT = 600
 
 # `bw serve` briefly reports an empty vault right after a sync, see
 # https://github.com/bitwarden/clients/issues/23283
@@ -167,6 +172,11 @@ MUTEX_TIMEOUT = 300
 # within a few seconds, so ask again a few times before giving up.
 EMPTY_LIST_RETRIES = 5
 EMPTY_LIST_RETRY_DELAY = 2
+
+# `bw serve` occasionally answers a sync with "HTTP Error 400: Bad Request" or does not
+# answer within the timeout at all, and succeeds again on the next attempt. Seconds to wait
+# before each further attempt; the error of the last one aborts the run.
+SYNC_RETRY_DELAYS = (10, 30, 60)
 
 
 class BitwardenException(Exception):
@@ -371,19 +381,49 @@ class Bitwarden:
             '`bw serve`'
         )
 
-    def sync(self, force=False, interval=60):
+    def sync(
+        self, force=False, interval=60, run_id=None, retry_delays=SYNC_RETRY_DELAYS
+    ):
         """Pull the latest vault data from server and repopulate the items cache.
-        Syncs only if the last sync was more than `interval` seconds ago, unless `force` is True.
+
+        With a `run_id` (the lookup passes one that identifies the Ansible run), syncs
+        once per run, since listing all items takes `bw serve` up to half a minute.
+        Without one, syncs only if the last sync was more than `interval` seconds ago.
+        `force` syncs in any case. A failed sync is tried again after each of the
+        `retry_delays` seconds. Returns whether it synced.
         """
-        if not force and time.time() - self._cache.get('sync_timestamp', 0) < interval:
-            display.vvv('lfbw - sync skipped, last sync was recent enough')
-            return
-        display.vvv(f'lfbw - syncing vault (force={force})')
-        self._api_call('sync', method='POST')
-        self._cache['items'] = self._list_items()
+        if not force and self._cache.get('items') is not None:
+            if run_id is not None and self._cache.get('sync_run_id') == run_id:
+                display.vvv('lfbw - sync skipped, already synced in this run')
+                return False
+            if (
+                run_id is None
+                and time.time() - self._cache.get('sync_timestamp', 0) < interval
+            ):
+                display.vvv('lfbw - sync skipped, last sync was recent enough')
+                return False
+        display.vvv(f'lfbw - syncing vault (force={force}, run_id={run_id})')
+        for delay in (*retry_delays, None):
+            try:
+                self._api_call('sync', method='POST')
+                items = self._list_items()
+                break
+            except (BitwardenException, TimeoutError) as e:
+                # TimeoutError: open_url raises it unwrapped when `bw serve` accepts the
+                # connection but does not answer within the timeout
+                if delay is None:
+                    raise
+                display.warning(
+                    f'lfbw - syncing the Bitwarden vault failed ({to_native(e)}), '
+                    f'trying again in {delay}s'
+                )
+                time.sleep(delay)
+        self._cache['items'] = items
+        self._cache['sync_run_id'] = run_id
         self._cache['sync_timestamp'] = time.time()
         display.vvv(f'lfbw - sync complete, cached {len(self._cache["items"])} items')
         self._save_cache()
+        return True
 
     def _list_items(self, retries=EMPTY_LIST_RETRIES, delay=EMPTY_LIST_RETRY_DELAY):
         """Return all items of the vault. An empty list is not trusted.
