@@ -190,6 +190,20 @@ Variables for `redis.conf` directives and their default values, defined and supp
 * Type: Number.
 * Default: unset
 
+`redis__conf_unixsocket`
+
+* Path of the Unix socket Redis listens on, in addition to the TCP port. Set it to `''` to listen on no Unix socket. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* Type: String.
+* Default: `'/run/redis/redis.sock'` on RHEL, `'/run/redis/redis-server.sock'` on Debian and Ubuntu
+* Deviates from the upstream default on Debian and Ubuntu, whose package listens on no Unix socket: local clients such as Nextcloud connect faster through the socket than through TCP, and `redis__conf_unixsocketperm` keeps it closed to anyone outside the `redis` group.
+
+`redis__conf_unixsocketperm`
+
+* Permissions of the Unix socket. Only the `redis` user and the members of the `redis` group can connect with `770`; a role that needs access adds its service user to the group. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* Type: String.
+* Default: `'770'`
+* Deviates from the upstream default, which leaves the mode to the umask of the service, so that the socket is writable, and thus usable, by the `redis` user only.
+
 Example:
 
 ```yaml
@@ -213,6 +227,8 @@ redis__conf_tls_ca_cert_file: '/etc/redis/ca.pem'
 redis__conf_tls_cert_file: '/etc/redis/redis.pem'
 redis__conf_tls_key_file: '/etc/redis/redis.key'
 redis__conf_tls_port: 6379
+redis__conf_unixsocket: '/run/redis/redis.sock'
+redis__conf_unixsocketperm: '770'
 ```
 
 

@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
 * **playbook:setup_basic**: Installs AIDE on every host, which checks file integrity twice a day and after every boot; skip it with `setup_basic__skip_aide`.
@@ -63,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
 * **role:monitoring_plugins**: On Linux, the role no longer stops the Icinga2 agent while it deploys the plugins, so a run no longer interrupts the monitoring of the host.
 * **role:icinga2_agent**: The role runs `icinga2 node setup` and restarts the agent only when the agent needs a new certificate or its settings changed, instead of on every run.
@@ -91,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
 * **role:aide**: The AIDE check no longer fails on hosts with fwupd, where it reported `/etc/fwupd/fwupd.conf` as changed after the first start of the fwupd daemon.
 * **role:aide**: The AIDE check no longer fails on hosts with an EFI system partition, where it reported the files below `/boot/efi` as changed a while after the database was created.
 * **role:system_update**: The security lane installs hot-fixes that need a newer package from BaseOS or AppStream, such as the kernel on Rocky 8.3, instead of failing on every run.
