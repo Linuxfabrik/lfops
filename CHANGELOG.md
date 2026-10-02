@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:kernel_settings**: The role works with fedora.linux_system_roles 2.5.0 and later, which a fresh installation of LFOps pulls in. Until now the run aborted with "kernel_settings_transparent_hugepages must be null, one of always, madvise, never" unless `kernel_settings__transparent_hugepages__*_var` and `kernel_settings__transparent_hugepages_defrag__*_var` were set.
 * **role:system_update**: The AIDE database is only updated after an update if a check right before the update comes out clean, instead of relying on the last scheduled check, so changes made since then are no longer accepted along with the update; a check that cannot run at all is reported in a mail of its own.
 * **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.
 * **role:firewall**: Hosts in one run with different `firewall__fwbuilder_repo_url` values each deploy `/etc/fwb.sh` from their own repository, instead of all from the repository of the first host.
