@@ -172,10 +172,14 @@
     # python_venv must run before glances: on RHEL 10 glances has no distro package and is installed
     # into a venv via glances__python_venv__venvs__dependent_var. duplicity also consumes this role's
     # venvs (further down in the Backups section).
+    # The venvs of a skipped role are read through lookup('vars'), which only runs in the branch
+    # taken: ternary() and a plain variable reference template the venv definition even when the
+    # role is skipped, and its platform_select aborts on a platform the role does not support.
+    # Verified with ansible-core 2.16 and 2.18 on Fedora 44.
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var: '{{
-          (not setup_basic__skip_duplicity | d(false)) | ternary(duplicity__python_venv__venvs__dependent_var, []) | d([]) +
-          (not setup_basic__skip_glances | d(false)) | ternary(glances__python_venv__venvs__dependent_var, []) | d([])
+          (lookup("ansible.builtin.vars", "duplicity__python_venv__venvs__dependent_var") if not setup_basic__skip_duplicity | d(false) else []) +
+          (lookup("ansible.builtin.vars", "glances__python_venv__venvs__dependent_var") if not setup_basic__skip_glances | d(false) else [])
         }}'
       when:
         - 'not setup_basic__skip_python_venv | d(false)'
