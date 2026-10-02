@@ -29,6 +29,8 @@
     ansible.builtin.package:
       name: 'crypto-policies-scripts'
       state: 'latest'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'update-crypto-policies --show'
     ansible.builtin.command: 'update-crypto-policies --show'

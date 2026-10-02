@@ -186,6 +186,8 @@
       ansible.builtin.dnf:
         name: '/tmp/{{ __rstudio_server__local_package_filename }}'
         state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
 
     - name: 'rm -f /tmp/{{ __rstudio_server__local_package_filename }}'
       ansible.builtin.file:

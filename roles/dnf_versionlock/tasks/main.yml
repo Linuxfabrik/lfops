@@ -4,6 +4,8 @@
     ansible.builtin.package:
       name: 'dnf-command(versionlock)'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # the module manages single entries instead of rewriting the whole locklist, so
   # locks set outside of this role (for example by monitoring_plugins) survive.

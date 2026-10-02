@@ -27,6 +27,8 @@
     ansible.builtin.package:
       name: '{{ __icinga2_master__pre_install_packages | d([]) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - '__icinga2_master__pre_install_packages | d([]) | length > 0'
 
@@ -34,6 +36,8 @@
     ansible.builtin.package:
       name: '{{ __icinga2_master__required_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'icinga2_master'

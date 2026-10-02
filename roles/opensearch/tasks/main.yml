@@ -5,6 +5,8 @@
       name:
         - 'opensearch{{ opensearch__version__combined_var }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     environment:
       OPENSEARCH_INITIAL_ADMIN_PASSWORD: '{{ opensearch__opensearch_initial_admin_password }}'
   tags:

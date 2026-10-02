@@ -72,6 +72,8 @@
     ansible.builtin.dnf:
       name: '/tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
       disable_gpg_check: true # rpm is not signed
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'rm /tmp/ansible.glpi-agent-{{ glpi_agent__github_version }}-1.noarch.rpm'
     ansible.builtin.file:

@@ -15,6 +15,8 @@
     ansible.builtin.package:
       name: '{{ __nextcloud__required_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
     ansible.builtin.get_url:

@@ -5,6 +5,8 @@
       name:
         - 'postgresql{{ postgresql_server__version }}-server'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'postgresql_server'

@@ -5,6 +5,8 @@
       name:
         - '{{ __monitoring_plugins__versionlock_package }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'not monitoring_plugins__skip_package_versionlock'
       - '__monitoring_plugins__versionlock_package is defined and __monitoring_plugins__versionlock_package | length > 0'
@@ -45,6 +47,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
@@ -53,6 +57,8 @@
       name:
         - 'linuxfabrik-monitoring-plugins{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*'
       state: 'latest' # use latest for the versionlock after
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     register: '__monitoring_plugins__package_result'
 
   - name: 'install linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*' # noqa package-latest
@@ -60,6 +66,8 @@
       name:
         - 'linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_separator }}{{ monitoring_plugins__version }}*'
       state: 'latest' # use latest for the versionlock after
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     register: '__monitoring_plugins__selinux_package_result'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'

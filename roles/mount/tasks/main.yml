@@ -16,6 +16,8 @@
     ansible.builtin.package:
       name: '{{ __mount__nfs_client_package }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - '((mount__mounts__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
           + (mount__mounts__combined_var | selectattr("state", "undefined") | list))
@@ -25,6 +27,8 @@
     ansible.builtin.package:
       name: '{{ __mount__cifs_client_package }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - '((mount__mounts__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list)
           + (mount__mounts__combined_var | selectattr("state", "undefined") | list))

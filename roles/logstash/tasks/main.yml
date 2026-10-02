@@ -17,6 +17,8 @@
       name:
         - 'logstash'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir -p /etc/logstash/conf.d'
     ansible.builtin.file:

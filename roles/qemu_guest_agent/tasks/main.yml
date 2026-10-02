@@ -5,6 +5,8 @@
       name:
         - 'qemu-guest-agent'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'qemu_guest_agent'

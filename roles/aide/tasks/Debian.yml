@@ -11,6 +11,8 @@
         - 'aide'
       install_recommends: false
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # a host that already has aide-common runs its check as well. that check mails its report and
   # never fails on a finding, writes /var/log/aide/aide.log too, overwriting the report of

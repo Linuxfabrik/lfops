@@ -4,6 +4,8 @@
     ansible.builtin.package:
       name: 'icinga2'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   when: 'ansible_facts["os_family"] != "Windows"'
   tags:
@@ -44,6 +46,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
@@ -51,6 +55,8 @@
     ansible.builtin.package:
       name: 'icinga2'
       state: 'latest'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     register: 'icinga2_agent__update_result'
 
   - name: 'systemctl restart icinga2' # noqa no-handler (would require a flush_handlers anyway)

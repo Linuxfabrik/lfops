@@ -72,6 +72,8 @@
           - 'curl'
           - 'tar'
         state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
 
     # in original script, this part below is being done by a platform detection script https://api-eu1.xbc.trendmicro.com/apk/platform-detection-script
     - name: 'Set x86_64 installer facts'

@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: '{{ __php__base_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'php'
@@ -26,6 +28,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
@@ -37,6 +41,8 @@
     ansible.builtin.package:
       name: '{{ __php__base_packages }}'
       state: 'latest'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:
@@ -105,6 +111,8 @@
       name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'php'
@@ -124,6 +132,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
@@ -133,6 +143,8 @@
       name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'latest'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:

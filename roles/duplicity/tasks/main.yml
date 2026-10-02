@@ -32,6 +32,8 @@
     ansible.builtin.package:
       name: '{{ __duplicity__required_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir /etc/duba'
     ansible.builtin.file:

@@ -9,6 +9,8 @@
         - 'libsasl2-2'
       update_cache: true
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     environment:
       DEBIAN_FRONTEND: 'noninteractive'
 

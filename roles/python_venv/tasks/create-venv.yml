@@ -2,6 +2,8 @@
   ansible.builtin.package:
     name: '{{ venv["package_requirements"] | d([]) }}'
     state: 'present'
+  retries: 3 # ride out a brief outage of the package repository
+  delay: 10
 
 - name: '{{ venv["python_executable"] | d("python3") }} -m venv {% if venv["system_site_packages"] | d("true") %} --system-site-packages {% endif %}{{ venv["name"] }}'
   ansible.builtin.command:
@@ -26,6 +28,8 @@
     state: 'latest'
     virtualenv: '/opt/python-venv/{{ venv["name"] }}'
     extra_args: '{{ ("--cert " ~ python_venv__pip_cert) if python_venv__pip_cert is defined and python_venv__pip_cert | length }}'
+  retries: 3 # ride out a brief outage of the package repository
+  delay: 10
 
 # A constraints file pins transitive dependencies (e.g. to force a modern version that drops a
 # deprecated, compiler-requiring sub-dependency) without having to list them as direct packages.
@@ -49,6 +53,8 @@
         (("--cert " ~ python_venv__pip_cert) if (python_venv__pip_cert is defined and python_venv__pip_cert | length > 0) else "")
         ~ ((" --constraint /opt/python-venv/" ~ venv["name"] ~ "/constraints.txt") if (venv["pip_constraints"] | d([]) | length > 0) else "")
       }}'
+  retries: 3 # ride out a brief outage of the package repository
+  delay: 10
 
 - name: 'Link choosen binaries to /usr/local/bin'
   ansible.builtin.file:

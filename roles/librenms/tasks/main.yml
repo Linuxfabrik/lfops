@@ -28,6 +28,8 @@
         - 'rrdtool'
         - 'unzip'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Get latest release version'
     ansible.builtin.uri:
@@ -120,6 +122,8 @@
       name: 'pip'
       version: '{{ __librenms__pip_bootstrap_version }}'
       extra_args: '--user'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     become: true
     become_user: 'librenms'
     vars:
@@ -139,6 +143,8 @@
       requirements: '/opt/librenms/requirements.txt'
       extra_args: '--user'
       executable: '{{ __librenms__pip_executable }}'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     become: true
     become_user: 'librenms'
     vars:

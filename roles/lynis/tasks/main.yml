@@ -37,6 +37,8 @@
     ansible.builtin.package:
       name: 'lynis'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'lynis'

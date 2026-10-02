@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: '{{ __mailx__package }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Deploy bash wrapper script that makes sending mail easier to /root/send-mail'
     ansible.builtin.template:

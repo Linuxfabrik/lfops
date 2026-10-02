@@ -47,6 +47,8 @@
     ansible.builtin.package:
       name: 'rsync'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'rsync dashboards to /tmp/ansible.monitoring_plugins_grafana_dashboards/'
     ansible.posix.synchronize:

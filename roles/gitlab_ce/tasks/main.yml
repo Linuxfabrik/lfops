@@ -4,6 +4,8 @@
     ansible.builtin.package:
       name: 'gitlab-ce'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     environment:
       EXTERNAL_URL: '{{ gitlab_ce__rb_external_url }}'
     when: 'not (gitlab_ce__version is defined and gitlab_ce__version | length > 0)'
@@ -12,6 +14,8 @@
     ansible.builtin.package:
       name: 'gitlab-ce-{{ gitlab_ce__version }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     environment:
       EXTERNAL_URL: '{{ gitlab_ce__rb_external_url }}'
     when: 'gitlab_ce__version is defined and gitlab_ce__version | length > 0'

@@ -230,6 +230,8 @@
         name: '/tmp/{{ __shiny_server__package_filename }}'
         disable_gpg_check: true # the vendor does not sign the package
         state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
 
     - name: 'rm -f /tmp/{{ __shiny_server__package_filename }}'
       ansible.builtin.file:

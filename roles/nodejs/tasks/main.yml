@@ -5,6 +5,8 @@
       name:
         - 'nodejs'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when: 'nodejs__dnf_module_stream is not defined or not (nodejs__dnf_module_stream | string | length > 0)'
 
   - name: 'dnf -y module reset nodejs'
@@ -21,6 +23,8 @@
       name:
         - '@nodejs:{{ nodejs__dnf_module_stream }}/common'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'nodejs__dnf_module_stream is defined'
       - 'nodejs__dnf_module_stream | string | length > 0'

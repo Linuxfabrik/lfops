@@ -67,6 +67,8 @@
         - 'elasticsearch'
         - 'unzip'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir -p {{ elasticsearch__path_data }}'
     ansible.builtin.file:

@@ -6,6 +6,8 @@
         - 'curl' # required by the `/usr/lib/influxdb/scripts/influxd-systemd-start.sh` script
         - 'influxdb'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'influxdb'

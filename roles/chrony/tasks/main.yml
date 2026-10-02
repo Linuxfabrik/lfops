@@ -28,6 +28,8 @@
     ansible.builtin.package:
       name: 'chrony'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # the template mirrors the target path, which differs between the RedHat and Debian families
   - name: 'Deploy {{ __chrony__conf_path }}'
