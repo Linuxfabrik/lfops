@@ -174,8 +174,8 @@
     # venvs (further down in the Backups section).
     - role: 'linuxfabrik.lfops.python_venv'
       python_venv__venvs__dependent_var: '{{
-          duplicity__python_venv__venvs__dependent_var +
-          glances__python_venv__venvs__dependent_var
+          (not setup_basic__skip_duplicity | d(false)) | ternary(duplicity__python_venv__venvs__dependent_var, []) | d([]) +
+          (not setup_basic__skip_glances | d(false)) | ternary(glances__python_venv__venvs__dependent_var, []) | d([])
         }}'
       when:
         - 'not setup_basic__skip_python_venv | d(false)'
