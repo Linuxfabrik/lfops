@@ -26,7 +26,7 @@ description:
     - Items are read from a local on-disk cache backed by C(bw serve). The cache is synced once per Ansible run, since listing all items takes C(bw serve) up to half a minute; where the run cannot be identified (no C(/proc) on the controller), at most every 60 seconds. An item missing from the cache is looked up again after a fresh sync before it is created, so an item created elsewhere during a long run is not created twice.
     - A failed sync is tried again after 10, 30 and 60 seconds before the lookup fails.
     - Lookups on the same controller run one at a time, so hosts that are processed in parallel and need the same missing item create it only once.
-    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The plugin then asks again for about ten seconds and fails rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
+    - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The plugin then asks again for about ten seconds, counts a vault that stays empty as a failed sync, and fails after the last sync attempt rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
 
 notes:
     - Lookups are evaluated by the templating engine on the controller and have no notion of check mode, so a run with C(--check) creates a missing item for real. Set I(create) to C(false) to turn that into a failure.
