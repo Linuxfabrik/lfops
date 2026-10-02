@@ -24,6 +24,13 @@ aide__rules__host_var: []
 aide__rules__role_var:
   - path: '/boot'
     attributes: 'NORMAL'
+  # Not in the shipped list. The EFI system partition is vfat, which stores no inode numbers:
+  # the kernel assigns a new one whenever it reads a file in again (iunique() in
+  # fat_build_inode(), fs/fat/inode.c), so NORMAL reports every file below it as changed once
+  # its inode has been dropped from the cache. DATAONLY still reports a changed content.
+  # Verified on Debian 13, Rocky 8, Rocky 9 and Ubuntu 24.04.
+  - path: '/boot/efi'
+    attributes: 'DATAONLY'
   - path: '/bin'
     attributes: 'NORMAL'
   - path: '/sbin'

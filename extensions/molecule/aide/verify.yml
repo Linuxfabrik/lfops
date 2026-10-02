@@ -1,15 +1,17 @@
 # Verify aide on the running system: the check timer is armed, aide-common (installed by
 # prepare.yml on Debian and Ubuntu) is gone, and a check against the database the role created
 # runs clean, which proves that aide reads the deployed config and that the database matches it,
-# including the role's own files. A forced log rotation leaves that report in place. A config
-# aide rejects aborts the role before it replaces
-# /etc/aide.conf. Then a file below the scenario's regular rule makes the check fail and shows
-# up in the report with all its attributes (report level added_removed_entries), while files
-# below its negative rules (one in the rule list, one in aide__conf_raw) do not, and neither
-# does a file below /opt, whose default rule the scenario removes. A content change of
-# /root/.lfops-molecule is reported, which only its own rule does, not the default '/root/\..*
-# PERMS' of the same directory. This only works if the rules and the raw part from the inventory
-# are in effect, since /srv is not monitored otherwise and /opt is by default.
+# including the role's own files. On a vfat /boot/efi that check runs after the inodes there have
+# been dropped from the cache, which gives the files new inode numbers that the default rule
+# ignores. A forced log rotation leaves that report in place. A config aide rejects aborts the
+# role before it replaces /etc/aide.conf. Then a file below the scenario's regular rule makes the
+# check fail and shows up in the report with all its attributes (report level
+# added_removed_entries), while files below its negative rules (one in the rule list, one in
+# aide__conf_raw) do not, and neither does a file below /opt, whose default rule the scenario
+# removes. A content change of /root/.lfops-molecule is reported, which only its own rule does,
+# not the default '/root/\..* PERMS' of the same directory, and so is a content change of
+# /boot/efi/lfops-molecule. This only works if the rules and the raw part from the inventory are
+# in effect, since /srv is not monitored otherwise and /opt is by default.
 # In between, the role is run again twice, each time after a change it has to revert, to
 # prove that its handler leaves the database alone in both cases where re-baselining would
 # accept unvetted changes: a database found without the role's check unit, and a last check
@@ -65,6 +67,43 @@
           - '__molecule__aide_common_result["stdout"] | d("") != "installed"'
           - 'not __molecule__aide_common_conf_result["stat"]["exists"]'
         fail_msg: '{{ __molecule__aide_common_result["stdout"] | d("") }}'
+
+    # vfat stores no inode numbers, the kernel assigns a new one whenever it reads a file in
+    # again. dropping the cache forces that, so the check below sees new inode numbers for every
+    # file below /boot/efi, which it has to ignore. 3, not 2: the kernel keeps an inode that
+    # still has pages in the page cache (inode_lru_isolate() in fs/inode.c). Verified on Debian
+    # 13, Rocky 9 and Ubuntu 24.04, where 2 leaves the inode number as it is.
+    - name: 'findmnt --noheadings --output FSTYPE /boot/efi'
+      ansible.builtin.command: 'findmnt --noheadings --output FSTYPE /boot/efi'
+      register: '__molecule__efi_fstype_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Drop the inodes of /boot/efi from the cache'
+      when:
+        - '__molecule__efi_fstype_result["stdout"] == "vfat"'
+      block:
+
+        - name: 'stat /boot/efi/lfops-molecule (before dropping the cache)'
+          ansible.builtin.stat:
+            path: '/boot/efi/lfops-molecule'
+            get_checksum: false
+          register: '__molecule__efi_probe_before_result'
+
+        - name: 'sync; echo 3 > /proc/sys/vm/drop_caches'
+          ansible.builtin.shell: 'sync; echo 3 > /proc/sys/vm/drop_caches'
+          changed_when: false
+
+        - name: 'stat /boot/efi/lfops-molecule (after dropping the cache)'
+          ansible.builtin.stat:
+            path: '/boot/efi/lfops-molecule'
+            get_checksum: false
+          register: '__molecule__efi_probe_after_result'
+
+        - name: 'Assert that the probe file on /boot/efi got a new inode number'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__efi_probe_after_result["stat"]["inode"] != __molecule__efi_probe_before_result["stat"]["inode"]'
 
     - name: 'systemctl start --wait aidecheck.service (clean host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
       ansible.builtin.command: 'systemctl start --wait aidecheck.service'
@@ -236,6 +275,13 @@
         group: 'root'
         mode: 0o644
 
+    - name: 'Change the content of /boot/efi/lfops-molecule'
+      ansible.builtin.copy:
+        content: 'lfops-molecule-changed'
+        dest: '/boot/efi/lfops-molecule'
+      when:
+        - '__molecule__efi_fstype_result["stdout"] == "vfat"'
+
     - name: 'systemctl start --wait aidecheck.service (changed host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
       ansible.builtin.command: 'systemctl start --wait aidecheck.service'
       changed_when: false
@@ -265,6 +311,14 @@
           - '"/opt/lfops-molecule-probe" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/etc/cron.d/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
         fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
+
+    - name: 'Assert that the check reports the changed content of /boot/efi/lfops-molecule'
+      ansible.builtin.assert:
+        that:
+          - '"/boot/efi/lfops-molecule" in __molecule__aide_changed_log_result["stdout"]'
+        fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
+      when:
+        - '__molecule__efi_fstype_result["stdout"] == "vfat"'
 
     # the check is failing now, so a config change must not re-baseline the database either.
     # the role run below reverts the hand edit, which notifies the handler.
@@ -324,6 +378,13 @@
         owner: 'root'
         group: 'root'
         mode: 0o644
+
+    - name: 'Restore the content of /boot/efi/lfops-molecule'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/boot/efi/lfops-molecule'
+      when:
+        - '__molecule__efi_fstype_result["stdout"] == "vfat"'
 
     # the last check failed, so the tasks `--tags aide:update_db` runs must leave the database
     # alone and say so
