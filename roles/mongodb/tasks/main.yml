@@ -42,6 +42,8 @@
         - 'mongodb-org'
         - 'tar'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Get the list of installed packages'
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
@@ -300,6 +302,8 @@
       name:
         - 'tar'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Deploy /etc/mongodb-dump.conf'
     ansible.builtin.template:

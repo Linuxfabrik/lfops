@@ -8,6 +8,8 @@
       name:
         - 'glances'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10)'
 

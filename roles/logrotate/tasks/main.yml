@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: 'logrotate'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Copy logrotate.conf template to /etc'
     ansible.builtin.template:

@@ -5,6 +5,8 @@
       url: '{{ gpg_key.url }}'
       dest: '/tmp/ansible.{{ gpg_key.dest | basename }}'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

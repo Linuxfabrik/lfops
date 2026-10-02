@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: '{{ __kvm_host__packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'systemctl {{ kvm_host__libvirtd_service_enabled | bool | ternary("enable", "disable") }} --now libvirtd.service'
     ansible.builtin.systemd:

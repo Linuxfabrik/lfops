@@ -132,6 +132,8 @@
     ansible.builtin.package:
       name: 'firewalld'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Be sure firewalld is started, enabled and not masked'
     ansible.builtin.systemd:
@@ -178,6 +180,8 @@
       depth: 1
       single_branch: true
       force: true
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     changed_when: false # not a config change on the server
     delegate_to: 'localhost'
     become: false
@@ -230,6 +234,8 @@
         - 'iptables'
         - 'nftables'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`
   # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.
@@ -262,6 +268,8 @@
     ansible.builtin.package:
       name: 'iptables-services'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Copy iptables definition to /etc/sysconfig/iptables'
     ansible.builtin.copy:
@@ -295,6 +303,8 @@
     ansible.builtin.package:
       name: 'nftables'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Be sure nftables is started, enabled and not masked'
     ansible.builtin.systemd:

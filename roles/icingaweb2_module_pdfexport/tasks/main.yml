@@ -23,6 +23,8 @@
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

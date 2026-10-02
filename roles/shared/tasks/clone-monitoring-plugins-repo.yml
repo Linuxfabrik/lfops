@@ -15,6 +15,8 @@
       dest: '/tmp/ansible.monitoring-plugins-repo'
       version: '{{ __shared__monitoring_plugins_version }}'
       depth: 1
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:
@@ -41,6 +43,8 @@
         dest: '/tmp/ansible.monitoring-plugins-repo'
         version: '{{ __shared__monitoring_plugins_version }}'
         depth: 1
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       delegate_to: 'localhost'
       become: false
       vars:

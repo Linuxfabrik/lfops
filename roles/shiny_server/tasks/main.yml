@@ -202,6 +202,8 @@
         url: '{{ __shiny_server__download_url }}'
         dest: '/tmp/ansible.{{ __shiny_server__package_filename }}'
         mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       delegate_to: 'localhost'
       become: false
       vars:
@@ -228,6 +230,8 @@
         name: '/tmp/{{ __shiny_server__package_filename }}'
         disable_gpg_check: true # the vendor does not sign the package
         state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
 
     - name: 'rm -f /tmp/{{ __shiny_server__package_filename }}'
       ansible.builtin.file:

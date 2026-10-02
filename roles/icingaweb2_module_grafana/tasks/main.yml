@@ -41,6 +41,8 @@
     ansible.builtin.get_url:
       url: 'https://github.com/NETWAYS/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: 'openvpn'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Generate DH Parameters with 2048 bits size'
     community.crypto.openssl_dhparam:

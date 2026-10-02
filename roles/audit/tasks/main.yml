@@ -6,6 +6,8 @@
         - 'audit'
         - 'audit-libs'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Deploy /etc/audit/auditd.conf'
     ansible.builtin.template:

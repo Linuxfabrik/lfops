@@ -19,6 +19,8 @@
     ansible.builtin.get_url:
       url: '{{ __monitoring_plugins__download_url }}'
       dest: '/tmp/ansible.{{ __monitoring_plugins__download_url | basename }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

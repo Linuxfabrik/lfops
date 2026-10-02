@@ -14,6 +14,8 @@
         - 'iftop'
         - 'ncdu'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'ansible_facts["architecture"] == "x86_64"'  # not available on ARM
 
@@ -30,12 +32,16 @@
         - 'vim'
         - 'wget'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'dnf -y install glibc-langpack-de'
     ansible.builtin.package:
       name:
         - 'glibc-langpack-de' # this prevents "Failed to set locale, defaulting to C.UTF-8" errors when using a german LANG on the local admin machine
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 

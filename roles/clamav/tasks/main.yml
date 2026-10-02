@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: '{{ __clamav__packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir -p /etc/systemd/system/clamav-clamonacc.service.d/'
     ansible.builtin.file:

@@ -5,6 +5,8 @@
       name:
         - 'bind-utils'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'blocky'
@@ -27,6 +29,8 @@
     - name: 'Get latest blocky release version'
       ansible.builtin.uri:
         url: 'https://api.github.com/repos/0xERR0R/blocky/releases/latest'
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       register: 'blocky__github_release'
       check_mode: false # run task even if `--check` is specified
       delegate_to: 'localhost'
@@ -47,6 +51,8 @@
       url: 'https://github.com/0xERR0R/blocky/releases/download/{{ blocky__github_version }}/blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
       dest: '/tmp/ansible.blocky_{{ blocky__github_version }}_Linux_x86_64.tar.gz'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

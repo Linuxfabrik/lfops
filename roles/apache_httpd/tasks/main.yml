@@ -17,6 +17,8 @@
     ansible.builtin.package:
       name: '{{ q("flattened", __apache_httpd__base_packages) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Combined Packages:'
     ansible.builtin.debug:
@@ -32,6 +34,8 @@
       name: '{{ (apache_httpd__packages__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (apache_httpd__packages__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir -p {{ __apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
     ansible.builtin.file:

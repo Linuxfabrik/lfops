@@ -28,6 +28,8 @@
     ansible.builtin.get_url:
       url: '{{ icingaweb2_module_x509__url }}'
       dest: '/tmp/ansible.icingaweb2-module-x509-{{ icingaweb2_module_x509__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

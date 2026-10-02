@@ -63,6 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
+* **role:monitoring_plugins**: On Linux, the role no longer stops the Icinga2 agent while it deploys the plugins, so a run no longer interrupts the monitoring of the host.
+* **role:icinga2_agent**: The role runs `icinga2 node setup` and restarts the agent only when the agent needs a new certificate or its settings changed, instead of on every run.
 * LFOps requires community.general 7.0.0 or newer (still below 9.0.0), which `ansible-galaxy collection install linuxfabrik.lfops` pulls in, while a manually maintained collection list has to be raised.
 * **plugin:bitwarden_item**: The lookup syncs the Bitwarden vault once per Ansible run instead of every 60 seconds, which makes runs with many lookups considerably faster, since each sync makes `bw serve` list the whole vault. Before it creates a missing item, it syncs again, so an item created elsewhere during the run is not created a second time.
 * **role:icingaweb2_module_generictts**: Downloads the module from Linuxfabrik, who maintain it since Icinga archived the original repository. The tarballs of v2.1.0 are identical.
@@ -88,6 +91,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: The security lane installs hot-fixes that need a newer package from BaseOS or AppStream, such as the kernel on Rocky 8.3, instead of failing on every run.
+* **role:system_update**: On Fedora 42 and later, where `/usr/local/sbin` is a link to `/usr/local/bin`, the role no longer deletes the `update-and-reboot` script right after deploying it, so the weekly update runs again.
+* **role:monitoring_plugins**: A run against an unchanged host no longer reports a change for the legacy dependency list of the source install.
 * **roles**: Tasks that run on the Ansible controller no longer escalate via sudo when the inventory sets `ansible_become: true`, where they failed without passwordless sudo on the controller or ran as root and left root-owned files in `/tmp`.
 * **plugin:bitwarden_item, module:bitwarden_item**: A failed sync of the Bitwarden vault, such as an "HTTP Error 400: Bad Request" or a timeout of `bw serve`, is tried again after 10, 30 and 60 seconds instead of aborting the run right away.
 * **role:aide**: Before it creates the database, the role also waits for running `dnf-automatic` jobs on the Red Hat family and for the update jobs of the system_update role on every platform, not only for the apt jobs on Debian and Ubuntu. An update during the initialisation left files in the database that the first check then reported.

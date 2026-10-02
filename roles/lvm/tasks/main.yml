@@ -32,12 +32,16 @@
     ansible.builtin.package:
       name: 'lvm2'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # growpart is not part of a minimal installation
   - name: 'Install {{ __lvm__growpart_package }}'
     ansible.builtin.package:
       name: '{{ __lvm__growpart_package }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     register: '__lvm__growpart_package_result'
 
   - name: 'growpart ...'
@@ -168,6 +172,8 @@
     ansible.builtin.package:
       name: '{{ __lvm__fstype_packages_in_use }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when: '__lvm__fstype_packages_in_use | length > 0'
     vars:
       __lvm__fstype_packages_in_use: '{{ lvm__lvs__combined_var

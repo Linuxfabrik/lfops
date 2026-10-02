@@ -7,6 +7,8 @@
       url: 'https://packages.sury.org/debsuryorg-archive-keyring.deb'
       dest: '/tmp/ansible.debsuryorg-archive-keyring.deb'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:
@@ -24,6 +26,8 @@
     ansible.builtin.apt:
       deb: '/tmp/ansible.debsuryorg-archive-keyring.deb'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
     ansible.builtin.template:
@@ -44,6 +48,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
 
   tags:

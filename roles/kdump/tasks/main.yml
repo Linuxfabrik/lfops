@@ -14,6 +14,8 @@
     ansible.builtin.package:
       name: '{{ __kdump__package }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when: '__kdump__wanted | bool'
 
   # A host without kdump.service already has kdump off. When kdump is to run, a missing unit has

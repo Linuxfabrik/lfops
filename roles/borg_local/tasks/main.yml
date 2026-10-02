@@ -5,6 +5,8 @@
       name:
         - 'borgbackup'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir /etc/borg'
     ansible.builtin.file:

@@ -4,6 +4,8 @@
     ansible.builtin.get_url:
       url: 'https://packages.icinga.com/windows/Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
       dest: '/tmp/ansible.Icinga2-{{ icinga2_agent__windows_version }}-x86_64.msi'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

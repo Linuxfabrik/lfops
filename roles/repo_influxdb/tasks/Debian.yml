@@ -6,6 +6,8 @@
       url: 'https://repos.influxdata.com/influxdata-archive.key'
       dest: '/tmp/ansible.influxdata-archive.key'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:
@@ -49,6 +51,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
 
   tags:

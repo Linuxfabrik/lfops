@@ -20,6 +20,8 @@
     ansible.builtin.get_url:
       url: 'https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

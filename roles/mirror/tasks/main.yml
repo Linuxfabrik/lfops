@@ -5,6 +5,8 @@
       repo: 'https://github.com/Linuxfabrik/mirror.git'
       dest: '/opt/mirror'
       force: false
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
 
   - name: 'useradd --system --home-dir /opt/mirror --shell /bin/false mirror'
     ansible.builtin.user:

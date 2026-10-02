@@ -74,17 +74,12 @@
     ansible.builtin.package:
       name: 'sudo'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
-  - name: 'Gather service facts'
-    ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
-
-  - name: 'systemctl stop icinga2.service'
-    ansible.builtin.service:
-      name: 'icinga2.service'
-      state: 'stopped'
-    when:
-      - '"icinga2.service" in ansible_facts.services'
-
+  # Unlike on Windows, the Icinga2 agent keeps running while the plugins are replaced: it
+  # starts a plugin afresh for every check, and package managers and rsync replace files by
+  # renaming, so a check never sees a half-written plugin.
   - name: 'Install Linuxfabrik Monitoring Plugins from package (rpm, deb)'
     ansible.builtin.include_tasks: 'linux-package.yml'
     when:
@@ -94,13 +89,6 @@
     ansible.builtin.include_tasks: 'linux-source.yml'
     when:
       - 'monitoring_plugins__install_method == "source"'
-
-  - name: 'systemctl start icinga2.service'
-    ansible.builtin.service:
-      name: 'icinga2.service'
-      state: 'started'
-    when:
-      - '"icinga2.service" in ansible_facts.services'
 
   when:
     - 'ansible_facts["os_family"] != "Windows"'
@@ -205,6 +193,8 @@
       ansible.builtin.package:
         name: 'rsync'
         state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
 
     - name: 'rsync icons to IcingaWeb2'
       ansible.posix.synchronize:

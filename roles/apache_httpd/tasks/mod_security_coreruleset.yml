@@ -3,11 +3,15 @@
   ansible.builtin.get_url:
     url: '{{ apache_httpd__mod_security_coreruleset_url }}/v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
     dest: '/tmp/coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
+  retries: 3 # ride out a brief outage of the download source
+  delay: 10
 
 - name: 'install tar'
   ansible.builtin.package:
     name: 'tar'
     state: 'present'
+  retries: 3 # ride out a brief outage of the package repository
+  delay: 10
 
 - name: 'tar xzf coreruleset-v{{ apache_httpd__mod_security_coreruleset_version }}.tar.gz'
   ansible.builtin.unarchive:

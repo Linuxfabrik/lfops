@@ -28,6 +28,8 @@
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-module-vspheredb/archive/refs/tags/{{ icingaweb2_module_vspheredb__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-vspheredb-{{ icingaweb2_module_vspheredb__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
     vars:

@@ -105,6 +105,8 @@
     ansible.builtin.package:
       name: '{{ __keycloak__java_package[keycloak__version.split(".")[0]] }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # version.txt ships inside the tarball and names the installed release ("Keycloak - Version
   # 26.4.7"), so it tells us whether the wanted version is already in place. Without this the
@@ -132,6 +134,8 @@
         url: '{{ __keycloak__download_url }}'
         dest: '/tmp/ansible.keycloak-{{ keycloak__version }}.tar.gz'
         mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       delegate_to: 'localhost'
       become: false
       vars:
