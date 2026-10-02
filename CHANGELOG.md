@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **all playbooks**: On a host with AIDE, a playbook stops before it changes anything if the last AIDE check reported changes, and otherwise has the AIDE database updated after the run, so that the next check does not report what the run changed; skip either step with `lfops__skip_aide_check_before_run` or `lfops__skip_aide_update_db_after_run`.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
 * **playbook:setup_basic**: Installs AIDE on every host, which checks file integrity twice a day and after every boot; skip it with `setup_basic__skip_aide`.

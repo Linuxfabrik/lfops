@@ -63,6 +63,17 @@
     # aide runs last in setup_basic and creates its database after the handlers of every other
     # role have run. A check straight after the play has to be clean: a file another role or one
     # of its handlers wrote after the database was created would make it fail.
+    # the playbook run of the idempotence step starts aide-update.service at its end, which
+    # updates the database and then runs a check of its own.
+    - name: 'systemctl is-active aide-update.service (wait for the update after the run)' # noqa command-instead-of-module (read-only state query in a retry loop)
+      ansible.builtin.command: 'systemctl is-active aide-update.service'
+      register: '__molecule__aide_update_active_result'
+      until: '__molecule__aide_update_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
+      retries: 120
+      delay: 5
+      changed_when: false
+      failed_when: '__molecule__aide_update_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+
     - name: 'systemctl start --wait aidecheck.service' # noqa command-instead-of-module (wait for the check to finish and read its Result)
       ansible.builtin.command: 'systemctl start --wait aidecheck.service'
       changed_when: false

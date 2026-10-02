@@ -1,0 +1,108 @@
+# Stops the run on a host whose last AIDE check reported changes, before any role changes a file.
+# Imported in the pre_tasks of every LFOps playbook, together with aide-update-db-after-run.yml in
+# the post_tasks: a run that starts from a clean check has the AIDE database updated afterwards,
+# so that the next check does not report the changes of the run, and a pending finding is never
+# accepted along with a deploy.
+#
+# Only on hosts where the aide role runs its check, that is where aidecheck.timer is active, the
+# same condition the system_update role and the dpkg hook of the aide role use.
+#
+# Skipped, and with it the update after the run, since nothing vouched for the state before it:
+# * with lfops__skip_aide_check_before_run, to deploy to a host with a pending finding.
+# * under --tags aide:update_db_force, which is how a finding is accepted. The remedy the message
+#   names would otherwise abort at this very check.
+# * in check mode, which changes nothing that would have to be accepted.
+#
+# Parameters: none.
+
+# playbooks/all.yml runs every playbook as its own play against the same host, and the facts
+# set_fact writes survive a play.
+- name: 'Reset the result of the AIDE check before the run'
+  ansible.builtin.set_fact:
+    __shared__aide_check_before_run_passed: false
+
+
+- block:
+
+  - name: 'systemctl is-active aidecheck.timer' # noqa command-instead-of-module (read-only state query)
+    ansible.builtin.command: 'systemctl is-active aidecheck.timer'
+    register: '__shared__aide_timer_active_result'
+    changed_when: false
+    failed_when: false
+
+  # an update after an earlier run is queued or running (/usr/local/sbin/aide-update). its
+  # run started from a clean check, and the update accepts everything up to the moment it runs,
+  # this run included, so there is no result to wait for. the unit is activating while its
+  # oneshot runs, including the check it starts after the update.
+  - name: 'stat /run/aide-update.request'
+    ansible.builtin.stat:
+      path: '/run/aide-update.request'
+    register: '__shared__aide_update_request_stat_result'
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+
+  - name: 'systemctl is-active aide-update.service' # noqa command-instead-of-module (read-only state query)
+    ansible.builtin.command: 'systemctl is-active aide-update.service'
+    register: '__shared__aide_update_active_result'
+    changed_when: false
+    failed_when: false
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+
+  - name: 'Set whether an AIDE database update is pending'
+    ansible.builtin.set_fact:
+      __shared__aide_update_pending: '{{
+          __shared__aide_update_request_stat_result["stat"]["exists"]
+          or __shared__aide_update_active_result["stdout"] in ["active", "activating"]
+        }}'
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+
+  # a running check has no result yet, and the one of the check before it is gone, since a start
+  # clears the failed state. 5 minutes at most, like the waits of the aide role, then the run
+  # fails. `systemctl is-active` exits 0 for active only, not for activating. failed_when, not
+  # `failed_when: false`, since ansible-core 2.16 moves on silently after the last retry otherwise.
+  - name: 'systemctl is-active aidecheck.service (wait up to 5 minutes for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
+    ansible.builtin.command: 'systemctl is-active aidecheck.service'
+    register: '__shared__aide_check_active_result'
+    until: '__shared__aide_check_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
+    retries: 30
+    delay: 10
+    changed_when: false
+    failed_when: '__shared__aide_check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+      - 'not __shared__aide_update_pending | bool'
+
+  # `aide --check` exits non-zero on any finding, so a failed aidecheck.service is what "the last
+  # check reported changes" looks like. rc 0 means failed.
+  - name: 'systemctl is-failed aidecheck.service' # noqa command-instead-of-module (read-only state query)
+    ansible.builtin.command: 'systemctl is-failed aidecheck.service'
+    register: '__shared__aide_check_failed_result'
+    changed_when: false
+    failed_when: false
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+      - 'not __shared__aide_update_pending | bool'
+
+  - name: 'Assert that the last AIDE check did not report changes'
+    ansible.builtin.assert:
+      that:
+        - '__shared__aide_check_failed_result["rc"] != 0'
+      quiet: true
+      fail_msg: 'aide: The last AIDE check reported changes (aidecheck.service is failed), so the run was stopped before it changed anything. Review /var/log/aide/aide.log, then accept the current state with `ansible-navigator linuxfabrik.lfops.aide --inventory inventory --limit {{ inventory_hostname }} --tags aide:update_db_force` and run the playbook again. To deploy without that, set `lfops__skip_aide_check_before_run: true`; the AIDE database is then not updated after the run.'
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+      - 'not __shared__aide_update_pending | bool'
+
+  - name: 'Remember that the AIDE check before the run passed'
+    ansible.builtin.set_fact:
+      __shared__aide_check_before_run_passed: true
+    when:
+      - '__shared__aide_timer_active_result["stdout"] == "active"'
+
+  when:
+    - 'ansible_facts["os_family"] != "Windows"'
+    - 'not ansible_check_mode'
+    - 'not lfops__skip_aide_check_before_run | d(false) | bool'
+    - '"aide:update_db_force" not in ansible_run_tags'

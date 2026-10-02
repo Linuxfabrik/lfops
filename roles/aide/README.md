@@ -26,10 +26,11 @@ This role is compatible with the following aide versions:
 * A check that is due while the [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role or `unattended-upgrades` installs packages waits until the update has finished. Conversely, `system_update` and the dpkg hook wait for a running check before they update the database. The role waits for it for 5 minutes at most and then aborts the run (see "Troubleshooting"). After every database update the role starts a check, so that `/var/log/aide/aide.log` shows the state of the host rather than the changes the update accepted.
 * When the role changes `/etc/aide.conf`, its own units or whether `aidecheck.service` or `aidecheck.timer` is enabled, it updates the database afterwards, so that the next check does not report every path the new rules add or drop. It only does so if the last check had not reported changes: re-baselining a failing check would silently accept whatever changed on the host, an intrusion included. The same applies to a database the role finds on a host where it has not deployed `aidecheck.service` yet, for example one left by a previous AIDE setup: no check of this role has vouched for it. In both cases the database is left alone and the run tells you so. Review `/var/log/aide/aide.log` or the output of `aide --check`, and accept the current state with `--tags aide:update_db_force`.
 * The re-baseline after a change of the role accepts everything that changed since the last check, not only the change the role made. The shorter the check interval, the smaller that window.
-* Changes to monitored files made by anyone else, other LFOps roles and packages installed by hand included, are reported by the next check. The [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role knows about `aidecheck.service`: it runs a check before it updates packages and updates the database afterwards if that check was clean.
+* Every LFOps playbook checks the result of the last check before it changes anything on the host, and stops if that check reported changes. After a clean start, `aide-update.service` updates the database once the run has finished, so the changes of the run are not reported. The playbook does not wait for the update. See `lfops__skip_aide_check_before_run` in the [LFOps README](https://github.com/Linuxfabrik/lfops#lfops__skip_aide_check_before_run--lfops__skip_aide_update_db_after_run) for the details and how to skip either step.
+* Changes to monitored files made outside LFOps, packages installed by hand included, are reported by the next check. The [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role knows about `aidecheck.service`: it runs a check before it updates packages and updates the database afterwards if that check was clean.
 * On Debian and Ubuntu the same applies to the updates of `unattended-upgrades`: a dpkg hook (`/usr/local/sbin/aide-dpkg-hook`, wired in by `/etc/apt/apt.conf.d/z00-linuxfabrik-aide`) runs a check before `unattended-upgrades` installs its first package, and if that check was clean, `aide-dpkg-update.service` updates the database once the upgrade has finished. `unattended-upgrades` installs in several steps, one dpkg run each, but the check and the update run only once per upgrade. The upgrade takes longer by that one check, while apt holds its lock. The hook only acts on dpkg runs of `unattended-upgrades`, so a package installed with apt by hand is reported, as on the Red Hat family. Changes made on the host while the upgrade runs are accepted along with it.
 * On Debian and Ubuntu the role creates an empty `/etc/apt/sources.list` if there is none, as on hosts with only `/etc/apt/sources.list.d/*.sources`. `unattended-upgrades` creates that file on every run otherwise, and the check before the first upgrade would report it.
-* The [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity) role backs up `/var/lib/aide` by default. An attacker with root privileges can replace the local database. The database only changes when it is updated (by this role, `--tags aide:update_db` or `aide:update_db_force`, the system_update role or `aide-dpkg-update.service`), so a local database that differs from the backup of a day without such an update points to tampering.
+* The [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity) role backs up `/var/lib/aide` by default. An attacker with root privileges can replace the local database. The database only changes when it is updated (by this role, `--tags aide:update_db` or `aide:update_db_force`, `aide-update.service` after an LFOps run, the system_update role or `aide-dpkg-update.service`), so a local database that differs from the backup of a day without such an update points to tampering.
 * Before it creates the database, the role waits for running package jobs: `apt-daily.service` and `apt-daily-upgrade.service` on Debian and Ubuntu, `dnf-automatic.service` and `dnf-automatic-install.service` on the Red Hat family, and `security-update.service` and `update-and-reboot.service` of the [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role everywhere. A package installation during `aide --init` would leave entries without checksums in the database.
 
 
@@ -48,6 +49,7 @@ This role is compatible with the following aide versions:
 * Installs aide.
 * Deploys `/etc/aide.conf` and `/etc/logrotate.d/aide`, and on Debian and Ubuntu the dpkg hook and `aide-dpkg-update.service`.
 * Deploys `aidecheck.service` and `aidecheck.timer`, enables both and sets the state of the timer.
+* Deploys `aide-update.service`, which updates the database on request, for example after every LFOps run.
 * Creates the AIDE database if it does not exist yet.
 * Triggers: AIDE database update.
 
@@ -64,7 +66,7 @@ This role is compatible with the following aide versions:
 `aide:update_db`
 
 * Not run by default, only when the tag is given explicitly.
-* Updates the AIDE database to the current state of the host, but only if the last check had not reported changes, the same condition under which the role updates the database after a change of its own. Otherwise the database is left alone and the run tells you so. Use it routinely after a deploy, to accept what the run changed without accepting findings that were pending before it: `ansible-playbook --inventory inventory linuxfabrik.lfops.setup_basic --limit myhost --tags all,aide:update_db`. Like that update, it accepts everything that changed since the last check, not only the changes of the run.
+* Updates the AIDE database to the current state of the host, but only if the last check had not reported changes, the same condition under which the role updates the database after a change of its own. Otherwise the database is left alone and the run tells you so. Every LFOps playbook already has the database updated after the run (see "How the Role Behaves"), so the tag is for changes made outside a playbook run: `ansible-playbook --inventory inventory linuxfabrik.lfops.aide --limit myhost --tags aide:update_db`. Like that update, it accepts everything that changed since the last check, not only the changes of the run.
 * Triggers: none.
 
 `aide:update_db_force`
@@ -204,6 +206,10 @@ aide__timer_state: 'started'
 **The run aborts at a task that waits up to 5 minutes**
 
 * An AIDE check (`aidecheck.service`) or a package job was still running after 5 minutes. A check takes longer on a large file system or a busy disk. Wait until `systemctl is-active aidecheck.service` and the package jobs the task names no longer report `active` or `activating`, then run the role again.
+
+**The run stops with `aide: The last AIDE check reported changes`**
+
+* Every LFOps playbook stops on a host whose last check reported changes, before it changes anything. Read the report in `/var/log/aide/aide.log`. If the changes are expected, accept them with `ansible-playbook --inventory inventory linuxfabrik.lfops.aide --limit myhost --tags aide:update_db_force`, then run the playbook again. To deploy without accepting them, run the playbook with `--extra-vars='lfops__skip_aide_check_before_run=true'`; the database is then not updated after the run.
 
 **`aidecheck.service` is failed**
 

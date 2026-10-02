@@ -214,11 +214,34 @@
     register: '__aide__timer_unit_result'
     notify: 'aide: update database'
 
+  # the post_tasks of every LFOps playbook start this unit to update the database after the run,
+  # see roles/shared/tasks/aide-update-db-after-run.yml.
+  - name: 'Deploy /usr/local/sbin/aide-update'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/aide-update.j2'
+      dest: '/usr/local/sbin/aide-update'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+    notify: 'aide: update database'
+
+  - name: 'Deploy /etc/systemd/system/aide-update.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/aide-update.service.j2'
+      dest: '/etc/systemd/system/aide-update.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__aide__update_unit_result'
+    notify: 'aide: update database'
+
   - name: 'systemctl daemon-reload' # noqa no-handler (the timer tasks below need the new units)
     ansible.builtin.systemd:
       daemon_reload: true
     when:
-      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed or __aide__legacy_units_result is changed'
+      - '__aide__service_unit_result is changed or __aide__timer_unit_result is changed or __aide__legacy_units_result is changed or __aide__update_unit_result is changed'
 
   tags:
     - 'aide'
