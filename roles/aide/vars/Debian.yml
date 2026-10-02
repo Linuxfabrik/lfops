@@ -1,1 +1,6 @@
 __aide__binary_path: '/usr/bin/aide'
+
+# jobs of the distribution that install packages on their own, see the wait before `aide --init`
+__aide__package_job_units:
+  - 'apt-daily-upgrade.service'
+  - 'apt-daily.service'

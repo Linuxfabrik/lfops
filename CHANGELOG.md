@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:aide**: Before it creates the database, the role also waits for running `dnf-automatic` jobs on the Red Hat family and for the update jobs of the system_update role on every platform, not only for the apt jobs on Debian and Ubuntu. An update during the initialisation left files in the database that the first check then reported.
 * **playbook:setup_basic**: With `setup_basic__skip_duplicity` or `setup_basic__skip_glances`, the playbook no longer builds the Python venv of the skipped role, which could abort the run with a pip error on hosts that do not back up with duplicity.
 * **role:kernel_settings**: `sunrpc.*` settings, such as the `sunrpc.tcp_slot_table_entries` the mariadb_server role sets, survive a reboot. Until now the `sunrpc` module was not loaded again after a reboot on hosts without NFS, so TuneD could not apply the setting and the next run of the role failed in `tuned-adm verify`.
 * **role:chrony**: The role aborts if neither `chrony__ntp_pools` nor `chrony__ntp_servers` is set, instead of leaving the host without a time source.

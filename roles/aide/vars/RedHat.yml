@@ -1,1 +1,8 @@
 __aide__binary_path: '/usr/sbin/aide'
+
+# jobs of the distribution that install packages on their own, see the wait before `aide --init`.
+# dnf-automatic.service installs only with `apply_updates = yes`; the download and notifyonly
+# variants install nothing. Verified against dnf-automatic 4.7, 4.14 and 4.20 on Rocky 8, 9 and 10.
+__aide__package_job_units:
+  - 'dnf-automatic-install.service'
+  - 'dnf-automatic.service'
