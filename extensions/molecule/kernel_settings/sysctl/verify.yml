@@ -10,3 +10,29 @@
     - name: 'Assert that vm.overcommit_memory is set to 1'
       ansible.builtin.assert:
         that: '__molecule__sysctl_vm_overcommit_memory_result["content"] | ansible.builtin.b64decode | int == 1'
+
+
+# The sunrpc sysctls only exist while the sunrpc module is loaded. Nothing else loads it on a host
+# without NFS, so check after a reboot that the module comes back on its own and TuneD applies the
+# value again.
+- name: 'Verify sunrpc.tcp_slot_table_entries survives a reboot'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    - name: 'systemctl reboot'
+      ansible.builtin.reboot:  # yamllint disable-line rule:empty-values
+      become: true
+
+    - name: 'Read sysctl sunrpc.tcp_slot_table_entries from procfs'
+      ansible.builtin.slurp:
+        src: '/proc/sys/sunrpc/tcp_slot_table_entries'
+      register: '__molecule__sysctl_sunrpc_tcp_slot_table_entries_result'
+
+    - name: 'Assert that sunrpc.tcp_slot_table_entries is set to 128'
+      ansible.builtin.assert:
+        that: '__molecule__sysctl_sunrpc_tcp_slot_table_entries_result["content"] | ansible.builtin.b64decode | int == 128'
+
+    - name: 'tuned-adm verify --ignore-missing'
+      ansible.builtin.command: 'tuned-adm verify --ignore-missing'
+      become: true
+      changed_when: false

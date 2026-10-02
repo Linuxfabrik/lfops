@@ -18,10 +18,14 @@
         - 'Combined transparent_hugepages: {{ kernel_settings__transparent_hugepages__combined_var }}'
         - 'Combined transparent_hugepages_defrag: {{ kernel_settings__transparent_hugepages_defrag__combined_var }}'
 
-  # prevent errors like "Failed to read sysctl parameter 'sunrpc.tcp_slot_table_entries', the parameter does not exist" on RHEL
+  # prevent errors like "Failed to read sysctl parameter 'sunrpc.tcp_slot_table_entries', the parameter does not exist" on RHEL.
+  # persistent, because nothing else loads sunrpc on a host without NFS: after a reboot, TuneD could
+  # not apply the setting and `tuned-adm verify` failed until the next run of this role.
+  # `persistent` writes /etc/modules-load.d/sunrpc.conf (community.general >= 7.0.0).
   - name: 'modprobe sunrpc'
     community.general.modprobe:
       name: 'sunrpc'
+      persistent: 'present'
       state: 'present'
     when: 'kernel_settings__sysctl__combined_var | selectattr("name", "match", "^sunrpc\.") | list | length > 0'  # if there is at least one key starting with "sunrpc."
 
