@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# 2026100201
+
+[Unit]
+Description=Update the AIDE database on request
+Documentation=man:aide(1)
+# started with --no-block by callers that created the request file after a clean AIDE check,
+# see /usr/local/sbin/aide-update.
+# an update while system_update or unattended-upgrades installs packages would accept a half
+# installed package, so it waits for them as aidecheck.service does. ordering on a unit that
+# does not exist is ignored.
+After=apt-daily-upgrade.service security-update.service update-and-reboot.service
+
+[Service]
+# oneshot has no start timeout by default (service_add_extras() in src/core/service.c,
+# systemd 239 and newer), so a long update and check on a large file system are not killed.
+Type=oneshot
+ExecStart=/usr/local/sbin/aide-update
+IOSchedulingClass=idle
+Nice=19

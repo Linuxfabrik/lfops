@@ -1,0 +1,48 @@
+# Has the AIDE database updated after the run, so that the next check does not report what the
+# run changed. Imported in the post_tasks of every LFOps playbook, see aide-check-before-run.yml in
+# the pre_tasks. Only after a clean check before the run, and not with
+# lfops__skip_aide_update_db_after_run.
+#
+# The play does not wait for the update: aide-update.service runs it with --no-block, then
+# starts a check. The update accepts everything that changed since the last clean check, not only
+# the changes of this run.
+#
+# post_tasks do not run on a host whose play failed, so the changes of a failed run are reported
+# by the next check, and the next run stops at aide-check-before-run.yml until they are accepted.
+#
+# Parameters: none.
+
+- block:
+
+  # a host whose aide role predates the unit has no update to start. the role deploys it on its
+  # next run.
+  - name: 'stat /etc/systemd/system/aide-update.service'
+    ansible.builtin.stat:
+      path: '/etc/systemd/system/aide-update.service'
+    register: '__shared__aide_update_unit_stat_result'
+
+  # the request the unit removes before each update, so that a play ending during an update is
+  # picked up by the loop in /usr/local/sbin/aide-update. changed_when: false, like the log
+  # line of log-end.yml: bookkeeping, not a change of the host the run asked for.
+  - name: 'touch /run/aide-update.request'
+    ansible.builtin.file:
+      path: '/run/aide-update.request'
+      state: 'touch'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    changed_when: false
+    when:
+      - '__shared__aide_update_unit_stat_result["stat"]["exists"]'
+
+  # --no-block: the unit is Type=oneshot, and a plain start would wait for the update and the
+  # check after it.
+  - name: 'systemctl start --no-block aide-update.service' # noqa command-instead-of-module (the service module cannot start without waiting)
+    ansible.builtin.command: 'systemctl start --no-block aide-update.service'
+    changed_when: false
+    when:
+      - '__shared__aide_update_unit_stat_result["stat"]["exists"]'
+
+  when:
+    - '__shared__aide_check_before_run_passed | d(false) | bool'
+    - 'not lfops__skip_aide_update_db_after_run | d(false) | bool'

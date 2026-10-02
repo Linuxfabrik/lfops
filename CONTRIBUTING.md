@@ -258,7 +258,7 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
 * Playbooks installing an application together with software packages that are complex to configure (`apache_httpd`, `mariadb_server` and/or `php`) as a dependency are prefixed by `setup_`. Example: `setup_nextcloud` because Nextcloud also needs Apache httpd, MariaDB Server etc.
 * The name of the playbook should be `- name: 'Playbook linuxfabrik.lfops.example'`.
 * After creating a new playbook, document it in `playbooks/README.md` and add it in the `playbooks/all.yml`.
-* Every run of the playbooks should be logged to `/var/log/linuxfabrik-lfops.log`. Include the following code in the playbook for this:
+* Every run of the playbooks should be logged to `/var/log/linuxfabrik-lfops.log`, should stop on a host whose last AIDE check reported changes, and should have the AIDE database updated after it has finished (see `lfops__skip_aide_check_before_run` in the [README](./README.md)). Include the following code in the playbook for this:
 
     ```yaml
     pre_tasks:
@@ -274,6 +274,12 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
         tags:
           - 'always'
 
+      - ansible.builtin.import_role:
+          name: 'shared'
+          tasks_from: 'aide-check-before-run.yml'
+        tags:
+          - 'always'
+
     roles:
 
       - role: 'example'
@@ -281,7 +287,19 @@ The project-agnostic "Changelog" rules above apply. LFOps overrides only the sor
     post_tasks:
       - ansible.builtin.import_role:
           name: 'shared'
+          tasks_from: 'aide-update-db-after-run.yml'
+        tags:
+          - 'always'
+
+      - ansible.builtin.import_role:
+          name: 'shared'
           tasks_from: 'log-end.yml'
+        tags:
+          - 'always'
+
+      - ansible.builtin.import_role:
+          name: 'shared'
+          tasks_from: 'print-messages.yml'
         tags:
           - 'always'
     ```

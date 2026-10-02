@@ -400,6 +400,22 @@ This variable is used as the default across all `repo_*` roles if it is set. Can
 lfops__repo_mirror_url: 'https://mirror.example.com'
 ```
 
+#### `lfops__skip_aide_check_before_run` / `lfops__skip_aide_update_db_after_run`
+
+On a host where the [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide) role runs its check (`aidecheck.timer` is active), every playbook checks the result of the last AIDE check before it changes anything, and has the AIDE database updated after it has finished:
+
+* If the last check reported changes (`aidecheck.service` is failed), the run stops for that host before any role runs. Review `/var/log/aide/aide.log`, accept the current state with `--tags aide:update_db_force` (see the aide role) and run the playbook again. A check that is running when the playbook starts is waited for, 5 minutes at most.
+* If the last check was clean, `aide-update.service` updates the database once the run has finished, and then runs a check. The playbook does not wait for it. Playbooks that run back to back share the update: a playbook that starts while it is pending does not check again, and one that ends meanwhile has its changes included.
+
+The update accepts everything that changed on the host since the last clean check, not only the changes of the run. A failed run gets no update, so the next check reports its changes and the next run stops until they are accepted.
+
+Set `lfops__skip_aide_check_before_run` to `true` to deploy to a host with a pending finding. The database is then not updated after the run either, since nothing vouched for the state before it. Set `lfops__skip_aide_update_db_after_run` to `true` to keep the check before the run, but leave the database as it is afterwards, so that the next check reports the changes of the run.
+
+```bash
+ansible-playbook linuxfabrik.lfops.setup_basic --limit myhost \
+  --extra-vars='lfops__skip_aide_check_before_run=true'
+```
+
 #### `lfops__skip_restart_handlers`
 
 Set this to `true` to deploy configuration changes without restarting the affected services. Every role's restart handler is skipped, so a config change is written to disk but the running process keeps its old configuration. Reload handlers are not affected, because a reload applies the new configuration without an outage.

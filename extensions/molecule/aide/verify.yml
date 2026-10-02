@@ -66,6 +66,10 @@
           - 'not __molecule__aide_common_conf_result["stat"]["exists"]'
         fail_msg: '{{ __molecule__aide_common_result["stdout"] | d("") }}'
 
+    # the playbook run of the idempotence step starts aide-update.service at its end
+    - name: 'Wait for the units to finish (clean host)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
     - name: 'systemctl start --wait aidecheck.service (clean host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
       ansible.builtin.command: 'systemctl start --wait aidecheck.service'
       changed_when: false
@@ -501,6 +505,304 @@
           - '__molecule__aide_db_after_clean_run_result["stat"]["checksum"] != __molecule__aide_db_before_clean_run_result["stat"]["checksum"]'
           - '__molecule__aide_clean_run_result["stdout"] == "success"'
           - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 0'
+
+
+# The check before and the database update after every LFOps run, through the shared task files
+# the playbooks import in their pre_tasks and post_tasks. After a clean check, the update after
+# the run accepts its change, and the check after the update is clean. Two runs back to back,
+# the second one ending while the update of the first one waits for /run/aide.lock, pass the
+# check without waiting and get two updates, the second one for the request of the second run.
+# A failed check stops the run, unless lfops__skip_aide_check_before_run is set, and then the
+# database is not updated after the run either. lfops__skip_aide_update_db_after_run keeps the
+# check, but leaves the database alone.
+- name: 'Verify the AIDE check before and the database update after LFOps runs'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'Wait for the units to finish (before the runs)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    # 1: one run from a clean check
+    - name: 'Run the AIDE check before the run (clean host)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-check-before-run.yml'
+
+    - name: 'Assert that the check before the run passed'
+      ansible.builtin.assert:
+        that:
+          - '__shared__aide_check_before_run_passed | bool'
+
+    - name: 'Deploy /etc/lfops-molecule-run'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/etc/lfops-molecule-run'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the update after the run)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_run_result'
+
+    - name: 'Run the AIDE database update after the run'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+
+    - name: 'Wait for the units to finish (after the run)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the update after the run)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_run_result'
+
+    - name: 'stat /run/aide-update.request (after the run)'
+      ansible.builtin.stat:
+        path: '/run/aide-update.request'
+      register: '__molecule__aide_request_after_run_result'
+
+    - name: 'systemctl show --property=Result aidecheck.service (after the run)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_after_run_result'
+      changed_when: false
+
+    - name: 'Assert that the update after the run accepted its change and the check is clean'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_db_after_run_result["stat"]["checksum"] != __molecule__aide_db_before_run_result["stat"]["checksum"]'
+          - 'not __molecule__aide_request_after_run_result["stat"]["exists"]'
+          - '__molecule__aide_after_run_result["stdout"] == "success"'
+
+    # 2: two runs back to back. a transient unit holds /run/aide.lock, so that the update of the
+    # first run is still running when the second run starts and ends.
+    - name: 'date +%s (before the runs back to back)'
+      ansible.builtin.command: 'date +%s'
+      register: '__molecule__aide_back_to_back_since_result'
+      changed_when: false
+
+    - name: 'systemd-run --unit=lfops-molecule-aide-lock flock /run/aide.lock sleep 600'
+      ansible.builtin.command: 'systemd-run --unit=lfops-molecule-aide-lock flock /run/aide.lock sleep 600'
+      changed_when: true
+
+    - name: 'Run the AIDE check before the first run'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-check-before-run.yml'
+
+    - name: 'rm -f /etc/lfops-molecule-run (first run)'
+      ansible.builtin.file:
+        path: '/etc/lfops-molecule-run'
+        state: 'absent'
+
+    - name: 'Run the AIDE database update after the first run'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+
+    - name: 'systemctl is-active aide-update.service (wait for the update of the first run to wait for the lock)' # noqa command-instead-of-module (read-only state query in a retry loop)
+      ansible.builtin.command: 'systemctl is-active aide-update.service'
+      register: '__molecule__aide_update_active_result'
+      until: '__molecule__aide_update_active_result["stdout"] == "activating"'
+      retries: 12
+      delay: 5
+      changed_when: false
+      failed_when: '__molecule__aide_update_active_result["stdout"] != "activating"'
+
+    - name: 'Run the AIDE check before the second run'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-check-before-run.yml'
+
+    - name: 'Assert that the check before the second run passed on the pending update'
+      ansible.builtin.assert:
+        that:
+          - '__shared__aide_check_before_run_passed | bool'
+          - '__shared__aide_update_pending | bool'
+
+    - name: 'Deploy /etc/lfops-molecule-run (second run)'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/etc/lfops-molecule-run'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'Run the AIDE database update after the second run'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+
+    - name: 'systemctl stop lfops-molecule-aide-lock.service'
+      ansible.builtin.service:
+        name: 'lfops-molecule-aide-lock.service'
+        state: 'stopped'
+
+    - name: 'Wait for the units to finish (after the runs back to back)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'journalctl --identifier=aide-update (after the runs back to back)'
+      ansible.builtin.command: 'journalctl --identifier=aide-update --since=@{{ __molecule__aide_back_to_back_since_result["stdout"] }} --output=cat'
+      register: '__molecule__aide_back_to_back_log_result'
+      changed_when: false
+
+    - name: 'systemctl show --property=Result aidecheck.service (after the runs back to back)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      register: '__molecule__aide_back_to_back_result'
+      changed_when: false
+
+    - name: 'Assert that both runs were accepted, the second one by an update of its own'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_back_to_back_log_result["stdout_lines"] | select("search", "updated the AIDE database") | list | length == 2'
+          - '__molecule__aide_back_to_back_result["stdout"] == "success"'
+        fail_msg: '{{ __molecule__aide_back_to_back_log_result["stdout_lines"] }}'
+
+    # 3: a failed check stops the run
+    - name: 'Deploy /etc/lfops-molecule-drift'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/etc/lfops-molecule-drift'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'systemctl start --wait aidecheck.service (drifted host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
+
+    - block:
+
+      - name: 'Run the AIDE check before the run (drifted host)'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.shared'
+          tasks_from: 'aide-check-before-run.yml'
+
+      - name: 'Fail, since the check before the run passed on a failed check'
+        ansible.builtin.fail:
+          msg: 'The AIDE check before the run let the run continue after a failed check.'
+
+      rescue:
+
+      - name: 'Assert that the check before the run stopped the run'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] == "Assert that the last AIDE check did not report changes"'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    # lfops__skip_aide_check_before_run lets the run continue, and leaves the database alone
+    # after it
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run with lfops__skip_aide_check_before_run)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_skip_check_result'
+
+    - name: 'Run the AIDE check before the run (lfops__skip_aide_check_before_run)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-check-before-run.yml'
+      vars:
+        lfops__skip_aide_check_before_run: true
+
+    - name: 'Run the AIDE database update after the run (lfops__skip_aide_check_before_run)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+
+    - name: 'Wait for the units to finish (lfops__skip_aide_check_before_run)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run with lfops__skip_aide_check_before_run)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_skip_check_result'
+
+    - name: 'Assert that the run continued and the database was left alone'
+      ansible.builtin.assert:
+        that:
+          - 'not __shared__aide_check_before_run_passed | bool'
+          - '__molecule__aide_db_after_skip_check_result["stat"]["checksum"] == __molecule__aide_db_before_skip_check_result["stat"]["checksum"]'
+
+    - name: 'rm -f /etc/lfops-molecule-drift'
+      ansible.builtin.file:
+        path: '/etc/lfops-molecule-drift'
+        state: 'absent'
+
+    - name: 'Accept the state without the drift'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db.yml'
+
+    - name: 'Wait for the units to finish (after accepting the state without the drift)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    # 4: lfops__skip_aide_update_db_after_run keeps the check, but leaves the database alone
+    - name: 'Run the AIDE check before the run (lfops__skip_aide_update_db_after_run)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-check-before-run.yml'
+
+    - name: 'Deploy /etc/lfops-molecule-drift (lfops__skip_aide_update_db_after_run)'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/etc/lfops-molecule-drift'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (before the run with lfops__skip_aide_update_db_after_run)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_before_skip_update_result'
+
+    - name: 'Run the AIDE database update after the run (lfops__skip_aide_update_db_after_run)'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+      vars:
+        lfops__skip_aide_update_db_after_run: true
+
+    - name: 'Wait for the units to finish (lfops__skip_aide_update_db_after_run)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    - name: 'sha256sum /var/lib/aide/aide.db.gz (after the run with lfops__skip_aide_update_db_after_run)'
+      ansible.builtin.stat:
+        path: '/var/lib/aide/aide.db.gz'
+        checksum_algorithm: 'sha256'
+      register: '__molecule__aide_db_after_skip_update_result'
+
+    - name: 'Assert that the check before the run passed and the database was left alone'
+      ansible.builtin.assert:
+        that:
+          - '__shared__aide_check_before_run_passed | bool'
+          - '__molecule__aide_db_after_skip_update_result["stat"]["checksum"] == __molecule__aide_db_before_skip_update_result["stat"]["checksum"]'
+
+    # back to the state the second verify after the idempotence step expects
+    - name: 'rm -f /etc/lfops-molecule-drift /etc/lfops-molecule-run'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/etc/lfops-molecule-drift'
+        - '/etc/lfops-molecule-run'
+
+    - name: 'Accept the state after the runs'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.aide'
+        tasks_from: 'update-db.yml'
+
+    - name: 'Wait for the units to finish (after cleaning up)'
+      ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
 
 
 # The dpkg hook against real unattended-upgrades runs, started through apt-daily-upgrade.service

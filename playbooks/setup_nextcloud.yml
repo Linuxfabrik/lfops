@@ -23,6 +23,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'aide-check-before-run.yml'
+      tags:
+        - 'always'
+
 
   roles:
 
@@ -191,6 +197,12 @@
       when: false
 
   post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+      tags:
+        - 'always'
+
     - ansible.builtin.import_role:
         name: 'shared'
         tasks_from: 'log-end.yml'

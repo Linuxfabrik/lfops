@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026100201
+
+# Updates the AIDE database on request, run by aide-update.service. A caller creates the request
+# file and starts the unit with --no-block, so it does not wait for the update.
+#
+# Contract: request an update only after a clean AIDE check. The update accepts everything that
+# changed since that check, and a caller that finds an update pending (request file present or
+# unit activating) may rely on it without a check of its own, as the pre_tasks of the LFOps
+# playbooks do (roles/shared/tasks/aide-check-before-run.yml).
+# Callers: the post_tasks of every LFOps playbook (roles/shared/tasks/aide-update-db-after-run.yml).
+#
+# A start request for the unit while it runs is merged into the running job (job merging in
+# src/core/job.c of systemd), so a caller that requests meanwhile does not get a run of its own.
+# The loop picks it up instead: the request file is removed before each update, so a request
+# during the update or the check after it creates it again, and the loop runs once more.
+
+REQUEST='/run/aide-update.request'
+UNIT='aidecheck'
+
+log() {
+    logger --tag aide-update -- "$*"
+}
+
+while [ -e "$REQUEST" ]; do
+    rm --force "$REQUEST"
+    if [ ! -e '/var/lib/aide/aide.db.gz' ]; then
+        log 'no AIDE database yet, nothing to update'
+        exit 0
+    fi
+    # /run/aide.lock serialises all aide runs of LFOps, see aidecheck.service. `aide --update`
+    # exits with the bitmask of what it found (1 added, 2 removed, 4 changed), its errors start
+    # at 14, flock's own at 64.
+    flock /run/aide.lock {{ __aide__binary_path }} --config=/etc/aide.conf --update > /dev/null 2>&1
+    rc=$?
+    if [ "$rc" -ge 8 ]; then
+        log "aide --update exited with ${rc}; the database was not updated"
+        exit 1
+    fi
+    mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+    log 'updated the AIDE database on request'
+    # `aide --update` wrote its own report. a check against the new database replaces it, so
+    # that the report and the state of the unit reflect the host again. --wait, so that a request
+    # during the check is picked up by the loop, and the unit stays activating, and therefore
+    # pending for callers, until the result is in. the result itself is aidecheck.service's.
+    systemctl start --wait "${UNIT}.service"
+done
+exit 0

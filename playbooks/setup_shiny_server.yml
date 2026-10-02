@@ -15,6 +15,12 @@
       tags:
         - 'always'
 
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'aide-check-before-run.yml'
+      tags:
+        - 'always'
+
     # apache_httpd runs before shiny_server, so the vHost and htpasswd lists have to exist
     # before the roles start. Rendering the Apache configuration of an arbitrary number of
     # tenants needs a Jinja loop, which a variable definition cannot carry.
@@ -91,6 +97,12 @@
 
 
   post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'aide-update-db-after-run.yml'
+      tags:
+        - 'always'
+
     - ansible.builtin.import_role:
         name: 'shared'
         tasks_from: 'log-end.yml'
