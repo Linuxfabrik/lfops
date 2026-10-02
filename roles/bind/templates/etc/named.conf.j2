@@ -74,7 +74,7 @@ options {
         {{ item }};
 {% endfor %}
     };
-{% if bind__rpz_zone is defined and bind__rpz_zone | length %}
+{% if bind__rpz_zone is defined and bind__rpz_zone | length > 0 %}
     response-policy { zone "{{ bind__rpz_zone }}"; };
 {% endif %}
     version "Linuxfabrik";
@@ -130,7 +130,7 @@ zone "{{ item['name'] }}" IN {
     allow-query { trusted; };
     {% endif %}
 
-    {% if item['allow_transfer'] | d([]) | length and item['type'] | d('master') in ['mirror', 'primary', 'master', 'secondary', 'slave'] %}
+    {% if item['allow_transfer'] | d([]) | length > 0 and item['type'] | d('master') in ['mirror', 'primary', 'master', 'secondary', 'slave'] %}
     allow-transfer {
         {% for item in item['allow_transfer'] | d(['none']) %}
         {{ item }};
@@ -156,7 +156,7 @@ key "{{ item ['name'] }}" {
 };
 {% endfor %}
 
-{% if bind__named_conf_raw is defined and bind__named_conf_raw | length %}
+{% if bind__named_conf_raw is defined and bind__named_conf_raw | length > 0 %}
 # raw
 {{ bind__named_conf_raw }}
 {% endif %}
