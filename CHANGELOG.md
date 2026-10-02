@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:bind**: named validates DNSSEC by default, as the bind package does, and follows the system-wide crypto policy. Forged or broken answers for signed zones are answered with `SERVFAIL` instead of being passed on. The `forward`, `static-stub` and `stub` zones in `bind__zones` are excluded from validation; list other internal zones below a signed domain or TLD in `bind__dnssec_validate_except`, or set `bind__dnssec_validation: false`. On RHEL 8 the role fails if it has zones to exclude, since BIND 9.11 cannot; set `bind__dnssec_validation: false` there ([#355](https://github.com/Linuxfabrik/lfops/issues/355), [#356](https://github.com/Linuxfabrik/lfops/issues/356)).
 * **role:system_update**: On Debian and Ubuntu, the system update no longer updates the database of an AIDE installed by hand, since it also accepted changes that were pending before the update. On such hosts the daily AIDE mail now lists the files each update changed. Deploy the aide role to have its database updated after updates again.
 * **role:grav**: The `grav:cron` tag is gone. Run the role with `--tags grav` to deploy the timers and their services, or with `--tags grav:state` to enable or disable the timers.
 * **role:firewall**: With `firewall__firewall: 'fwbuilder'`, the default, the run aborts on a host that has neither `/etc/fwb.sh` nor `firewall__fwbuilder_repo_url`, before the role stops any firewall. Until now `fwb.service` failed there and the host ran without a firewall. Deploy `/etc/fwb.sh`, set `firewall__fwbuilder_repo_url`, or set `firewall__firewall` to the firewall the host uses.
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
 * **playbook:setup_basic**: Installs AIDE on every host, which checks file integrity twice a day and after every boot; skip it with `setup_basic__skip_aide`.
 * **role:aide, playbook:aide**: Add a role and playbook that install AIDE on Debian 12 and 13, RHEL 8, 9 and 10 and Ubuntu 22.04, 24.04 and 26.04 as the CIS benchmarks recommend, leaving `aidecheck.service` failed on any finding and keeping the database in step with `system_update` and `unattended-upgrades`.
@@ -84,6 +86,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:bind**: A secondary zone with `type: 'slave'` is saved to its file again, so the secondary answers it after a restart without waiting for the primary.
+* **role:bind**: Reverse lookups for private and special-use addresses, such as `10.0.0.0/8` or `fd00::/8`, are answered locally, as BIND does by default, instead of waiting for the forwarders, which also no longer see the internal addressing.
 * **role:kernel_settings**: The role works with fedora.linux_system_roles 2.5.0 and later, which a fresh installation of LFOps pulls in. Until now the run aborted with "kernel_settings_transparent_hugepages must be null, one of always, madvise, never" unless `kernel_settings__transparent_hugepages__*_var` and `kernel_settings__transparent_hugepages_defrag__*_var` were set.
 * **role:system_update**: The AIDE database is only updated after an update if a check right before the update comes out clean, instead of relying on the last scheduled check, so changes made since then are no longer accepted along with the update; a check that cannot run at all is reported in a mail of its own.
 * **role:fangfrisch**: `--tags fangfrisch:state` no longer aborts on an undefined variable.

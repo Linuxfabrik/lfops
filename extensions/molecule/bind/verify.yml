@@ -1,0 +1,141 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state, not that individual tasks ran.
+#
+# Every check asks the running named with dig and reads the status and the flags of the answer:
+# `aa` tells an answer from a local zone apart from one that came through the forwarders, `ad`
+# tells a DNSSEC-validated answer apart from an unvalidated one. Zones, peers and expectations
+# come from the ring in group_vars.
+- name: 'Verify named is running and answers as configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  vars:
+
+    __molecule__bind_own_zone: '{{ inventory_hostname | replace("-vm", "") }}.example'
+    __molecule__bind_secondary_zone_name: '{{ __molecule__bind_secondary_of | replace("-vm", "") }}.example'
+
+    # status: the rcode, aa: answered from a local zone, ad: validated, answer: substring of
+    # the dig output (empty: not checked).
+    __molecule__bind_checks: '{{
+        [
+          {
+            "label": "own primary zone answered locally",
+            "query": "owner." ~ __molecule__bind_own_zone ~ " TXT",
+            "status": "NOERROR",
+            "aa": true,
+            "answer": inventory_hostname,
+          },
+          {
+            "label": "private reverse lookup answered from the empty zone",
+            "query": "-x 10.1.2.3",
+            "status": "NXDOMAIN",
+            "aa": true,
+            "answer": "",
+          },
+          {
+            "label": "broken DNSSEC signature rejected",
+            "query": "dnssec-failed.org A",
+            "status": "SERVFAIL",
+            "aa": false,
+            "answer": "",
+          },
+          {
+            "label": "signed zone validated",
+            "query": "+dnssec isc.org SOA",
+            "status": "NOERROR",
+            "aa": false,
+            "ad": true,
+            "answer": "",
+          },
+        ]
+        + ([
+          {
+            "label": "forward zone below an unsigned TLD excluded from validation",
+            "query": "owner." ~ (__molecule__bind_forward_to | replace("-vm", "")) ~ ".example TXT",
+            "status": "NOERROR",
+            "aa": false,
+            "answer": __molecule__bind_forward_to,
+          },
+        ] if __molecule__bind_forward_to | length > 0 else [])
+      }}'
+
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert named is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"]["named.service"]["state"] == "running"'
+          - 'ansible_facts["services"]["named.service"]["status"] == "enabled"'
+        fail_msg: 'named.service is {{ ansible_facts["services"]["named.service"] | d("absent") }}'
+
+    - name: 'dig @127.0.0.1 ...'
+      ansible.builtin.command: 'dig @127.0.0.1 +tries=2 +time=5 {{ item["query"] }}'
+      register: '__molecule__bind_dig_result'
+      changed_when: false
+      loop: '{{ __molecule__bind_checks }}'
+      loop_control:
+        label: '{{ item["query"] }}'
+
+    - name: 'Assert the status, the flags and the answer'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__bind_status == item["item"]["status"]'
+          - '("aa" in __molecule__bind_flags) == item["item"]["aa"]'
+          - '("ad" in __molecule__bind_flags) == item["item"]["ad"] | d("ad" in __molecule__bind_flags)'
+          - 'item["item"]["answer"] in item["stdout"]'
+        fail_msg: '{{ item["item"]["label"] }}: got status {{ __molecule__bind_status }} with flags "{{ __molecule__bind_flags | join(" ") }}"; dig output: {{ item["stdout"] }}'
+        quiet: true
+      loop: '{{ __molecule__bind_dig_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["label"] }}'
+      vars:
+        __molecule__bind_status: '{{ item["stdout"] | regex_search("status: (\w+)", "\1") | first | d("") }}'
+        __molecule__bind_flags: '{{ (item["stdout"] | regex_search(";; flags: ([a-z ]+);", "\1") | first | d("")).split() }}'
+
+
+    - block:
+
+      # All three hosts start named within the same task, so the secondary's first transfer
+      # usually runs before its primary listens, and the next attempt only follows minutes later.
+      # Trigger it now instead of waiting for the retry timer.
+      - name: 'rndc retransfer {{ __molecule__bind_secondary_zone_name }}'
+        ansible.builtin.command: 'rndc retransfer {{ __molecule__bind_secondary_zone_name }}'
+        changed_when: false
+
+      - name: 'dig @127.0.0.1 owner.{{ __molecule__bind_secondary_zone_name }} TXT'
+        ansible.builtin.command: 'dig @127.0.0.1 +norecurse owner.{{ __molecule__bind_secondary_zone_name }} TXT'
+        register: '__molecule__bind_secondary_dig_result'
+        changed_when: false
+        until: '"status: NOERROR" in __molecule__bind_secondary_dig_result["stdout"]'
+        retries: 10
+        delay: 3
+
+      - name: 'Assert the secondary answers from the transferred zone'
+        ansible.builtin.assert:
+          that:
+            - '" aa" in (__molecule__bind_secondary_dig_result["stdout"] | regex_search(";; flags: [a-z ]+;"))'
+            - '__molecule__bind_secondary_of in __molecule__bind_secondary_dig_result["stdout"]'
+          fail_msg: 'owner.{{ __molecule__bind_secondary_zone_name }} did not come from {{ __molecule__bind_secondary_of }}: {{ __molecule__bind_secondary_dig_result["stdout"] }}'
+
+      # The secondary keeps a copy of the zone, so it can answer after a restart while the
+      # primary is down.
+      - name: 'stat /var/named/{{ __molecule__bind_secondary_zone_name }}.zone'
+        ansible.builtin.stat:
+          path: '/var/named/{{ __molecule__bind_secondary_zone_name }}.zone'
+        register: '__molecule__bind_secondary_file_result'
+        until: '__molecule__bind_secondary_file_result["stat"]["exists"]'
+        retries: 10
+        delay: 3
+
+      - name: 'Assert the secondary saved the transferred zone'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__bind_secondary_file_result["stat"]["exists"]'
+            - '__molecule__bind_secondary_file_result["stat"]["pw_name"] == "named"'
+          fail_msg: '/var/named/{{ __molecule__bind_secondary_zone_name }}.zone is {{ __molecule__bind_secondary_file_result["stat"] }}'
+
+      when:
+        - '__molecule__bind_secondary_of | length > 0'
