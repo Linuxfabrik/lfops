@@ -76,10 +76,10 @@
       - '(item[1] is ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("p[0-9]+$")) or
          (item[1] is not ansible.builtin.regex("nvme") and item[1] is ansible.builtin.regex("[0-9]+$"))'
     register: '__lvm__growpart_result'
-    changed_when: '__lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^CHANGED:", multiline=true)'
+    changed_when: '__lvm__growpart_result["stdout"] is ansible.builtin.regex("^CHANGED:", multiline=true)'
     failed_when:
       - '__lvm__growpart_result["rc"] != 0'
-      - 'not __lvm__growpart_result["stdout"] | ansible.builtin.regex_search("^NOCHANGE:", multiline=true)'
+      - '__lvm__growpart_result["stdout"] is not ansible.builtin.regex("^NOCHANGE:", multiline=true)'
 
   - name: 'pvcreate / pvresize {{ item[1] }}'
     # we copied the upstream https://github.com/ansible-collections/community.general/blob/28b16eab66c56e69794fbf8fb3b7bd4486f7505b/plugins/modules/lvm_pv.py because it is only available in community.general 11.0.0 and later
