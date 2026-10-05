@@ -91,6 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: On Debian and Ubuntu, the first run against a fresh host no longer fails reloading Apache, since the role points `PidFile` to where `apachectl` looks; a server started by an earlier version of the role is restarted once.
 * **playbook:redis, playbook:setup_mastodon**: On Debian and Ubuntu, the playbooks no longer abort with "'redis__skip_repo_redis' is undefined" or "'setup_mastodon__skip_repo_redis' is undefined" unless the skip variable is set in the inventory.
 * **role:grafana_grizzly, role:monitoring_plugins_grafana_dashboards**: On Grafana 13.1 and newer, dashboards that the roles add or update stay in their folder, instead of landing in the root, where viewers and the graphs embedded in IcingaWeb2 got "403". A run also moves back the dashboards that earlier runs left in the root.
 * **role:aide**: The AIDE check no longer fails on hosts with fwupd, where it reported `/etc/fwupd/fwupd.conf` as changed after the first start of the fwupd daemon.

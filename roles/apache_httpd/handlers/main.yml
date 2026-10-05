@@ -16,6 +16,8 @@
     state: 'reloaded'
   when:
     - '__apache_httpd__service_state_result is not defined or __apache_httpd__service_state_result is not changed'
+    # a server with the PID file of an earlier role version cannot be reloaded, it gets restarted (see tasks)
+    - 'not (__apache_httpd__legacy_pid_file_result["stat"]["exists"] | d(false))'
     - 'apache_httpd__systemd_state != "stopped"'
 
 - name: 'apache_httpd: httpd -t; systemctl restart httpd'

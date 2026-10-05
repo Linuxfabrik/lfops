@@ -78,7 +78,7 @@ Manual steps:
 * Creates or updates the global Apache configuration (`httpd.conf`).
 * Removes rpmnew/rpmsave files (and Debian equivalents).
 * Removes, creates, disables, and enables conf-available configs.
-* Triggers: httpd.service reload.
+* Triggers: httpd.service reload, or a restart on Debian and Ubuntu where Apache still runs with the PID file of an earlier version of the role (`/run/apache2.pid`).
 
 `apache_httpd:htpasswd`
 

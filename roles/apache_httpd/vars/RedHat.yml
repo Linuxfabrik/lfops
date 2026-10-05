@@ -12,6 +12,7 @@ __apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
 __apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
 __apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ __apache_httpd__php_socket }}|fcgi://localhost"'
 __apache_httpd__php_socket: '/run/php-fpm/www.sock'
+__apache_httpd__pid_file: 'run/httpd.pid' # the compiled-in default
 __apache_httpd__root_path: '/var/www'
 __apache_httpd__roothtml_path: '/var/www/html'
 __apache_httpd__service_name: 'httpd'
