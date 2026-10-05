@@ -6,6 +6,7 @@ __apache_httpd__config_path: '/etc/apache2'
 __apache_httpd__config_prefix: 'lfops-' # deploy our configs into an directory that is not influenced by the package manager
 __apache_httpd__config_test_command: 'apachectl -t'
 __apache_httpd__log_path: '/var/log/apache2'
+__apache_httpd__mod_security_package: 'libapache2-mod-security2'
 __apache_httpd__modules_path: '/usr/lib/apache2/modules'
 __apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
 __apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'

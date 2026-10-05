@@ -41,9 +41,16 @@ This role supports both Red Hat and Debian-based systems. The following paths an
 * User/Group: Red Hat `apache`/`apache`, Debian `www-data`/`www-data`
 * PHP-FPM socket: Red Hat `/run/php-fpm/www.sock`, Debian `/run/php/www.sock`
 
+The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controller and copied to the target, so only the controller needs access to GitHub. The role deploys the rules to `/etc/httpd/modsecurity.d/crs/`, but does not activate them: include `modsecurity.d/crs/crs-setup.conf` and `modsecurity.d/crs/rules/*.conf` in a vHost (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md)). Each version is kept in its own directory, so a change of `apache_httpd__mod_security_coreruleset_version` switches the symlink and reloads Apache, and setting the previous version again rolls back. `crs-setup.conf` is reset to the shipped example on every run; put your CRS settings into the vHost.
+
 This role does NOT:
 
 * install PHP or PHP-FPM. It prefers PHP-FPM over mod_php, but installs neither.
+
+
+## Known Limitations
+
+* The OWASP Core Rule Set needs ModSecurity 2.9.6 or newer. Ubuntu 22.04 ships 2.9.5, so `apache_httpd__skip_mod_security_coreruleset` has to stay `true` there.
 
 
 ## Dependent Roles
@@ -87,11 +94,12 @@ Manual steps:
 
 `apache_httpd:mod_security_coreruleset`
 
+* Aborts if the installed ModSecurity is older than 2.9.6, which the Core Rule Set 4 needs.
 * Installs `tar`.
-* Downloads and verifies the OWASP ModSecurity Core Rule Set (CRS).
-* Extracts the archive and creates a symlink to the CRS directory.
+* Downloads the OWASP ModSecurity Core Rule Set (CRS) on the Ansible controller.
+* Extracts the archive to `/etc/httpd/modsecurity.d/` and points the `modsecurity.d/crs` symlink at it.
 * Copies the default `crs-setup.conf.example` to `crs-setup.conf`.
-* Triggers: none.
+* Triggers: httpd.service reload.
 
 `apache_httpd:mods`
 

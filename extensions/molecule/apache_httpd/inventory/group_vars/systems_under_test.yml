@@ -1,5 +1,23 @@
 apache_httpd__conf_server_admin: 'webmaster@example.com'
 
+# The OWASP Core Rule Set, included server-wide so that every vHost below runs behind it. verify.yml
+# sends an attack and expects the rules to block it, which proves that the release the role deployed
+# is the one the running Apache applies. The ordinary requests of the other checks pass through the
+# same rules. Ubuntu 22.04 ships a ModSecurity that is too old for the CRS (see host_vars).
+apache_httpd__conf__group_var:
+  - filename: 'z00-crs'
+    enabled: true
+    state: 'present'
+    template: 'raw'
+    raw: |-
+      SecRuleEngine On
+      SecRequestBodyAccess On
+      Include modsecurity.d/crs/crs-setup.conf
+      Include modsecurity.d/crs/rules/*.conf
+# Pinned here as well, because verify.yml compares the release in the log against it.
+apache_httpd__mod_security_coreruleset_version: '4.27.0'
+apache_httpd__skip_mod_security_coreruleset: false
+
 # The same user in two htpasswd files. The username and the path together identify an entry, so
 # both entries have to reach their own file instead of being merged into one. Each file protects
 # the location of h2.example.com named after it (see the raw block below), and verify.yml logs in
@@ -16,10 +34,15 @@ apache_httpd__htpasswd__group_var:
     password: 'linuxfabrik'
     path: '/var/www/htpasswd-b'
 
+# mod_security2 is off by default and needed for the Core Rule Set above.
 # The role enables the deflate conf, but leaves mod_deflate and mod_filter off, and the deflate conf
 # sits inside <IfModule> blocks for both. Without them nothing is compressed, so the compression
 # check in verify.yml needs them loaded, the way a reverse proxy that compresses has them.
 apache_httpd__mods__group_var:
+  - filename: 'security2'
+    enabled: true
+    state: 'present'
+    template: 'security2'
   - filename: 'deflate'
     enabled: true
     state: 'present'

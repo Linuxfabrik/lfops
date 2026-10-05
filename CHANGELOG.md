@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
+* **role:apache_httpd**: The OWASP Core Rule Set is downloaded on the Ansible controller, so the target no longer needs access to GitHub.
 * **role:monitoring_plugins**: On Linux, the role no longer stops the Icinga2 agent while it deploys the plugins, so a run no longer interrupts the monitoring of the host.
 * **role:icinga2_agent**: The role runs `icinga2 node setup` and restarts the agent only when the agent needs a new certificate or its settings changed, instead of on every run.
 * LFOps requires community.general 7.0.0 or newer (still below 9.0.0), which `ansible-galaxy collection install linuxfabrik.lfops` pulls in, while a manually maintained collection list has to be raised.
@@ -92,6 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **role:apache_httpd**: On Debian and Ubuntu, the first run against a fresh host no longer fails reloading Apache, since the role points `PidFile` to where `apachectl` looks; a server started by an earlier version of the role is restarted once.
+* **role:apache_httpd**: Apache reloads after the OWASP Core Rule Set is updated, instead of applying the previous rules until its next reload.
+* **role:apache_httpd**: The OWASP Core Rule Set deploys on Debian and Ubuntu, where the run failed until now, and on Ubuntu 22.04, whose ModSecurity 2.9.5 is too old for it, the run aborts with a message saying so.
 * **playbook:redis, playbook:setup_mastodon**: On Debian and Ubuntu, the playbooks no longer abort with "'redis__skip_repo_redis' is undefined" or "'setup_mastodon__skip_repo_redis' is undefined" unless the skip variable is set in the inventory.
 * **role:grafana_grizzly, role:monitoring_plugins_grafana_dashboards**: On Grafana 13.1 and newer, dashboards that the roles add or update stay in their folder, instead of landing in the root, where viewers and the graphs embedded in IcingaWeb2 got "403". A run also moves back the dashboards that earlier runs left in the root.
 * **role:aide**: The AIDE check no longer fails on hosts with fwupd, where it reported `/etc/fwupd/fwupd.conf` as changed after the first start of the fwupd daemon.

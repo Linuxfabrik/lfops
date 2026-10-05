@@ -67,7 +67,7 @@
 
   - ansible.builtin.include_tasks: 'mod_security_coreruleset.yml'
   when:
-    - 'not apache_httpd__skip_mod_security_coreruleset'
+    - 'not apache_httpd__skip_mod_security_coreruleset | bool'
 
   tags:
     - 'apache_httpd'
