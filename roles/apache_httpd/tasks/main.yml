@@ -67,7 +67,7 @@
 
   - ansible.builtin.include_tasks: 'mod_security_coreruleset.yml'
   when:
-    - 'not apache_httpd__skip_mod_security_coreruleset'
+    - 'not apache_httpd__skip_mod_security_coreruleset | bool'
 
   tags:
     - 'apache_httpd'
@@ -76,6 +76,17 @@
 
 # Manage global Apache config
 - block:
+
+  # Before the role set PidFile, Apache on Debian and Ubuntu wrote its PID to the compiled-in
+  # default /run/apache2.pid, where apachectl no longer looks. `apachectl graceful` then takes
+  # the server for stopped, tries to start a second one and fails on the bound ports, so such a
+  # server has to be restarted once instead of reloaded.
+  - name: 'stat /run/apache2.pid'
+    ansible.builtin.stat:
+      path: '/run/apache2.pid'
+    register: '__apache_httpd__legacy_pid_file_result'
+    when:
+      - 'ansible_facts["os_family"] == "Debian"'
 
   - name: 'Create or update global Apache configuration {{ __apache_httpd__config_file }}'
     ansible.builtin.template:
@@ -87,6 +98,15 @@
       mode: 0o644
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  - name: 'Request a restart of {{ __apache_httpd__service_name }}, which runs with the PID file of an earlier role version'
+    ansible.builtin.debug:
+      msg: '/run/apache2.pid exists, so {{ __apache_httpd__service_name }} is restarted instead of reloaded'
+    changed_when: true # notify the restart handler; the reload handler skips this case
+    notify:
+      - 'apache_httpd: httpd -t; systemctl restart httpd'
+    when:
+      - '__apache_httpd__legacy_pid_file_result["stat"]["exists"] | d(false)'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

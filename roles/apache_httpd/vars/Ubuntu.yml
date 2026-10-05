@@ -6,6 +6,7 @@ __apache_httpd__config_path: '/etc/apache2'
 __apache_httpd__config_prefix: 'lfops-' # deploy our configs into an directory that is not influenced by the package manager
 __apache_httpd__config_test_command: 'apachectl -t'
 __apache_httpd__log_path: '/var/log/apache2'
+__apache_httpd__mod_security_package: 'libapache2-mod-security2'
 __apache_httpd__modules_path: '/usr/lib/apache2/modules'
 __apache_httpd__openssl_certificate_path: '/etc/pki/tls/certs'
 __apache_httpd__openssl_chain_path: '/etc/pki/tls/certs'
@@ -14,6 +15,9 @@ __apache_httpd__openssl_privatekey_path: '/etc/pki/tls/private'
   #   state: 'present'
 __apache_httpd__php_set_handler_default: 'SetHandler "proxy:unix:{{ __apache_httpd__php_socket }}|fcgi://localhost"'
 __apache_httpd__php_socket: '/run/php/www.sock'
+# from /etc/apache2/envvars, which apachectl reads; the compiled-in default /run/apache2.pid differs,
+# so apachectl would not find a server that the package started with its own apache2.conf
+__apache_httpd__pid_file: '${APACHE_PID_FILE}'
 __apache_httpd__root_path: '/var/www'
 __apache_httpd__roothtml_path: '/var/www/html'
 __apache_httpd__service_name: 'apache2'

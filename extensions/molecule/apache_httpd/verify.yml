@@ -9,7 +9,8 @@
 #
 # The htpasswd files are checked the same way: by logging in through Apache, not by reading them.
 # So is the compression: by the Content-Encoding of a real response, not by the deflate conf.
-- name: 'Verify apache_httpd serves HTTP/2, basic auth and compression where it is configured to'
+# And the OWASP Core Rule Set: by an attack that the running Apache blocks, not by the rule files.
+- name: 'Verify apache_httpd serves HTTP/2, basic auth, compression and the Core Rule Set where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
   become: true
@@ -237,3 +238,49 @@
           - '__molecule__apache_httpd_curl_deflate_result["stdout"] is search("^content-type: text/markdown", ignorecase=true, multiline=true)'
           - '__molecule__apache_httpd_curl_deflate_result["stdout"] is search("^content-encoding: gzip", ignorecase=true, multiline=true)'
         fail_msg: 'expected a gzip-compressed text/markdown response, got: {{ __molecule__apache_httpd_curl_deflate_result["stdout"] }}'
+
+    # The Core Rule Set is included server-wide (see group_vars), so the first vHost has to block a
+    # request carrying a shell command in a parameter (rule 932160, paranoia level 1). The 200 for
+    # every vHost above shows that ordinary requests still pass. A host where the rules are not
+    # loaded answers 200 here, and one that runs an older release than the inventory asks for logs
+    # a different version in the rule match, which the second assertion catches.
+    - name: 'curl https://<vhost>/?exec=/bin/bash' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --output /dev/null
+        --write-out '%{http_code}'
+        https://{{ __molecule__server_name }}/?exec=/bin/bash
+      register: '__molecule__apache_httpd_curl_crs_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
+      when:
+        - 'not apache_httpd__skip_mod_security_coreruleset | bool'
+
+    - name: 'grep the release of the matching rule from <vhost>-error.log'
+      ansible.builtin.command: >-
+        grep --only-matching --max-count 1 --perl-regexp
+        '\[id "932160"\].*\[ver "\KOWASP_CRS/[^"]+'
+        {{ __molecule__error_log }}
+      register: '__molecule__apache_httpd_crs_version_result'
+      changed_when: false
+      failed_when: false
+      vars:
+        __molecule__error_log: >-
+          {{ (ansible_facts["os_family"] == "Debian") | ternary("/var/log/apache2", "/var/log/httpd") }}/{{
+          apache_httpd__vhosts__group_var[0]["conf_server_name"] }}-error.log
+      when:
+        - 'not apache_httpd__skip_mod_security_coreruleset | bool'
+
+    - name: 'Assert the Core Rule Set blocks the attack with the configured release'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_curl_crs_result["stdout"] == "403"'
+          - '__molecule__apache_httpd_crs_version_result["stdout"] == "OWASP_CRS/" ~ apache_httpd__mod_security_coreruleset_version'
+        fail_msg: >-
+          expected 403 from OWASP_CRS/{{ apache_httpd__mod_security_coreruleset_version }}, got
+          {{ __molecule__apache_httpd_curl_crs_result["stdout"] }} and
+          "{{ __molecule__apache_httpd_crs_version_result["stdout"] }}" in the error log
+      when:
+        - 'not apache_httpd__skip_mod_security_coreruleset | bool'
