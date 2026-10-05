@@ -871,7 +871,7 @@ Calls the following roles (in order):
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `redis__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `redis__skip_repo_epel`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `redis__skip_repo_remi`
-* [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis)
+* [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis): `redis__skip_repo_redis`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis)
 
 
@@ -1286,7 +1286,7 @@ Calls the following roles (in order):
 * [postgresql_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/postgresql_server): `setup_mastodon__skip_postgresql_server`
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_mastodon__skip_kernel_settings`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `setup_mastodon__skip_repo_remi`
-* [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis)
+* [repo_redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_redis): `setup_mastodon__skip_repo_redis`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_mastodon__skip_redis`
 * [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_mastodon__skip_valkey`
 * [repo_elasticsearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_elasticsearch): `setup_mastodon__skip_repo_elasticsearch`

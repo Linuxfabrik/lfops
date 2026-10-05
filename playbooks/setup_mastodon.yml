@@ -75,7 +75,7 @@
     - role: 'linuxfabrik.lfops.repo_redis'
       when:
         - 'ansible_facts["os_family"] == "Debian"' # not available for RedHat, instead using repo_remi there
-        - 'not setup_mastodon__skip_repo_redis'
+        - 'not setup_mastodon__skip_repo_redis | d(false)'
         - 'not setup_mastodon__skip_redis__internal_var'
 
     - role: 'linuxfabrik.lfops.redis'
