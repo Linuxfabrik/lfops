@@ -15,7 +15,7 @@ apache_httpd__conf__group_var:
       Include modsecurity.d/crs/crs-setup.conf
       Include modsecurity.d/crs/rules/*.conf
 # Pinned here as well, because verify.yml compares the release in the log against it.
-apache_httpd__mod_security_coreruleset_version: '4.27.0'
+apache_httpd__mod_security_coreruleset_version: '4.30.0'
 apache_httpd__skip_mod_security_coreruleset: false
 
 # The same user in two htpasswd files. The username and the path together identify an entry, so

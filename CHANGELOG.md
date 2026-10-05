@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
+* **role:apache_httpd**: Bump the OWASP Core Rule Set to 4.30.0.
 * **role:apache_httpd**: The OWASP Core Rule Set is downloaded on the Ansible controller, so the target no longer needs access to GitHub.
 * **role:monitoring_plugins**: On Linux, the role no longer stops the Icinga2 agent while it deploys the plugins, so a run no longer interrupts the monitoring of the host.
 * **role:icinga2_agent**: The role runs `icinga2 node setup` and restarts the agent only when the agent needs a new certificate or its settings changed, instead of on every run.
