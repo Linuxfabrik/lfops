@@ -91,6 +91,25 @@
     register: '__monitoring_plugins_grafana_dashboards__grr_apply_result'
     changed_when: '"added" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"] or "updated" in __monitoring_plugins_grafana_dashboards__grr_apply_result["stdout"]'
 
+  - name: 'Move the dashboards that grizzly filed in the root into their folder'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'grafana-move-dashboards-into-folders.yml'
+    vars:
+      shared__grafana_dashboards: >-
+        {%- set dashboards = [] -%}
+        {%- for file in lookup("ansible.builtin.fileglob", "/tmp/ansible.monitoring-plugins-repo-flattened/grafana/*.yml", wantlist=True) -%}
+        {%-   for resource in lookup("ansible.builtin.file", file) | ansible.builtin.from_yaml_all -%}
+        {%-     if resource is mapping and resource["kind"] | d("") == "Dashboard" and resource["metadata"]["folder"] | d("") | length -%}
+        {%-       set _ = dashboards.append({"uid": resource["metadata"]["name"], "folder": resource["metadata"]["folder"]}) -%}
+        {%-     endif -%}
+        {%-   endfor -%}
+        {%- endfor -%}
+        {{ dashboards }}
+      shared__grafana_token: '{{ monitoring_plugins_grafana_dashboard__grafana_service_account_login["password"] }}'
+      shared__grafana_url: '{{ monitoring_plugins_grafana_dashboards__grafana_url }}'
+      shared__grafana_validate_certs: '{{ grafana__validate_certs | d(true) }}'
+
   - name: 'rm -rf /tmp/ansible.monitoring_plugins_grafana_dashboards'
     ansible.builtin.file:
       path: '/tmp/ansible.monitoring_plugins_grafana_dashboards'
