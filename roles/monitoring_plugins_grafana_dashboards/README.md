@@ -6,6 +6,11 @@ This role deploys the Monitoring Plugins Grafana Dashboards for a Grafana Server
 *Available since LFOps `3.0.0`.*
 
 
+## How the Role Behaves
+
+* **Dashboards stay in their folder on Grafana 13.1 and newer.** From Grafana 13.1 on, grizzly files every dashboard it adds or updates in the root instead of in the folder named in the resource, and the dashboard loses the viewer permission it inherited from the folder, so viewers and the graphs embedded in IcingaWeb2 get "403". After applying, the role saves every dashboard that is not in its folder again, which puts it back and restores the permission. This also repairs dashboards that earlier runs left in the root. A dashboard whose resource names the folder `general` belongs into the root and is left there.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
