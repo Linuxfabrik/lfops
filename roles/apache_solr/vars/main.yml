@@ -1,4 +1,15 @@
-__apache_solr__java_package:
-  '10': 'java-21-openjdk-headless'
-  '9': 'java-17-openjdk-headless'
-  '8': 'java-1.8.0-openjdk-headless'
+# the users that end up in security.json. combine_lod keeps the `state` subkey as given, so
+# entries without it count as present.
+__apache_solr__present_users: '{{
+    (apache_solr__users__combined_var | selectattr("state", "undefined") | list)
+    + (apache_solr__users__combined_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list)
+  }}'
+
+# usernames whose password equals the username, as a string, so that the assert can name them
+# without printing any password
+__apache_solr__users_with_username_as_password: >-
+  {%- set ns = namespace(names=[]) -%}
+  {%- for user in __apache_solr__present_users if user["password"] == user["username"] -%}
+  {%- set ns.names = ns.names + [user["username"]] -%}
+  {%- endfor -%}
+  {{ ns.names | join(", ") }}

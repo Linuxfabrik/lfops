@@ -1,35 +1,41 @@
-#jinja2:block_start_string:'{{%%', block_end_string:'%%}}',variable_start_string:'{{{{', variable_end_string:'}}}}'
-{
-    "authentication":
-    {
-        "blockUnknown": true,
-        "class": "solr.BasicAuthPlugin",
-        "credentials":
-        {
-            {{%% for user in apache_solr__pwhashes.results if user.stdout_lines[3] | d('present') != 'absent' %%}}
-                "{{{{ user.stdout_lines[0] }}}}": "{{{{ user.stdout_lines[1] }}}}"{{%% if not loop.last %%}},{{%% endif %%}}
-            {{%% endfor %%}}
-        },
-        "realm": "Linuxfabrik Solr users",
-        "forwardCredentials": false
+{#- 2026100501. JSON has no comments, so this file carries no ansible_managed header. -#}
+{%- set ns = namespace(credentials={}, names=[], permissions=[], user_role={}) -%}
+{%- for result in __apache_solr__password_hashes_result['results'] -%}
+{%-   set ns.credentials = ns.credentials | combine({result['item']['username']: result['stdout']}) -%}
+{%-   set ns.user_role = ns.user_role | combine({result['item']['username']: result['item']['role']}) -%}
+{%- endfor -%}
+{%- set roles = (apache_solr__roles__combined_var | selectattr('state', 'undefined') | list)
+    + (apache_solr__roles__combined_var | selectattr('state', 'defined') | rejectattr('state', 'eq', 'absent') | list) -%}
+{%- for role in roles -%}
+{%-   for name in role['permissions'] if name not in ns.names -%}
+{%-     set ns.names = ns.names + [name] -%}
+{%-   endfor -%}
+{%- endfor -%}
+{#- Solr applies only the first permission that matches a request and denies it to every role
+    not listed there, so the catch-all goes last. A permission entry carries a single name, so
+    every role that holds it is listed in its "role", and a role holding "all" in every entry,
+    otherwise it would be denied whatever a more specific entry matches first. -#}
+{%- set all_roles = roles | selectattr('permissions', 'contains', 'all') | map(attribute='name') | list -%}
+{%- for name in (ns.names | reject('eq', 'all') | list) + (['all'] if 'all' in ns.names else []) -%}
+{%-   set holders = roles | selectattr('permissions', 'contains', name) | map(attribute='name') | list -%}
+{%-   set ns.permissions = ns.permissions + [{
+        'name': name,
+        'role': holders + (all_roles | reject('in', holders) | list),
+      }] -%}
+{%- endfor -%}
+{{
+  {
+    'authentication': {
+      'blockUnknown': true,
+      'class': 'solr.BasicAuthPlugin',
+      'credentials': ns.credentials,
+      'forwardCredentials': false,
+      'realm': 'Linuxfabrik Solr users',
     },
-    "authorization":
-    {
-        "class": "solr.RuleBasedAuthorizationPlugin",
-        "permissions":
-        [
-            {{%% for role in apache_solr__roles__combined_var if role.state | d('present') != 'absent' %%}}
-                {
-                    "name": "{{{{ role.permissions | join(",") }}}}",
-                    "role": "{{{{ role.name }}}}"
-                }{{%% if not loop.last %%}},{{%% endif %%}}
-            {{%% endfor %%}}
-        ],
-        "user-role":
-        {
-            {{%% for user in apache_solr__pwhashes.results if user.stdout_lines[3] | d('present') != 'absent' %%}}
-                "{{{{ user.stdout_lines[0] }}}}": "{{{{ user.stdout_lines[2] }}}}"{{%% if not loop.last %%}},{{%% endif %%}}
-            {{%% endfor %%}}
-        }
-    }
-}
+    'authorization': {
+      'class': 'solr.RuleBasedAuthorizationPlugin',
+      'permissions': ns.permissions,
+      'user-role': ns.user_role,
+    },
+  } | to_nice_json(indent=4)
+}}

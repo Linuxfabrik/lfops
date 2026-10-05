@@ -1,0 +1,4 @@
+# RHEL 10 ships neither Java 8 nor Java 17.
+__apache_solr__java_package:
+  '10': 'java-21-openjdk-headless'
+  '9': 'java-21-openjdk-headless'

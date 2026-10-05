@@ -1,0 +1,4 @@
+# Debian 13 ships neither Java 8 nor Java 17.
+__apache_solr__java_package:
+  '10': 'openjdk-21-jre-headless'
+  '9': 'openjdk-21-jre-headless'
