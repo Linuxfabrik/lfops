@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.systemd_journald'
   hosts:
     - 'lfops_systemd_journald'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_nextcloud'
   hosts:
     - 'lfops_setup_nextcloud'
+  force_handlers: true
 
   # Redis and Valkey are interchangeable for Nextcloud: same protocol, same port. Which of the
   # two is available depends on the platform, so the defaults follow the OS - RHEL 10 has no
@@ -88,6 +89,7 @@
       # ====Apache Webserver
     - role: 'linuxfabrik.lfops.apache_httpd'
       apache_httpd__mods__dependent_var: '{{ nextcloud__apache_httpd__mods__dependent_var | d([]) }}'
+      apache_httpd__placeholder_certificates__dependent_var: '{{ acme_sh__apache_httpd__placeholder_certificates__dependent_var }}'
       apache_httpd__vhosts__dependent_var: '{{ nextcloud__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not setup_nextcloud__skip_apache_httpd | d(false)'
@@ -189,6 +191,13 @@
       # nextcloud-update.j2 must access the icinga2_agent variables
     - role: 'linuxfabrik.lfops.icinga2_agent'
       when: false
+
+    # last, so that the port 80 vHost of apache_httpd is up to answer the ACME challenge.
+    # replaces the placeholder certificates apache_httpd created for its certificates.
+    - role: 'linuxfabrik.lfops.acme_sh'
+      when:
+        - 'not setup_nextcloud__skip_acme_sh | d(true)'
+
 
   post_tasks:
     - ansible.builtin.import_role:

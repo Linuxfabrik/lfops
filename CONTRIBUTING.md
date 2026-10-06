@@ -203,6 +203,7 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
 * Each playbook contains all dependencies to run flawlessly against a newly installed machine.
 * Playbooks that install an application together with packages that are complex to configure (`apache_httpd`, `mariadb_server` and/or `php`) are prefixed by `setup_`, e.g. `setup_nextcloud`.
 * Name the play `- name: 'Playbook linuxfabrik.lfops.example'`.
+* Set `force_handlers: true` on every play. Without it, a failing task drops the handlers notified so far, and since every later run reports the deployed file unchanged, the running service never picks up the new config (e.g. `sshd` keeps listening on the old port).
 * Document a new playbook in `playbooks/README.md` and add it to `playbooks/all.yml`.
 * Import `shared/tasks/log-start.yml` and `shared/tasks/global-variables.yml` in `pre_tasks` and `shared/tasks/log-end.yml` in `post_tasks`, tagged `always`, so every run is logged to `/var/log/linuxfabrik-lfops.log` and the LFOps-wide variables are loaded. Copy the frame from `playbooks/example.yml`.
 
@@ -343,6 +344,16 @@ A role that requests reboots also:
 * Tests the windowed path in its ordinary scenario (request file waits in `/run/schedule-reboot/`, host still up) and the immediate path in a destructive sub-scenario (change effective when `verify.yml` starts) with a non-zero grace period. References: `extensions/molecule/bootloader/install` and `.../reboot_now`.
 
 
+#### Preflight Checks
+
+A role checks what the host or the outside world has to provide (a file in a Git repository, a reachable server) before it changes anything, and puts these checks into `tasks/preflight.yml`: read-only, carrying the role's tags, imported at the top of `tasks/main.yml`. References: `roles/firewall`, `roles/icinga2_agent`.
+
+A playbook that runs many roles, such as `setup_basic`, aborts on a missing prerequisite before its first role changes the host. Otherwise a run aborting after hundreds of tasks leaves SSH hardened and the firewall replaced, and the next run may no longer connect with the bootstrap user. In its `pre_tasks`, such a playbook:
+
+* includes `shared/tasks/validate-role-arguments.yml`, tagged `always`, with the roles it runs. It lists them in `<playbook>__roles__internal_var`, each with the condition under which the play skips it; `tests/unit/test_playbooks.py` keeps the list in sync with the play.
+* includes the `preflight.yml` of each role that has one, with `tasks_from`, gated on the role's skip variable and tagged like the role.
+
+
 #### Reporting a Manual Step to the Operator
 
 When a role ends with something the operator has to do by hand, it prints the message with `ansible.builtin.debug` and appends it to `__shared__end_of_play_messages` with `ansible.builtin.set_fact`, both under the same condition. `roles/shared/tasks/print-messages.yml` in every playbook's `post_tasks` prints the collected list as one block above the `PLAY RECAP`. The inline `debug` stays for plays outside this collection. Define the text once:
@@ -361,7 +372,7 @@ __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__
 * A handler appends via a second handler task with the same `listen`, as in [roles/mongodb](https://github.com/Linuxfabrik/lfops/blob/main/roles/mongodb/handlers/main.yml).
 * References: `roles/bootloader`, `roles/kernel_settings`, `roles/network`.
 
-Known limitation: `post_tasks` do not run when the play fails (`--force-handlers` does not help); the inline messages cover that case.
+Known limitation: `post_tasks` do not run when the play fails (`force_handlers` does not help); the inline messages cover that case.
 
 
 #### Tags

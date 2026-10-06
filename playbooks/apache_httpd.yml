@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.apache_httpd'
   hosts:
     - 'lfops_apache_httpd'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -53,6 +54,13 @@
         - 'not apache_httpd__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__placeholder_certificates__dependent_var: '{{ acme_sh__apache_httpd__placeholder_certificates__dependent_var }}'
+
+    # last, so that the port 80 vHost of apache_httpd is up to answer the ACME challenge.
+    # replaces the placeholder certificates apache_httpd created for its certificates.
+    - role: 'linuxfabrik.lfops.acme_sh'
+      when:
+        - 'not apache_httpd__skip_acme_sh | d(true)'
 
 
   post_tasks:

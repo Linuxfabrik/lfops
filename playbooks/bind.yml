@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.bind'
   hosts:
     - 'lfops_bind'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.icingaweb2_module_director'
   hosts:
     - 'lfops_icingaweb2_module_director'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

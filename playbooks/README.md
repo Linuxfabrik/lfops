@@ -16,7 +16,6 @@ See the [main README](../README.md#skipping-roles-in-a-playbook) for details.
 
 Calls the following roles (in order):
 
-* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)
 * [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh)
 
 
@@ -51,6 +50,7 @@ Calls the following roles (in order):
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `apache_httpd__skip_selinux`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `apache_httpd__skip_python`
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `apache_httpd__skip_acme_sh` (default: `true`)
 
 
 ## apache_solr.yml
@@ -1098,6 +1098,8 @@ Calls the following roles (in order):
 
 ## setup_basic.yml
 
+Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, and that the Icinga2 master is reachable. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
+
 Calls the following roles (in order):
 
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network): `setup_basic__skip_network`
@@ -1160,6 +1162,7 @@ Calls the following roles (in order):
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `grav__skip_python`
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `grav__skip_apache_httpd`
 * [grav](https://github.com/Linuxfabrik/lfops/tree/main/roles/grav)
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_grav__skip_acme_sh` (default: `true`)
 
 
 ## setup_graylog_datanode.yml
@@ -1248,6 +1251,7 @@ Calls the following roles (in order):
 * [influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/influxdb): `setup_icinga2_master__influxdb__skip_role`
 * [icingaweb2_module_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_grafana): `setup_icinga2_master__icingaweb2_module_grafana__skip_role`
 * [monitoring_plugins_grafana_dashboards](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins_grafana_dashboards): `setup_icinga2_master__monitoring_plugins_grafana_dashboards__skip_role`
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_icinga2_master__acme_sh__skip_role` (default: `true`)
 
 
 ## setup_keycloak.yml
@@ -1283,6 +1287,7 @@ Calls the following roles (in order):
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `setup_librenms__skip_php`
 * [librenms](https://github.com/Linuxfabrik/lfops/tree/main/roles/librenms)
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_librenms__skip_apache_httpd`
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_librenms__skip_acme_sh` (default: `true`)
 
 
 ## setup_mastodon.yml
@@ -1306,6 +1311,7 @@ Calls the following roles (in order):
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_mastodon__skip_selinux`
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_mastodon__skip_apache_httpd`
 * [mastodon](https://github.com/Linuxfabrik/lfops/tree/main/roles/mastodon)
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_mastodon__skip_acme_sh` (default: `true`)
 
 
 ## setup_moodle.yml
@@ -1328,6 +1334,7 @@ Calls the following roles (in order):
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_moodle__skip_apache_httpd`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_moodle__skip_selinux`
 * [moodle](https://github.com/Linuxfabrik/lfops/tree/main/roles/moodle)
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_moodle__skip_acme_sh` (default: `true`)
 
 
 ## setup_nextcloud.yml
@@ -1357,6 +1364,7 @@ Calls the following roles (in order):
 * [collabora](https://github.com/Linuxfabrik/lfops/tree/main/roles/collabora): `setup_nextcloud__skip_collabora`
 * [coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn): `setup_nextcloud__skip_coturn`
 * [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent)
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_nextcloud__skip_acme_sh` (default: `true`)
 
 
 ## setup_rocketchat.yml
@@ -1386,6 +1394,7 @@ Calls the following roles (in order):
 * [shiny_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/shiny_server)
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_shiny_server__skip_python`
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_shiny_server__skip_apache_httpd`
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_shiny_server__skip_acme_sh` (default: `true`)
 
 
 ## setup_wordpress.yml
@@ -1406,6 +1415,7 @@ Calls the following roles (in order):
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_wordpress__skip_apache_httpd`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_wordpress__skip_selinux`
 * [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress)
+* [acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh): `setup_wordpress__skip_acme_sh` (default: `true`)
 
 
 ## shell.yml

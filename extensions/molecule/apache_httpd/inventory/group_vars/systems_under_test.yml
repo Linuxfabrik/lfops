@@ -34,10 +34,18 @@ apache_httpd__htpasswd__group_var:
     password: 'linuxfabrik'
     path: '/var/www/htpasswd-b'
 
-# verify.yml sends its requests from the host itself and sets X-Forwarded-For, so trusting the
-# loopback address as the proxy shows whether Apache logs the forwarded client instead of the peer.
-lfops__trusted_proxies:
-  - '127.0.0.1'
+# The scenario's vHosts terminate TLS, and Apache refuses to start when an SSLCertificateFile it is
+# pointed at does not exist. The role creates a self-signed placeholder for each of them, the way
+# it does for the certificates acme_sh issues later. The paths match the raw blocks of the vHosts
+# below; on Debian and Ubuntu the role has to create /etc/pki/tls first. verify.yml checks that
+# Apache serves these placeholders, and the idempotence step that a second run keeps them.
+apache_httpd__placeholder_certificates__group_var:
+  - name: 'h1.example.com'
+    cert_path: '/etc/pki/tls/certs'
+    key_path: '/etc/pki/tls/private'
+  - name: 'h2.example.com'
+    cert_path: '/etc/pki/tls/certs'
+    key_path: '/etc/pki/tls/private'
 
 # mod_security2 is off by default and needed for the Core Rule Set above.
 # The role enables the deflate conf, but leaves mod_deflate and mod_filter off, and the deflate conf
@@ -67,7 +75,7 @@ apache_httpd__mods__group_var:
 # Each vHost gets its own certificate rather than a shared one. Browsers coalesce connections across
 # vHosts that share a certificate, and Apache answers 421 Misdirected Request when such vHosts do
 # not carry identical TLS settings - a complication this scenario has no reason to take on.
-# prepare.yml issues one self-signed certificate per conf_server_name below.
+# apache_httpd__placeholder_certificates__group_var above gives each conf_server_name its own one.
 #
 # The document root is created by the role; verify.yml drops an index.html into it, because a
 # request has to reach a real response for its HTTP version to mean anything.
@@ -119,3 +127,8 @@ apache_httpd__vhosts__group_var:
       SSLEngine on
       SSLCertificateFile    /etc/pki/tls/certs/h1.example.com.crt
       SSLCertificateKeyFile /etc/pki/tls/private/h1.example.com.key
+
+# verify.yml sends its requests from the host itself and sets X-Forwarded-For, so trusting the
+# loopback address as the proxy shows whether Apache logs the forwarded client instead of the peer.
+lfops__trusted_proxies:
+  - '127.0.0.1'

@@ -2,6 +2,7 @@
   hosts:
     - 'lfops_mariadb_server'
   serial: 1 # required for the handlers to work correctly when managing a galera cluster
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

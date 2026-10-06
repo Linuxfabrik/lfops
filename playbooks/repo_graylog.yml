@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_graylog'
   hosts:
     - 'lfops_repo_graylog'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

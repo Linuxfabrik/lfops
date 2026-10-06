@@ -43,6 +43,8 @@ This role supports both Red Hat and Debian-based systems. The following paths an
 
 The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controller and copied to the target, so only the controller needs access to GitHub. The role checks the archive against a SHA-256 checksum it carries for each supported release, taken from an archive whose signature by the CRS project was verified, and aborts on a mismatch. The role deploys the rules to `/etc/httpd/modsecurity.d/crs/`, but does not activate them: include `modsecurity.d/crs/crs-setup.conf` and `modsecurity.d/crs/rules/*.conf` in a vHost (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md)). Each version is kept in its own directory, so a change of `apache_httpd__mod_security_coreruleset_version` switches the symlink and reloads Apache, and setting the previous version again rolls back. `crs-setup.conf` is reset to the shipped example on every run; put your CRS settings into the vHost.
 
+A vHost that references a certificate file that does not exist yet keeps Apache from starting. For every entry in `apache_httpd__placeholder_certificates__*_var` whose certificate is missing, the role therefore creates a self-signed placeholder (`<name>.crt`, `<name>-chain.crt`, `<name>-fullchain.crt` and `<name>.key`, valid for 365 days) before it deploys the vHosts. An existing file is never touched. The playbooks that run `acme_sh` together with this role fill the list with the certificates of `acme_sh__certificates`, and `acme_sh` replaces the placeholders once the certificates are issued.
+
 This role does NOT:
 
 * change the owner of what lies below the document root. Apache only reads it by default, and what an application has to write is handed to the web server user by the role that installs the application (`nextcloud`, `wordpress`, `grav`, `moodle`, ...). Content placed by hand below a vHost that has to be writable needs its owner set by hand, for the writable directories only.
@@ -78,8 +80,14 @@ Manual steps:
 * Creates symlink for the log directory.
 * Sets ownership on everything below the document root (`chown --no-dereference apache:apache`), not on the document root itself.
 * Hardens permissions on the config directory (`chmod -R g-w`).
+* Creates missing placeholder certificates (see `apache_httpd:certs`).
 * Ensures httpd service is in the desired state.
 * Triggers: httpd.service reload, or restart when a module is enabled or disabled (see `apache_httpd:mods`).
+
+`apache_httpd:certs`
+
+* Installs `openssl` and creates a self-signed placeholder for every certificate in `apache_httpd__placeholder_certificates__*_var` that does not exist yet.
+* Triggers: none.
 
 `apache_httpd:configure`
 
@@ -116,6 +124,7 @@ Manual steps:
 
 `apache_httpd:vhosts`
 
+* Creates missing placeholder certificates (see `apache_httpd:certs`).
 * Disables and removes sites-available vHosts.
 * Creates DocumentRoot directories for all vHosts.
 * Creates and enables sites-available vHosts.
@@ -390,6 +399,34 @@ apache_httpd__conf_trace_enable: 'Off'
         * Optional. State of the package, one of `present`, `absent`.
         * Type: String.
 
+`apache_httpd__placeholder_certificates__group_var` / `apache_httpd__placeholder_certificates__host_var`
+
+* Certificates for which the role creates a self-signed placeholder if the certificate file does not exist yet, so that a vHost referencing it can start before the certificate is issued. The files are named like the ones `acme_sh` installs: `<cert_path>/<name>.crt`, `<cert_path>/<name>-chain.crt`, `<cert_path>/<name>-fullchain.crt` and `<key_path>/<name>.key`.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `cert_path`:
+
+        * Mandatory. Directory of the certificate files.
+        * Type: String.
+
+    * `key_path`:
+
+        * Mandatory. Directory of the private key.
+        * Type: String.
+
+    * `name`:
+
+        * Mandatory. Name of the certificate, also used as its CN.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. `absent` only stops the role from creating a placeholder, it does not remove any file.
+        * Type: String.
+        * Default: `'present'`
+
 `apache_httpd__skip_php_fpm`
 
 * Skip PHP-FPM configuration globally and in each vHost within Apache. When set to `false` (default), the role automatically injects PHP-FPM `ProxyPass` directives into app, localhost, and wordpress vHosts.
@@ -443,6 +480,10 @@ apache_httpd__mods__host_var:
 apache_httpd__packages__host_var:
   - name: 'mod_qos'
     state: 'present'
+apache_httpd__placeholder_certificates__host_var:
+  - name: 'www.example.com'
+    cert_path: '/etc/pki/tls/certs'
+    key_path: '/etc/pki/tls/private'
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'

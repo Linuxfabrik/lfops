@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.keepalived'
   hosts:
     - 'lfops_keepalived'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

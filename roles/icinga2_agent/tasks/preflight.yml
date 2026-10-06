@@ -1,0 +1,21 @@
+# Checks that need nothing changed on the host. Imported at the top of tasks/main.yml, and
+# included by playbooks that run many roles (e.g. setup_basic) in their pre_tasks, so a missing
+# prerequisite aborts the run before any role changes the host.
+- block:
+
+  # `icinga2 pki save-cert` only gives up after more than two minutes if the master is not
+  # reachable, with a TLS error that does not name the cause.
+  - name: 'Wait for {{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }} to be reachable'
+    ansible.builtin.wait_for:
+      host: '{{ icinga2_agent__icinga2_master_host }}'
+      port: '{{ icinga2_agent__icinga2_master_port }}'
+      timeout: 10
+      msg: >-
+        The Icinga2 master {{ icinga2_agent__icinga2_master_host }}:{{ icinga2_agent__icinga2_master_port }}
+        is not reachable from this host. Check DNS, routing, NAT and the firewalls in between.
+    check_mode: false # read-only, also run in check mode
+
+  when: 'ansible_facts["os_family"] != "Windows"'
+  tags:
+    - 'icinga2_agent'
+    - 'icinga2_agent:node_setup'

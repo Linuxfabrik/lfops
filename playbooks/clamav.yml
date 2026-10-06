@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.clamav'
   hosts:
     - 'lfops_clamav'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

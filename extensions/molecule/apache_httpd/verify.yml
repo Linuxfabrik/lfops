@@ -63,6 +63,33 @@
         label: '{{ item["item"]["conf_server_name"] }}'
       when: 'item["stat"]["exists"]'
 
+    # The vHosts can only have started because the role created the certificates they point at.
+    # Ask the running Apache which certificate it presents: the self-signed placeholder carries
+    # the vHost name as both subject and issuer.
+    - name: 'openssl s_client -servername <vhost> | openssl x509 -noout -subject -issuer'
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          openssl s_client -connect 127.0.0.1:443 -servername '{{ item["name"] }}' </dev/null 2>/dev/null \
+            | openssl x509 -noout -subject -issuer -nameopt RFC2253
+        executable: '/bin/bash'
+      register: '__molecule__apache_httpd_placeholder_result'
+      changed_when: false
+      loop: '{{ apache_httpd__placeholder_certificates__group_var }}'
+      loop_control:
+        label: '{{ item["name"] }}'
+
+    - name: 'Assert Apache presents the placeholder certificate of every vHost'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_placeholder_result["results"][__molecule__index]["stdout_lines"]
+             == ["subject=CN=" ~ item["name"], "issuer=CN=" ~ item["name"]]'
+        fail_msg: '{{ __molecule__apache_httpd_placeholder_result["results"][__molecule__index]["stdout_lines"] }}'
+      loop: '{{ apache_httpd__placeholder_certificates__group_var }}'
+      loop_control:
+        index_var: '__molecule__index'
+        label: '{{ item["name"] }}'
+
     # The role creates the document root, but nothing puts a file in it, and a request that ends in
     # 403 says nothing about which protocol carried it. DirectoryIndex resolves index.html first.
     # setype is set explicitly because the worker reads the file as httpd_t on RedHat.

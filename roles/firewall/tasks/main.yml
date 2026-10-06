@@ -1,30 +1,5 @@
-# Validated before any firewall is stopped: without /etc/fwb.sh, fwb.service fails right after
-# `systemctl start` (Type=simple, status=203/EXEC), and the host would end up with no firewall at
-# all. With firewall__fwbuilder_repo_url set, the deploy task below fails on its own if the
-# repository has no file for this host.
-- block:
-
-  - name: 'stat /etc/fwb.sh'
-    ansible.builtin.stat:
-      path: '/etc/fwb.sh'
-    register: '__firewall__fwb_sh_stat_result'
-
-  - name: 'Assert that there is an /etc/fwb.sh for fwb.service to run'
-    ansible.builtin.assert:
-      that:
-        - '__firewall__fwb_sh_stat_result["stat"]["exists"] | bool'
-      quiet: true
-      fail_msg: >-
-        firewall__firewall is 'fwbuilder', but there is no /etc/fwb.sh, so the host would run
-        without a firewall. Deploy /etc/fwb.sh, set firewall__fwbuilder_repo_url, or set
-        firewall__firewall to the firewall this host uses.
-
-  when:
-    - 'firewall__firewall == "fwbuilder"'
-    - 'firewall__fwbuilder_repo_url is not defined or firewall__fwbuilder_repo_url | length == 0'
-  tags:
-    - 'firewall'
-    - 'firewall:deploy_fwb_sh'
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
 
 
 - block:
@@ -165,37 +140,6 @@
   tags:
     - 'firewall'
     - 'firewall:firewalld'
-
-
-# One clone per repository, in a directory named after its URL, so hosts whose firewall files live
-# in different repositories each deploy their own. The first host clones; the others sharing the
-# URL fetch into the same directory, and `force` resets it to the newest commit, also after a
-# force push. Verified with ansible-core 2.16 against a local repository.
-- block:
-
-  - name: 'Clone the fwb git repo to localhost' # noqa latest[git] the newest compiled firewall is what is deployed
-    ansible.builtin.git:
-      repo: '{{ firewall__fwbuilder_repo_url }}'
-      dest: '{{ __firewall__fwbuilder_repo_dir }}'
-      depth: 1
-      single_branch: true
-      force: true
-    retries: 3 # ride out a brief outage of the download source
-    delay: 10
-    changed_when: false # not a config change on the server
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
-    check_mode: false # run task even if `--check` is specified
-
-  when:
-    - 'firewall__firewall == "fwbuilder"'
-    - 'firewall__fwbuilder_repo_url is defined and firewall__fwbuilder_repo_url | length > 0'
-  tags:
-    - 'firewall'
-    - 'firewall:deploy_fwb_sh'
 
 
 - block:

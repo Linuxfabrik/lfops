@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.mount'
   hosts:
     - 'lfops_mount'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

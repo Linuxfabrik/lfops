@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_grafana'
   hosts:
     - 'lfops_repo_grafana'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

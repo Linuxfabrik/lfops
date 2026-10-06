@@ -5,6 +5,22 @@ apache_httpd__systemd_state: 'started'
 apache_httpd__systemd_timeout_stop_sec: 5
 
 
+# Placeholder Certificates
+# ------------------------
+
+apache_httpd__placeholder_certificates__combined_var: '{{ (
+      apache_httpd__placeholder_certificates__role_var +
+      apache_httpd__placeholder_certificates__dependent_var +
+      apache_httpd__placeholder_certificates__group_var +
+      apache_httpd__placeholder_certificates__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+apache_httpd__placeholder_certificates__dependent_var: []
+apache_httpd__placeholder_certificates__group_var: []
+apache_httpd__placeholder_certificates__host_var: []
+apache_httpd__placeholder_certificates__role_var: []
+
+
 # Apache Module Installation
 # --------------------------
 

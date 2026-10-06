@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_mastodon'
   hosts:
     - 'lfops_setup_mastodon'
+  force_handlers: true
 
   # Redis and Valkey are interchangeable for Mastodon: same protocol, same port. Which of the
   # two is available depends on the platform, so the defaults follow the OS - RHEL 10 has no
@@ -139,6 +140,7 @@
       apache_httpd__mods__dependent_var: '{{
           mastodon__apache_httpd__mods__dependent_var
         }}'
+      apache_httpd__placeholder_certificates__dependent_var: '{{ acme_sh__apache_httpd__placeholder_certificates__dependent_var }}'
       apache_httpd__vhosts__dependent_var: '{{
           mastodon__apache_httpd__vhosts__dependent_var
         }}'
@@ -146,6 +148,12 @@
         - 'not setup_mastodon__skip_apache_httpd | default(false)'
 
     - role: 'linuxfabrik.lfops.mastodon'
+
+    # last, so that the port 80 vHost of apache_httpd is up to answer the ACME challenge.
+    # replaces the placeholder certificates apache_httpd created for its certificates.
+    - role: 'linuxfabrik.lfops.acme_sh'
+      when:
+        - 'not setup_mastodon__skip_acme_sh | d(true)'
 
 
   post_tasks:

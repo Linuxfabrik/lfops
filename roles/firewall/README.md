@@ -10,7 +10,7 @@ This role configures a firewall on the system. For the currently supported firew
 
 Manual steps:
 
-* When using `firewall__firewall == fwbuilder`, either manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically. Without either, the run aborts before the role stops any firewall.
+* When using `firewall__firewall == fwbuilder`, either manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically. Without either, or if the repository has no compiled file for the host, the run aborts before the role stops any firewall.
 * When using `firewall__firewall == iptables`, optionally place an iptables config file in your inventory, which will be deployed to the system. The file has to be placed into `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables`.
 
 
@@ -80,7 +80,7 @@ Manual steps:
 
 `firewall__fwbuilder_fw_file`
 
-* The name of the Firewall Builder file which will be created when compiling the firewall in Firewall Builder. Needed if ``firewall__fwbuilder_repo_url`` is used and if the Firewall name within Firewall Builder differs from ``{{ inventory_hostname }}``.
+* The name of the Firewall Builder file which will be created when compiling the firewall in Firewall Builder, without the `.fw` extension. Needed if ``firewall__fwbuilder_repo_url`` is used and if the Firewall name within Firewall Builder differs from ``{{ inventory_hostname }}``.
 * Type: String.
 * Default: `'{{ inventory_hostname }}'`
 
@@ -102,7 +102,7 @@ firewall__firewalld_services__group_var: []
 firewall__firewalld_services__host_var:
   - service: 'ssh'
     state: 'enabled'
-firewall__fwbuilder_fw_file: 'example.fw'
+firewall__fwbuilder_fw_file: 'example'
 firewall__fwbuilder_repo_url: 'git@git.example.com:fwbuilder/fwb.git'
 ```
 
