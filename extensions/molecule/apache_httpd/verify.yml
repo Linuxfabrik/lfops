@@ -17,10 +17,6 @@
   vars:
     # the vHost that carries one basic-auth location per htpasswd file, see group_vars
     __molecule__auth_server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
-    # The role chowns the document roots to the web server user on every run. Files this playbook
-    # adds there have to carry that owner already, otherwise the idempotence step sees the role
-    # take them back and reports it as a change.
-    __molecule__docroot_owner: '{{ (ansible_facts["os_family"] == "Debian") | ternary("www-data", "apache") }}'
   tasks:
 
     - name: 'Get the service facts'
@@ -43,6 +39,28 @@
         name: 'curl'
         state: 'present'
 
+    # The role leaves the owner of what lies below the document root alone: Apache only reads it, and
+    # what an application has to write belongs to the role of that application. The files this
+    # playbook deploys belong to root, so on the run after the idempotence step they have to still
+    # belong to root, which a role that hands the document root to the web server user would undo.
+    # Checked before the deploy below sets the owner again; on the first run the file is missing.
+    - name: 'stat /var/www/html/<vhost>/index.html'
+      ansible.builtin.stat:
+        path: '/var/www/html/{{ item["conf_server_name"] }}/index.html'
+      register: '__molecule__apache_httpd_index_stat_result'
+      loop: '{{ apache_httpd__vhosts__group_var }}'
+      loop_control:
+        label: '{{ item["conf_server_name"] }}'
+
+    - name: 'Assert the content of the document root still belongs to root'
+      ansible.builtin.assert:
+        that: 'item["stat"]["pw_name"] == "root"'
+        fail_msg: '{{ item["stat"]["path"] }} belongs to {{ item["stat"]["pw_name"] }}, expected root'
+      loop: '{{ __molecule__apache_httpd_index_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["conf_server_name"] }}'
+      when: 'item["stat"]["exists"]'
+
     # The role creates the document root, but nothing puts a file in it, and a request that ends in
     # 403 says nothing about which protocol carried it. DirectoryIndex resolves index.html first.
     # setype is set explicitly because the worker reads the file as httpd_t on RedHat.
@@ -50,8 +68,8 @@
       ansible.builtin.copy:
         content: "ok\n"
         dest: '/var/www/html/{{ item["conf_server_name"] }}/index.html'
-        owner: '{{ __molecule__docroot_owner }}'
-        group: '{{ __molecule__docroot_owner }}'
+        owner: 'root'
+        group: 'root'
         mode: 0o644
         setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
       loop: '{{ apache_httpd__vhosts__group_var }}'
@@ -140,8 +158,8 @@
       ansible.builtin.file:
         path: '/var/www/html/{{ __molecule__auth_server_name }}/{{ item["path"] | basename }}'
         state: 'directory'
-        owner: '{{ __molecule__docroot_owner }}'
-        group: '{{ __molecule__docroot_owner }}'
+        owner: 'root'
+        group: 'root'
         mode: 0o755
         setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
       loop: '{{ apache_httpd__htpasswd__group_var }}'
@@ -152,8 +170,8 @@
       ansible.builtin.copy:
         content: "ok\n"
         dest: '/var/www/html/{{ __molecule__auth_server_name }}/{{ item["path"] | basename }}/index.html'
-        owner: '{{ __molecule__docroot_owner }}'
-        group: '{{ __molecule__docroot_owner }}'
+        owner: 'root'
+        group: 'root'
         mode: 0o644
         setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
       loop: '{{ apache_httpd__htpasswd__group_var }}'
@@ -214,8 +232,8 @@
           A response of type text/markdown, long enough that compressing it is worth the effort.
           A response of type text/markdown, long enough that compressing it is worth the effort.
         dest: '/var/www/html/{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}/markdown.txt'
-        owner: '{{ __molecule__docroot_owner }}'
-        group: '{{ __molecule__docroot_owner }}'
+        owner: 'root'
+        group: 'root'
         mode: 0o644
         setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
 
