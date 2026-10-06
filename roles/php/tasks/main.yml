@@ -403,6 +403,43 @@
 
 - block:
 
+  # The ordering belongs to the consuming unit, Apache. The php-fpm package of RHEL and Remi only
+  # lets httpd pull php-fpm in (`Wants=` in `httpd.service.d/php-fpm.conf`, below /usr/lib or /etc
+  # depending on the build; php-fpm 8.0 to 8.5 on Rocky 8, 9 and 10), Debian does not even that,
+  # so both start in parallel at boot. On a host without Apache the ordering is ignored. No
+  # restart: an ordering drop-in takes effect at the next boot.
+  - name: 'mkdir -p /etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/z00-php.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/z00-php.conf.j2'
+      dest: '/etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/z00-php.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__php__z00_php_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__php__z00_php_result is changed'
+
+  # 'php:update' is included because a version change renames the PHP-FPM unit on Debian.
+  tags:
+    - 'php'
+    - 'php:fpm'
+    - 'php:update'
+
+
+- block:
+
   - name: 'systemctl {{ php__fpm_service_enabled | bool | ternary("enable", "disable") }} {{ __php__fpm_service_name }}'
     ansible.builtin.service:
       name: '{{ __php__fpm_service_name }}'

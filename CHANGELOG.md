@@ -105,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: Apache starts after PHP-FPM at boot, so the first PHP requests after a reboot no longer fail.
 * **role:apache_solr**: Passwords no longer show up in the output of a run, and a user without `state` no longer aborts it.
 * **role:apache_solr**: The role runs without EPEL on RHEL and no longer restarts Solr on every run.
 * **role:apache_solr**: A role with several permissions takes effect, where Solr discarded it as invalid so far.

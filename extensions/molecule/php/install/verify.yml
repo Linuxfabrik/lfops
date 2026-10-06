@@ -431,3 +431,37 @@
             "/var/log/php-fpm/error.log" if ansible_facts["os_family"] == "RedHat"
             else "/var/log/php" ~ php__version ~ "-fpm.log"
           }}'
+
+
+# Apache and PHP-FPM start in parallel at boot unless Apache is ordered after PHP-FPM, and the first
+# PHP requests then fail on the missing socket. systemd's own view of the Apache unit is asserted
+# rather than the drop-in file, so a drop-in in the wrong directory or without a daemon-reload
+# fails. That view needs the unit itself: systemd on Debian 12 and 13 shows no `After=` for a unit
+# that is not installed, so the scenario installs Apache first.
+- name: 'Verify Apache is ordered after PHP-FPM'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Make sure Apache is installed'
+      ansible.builtin.package:
+        name: '{{ (ansible_facts["os_family"] == "Debian") | ternary("apache2", "httpd") }}'
+        state: 'present'
+
+    - name: 'systemctl show --property=After <apache>.service'
+      ansible.builtin.command: >-
+        systemctl show --property=After
+        {{ (ansible_facts["os_family"] == "Debian") | ternary("apache2.service", "httpd.service") }}
+      register: '__molecule__php_apache_after_result'
+      changed_when: false
+
+    - name: 'Assert Apache starts after PHP-FPM'
+      ansible.builtin.assert:
+        that: '__molecule__php_fpm_unit in __molecule__php_apache_after_result["stdout"].split("=", 1)[-1].split()'
+        fail_msg: '{{ __molecule__php_apache_after_result["stdout"] }} does not name {{ __molecule__php_fpm_unit }}'
+      vars:
+        __molecule__php_fpm_unit: '{{
+            "php-fpm.service" if ansible_facts["os_family"] == "RedHat"
+            else "php" ~ php__version ~ "-fpm.service"
+          }}'

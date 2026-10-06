@@ -561,7 +561,7 @@ nextcloud__php__modules__dependent_var: '{{
 
 #### LFOps-wide Shared Variables
 
-Platform values shared by many roles (currently the Apache httpd user and group) live once in `roles/shared/vars/<os>.yml`, loaded by `roles/shared/tasks/global-variables.yml` in every playbook's `pre_tasks`. Reference them directly (e.g. `owner: '{{ __shared__apache_httpd_user }}'`), and add new ones there.
+Platform values shared by many roles (currently the Apache httpd user, group and service name) live once in `roles/shared/vars/<os>.yml`, loaded by `roles/shared/tasks/global-variables.yml` in every playbook's `pre_tasks`. Reference them directly (e.g. `owner: '{{ __shared__apache_httpd_user }}'`), and add new ones there.
 
 
 #### OS-specific Tasks
