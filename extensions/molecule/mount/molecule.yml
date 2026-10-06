@@ -1,0 +1,2 @@
+# Molecule scenario marker for the 'mount' scenario, run with
+# `molecule test --scenario-name mount`.

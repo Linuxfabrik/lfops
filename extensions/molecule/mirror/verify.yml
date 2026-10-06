@@ -1,0 +1,59 @@
+- name: 'Verify mirror is scheduled and both users can write the mirror directory'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'systemctl is-enabled mirror-update.timer; systemctl is-active mirror-update.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} mirror-update.timer'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__timer_result'
+      loop:
+        - 'is-enabled'
+        - 'is-active'
+
+    - name: 'Assert that mirror-update.timer is enabled and active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__timer_result["results"] | map(attribute="stdout") | list == ["enabled", "active"]'
+        fail_msg: '{{ __molecule__timer_result["results"] | map(attribute="stdout") | list }}'
+
+    # What the ACLs are for: the mirror user fills the directory and the web server user reads
+    # it, also in subdirectories created later. Ask the kernel instead of reading getfacl.
+    - name: 'mkdir as mirror, then read and write in it as the web server user'
+      ansible.builtin.shell:
+        cmd: |
+          set -o errexit
+          runuser --user mirror -- mkdir --parents /var/www/html/reposync-repos/lfops-molecule
+          runuser --user mirror -- touch /var/www/html/reposync-repos/lfops-molecule/repomd.xml
+          runuser --user nobody -- test -r /var/www/html/reposync-repos/lfops-molecule/repomd.xml
+          runuser --user nobody -- test -w /var/www/html/reposync-repos/lfops-molecule
+        executable: '/bin/bash'
+      changed_when: false
+
+    - name: 'rm -rf /var/www/html/reposync-repos/lfops-molecule'
+      ansible.builtin.file:
+        path: '/var/www/html/reposync-repos/lfops-molecule'
+        state: 'absent'
+
+    # A chmod of the mirror directory, by hand or by another role, narrows the ACL mask and with it
+    # the write access of the named users, so reposync fails on every repository it has to create.
+    # The role has to repair that on its next run.
+    - name: 'chmod 0755 /var/www/html/reposync-repos (narrows the ACL mask to r-x)'
+      ansible.builtin.file:
+        path: '/var/www/html/reposync-repos'
+        mode: 0o755
+
+    - name: 'Run the mirror role on the narrowed mask'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.mirror'
+
+    - name: 'mkdir as mirror, as reposync does for a new repository'
+      ansible.builtin.command: 'runuser --user mirror -- mkdir /var/www/html/reposync-repos/lfops-molecule-new'
+      changed_when: false
+
+    - name: 'rm -rf /var/www/html/reposync-repos/lfops-molecule-new'
+      ansible.builtin.file:
+        path: '/var/www/html/reposync-repos/lfops-molecule-new'
+        state: 'absent'

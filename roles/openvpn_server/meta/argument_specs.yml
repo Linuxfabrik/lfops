@@ -1,0 +1,115 @@
+argument_specs:
+  main:
+    options:
+
+      openvpn_server__client_configs:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Client configs ("CCD"), one file per X509 common name below
+          `/etc/openvpn/ccd`.
+        options:
+          name:
+            type: 'str'
+            required: true
+            description: 'X509 common name of the client.'
+          raw:
+            type: 'str'
+            required: true
+            description: 'Raw config for this client.'
+          state:
+            type: 'str'
+            required: false
+            default: 'present'
+            choices:
+              - 'absent'
+              - 'present'
+            description: 'Whether the client config should be present or absent.'
+
+      openvpn_server__client_netmask:
+        type: 'str'
+        required: false
+        default: '255.255.255.0'
+        description: >-
+          Netmask used with `openvpn_server__client_network` to allocate
+          client addresses.
+
+      openvpn_server__client_network:
+        type: 'str'
+        required: true
+        description: >-
+          Network in which the OpenVPN server allocates client addresses.
+
+      openvpn_server__crl_verify:
+        type: 'str'
+        required: false
+        default: '/etc/openvpn/server/crl.pem'
+        description: 'Path of the certificate revocation list on the server.'
+
+      openvpn_server__crl_verify_skip_deploy:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Expect the certificate revocation list on the server instead of
+          copying it from the inventory.
+
+      openvpn_server__duplicate_cn:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Allow several clients with the same certificate to be connected at
+          the same time.
+
+      openvpn_server__pkcs12:
+        type: 'str'
+        required: false
+        default: '/etc/openvpn/server/server.p12'
+        description: >-
+          Path of the PKCS #12 file with the server key, the server
+          certificate and the CA certificate.
+
+      openvpn_server__pkcs12_skip_deploy:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Expect the PKCS #12 file on the server instead of copying it from
+          the inventory.
+
+      openvpn_server__port:
+        type: 'int'
+        required: false
+        default: 1194
+        description: 'UDP port the server listens on.'
+
+      openvpn_server__pushs:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'Options pushed to the connected clients, e.g. routes.'
+
+      openvpn_server__raw:
+        type: 'str'
+        required: false
+        description: 'Raw OpenVPN config appended to `server.conf`.'
+
+      openvpn_server__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enable `openvpn-server@server.service` at boot.'
+
+      openvpn_server__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of `openvpn-server@server.service`.'

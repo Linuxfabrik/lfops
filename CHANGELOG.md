@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:apache_httpd**: The role no longer hands everything below the document root to the web server user, so a hole in a web application can no longer rewrite the code of every site on the host. The roles that install an application set the owners they need. For content placed by hand that Apache has to write, give the writable directories to `apache` (`www-data` on Debian and Ubuntu) yourself. Remove `apache_httpd__skip_document_root_chown` from your inventory.
+* **role:openvpn_server**: The role requires OpenVPN 2.7 and installs or upgrades it from the OpenVPN repository, which the `openvpn_server` playbook enables with the new `repo_openvpn` role. The upgrade restarts the OpenVPN service from within the package and drops every client, so run it in a maintenance window and restart the service once more afterwards, as the message at the end of the run says. The server refuses client certificates with an RSA key below 2048 bits, a SHA-1 signature or without the TLS Web Client Authentication key usage, and no longer accepts several clients with the same certificate; set `openvpn_server__duplicate_cn: true` where clients share one. Clients that only speak TLS 1.2 and carry the `tls-cipher` line of the former example client config must drop that line. Remove `openvpn_server__dh` and `openvpn_server__dh_skip_deploy` from your inventory.
 * **role:apache_httpd**: `apache_httpd__mod_security_coreruleset_version` has no default anymore and accepts only the OWASP Core Rule Set releases the CRS project supports with security fixes, currently `4.25.2`, `4.29.0` and `4.30.0`. On hosts with `apache_httpd__skip_mod_security_coreruleset: false`, set it in the inventory, otherwise the run aborts.
 * **role:apache_solr**: Solr listens on `127.0.0.1` only and gets 180 seconds to stop gracefully, as upstream ships it, instead of listening on all addresses and being killed after 15 seconds. Set `apache_solr__http_bind_address: '0.0.0.0'` for a Solr that other hosts have to reach.
 * **role:bind**: named validates DNSSEC by default, as the bind package does, and follows the system-wide crypto policy. Forged or broken answers for signed zones are answered with `SERVFAIL` instead of being passed on. The `forward`, `static-stub` and `stub` zones in `bind__zones` are excluded from validation; list other internal zones below a signed domain or TLD in `bind__dnssec_validate_except`, or set `bind__dnssec_validation: false`. On RHEL 8 the role fails if it has zones to exclude, since BIND 9.11 cannot; set `bind__dnssec_validation: false` there ([#355](https://github.com/Linuxfabrik/lfops/issues/355), [#356](https://github.com/Linuxfabrik/lfops/issues/356)).
@@ -43,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:apache_httpd**: `lfops__trusted_proxies` lists the reverse proxies in front of a host, and Apache then logs the client from `X-Forwarded-For` instead of the proxy in the access and the error log.
+* **role:repo_openvpn, playbook:repo_openvpn**: Add a role and playbook that deploy the OpenVPN 2.7 release repository of the OpenVPN community on RHEL 8, 9 and 10, where EPEL ships outdated OpenVPN versions.
+* **role:openvpn_server**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:apache_solr**: Supports Solr 10, deployed as a single instance without ZooKeeper, as with Solr 9.
 * **role:apache_solr**: Supports Debian 12 and 13, RHEL 10 and Ubuntu 22.04, 24.04 and 26.04, with the Java the Solr version needs installed from the distribution.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
@@ -106,6 +110,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **role:php**: Apache starts after PHP-FPM at boot, so the first PHP requests after a reboot no longer fail.
+* **role:mount**: A freshly created filesystem is relabelled for SELinux after mounting, so confined services such as Apache httpd can access it without a manual `restorecon`.
+* **role:mirror**: Repairs the ACL mask of `mirror__base_path` when a chmod narrowed it to `r-x`, which made reposync fail with `Permission denied` on every new repository.
+* **role:mirror**: Runs on minimal installations such as Rocky 10, where it aborted for lack of `setfacl`, since the role installs acl, createrepo and git itself instead of the mirror playbook running the apps role.
+* **role:openvpn_server**: The role runs on a minimal RHEL 10 installation, where it aborted for lack of `openssl` while generating Diffie-Hellman parameters, which OpenVPN 2.7 no longer needs.
 * **role:apache_solr**: Passwords no longer show up in the output of a run, and a user without `state` no longer aborts it.
 * **role:apache_solr**: The role runs without EPEL on RHEL and no longer restarts Solr on every run.
 * **role:apache_solr**: A role with several permissions takes effect, where Solr discarded it as invalid so far.
@@ -172,7 +180,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:apache_httpd**: The `wordpress` vHost blocks direct calls to the PHP files below `wp-includes/` and `wp-admin/includes/`, whose rules never matched.
 * **role:postfix**: `postfix__compatibility_level` takes effect on Debian and Ubuntu as well, and defaults to the level the distribution ships, so Debian 13 and Ubuntu 26.04 run at `3.9` instead of `3.6` ([#364](https://github.com/Linuxfabrik/lfops/issues/364)).
 * **role:mariadb_server**: On RHEL 10 with a `selinux-policy-targeted` older than `42.1.18-4.el10_2.3`, MariaDB runs confined in `mysqld_t` again, so web applications such as WordPress or Nextcloud reach its socket. Until now it ran in `initrc_t` there, and PHP-FPM failed to connect until the SELinux policy was updated and MariaDB restarted.
-* **role:apache_httpd**: The role hands the content of the document root to the web server user, but leaves the directory itself to the httpd package, whose tmpfiles rule resets it to `root` on every boot and after some package installations. A second run on a fresh host no longer reports the ownership as changed.
 * **role:monitoring_plugins**: A package install that fails no longer leaves the Monitoring Plugins unlocked, so a later system update cannot move them past `monitoring_plugins__version`. The lock that existed before the run is set again.
 * **role:monitoring_plugins**: A run against an unchanged host no longer reports changes for the package versionlock ([#353](https://github.com/Linuxfabrik/lfops/issues/353)).
 * **role:collabora**: A run against an unchanged host no longer reports changes for the coolwsd log file and the ownership of `/etc/coolwsd`.
@@ -197,6 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:openvpn_server**: The server negotiates TLS 1.2 only with forward secrecy and checks client certificates against OpenSSL security level 2 ([#358](https://github.com/Linuxfabrik/lfops/issues/358)).
 * **role:apache_httpd**: The OWASP Core Rule Set archive is checked against a SHA-256 checksum before it is deployed, so a tampered or corrupted download aborts the run.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
 * **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.

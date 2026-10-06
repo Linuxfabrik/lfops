@@ -45,6 +45,7 @@ The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controlle
 
 This role does NOT:
 
+* change the owner of what lies below the document root. Apache only reads it by default, and what an application has to write is handed to the web server user by the role that installs the application (`nextcloud`, `wordpress`, `grav`, `moodle`, ...). Content placed by hand below a vHost that has to be writable needs its owner set by hand, for the writable directories only.
 * install PHP or PHP-FPM. It prefers PHP-FPM over mod_php, but installs neither.
 
 
@@ -389,12 +390,6 @@ apache_httpd__conf_trace_enable: 'Off'
         * Optional. State of the package, one of `present`, `absent`.
         * Type: String.
 
-`apache_httpd__skip_document_root_chown`
-
-* Set to true to skip handing the content of the document root to the web server user. The document root directory itself keeps the owner the httpd package gives it, since the package's tmpfiles rule resets it on every boot anyway.
-* Type: Bool.
-* Default: `false`
-
 `apache_httpd__skip_php_fpm`
 
 * Skip PHP-FPM configuration globally and in each vHost within Apache. When set to `false` (default), the role automatically injects PHP-FPM `ProxyPass` directives into app, localhost, and wordpress vHosts.
@@ -448,7 +443,6 @@ apache_httpd__mods__host_var:
 apache_httpd__packages__host_var:
   - name: 'mod_qos'
     state: 'present'
-apache_httpd__skip_document_root_chown: true
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'

@@ -1,0 +1,2 @@
+- name: 'Converge repo_openvpn playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.repo_openvpn'

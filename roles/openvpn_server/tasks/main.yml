@@ -8,22 +8,75 @@
 
 - block:
 
-  - name: 'Install openvpn'
-    ansible.builtin.package:
-      name: 'openvpn'
-      state: 'present'
-    retries: 3 # ride out a brief outage of the package repository
-    delay: 10
+  - name: 'Assert that the platform is supported'
+    ansible.builtin.assert:
+      that:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["8", "9", "10"]'
+      fail_msg: 'openvpn_server: {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_version"] }} is not supported by this role. Supported platforms: RHEL 8, 9 and 10 and their derivatives.'
+      quiet: true
 
-  - name: 'Generate DH Parameters with 2048 bits size'
-    community.crypto.openssl_dhparam:
-      path: '{{ openvpn_server__dh }}'
-      size: 2048
-      mode: 0o440
-      group: 'openvpn'
-    notify: 'openvpn_server: restart openvpn-server@server.service'
-    when:
-      - 'not openvpn_server__dh_skip_deploy'
+  tags:
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
+
+- block:
+
+  - name: 'rpm --query openvpn # version before this run' # noqa command-instead-of-module (package_facts would gather every package)
+    ansible.builtin.command: 'rpm --query --queryformat=%{VERSION} openvpn'
+    register: '__openvpn_server__version_before_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false # run task even if `--check` is specified
+
+  - block:
+
+    # ansible.builtin.package cannot skip weak dependencies. The Copr packages recommend
+    # kmod-ovpn, which pulls DKMS, a compiler and the kernel headers onto the VPN server, and
+    # the module stays unused on RHEL anyway (kernel < 6.16, and the SELinux policy denies
+    # openvpn_t the generic netlink socket). Verified with OpenVPN 2.7.7 on Rocky 8, 9 and 10.
+    # The version specifier upgrades an older OpenVPN to 2.7, without `state: latest`.
+    - name: 'dnf install --setopt=install_weak_deps=False "openvpn >= 2.7"'
+      ansible.builtin.dnf:
+        name: 'openvpn >= 2.7'
+        state: 'present'
+        install_weak_deps: false
+      register: '__openvpn_server__dnf_result'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+    rescue:
+
+    - name: 'Fail with a hint where to get OpenVPN 2.7'
+      ansible.builtin.fail:
+        msg: >-
+          openvpn_server: The role requires OpenVPN 2.7 or newer, but dnf cannot install it
+          ({{ __openvpn_server__dnf_result["msg"] | d("") }}
+          {{ __openvpn_server__dnf_result["failures"] | d([]) | join(" ") }}).
+          EPEL ships outdated versions on RHEL 8 and 9. Enable the OpenVPN repository with the
+          linuxfabrik.lfops.repo_openvpn role, which the openvpn_server playbook runs unless
+          openvpn_server__skip_repo_openvpn is set.
+
+  - name: 'rpm --query openvpn # version after this run' # noqa command-instead-of-module (package_facts would gather every package)
+    ansible.builtin.command: 'rpm --query --queryformat=%{VERSION} openvpn'
+    register: '__openvpn_server__version_result'
+    changed_when: false
+    failed_when: false # in check mode, a fresh host has no OpenVPN yet
+    check_mode: false # run task even if `--check` is specified
+
+  # The package restarts openvpn-server@server.service on its own during an upgrade, but on
+  # RHEL 8 it does so with the unit file of the old package. The restart that applies the new
+  # unit file and the new configuration drops every client, so it is left to the operator.
+  - name: 'Report the OpenVPN upgrade to the operator'
+    ansible.builtin.debug:
+      msg: '{{ __openvpn_server__upgrade_message }}'
+    when: '__openvpn_server__upgraded | bool'
+
+  - name: 'Collect the OpenVPN upgrade message for the end of the play'
+    ansible.builtin.set_fact:
+      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__openvpn_server__upgrade_message] }}'
+    when: '__openvpn_server__upgraded | bool'
 
   # 0750: the daemon drops privileges to the openvpn user (`user openvpn` in server.conf) and
   # reads a client's file from here when that client connects, so the group needs to traverse

@@ -1,5 +1,17 @@
 - block:
 
+  # setfacl for the ACLs below, createrepo for the mirror script, git for the clone. Minimal
+  # installations, e.g. of Rocky 10, ship none of them.
+  - name: 'Install acl, createrepo and git'
+    ansible.builtin.package:
+      name:
+        - 'acl'
+        - 'createrepo'
+        - 'git'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
   - name: 'git clone --recurse-submodules https://github.com/Linuxfabrik/mirror.git /opt/mirror'
     ansible.builtin.git:
       repo: 'https://github.com/Linuxfabrik/mirror.git'
@@ -44,13 +56,18 @@
       enabled: '{{ mirror__timer_enabled }}'
       state: '{{ mirror__timer_enabled | bool | ternary("started", "stopped") }}'
 
+  # 0775, because the ACLs below raise the mask to rwx, and the mask shows as the group bits.
+  # 0755 would narrow the mask to r-x on every run, take write access from the named users until
+  # setfacl grants it again, and report both tasks as changed. 0775 also repairs a mask that a
+  # chmod narrowed outside the role, which the acl tasks do not notice, since they only compare
+  # the entries, not their effective permissions (verified with acl 2.3 on RHEL 9).
   - name: 'mkdir {{ mirror__base_path }}'
     ansible.builtin.file:
       path: '{{ mirror__base_path }}'
       state: 'directory'
       owner: '{{ mirror__webserver_user }}'
       group: '{{ mirror__webserver_user }}'
-      mode: 0o755
+      mode: 0o775
 
   - name: 'setfacl --recursive --modify user:{{ mirror__webserver_user }}:rwx {{ mirror__base_path }}'
     ansible.posix.acl:

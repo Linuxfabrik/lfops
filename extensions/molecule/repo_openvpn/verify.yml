@@ -1,0 +1,49 @@
+# verify.yml runs after converge and again after the idempotence step. A deployed repository
+# file proves nothing on its own; dnf has to accept the repository, resolve OpenVPN 2.7 from it
+# and verify the package signature with the key the role deployed.
+- name: 'Verify repo_openvpn serves a signed OpenVPN 2.7'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'dnf repoquery --repo=copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7 --latest-limit=1 --queryformat="%{version}" openvpn'
+      ansible.builtin.command: >-
+        dnf repoquery --quiet
+        --repo=copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7
+        --latest-limit=1 --arch=x86_64 --queryformat=%{version} openvpn
+      register: '__molecule__repoquery_result'
+      changed_when: false
+
+    - name: 'Assert the repository offers OpenVPN 2.7 or newer'
+      ansible.builtin.assert:
+        that: '__molecule__repoquery_result["stdout_lines"] | last is version("2.7", ">=")'
+        fail_msg: 'repoquery returned: {{ __molecule__repoquery_result["stdout"] }}'
+
+    - name: 'dnf install --assumeno --setopt=install_weak_deps=False openvpn # resolve without installing'
+      ansible.builtin.command: 'dnf install --assumeno --setopt=install_weak_deps=False openvpn'
+      register: '__molecule__resolve_result'
+      changed_when: false
+      failed_when: '"openvpn-release-2.7" not in __molecule__resolve_result["stdout"]'
+
+    - name: 'dnf download --destdir=/tmp/molecule-repo-openvpn openvpn'
+      ansible.builtin.command: >-
+        dnf download --quiet --destdir=/tmp/molecule-repo-openvpn
+        --repo=copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7 openvpn.x86_64
+      changed_when: false
+
+    - name: 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-copr-OpenVPN-openvpn-release-2.7' # noqa command-instead-of-module (the key file the role deployed, not a URL)
+      ansible.builtin.command: 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-copr-OpenVPN-openvpn-release-2.7'
+      changed_when: false
+
+    - name: 'rpm --checksig /tmp/molecule-repo-openvpn/openvpn-*.rpm' # noqa command-instead-of-module (no module verifies a package signature)
+      ansible.builtin.shell:
+        cmd: 'rpm --checksig /tmp/molecule-repo-openvpn/openvpn-*.rpm'
+        executable: '/bin/bash'
+      register: '__molecule__checksig_result'
+      changed_when: false
+
+    - name: 'Assert the package signature matches the deployed key'
+      ansible.builtin.assert:
+        that: '__molecule__checksig_result["stdout"] is search("(digests signatures OK|signatures OK)")'
+        fail_msg: '{{ __molecule__checksig_result["stdout"] }}'

@@ -682,6 +682,7 @@ Molecule tests the playbooks (and thereby the roles) in `extensions/molecule`. W
 * `<playbook>/` (e.g. `apps/`), optionally with sub-scenarios (`install/`, `remove/`): `converge.yml` runs the playbook, `verify.yml` checks the result, `molecule.yml` (required, may override `config.yml`, e.g. VM vs container), `inventory/` (`hosts.yml` puts shared-inventory hosts into the playbook's group, `group_vars/systems_under_test.yml` holds the variables).
 * `config.yml` applies to all scenarios; `default/` is unused but required; `inventory/` is the shared inventory (`hosts.yml` required); `playbooks/` holds the provisioning playbooks.
 * `example/` is the fully commented reference scenario; copy it for a new test.
+* A scenario that deploys the Linuxfabrik Monitoring Plugins tests their latest release, never a pinned one: it imports `playbooks/monitoring-plugins-latest.yml` in its `converge.yml` (see `extensions/molecule/setup_basic`). A pin goes stale unnoticed and hides problems of the release the hosts actually get.
 
 
 #### Preparing the controller
