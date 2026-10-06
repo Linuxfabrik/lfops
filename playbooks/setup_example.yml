@@ -9,6 +9,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_example'
   hosts:
     - 'lfops_setup_example'
+  force_handlers: true
 
   vars:
 

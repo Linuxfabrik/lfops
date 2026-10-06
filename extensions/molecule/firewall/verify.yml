@@ -1,4 +1,4 @@
-- name: 'Verify the switch from fwbuilder to nftables'
+- name: 'Verify the switch from fwbuilder to nftables, and the abort on a repository without a compiled firewall'
   hosts: 'systems_under_test'
   gather_facts: false
 
@@ -26,3 +26,73 @@
           - '__molecule__is_active_result["stdout_lines"] == ["inactive", "active"]'
           - '__molecule__fwb_is_enabled_result["stdout"] == "masked"'
         fail_msg: '{{ __molecule__is_active_result["stdout_lines"] + [__molecule__fwb_is_enabled_result["stdout"]] }}'
+
+    # A Firewall Builder repository without a compiled firewall for the host must abort the run
+    # before the role stops the firewall that is running, here nftables.
+    - name: 'mktemp -d (empty Firewall Builder repository on the controller)'
+      ansible.builtin.tempfile:
+        state: 'directory'
+        prefix: 'lfops-molecule-fwb.'
+      register: '__molecule__fwb_repo_result'
+      delegate_to: 'localhost'
+      become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
+
+    - name: 'git init; git commit --allow-empty'
+      ansible.builtin.shell:
+        cmd: |
+          set -o errexit
+          git -C '{{ __molecule__fwb_repo_result["path"] }}' init --quiet
+          git -C '{{ __molecule__fwb_repo_result["path"] }}' -c user.name='molecule' -c user.email='molecule@example.com' commit --allow-empty --quiet --message 'empty'
+        executable: '/bin/bash'
+      changed_when: true
+      delegate_to: 'localhost'
+      become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
+
+    - block:
+
+      - name: 'Run the firewall role against the repository without a compiled firewall'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.firewall'
+        vars:
+          firewall__firewall: 'fwbuilder'
+          firewall__fwbuilder_repo_url: 'file://{{ __molecule__fwb_repo_result["path"] }}'
+
+      - name: 'Fail, since the role accepted a repository without a compiled firewall'
+        ansible.builtin.fail:
+          msg: 'The firewall role did not abort on a repository without a compiled firewall for this host.'
+
+      rescue:
+
+      - name: 'Assert that the role failed on the compiled-firewall check, not on the task above'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] is search("has a compiled firewall for this host")'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    - name: 'systemctl is-active nftables.service (after the aborted run)' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active nftables.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__nftables_is_active_after_abort_result'
+
+    - name: 'Assert that nftables.service is still active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nftables_is_active_after_abort_result["stdout"] == "active"'
+        fail_msg: '{{ __molecule__nftables_is_active_after_abort_result["stdout"] }}'
+
+    - name: 'rm -rf the empty Firewall Builder repository and its clone on the controller'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '{{ __molecule__fwb_repo_result["path"] }}'
+        - '/tmp/ansible.fwb-{{ ("file://" ~ __molecule__fwb_repo_result["path"]) | hash("sha1") }}'
+      delegate_to: 'localhost'
+      become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]

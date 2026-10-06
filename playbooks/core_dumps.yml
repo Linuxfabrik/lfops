@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.core_dumps'
   hosts:
     - 'lfops_core_dumps'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

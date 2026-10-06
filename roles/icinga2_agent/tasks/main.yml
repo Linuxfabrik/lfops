@@ -1,3 +1,7 @@
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
+
+
 - block:
 
   - name: 'install icinga2'

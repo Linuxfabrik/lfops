@@ -1,0 +1,31 @@
+# Validates the variables of several roles against their meta/argument_specs.yml at once.
+#
+# A role validates its own variables only when the play reaches it. A playbook that runs many
+# roles imports this in its pre_tasks, tagged 'always', so that a missing or wrongly typed
+# variable of a late role aborts the run before the first role changes anything, instead of after
+# hundreds of tasks that already hardened SSH or replaced the firewall. Roles without
+# meta/argument_specs.yml are skipped.
+#
+#   - name: 'Validate the variables of every role this playbook runs'
+#     ansible.builtin.import_role:
+#       name: 'shared'
+#       tasks_from: 'validate-role-arguments.yml'
+#     vars:
+#       shared__validate_role_arguments_roles:
+#         - 'mailto_root'
+#         - 'duplicity'
+#     tags:
+#       - 'always'
+#
+# Parameters:
+#
+# * shared__validate_role_arguments_roles: List of role names (without the collection prefix)
+#   whose `main` entry point is validated.
+
+- name: 'Validate the variables of {{ item }}'
+  ansible.builtin.validate_argument_spec:
+    argument_spec: '{{ (lookup("ansible.builtin.file", role_path ~ "/../" ~ item ~ "/meta/argument_specs.yml")
+      | from_yaml)["argument_specs"]["main"]["options"] }}'
+  loop: '{{ shared__validate_role_arguments_roles }}'
+  when:
+    - '(role_path ~ "/../" ~ item ~ "/meta/argument_specs.yml") is file'

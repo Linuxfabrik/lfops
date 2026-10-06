@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.yum_utils'
   hosts:
     - 'lfops_yum_utils'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

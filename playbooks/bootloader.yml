@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.bootloader'
   hosts:
     - 'lfops_bootloader'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

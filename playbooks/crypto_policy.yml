@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.crypto_policy'
   hosts:
     - 'lfops_crypto_policy'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.elastic_agent'
   hosts:
     - 'lfops_elastic_agent'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

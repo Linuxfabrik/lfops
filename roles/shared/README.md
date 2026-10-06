@@ -37,6 +37,13 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
     * `shared__reboot_reason`: Mandatory. Spool file name, by convention the role name.
     * `shared__reboot_detail`: Mandatory. What changed, in lower case. Goes into the notification mail, followed by the name of the calling role, and into the message the operator sees.
 
+`validate-role-arguments.yml`
+
+* Validates the variables of several roles against their `meta/argument_specs.yml` at once, see "Preflight Checks" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Import it in the `pre_tasks` of a playbook that runs many roles, tagged `always`, so that a missing or wrongly typed variable of a late role aborts the run before the first role changes the host. Roles without `meta/argument_specs.yml` are skipped.
+* Parameters:
+
+    * `shared__validate_role_arguments_roles`: Mandatory. List of role names, without the collection prefix.
+
 `clone-lib-repo.yml`
 
 * Clones the [Linuxfabrik Python Libraries](https://github.com/Linuxfabrik/lib) to `/tmp/ansible.lib-repo` on the Ansible controller (`delegate_to: localhost`, serialized with `throttle: 1`, `--check`-safe). Includes a rescue path that wipes the directory and retries on failure (e.g. when an existing checkout is on a different ref).

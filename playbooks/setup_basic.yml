@@ -1,6 +1,100 @@
 - name: 'Playbook linuxfabrik.lfops.setup_basic'
   hosts:
     - 'lfops_setup_basic'
+  force_handlers: true
+
+  vars:
+
+    # Every role of this play with the condition under which the play skips it, in play order.
+    # The pre_tasks validate the variables of the roles that run before any role changes the
+    # host. tests/unit/test_playbooks.py keeps this list in sync with the roles below.
+    setup_basic__roles__internal_var:
+      - name: 'network'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_network | d(false) }}'
+      - name: 'repo_baseos'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_repo_baseos | d(false) }}'
+      - name: 'repo_epel'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_repo_epel | d(false) }}'
+      - name: 'hostname'
+        skip: '{{ setup_basic__skip_hostname | d(false) }}'
+      - name: 'mailx'
+        skip: '{{ setup_basic__skip_mailx | d(false) }}'
+      - name: 'postfix'
+        skip: '{{ setup_basic__skip_postfix | d(false) }}'
+      - name: 'mailto_root'
+        skip: '{{ setup_basic__skip_mailto_root | d(false) }}'
+      - name: 'schedule_reboot'
+        skip: '{{ setup_basic__skip_schedule_reboot | d(false) }}'
+      - name: 'crypto_policy'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_crypto_policy | d(false) }}'
+      - name: 'policycoreutils'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_policycoreutils | d(false) }}'
+      - name: 'selinux'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_selinux | d(false) }}'
+      - name: 'kernel_modules'
+        skip: '{{ setup_basic__skip_kernel_modules | d(false) }}'
+      - name: 'kernel_settings'
+        skip: '{{ setup_basic__skip_kernel_settings | d(false) }}'
+      - name: 'core_dumps'
+        skip: '{{ setup_basic__skip_core_dumps | d(false) }}'
+      - name: 'lynis'
+        skip: '{{ setup_basic__skip_lynis | d(false) }}'
+      - name: 'systemd_journald'
+        skip: '{{ setup_basic__skip_systemd_journald | d(false) }}'
+      - name: 'timezone'
+        skip: '{{ setup_basic__skip_timezone | d(false) }}'
+      - name: 'logrotate'
+        skip: '{{ setup_basic__skip_logrotate | d(false) }}'
+      - name: 'rsyslog'
+        skip: '{{ setup_basic__skip_rsyslog | d(false) }}'
+      - name: 'cloud_init'
+        skip: '{{ setup_basic__skip_cloud_init | d(false) }}'
+      - name: 'cockpit'
+        skip: '{{ setup_basic__skip_cockpit | d(false) }}'
+      - name: 'dnf_makecache'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_dnf_makecache | d(false) }}'
+      - name: 'kdump'
+        skip: '{{ setup_basic__skip_kdump | d(false) }}'
+      - name: 'chrony'
+        skip: '{{ setup_basic__skip_chrony | d(false) }}'
+      - name: 'motd'
+        skip: '{{ setup_basic__skip_motd | d(false) }}'
+      - name: 'at'
+        skip: '{{ setup_basic__skip_at | d(false) }}'
+      - name: 'python'
+        skip: '{{ setup_basic__skip_python | d(false) }}'
+      - name: 'python_venv'
+        skip: '{{ setup_basic__skip_python_venv | d(false) }}'
+      - name: 'glances'
+        skip: '{{ setup_basic__skip_glances | d(false) }}'
+      - name: 'tools'
+        skip: '{{ setup_basic__skip_tools | d(false) }}'
+      - name: 'tmux'
+        skip: '{{ setup_basic__skip_tmux | d(false) }}'
+      - name: 'yum_utils'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_yum_utils | d(false) }}'
+      - name: 'lvm'
+        skip: '{{ setup_basic__skip_lvm | d(false) }}'
+      - name: 'sshd'
+        skip: '{{ setup_basic__skip_sshd | d(false) }}'
+      - name: 'login'
+        skip: '{{ setup_basic__skip_login | d(false) }}'
+      - name: 'firewall'
+        skip: '{{ setup_basic__skip_firewall | d(false) }}'
+      - name: 'system_update'
+        skip: '{{ setup_basic__skip_system_update | d(false) }}'
+      - name: 'duplicity'
+        skip: '{{ setup_basic__skip_duplicity | d(false) }}'
+      - name: 'repo_monitoring_plugins'
+        skip: '{{ not (monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags) or setup_basic__skip_repo_monitoring_plugins | d(false) }}'
+      - name: 'monitoring_plugins'
+        skip: '{{ setup_basic__skip_monitoring_plugins | d(false) }}'
+      - name: 'repo_icinga'
+        skip: '{{ setup_basic__skip_repo_icinga | d(false) }}'
+      - name: 'icinga2_agent'
+        skip: '{{ setup_basic__skip_icinga2_agent | d(false) }}'
+      - name: 'aide'
+        skip: '{{ setup_basic__skip_aide | d(false) }}'
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -14,6 +108,38 @@
         tasks_from: 'global-variables.yml'
       tags:
         - 'always'
+
+    # Abort on a missing prerequisite before the first role changes the host. A run that aborts
+    # halfway through leaves SSH hardened and the firewall replaced, and the next run may then no
+    # longer be able to connect with the bootstrap user.
+    - name: 'Validate the variables of every role this playbook runs'
+      ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'validate-role-arguments.yml'
+      vars:
+        shared__validate_role_arguments_roles: '{{ setup_basic__roles__internal_var | rejectattr("skip") | map(attribute="name") | list }}'
+      tags:
+        - 'always'
+
+    - name: 'Run the preflight checks of the firewall role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.firewall'
+        tasks_from: 'preflight.yml'
+      when:
+        - 'not setup_basic__skip_firewall | d(false)'
+      tags:
+        - 'firewall'
+        - 'firewall:deploy_fwb_sh'
+
+    - name: 'Run the preflight checks of the icinga2_agent role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.icinga2_agent'
+        tasks_from: 'preflight.yml'
+      when:
+        - 'not setup_basic__skip_icinga2_agent | d(false)'
+      tags:
+        - 'icinga2_agent'
+        - 'icinga2_agent:node_setup'
 
 
   roles:

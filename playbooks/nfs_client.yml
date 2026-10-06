@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.nfs_client'
   hosts:
     - 'lfops_nfs_client'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
