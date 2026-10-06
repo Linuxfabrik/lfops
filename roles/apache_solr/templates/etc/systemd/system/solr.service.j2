@@ -1,19 +1,21 @@
 # {{ ansible_managed }}
-# 2023111701
+# 2026100501
 
 [Unit]
 After=syslog.target network.target
 Description=Solr Service
 
 [Service]
-ExecStart=/opt/solr/bin/solr start
-ExecStop=/opt/solr/bin/solr stop
-Group=solr
+ExecStart={{ apache_solr__install_dir }}/solr/bin/solr start
+ExecStop={{ apache_solr__install_dir }}/solr/bin/solr stop
+Group={{ apache_solr__group }}
 LimitNOFILE=65000
 LimitNPROC=65000
 SuccessExitStatus=5 6
 Type=forking
-User=solr
+# files Solr creates get the modes the role sets on the existing ones (0640, 0750)
+UMask=0027
+User={{ apache_solr__user }}
 
 [Install]
 WantedBy=multi-user.target

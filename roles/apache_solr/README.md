@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.apache_solr
 
-This role installs [Apache Solr 8+](https://solr.apache.org) (the full binary package, for all operating systems). Parallel installation of multiple versions and switching between them is supported. We do not make use of Solr's `install_solr_service.sh` script due to idempotency reasons (we ported it to Ansible instead).
+This role installs [Apache Solr](https://solr.apache.org) from the full binary package. Parallel installation of multiple versions and switching between them is supported. We do not make use of Solr's `install_solr_service.sh` script due to idempotency reasons (we ported it to Ansible instead).
 
 This Ansible role
 
@@ -8,15 +8,37 @@ This Ansible role
 * and supports Rule-based authorization with the `RuleBasedAuthorizationPlugin`,
 * but currently does not create any cores or collections.
 
+The role installs the Java that the Solr major version needs, from the distribution's repositories:
+
+| Platform                          | Solr 8   | Solr 9  | Solr 10 |
+| ---                               | ---      | ---     | ---     |
+| Debian 12                         |          | Java 17 |         |
+| Debian 13                         |          | Java 21 | Java 21 |
+| RHEL 8, RHEL 9                    | Java 8   | Java 17 | Java 21 |
+| RHEL 10                           |          | Java 21 | Java 21 |
+| Ubuntu 22.04, 24.04, 26.04        |          | Java 17 | Java 21 |
+
+Solr 8 is EOL and only covered where existing installations still run it. Solr 10 starts in SolrCloud mode by default and is not covered by the role's tests.
+
 
 *Available since LFOps `3.0.0`.*
+
+
+## How the Role Behaves
+
+* The release tarball is downloaded on the Ansible controller and copied to the target, so the controller needs outbound access to `dlcdn.apache.org` and `archive.apache.org`, the target does not. The download comes from the Apache CDN, which only carries the current releases, and from the much slower Apache archive for every other version.
+* As with Solr's own `install_solr_service.sh`, the installation under `apache_solr__install_dir` belongs to `root`, so Solr cannot modify its own program files, while `apache_solr__var_dir` belongs to the Solr user and is not readable for other users.
+* Changing `apache_solr__version` installs the new version next to the old one, switches the `solr` symlink to it and restarts Solr. The old version is left in place.
+* `security.json` is fully templated from `apache_solr__users__*_var` and `apache_solr__roles__*_var`, so users or permissions added through the Solr API or the Admin UI are overwritten on the next run. The file is only deployed if at least one user is configured.
+* Solr applies only the first permission that matches a request. The role therefore writes one Solr permission per permission name, lists every role holding it, places `all` last and adds a role holding `all` to every permission, so such a role is never locked out by a more specific permission.
+* Solr 9.11 and newer reject a login whose password equals the username. The role aborts the run for such a user instead of deploying it.
 
 
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* Java 11+ must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)). Java OpenJDK latest is recommended.
+* The tools that Solr's start script and the role need, such as `lsof` and `tar`, must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 
 
 ## Tags
@@ -52,10 +74,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 Example:
 ```yaml
 # mandatory
-# apache_solr__checksum: 'sha512:fcd1ca482744f4a72c21c59d1877f3aeeb4b8683cf89af70bb10d29fc07da1858628b2666e3c363227e4b2f7a8ef33c2b63065811ae1c2f2843fe9f09305cb59'
-# apache_solr__version: '9.3.0'
-apache_solr__checksum: 'sha512:7147caaec5290049b721f9a4e8b0c09b1775315fc4aa790fa7a88a783a45a61815b3532a938731fd583e91195492c4176f3c87d0438216dab26a07a4da51c1f5'
-apache_solr__version: '9.4.0'
+apache_solr__checksum: 'sha512:0cf320f15662b03844e2d3e983b2a50abab3e643d9aff53ed5a4481ef870776420c7bd8dfde377183d44304dcc589f6784ab020eb7c6675000f86fe32fff4057'
+apache_solr__version: '9.11.0'
 ```
 
 
@@ -69,7 +89,7 @@ apache_solr__version: '9.4.0'
 
 `apache_solr__group`
 
-* Group running the systemd service.
+* Primary group of the Solr user, running the systemd service.
 * Type: String.
 * Default: `'solr'`
 
@@ -81,9 +101,9 @@ apache_solr__version: '9.4.0'
 
 `apache_solr__http_bind_address`
 
-* [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations).
+* [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations), the address Solr listens on. Set it to `'0.0.0.0'` or to the address of an interface if Solr has to be reachable from other hosts.
 * Type: String.
-* Default: `'0.0.0.0'`
+* Default: `'127.0.0.1'`
 
 `apache_solr__http_bind_port`
 
@@ -136,7 +156,7 @@ apache_solr__version: '9.4.0'
 
     * `permissions`:
 
-        * Mandatory. Apache Solr permissions assigned to this role. Have a look at the example for all possible values.
+        * Mandatory. [Predefined Solr permissions](https://solr.apache.org/guide/solr/latest/deployment-guide/rule-based-authorization-plugin.html#predefined-permissions) assigned to this role. Have a look at the example for all possible values. A role holding `all` is allowed everything.
         * Type: List of strings.
 
     * `state`:
@@ -170,9 +190,9 @@ apache_solr__version: '9.4.0'
 
 `apache_solr__stop_wait`
 
-* Waiting up to $SOLR_STOP_WAIT seconds to see Solr running on port $SOLR_PORT.
+* `SOLR_STOP_WAIT`, the number of seconds Solr gets to stop gracefully before it is killed. Also the number of seconds the start script waits for Solr to listen on its port.
 * Type: Number.
-* Default: `15`
+* Default: `180`
 
 `apache_solr__user`
 
@@ -182,7 +202,7 @@ apache_solr__version: '9.4.0'
 
 `apache_solr__users__group_var` / `apache_solr__users__host_var`
 
-* This Ansible role supports Basic authentication for users with the use of the `BasicAuthPlugin`, which only provides user authentication. To control user permissions, you may need to configure `apache_solr__roles__group_var` / `apache_solr__roles__host_var`. Note: The 'all' permission should always be the last permission in your config so that more specific permissions are applied first.
+* This Ansible role supports Basic authentication for users with the use of the `BasicAuthPlugin`, which only provides user authentication. To control user permissions, you may need to configure `apache_solr__roles__group_var` / `apache_solr__roles__host_var`. At least one user has to remain present once users are configured.
 * For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
 * Default: `[]`
@@ -195,7 +215,7 @@ apache_solr__version: '9.4.0'
 
     * `password`:
 
-        * Mandatory. Password.
+        * Mandatory. Password. Must differ from the username on Solr 9.11 and newer.
         * Type: String.
 
     * `role`:
@@ -220,7 +240,7 @@ Example:
 apache_solr__data_dir: '/var/solr/data'
 apache_solr__group: 'solr'
 apache_solr__heap: '512m'
-apache_solr__http_bind_address: '0.0.0.0'
+apache_solr__http_bind_address: '127.0.0.1'
 apache_solr__http_bind_port: 8983
 apache_solr__install_dir: '/opt'
 apache_solr__log4j_props: '/var/solr/log4j2.xml'
@@ -231,7 +251,7 @@ apache_solr__security_manager_enabled: true
 apache_solr__service: 'solr'
 apache_solr__service_enabled: true
 apache_solr__service_state: 'started'
-apache_solr__stop_wait: 15
+apache_solr__stop_wait: 180
 apache_solr__user: 'solr'
 apache_solr__var_dir: '/var/solr'
 
@@ -241,6 +261,7 @@ apache_solr__roles__host_var:
       - 'config-read'
       - 'filestore-read'
       - 'metrics-read'
+      - 'read'
       - 'schema-read'
     state: 'present'
   - name: 'admin'
@@ -281,6 +302,17 @@ apache_solr__users__host_var:
     role: 'admin'
     state: 'present'
 ```
+
+
+## Troubleshooting
+
+**The run aborts with `Solr X.Y.Z needs a Java that <platform> does not ship`**
+
+* The distribution offers no Java that this Solr major version runs on, for example Java 21 for Solr 10 on Debian 12. Install a Solr version the message lists as supported on this platform, or move Solr to a platform from the table at the top.
+
+**The run aborts with `Solr X.Y.Z rejects the login of a user whose password equals the username`**
+
+* Set a password that differs from the username for the listed users. Solr 9.11 and newer refuse such logins.
 
 
 ## License

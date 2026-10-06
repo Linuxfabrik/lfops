@@ -1,0 +1,137 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state: Solr runs the configured version on the Java the role picked for the platform, applies
+# the configured settings, and lets in exactly the users and permissions from the inventory. Every
+# value is read back from the running Solr, not from the files the role deployed.
+- name: 'Verify Apache Solr is running and uses the configured values'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+
+    # RHEL 10 and Debian 13 ship no Java 17, so the role falls back to Java 21 there.
+    __molecule__apache_solr_java_major: '{{
+        "21" if (ansible_facts["os_family"] ~ ansible_facts["distribution_major_version"]) in ["RedHat10", "Debian13"]
+        else "17"
+      }}'
+    __molecule__apache_solr_url: 'http://127.0.0.1:{{ apache_solr__http_bind_port | d(8983) }}/solr'
+
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert solr.service is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"]["solr.service"]["state"] == "running"'
+          - 'ansible_facts["services"]["solr.service"]["status"] == "enabled"'
+        fail_msg: 'solr.service is {{ ansible_facts["services"]["solr.service"] | d("absent") }}'
+
+    - name: 'Wait for Solr to answer on its port'
+      ansible.builtin.wait_for:
+        host: '127.0.0.1'
+        port: '{{ apache_solr__http_bind_port | d(8983) }}'
+        timeout: 60
+
+    # Solr listens on the loopback only, as upstream ships it, so it is closed on the host's address.
+    - name: 'Assert Solr is not reachable on {{ ansible_facts["default_ipv4"]["address"] }}'
+      ansible.builtin.wait_for:
+        host: '{{ ansible_facts["default_ipv4"]["address"] }}'
+        port: '{{ apache_solr__http_bind_port | d(8983) }}'
+        state: 'stopped'
+        timeout: 5
+
+    # blockUnknown: a request without credentials is turned away before any permission applies.
+    - name: 'curl {{ __molecule__apache_solr_url }}/admin/info/system without credentials'
+      ansible.builtin.uri:
+        url: '{{ __molecule__apache_solr_url }}/admin/info/system'
+        status_code: 401
+
+    # Also proves that the hash the role computed is the one Solr expects.
+    - name: 'curl --user solr-admin {{ __molecule__apache_solr_url }}/admin/info/system'
+      ansible.builtin.uri:
+        url: '{{ __molecule__apache_solr_url }}/admin/info/system'
+        url_username: 'solr-admin'
+        url_password: 'linuxfabrik'
+        force_basic_auth: true
+        return_content: true
+      register: '__molecule__apache_solr_system_result'
+      retries: 6 # Solr answers on its port shortly before its handlers are ready
+      delay: 5
+      until: '__molecule__apache_solr_system_result["status"] == 200'
+
+    - name: 'Assert Solr runs the configured version on the expected Java with the configured settings'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_solr_system["lucene"]["solr-spec-version"] == apache_solr__version'
+          - '__molecule__apache_solr_system["jvm"]["spec"]["version"] == __molecule__apache_solr_java_major'
+          - '"-Xmx" ~ apache_solr__heap in __molecule__apache_solr_system["jvm"]["jmx"]["commandLineArgs"]'
+          - '"-Djava.security.manager" in __molecule__apache_solr_system["jvm"]["jmx"]["commandLineArgs"]'
+        fail_msg: >-
+          Solr {{ __molecule__apache_solr_system["lucene"]["solr-spec-version"] }} on Java
+          {{ __molecule__apache_solr_system["jvm"]["spec"]["version"] }} with
+          {{ __molecule__apache_solr_system["jvm"]["jmx"]["commandLineArgs"] }}
+      vars:
+        __molecule__apache_solr_system: '{{ __molecule__apache_solr_system_result["json"] }}'
+
+    # The role translates its role-to-permissions list into one Solr permission entry per name.
+    # 'reader' holds 'health', so it gets in there and nowhere else; 'admin' holds 'all', so it
+    # also gets past the 'health' entry, which matches first.
+    - name: 'curl --user <user> {{ __molecule__apache_solr_url }}/<path>'
+      ansible.builtin.uri:
+        url: '{{ __molecule__apache_solr_url }}/{{ item["path"] }}'
+        url_username: '{{ item["username"] }}'
+        url_password: '{{ item["password"] }}'
+        force_basic_auth: true
+        status_code: '{{ item["status"] }}'
+      loop:
+        - username: 'solr-admin'
+          password: 'linuxfabrik'
+          path: 'admin/info/health'
+          status: 200
+        - username: 'solr-admin'
+          password: 'linuxfabrik'
+          path: 'admin/authorization'
+          status: 200
+        - username: 'solr-reader'
+          password: 'linuxfabrik-reader'
+          path: 'admin/info/health'
+          status: 200
+        - username: 'solr-reader'
+          password: 'linuxfabrik-reader'
+          path: 'admin/authorization'
+          status: 403
+        - username: 'solr-removed'
+          password: 'linuxfabrik-removed'
+          path: 'admin/info/health'
+          status: 401
+      loop_control:
+        label: '{{ item["username"] }} {{ item["path"] }} -> {{ item["status"] }}'
+
+    # As with Solr's install_solr_service.sh, the program files belong to root, so that Solr cannot
+    # modify them.
+    - name: 'stat /opt/solr/bin/solr'
+      ansible.builtin.stat:
+        path: '/opt/solr/bin/solr'
+      register: '__molecule__apache_solr_bin_result'
+
+    - name: 'Assert the Solr program files belong to root'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_solr_bin_result["stat"]["pw_name"] == "root"'
+          - '__molecule__apache_solr_bin_result["stat"]["mode"] == "0755"'
+        fail_msg: '/opt/solr/bin/solr is {{ __molecule__apache_solr_bin_result["stat"] | d("missing") }}'
+
+    # Solr writes its PID file after it started, so its mode shows the UMask of solr.service.
+    - name: 'stat /var/solr/solr-{{ apache_solr__http_bind_port | d(8983) }}.pid'
+      ansible.builtin.stat:
+        path: '/var/solr/solr-{{ apache_solr__http_bind_port | d(8983) }}.pid'
+      register: '__molecule__apache_solr_pid_result'
+
+    - name: 'Assert files Solr creates are not world-readable'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_solr_pid_result["stat"]["pw_name"] == "solr"'
+          - '__molecule__apache_solr_pid_result["stat"]["mode"] == "0640"'
+        fail_msg: 'The PID file is {{ __molecule__apache_solr_pid_result["stat"] | d("missing") }}'

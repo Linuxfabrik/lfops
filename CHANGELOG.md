@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11.
+
 ### Breaking Changes
 
+* **role:apache_solr**: Solr listens on `127.0.0.1` only and gets 180 seconds to stop gracefully, as upstream ships it, instead of listening on all addresses and being killed after 15 seconds. Set `apache_solr__http_bind_address: '0.0.0.0'` for a Solr that other hosts have to reach.
 * **role:bind**: named validates DNSSEC by default, as the bind package does, and follows the system-wide crypto policy. Forged or broken answers for signed zones are answered with `SERVFAIL` instead of being passed on. The `forward`, `static-stub` and `stub` zones in `bind__zones` are excluded from validation; list other internal zones below a signed domain or TLD in `bind__dnssec_validate_except`, or set `bind__dnssec_validation: false`. On RHEL 8 the role fails if it has zones to exclude, since BIND 9.11 cannot; set `bind__dnssec_validation: false` there ([#355](https://github.com/Linuxfabrik/lfops/issues/355), [#356](https://github.com/Linuxfabrik/lfops/issues/356)).
 * **role:system_update**: On Debian and Ubuntu, the system update no longer updates the database of an AIDE installed by hand, since it also accepted changes that were pending before the update. On such hosts the daily AIDE mail now lists the files each update changed. Deploy the aide role to have its database updated after updates again.
 * **role:grav**: The `grav:cron` tag is gone. Run the role with `--tags grav` to deploy the timers and their services, or with `--tags grav:state` to enable or disable the timers.
@@ -38,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_solr**: Supports Debian 12 and 13, RHEL 10 and Ubuntu 22.04, 24.04 and 26.04, with the Java the Solr version needs installed from the distribution.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
 * **playbook:setup_basic**: Installs AIDE on every host, which checks file integrity twice a day and after every boot; skip it with `setup_basic__skip_aide`.
@@ -63,6 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_solr**: Downloads Solr from the Apache CDN, which is much faster than the Apache archive, and falls back to the archive for releases the CDN no longer carries.
+* **role:apache_solr**: The run aborts for a user whose password equals the username, since Solr 9.11 and newer reject such logins.
+* **role:apache_solr**: A role holding the `all` permission is allowed every request, also one that a more specific permission of another role matches first.
+* **role:apache_solr**: The Solr program files belong to `root`, as with Solr's own installation script, and files that Solr creates are no longer readable by other users.
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
 * **role:apache_httpd**: Bump the OWASP Core Rule Set to 4.30.0.
 * **role:apache_httpd**: The OWASP Core Rule Set is downloaded on the Ansible controller, so the target no longer needs access to GitHub.
@@ -93,6 +101,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_solr**: Passwords no longer show up in the output of a run, and a user without `state` no longer aborts it.
+* **role:apache_solr**: The role runs without EPEL on RHEL and no longer restarts Solr on every run.
+* **role:apache_solr**: A role with several permissions takes effect, where Solr discarded it as invalid so far.
+* **role:apache_solr**: Users can log in on hosts without `xxd`, such as a minimal RHEL 9, where the role wrote an empty password hash.
 * **role:apache_httpd**: On Debian and Ubuntu, the first run against a fresh host no longer fails reloading Apache, since the role points `PidFile` to where `apachectl` looks; a server started by an earlier version of the role is restarted once.
 * **role:apache_httpd**: Apache reloads after the OWASP Core Rule Set is updated, instead of applying the previous rules until its next reload.
 * **role:apache_httpd**: The OWASP Core Rule Set deploys on Debian and Ubuntu, where the run failed until now, and on Ubuntu 22.04, whose ModSecurity 2.9.5 is too old for it, the run aborts with a message saying so.
