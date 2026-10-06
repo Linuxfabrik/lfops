@@ -8,6 +8,8 @@ This Ansible role
 * and supports Rule-based authorization with the `RuleBasedAuthorizationPlugin`,
 * but currently does not create any cores or collections.
 
+The role deploys a single Solr instance without ZooKeeper (Solr's user-managed mode), also for Solr 10, which starts in SolrCloud mode with an embedded ZooKeeper by default.
+
 The role installs the Java that the Solr major version needs, from the distribution's repositories:
 
 | Platform                          | Solr 8   | Solr 9  | Solr 10 |
@@ -18,7 +20,7 @@ The role installs the Java that the Solr major version needs, from the distribut
 | RHEL 10                           |          | Java 21 | Java 21 |
 | Ubuntu 22.04, 24.04, 26.04        |          | Java 17 | Java 21 |
 
-Solr 8 is EOL and only covered where existing installations still run it. Solr 10 starts in SolrCloud mode by default and is not covered by the role's tests.
+Solr 8 is EOL and only covered where existing installations still run it.
 
 
 *Available since LFOps `3.0.0`.*
@@ -28,7 +30,7 @@ Solr 8 is EOL and only covered where existing installations still run it. Solr 1
 
 * The release tarball is downloaded on the Ansible controller and copied to the target, so the controller needs outbound access to `dlcdn.apache.org` and `archive.apache.org`, the target does not. The download comes from the Apache CDN, which only carries the current releases, and from the much slower Apache archive for every other version.
 * As with Solr's own `install_solr_service.sh`, the installation under `apache_solr__install_dir` belongs to `root`, so Solr cannot modify its own program files, while `apache_solr__var_dir` belongs to the Solr user and is not readable for other users.
-* Changing `apache_solr__version` installs the new version next to the old one, switches the `solr` symlink to it and restarts Solr. The old version is left in place.
+* Changing `apache_solr__version` installs the new version next to the old one, switches the `solr` symlink to it and restarts Solr. The old version is left in place. Solr 10 opens the indexes of Solr 9, but an index that Solr 8 ever wrote to has to be deleted and reindexed before upgrading to Solr 10, see [Reindexing](https://solr.apache.org/guide/solr/latest/indexing-guide/reindexing.html#upgrades).
 * `security.json` is fully templated from `apache_solr__users__*_var` and `apache_solr__roles__*_var`, so users or permissions added through the Solr API or the Admin UI are overwritten on the next run. The file is only deployed if at least one user is configured.
 * Solr applies only the first permission that matches a request. The role therefore writes one Solr permission per permission name, lists every role holding it, places `all` last and adds a role holding `all` to every permission, so such a role is never locked out by a more specific permission.
 * Solr 9.11 and newer reject a login whose password equals the username. The role aborts the run for such a user instead of deploying it.
@@ -101,13 +103,13 @@ apache_solr__version: '9.11.0'
 
 `apache_solr__http_bind_address`
 
-* [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations), the address Solr listens on. Set it to `'0.0.0.0'` or to the address of an interface if Solr has to be reachable from other hosts.
+* [SOLR_JETTY_HOST](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#security-considerations) (`SOLR_HOST_BIND` on Solr 10), the address Solr listens on. Set it to `'0.0.0.0'` or to the address of an interface if Solr has to be reachable from other hosts.
 * Type: String.
 * Default: `'127.0.0.1'`
 
 `apache_solr__http_bind_port`
 
-* [SOLR_PORT](https://solr.apache.org/guide/solr/latest/deployment-guide/upgrading-a-solr-cluster.html#planning-your-upgrade).
+* [SOLR_PORT](https://solr.apache.org/guide/solr/latest/deployment-guide/upgrading-a-solr-cluster.html#planning-your-upgrade) (`SOLR_PORT_LISTEN` on Solr 10).
 * Type: Number.
 * Default: `8983`
 

@@ -9,9 +9,11 @@
 
   vars:
 
-    # RHEL 10 and Debian 13 ship no Java 17, so the role falls back to Java 21 there.
+    # Solr 10 needs Java 21. Solr 9 runs on Java 17, except on RHEL 10 and Debian 13, which ship no
+    # Java 17.
     __molecule__apache_solr_java_major: '{{
-        "21" if (ansible_facts["os_family"] ~ ansible_facts["distribution_major_version"]) in ["RedHat10", "Debian13"]
+        "21" if apache_solr__version is version("10.0.0", ">=")
+          or (ansible_facts["os_family"] ~ ansible_facts["distribution_major_version"]) in ["RedHat10", "Debian13"]
         else "17"
       }}'
     __molecule__apache_solr_url: 'http://127.0.0.1:{{ apache_solr__http_bind_port | d(8983) }}/solr'
@@ -65,11 +67,14 @@
       ansible.builtin.assert:
         that:
           - '__molecule__apache_solr_system["lucene"]["solr-spec-version"] == apache_solr__version'
+          # a single instance without ZooKeeper ("std"), also on Solr 10, which defaults to SolrCloud
+          - '__molecule__apache_solr_system["mode"] == "std"'
           - '__molecule__apache_solr_system["jvm"]["spec"]["version"] == __molecule__apache_solr_java_major'
           - '"-Xmx" ~ apache_solr__heap in __molecule__apache_solr_system["jvm"]["jmx"]["commandLineArgs"]'
           - '"-Djava.security.manager" in __molecule__apache_solr_system["jvm"]["jmx"]["commandLineArgs"]'
         fail_msg: >-
-          Solr {{ __molecule__apache_solr_system["lucene"]["solr-spec-version"] }} on Java
+          Solr {{ __molecule__apache_solr_system["lucene"]["solr-spec-version"] }}
+          in mode {{ __molecule__apache_solr_system["mode"] }} on Java
           {{ __molecule__apache_solr_system["jvm"]["spec"]["version"] }} with
           {{ __molecule__apache_solr_system["jvm"]["jmx"]["commandLineArgs"] }}
       vars:
