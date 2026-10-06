@@ -8,6 +8,17 @@
 
 - block:
 
+  # curl downloads the installer, which needs openssl and tar
+  - name: 'Install curl, openssl and tar'
+    ansible.builtin.package:
+      name:
+        - 'curl'
+        - 'openssl'
+        - 'tar'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
   - name: 'curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online ...'
     ansible.builtin.shell: |-
       curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online \
@@ -66,6 +77,11 @@
 
 - block:
 
+  # a vHost for the ACME challenge that an earlier role in the play just deployed is only
+  # served after its reload handler ran
+  - name: 'Flush handlers so that the web server serves the current config'
+    ansible.builtin.meta: 'flush_handlers'
+
   - name: 'acme.sh --config-home /etc/acme.sh --upgrade'
     ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --upgrade'
     # acme.sh prints "Already up to date!" when there is nothing to upgrade (and additionally
@@ -113,23 +129,28 @@
 
   # acme.sh re-runs install-cert (copy to /etc/pki + reload) on every renewal by itself, using
   # the paths it saved on the last install. So this role only needs to install when a
-  # certificate was just (re)issued above, or when the installed file is missing (self-heal).
-  # Installing on every run would reload the web server on every run, which is not idempotent.
-  - name: 'Stat the installed certificates'
+  # certificate was just (re)issued above, or when the installed file differs from the one in
+  # acme.sh's store (self-heal), e.g. a placeholder that apache_httpd created before the
+  # certificate was issued and that an aborted install never replaced. install-cert copies the
+  # file byte for byte (`cat "$CERT_PATH" >"$_real_cert"`, verified against acme.sh 3.1.5), so
+  # comparing checksums is enough. Installing on every run would reload the web server on every
+  # run, which is not idempotent.
+  - name: 'sha1sum the installed certificates'
     ansible.builtin.stat:
       path: '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt'
     loop: '{{ acme_sh__certificates }}'
     loop_control:
       label: '{{ item["name"] }}'
-    register: 'acme_sh__installed_stat_result'
+    register: '__acme_sh__installed_stat_result'
 
-  - name: 'Determine which installed certificates are missing'
-    ansible.builtin.set_fact:
-      __acme_sh__missing_install: >-
-        {{ acme_sh__installed_stat_result["results"]
-           | rejectattr("stat.exists")
-           | map(attribute="item.name")
-           | list }}
+  # acme.sh keeps an ECDSA certificate in `<name>_ecc/`, an RSA one in `<name>/`.
+  - name: 'sha1sum the certificates in the acme.sh store'
+    ansible.builtin.stat:
+      path: '/etc/acme.sh/certs/{{ item["name"] }}{{ "_ecc" if (acme_sh__key_length | string) is match("^ec-") else "" }}/{{ item["name"] }}.cer'
+    loop: '{{ acme_sh__certificates }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    register: '__acme_sh__store_stat_result'
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
@@ -140,9 +161,16 @@
       --cert-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}.crt' \
       --fullchain-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}-fullchain.crt' \
       --key-file '{{ __acme_sh__key_path }}/{{ item["name"] }}.key' \
-      --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], "systemctl reload httpd")) }}'
+      --reloadcmd '{{ acme_sh__reload_cmd | d((item["reload_cmd"] is defined and item["reload_cmd"] | length > 0) | ternary(item["reload_cmd"], __acme_sh__reload_cmd)) }}'
     loop: '{{ acme_sh__certificates }}'
-    when: 'item["name"] in __acme_sh__to_issue or item["name"] in __acme_sh__missing_install'
+    loop_control:
+      index_var: '__acme_sh__index'
+      label: '{{ item["name"] }}'
+    when: >-
+      item["name"] in __acme_sh__to_issue
+      or (__acme_sh__store_stat_result["results"][__acme_sh__index]["stat"]["exists"]
+          and __acme_sh__installed_stat_result["results"][__acme_sh__index]["stat"]["checksum"] | d("")
+              != __acme_sh__store_stat_result["results"][__acme_sh__index]["stat"]["checksum"])
     changed_when: true
 
   - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'

@@ -119,9 +119,16 @@
     - role: 'linuxfabrik.lfops.librenms'
 
     - role: 'linuxfabrik.lfops.apache_httpd'
+      apache_httpd__placeholder_certificates__dependent_var: '{{ acme_sh__apache_httpd__placeholder_certificates__dependent_var }}'
       apache_httpd__vhosts__dependent_var: '{{ librenms__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
         - 'not setup_librenms__skip_apache_httpd | d(false)'
+
+    # last, so that the port 80 vHost of apache_httpd is up to answer the ACME challenge.
+    # replaces the placeholder certificates apache_httpd created for its certificates.
+    - role: 'linuxfabrik.lfops.acme_sh'
+      when:
+        - 'not setup_librenms__skip_acme_sh | d(true)'
 
 
   post_tasks:

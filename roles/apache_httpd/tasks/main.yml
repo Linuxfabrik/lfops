@@ -166,6 +166,66 @@
     - 'apache_httpd:htpasswd'
 
 
+# A vHost that references a certificate that does not exist yet keeps httpd from starting, and
+# such a certificate is often issued by acme_sh over the port 80 vHost of this very server. A
+# self-signed placeholder at the same path lets httpd start, and acme_sh replaces it once the
+# certificate is issued. Only missing files are created, an existing certificate is never touched.
+- block:
+
+  - name: 'Install openssl to create placeholder certificates'
+    ansible.builtin.package:
+      name: 'openssl'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  # only creates a missing directory, so the mode of an existing one such as /etc/ssl/private
+  # (0710 root:ssl-cert on Debian) is left alone
+  - name: 'mkdir --parents --mode={{ item[1] }} {{ item[0] }}'
+    ansible.builtin.command:
+      cmd: 'mkdir --parents --mode={{ item[1] }} {{ item[0] }}'
+      creates: '{{ item[0] }}'
+    loop: '{{ ((apache_httpd__placeholder_certificates__combined_var | map(attribute="cert_path") | product(["0755"]) | list)
+        + (apache_httpd__placeholder_certificates__combined_var | map(attribute="key_path") | product(["0700"]) | list))
+        | unique }}'
+
+  # openssl writes the key with mode 0600 (verified with OpenSSL 1.1.1 on RHEL 8)
+  - name: 'openssl req -x509 -newkey ec -subj /CN=... -keyout <name>.key -out <name>.crt'
+    ansible.builtin.command:
+      cmd: >-
+        openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 365
+        -subj '/CN={{ item["name"] }}'
+        -keyout '{{ item["key_path"] }}/{{ item["name"] }}.key'
+        -out '{{ item["cert_path"] }}/{{ item["name"] }}.crt'
+      creates: '{{ item["cert_path"] }}/{{ item["name"] }}.crt'
+    loop: '{{ apache_httpd__placeholder_certificates__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  # a self-signed certificate is its own chain
+  - name: 'cp <name>.crt <name>{{ item[1] }}.crt'
+    ansible.builtin.command:
+      cmd: >-
+        cp
+        '{{ item[0]["cert_path"] }}/{{ item[0]["name"] }}.crt'
+        '{{ item[0]["cert_path"] }}/{{ item[0]["name"] }}{{ item[1] }}.crt'
+      creates: '{{ item[0]["cert_path"] }}/{{ item[0]["name"] }}{{ item[1] }}.crt'
+    loop: '{{ apache_httpd__placeholder_certificates__combined_var | product(["-chain", "-fullchain"]) | list }}'
+    loop_control:
+      label: '{{ item[0]["name"] }}{{ item[1] }}'
+    when:
+      - 'item[0]["state"] | d("present") != "absent"'
+
+  when:
+    - 'apache_httpd__placeholder_certificates__combined_var | map(attribute="state", default="present") | select("ne", "absent") | list | length > 0'
+  tags:
+    - 'apache_httpd'
+    - 'apache_httpd:certs'
+    - 'apache_httpd:vhosts'
+
+
 - block:
 
   - ansible.builtin.include_tasks: 'vhosts.yml'
