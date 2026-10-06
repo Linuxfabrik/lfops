@@ -41,7 +41,7 @@ This role supports both Red Hat and Debian-based systems. The following paths an
 * User/Group: Red Hat `apache`/`apache`, Debian `www-data`/`www-data`
 * PHP-FPM socket: Red Hat `/run/php-fpm/www.sock`, Debian `/run/php/www.sock`
 
-The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controller and copied to the target, so only the controller needs access to GitHub. The role deploys the rules to `/etc/httpd/modsecurity.d/crs/`, but does not activate them: include `modsecurity.d/crs/crs-setup.conf` and `modsecurity.d/crs/rules/*.conf` in a vHost (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md)). Each version is kept in its own directory, so a change of `apache_httpd__mod_security_coreruleset_version` switches the symlink and reloads Apache, and setting the previous version again rolls back. `crs-setup.conf` is reset to the shipped example on every run; put your CRS settings into the vHost.
+The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controller and copied to the target, so only the controller needs access to GitHub. The role checks the archive against a SHA-256 checksum it carries for each supported release, taken from an archive whose signature by the CRS project was verified, and aborts on a mismatch. The role deploys the rules to `/etc/httpd/modsecurity.d/crs/`, but does not activate them: include `modsecurity.d/crs/crs-setup.conf` and `modsecurity.d/crs/rules/*.conf` in a vHost (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md)). Each version is kept in its own directory, so a change of `apache_httpd__mod_security_coreruleset_version` switches the symlink and reloads Apache, and setting the previous version again rolls back. `crs-setup.conf` is reset to the shipped example on every run; put your CRS settings into the vHost.
 
 This role does NOT:
 
@@ -877,19 +877,29 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 ```
 
 
+## Mandatory Role Variables - mod_security (security2)
+
+Only mandatory if `apache_httpd__skip_mod_security_coreruleset` is `false`.
+
+`apache_httpd__mod_security_coreruleset_version`
+
+* The OWASP ModSecurity Core Rule Set (CRS) version number without "v". The role deploys the releases the CRS project supports with security fixes: `4.25.2` (LTS), `4.29.0` and `4.30.0`.
+* Type: String.
+
+Example:
+```yaml
+# mandatory - mod_security
+apache_httpd__mod_security_coreruleset_version: '4.30.0'
+```
+
+
 ## Optional Role Variables - mod_security (security2)
 
 `apache_httpd__mod_security_coreruleset_url`
 
-* The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers.
+* The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. The archive has to be identical to the one GitHub serves, since the role checks its SHA-256 checksum.
 * Type: String.
 * Default: `'https://github.com/coreruleset/coreruleset/archive'`
-
-`apache_httpd__mod_security_coreruleset_version`
-
-* The OWASP ModSecurity Core Rule Set (CRS) version number without "v".
-* Type: String.
-* Default: `'4.30.0'`
 
 `apache_httpd__skip_mod_security_coreruleset`
 
@@ -901,8 +911,7 @@ Example:
 ```yaml
 # optional - mod_security
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.30.0'
-apache_httpd__skip_mod_security_coreruleset: true
+apache_httpd__skip_mod_security_coreruleset: false
 ```
 
 
@@ -1164,6 +1173,17 @@ apache_httpd__wsgi_python_home: '/opt/python'
 apache_httpd__wsgi_python_path: '/var/www/html/python/'
 apache_httpd__wsgi_script_alias: '/ /var/www/html/python/index.py'
 ```
+
+
+## Troubleshooting
+
+**The run aborts with ``Set `apache_httpd__mod_security_coreruleset_version` to a version this role supports``**
+
+* The OWASP Core Rule Set is deployed (`apache_httpd__skip_mod_security_coreruleset: false`), but its version is not set, or the role carries no checksum for it. Set one of the listed versions, or skip the deployment.
+
+**The CRS download fails with `The checksum for /tmp/ansible.coreruleset-v<version>.tar.gz did not match`**
+
+* The archive differs from the one the role knows for this release. Do not deploy it. Check `apache_httpd__mod_security_coreruleset_url` (a mirror has to serve the unmodified GitHub archive) and verify the archive against the release signature as described in the [CRS installation guide](https://coreruleset.org/docs/deployment/install/).
 
 
 ## License

@@ -279,9 +279,9 @@ argument_specs:
       apache_httpd__mod_security_coreruleset_version:
         type: 'str'
         required: false
-        default: '4.30.0'
         description: >-
-          Version of the OWASP Core Rule Set to deploy.
+          Version of the OWASP Core Rule Set to deploy. Mandatory unless
+          apache_httpd__skip_mod_security_coreruleset is true.
 
       apache_httpd__mod_ssl_ssl_use_stapling:
         type: 'str'
