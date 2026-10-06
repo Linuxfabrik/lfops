@@ -104,7 +104,7 @@ Which Ansible role is proven to run on which OS?
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| mirror                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mongodb                               |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | monitoring_plugins                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Debian 9, Fedora, SLES 15, SLES 16, Windows  |

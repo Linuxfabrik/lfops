@@ -11,8 +11,6 @@ This role installs and configures [mirror](https://github.com/Linuxfabrik/mirror
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * Python 3 must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
-* `createrepo` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
-* `git` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
 * `yum-utils` must be installed (role: [linuxfabrik.lfops.yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)).
 
 
@@ -20,6 +18,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `mirror`
 
+* Installs acl, createrepo and git.
 * Installs and configures mirror.
 * Triggers: `mirror: systemctl daemon-reload`.
 

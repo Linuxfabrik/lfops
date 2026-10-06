@@ -666,7 +666,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `mirror__skip_apps`
 * [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `mirror__skip_yum_utils`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `mirror__skip_python`
 * [mirror](https://github.com/Linuxfabrik/lfops/tree/main/roles/mirror)

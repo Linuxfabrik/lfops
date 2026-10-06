@@ -1,0 +1,8 @@
+# A repository that every Rocky host has configured. The timer that would mirror it is enabled but
+# does not fire during the scenario, so nothing is downloaded.
+mirror__reposync_repos:
+  - repoid: 'baseos'
+    relative_target_path: 'rocky/baseos/'
+
+# No web server is installed here, so the ACLs are granted to a user and group every host has.
+mirror__webserver_user: 'nobody'

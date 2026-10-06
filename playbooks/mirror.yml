@@ -18,13 +18,6 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: '{{
-          mirror__apps__apps__dependent_var
-        }}'
-      when:
-        - 'not mirror__skip_apps | d(false)'
-
     - role: 'linuxfabrik.lfops.yum_utils'
       when:
         - 'not mirror__skip_yum_utils | d(false)'
