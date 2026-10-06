@@ -106,6 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mirror**: Repairs the ACL mask of `mirror__base_path` when a chmod narrowed it to `r-x`, which made reposync fail with `Permission denied` on every new repository.
+* **role:mirror**: Runs on minimal installations such as Rocky 10, where it aborted for lack of `setfacl`, since the role installs acl, createrepo and git itself instead of the mirror playbook running the apps role.
 * **role:openvpn_server**: The role runs on a minimal RHEL 10 installation, where it aborted for lack of `openssl` while generating Diffie-Hellman parameters, which OpenVPN 2.7 no longer needs.
 * **role:apache_solr**: Passwords no longer show up in the output of a run, and a user without `state` no longer aborts it.
 * **role:apache_solr**: The role runs without EPEL on RHEL and no longer restarts Solr on every run.

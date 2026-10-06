@@ -1,0 +1,2 @@
+# Molecule scenario marker for the 'mirror' scenario, run with
+# `molecule test --scenario-name mirror`.
