@@ -158,6 +158,12 @@ apache_httpd__conf__role_var:
     state: 'present'
     template: 'python'
 
+  # The RemoteIP* directives only exist with mod_remoteip loaded, so this follows its mods entry.
+  - filename: 'remoteip'
+    enabled: '{{ apache_httpd__mod_remoteip_internal_proxy | length > 0 }}'
+    state: 'present'
+    template: 'remoteip'
+
   - filename: 'ssl'
     enabled: true
     state: 'present'
@@ -222,6 +228,9 @@ apache_httpd__mod_http2_min_workers: ''
 apache_httpd__mod_http2_protocols: 'h2 http/1.1'  # upstream default: http/1.1
 apache_httpd__mod_http2_stream_max_mem_size: 65536
 apache_httpd__mod_http2_window_size: 65535
+
+# mod_remoteip
+apache_httpd__mod_remoteip_internal_proxy: '{{ lfops__trusted_proxies | d([]) }}'
 
 # mod_security
 # get details from https://coreruleset.org/docs/deployment/install/

@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_httpd**: `lfops__trusted_proxies` lists the reverse proxies in front of a host, and Apache then logs the client from `X-Forwarded-For` instead of the proxy in the access and the error log.
 * **role:apache_httpd**: Creates a self-signed placeholder for every certificate in `apache_httpd__placeholder_certificates__*_var` that does not exist yet, so a TLS vHost starts before its certificate is issued; the playbooks fill the list from `acme_sh__certificates`.
 * `acme_sh` can run as the last role of every playbook with `apache_httpd`, so a fresh host gets its Let's Encrypt certificates in a single run; enable it with the playbook's `acme_sh` skip variable (`apache_httpd` and the `setup_*` playbooks with `apache_httpd`).
 * **role:repo_openvpn, playbook:repo_openvpn**: Add a role and playbook that deploy the OpenVPN 2.7 release repository of the OpenVPN community on RHEL 8, 9 and 10, where EPEL ships outdated OpenVPN versions.
@@ -75,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
 * **playbook:setup_basic**: Checks the variables of all its roles, the compiled firewall in the Firewall Builder repository and the reachability of the Icinga2 master before it changes anything on the host, so a missing prerequisite no longer aborts the run halfway through, after SSH was already hardened.
 * Handlers that a role notified before a later task failed run anyway, so a changed configuration reaches the running service; until now it stayed inactive, also across later runs, which reported no change (all playbooks).
 * **playbook:acme_sh**: No longer runs the `apps` role, since the `acme_sh` role installs curl, openssl and tar itself.
@@ -113,6 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: Apache starts after PHP-FPM at boot, so the first PHP requests after a reboot no longer fail.
 * **role:firewall**: With `firewall__fwbuilder_repo_url`, a repository without a compiled firewall for the host aborts the run before the role stops any firewall. Until now the role stopped a running firewalld, iptables, nftables or ufw first and left the host without a firewall.
 * **role:acme_sh**: On Debian and Ubuntu, certificates are installed with `systemctl reload apache2` instead of `systemctl reload httpd`, which does not exist there; certificates installed before keep the old command until they are issued again.
 * **role:mount**: A freshly created filesystem is relabelled for SELinux after mounting, so confined services such as Apache httpd can access it without a manual `restorecon`.

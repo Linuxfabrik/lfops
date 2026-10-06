@@ -269,6 +269,14 @@ argument_specs:
           Global log directive for requests not handled by any vHost
           (`CustomLog`). Unset omits the directive.
 
+      apache_httpd__mod_remoteip_internal_proxy:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Reverse proxies whose `X-Forwarded-For` header is believed
+          (`RemoteIPInternalProxy`). Defaults to `lfops__trusted_proxies`.
+
       apache_httpd__mod_security_coreruleset_url:
         type: 'str'
         required: false
