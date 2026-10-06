@@ -493,13 +493,6 @@ argument_specs:
           Packages installed via the OS package manager. Host-level
           override.
 
-      apache_httpd__skip_document_root_chown:
-        type: 'bool'
-        required: false
-        default: false
-        description: >-
-          Skip the recursive chown of the document root.
-
       apache_httpd__skip_mod_security_coreruleset:
         type: 'bool'
         required: false
