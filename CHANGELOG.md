@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_openvpn, playbook:repo_openvpn**: Add a role and playbook that deploy the OpenVPN 2.7 release repository of the OpenVPN community on RHEL 8, 9 and 10, where EPEL ships outdated OpenVPN versions.
 * **role:apache_solr**: Supports Solr 10, deployed as a single instance without ZooKeeper, as with Solr 9.
 * **role:apache_solr**: Supports Debian 12 and 13, RHEL 10 and Ubuntu 22.04, 24.04 and 26.04, with the Java the Solr version needs installed from the distribution.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.

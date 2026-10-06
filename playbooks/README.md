@@ -1002,6 +1002,14 @@ Calls the following roles (in order):
 * [repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch)
 
 
+## repo_openvpn.yml
+
+Calls the following roles (in order):
+
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `repo_openvpn__skip_repo_epel`
+* [repo_openvpn](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_openvpn)
+
+
 ## repo_postgresql.yml
 
 Calls the following roles (in order):
