@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.dnf_versionlock'
   hosts:
     - 'lfops_dnf_versionlock'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

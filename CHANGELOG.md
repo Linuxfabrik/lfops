@@ -75,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:setup_basic**: Checks the variables of all its roles, the compiled firewall in the Firewall Builder repository and the reachability of the Icinga2 master before it changes anything on the host, so a missing prerequisite no longer aborts the run halfway through, after SSH was already hardened.
+* Handlers that a role notified before a later task failed run anyway, so a changed configuration reaches the running service; until now it stayed inactive, also across later runs, which reported no change (all playbooks).
 * **playbook:acme_sh**: No longer runs the `apps` role, since the `acme_sh` role installs curl, openssl and tar itself.
 * **role:acme_sh**: Installs a certificate again when the installed file differs from the one acme.sh issued, which replaces a placeholder that an aborted run left behind.
 * **role:apache_solr**: Downloads Solr from the Apache CDN, which is much faster than the Apache archive, and falls back to the archive for releases the CDN no longer carries.
@@ -111,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:firewall**: With `firewall__fwbuilder_repo_url`, a repository without a compiled firewall for the host aborts the run before the role stops any firewall. Until now the role stopped a running firewalld, iptables, nftables or ufw first and left the host without a firewall.
 * **role:acme_sh**: On Debian and Ubuntu, certificates are installed with `systemctl reload apache2` instead of `systemctl reload httpd`, which does not exist there; certificates installed before keep the old command until they are issued again.
 * **role:mount**: A freshly created filesystem is relabelled for SELinux after mounting, so confined services such as Apache httpd can access it without a manual `restorecon`.
 * **role:mirror**: Repairs the ACL mask of `mirror__base_path` when a chmod narrowed it to `r-x`, which made reposync fail with `Permission denied` on every new repository.

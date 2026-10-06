@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.acme_sh'
   hosts:
     - 'lfops_acme_sh'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

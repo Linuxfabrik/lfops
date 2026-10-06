@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_nextcloud'
   hosts:
     - 'lfops_setup_nextcloud'
+  force_handlers: true
 
   # Redis and Valkey are interchangeable for Nextcloud: same protocol, same port. Which of the
   # two is available depends on the platform, so the defaults follow the OS - RHEL 10 has no

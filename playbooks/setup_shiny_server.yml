@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_shiny_server'
   hosts:
     - 'lfops_setup_shiny_server'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

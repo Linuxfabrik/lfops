@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.sshd'
   hosts:
     - 'lfops_sshd'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

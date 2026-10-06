@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.nodejs'
   hosts:
     - 'lfops_nodejs'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

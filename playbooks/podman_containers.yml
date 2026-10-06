@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.podman_containers'
   hosts:
     - 'lfops_podman_containers'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_icinga2_master'
   hosts:
     - 'lfops_setup_icinga2_master'
+  force_handlers: true
 
 
   vars:

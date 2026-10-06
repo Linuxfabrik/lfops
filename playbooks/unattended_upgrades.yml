@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.unattended_upgrades'
   hosts:
     - 'lfops_unattended_upgrades'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

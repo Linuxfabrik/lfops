@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.php'
   hosts:
     - 'lfops_php'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
