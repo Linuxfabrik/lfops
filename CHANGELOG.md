@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11.
+**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum.
 
 ### Breaking Changes
 
+* **role:apache_httpd**: `apache_httpd__mod_security_coreruleset_version` has no default anymore and accepts only the OWASP Core Rule Set releases the CRS project supports with security fixes, currently `4.25.2`, `4.29.0` and `4.30.0`. On hosts with `apache_httpd__skip_mod_security_coreruleset: false`, set it in the inventory, otherwise the run aborts.
 * **role:apache_solr**: Solr listens on `127.0.0.1` only and gets 180 seconds to stop gracefully, as upstream ships it, instead of listening on all addresses and being killed after 15 seconds. Set `apache_solr__http_bind_address: '0.0.0.0'` for a Solr that other hosts have to reach.
 * **role:bind**: named validates DNSSEC by default, as the bind package does, and follows the system-wide crypto policy. Forged or broken answers for signed zones are answered with `SERVFAIL` instead of being passed on. The `forward`, `static-stub` and `stub` zones in `bind__zones` are excluded from validation; list other internal zones below a signed domain or TLD in `bind__dnssec_validate_except`, or set `bind__dnssec_validation: false`. On RHEL 8 the role fails if it has zones to exclude, since BIND 9.11 cannot; set `bind__dnssec_validation: false` there ([#355](https://github.com/Linuxfabrik/lfops/issues/355), [#356](https://github.com/Linuxfabrik/lfops/issues/356)).
 * **role:system_update**: On Debian and Ubuntu, the system update no longer updates the database of an AIDE installed by hand, since it also accepted changes that were pending before the update. On such hosts the daily AIDE mail now lists the files each update changed. Deploy the aide role to have its database updated after updates again.
@@ -192,6 +193,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:apache_httpd**: The OWASP Core Rule Set archive is checked against a SHA-256 checksum before it is deployed, so a tampered or corrupted download aborts the run.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
 * **role:github_project_createrepo**: The service can only write to the repositories it maintains instead of to everything below `github_project_createrepo__base_path`, where it could replace other files such as a repository signing key. The role removes the ACL entries it granted before.
 * **role:kernel_modules**: Blocks further rarely used kernel modules by default that unprivileged users can get loaded and that are prone to local privilege escalations, among them `ah6`, `pppoe` and `sctp_diag` from [RHSB-2026-011](https://access.redhat.com/security/vulnerabilities/RHSB-2026-011). This stops Bluetooth, L2TP/IPsec, PPPoE, PPTP and IPsec AH; set `enabled: true` for the modules a host needs. The role README lists them all.

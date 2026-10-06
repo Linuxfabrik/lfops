@@ -209,11 +209,9 @@ apache_httpd__mod_http2_stream_max_mem_size: 65536
 apache_httpd__mod_http2_window_size: 65535
 
 # mod_security
-# normally nothing that you have to change
 # get details from https://coreruleset.org/docs/deployment/install/
 # origin: https://github.com/coreruleset/coreruleset/releases
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.30.0'
 
 # mod_ssl
 apache_httpd__mod_ssl_ssl_use_stapling: 'off'

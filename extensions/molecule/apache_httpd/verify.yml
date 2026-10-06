@@ -260,7 +260,7 @@
 
     - name: 'grep the release of the matching rule from <vhost>-error.log'
       ansible.builtin.command: >-
-        grep --only-matching --max-count 1 --perl-regexp
+        grep --only-matching --perl-regexp
         '\[id "932160"\].*\[ver "\KOWASP_CRS/[^"]+'
         {{ __molecule__error_log }}
       register: '__molecule__apache_httpd_crs_version_result'
@@ -277,10 +277,11 @@
       ansible.builtin.assert:
         that:
           - '__molecule__apache_httpd_curl_crs_result["stdout"] == "403"'
-          - '__molecule__apache_httpd_crs_version_result["stdout"] == "OWASP_CRS/" ~ apache_httpd__mod_security_coreruleset_version'
+          # the last match is the request above; earlier ones may stem from a release deployed before
+          - '__molecule__apache_httpd_crs_version_result["stdout_lines"] | last | d("") == "OWASP_CRS/" ~ apache_httpd__mod_security_coreruleset_version'
         fail_msg: >-
           expected 403 from OWASP_CRS/{{ apache_httpd__mod_security_coreruleset_version }}, got
           {{ __molecule__apache_httpd_curl_crs_result["stdout"] }} and
-          "{{ __molecule__apache_httpd_crs_version_result["stdout"] }}" in the error log
+          "{{ __molecule__apache_httpd_crs_version_result["stdout_lines"] | last | d("") }}" in the error log
       when:
         - 'not apache_httpd__skip_mod_security_coreruleset | bool'

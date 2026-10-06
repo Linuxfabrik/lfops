@@ -6,6 +6,25 @@
     - 'always'
 
 
+- block:
+
+  - name: 'Assert that the OWASP Core Rule Set version is set and supported'
+    ansible.builtin.assert:
+      that:
+        - 'apache_httpd__mod_security_coreruleset_version is defined'
+        - 'apache_httpd__mod_security_coreruleset_version in __apache_httpd__mod_security_coreruleset_sha256'
+      quiet: true
+      fail_msg: >-
+        Set `apache_httpd__mod_security_coreruleset_version` to a version this role supports:
+        {{ __apache_httpd__mod_security_coreruleset_sha256 | list | join(", ") }}.
+        Or set `apache_httpd__skip_mod_security_coreruleset: true`.
+
+  when:
+    - 'not apache_httpd__skip_mod_security_coreruleset | bool'
+  tags:
+    - 'always'
+
+
 # Manage required system packages (Installation)
 - block:
 
