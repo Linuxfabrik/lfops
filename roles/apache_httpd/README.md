@@ -727,6 +727,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 `php_set_handler`
 
 * Set the handler for PHP. Socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"`. Network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"`. Only rendered if `apache_httpd__skip_php_fpm` is `false`.
+* The handler only applies to PHP files that exist below the `DocumentRoot` of this host. For any other `.php` request Apache answers 404 itself instead of passing it to PHP-FPM, so a scanner probing for PHP files ties up no pool worker. A network-based handler therefore needs the scripts on this host as well, under the same path.
 * Applies to: app, localhost, wordpress.
 * Type: String.
 * Default: `'SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"'`
@@ -874,6 +875,24 @@ Example:
 ```yaml
 # optional - mod_log_config
 apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
+```
+
+
+## Optional Role Variables - mod_remoteip
+
+`apache_httpd__mod_remoteip_internal_proxy`
+
+* List of reverse proxies (IP addresses or CIDR ranges, IPv4 and IPv6) in front of this server. As soon as it lists one, the role enables `mod_remoteip` and takes the client address from the `X-Forwarded-For` header of requests that come from these proxies, so the access log, the error log, `Require ip` and fail2ban see the client instead of the proxy. See [RemoteIPInternalProxy](https://httpd.apache.org/docs/2.4/mod/mod_remoteip.html#remoteipinternalproxy).
+* Every address listed here can claim any client address, `127.0.0.1` included, which passes `Require local`. List the proxies only, never a whole client network.
+* Type: List.
+* Default: `lfops__trusted_proxies`, otherwise `[]` (`mod_remoteip` stays disabled)
+
+Example:
+```yaml
+# optional - mod_remoteip
+apache_httpd__mod_remoteip_internal_proxy:
+  - '192.0.2.4'
+  - '2001:db8::4'
 ```
 
 

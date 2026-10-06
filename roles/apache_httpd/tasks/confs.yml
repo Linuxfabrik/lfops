@@ -10,7 +10,7 @@
     mode: 0o644
     state: 'absent'
   loop: '{{ apache_httpd__conf__combined_var }}'
-  when: 'not item["enabled"] | d(true)
+  when: 'not item["enabled"] | d(true) | bool
         or item["state"] | d("present") == "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'
@@ -46,7 +46,7 @@
     force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check
   loop: '{{ apache_httpd__conf__combined_var }}'
   when:
-    - 'item["enabled"] | d(true)'
+    - 'item["enabled"] | d(true) | bool'
     - 'item["state"] | d("present") != "absent"'
   notify:
     - 'apache_httpd: httpd -t; systemctl reload httpd'

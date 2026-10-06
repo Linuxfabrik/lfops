@@ -34,6 +34,11 @@ apache_httpd__htpasswd__group_var:
     password: 'linuxfabrik'
     path: '/var/www/htpasswd-b'
 
+# verify.yml sends its requests from the host itself and sets X-Forwarded-For, so trusting the
+# loopback address as the proxy shows whether Apache logs the forwarded client instead of the peer.
+lfops__trusted_proxies:
+  - '127.0.0.1'
+
 # mod_security2 is off by default and needed for the Core Rule Set above.
 # The role enables the deflate conf, but leaves mod_deflate and mod_filter off, and the deflate conf
 # sits inside <IfModule> blocks for both. Without them nothing is compressed, so the compression

@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_httpd**: `lfops__trusted_proxies` lists the reverse proxies in front of a host, and Apache then logs the client from `X-Forwarded-For` instead of the proxy in the access and the error log.
 * **role:apache_solr**: Supports Solr 10, deployed as a single instance without ZooKeeper, as with Solr 9.
 * **role:apache_solr**: Supports Debian 12 and 13, RHEL 10 and Ubuntu 22.04, 24.04 and 26.04, with the Java the Solr version needs installed from the distribution.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
@@ -69,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
 * **role:apache_solr**: Downloads Solr from the Apache CDN, which is much faster than the Apache archive, and falls back to the archive for releases the CDN no longer carries.
 * **role:apache_solr**: The run aborts for a user whose password equals the username, since Solr 9.11 and newer reject such logins.
 * **role:apache_solr**: A role holding the `all` permission is allowed every request, also one that a more specific permission of another role matches first.

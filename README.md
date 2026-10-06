@@ -418,6 +418,18 @@ ansible-playbook linuxfabrik.lfops.nextcloud --limit myhost \
 
 Some roles restart a service and then talk to it in the same run, for example `keycloak` (provisions the bootstrap admin), `influxdb` (creates users and databases) and `opensearch` (runs `securityadmin.sh`). Do not use this variable during an initial installation of those roles.
 
+#### `lfops__trusted_proxies`
+
+List of the reverse proxies (IP addresses or CIDR ranges, IPv4 and IPv6) in front of a host. Roles that evaluate a forwarded client address believe it from these addresses only. Currently it is the default of `apache_httpd__mod_remoteip_internal_proxy` in the `apache_httpd` role, which enables `mod_remoteip` as soon as the list is not empty, so the logs, `Require ip` and fail2ban see the client instead of the proxy.
+
+Every address listed here can claim any client address, so list the proxies only, never a whole client network. The default is an empty list, which trusts no proxy.
+
+```yaml
+lfops__trusted_proxies:
+  - '192.0.2.4'
+  - '2001:db8::4'
+```
+
 The `icingadb` role restarts `icinga2`, which it does not own. A restart deferred there cannot be flushed through `icingadb`; use the `icinga2_master` role instead (`--tags icinga2_master:state --extra-vars='icinga2_master__service_state=restarted'`).
 
 ### Bitwarden Integration

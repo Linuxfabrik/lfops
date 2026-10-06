@@ -10,7 +10,9 @@
 # The htpasswd files are checked the same way: by logging in through Apache, not by reading them.
 # So is the compression: by the Content-Encoding of a real response, not by the deflate conf.
 # And the OWASP Core Rule Set: by an attack that the running Apache blocks, not by the rule files.
-- name: 'Verify apache_httpd serves HTTP/2, basic auth, compression and the Core Rule Set where it is configured to'
+# And the PHP handler and mod_remoteip: by the status of a request for a missing PHP file and by the
+# client address Apache logs for it.
+- name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
   become: true
@@ -285,3 +287,57 @@
           "{{ __molecule__apache_httpd_crs_version_result["stdout_lines"] | last | d("") }}" in the error log
       when:
         - 'not apache_httpd__skip_mod_security_coreruleset | bool'
+
+    # The scenario installs no PHP-FPM, so a request that Apache passes to the PHP handler fails
+    # with 503 on the missing socket. A missing PHP file has to be answered with 404 by Apache
+    # itself instead, which is what keeps scanners away from the pool. The request comes from the
+    # loopback address, which group_vars lists in lfops__trusted_proxies, so mod_remoteip has to log
+    # the address from X-Forwarded-For as the client.
+    - name: 'curl --header "X-Forwarded-For: 203.0.113.7" https://<vhost>/molecule-missing.php' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --header 'X-Forwarded-For: 203.0.113.7'
+        --output /dev/null
+        --write-out '%{http_code}'
+        https://{{ __molecule__server_name }}/molecule-missing.php
+      register: '__molecule__apache_httpd_curl_missing_php_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[1]["conf_server_name"] }}'
+
+    - name: 'grep molecule-missing.php <vhost>-error.log'
+      ansible.builtin.command: >-
+        grep --fixed-strings 'molecule-missing.php' {{ __molecule__error_log }}
+      register: '__molecule__apache_httpd_missing_php_log_result'
+      changed_when: false
+      failed_when: false
+      vars:
+        __molecule__error_log: >-
+          {{ (ansible_facts["os_family"] == "Debian") | ternary("/var/log/apache2", "/var/log/httpd") }}/{{
+          apache_httpd__vhosts__group_var[1]["conf_server_name"] }}-error.log
+
+    # mod_remoteip removes the header once it took the client from it, so the access log only
+    # names the client if its format logs %a rather than the peer (%h).
+    - name: 'grep molecule-missing.php <vhost>-access.log'
+      ansible.builtin.command: >-
+        grep --fixed-strings 'molecule-missing.php' {{ __molecule__access_log }}
+      register: '__molecule__apache_httpd_missing_php_access_result'
+      changed_when: false
+      failed_when: false
+      vars:
+        __molecule__access_log: >-
+          {{ (ansible_facts["os_family"] == "Debian") | ternary("/var/log/apache2", "/var/log/httpd") }}/{{
+          apache_httpd__vhosts__group_var[1]["conf_server_name"] }}-access.log
+
+    - name: 'Assert Apache answers a missing PHP file itself and logs the forwarded client'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_curl_missing_php_result["stdout"] == "404"'
+          - '__molecule__apache_httpd_missing_php_log_result["stdout"] is search("\\[client 203\\.0\\.113\\.7:\\d+\\] AH00128: ")'
+          - '__molecule__apache_httpd_missing_php_access_result["stdout"] is search("^203\\.0\\.113\\.7 ", multiline=true)'
+        fail_msg: >-
+          expected 404 and the client 203.0.113.7 in the error and the access log, got
+          {{ __molecule__apache_httpd_curl_missing_php_result["stdout"] }},
+          "{{ __molecule__apache_httpd_missing_php_log_result["stdout"] }}" and
+          "{{ __molecule__apache_httpd_missing_php_access_result["stdout"] }}"
