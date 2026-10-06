@@ -181,7 +181,7 @@
   - name: 'Deploy {{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin/solr.in.sh'
     ansible.builtin.template:
       backup: true
-      src: 'opt/solr/bin/solr.in.sh.j2'
+      src: 'opt/solr/bin/{{ __apache_solr__template_version }}-solr.in.sh.j2'
       dest: '{{ apache_solr__install_dir }}/solr-{{ apache_solr__version }}/bin/solr.in.sh'
       owner: 'root'
       group: 'root'
@@ -191,7 +191,7 @@
   - name: 'Deploy {{ apache_solr__log4j_props }}'
     ansible.builtin.template:
       backup: true
-      src: 'var/solr/log4j.xml.j2'
+      src: 'var/solr/{{ __apache_solr__template_version }}-log4j2.xml.j2'
       dest: '{{ apache_solr__log4j_props }}'
       owner: '{{ apache_solr__user }}'
       group: '{{ apache_solr__group }}'

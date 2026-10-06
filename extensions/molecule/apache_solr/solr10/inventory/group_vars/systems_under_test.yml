@@ -1,0 +1,28 @@
+apache_solr__checksum: 'sha512:825ab4e92a839802d9f5d570600b622881ddfe4f700cab569afb7d8220590a59d11088f4e10d4dcf9395073c35d73a420cc275a9ed7b18e2f84178bfcb49ae82'
+apache_solr__heap: '640m'
+apache_solr__version: '10.0.0'
+
+# A role that holds several permissions and a role holding 'all' cover how the role translates
+# its role-to-permissions list into Solr's permission entries.
+apache_solr__roles__host_var:
+  - name: 'reader'
+    permissions:
+      - 'health'
+      - 'read'
+      - 'schema-read'
+  - name: 'admin'
+    permissions:
+      - 'all'
+
+apache_solr__users__host_var:
+  - username: 'solr-admin'
+    password: 'linuxfabrik'
+    role: 'admin'
+  - username: 'solr-reader'
+    password: 'linuxfabrik-reader'
+    role: 'reader'
+    state: 'present'
+  - username: 'solr-removed'
+    password: 'linuxfabrik-removed'
+    role: 'admin'
+    state: 'absent'

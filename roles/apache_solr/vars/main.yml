@@ -1,3 +1,7 @@
+# Solr 10 renamed the variables of solr.in.sh and the log directory property of log4j2.xml, so the
+# role ships both files once for Solr 10 and once for the older versions.
+__apache_solr__template_version: '{{ "10" if apache_solr__version is version("10.0.0", ">=") else "9" }}'
+
 # the users that end up in security.json. combine_lod keeps the `state` subkey as given, so
 # entries without it count as present.
 __apache_solr__present_users: '{{

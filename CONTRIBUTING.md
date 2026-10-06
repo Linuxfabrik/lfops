@@ -638,7 +638,7 @@ Before adding an `allow` rule, work out what it buys an attacker **on top of** t
 
 #### Other
 
-* `apache_solr`: OpenJDK package per platform and Solr major version via `vars/<platform>.yml` (RHEL 10 and Debian 13 ship no Java 17), asserted per platform; `security.json` hashes computed on the controller with a host- and user-derived salt, so the file only changes with a password.
+* `apache_solr`: OpenJDK package per platform and Solr major version via `vars/<platform>.yml` (RHEL 10 and Debian 13 ship no Java 17), asserted per platform; `security.json` hashes computed on the controller with a host- and user-derived salt, so the file only changes with a password; `solr.in.sh` and `log4j2.xml` per Solr major (`9-`, `10-`), since Solr 10 renamed their variables.
 * `mongodb`: `state: skip` in `mongodb__databases` / `mongodb__users` leaves an entry untouched.
 * `moodle`: patch tag discovered via `api.github.com/repos/moodle/moodle/tags`, first match of `^v<configured-version>`.
 * `nextcloud`: a state file skips install-only tasks after the initial installation; concise "Tags" README section.

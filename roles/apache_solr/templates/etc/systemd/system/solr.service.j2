@@ -1,12 +1,18 @@
 # {{ ansible_managed }}
-# 2026100501
+# 2026100601
 
 [Unit]
 After=syslog.target network.target
 Description=Solr Service
 
 [Service]
+{% if apache_solr__version is version('10.0.0', '>=') %}
+# Solr 10 starts in SolrCloud mode with an embedded ZooKeeper by default; the role runs a single
+# instance without ZooKeeper, as with Solr 9
+ExecStart={{ apache_solr__install_dir }}/solr/bin/solr start --user-managed
+{% else %}
 ExecStart={{ apache_solr__install_dir }}/solr/bin/solr start
+{% endif %}
 ExecStop={{ apache_solr__install_dir }}/solr/bin/solr stop
 Group={{ apache_solr__group }}
 LimitNOFILE=65000

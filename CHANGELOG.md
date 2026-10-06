@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_solr**: Supports Solr 10, deployed as a single instance without ZooKeeper, as with Solr 9.
 * **role:apache_solr**: Supports Debian 12 and 13, RHEL 10 and Ubuntu 22.04, 24.04 and 26.04, with the Java the Solr version needs installed from the distribution.
 * **role:bind**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
