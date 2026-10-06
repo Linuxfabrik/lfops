@@ -773,6 +773,7 @@ Calls the following roles (in order):
 
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `openvpn_server__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `openvpn_server__skip_repo_epel`
+* [repo_openvpn](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_openvpn): `openvpn_server__skip_repo_openvpn`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `openvpn_server__skip_policycoreutils`
 * [openvpn_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/openvpn_server)
 
@@ -1000,6 +1001,14 @@ Calls the following roles (in order):
 Calls the following roles (in order):
 
 * [repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch)
+
+
+## repo_openvpn.yml
+
+Calls the following roles (in order):
+
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `repo_openvpn__skip_repo_epel`
+* [repo_openvpn](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_openvpn)
 
 
 ## repo_postgresql.yml

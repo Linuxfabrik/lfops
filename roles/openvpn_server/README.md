@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.openvpn_server
 
-This role installs and configures [OpenVPN](https://openvpn.net/) as a server. Currently, the only supported configuration is a multi-client server. A corresponding client config will be generated to `/tmp/` on the ansible control node.
+This role installs and configures [OpenVPN](https://openvpn.net/) 2.7 as a server. Currently, the only supported configuration is a multi-client server. A corresponding client config will be generated to `/tmp/` on the ansible control node.
 
 This role does not configure OpenVPN logging via `log-append /var/log/openvpn.log`. Instead it configures OpenVPN to use Journald, because there we get log entries including timestamps etc. To inspect the logs, use `journalctl --unit=openvpn-server@server --follow` for example.
 
@@ -10,6 +10,10 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 
 ## How the Role Behaves
 
+* The role requires OpenVPN 2.7 or newer. It installs `openvpn >= 2.7`, which also upgrades an older OpenVPN, and aborts with a hint to [repo_openvpn](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_openvpn) if no repository offers it.
+* The package is installed without weak dependencies. The OpenVPN 2.7 packages recommend `kmod-ovpn` for data channel offload, which pulls DKMS, a compiler and the kernel headers onto the server, while RHEL cannot use it: RHEL 10 ships a kernel older than 6.16, and on RHEL 8 and 9 the SELinux policy keeps OpenVPN from using the module. On RHEL 8 and 9 the role therefore switches data channel offload off (`disable-dco`), which also spares the SELinux denial OpenVPN would otherwise log at every start.
+* An upgrade restarts `openvpn-server@server.service` from within the package, which drops every connected client. On RHEL 8 that restart still runs with the unit file of the old package. The role does not restart the service a second time in the run that upgrades OpenVPN, even if the configuration changed; it ends with a message to run `systemctl daemon-reload && systemctl restart openvpn-server@server.service` in a maintenance window.
+* The TLS settings follow the OpenVPN 2.7 defaults, with two exceptions. Client certificates are checked against the OpenSSL security level 2 (`tls-cert-profile preferred`) instead of level 1, so certificates with RSA keys below 2048 bits or SHA-1 signatures are refused. And a client certificate must carry the TLS Web Client Authentication extended key usage (`remote-cert-tls client`). The data channel uses AES-256-GCM, AES-128-GCM or ChaCha20-Poly1305, whichever the client supports, and there are no Diffie-Hellman parameters to manage.
 * A change to `/etc/openvpn/server/server.conf`, to the server certificate (`server.p12`) or to the Diffie-Hellman file restarts `openvpn-server@server.service`, because OpenVPN reads all three only at startup. The restart drops every connected client, which then reconnects on its own. Defer it with `lfops__skip_restart_handlers`, and note that the restart is skipped when the service was just started in the same run or when `openvpn_server__service_state` is `stopped`.
 * A change to the certificate revocation list does **not** restart the service. OpenVPN reloads the file whenever it changed before each TLS negotiation, so a revoked certificate is refused from the next connection attempt onwards, without an outage for the other clients.
 * A change to a client config (CCD) does **not** restart the service either. OpenVPN reads a client's file when that client connects, so the change applies the next time that client reconnects, while the other clients stay up.
@@ -21,7 +25,8 @@ This role does not configure OpenVPN logging via `log-append /var/log/openvpn.lo
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* The OpenVPN repository must be enabled (role: [linuxfabrik.lfops.repo_openvpn](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_openvpn)). It is the recommended source for OpenVPN 2.7 on RHEL 8 and 9, where EPEL ships outdated versions (2.4 and 2.5). On RHEL 10, EPEL ships 2.7 as well, but lags behind.
+* The EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)). OpenVPN needs `pkcs11-helper` from it on RHEL 8 and 10.
 * Python 3 and the python3-policycoreutils module must be installed (required for the SELinux Ansible tasks) (role: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)).
 
 
@@ -35,6 +40,7 @@ kernel_modules__modules__host_var:
   - name: 'tun'
     enabled: true
 ```
+* Issue client certificates with an RSA key of at least 2048 bits (or an EC key of at least 224 bits), a SHA-256 or stronger signature and the TLS Web Client Authentication extended key usage. The server refuses other certificates. RSA 2048 or ECDSA P-256 are enough; larger keys slow down every handshake without a security gain that matters here.
 * Create a certificate for the OpenVPN server and save it on the ansible control node as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/server.p12`.
 * Generate a certificate revocation list and save it on the ansible control node as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/crl.pem`.
 
@@ -118,15 +124,9 @@ For details see `man openvpn`.
 * Type: Bool.
 * Default: `false`
 
-`openvpn_server__dh`
+`openvpn_server__duplicate_cn`
 
-* File containing Diffie Hellman parameters in .pem format (required for `--tls-server` only). The file will be created automatically.
-* Type: String.
-* Default: `'/etc/openvpn/dh2048.pem'`
-
-`openvpn_server__dh_skip_deploy`
-
-* Skip the creation of the Diffie Hellman file.
+* Allow several clients with the same certificate to be connected at the same time. Leave it off when every client has its own certificate: a copied certificate would otherwise go unnoticed, and the per-client settings in `openvpn_server__client_configs` (for example a fixed IP address) collide when two clients share a common name.
 * Type: Bool.
 * Default: `false`
 
@@ -184,8 +184,7 @@ openvpn_server__client_configs:
 openvpn_server__client_netmask: '255.255.255.0'
 openvpn_server__crl_verify: '/etc/openvpn/server/crl.pem'
 openvpn_server__crl_verify_skip_deploy: false
-openvpn_server__dh: '/etc/openvpn/dh2048.pem'
-openvpn_server__dh_skip_deploy: false
+openvpn_server__duplicate_cn: false
 openvpn_server__pkcs12: '/etc/openvpn/server/server.p12'
 openvpn_server__pkcs12_skip_deploy: false
 openvpn_server__port: 1194
@@ -200,20 +199,17 @@ openvpn_server__service_state: 'started'
 
 ## Troubleshooting
 
-**`SyntaxError: future feature annotations is not defined` when generating DH parameters**
+**`openvpn_server: The role requires OpenVPN 2.7 or newer, but dnf cannot install it`**
 
-```
-TASK [linuxfabrik.lfops.openvpn_server : Generate DH Parameters with 2048 bits size]
-An exception occurred during task execution. To see the full traceback, use -vvv. The error was: SyntaxError: future feature annotations is not defined
-fatal: [host1]: FAILED! => changed=false
-  module_stderr: |-
-    Traceback (most recent call last):
-    ...
-    SyntaxError: future feature annotations is not defined
-```
+No enabled repository offers OpenVPN 2.7. Run the role through the `openvpn_server` playbook, which enables the OpenVPN repository with [repo_openvpn](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_openvpn), or run that playbook first if you set `openvpn_server__skip_repo_openvpn`.
 
-* Occurs when running against a host with Python <=3.6, which is not supported in community.crypto >=3.0.0 (see their [CHANGELOG](https://github.com/ansible-collections/community.crypto/blob/main/CHANGELOG.md#v300)).
-* As a workaround the collection can be downgraded: `ansible-galaxy collection install --force 'community.crypto:<3.0.0'`
+**A client cannot connect, the server logs `VERIFY ERROR`, `ee key too small` or `ca md too weak`**
+
+The client certificate does not meet OpenSSL security level 2, see "Requirements". Issue a new certificate with an RSA key of at least 2048 bits and a SHA-256 signature.
+
+**A client cannot connect, the server logs `Certificate does not have extended key usage extension` or `--remote-cert-tls client` fails**
+
+The client certificate lacks the TLS Web Client Authentication extended key usage, see "Requirements". Issue a new client certificate from a client template.
 
 
 ## License

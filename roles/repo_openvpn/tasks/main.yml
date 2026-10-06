@@ -1,0 +1,46 @@
+- block:
+
+  - name: 'Assert that the platform is supported'
+    ansible.builtin.assert:
+      that:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] in ["8", "9", "10"]'
+      fail_msg: 'repo_openvpn: {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_version"] }} is not supported by this role. Supported platforms: RHEL 8, 9 and 10 and their derivatives.'
+      quiet: true
+
+  tags:
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
+
+- block:
+
+  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-copr-OpenVPN-openvpn-release-2.7'
+    ansible.builtin.copy:
+      src: 'etc/pki/rpm-gpg/RPM-GPG-KEY-copr-OpenVPN-openvpn-release-2.7'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-copr-OpenVPN-openvpn-release-2.7'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  # same file and repo id as `dnf copr enable @OpenVPN/openvpn-release-2.7`, so a repository
+  # enabled by hand before is taken over instead of being defined twice
+  - name: 'Deploy /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7.repo (mirror: {{ repo_openvpn__mirror_url }})'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/yum.repos.d/_copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7.repo.j2'
+      dest: '/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7.repo'
+      owner: 'root'
+      group: 'root'
+      # 0600 while the file carries the mirror credentials
+      mode: '{{ "0o600" if repo_openvpn__basic_auth_login | default({}) | length > 0 else "0o644" }}'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7.repo'
+
+  tags:
+    - 'repo_openvpn'

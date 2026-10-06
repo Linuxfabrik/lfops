@@ -31,6 +31,10 @@
       when:
         - 'not openvpn_server__skip_repo_epel | d(false)'
 
+    - role: 'linuxfabrik.lfops.repo_openvpn'
+      when:
+        - 'not openvpn_server__skip_repo_openvpn | d(false)'
+
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'

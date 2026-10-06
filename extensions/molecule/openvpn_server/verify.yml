@@ -1,0 +1,136 @@
+# verify.yml runs after converge and again after the idempotence step. It asks the running
+# server, not the deployed files: a real OpenVPN client on the same host connects through the
+# configured port, the server lists it as connected and passes data channel traffic, and the
+# server refuses a client certificate without the client key usage (`remote-cert-tls client`).
+# A 1024-bit RSA client certificate cannot be tested here: OpenSSL on RHEL 8 to 10 already
+# refuses to load it on the client side (verified with OpenVPN 2.7.7, OpenSSL 1.1.1k and 3.5.5).
+- name: 'Verify openvpn_server'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    # service_facts reports the unit file state of the template (`indirect`), not of the
+    # instance, so ask systemd for the instance
+    - name: 'systemctl is-enabled openvpn-server@server.service; systemctl is-active openvpn-server@server.service' # noqa command-instead-of-module (read-only state query of a template instance)
+      ansible.builtin.command: 'systemctl {{ item }} openvpn-server@server.service'
+      register: '__molecule__unit_result'
+      changed_when: false
+      loop:
+        - 'is-enabled'
+        - 'is-active'
+
+    - name: 'Assert openvpn-server@server.service is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__unit_result["results"] | map(attribute="stdout") | list == ["enabled", "active"]'
+        fail_msg: '{{ __molecule__unit_result["results"] | map(attribute="stdout") | list }}'
+
+    - name: 'rpm --query --queryformat=%{VERSION} openvpn' # noqa command-instead-of-module (read-only query)
+      ansible.builtin.command: 'rpm --query --queryformat=%{VERSION} openvpn'
+      register: '__molecule__version_result'
+      changed_when: false
+
+    - name: 'rpm --query kmod-ovpn dkms' # noqa command-instead-of-module (read-only query)
+      ansible.builtin.command: 'rpm --query kmod-ovpn dkms'
+      register: '__molecule__weak_deps_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert OpenVPN 2.7 is installed without the DKMS module'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__version_result["stdout"] is version("2.7", ">=")'
+          - '__molecule__weak_deps_result["stdout_lines"] | select("search", "is not installed") | list | length == 2'
+        fail_msg: '{{ __molecule__version_result["stdout"] }} / {{ __molecule__weak_deps_result["stdout"] }}'
+
+    # verify.yml runs twice against the same VM
+    - name: 'systemctl stop molecule-openvpn-*' # noqa command-instead-of-module (transient units that may not exist)
+      ansible.builtin.command: 'systemctl stop molecule-openvpn-client molecule-openvpn-client-noeku'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Remember the time before the clients connect'
+      ansible.builtin.command: 'date +%s'
+      register: '__molecule__start_result'
+      changed_when: false
+
+    # one transient unit per client certificate, so the client runs in its own SELinux domain
+    # (init_t transitions to openvpn_t) and logs to the journal
+    - name: 'systemd-run --unit=molecule-openvpn-<certificate> openvpn --client ...'
+      ansible.builtin.command: >-
+        systemd-run --unit=molecule-openvpn-{{ item }} --collect
+        openvpn --client --dev tun --proto udp --remote 127.0.0.1 {{ openvpn_server__port | d(1194) }}
+        --nobind --route-nopull --remote-cert-tls server --verify-x509-name server name
+        --pkcs12 /etc/pki/molecule-openvpn/{{ item }}.p12 --connect-retry-max 1 --verb 3
+        --disable-dco
+      changed_when: false
+      loop:
+        - 'client'
+        - 'client-noeku'
+
+    # keepalive pings travel over the data channel every 10 seconds, so after the handshake
+    # the server sees bytes from the client
+    - name: 'Wait for the server to account data channel traffic from the client'
+      ansible.builtin.shell:
+        cmd: 'grep "^CLIENT_LIST,client," /var/log/openvpn-status.log'
+        executable: '/bin/bash'
+      register: '__molecule__status_result'
+      until: '__molecule__status_result["rc"] == 0 and (__molecule__status_result["stdout"].split(",")[5] | int) > 0'
+      retries: 12
+      delay: 10
+      changed_when: false
+
+    - name: 'journalctl --unit=openvpn-server@server.service --since=@<start>'
+      ansible.builtin.command: 'journalctl --unit=openvpn-server@server.service --since=@{{ __molecule__start_result["stdout"] }} --no-pager --output=cat'
+      register: '__molecule__server_log_result'
+      changed_when: false
+
+    - name: 'journalctl --unit=molecule-openvpn-client --since=@<start>'
+      ansible.builtin.command: 'journalctl --unit=molecule-openvpn-client --since=@{{ __molecule__start_result["stdout"] }} --no-pager --output=cat'
+      register: '__molecule__client_log_result'
+      changed_when: false
+
+    - name: 'Assert the client negotiated an AEAD data channel over TLS 1.3'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__client_log_result["stdout"] is search("Initialization Sequence Completed")'
+          - '__molecule__client_log_result["stdout"] is search("Control Channel: TLSv1.3")'
+          - '__molecule__client_log_result["stdout"] is search("Data Channel: cipher .AES-256-GCM")'
+        fail_msg: '{{ __molecule__client_log_result["stdout"] }}'
+
+    - name: 'Assert the server refused the client certificate without key usage'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__server_log_result["stdout"] is search("Certificate does not have extended key usage extension")'
+        fail_msg: '{{ __molecule__server_log_result["stdout"] }}'
+
+    # the server must not trip over SELinux, including the data channel offload probe that
+    # the role switches off on RHEL 8 and 9
+    - name: 'grep "denied.*comm=\"openvpn\"" /var/log/audit/audit.log'
+      ansible.builtin.command: 'grep --count "denied.*comm=\"openvpn\"" /var/log/audit/audit.log'
+      register: '__molecule__avc_result'
+      changed_when: false
+      failed_when: '__molecule__avc_result["rc"] > 1'
+
+    - name: 'Assert SELinux denied OpenVPN nothing'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__avc_result["stdout"] == "0"'
+        fail_msg: '{{ __molecule__avc_result["stdout"] }} AVC denials for openvpn in /var/log/audit/audit.log'
+
+    - name: 'grep "^CLIENT_LIST" /var/log/openvpn-status.log'
+      ansible.builtin.command: 'grep "^CLIENT_LIST" /var/log/openvpn-status.log'
+      register: '__molecule__clients_result'
+      changed_when: false
+
+    - name: 'Assert only the valid client is connected'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__clients_result["stdout_lines"] | length == 1'
+        fail_msg: '{{ __molecule__clients_result["stdout"] }}'
+
+    - name: 'systemctl stop molecule-openvpn-*' # noqa command-instead-of-module (transient units that may not exist)
+      ansible.builtin.command: 'systemctl stop molecule-openvpn-client molecule-openvpn-client-noeku'
+      changed_when: false
+      failed_when: false

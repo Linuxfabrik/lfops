@@ -1,9 +1,6 @@
-auth SHA384
 auth-nocache
-tls-cipher TLS-RSA-WITH-AES-256-GCM-SHA384:TLS-RSA-WITH-AES-256-CBC-SHA256:TLS-RSA-WITH-AES-256-CBC-SHA
 tls-version-min 1.2
 remote-cert-tls server
-data-ciphers-fallback AES-256-GCM
 
 pkcs12 /etc/openvpn/{{ inventory_hostname }}.p12
 verify-x509-name {{ inventory_hostname }} name
@@ -12,7 +9,6 @@ dev tun
 client
 nobind
 proto udp
-persist-key
 persist-tun
 keepalive 10 60
 
