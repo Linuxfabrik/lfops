@@ -1,0 +1,31 @@
+# Looks up the latest release of the Linuxfabrik Monitoring Plugins once per Molecule run and writes
+# it to the scenario's ephemeral directory. A scenario that deploys the plugins imports this at the
+# top of its converge.yml and reads the file in its group_vars, so the tests always run against the
+# current release instead of a version that was pinned once and never raised again:
+#
+#     monitoring_plugins__version: '{{ lookup("ansible.builtin.file",
+#         lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/monitoring-plugins-version") }}'
+#
+# The file lookup also works in the nested ansible-playbook runs some scenarios start, which a fact
+# set here would not reach. It is read on every use, so the GitHub API is only asked once per run.
+- name: 'Look up the latest monitoring plugins release'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'curl https://api.github.com/repos/Linuxfabrik/monitoring-plugins/releases/latest'
+      ansible.builtin.uri:
+        url: 'https://api.github.com/repos/Linuxfabrik/monitoring-plugins/releases/latest'
+        headers:
+          Accept: 'application/vnd.github+json'
+      register: '__molecule__monitoring_plugins_release_result'
+      retries: 3 # ride out a brief outage of the GitHub API
+      delay: 10
+      check_mode: false # read-only
+
+    - name: 'Write the release to $MOLECULE_EPHEMERAL_DIRECTORY/monitoring-plugins-version'
+      ansible.builtin.copy:
+        content: '{{ __molecule__monitoring_plugins_release_result["json"]["tag_name"] | regex_replace("^v", "") }}'
+        dest: '{{ lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") }}/monitoring-plugins-version'
+        mode: 0o644

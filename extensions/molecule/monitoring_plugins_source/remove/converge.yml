@@ -1,3 +1,7 @@
+- name: 'Look up the latest monitoring plugins release'
+  ansible.builtin.import_playbook: '../../playbooks/monitoring-plugins-latest.yml'
+
+
 # A playbook cannot select tags for itself, so this play calls the playbook under test as separate
 # ansible-playbook runs against the same inventory and limit, the way an admin does it. The first
 # run installs the package, the second removes it with the tags the README names. Every converge,

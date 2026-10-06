@@ -12,7 +12,9 @@ mailto_root__from: 'root@localhost'
 mailto_root__to:
   - 'root@localhost'
 
-monitoring_plugins__version: '5.0.0'
+# The latest release, see playbooks/monitoring-plugins-latest.yml, which converge.yml imports.
+monitoring_plugins__version: '{{ lookup("ansible.builtin.file",
+    lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/monitoring-plugins-version") }}'
 
 postfix__recipient_canonicals__host_var:
   - pattern: '/^.+@example.com$/'
