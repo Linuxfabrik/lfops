@@ -52,5 +52,35 @@
       fstype: '{{ item["fstype"] }}'
     loop: '{{ mount__mounts__combined_var }}'
 
+  # A freshly created filesystem carries no SELinux labels, so everything on it is unlabeled_t
+  # and confined services such as httpd are denied access ("does not contain SELinux labels"
+  # when mounting). Relabel a mounted filesystem whose mount point is still unlabeled, which
+  # happens once per new volume. NFS and CIFS get their context from the mount options and
+  # are never unlabeled_t, so they are left alone.
+  - name: 'stat --format=%C mount-point'
+    ansible.builtin.command: 'stat --format=%C {{ item["path"] }}'
+    loop: '{{ mount__mounts__combined_var | selectattr("state", "undefined") | list
+        + mount__mounts__combined_var | selectattr("state", "defined") | selectattr("state", "in", ["mounted", "remounted", "ephemeral"]) | list }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    register: '__mount__context_result'
+    changed_when: false # read-only
+    # under --check the mount point of a new mount does not exist yet; without output the
+    # relabelling below is skipped, and a real run fails at "Mount volumes" before it gets here
+    failed_when: false
+    check_mode: false # read-only, also run in check mode
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  - name: 'restorecon -R mount-point'
+    ansible.builtin.command: 'restorecon -R {{ item["item"]["path"] }}'
+    loop: '{{ __mount__context_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"]["path"] }}'
+    when:
+      - 'item["stdout"] is defined'
+      - 'item["stdout"] is search(":unlabeled_t:")'
+    changed_when: true # only runs when the mount point was unlabeled
+
   tags:
     - 'mount'

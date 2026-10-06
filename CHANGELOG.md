@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mount**: A freshly created filesystem is relabelled for SELinux after mounting, so confined services such as Apache httpd can access it without a manual `restorecon`.
 * **role:mirror**: Repairs the ACL mask of `mirror__base_path` when a chmod narrowed it to `r-x`, which made reposync fail with `Permission denied` on every new repository.
 * **role:mirror**: Runs on minimal installations such as Rocky 10, where it aborted for lack of `setfacl`, since the role installs acl, createrepo and git itself instead of the mirror playbook running the apps role.
 * **role:openvpn_server**: The role runs on a minimal RHEL 10 installation, where it aborted for lack of `openssl` while generating Diffie-Hellman parameters, which OpenVPN 2.7 no longer needs.

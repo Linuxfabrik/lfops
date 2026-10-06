@@ -6,11 +6,17 @@ This role installs NFS and CIFS client utilities when necessary and configures m
 *Available since LFOps `3.0.0`.*
 
 
+## How the Role Behaves
+
+* A freshly created filesystem carries no SELinux labels, so confined services such as Apache httpd are denied access to it. When SELinux is not disabled and the mount point of a mounted filesystem is still `unlabeled_t`, the role runs `restorecon -R` on it once. A filesystem that already carries labels is not touched, so a context set by hand, for example with `chcon`, survives. NFS and CIFS shares get their context from the mount options and are never relabeled.
+
+
 ## Tags
 
 `mount`
 
-* Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` und mounts the volumes.
+* Installs nfs-utils/cifs on RedHat-Based systems or nfs-common/cifs-utils on Debian-Based systems, creates the corresponding directories for the mount points, alters `/etc/fstab` and mounts the volumes.
+* Relabels a mounted filesystem with `restorecon -R` while its mount point carries no SELinux label (`unlabeled_t`), as on a freshly created volume.
 * Triggers: none.
 
 
