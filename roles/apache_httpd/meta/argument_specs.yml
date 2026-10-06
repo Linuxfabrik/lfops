@@ -493,6 +493,33 @@ argument_specs:
           Packages installed via the OS package manager. Host-level
           override.
 
+      apache_httpd__placeholder_certificates__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Certificates that get a self-signed placeholder while missing.
+          Dependent-role injection.
+
+      apache_httpd__placeholder_certificates__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Certificates that get a self-signed placeholder while missing.
+          Group-level override.
+
+      apache_httpd__placeholder_certificates__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Certificates that get a self-signed placeholder while missing.
+          Host-level override.
+
       apache_httpd__skip_mod_security_coreruleset:
         type: 'bool'
         required: false

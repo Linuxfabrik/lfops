@@ -1,0 +1,28 @@
+# Where certificates are installed to, and how the local web server is reloaded afterwards, per
+# platform. Kept here instead of in vars/<os>.yml, since the placeholder certificates below are
+# consumed by apache_httpd, which runs before this role (see "OS-specific Dependent Variables"
+# in CONTRIBUTING.md). `d("")` keeps them valid on platforms the role does not support.
+__acme_sh__platform:
+  Debian:
+    cert_path: '/etc/ssl/certs'
+    key_path: '/etc/ssl/private'
+    reload_cmd: 'systemctl reload apache2'
+  RedHat:
+    cert_path: '/etc/pki/tls/certs'
+    key_path: '/etc/pki/tls/private'
+    reload_cmd: 'systemctl reload httpd'
+__acme_sh__cert_path: '{{ (__acme_sh__platform | linuxfabrik.lfops.platform_select(ansible_facts, default={}))["cert_path"] | d("") }}'
+__acme_sh__key_path: '{{ (__acme_sh__platform | linuxfabrik.lfops.platform_select(ansible_facts, default={}))["key_path"] | d("") }}'
+__acme_sh__reload_cmd: '{{ (__acme_sh__platform | linuxfabrik.lfops.platform_select(ansible_facts, default={}))["reload_cmd"] | d("") }}'
+
+# A self-signed placeholder at every path this role installs a certificate to, so that
+# apache_httpd can start a vHost that references it before the certificate is issued. This role
+# replaces the placeholder at the same path once the certificate is issued.
+# `| d([])` keeps this valid on hosts that do not run this role.
+acme_sh__apache_httpd__placeholder_certificates__dependent_var: '{{
+    acme_sh__certificates | d([])
+    | map(attribute="name")
+    | map("community.general.dict_kv", "name")
+    | map("combine", {"cert_path": __acme_sh__cert_path, "key_path": __acme_sh__key_path})
+    | list
+  }}'

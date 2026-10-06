@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:apache_httpd**: Creates a self-signed placeholder for every certificate in `apache_httpd__placeholder_certificates__*_var` that does not exist yet, so a TLS vHost starts before its certificate is issued; the playbooks fill the list from `acme_sh__certificates`.
+* `acme_sh` can run as the last role of every playbook with `apache_httpd`, so a fresh host gets its Let's Encrypt certificates in a single run; enable it with the playbook's `acme_sh` skip variable (`apache_httpd` and the `setup_*` playbooks with `apache_httpd`).
 * **role:repo_openvpn, playbook:repo_openvpn**: Add a role and playbook that deploy the OpenVPN 2.7 release repository of the OpenVPN community on RHEL 8, 9 and 10, where EPEL ships outdated OpenVPN versions.
 * **role:openvpn_server**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:apache_solr**: Supports Solr 10, deployed as a single instance without ZooKeeper, as with Solr 9.
@@ -73,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:acme_sh**: No longer runs the `apps` role, since the `acme_sh` role installs curl, openssl and tar itself.
+* **role:acme_sh**: Installs a certificate again when the installed file differs from the one acme.sh issued, which replaces a placeholder that an aborted run left behind.
 * **role:apache_solr**: Downloads Solr from the Apache CDN, which is much faster than the Apache archive, and falls back to the archive for releases the CDN no longer carries.
 * **role:apache_solr**: The run aborts for a user whose password equals the username, since Solr 9.11 and newer reject such logins.
 * **role:apache_solr**: A role holding the `all` permission is allowed every request, also one that a more specific permission of another role matches first.
@@ -107,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:acme_sh**: On Debian and Ubuntu, certificates are installed with `systemctl reload apache2` instead of `systemctl reload httpd`, which does not exist there; certificates installed before keep the old command until they are issued again.
 * **role:mount**: A freshly created filesystem is relabelled for SELinux after mounting, so confined services such as Apache httpd can access it without a manual `restorecon`.
 * **role:mirror**: Repairs the ACL mask of `mirror__base_path` when a chmod narrowed it to `r-x`, which made reposync fail with `Permission denied` on every new repository.
 * **role:mirror**: Runs on minimal installations such as Rocky 10, where it aborted for lack of `setfacl`, since the role installs acl, createrepo and git itself instead of the mirror playbook running the apps role.
