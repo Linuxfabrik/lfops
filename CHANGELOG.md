@@ -116,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_epel**: On RHEL 10 hosts with `repo_epel__mirror_url` set, EPEL is installed from the mirror. Until now dnf failed to download the EPEL metadata, which also broke every other dnf call on the host.
 * **role:php**: Apache starts after PHP-FPM at boot, so the first PHP requests after a reboot no longer fail.
 * **role:firewall**: With `firewall__fwbuilder_repo_url`, a repository without a compiled firewall for the host aborts the run before the role stops any firewall. Until now the role stopped a running firewalld, iptables, nftables or ufw first and left the host without a firewall.
 * **role:acme_sh**: On Debian and Ubuntu, certificates are installed with `systemctl reload apache2` instead of `systemctl reload httpd`, which does not exist there; certificates installed before keep the old command until they are issued again.
