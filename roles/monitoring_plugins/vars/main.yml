@@ -1,0 +1,17 @@
+# The psi-* check plugins read /proc/pressure, which a kernel built with
+# CONFIG_PSI_DEFAULT_DISABLED=y only creates when booted with psi=1 (kernel/sched/psi.c). Kernel
+# configs verified 2026-10-06 from the distribution kernel packages: RHEL family 8, 9 and 10 ship
+# the option set (kernel-core 4.18.0-553.171.1.el8_10, 5.14.0-687.54.1.el9_8,
+# 6.12.0-211.61.1.el10_2), Fedora 44, Debian 12 and 13 and Ubuntu 22.04, 24.04 and 26.04 track
+# pressure by default and need nothing.
+# Published here and not in defaults/, because setup_basic runs the bootloader role before this
+# role, see "OS-specific Dependent Variables" in CONTRIBUTING.md.
+__monitoring_plugins__bootloader__cmdline_options__dependent_var:
+  Fedora: []
+  RedHat:
+    - name: 'psi'
+      value: 1
+monitoring_plugins__bootloader__cmdline_options__dependent_var: '{{
+    __monitoring_plugins__bootloader__cmdline_options__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
+  }}'

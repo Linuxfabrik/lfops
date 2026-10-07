@@ -232,3 +232,59 @@
     - name: 'Assert that the duplicity venv is absent while duplicity is skipped'
       ansible.builtin.assert:
         that: 'not __molecule__duplicity_venv_stat_result["stat"]["exists"]'
+
+    # setup_basic puts psi=1 on the kernel command line of the Red Hat family, whose kernels keep
+    # no pressure stall information without it, and the bootloader role only requests the reboot
+    # that makes it effective. The first verify run therefore finds the request waiting in the
+    # schedule_reboot spool and reboots; the second one (after idempotence) finds the option on
+    # the running kernel already.
+    - name: 'Verify that the kernel command line of the Red Hat family carries psi=1'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+      block:
+
+      - name: 'grubby --info=ALL'
+        ansible.builtin.command: 'grubby --info=ALL'
+        register: '__molecule__grubby_info_result'
+        changed_when: false
+
+      - name: 'Assert that every boot entry has psi=1 on its command line'
+        ansible.builtin.assert:
+          that: '__molecule__grubby_info_result["stdout_lines"]
+              | select("match", "^args=")
+              | reject("search", "psi=1")
+              | list | length == 0'
+
+      - name: 'slurp /proc/cmdline'
+        ansible.builtin.slurp:
+          src: '/proc/cmdline'
+        register: '__molecule__proc_cmdline_result'
+
+      - name: 'stat /run/schedule-reboot/bootloader'
+        ansible.builtin.stat:
+          path: '/run/schedule-reboot/bootloader'
+        register: '__molecule__reboot_request_stat_result'
+        when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+      - name: 'Assert that the bootloader role requested a reboot at the maintenance window'
+        ansible.builtin.assert:
+          that: '__molecule__reboot_request_stat_result["stat"]["exists"] | bool'
+        when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+      - name: 'systemctl reboot'
+        ansible.builtin.reboot:  # yamllint disable-line rule:empty-values
+        when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+    # The point of psi=1: the plugin has to find pressure stall information on every platform,
+    # with the option on the Red Hat family and by default on Debian and Ubuntu.
+    # --severity-no-psi crit turns its "nothing to measure" OK into a failure.
+    - name: '/usr/lib64/nagios/plugins/psi-cpu --severity-no-psi crit'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/psi-cpu --severity-no-psi crit'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__psi_cpu_result'
+
+    - name: 'Assert that the psi-cpu monitoring plugin finds pressure stall information'
+      ansible.builtin.assert:
+        that: '__molecule__psi_cpu_result["rc"] == 0'
+        fail_msg: '{{ __molecule__psi_cpu_result["stdout"] }}'
