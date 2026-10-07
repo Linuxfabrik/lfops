@@ -3,13 +3,10 @@
     - 'lfops_uptimerobot'
   force_handlers: true
 
+  # Runs on the Ansible controller against the UptimeRobot API, so unlike the playbooks for managed
+  # hosts it does not log to /var/log/linuxfabrik-lfops.log: that would need root on the controller,
+  # and modules running as root would look for the API key in /root/.uptimerobot.
   pre_tasks:
-    - ansible.builtin.import_role:
-        name: 'shared'
-        tasks_from: 'log-start.yml'
-      tags:
-        - 'always'
-
     - ansible.builtin.import_role:
         name: 'shared'
         tasks_from: 'global-variables.yml'
@@ -23,12 +20,6 @@
 
 
   post_tasks:
-    - ansible.builtin.import_role:
-        name: 'shared'
-        tasks_from: 'log-end.yml'
-      tags:
-        - 'always'
-
     - ansible.builtin.import_role:
         name: 'shared'
         tasks_from: 'print-messages.yml'
