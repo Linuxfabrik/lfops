@@ -116,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:icingaweb2_module_grafana**: With JWT authentication, the Grafana graphs in IcingaWeb2 no longer switch to the Grafana login after 30 seconds. The token stays valid for 3 days; adjust with `icingaweb2_module_grafana__auth_jwt__expires`.
 * **playbook:uptimerobot**: The playbook runs as a normal user on the Ansible controller, without `--become`. Until now it aborted because it tried to write `/var/log/linuxfabrik-lfops.log` on the controller, and with `--become` it could not find the API key in `~/.uptimerobot`.
 * **role:repo_epel**: On RHEL 10 hosts with `repo_epel__mirror_url` set, EPEL is installed from the mirror. Until now dnf failed to download the EPEL metadata, which also broke every other dnf call on the host.
 * **role:php**: Apache starts after PHP-FPM at boot, so the first PHP requests after a reboot no longer fail.
