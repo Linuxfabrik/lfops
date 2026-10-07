@@ -1142,6 +1142,7 @@ Calls the following roles (in order):
 * [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity): `setup_basic__skip_duplicity`
 * [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `setup_basic__skip_repo_monitoring_plugins`
 * [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): `setup_basic__skip_monitoring_plugins`
+* [bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader): `setup_basic__skip_bootloader`. Red Hat family only. Puts `psi=1` on the kernel command line, which the psi-* monitoring plugins need, and requests a reboot at the maintenance window.
 * [repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga): `setup_basic__skip_repo_icinga`
 * [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent): `setup_basic__skip_icinga2_agent`
 * [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide): `setup_basic__skip_aide`
