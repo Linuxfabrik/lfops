@@ -116,8 +116,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: `--tags php:ini` also deploys the PHP-FPM pools, so a changed `php__ini_memory_limit__*_var`, `php__ini_max_execution_time__*_var` and the like take effect in PHP-FPM, not only on the command line.
 * **role:chrony**: Without `chrony__ntp_pools` or `chrony__ntp_servers` in the inventory, chronyd synchronises with `ntp.metas.ch`, the time server of the Swiss Federal Institute of Metrology, instead of running without a time source. If both are set to `[]`, the role aborts.
-* **role:icingaweb2**: PHP gets a `memory_limit` of 256M instead of 128M, so exporting larger views such as History > Event Overview as CSV or JSON no longer fails with "Allowed memory size exhausted". Override it with `php__ini_memory_limit__group_var` / `php__ini_memory_limit__host_var`.
+* **role:icingaweb2**: PHP gets a `memory_limit` of 256M instead of 128M, so the CSV and JSON exports, such as History > Event Overview, handle about twice as many rows before they break off with "Allowed memory size exhausted". Override it with `php__ini_memory_limit__group_var` / `php__ini_memory_limit__host_var`.
 * **role:nextcloud**: The README documents the app states correctly. `state: 'present'` installs an app but leaves it disabled; use `state: 'enabled'` to switch on an app, including the apps the role disables by default, such as `activity`, `notifications` and `systemtags`.
 * **role:icingaweb2_module_grafana**: With JWT authentication, the Grafana graphs in IcingaWeb2 no longer switch to the Grafana login after 30 seconds. The token stays valid for 3 days; adjust with `icingaweb2_module_grafana__auth_jwt__expires`.
 * **playbook:uptimerobot**: The playbook runs as a normal user on the Ansible controller, without `--become`. Until now it aborted because it tried to write `/var/log/linuxfabrik-lfops.log` on the controller, and with `--become` it could not find the API key in `~/.uptimerobot`.
