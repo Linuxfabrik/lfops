@@ -12,7 +12,7 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 ## How the Role Behaves
 
 * The configuration is fully templated: `/etc/chrony.conf` on the Red Hat family, `/etc/chrony/chrony.conf` on Debian and Ubuntu, each close to the file the distribution ships. Out-of-band edits are overwritten on the next run (a timestamped backup is kept).
-* chronyd uses only the sources from `chrony__ntp_pools` and `chrony__ntp_servers`. If neither is set, the role aborts, since the host would have no time source. The distribution's default pools, time sources from DHCP and, on Debian and Ubuntu, `/etc/chrony/sources.d` are not used. Ubuntu 26.04 ships its default pools in `/etc/chrony/sources.d`, where chronyd would prefer them over every source from the inventory.
+* chronyd uses only the sources from `chrony__ntp_pools` and `chrony__ntp_servers`, by default the time server `ntp.metas.ch` of the Swiss Federal Institute of Metrology (METAS). If both are set to `[]`, the role aborts, since the host would have no time source. The distribution's default pools, time sources from DHCP and, on Debian and Ubuntu, `/etc/chrony/sources.d` are not used. Ubuntu 26.04 ships its default pools in `/etc/chrony/sources.d`, where chronyd would prefer them over every source from the inventory.
 * On Debian and Ubuntu, drop-ins in `/etc/chrony/conf.d` are read at the beginning of the deployed `chrony.conf`, so the role's settings win over a drop-in that sets the same directive. Debian 13 and Ubuntu 26.04 read them at the end of their own `chrony.conf`, where a drop-in would win. Directives that add something instead of replacing it still take effect from a drop-in: a `pool`, `server` or `sourcedir` there adds time sources next to the ones from the inventory, and with the `prefer` option chronyd uses only those. Likewise, `allow` and `deny` add access rules.
 * The deployed `chrony.conf` loads no key file, so NTP sources are not authenticated with symmetric keys. RHEL 10's own `chrony.conf` does the same, while RHEL 8 and 9, Debian and Ubuntu load a key file that holds no keys (`/etc/chrony.keys`, `/etc/chrony/chrony.keys`).
 
@@ -28,11 +28,6 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 
 * Manages the state of the chrony service.
 * Triggers: none.
-
-
-## Mandatory Role Variables
-
-This role does not have any mandatory variables. However, either `chrony__ntp_pools` or `chrony__ntp_servers` has to be set, otherwise the role aborts.
 
 
 ## Optional Role Variables
@@ -57,7 +52,7 @@ This role does not have any mandatory variables. However, either `chrony__ntp_po
 
 `chrony__ntp_pools`
 
-* A list of NTP server pools. Same as `chrony__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server.
+* A list of NTP server pools. Same as `chrony__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server. A pool name has to resolve to several addresses, of which chronyd uses up to four. Put a hostname with a single address into `chrony__ntp_servers`, since chronyd keeps resolving a pool name until it gets four sources from it.
 * Type: List.
 * Default: `[]`
 
@@ -65,7 +60,8 @@ This role does not have any mandatory variables. However, either `chrony__ntp_po
 
 * A list of NTP servers which should be used as a time source. The `iburst` option is always used, meaning chronyd will start with a burst of 4-8 requests in order to make the first update of the clock sooner.
 * Type: List.
-* Default: `[]`
+* Default: `['ntp.metas.ch']` if `chrony__ntp_pools` is empty, else `[]`
+* Deviates from the distributions, which ship public pools: METAS, the Swiss Federal Institute of Metrology, keeps the official time of Switzerland and operates `ntp.metas.ch`.
 
 `chrony__service_enabled`
 

@@ -8,8 +8,8 @@
 
 - block:
 
-  # the deployed chrony.conf carries no source of the distribution, so without one from the
-  # inventory chronyd runs without any time source and the clock drifts unnoticed
+  # the deployed chrony.conf carries no source of the distribution, so with both lists set to []
+  # in the inventory chronyd runs without any time source and the clock drifts unnoticed
   - name: 'Check variable constraints'
     ansible.builtin.assert:
       that:
