@@ -108,7 +108,8 @@
 
     # Only that source: the role configures no distribution pools and no DHCP sources, and a
     # distribution default next to it (Ubuntu 26.04 ships its NTS pools with `prefer` in
-    # /etc/chrony/sources.d) would take over and chronyd would never use it.
+    # /etc/chrony/sources.d) would take over and chronyd would never use it. The source from the
+    # inventory also replaces the role's default ntp.metas.ch instead of being added to it.
     - name: 'Assert that chronyd uses only the source configured in the inventory'
       ansible.builtin.assert:
         that: '__molecule__chronyc_sources_result["stdout_lines"] | map("split", ",") | map(attribute=2) | list == ["192.0.2.1"]'
