@@ -91,6 +91,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `php:ini`
 
 * Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
+* Deploys the PHP-FPM pools, since they take over several `php__ini_*` values, such as `memory_limit`.
 * Triggers: php-fpm.service restart.
 
 `php:logrotate`
@@ -209,6 +210,7 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_max_execution_time__group_var` / `php__ini_max_execution_time__host_var`
 
 * This sets the maximum time in seconds a script is allowed to run before it is terminated by the parser. This helps prevent poorly written scripts from tying up the server. The default setting is 30. When running PHP from the command line the default setting is 0. [php.net](https://www.php.net/manual/en/info.configuration.php)
+* The PHP-FPM pools also set it as `php_admin_value[max_execution_time]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_max_execution_time` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: Number.
 * Default: `30`
 
@@ -227,12 +229,14 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_max_input_vars__group_var` / `php__ini_max_input_vars__host_var`
 
 * How many input variables may be accepted (limit is applied to `$_GET`, `$_POST` and `$_COOKIE` superglobal separately). Use of this directive mitigates the possibility of denial of service attacks which use hash collisions. If there are more input variables than specified by this directive, an E_WARNING is issued, and further input variables are truncated from the request. [php.net](https://www.php.net/manual/en/info.configuration.php)
+* The PHP-FPM pools also set it as `php_admin_value[max_input_vars]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_max_input_vars` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: Number.
 * Default: `1000`
 
 `php__ini_memory_limit__group_var` / `php__ini_memory_limit__host_var`
 
 * This sets the maximum amount of memory in bytes that ONE RUNNING SCRIPT is allowed to allocate. This helps prevent poorly written scripts for eating up all available memory on a server. Note that to have no memory limit, set this directive to -1. Again: PHP memory_limit is per-script, just as a highway's speed limit is per-vehicle. [php.net](https://www.php.net/manual/en/ini.core.php)
+* The PHP-FPM pools also set it as `php_admin_value[memory_limit]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_memory_limit` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'128M'`
 
@@ -299,12 +303,14 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_post_max_size__group_var` / `php__ini_post_max_size__host_var`
 
 * Sets max size of post data allowed. This setting also affects file upload. To upload large files, this value must be larger than upload_max_filesize. [php.net](https://www.php.net/manual/en/ini.core.php)
+* The PHP-FPM pools also set it as `php_admin_value[post_max_size]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_post_max_size` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'8M'`
 
 `php__ini_session_cookie_httponly__group_var` / `php__ini_session_cookie_httponly__host_var`
 
 * Marks the session cookie as HttpOnly, so it is not accessible to JavaScript via `document.cookie`, mitigating cookie theft via XSS. [php.net](https://www.php.net/manual/en/session.configuration.php)
+* The PHP-FPM pools also set it as `php_value[session.cookie_httponly]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_value_session_cookie_httponly` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'On'`
 
@@ -314,6 +320,7 @@ Variables for `php.ini` directives and their default values, defined and support
 * `Lax` sends the cookie on same-site requests and on top-level cross-site navigations, but not on cross-site POSTs, iframes or XHR, which is what stops a foreign page from acting under the visitor's session. `Strict` withholds it on a top-level navigation as well, so a user following a link from an email lands logged out until the next click. `None` switches the protection off and only works together with `php__ini_session_cookie_secure__*_var`, otherwise browsers drop the cookie entirely. An empty string emits no attribute and leaves the decision to the browser, which differs between Chrome, Firefox and Safari.
 * Set `None` (with `Secure`) for an application whose identity provider returns through a cross-site POST, as SAML HTTP-POST binding and the OIDC `form_post` response mode do: with `Lax` the callback arrives without the session and the login loops. On a host serving more than one application, set it for that pool alone via `php_value_session_cookie_samesite` in `php__fpm_pools__*_var` instead of host-wide. Applications embedded from another registrable domain need it too. An identity provider or an embedded service under the same registrable domain, for example Collabora at `office.example.com` inside Nextcloud at `cloud.example.com`, counts as same-site and is unaffected.
 * Only deployed from PHP 7.3 on, since PHP 7.2 does not know the directive.
+* The PHP-FPM pools also set it as `php_value[session.cookie_samesite]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_value_session_cookie_samesite` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'Lax'`
 * Deviates from the upstream default, which is an empty string up to PHP 8.5 and therefore emits no attribute at all. PHP itself moves to `Lax` in 8.6, so this anticipates the upstream default rather than departing from it.
@@ -324,6 +331,7 @@ Variables for `php.ini` directives and their default values, defined and support
 * Set it to `'Off'` for a site genuinely served over plain HTTP, which otherwise cannot log anyone in: the browser accepts the cookie and then never returns it. On a host serving both, set it for the affected pool alone via `php_value_session_cookie_secure` in `php__fpm_pools__*_var`.
 * What decides is the scheme the browser uses, not what PHP sees. A site behind a reverse proxy that terminates TLS and forwards plain HTTP is an HTTPS site for this purpose, and is exactly the case where PHP cannot work the flag out for itself.
 * Switching an HTTPS host from `'Off'` to `'On'` logs nobody out. PHP only sends `Set-Cookie` when it creates a session ID, so a running session resumes untouched and its existing cookie keeps its old attributes until the application regenerates the ID, usually at the next login, or the session expires.
+* The PHP-FPM pools also set it as `php_value[session.cookie_secure]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_value_session_cookie_secure` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'On'`
 * Deviates from the upstream default `Off`: without the flag the session ID travels in cleartext on any `http://` request to the host, before a redirect to HTTPS can fire, and LFOps deploys these sites behind TLS. PHP sets the flag on its own only when it sees HTTPS itself, which it does not when TLS is terminated in front of it.
@@ -355,6 +363,7 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_upload_max_filesize__group_var` / `php__ini_upload_max_filesize__host_var`
 
 * The maximum size of an uploaded file. [php.net](https://www.php.net/manual/en/ini.core.php)
+* The PHP-FPM pools also set it as `php_admin_value[upload_max_filesize]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_upload_max_filesize` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'2M'`
 

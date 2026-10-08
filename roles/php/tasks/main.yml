@@ -366,6 +366,11 @@
     loop_control:
       label: '{{ item["name"] }}'
     notify: 'php: php-fpm --test; restart php-fpm'
+    # The pools set memory_limit, max_execution_time etc. from the php__ini_* variables, and a
+    # pool value takes precedence over the ini file, so a run with 'php:ini' alone must deploy
+    # them too.
+    tags:
+      - 'php:ini'
 
   # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
   # version's tree, which the package ships with nothing but its own default pool.
