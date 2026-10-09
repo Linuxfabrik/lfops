@@ -117,6 +117,10 @@
         set -euo pipefail
         shopt -s nullglob
 
+        # start from an empty directory: the flattened copy outlives the run,
+        # so the graph of a plugin that was renamed or removed upstream would
+        # otherwise end up in graphs.ini forever
+        rm -rf /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana
         for dir in "/tmp/ansible.monitoring-plugins-repo/check-plugins"/*/; do
             # dir ends in a slash, so basename drops it and gives you the plugin name

@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:icingaweb2_module_grafana**: `graphs.ini` no longer keeps the graphs of monitoring plugins that were removed or renamed upstream.
 * **role:uptimerobot**: Alert contacts past the first 50 are found, so `alert_contacts` of a monitor can name them and `uptimerobot_alert_contact_info` lists all of them.
 * **role:uptimerobot**: Port monitors with `sub_type` `https`, `ftp`, `smtp`, `pop3` or `imap` are created instead of rejected by UptimeRobot, a changed `sub_type` takes effect on an existing monitor, and a port monitor with a `sub_type` no longer reports a change on every run.
 * **role:php**: `--tags php:ini` also deploys the PHP-FPM pools, so a changed `php__ini_memory_limit__*_var`, `php__ini_max_execution_time__*_var` and the like take effect in PHP-FPM, not only on the command line.
