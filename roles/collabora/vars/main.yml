@@ -31,6 +31,7 @@ __collabora__supported_versions_enterprise:
   - '24.04.17'
   - '24.04.18'
   - '25.04.12'
+  - '25.04.13'
   - '26.04.2'
 __collabora__supported_versions: '{{
     collabora__use_code | bool | ternary(

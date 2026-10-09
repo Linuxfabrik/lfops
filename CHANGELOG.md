@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:collabora**: Add support for Collabora Online Enterprise 25.04.13.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.5.
 * **playbook:setup_basic, role:monitoring_plugins**: On the Red Hat family, `psi=1` is put on the kernel command line, so the psi-* monitoring plugins report pressure stall information instead of finding none; each host reboots once at its maintenance window, and `setup_basic__skip_bootloader` skips it.
 * **role:apache_httpd**: `lfops__trusted_proxies` lists the reverse proxies in front of a host, and Apache then logs the client from `X-Forwarded-For` instead of the proxy in the access and the error log.
