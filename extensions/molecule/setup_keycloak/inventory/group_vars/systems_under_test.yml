@@ -16,7 +16,7 @@ keycloak__hostname: 'keycloak.example.com'
 
 # 26.6.0 and newer, so the scenario covers the transaction-* options in keycloak.conf
 # and the ExecStart without the Quarkus property.
-keycloak__version: '26.7.3'
+keycloak__version: '26.8.0'
 
 # Optional values whose runtime effect verify.yml checks: the two endpoints on the
 # management interface, and the log handler writing to keycloak__log_file.
