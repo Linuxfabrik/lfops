@@ -33,9 +33,6 @@ API_BASE = 'https://api.uptimerobot.com/v2/'
 ENV_API_KEY = 'UPTIMEROBOT_API_KEY'
 DEFAULT_API_KEY_FILE = '~/.uptimerobot'
 
-# How many items v2 returns per page. We page until pagination['total'] is reached.
-PAGE_SIZE = 50
-
 # When the API returns 429 (rate limit), wait this many seconds and retry once.
 DEFAULT_RATE_LIMIT_RETRY_SECONDS = 10
 
@@ -428,13 +425,18 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
             module.log(f'uptimerobot: POST {endpoint} stat=ok pages={pages}')
             return True, item
 
-        pagination = payload.get('pagination') or {}
-        if not pagination:
+        # getMonitors, getMWindows and getPSPs nest `total` in `pagination`,
+        # getAlertContacts puts it at the top level, so its records past the first
+        # page were lost. Step by what the page held, which also stays right if a
+        # `limit` is ever sent. Verified against the UptimeRobot v2 API on 2026-10-09.
+        pagination = payload.get('pagination') or (
+            payload if 'total' in payload else {}
+        )
+        if not pagination or not item:
             break
-        total = pagination.get('total', len(aggregated))
-        if offset + PAGE_SIZE >= total:
+        offset += len(item)
+        if offset >= int(pagination.get('total', 0)):
             break
-        offset += PAGE_SIZE
 
     module.log(
         f'uptimerobot: POST {endpoint} stat=ok pages={pages} items={len(aggregated)}'

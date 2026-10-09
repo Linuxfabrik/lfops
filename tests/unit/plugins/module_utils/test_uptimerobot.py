@@ -20,7 +20,9 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import json
 import unittest
+from unittest import mock
 
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils import uptimerobot as ur
 
@@ -83,6 +85,69 @@ class TestTranslateHelpers(unittest.TestCase):
     def test_post_content_type_application_json(self):
         self.assertEqual(ur.POST_CONTENT_TYPE['application/json'], 1)
         self.assertEqual(ur.POST_CONTENT_TYPE['content/json'], 1)
+
+
+class _FakeModule:
+    def log(self, msg):
+        pass
+
+    def warn(self, msg):
+        pass
+
+
+class _FakeResponse:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def read(self):
+        return json.dumps(self.payload).encode('utf-8')
+
+
+class TestPagination(unittest.TestCase):
+    """_request_uncached() against a fake API that slices like UptimeRobot v2."""
+
+    def run_pages(self, total, nested, result_key='alert_contacts'):
+        offsets = []
+
+        def fake_fetch_url(module, url, data=None, **kwargs):
+            body = dict(pair.split('=', 1) for pair in data.decode('utf-8').split('&'))
+            offset = int(body['offset'])
+            offsets.append(offset)
+            page = [{'id': i} for i in range(offset, min(offset + 50, total))]
+            counters = {'offset': offset, 'limit': 50, 'total': total}
+            payload = {'stat': 'ok', result_key: page}
+            if nested:
+                payload['pagination'] = counters
+            else:
+                payload.update(counters)
+            return _FakeResponse(payload), {'status': 200}
+
+        with mock.patch.object(ur, 'fetch_url', side_effect=fake_fetch_url):
+            success, items = ur._request_uncached(
+                _FakeModule(), 'k', 'getAlertContacts', {}, result_key
+            )
+        return success, items, offsets
+
+    def test_total_at_the_top_level(self):
+        # getAlertContacts carries offset, limit and total next to the result
+        # (UptimeRobot v2 API, 2026-10-09); only the first 50 came back.
+        success, items, offsets = self.run_pages(120, nested=False)
+        self.assertTrue(success)
+        self.assertEqual(items, [{'id': i} for i in range(120)])
+        self.assertEqual(offsets, [0, 50, 100])
+
+    def test_total_in_pagination(self):
+        success, items, offsets = self.run_pages(
+            152, nested=True, result_key='monitors'
+        )
+        self.assertTrue(success)
+        self.assertEqual(len(items), 152)
+        self.assertEqual(offsets, [0, 50, 100, 150])
+
+    def test_total_on_a_page_boundary_needs_no_empty_request(self):
+        _, items, offsets = self.run_pages(100, nested=True, result_key='monitors')
+        self.assertEqual(len(items), 100)
+        self.assertEqual(offsets, [0, 50])
 
 
 class TestSafeKeysAndCache(unittest.TestCase):
