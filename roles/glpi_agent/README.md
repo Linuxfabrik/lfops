@@ -120,7 +120,7 @@ glpi_agent__conf_server: 'https://glpi.example.com'
 
 `glpi_agent__version`
 
-* The version of blocky to install. Possible options: `'latest'`, or any from https://github.com/glpi-project/glpi-agent/releases.
+* The version of the GLPI Agent to install. Possible options: `'latest'`, or any from https://github.com/glpi-project/glpi-agent/releases.
 * Type: String.
 * Default: `'latest'`
 
