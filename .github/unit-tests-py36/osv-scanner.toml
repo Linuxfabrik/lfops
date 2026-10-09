@@ -1,0 +1,17 @@
+# Advisories against the Python 3.6 lockfile in this directory, picked up by the
+# Vulnerabilities check of OpenSSF Scorecard. Same reasoning as the allow-ghsas entries in
+# .github/workflows/dependency-review.yml: the test runner has to run on the Python 3.6 of
+# RHEL 8, and the fixed releases need a newer Python. The tests run in a throwaway UBI 8
+# container. Drop this file once the py36 lockfile is retired together with RHEL 8 support.
+
+[[IgnoredVulns]]
+id = 'PYSEC-2026-1845'
+reason = """pytest 6.2.5, GHSA-6w46-j5rx-g56g: other local users abusing the predictable \
+/tmp/pytest-of-{user} directories; the container has no other users. Fixed in pytest \
+9.0.3, which requires Python 3.10."""
+
+[[IgnoredVulns]]
+id = 'PYSEC-2026-2074'
+reason = """zipp 3.6.0, GHSA-jfmj-5v4g-7637: an infinite loop on a crafted ZIP file \
+opened with zipp.Path; the tests open no ZIP files. Fixed in zipp 3.19.1, which requires \
+Python 3.8."""
