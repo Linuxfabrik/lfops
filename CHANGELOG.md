@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:collabora**: Add support for Collabora Online Enterprise 24.04.19, 26.04.3 and 26.04.4.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.13.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.5.
 * **playbook:setup_basic, role:monitoring_plugins**: On the Red Hat family, `psi=1` is put on the kernel command line, so the psi-* monitoring plugins report pressure stall information instead of finding none; each host reboots once at its maintenance window, and `setup_basic__skip_bootloader` skips it.

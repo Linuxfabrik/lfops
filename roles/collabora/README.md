@@ -186,7 +186,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 * Controls whether the welcome screen should be shown to the users on new install and updates.
 * Type: Bool.
 * Default: `false`
-* Applies to the versions whose `coolwsd.xml` carries a `welcome` section: CODE 24.04.7 to 24.04.10 and 26.04.2, Enterprise 24.04.13 to 24.04.18, 25.04.12, 25.04.13 and 26.04.2. The other versions ship no such section and ignore the variable.
+* Applies to the versions whose `coolwsd.xml` carries a `welcome` section: CODE 24.04.7 to 24.04.10 and 26.04.2, Enterprise 24.04.13 to 24.04.19, 25.04.12, 25.04.13 and 26.04.2 to 26.04.4. The other versions ship no such section and ignore the variable.
 
 `collabora__language_packages__host_var` / `collabora__language_packages__group_var`
 
