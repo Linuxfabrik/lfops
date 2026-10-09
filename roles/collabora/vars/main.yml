@@ -23,6 +23,7 @@ __collabora__supported_versions_code:
   - '26.04.2'
   - '26.04.3'
   - '26.04.4'
+  - '26.04.5'
 __collabora__supported_versions_enterprise:
   - '24.04.13'
   - '24.04.15'
