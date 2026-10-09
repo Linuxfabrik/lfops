@@ -64,12 +64,13 @@ options:
     sub_type:
         description:
             - For I(type=C(port)), which protocol/port preset to use. C(custom) means "use the explicit I(port) value".
+            - A preset stands for its port (C(http) 80, C(https) 443, C(ftp) 21, C(smtp) 25, C(pop3) 110, C(imap) 143), which the module sends along, since UptimeRobot ignores I(sub_type) on an existing monitor. An explicit I(port) takes precedence.
         type: str
         choices: ['custom', 'ftp', 'http', 'https', 'imap', 'pop3', 'smtp']
         required: false
     port:
         description:
-            - Custom port number. Only consulted by UptimeRobot when I(type=C(port)) and I(sub_type=C(custom)).
+            - Port number for I(type=C(port)). Required with I(sub_type=C(custom)), and takes precedence over the port of any other I(sub_type).
         type: int
         required: false
     keyword_type:
@@ -143,7 +144,7 @@ options:
         description:
             - C(Content-Type) header for the request body.
         type: str
-        choices: ['content/json', 'text/html']
+        choices: ['application/json', 'content/json', 'text/html']
         required: false
     custom_http_headers:
         description:
@@ -342,6 +343,18 @@ _MONITOR_DIFFABLE_FIELDS = [
 ]
 
 
+def _apply_sub_type_port(desired):
+    """Add the port a `sub_type` preset stands for, unless `port` is set.
+
+    UptimeRobot ignores `sub_type` on editMonitor and reports 1 for it on every port
+    monitor, so a preset only takes effect, and only compares, through its port.
+    """
+    preset_port = ur.MONITOR_SUB_TYPE_PORT.get(desired.get('sub_type'))
+    if preset_port is not None and 'port' not in desired:
+        desired['port'] = preset_port
+    return desired
+
+
 def _build_alert_contacts(module, api_key, items):
     """Resolve the user-supplied list of {friendly_name|id, threshold, recurrence}
     into the v2 wire string id_threshold_recurrence-...
@@ -475,7 +488,9 @@ def main():
         ),
         post_type=dict(type='str', choices=['key-value', 'raw data']),
         post_value=dict(type='str'),
-        post_content_type=dict(type='str', choices=['content/json', 'text/html']),
+        post_content_type=dict(
+            type='str', choices=['application/json', 'content/json', 'text/html']
+        ),
         custom_http_headers=dict(type='raw'),
         custom_http_statuses=dict(type='str'),
         ignore_ssl_errors=dict(type='bool'),
@@ -536,6 +551,7 @@ def main():
         value = module.params.get(field)
         if value is not None and value != '':
             desired[field] = value
+    _apply_sub_type_port(desired)
     if module.params.get('alert_contacts'):
         desired['alert_contacts'] = _build_alert_contacts(
             module, api_key, module.params['alert_contacts']
@@ -680,10 +696,11 @@ def main():
 
     # `http_password` and `http_auth_type` can't be diffed reliably because
     # the API hides them in `getMonitors` responses (the `auth_type` field
-    # comes back as null even when credentials are set). Always send them
-    # through on edit when the user supplied them, but don't let them count
-    # as a change.
-    write_only = {'http_password', 'http_auth_type'}
+    # comes back as null even when credentials are set). `sub_type` comes back
+    # as 1 for every port monitor; its preset is compared through `port`, see
+    # `_apply_sub_type_port()`. Always send them through on edit when the user
+    # supplied them, but don't let them count as a change.
+    write_only = {'http_auth_type', 'http_password', 'sub_type'}
     diff_fields = [f for f in _MONITOR_DIFFABLE_FIELDS if f not in write_only]
     field_diff = ur.diff_for_update(current_compare, desired_compare, diff_fields)
 

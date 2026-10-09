@@ -77,14 +77,28 @@ _WRITE_INVALIDATES = {
 MONITOR_TYPE = {'http': 1, 'keyw': 2, 'ping': 3, 'port': 4, 'beat': 5}
 MONITOR_STATUS_READ = {0: 'paused', 1: 'wait', 2: 'up', 8: 'seems_down', 9: 'down'}
 MONITOR_STATUS_WRITE = {'paused': 0, 'up': 1}  # write side only allows pause/un-pause
+# The preset of a port monitor, not its port number. Verified against the
+# UptimeRobot v2 API on 2026-10-09: newMonitor without `port` monitors the port
+# in MONITOR_SUB_TYPE_PORT for codes 1 to 6 and rejects a port number such as 443
+# ("port must not be greater than 65535"); with `port`, the port wins. editMonitor
+# ignores `sub_type` altogether, and getMonitors reports 1 for every port monitor,
+# so only `port` tells which preset is in effect.
 MONITOR_SUB_TYPE = {
     'http': 1,
+    'https': 2,
+    'ftp': 3,
+    'smtp': 4,
+    'pop3': 5,
+    'imap': 6,
+    'custom': 99,
+}
+MONITOR_SUB_TYPE_PORT = {
+    'http': 80,
     'https': 443,
     'ftp': 21,
     'smtp': 25,
     'pop3': 110,
     'imap': 143,
-    'custom': 99,
 }
 KEYWORD_TYPE = {'exist': 1, 'notex': 2}
 KEYWORD_CASE_TYPE = {'cs': 0, 'ci': 1}
@@ -99,7 +113,7 @@ HTTP_METHOD = {
     'options': 7,
 }
 POST_TYPE = {'key-value': 1, 'raw data': 2}
-POST_CONTENT_TYPE = {'text/html': 0, 'content/json': 1}
+POST_CONTENT_TYPE = {'application/json': 1, 'content/json': 1, 'text/html': 0}
 DISABLE_DOMAIN_EXPIRE = {'enable': 0, 'disable': 1}
 
 MWINDOW_TYPE = {'once': 1, 'daily': 2, 'weekly': 3, 'monthly': 4}

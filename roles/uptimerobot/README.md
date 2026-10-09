@@ -140,12 +140,12 @@ Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMoni
 
     * `sub_type`:
 
-        * Optional. For `type: 'port'`: which protocol/port preset (`'http'`, `'https'`, `'ftp'`, `'smtp'`, `'pop3'`, `'imap'`, `'custom'`). `'custom'` means "use the explicit `port` value".
+        * Optional. For `type: 'port'`: which protocol/port preset (`'http'`, `'https'`, `'ftp'`, `'smtp'`, `'pop3'`, `'imap'`, `'custom'`). A preset stands for its port (80, 443, 21, 25, 110, 143), `'custom'` means "use the explicit `port` value". UptimeRobot does not keep the preset itself, so the role compares and changes it through the port.
         * Type: String.
 
     * `port`:
 
-        * Optional. Custom TCP port for `type: 'port'` + `sub_type: 'custom'`.
+        * Optional. TCP port for `type: 'port'`. Required with `sub_type: 'custom'`, and takes precedence over the port of any other `sub_type`.
         * Type: Number.
 
     * `keyword_type` / `keyword_case_type` / `keyword_value`:
@@ -180,7 +180,7 @@ Typical impact: a `--check` run over 56 monitors goes from ~56× 4 page `getMoni
 
     * `post_type` / `post_value` / `post_content_type`:
 
-        * Optional. Request body payload for `POST` / `PUT` / `PATCH` checks. `post_type` is `'key-value'` or `'raw data'`. `post_content_type` is `'text/html'` or `'content/json'`.
+        * Optional. Request body payload for `POST` / `PUT` / `PATCH` checks. `post_type` is `'key-value'` or `'raw data'`. `post_content_type` is `'text/html'` or `'application/json'` (`'content/json'` is accepted as well).
         * Type: String.
 
     * `custom_http_headers`:

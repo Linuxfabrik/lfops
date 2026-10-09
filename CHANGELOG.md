@@ -116,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:uptimerobot**: Port monitors with `sub_type` `https`, `ftp`, `smtp`, `pop3` or `imap` are created instead of rejected by UptimeRobot, a changed `sub_type` takes effect on an existing monitor, and a port monitor with a `sub_type` no longer reports a change on every run.
 * **role:php**: `--tags php:ini` also deploys the PHP-FPM pools, so a changed `php__ini_memory_limit__*_var`, `php__ini_max_execution_time__*_var` and the like take effect in PHP-FPM, not only on the command line.
 * **role:chrony**: Without `chrony__ntp_pools` or `chrony__ntp_servers` in the inventory, chronyd synchronises with `ntp.metas.ch`, the time server of the Swiss Federal Institute of Metrology, instead of running without a time source. If both are set to `[]`, the role aborts.
 * **role:icingaweb2**: PHP gets a `memory_limit` of 256M instead of 128M, so the CSV and JSON exports, such as History > Event Overview, handle about twice as many rows before they break off with "Allowed memory size exhausted". Override it with `php__ini_memory_limit__group_var` / `php__ini_memory_limit__host_var`.

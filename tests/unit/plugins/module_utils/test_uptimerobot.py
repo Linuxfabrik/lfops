@@ -56,6 +56,34 @@ class TestTranslateHelpers(unittest.TestCase):
         self.assertEqual(params['type'], 1)
         self.assertEqual(params['interval'], 300)
 
+    def test_sub_type_presets_are_codes_not_ports(self):
+        # 'https' was sent as 443, which UptimeRobot rejects without `port`
+        # (UptimeRobot v2 API, 2026-10-09).
+        params = {'sub_type': 'https'}
+        ur._translate_keys(params, {'sub_type': ur.MONITOR_SUB_TYPE})
+        self.assertEqual(params['sub_type'], 2)
+        self.assertEqual(
+            ur.MONITOR_SUB_TYPE,
+            {
+                'custom': 99,
+                'ftp': 3,
+                'http': 1,
+                'https': 2,
+                'imap': 6,
+                'pop3': 5,
+                'smtp': 4,
+            },
+        )
+
+    def test_every_preset_but_custom_has_a_port(self):
+        self.assertEqual(
+            set(ur.MONITOR_SUB_TYPE_PORT), set(ur.MONITOR_SUB_TYPE) - {'custom'}
+        )
+
+    def test_post_content_type_application_json(self):
+        self.assertEqual(ur.POST_CONTENT_TYPE['application/json'], 1)
+        self.assertEqual(ur.POST_CONTENT_TYPE['content/json'], 1)
+
 
 class TestSafeKeysAndCache(unittest.TestCase):
     def test_safe_keys_redacts_secrets(self):

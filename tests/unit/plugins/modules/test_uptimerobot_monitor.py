@@ -64,5 +64,39 @@ class TestNormalizeMwindows(unittest.TestCase):
         self.assertEqual(mod._normalize_desired_mwindows(''), '')
 
 
+class TestApplySubTypePort(unittest.TestCase):
+    # UptimeRobot ignores sub_type on edit and reports 1 for it on every port
+    # monitor, so a preset has to travel, and compare, as its port.
+
+    def test_preset_adds_its_port(self):
+        self.assertEqual(
+            mod._apply_sub_type_port({'sub_type': 'https'}),
+            {'sub_type': 'https', 'port': 443},
+        )
+
+    def test_explicit_port_wins(self):
+        self.assertEqual(
+            mod._apply_sub_type_port({'sub_type': 'https', 'port': 8443}),
+            {'sub_type': 'https', 'port': 8443},
+        )
+
+    def test_custom_and_missing_sub_type_add_nothing(self):
+        self.assertEqual(
+            mod._apply_sub_type_port({'sub_type': 'custom', 'port': 2222}),
+            {'sub_type': 'custom', 'port': 2222},
+        )
+        self.assertEqual(mod._apply_sub_type_port({'url': 'x'}), {'url': 'x'})
+
+    def test_preset_matches_the_port_the_api_reports(self):
+        # getMonitors returns sub_type 1 and port 443 for an https preset, which
+        # must not count as a change.
+        current = {'sub_type': 1, 'port': 443}
+        desired = mod._apply_sub_type_port({'sub_type': 'https'})
+        self.assertEqual(
+            mod.ur.diff_for_update(current, desired, ['port']),
+            {},
+        )
+
+
 if __name__ == '__main__':
     unittest.main()
