@@ -186,7 +186,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:monitoring_plugins**: The source install no longer reports a change on every run once the plugins have run.
 * **role:monitoring_plugins**: The source install no longer clears the setuid bit of the distribution's `check_icmp` and `check_dhcp` on every run.
 * **role:monitoring_plugins**: `--tags monitoring_plugins:remove` no longer aborts on Debian and Ubuntu, and also removes the version lock of the SELinux package, the SELinux policy module, the Debian conffiles and every file a release of the plugins ever installed.
-* **role:monitoring_plugins**: The source install sets `nagios_run_sudo` and loads the SELinux policy module, so plugins run through sudo under enforcing SELinux on RHEL 8 and 9.
+* **role:monitoring_plugins**: The source install sets `nagios_run_sudo` and, for Monitoring Plugins releases after 8.0.0, loads the SELinux policy module, so plugins run through sudo under enforcing SELinux on RHEL 8 and 9.
 * **role:monitoring_plugins**: The source install of a release before 8.0.0 no longer fails on the missing logging sudoers file.
 * **role:fail2ban**: An empty `fail2ban__jail_portscan_allowed_ports` exempts no port, so the `portscan` jail bans every denied connection attempt instead of none.
 * **role:fail2ban**: The `portscan` jail no longer bans a server that a local proxy talks to because the firewall logged a late TCP packet or an ICMP error from it, for example the final FIN of a half-closed connection.
