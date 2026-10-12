@@ -169,7 +169,7 @@ Which Ansible role is proven to run on which OS?
 | sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | system_update                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | systemd_journald                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| systemd_unit                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | telegraf                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | timezone                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | tmux                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
