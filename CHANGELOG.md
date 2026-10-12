@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:systemd_unit**: Manages systemd socket units with `systemd_unit__sockets__host_var` / `systemd_unit__sockets__group_var`, for example to forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.
 * **role:collabora**: Add support for Collabora Online Enterprise 24.04.19, 26.04.3 and 26.04.4.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.13.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.5.

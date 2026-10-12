@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# 2026101201
+
+[Unit]
+Description={% if item['description'] is defined and item['description'] %}{{ item['description'] }}{% else %}{{ item['name'] }} Socket{% endif %}
+{% if 'raw_unit' in item +%}
+# raw
+{{ item['raw_unit'] }}
+{% endif %}
+
+
+[Socket]
+{% if 'raw_socket' in item +%}
+# raw
+{{ item['raw_socket'] }}
+{% endif %}
+
+[Install]
+WantedBy={{ item['wanted_by'] | d('sockets.target') }}
+{% if 'raw_install' in item +%}
+# raw
+{{ item['raw_install'] }}
+{% endif %}

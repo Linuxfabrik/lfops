@@ -12,6 +12,8 @@ This role installs and manages systemd unit files. A unit file is a plain text i
 
 * Remove service units from `/etc/systemd/system`.
 * Deploy the service units to `/etc/systemd/system`.
+* Remove socket units from `/etc/systemd/system`.
+* Deploy the socket units to `/etc/systemd/system`.
 * Remove timer units from `/etc/systemd/system`.
 * Deploy the timer units to `/etc/systemd/system`.
 * Triggers: systemctl daemon-reload.
@@ -25,6 +27,12 @@ This role installs and manages systemd unit files. A unit file is a plain text i
 
 * Remove service units from `/etc/systemd/system`.
 * Deploy the service units to `/etc/systemd/system`.
+* Triggers: systemctl daemon-reload.
+
+`systemd_unit:sockets`
+
+* Remove socket units from `/etc/systemd/system`.
+* Deploy the socket units to `/etc/systemd/system`.
 * Triggers: systemctl daemon-reload.
 
 `systemd_unit:state`
@@ -149,6 +157,60 @@ This role installs and manages systemd unit files. A unit file is a plain text i
         * Type: Bool.
         * Default: `true`
 
+`systemd_unit__sockets__host_var` / `systemd_unit__sockets__group_var`
+
+* List of Systemd Socket Units.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the systemd socket. Will be used as the filename.
+        * Type: String.
+
+    * `description`:
+
+        * Optional. The description for the unit. If ommitted, the name will be used, suffixed by `Socket`.
+        * Type: String.
+        * Default: unset
+
+    * `wanted_by`:
+
+        * Optional. Value for `WantedBy`.
+        * Type: String.
+        * Default: `'sockets.target'`
+
+    * `raw_unit`:
+
+        * Optional. Raw block in the `[Unit]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_socket`:
+
+        * Optional. Raw block in the `[Socket]` section.
+        * Type: String.
+        * Default: unset
+
+    * `raw_install`:
+
+        * Optional. Raw block in the `[Install]` section.
+        * Type: String.
+        * Default: unset
+
+    * `state`:
+
+        * Optional. State of the unit. Possible options: `present`, `absent`, `started`, `stopped`, `restarted`, `reloaded`.
+        * Type: String.
+        * Default: `'started'`
+
+    * `enabled`:
+
+        * Optional. If the unit should start at boot or not.
+        * Type: Bool.
+        * Default: `true`
+
 `systemd_unit__timers__host_var` / `systemd_unit__timers__group_var`
 
 * List of Systemd Timer Units.
@@ -235,6 +297,27 @@ systemd_unit__services__host_var:
     raw_service: |-
       ExecStart=/usr/local/bin/duba
       Type=oneshot
+
+# forward a TCP port with systemd-socket-proxyd, without installing a proxy server. The service
+# is started by the first connection to the socket, so it is neither enabled nor started itself.
+# FreeBind lets the socket listen on an address that is not configured yet.
+systemd_unit__sockets__host_var:
+  - name: 'https6-proxy'
+    description: 'Forward HTTPS on an IPv6 address to the backend'
+    raw_socket: |-
+      ListenStream=[2001:db8::143]:443
+      FreeBind=true
+    wanted_by: 'sockets.target'
+systemd_unit__services__host_var:
+  - name: 'https6-proxy'
+    description: 'Forward HTTPS on an IPv6 address to the backend'
+    raw_unit: |-
+      Requires=https6-proxy.socket
+      After=https6-proxy.socket network-online.target
+    raw_service: |-
+      ExecStart=/usr/lib/systemd/systemd-socket-proxyd 192.0.2.4:443
+    state: 'present'
+    enabled: false
 
 # two timers, one with more options, one minimal
 systemd_unit__timers__host_var:
