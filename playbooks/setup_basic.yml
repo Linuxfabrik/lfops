@@ -371,10 +371,11 @@
       when:
         - 'not setup_basic__skip_monitoring_plugins | d(false)'
 
-    # The psi-* plugins need pressure stall information, which RHEL kernels only keep when booted
-    # with psi=1. The bootloader role puts it on the kernel command line and requests a reboot at
-    # the maintenance window, so schedule_reboot has to be in place already (see above). Debian
-    # and Ubuntu track pressure by default, so the role runs on the Red Hat family only.
+    # The psi-* monitoring-plugins need pressure stall information, which RHEL kernels
+    # only keep when booted with psi=1. The bootloader role puts it on the kernel command
+    # line and requests a reboot at the maintenance window, so schedule_reboot has to be
+    # in place already (see above). Debian and Ubuntu track pressure by default, so the
+    # role runs on the Red Hat family only.
     - role: 'linuxfabrik.lfops.bootloader'
       bootloader__cmdline_options__dependent_var: '{{
           (not setup_basic__skip_monitoring_plugins | d(false)) | ternary(monitoring_plugins__bootloader__cmdline_options__dependent_var, []) | d([])
