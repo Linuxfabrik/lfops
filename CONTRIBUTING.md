@@ -205,7 +205,9 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
 * Name the play `- name: 'Playbook linuxfabrik.lfops.example'`.
 * Set `force_handlers: true` on every play. Without it, a failing task drops the handlers notified so far, and since every later run reports the deployed file unchanged, the running service never picks up the new config (e.g. `sshd` keeps listening on the old port).
 * Document a new playbook in `playbooks/README.md` and add it to `playbooks/all.yml`.
+* A playbook that runs `repo_epel` runs `repo_baseos` right before it, passing `repo_epel__repo_baseos__crb_repo_enabled__dependent_var` and gated by `<playbook>__skip_repo_baseos`: EPEL packages depend on CRB, which only `repo_baseos` enables on Rocky 9 and newer. Copy the block from `playbooks/repo_epel.yml`. The exception is a playbook that limits `repo_epel` to RHEL 8, where the role enables PowerTools itself (`playbooks/valkey.yml`).
 * Import `shared/tasks/log-start.yml` and `shared/tasks/global-variables.yml` in `pre_tasks` and `shared/tasks/log-end.yml` in `post_tasks`, tagged `always`, so every run is logged to `/var/log/linuxfabrik-lfops.log` and the LFOps-wide variables are loaded. Copy the frame from `playbooks/example.yml`.
+* A playbook whose role only works from the controller against an API or a hypervisor, never on the inventory host itself (`exoscale_vm`, `hetzner_vm`, `infomaniak_vm`, `kvm_vm`, `uptimerobot`), sets `gather_facts: false` and omits this frame. The host may not exist yet or is the controller, where `/var/log/linuxfabrik-lfops.log` would need root, and `global-variables.yml` needs facts. Explain it in a comment above `gather_facts`, as `playbooks/uptimerobot.yml` does, and add `print-messages.yml` to `post_tasks` only if the role reports a manual step.
 
 
 ### Roles
