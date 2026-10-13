@@ -63,7 +63,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__filter_apache_404_ignoreregex`
 
-* A list of regular expressions. Log lines matching any of these patterns will be ignored by the `apache-404` filter, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`.
+* A list of regular expressions. Log lines matching any of these patterns will be ignored by the `apache-404` filter, even if they match the `failregex`. Useful for excluding known missing resources like `/favicon.ico` or `/assets/style.css`, or requests from authenticated users, such as the clients of a package mirror that request packages from outdated repository metadata.
 * Type: List of strings.
 * Default: `[]`
 
@@ -225,6 +225,7 @@ Example:
 fail2ban__filter_apache_404_ignoreregex:
   - '^<HOST> [^"]*"GET /favicon\.ico '
   - '^<HOST> [^"]*"GET /assets/style\.css '
+  - '^[^\["]* (?!- )\S+ \[' # 404s from authenticated users (%u is not "-")
 fail2ban__filters__host_var:
   - filename: 'numishare-admin'
     state: 'present'
