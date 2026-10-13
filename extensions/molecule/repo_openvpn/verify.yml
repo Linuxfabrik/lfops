@@ -7,6 +7,17 @@
   become: true
   tasks:
 
+    # EPEL packages depend on CRB (PowerTools on Rocky 8), so the playbook has to leave it enabled.
+    - name: 'dnf repolist --enabled'
+      ansible.builtin.command: 'dnf repolist --enabled --quiet'
+      register: '__molecule__repolist_result'
+      changed_when: false
+
+    - name: 'Assert that CRB or PowerTools is enabled'
+      ansible.builtin.assert:
+        that: '__molecule__repolist_result["stdout"] is search("^(crb|powertools) ", multiline=true)'
+        fail_msg: 'enabled repositories: {{ __molecule__repolist_result["stdout"] }}'
+
     - name: 'dnf repoquery --repo=copr:copr.fedorainfracloud.org:group_OpenVPN:openvpn-release-2.7 --latest-limit=1 --queryformat="%{version}" openvpn'
       ansible.builtin.command: >-
         dnf repoquery --quiet
