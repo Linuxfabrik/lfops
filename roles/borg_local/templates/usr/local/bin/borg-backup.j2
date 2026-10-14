@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2025020301
+# 2026092201
 
 # no `set -e` because we want to finish writing the log file even if a borg command fails
 function exit_with_first_failed_retc() {
@@ -17,14 +17,16 @@ if [[ $? -eq 0 ]]; then
     # needed for Icinga to set clamd@scan service downtime (max. 90 minutes downtime)
     START_TIME=$(date +%s)
     END_TIME=$(( START_TIME + 5400 ))
-    curl --connect-timeout 5 --insecure --silent --user '{{ borg_local__icinga2_api_user_login["username"] }}:{{ borg_local__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+    # The credentials reach curl as a header read from a pipe that the printf builtin fills, so
+    # they never show up in the process list the way `curl --user` would put them there.
+    curl --connect-timeout 5 --insecure --silent --header @<(printf 'Authorization: Basic %s\n' '{{ (borg_local__icinga2_api_user_login["username"] ~ ":" ~ borg_local__icinga2_api_user_login["password"]) | b64encode }}') --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
     {
         "type": "Service",
-        "filter": "match(\"{{ borg_local__icinga2_hostname }}\", host.name) && "match(\"*Systemd Unit - clamd@scan*\", service.name)",
+        "filter": "match(\"{{ borg_local__icinga2_hostname }}\", host.name) && match(\"*Systemd Unit - clamd@scan*\", service.name)",
         "start_time": "$START_TIME",
         "end_time": "$END_TIME",
         "author": "{{ borg_local__icinga2_hostname }}",
-        "comment": "Disabling clamd@scan during borg backup.",
+        "comment": "Disabling clamd@scan during borg backup."
     }
 EOF
 {% endif %}
@@ -90,7 +92,7 @@ if [[ $start_clamd -eq 1 ]]; then
 
     # remove Icinga downtime
     DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ borg_local__icinga2_hostname }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
-    curl --insecure --silent --user {{ borg_local__icinga2_api_user_login["username"] }}:{{ borg_local__icinga2_api_user_login["password"] }} --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+    curl --insecure --silent --header @<(printf 'Authorization: Basic %s\n' '{{ (borg_local__icinga2_api_user_login["username"] ~ ":" ~ borg_local__icinga2_api_user_login["password"]) | b64encode }}') --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
 {% endif %}
 fi
 

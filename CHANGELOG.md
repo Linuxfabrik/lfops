@@ -122,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
 * **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
 * **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
 * **role:gitlab_ce**: A changed `gitlab-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
@@ -237,6 +238,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
 * **role:openvpn_server**: The server negotiates TLS 1.2 only with forward secrecy and checks client certificates against OpenSSL security level 2 ([#358](https://github.com/Linuxfabrik/lfops/issues/358)).
 * **role:apache_httpd**: The OWASP Core Rule Set archive is checked against a SHA-256 checksum before it is deployed, so a tampered or corrupted download aborts the run.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.
