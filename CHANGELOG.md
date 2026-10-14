@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:influxdb**: The daily dump runs with low CPU and IO priority, so it no longer slows down InfluxDB.
 * **role:gitlab_ce**: The daily dump runs with low CPU and IO priority, so it no longer slows down GitLab.
 * **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
