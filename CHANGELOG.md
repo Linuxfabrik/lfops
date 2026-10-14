@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mongodb**: The daily dump runs with low CPU and IO priority, so it no longer slows down MongoDB.
 * **role:mariadb_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down MariaDB.
 * **role:influxdb**: The daily dump runs with low CPU and IO priority, so it no longer slows down InfluxDB.
 * **role:gitlab_ce**: The daily dump runs with low CPU and IO priority, so it no longer slows down GitLab.
