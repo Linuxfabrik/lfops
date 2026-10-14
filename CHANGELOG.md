@@ -130,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: The daily dump works with the mydumper that Debian and Ubuntu ship.
 * **role:repo_mongodb**: On RHEL, the repository key always matches `repo_mongodb__version`, instead of reusing the key of an earlier run with another version, which made the installation fail.
 * **role:repo_mongodb**: On Ubuntu, the role points to MongoDB's Ubuntu repository instead of the Debian one, so MongoDB can be installed there.
 * **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
