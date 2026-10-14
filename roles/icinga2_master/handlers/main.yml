@@ -22,3 +22,7 @@
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__icinga2_master__service_state_result is not defined or __icinga2_master__service_state_result is not changed'
     - 'icinga2_master__service_state != "stopped"'
+
+- name: 'icinga2_master: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

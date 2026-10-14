@@ -45,6 +45,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'acme_sh: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/acme-sh.timer'
     ansible.builtin.template:
@@ -54,6 +55,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'acme_sh: systemctl daemon-reload'
 
   - name: 'mkdir -p /var/www/html/letsencrypt/.well-known/acme-challenge'
     ansible.builtin.file:

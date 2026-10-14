@@ -12,3 +12,7 @@
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__postgresql_server__service_state_result is not defined or __postgresql_server__service_state_result is not changed'
     - 'postgresql_server__state != "stopped"'
+
+- name: 'postgresql_server: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

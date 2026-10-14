@@ -5,6 +5,12 @@ argument_specs:
   main:
     options:
 
+      duplicity__archive_dir:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The directory for the local duplicity metadata cache. Empty means the duplicity default (`~/.cache/duplicity`).'
+
       duplicity__backup_backend:
         type: 'str'
         required: false

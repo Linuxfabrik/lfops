@@ -61,6 +61,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'icinga2_master: systemctl daemon-reload'
 
   tags:
     - 'icinga2_master'

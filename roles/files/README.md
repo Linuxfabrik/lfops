@@ -155,19 +155,19 @@ Manual steps:
 
     * `mode`:
 
-        * Optional. Mode (permissions) of the directory.
+        * Optional. Mode (permissions) of the symlink itself. The target is not changed.
         * Type: String.
         * Default: `0o644`
 
     * `owner`:
 
-        * Optional. Owner of the directory.
+        * Optional. Owner of the symlink itself. The target is not changed.
         * Type: String.
         * Default: `'root'`
 
     * `group`:
 
-        * Optional. Group of the directory.
+        * Optional. Group of the symlink itself. The target is not changed.
         * Type: String.
         * Default: `'root'`
 

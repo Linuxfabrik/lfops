@@ -19,7 +19,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2024112801'
+__version__ = '2026101401'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -126,6 +126,15 @@ class Duba:
         return env
 
 
+    def archive_dir_options(self):
+        # duplicity appends a hash of the backup URL to the archive dir, so all calls can share it.
+        # Backup and cleanup have to use the same dir, otherwise the cleanup works on another cache.
+        archive_dir = self.config.get('archive_dir', '')
+        if not archive_dir:
+            return []
+        return ['--archive-dir', f"{archive_dir}"]
+
+
     def build_duplicity_backup_command(self, backup_path, backup_options):
         # build the duplicity backup command line
         cmd = ['ionice', '--class', '3']
@@ -138,6 +147,7 @@ class Duba:
             cmd += ['--concurrency', '2']
         else:
             cmd += ['--asynchronous-upload']
+        cmd += self.archive_dir_options()
         cmd += ['--backend-retry-delay', '60']
         cmd += ['--cf-backend', f"{self.config.get('backend', 'swift')}"]
         cmd += ['--encrypt-key', f"{self.config.get('gpg_encrypt_local_key', '')}"]
@@ -175,6 +185,7 @@ class Duba:
 
         cmd += ['remove-older-than', f"{self.config.get('retention_time', '30D')}"]
 
+        cmd += self.archive_dir_options()
         cmd += ['--backend-retry-delay', '60']
         cmd += ['--force']
 
