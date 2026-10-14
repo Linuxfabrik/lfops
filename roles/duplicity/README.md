@@ -103,6 +103,12 @@ duplicity__swift_login:
 
 ## Optional Role Variables
 
+`duplicity__archive_dir`
+
+* The directory for duplicity's local metadata cache (`--archive-dir`). Duplicity creates one subdirectory per backup URL in it, named after the MD5 hash of the URL. `duba` passes it to both the backup and the cleanup. Empty means the duplicity default, `~/.cache/duplicity`. Use it to keep the cache of a separate `duba` setup (for example long-term backups to changing targets) apart, so that it can be deleted without touching the cache of the daily backup.
+* Type: String.
+* Default: `''`
+
 `duplicity__backup_backend`
 
 * The backup backend being used. Possible options: `swift`, `sftp`.
@@ -247,6 +253,7 @@ duplicity__swift_login:
 Example:
 ```yaml
 # optional
+duplicity__archive_dir: ''
 duplicity__backup_backend: 'swift'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'
 duplicity__backup_dest_container: '{{ ansible_nodename }}'
