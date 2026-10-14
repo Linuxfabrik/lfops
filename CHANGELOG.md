@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
 * **role:systemd_unit**: Manages systemd socket units with `systemd_unit__sockets__host_var` / `systemd_unit__sockets__group_var`, for example to forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.
 * **role:collabora**: Add support for Collabora Online Enterprise 24.04.19, 26.04.3 and 26.04.4.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.13.
@@ -120,6 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_mongodb**: On RHEL, the repository key always matches `repo_mongodb__version`, instead of reusing the key of an earlier run with another version, which made the installation fail.
+* **role:repo_mongodb**: On Ubuntu, the role points to MongoDB's Ubuntu repository instead of the Debian one, so MongoDB can be installed there.
 * **role:icingaweb2_module_grafana**: `graphs.ini` no longer keeps the graphs of monitoring plugins that were removed or renamed upstream.
 * **role:uptimerobot**: Alert contacts past the first 50 are found, so `alert_contacts` of a monitor can name them and `uptimerobot_alert_contact_info` lists all of them.
 * **role:uptimerobot**: Port monitors with `sub_type` `https`, `ftp`, `smtp`, `pop3` or `imap` are created instead of rejected by UptimeRobot, a changed `sub_type` takes effect on an existing monitor, and a port monitor with a `sub_type` no longer reports a change on every run.
