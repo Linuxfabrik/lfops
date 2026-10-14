@@ -36,3 +36,7 @@
     - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
     - 'mongodb__service_state != "stopped"'
     - 'mongodb__repl_set_name is defined and mongodb__repl_set_name | length > 0'
+
+- name: 'mongodb: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

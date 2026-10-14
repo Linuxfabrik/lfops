@@ -103,6 +103,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'duplicity: systemctl daemon-reload'
 
   - name: 'Deploy /usr/local/bin/duba'
     ansible.builtin.template:
@@ -137,7 +138,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'duplicity__systemd_duba_timer_result'
+    notify: 'duplicity: systemctl daemon-reload'
 
   tags:
     - 'duplicity'
@@ -152,7 +153,6 @@
       name: 'duba.timer'
       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ duplicity__timer_enabled | bool }}'
-      daemon_reload: '{{ duplicity__systemd_duba_timer_result | d({}) is changed }}'
 
   tags:
     - 'duplicity'

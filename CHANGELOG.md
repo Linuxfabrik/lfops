@@ -120,6 +120,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
+* **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:gitlab_ce**: A changed `gitlab-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:influxdb**: A changed `influxdb-dump.service` or `influxdb-dump.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
+* **role:mariadb_server**: A changed `mariadb-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:mongodb**: A changed `mongodb-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:postgresql_server**: A changed `postgresql-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:duplicity**: A changed backup schedule or `duba.service` takes effect in the same run, also with `--tags duplicity:configure`. Until now it applied only with a full run, or after the next change of the timer file.
 * **role:files**: Symlinks from `files__symlinks__*_var` no longer change the mode, owner and group of their target. Until now a link to a directory set the directory to `0644` and `root:root` by default, so services could no longer enter it.
 * **role:icingaweb2_module_grafana**: `graphs.ini` no longer keeps the graphs of monitoring plugins that were removed or renamed upstream.
 * **role:uptimerobot**: Alert contacts past the first 50 are found, so `alert_contacts` of a monitor can name them and `uptimerobot_alert_contact_info` lists all of them.

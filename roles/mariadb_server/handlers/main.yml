@@ -27,3 +27,7 @@
     timeout: 60
   when:
     - 'mariadb_server__cnf_wsrep_on is true'
+
+- name: 'mariadb_server: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

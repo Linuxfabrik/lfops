@@ -1,0 +1,3 @@
+- name: 'icinga2_agent: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
