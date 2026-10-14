@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.2.
 * **role:duplicity**: `duplicity__archive_dir` sets the directory of duplicity's local metadata cache, for example to keep the cache of a separate long-term backup apart from the daily one. Without it, the cache stays in `~/.cache/duplicity`.
 * **role:systemd_unit**: Manages systemd socket units with `systemd_unit__sockets__host_var` / `systemd_unit__sockets__group_var`, for example to forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.
@@ -83,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
 * **playbook:setup_basic**: Checks the variables of all its roles, the compiled firewall in the Firewall Builder repository and the reachability of the Icinga2 master before it changes anything on the host, so a missing prerequisite no longer aborts the run halfway through, after SSH was already hardened.
 * Handlers that a role notified before a later task failed run anyway, so a changed configuration reaches the running service; until now it stayed inactive, also across later runs, which reported no change (all playbooks).
@@ -122,6 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
 * **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
 * **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
 * **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
