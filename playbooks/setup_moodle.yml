@@ -106,7 +106,7 @@
       # === MariaDB
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
+        - 'ansible_facts["os_family"] in ["Debian", "RedHat"] and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_moodle__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'

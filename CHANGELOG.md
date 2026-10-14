@@ -120,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbook:mariadb_server**: Debian and Ubuntu install mydumper from the official mydumper repository, so the daily dump also works on Debian 13 (all playbooks that install MariaDB with dumps).
 * **role:icingaweb2_module_grafana**: `graphs.ini` no longer keeps the graphs of monitoring plugins that were removed or renamed upstream.
 * **role:uptimerobot**: Alert contacts past the first 50 are found, so `alert_contacts` of a monitor can name them and `uptimerobot_alert_contact_info` lists all of them.
 * **role:uptimerobot**: Port monitors with `sub_type` `https`, `ftp`, `smtp`, `pop3` or `imap` are created instead of rejected by UptimeRobot, a changed `sub_type` takes effect on an existing monitor, and a port monitor with a `sub_type` no longer reports a change on every run.
