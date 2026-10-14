@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
 * **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.2.
 * **role:duplicity**: `duplicity__archive_dir` sets the directory of duplicity's local metadata cache, for example to keep the cache of a separate long-term backup apart from the daily one. Without it, the cache stays in `~/.cache/duplicity`.
@@ -124,6 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_mongodb**: On RHEL, the repository key always matches `repo_mongodb__version`, instead of reusing the key of an earlier run with another version, which made the installation fail.
+* **role:repo_mongodb**: On Ubuntu, the role points to MongoDB's Ubuntu repository instead of the Debian one, so MongoDB can be installed there.
 * **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
 * **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
 * **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
