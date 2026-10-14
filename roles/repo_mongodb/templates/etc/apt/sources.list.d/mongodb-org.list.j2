@@ -1,8 +1,11 @@
 # {{ ansible_managed }}
-# 2025011601
+# 2026101401
 
+{# MongoDB publishes one repository per distribution, and files its Ubuntu packages under "multiverse" #}
+{% set __distribution = ansible_facts["distribution"] | lower %}
+{% set __component = "multiverse" if ansible_facts["distribution"] == "Ubuntu" else "main" %}
 {% if repo_mongodb__mirror_url is defined and repo_mongodb__mirror_url | length %}
-deb [signed-by=/etc/apt/keyrings/mongodb-server-{{ repo_mongodb__version }}.asc] {{ repo_mongodb__mirror_url }}/mongodb-org {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} main
+deb [signed-by=/etc/apt/keyrings/mongodb-server-{{ repo_mongodb__version }}.asc] {{ repo_mongodb__mirror_url }}/mongodb-org {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} {{ __component }}
 {% else %}
-deb [signed-by=/etc/apt/keyrings/mongodb-server-{{ repo_mongodb__version }}.asc] http://repo.mongodb.org/apt/debian {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} main
+deb [signed-by=/etc/apt/keyrings/mongodb-server-{{ repo_mongodb__version }}.asc] http://repo.mongodb.org/apt/{{ __distribution }} {{ ansible_facts["distribution_release"] }}/mongodb-org/{{ repo_mongodb__version }} {{ __component }}
 {% endif %}
