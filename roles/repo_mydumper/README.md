@@ -1,7 +1,7 @@
 # Ansible Role linuxfabrik.lfops.repo_mydumper
 
 This role deploys a repository for the mydumper package.
-Note that Linuxfabrik currently uses its [own repository server](https://repo.linuxfabrik.ch/) for RedHat-based Distros.
+By default, it uses the official [APT and YUM repositories](https://mydumper.github.io/mydumper/docs/html/installing.html) of the mydumper project, and verifies the packages against the project's GPG key.
 
 
 *Available since LFOps `2.0.0`.*

@@ -100,7 +100,7 @@ Which Ansible role is proven to run on which OS?
 | lynis                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mailto_root                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mailx                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
-| mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
+| mariadb_server                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -147,7 +147,7 @@ Which Ansible role is proven to run on which OS?
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |
-| repo_mydumper                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_mydumper                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
 | repo_openvpn                          |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |

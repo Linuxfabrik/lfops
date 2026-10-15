@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:repo_mydumper**: On the Red Hat family, mydumper comes from the official mydumper repository instead of `repo.linuxfabrik.ch`, and dnf checks the package signature. A `repo_mydumper__mirror_url` must therefore serve the signed packages of the official repository unchanged, otherwise the installation fails with a signature error.
 * **role:apache_httpd**: The role no longer hands everything below the document root to the web server user, so a hole in a web application can no longer rewrite the code of every site on the host. The roles that install an application set the owners they need. For content placed by hand that Apache has to write, give the writable directories to `apache` (`www-data` on Debian and Ubuntu) yourself. Remove `apache_httpd__skip_document_root_chown` from your inventory.
 * **role:openvpn_server**: The role requires OpenVPN 2.7 and installs or upgrades it from the OpenVPN repository, which the `openvpn_server` playbook enables with the new `repo_openvpn` role. The upgrade restarts the OpenVPN service from within the package and drops every client, so run it in a maintenance window and restart the service once more afterwards, as the message at the end of the run says. The server refuses client certificates with an RSA key below 2048 bits, a SHA-1 signature or without the TLS Web Client Authentication key usage, and no longer accepts several clients with the same certificate; set `openvpn_server__duplicate_cn: true` where clients share one. Clients that only speak TLS 1.2 and carry the `tls-cipher` line of the former example client config must drop that line. Remove `openvpn_server__dh` and `openvpn_server__dh_skip_deploy` from your inventory.
 * **role:apache_httpd**: `apache_httpd__mod_security_coreruleset_version` has no default anymore and accepts only the OWASP Core Rule Set releases the CRS project supports with security fixes, currently `4.25.2`, `4.29.0` and `4.30.0`. On hosts with `apache_httpd__skip_mod_security_coreruleset: false`, set it in the inventory, otherwise the run aborts.
@@ -130,6 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbook:mariadb_server**: Debian and Ubuntu install mydumper from the official mydumper repository, so the daily dump also works on Debian 13 (all playbooks that install MariaDB with dumps).
 * **role:mariadb_server**: The daily dump works with the mydumper that Debian and Ubuntu ship.
 * **role:lvm**: `growpart: true` grows the right partition when the PV is partition 10 or higher, such as `/dev/vda12` or `/dev/nvme0n1p12`. Until now it addressed partition 2 there, or failed.
 * **role:lvm**: The argument specs name the `fstype` subkey correctly and accept `lvm__lvs__dependent_var` and `lvm__vgs__dependent_var`, so the `setup_*` playbooks can inject LVs and VGs.
