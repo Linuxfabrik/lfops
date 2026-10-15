@@ -2,6 +2,13 @@ argument_specs:
   main:
     options:
 
+      lvm__lvs__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'List of logical volumes to manage. Dependent-role injection.'
+
       lvm__lvs__group_var:
         type: 'list'
         elements: 'dict'
@@ -10,7 +17,7 @@ argument_specs:
         description: >-
           List of logical volumes to manage. Group-level override. See
           README for the full subkey schema (`name`, `vg`, `size`,
-          `filesystem`, `mount_path`, ...).
+          `fstype`, `mount_path`, ...).
 
       lvm__lvs__host_var:
         type: 'list'
@@ -18,6 +25,13 @@ argument_specs:
         required: false
         default: []
         description: 'List of logical volumes to manage. Host-level override.'
+
+      lvm__vgs__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'List of volume groups to manage. Dependent-role injection.'
 
       lvm__vgs__group_var:
         type: 'list'
