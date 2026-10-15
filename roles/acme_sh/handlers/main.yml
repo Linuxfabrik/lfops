@@ -1,0 +1,3 @@
+- name: 'acme_sh: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

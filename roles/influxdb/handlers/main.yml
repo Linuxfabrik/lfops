@@ -12,3 +12,7 @@
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__influxdb__service_state_result is not defined or __influxdb__service_state_result is not changed'
     - 'influxdb__service_state != "stopped"'
+
+- name: 'influxdb: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

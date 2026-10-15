@@ -45,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
+* **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
+* **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.2.
+* **role:duplicity**: `duplicity__archive_dir` sets the directory of duplicity's local metadata cache, for example to keep the cache of a separate long-term backup apart from the daily one. Without it, the cache stays in `~/.cache/duplicity`.
 * **role:systemd_unit**: Manages systemd socket units with `systemd_unit__sockets__host_var` / `systemd_unit__sockets__group_var`, for example to forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.
 * **role:collabora**: Add support for Collabora Online Enterprise 24.04.19, 26.04.3 and 26.04.4.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.13.
@@ -82,6 +86,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:postgresql_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down PostgreSQL.
+* **role:mongodb**: The daily dump runs with low CPU and IO priority, so it no longer slows down MongoDB.
+* **role:mariadb_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down MariaDB.
+* **role:influxdb**: The daily dump runs with low CPU and IO priority, so it no longer slows down InfluxDB.
+* **role:gitlab_ce**: The daily dump runs with low CPU and IO priority, so it no longer slows down GitLab.
+* **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
 * **playbook:setup_basic**: Checks the variables of all its roles, the compiled firewall in the Firewall Builder repository and the reachability of the Icinga2 master before it changes anything on the host, so a missing prerequisite no longer aborts the run halfway through, after SSH was already hardened.
 * Handlers that a role notified before a later task failed run anyway, so a changed configuration reaches the running service; until now it stayed inactive, also across later runs, which reported no change (all playbooks).
@@ -122,6 +132,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **playbook:mariadb_server**: Debian and Ubuntu install mydumper from the official mydumper repository, so the daily dump also works on Debian 13 (all playbooks that install MariaDB with dumps).
+* **role:mariadb_server**: The daily dump works with the mydumper that Debian and Ubuntu ship.
+* **role:lvm**: `growpart: true` grows the right partition when the PV is partition 10 or higher, such as `/dev/vda12` or `/dev/nvme0n1p12`. Until now it addressed partition 2 there, or failed.
+* **role:lvm**: The argument specs name the `fstype` subkey correctly and accept `lvm__lvs__dependent_var` and `lvm__vgs__dependent_var`, so the `setup_*` playbooks can inject LVs and VGs.
+* **role:repo_mongodb**: On RHEL, the repository key always matches `repo_mongodb__version`, instead of reusing the key of an earlier run with another version, which made the installation fail.
+* **role:repo_mongodb**: On Ubuntu, the role points to MongoDB's Ubuntu repository instead of the Debian one, so MongoDB can be installed there.
+* **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
+* **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
+* **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
+* **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:gitlab_ce**: A changed `gitlab-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:influxdb**: A changed `influxdb-dump.service` or `influxdb-dump.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
+* **role:mariadb_server**: A changed `mariadb-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:mongodb**: A changed `mongodb-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:postgresql_server**: A changed `postgresql-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
+* **role:duplicity**: A changed backup schedule or `duba.service` takes effect in the same run, also with `--tags duplicity:configure`. Until now it applied only with a full run, or after the next change of the timer file.
+* **role:files**: Symlinks from `files__symlinks__*_var` no longer change the mode, owner and group of their target. Until now a link to a directory set the directory to `0644` and `root:root` by default, so services could no longer enter it.
 * **role:icingaweb2_module_grafana**: `graphs.ini` no longer keeps the graphs of monitoring plugins that were removed or renamed upstream.
 * **role:uptimerobot**: Alert contacts past the first 50 are found, so `alert_contacts` of a monitor can name them and `uptimerobot_alert_contact_info` lists all of them.
 * **role:uptimerobot**: Port monitors with `sub_type` `https`, `ftp`, `smtp`, `pop3` or `imap` are created instead of rejected by UptimeRobot, a changed `sub_type` takes effect on an existing monitor, and a port monitor with a `sub_type` no longer reports a change on every run.
@@ -228,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
 * **role:openvpn_server**: The server negotiates TLS 1.2 only with forward secrecy and checks client certificates against OpenSSL security level 2 ([#358](https://github.com/Linuxfabrik/lfops/issues/358)).
 * **role:apache_httpd**: The OWASP Core Rule Set archive is checked against a SHA-256 checksum before it is deployed, so a tampered or corrupted download aborts the run.
 * **role:monitoring_plugins**: The source install checks every pinned Python dependency against the checksums in the lockfile instead of installing whatever PyPI serves, and puts the sudoers drop-ins in place only once `visudo` accepts them.

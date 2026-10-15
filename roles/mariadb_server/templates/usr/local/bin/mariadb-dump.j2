@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2026022701
+# 2026101302
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -17,6 +17,12 @@ function exit_with_first_failed_retc() {
             exit "$retc"
         fi
     done
+}
+
+
+# true if version $1 is the same as or newer than version $2 (plain `X.Y.Z[-N]`, no leading "v")
+function version_ge() {
+    [ "$(printf '%s\n%s\n' "$1" "$2" | sort --version-sort | tail -n 1)" == "$1" ]
 }
 
 
@@ -46,8 +52,10 @@ mysql_table_lock_retc=$?
 
 # https://github.com/mydumper/mydumper
 
-# get installed mydumper version ("mydumper v0.15.1-3, built against MySQL 8.0.33-25 with SSL support")
-mydumper_version=$(mydumper --version | awk '{print $2}' | tr --delete ',')
+# get installed mydumper version ("mydumper v0.15.1-3, built against MySQL 8.0.33-25 with SSL support"
+# on RHEL, "mydumper 0.10.0, built against MySQL 8.0.36" in the Debian and Ubuntu repositories).
+# strip the comma and the leading "v", so that version_ge() compares the same way for both.
+mydumper_version=$(mydumper --version | awk '{print $2}' | tr --delete ',' | sed 's/^v//')
 
 # build the cmdline parameters for mydumper
 mydumper_params="--host=$HOST "
@@ -57,9 +65,8 @@ mydumper_params+="--build-empty-files "
 if [ -n "$COMPRESS" ]; then
     mydumper_params+="--compress=$COMPRESS "
 fi
-if [[ "$(echo -e "$mydumper_version\nv0.15.2-7" | sort --version-sort | tail -n1)" == "$mydumper_version" ]]; then
-    # if $(mydumper --version) > 0.15.2-7:
-    # parameter available since mydumper v0.15.2-8+
+if version_ge "$mydumper_version" 0.15.2-8; then
+    # parameter available since mydumper v0.15.2-8
     mydumper_params+="--dirty "
 fi
 mydumper_params+="--events "
@@ -67,9 +74,18 @@ mydumper_params+="--logfile=$BACKUP_DIR/mydumper.log "
 mydumper_params+="--long-query-guard=$LONG_QUERY_GUARD "
 mydumper_params+="--outputdir=$BACKUP_DIR "
 mydumper_params+="--routines "
+if [ "$THREADS" -eq 0 ] && ! version_ge "$mydumper_version" 0.15.3-1; then
+    # 0 means "number of CPUs" only since mydumper v0.15.3-1; older versions (0.10.x in the
+    # Debian and Ubuntu repositories) wait forever without a single worker
+    THREADS=$(nproc)
+fi
 mydumper_params+="--threads=$THREADS "
 mydumper_params+="--triggers "
-mydumper_params+="--trx-tables=0 "
+if version_ge "$mydumper_version" 0.20.1-1; then
+    # `--trx-tables=0` takes an argument since mydumper v0.20.1-1, where it also turned on by
+    # default. older versions do not know the argument and behave like "0" anyway.
+    mydumper_params+="--trx-tables=0 "
+fi
 mydumper_params+="--verbose=3 "
 mydumper_params+="$RAW "
 

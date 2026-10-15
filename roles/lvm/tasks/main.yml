@@ -46,8 +46,9 @@
 
   - name: 'growpart ...'
     ansible.builtin.command:
-      # we need the `[p]` inside the regex to correctly match `/dev/nvme0n1p1`
-      cmd: 'growpart {{ "--dry-run" if ansible_check_mode else "" }} {{ item[1] | ansible.builtin.regex_replace("[p]?[0-9]+$", "") }} {{ item[1] | ansible.builtin.regex_replace(".*[p]?([0-9]+)$", "\1") }}'
+      # we need the `[p]` inside the regex to correctly match `/dev/nvme0n1p1`. the leading `.*?` has to be
+      # non-greedy, otherwise it swallows all but the last digit (`/dev/vda12` would become partition `2`)
+      cmd: 'growpart {{ "--dry-run" if ansible_check_mode else "" }} {{ item[1] | ansible.builtin.regex_replace("[p]?[0-9]+$", "") }} {{ item[1] | ansible.builtin.regex_replace("^.*?[p]?([0-9]+)$", "\1") }}'
     # always run, since growpart supports `--dry-run`
     check_mode: false
     loop: '{{ lvm__vgs__combined_var | ansible.builtin.subelements("pvs", skip_missing=true) }}'

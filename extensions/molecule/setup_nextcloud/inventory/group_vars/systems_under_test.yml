@@ -15,6 +15,11 @@ icinga2_master__downtime_api_user:
 mariadb_server__admin_user:
   username: 'mariadb-admin'
   password: 'linuxfabrik'
+# setting the dump user enables the daily dump (mariadb-dump.service and .timer)
+mariadb_server__dump_user:
+  username: 'mariadb-backup'
+  password: 'linuxfabrik'
+  state: 'present'
 
 nextcloud__fqdn: 'nextcloud.example.com'
 nextcloud__skip_notify_push: true

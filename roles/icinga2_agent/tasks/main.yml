@@ -34,6 +34,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'icinga2_agent: systemctl daemon-reload'
 
   when: 'ansible_facts["os_family"] != "Windows"'
   tags:

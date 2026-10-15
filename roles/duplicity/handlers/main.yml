@@ -1,0 +1,6 @@
+# a daemon-reload is enough for a changed unit file: systemd recalculates the next elapse of a
+# running timer from the new OnCalendar, and the oneshot service reads its new settings on the
+# next run. No restart needed.
+- name: 'duplicity: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

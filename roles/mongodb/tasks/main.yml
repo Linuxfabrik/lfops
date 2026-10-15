@@ -331,6 +331,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'mongodb: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/mongodb-dump.timer'
     ansible.builtin.template:
@@ -340,14 +341,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'mongodb__dump_systemd_timer_result'
+    notify: 'mongodb: systemctl daemon-reload'
 
   - name: 'systemctl enable mongodb-dump.timer --now'
     ansible.builtin.systemd:
       name: 'mongodb-dump.timer'
       state: 'started'
       enabled: true
-      daemon_reload: '{{ mongodb__dump_systemd_timer_result is changed }}'
 
   tags:
     - 'mongodb'

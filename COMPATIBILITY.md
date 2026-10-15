@@ -106,7 +106,7 @@ Which Ansible role is proven to run on which OS?
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mirror                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| mongodb                               |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| mongodb                               |   x    |        |   x    |   x    |    x    |     x     |     x     |           |                                              |
 | monitoring_plugins                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Debian 9, Fedora, SLES 15, SLES 16, Windows  |
 | monitoring_plugins_grafana_dashboards |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | moodle                                |   -    |   -    |   x    |   x    |   (x)   |           |           |           |                                              |
@@ -145,7 +145,7 @@ Which Ansible role is proven to run on which OS?
 | repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
-| repo_mongodb                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |
 | repo_mydumper                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
