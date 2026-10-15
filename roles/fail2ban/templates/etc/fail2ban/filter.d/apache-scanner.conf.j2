@@ -1,0 +1,35 @@
+# {{ ansible_managed }}
+# 2026101501
+
+# Matches requests in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common)
+# that no visitor makes by following a link: automated scanners that probe for files a web server
+# should never hand out, whatever the answer was. GitLab, for example, answers these with a redirect
+# to its sign-in page, so the apache-404 filter never sees them.
+#
+# What counts as a probe:
+#   - a file with a backup, archive or database extension directly below the document root, such
+#     as /backup.zip or /dump.sql (a file below a path, like a project archive, does not count)
+#   - a secrets or version-control entry directly below the document root, such as /.env, /.git/config
+#     or /.aws/credentials
+#   - the development-server paths /@fs/ and /__vite, which expose files of a Vite dev server
+#   - a path traversal through the `..;/` trick of Java servers
+
+[Definition]
+_probe = (?:GET|HEAD|POST) (?:/[^/?" ]+\.(?:7z|bak|bz2|gz|old|orig|rar|sql|swp|tar|tgz|xz|zip)|/\.(?:aws|env|git|ssh|svn)(?:[./][^" ]*)?|/@fs/[^" ]*|/__vite[^" ]*|/[^" ]*\.\.;/[^" ]*)(?:\?[^" ]*)? HTTP/[^"]*"
+
+failregex = ^<HOST> \S+ \S+ \[[^"]*"%(_probe)s
+            ^(?!\d+\.\d+\.\d+\.\d+\s)[^\s:]+ <HOST> \S+ \S+ \[[^"]*"%(_probe)s
+            ^<ADDR> \S+ \S+ \S+ \[[^"]*"%(_probe)s
+
+ignoreregex =
+
+datepattern = ^[^\[]*\[({DATE})
+              {^LN-BEG}
+
+
+# DEV Notes:
+#
+# example log lines (combined):
+# 198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /backup.zip HTTP/1.1" 302 106 "-" "Mozilla/5.0"
+# example log lines (linuxfabrikio):
+# 198.51.100.1 - - - [15/Oct/2026:16:08:40 +0200] "GET /.env HTTP/1.1" 302 106 "-" "Mozilla/5.0" 591 5236

@@ -97,6 +97,62 @@
       loop_control:
         label: '{{ item["item"]["label"] }}'
 
+    # The apache-scanner filter is fed through fail2ban-regex the same way. What is asserted is
+    # which request counts as a probe, whatever the answer was: files that a web server never hands
+    # out directly below the document root. The paths that look alike but belong to a legitimate
+    # visit (a project archive, a file of a repository, a Git URL) must not match, otherwise the
+    # jail bans the users of a code hosting service.
+    - name: 'fail2ban-regex against a {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'fail2ban-regex'
+          - '{{ item["line"] }}'
+          - '/etc/fail2ban/filter.d/apache-scanner.conf'
+      register: '__molecule__fail2ban_scanner_regex_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - label: 'backup archive below the document root'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /backup.zip HTTP/1.1" 302 106 "-" "Mozilla/5.0"'
+          matched: 1
+        - label: 'secrets file in the linuxfabrikio format'
+          line: '192.0.2.10 198.51.100.3 - - [15/Oct/2026:16:08:40 +0200] "GET /.env HTTP/1.1" 302 106 "-" "curl/8" 591 5236'
+          matched: 1
+        - label: 'database dump in the vhost_common format'
+          line: 'test.example.com 198.51.100.2 - - [15/Oct/2026:16:08:40 +0200] "HEAD /dump.sql?x=1 HTTP/1.1" 404 0'
+          matched: 1
+        - label: 'Vite development server path'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /@fs/etc/passwd HTTP/1.1" 302 106 "-" "Mozilla/5.0"'
+          matched: 1
+        - label: 'path traversal with ..;/'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /static/..;/..;/web.xml HTTP/1.1" 302 106 "-" "Mozilla/5.0"'
+          matched: 1
+        - label: 'version-control entry that answers with 200'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /.git/config HTTP/1.1" 200 106 "-" "Mozilla/5.0"'
+          matched: 1
+        - label: 'project archive download'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /group/project/-/archive/main/project-main.zip HTTP/1.1" 200 5000 "-" "Mozilla/5.0"'
+          matched: 0
+        - label: 'Git clone URL'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /group/project.git/info/refs?service=git-upload-pack HTTP/1.1" 200 5000 "-" "git/2.43"'
+          matched: 0
+        - label: 'example file inside a repository'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /group/project/-/blob/main/.env.example HTTP/1.1" 200 500 "-" "Mozilla/5.0"'
+          matched: 0
+        - label: 'ordinary page'
+          line: '198.51.100.1 - - [15/Oct/2026:16:08:40 +0200] "GET /users/sign_in HTTP/2.0" 200 500 "-" "Mozilla/5.0"'
+          matched: 0
+      loop_control:
+        label: '{{ item["label"] }}'
+
+    - name: 'Assert the apache-scanner filter matches only the probes'
+      ansible.builtin.assert:
+        that: 'item["stdout"] is search("Lines: 1 lines, 0 ignored, " ~ item["item"]["matched"] ~ " matched")'
+        fail_msg: '{{ item["item"]["label"] }}: {{ item["stdout"] }}'
+      loop: '{{ __molecule__fail2ban_scanner_regex_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["label"] }}'
+
     # Same approach for the portscan filter, whose jail reads the kernel log of a firewall this
     # host does not run. The filter gets its ports and addresses from the jail, so the sample
     # lines are fed with the same parameters the role default produces (allowed port 22) unless a

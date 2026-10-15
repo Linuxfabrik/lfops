@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:fail2ban**: The `apache-scanner` filter and the `z10-apache-scanner` jail ban clients that probe for `.env` files, backups, archives and database dumps. A reverse proxy in front of GitLab answers such requests with a redirect, which the `apache-404` jail never counts.
 * **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
 * **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.2.

@@ -16,6 +16,9 @@ fail2ban__filters__role_var:
   - filename: 'apache-dos'
     state: 'present'
     template: 'apache-dos'
+  - filename: 'apache-scanner'
+    state: 'present'
+    template: 'apache-scanner'
   - filename: 'portscan'
     state: 'present'
     template: 'portscan'
@@ -25,6 +28,10 @@ fail2ban__filters__role_var:
 fail2ban__jail_apache_404_bantime: '8h'
 fail2ban__jail_apache_404_findtime: '10s'
 fail2ban__jail_apache_404_maxretry: 10
+fail2ban__jail_apache_scanner_bantime: '8h'
+fail2ban__jail_apache_scanner_findtime: '10m'
+fail2ban__jail_apache_scanner_logpath: '/var/log/httpd/*access?log'
+fail2ban__jail_apache_scanner_maxretry: 5
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
 # jail.d is read in alphabetical order, so this file overrides the banaction that the

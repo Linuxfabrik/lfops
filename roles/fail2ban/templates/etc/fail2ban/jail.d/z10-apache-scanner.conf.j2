@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026101501
+
+[apache-scanner]
+bantime  = {{ fail2ban__jail_apache_scanner_bantime }}
+enabled  = true
+findtime = {{ fail2ban__jail_apache_scanner_findtime }}
+logpath  = {{ fail2ban__jail_apache_scanner_logpath }}
+maxretry = {{ fail2ban__jail_apache_scanner_maxretry }}
+port     = http,https
