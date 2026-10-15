@@ -1,0 +1,171 @@
+argument_specs:
+  main:
+    options:
+
+      apache_tomcat__context_xml_cache_max_size:
+        type: 'int'
+        required: false
+        default: 10240
+        description: 'The maximum size of the static resource cache in kilobytes.'
+
+      apache_tomcat__env_xms:
+        type: 'str'
+        required: false
+        default: '1024M'
+        description: 'The initial Java heap size (`-Xms`).'
+
+      apache_tomcat__env_xmx:
+        type: 'str'
+        required: false
+        default: '1024M'
+        description: 'The maximum Java heap size (`-Xmx`).'
+
+      apache_tomcat__env_xx:
+        type: 'str'
+        required: false
+        default: '+UseParallelGC'
+        description: 'JVM option passed after `-XX:`.'
+
+      apache_tomcat__logrotate:
+        type: 'int'
+        required: false
+        description: 'Number of days to keep rotated log files.'
+
+      apache_tomcat__roles__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Tomcat roles to deploy. Dependent-role injection.'
+
+      apache_tomcat__roles__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Tomcat roles to deploy. Group-level override.'
+
+      apache_tomcat__roles__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Tomcat roles to deploy. Host-level override.'
+
+      apache_tomcat__server_xml_ajp_port:
+        type: 'int'
+        required: false
+        description: 'Port of the AJP connector. Unset disables the AJP connector.'
+
+      apache_tomcat__server_xml_connector_compressable_mime_types:
+        type: 'str'
+        required: false
+        default: 'text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml'
+        description: 'The compressible MIME types for the HTTP connector.'
+
+      apache_tomcat__server_xml_connector_compression:
+        type: 'str'
+        required: false
+        default: 'on'
+        description: 'HTTP/1.1 GZIP compression of the HTTP connector: `off`, `on`, `force` or a minimum size in bytes.'
+
+      apache_tomcat__server_xml_connector_connection_timeout:
+        type: 'int'
+        required: false
+        default: 20000
+        description: 'Milliseconds the HTTP connector waits for the request line after accepting a connection.'
+
+      apache_tomcat__server_xml_connector_max_threads:
+        type: 'int'
+        required: false
+        default: 200
+        description: 'Maximum number of request processing threads of the HTTP connector.'
+
+      apache_tomcat__server_xml_connector_min_spare_threads:
+        type: 'int'
+        required: false
+        default: 10
+        description: 'Minimum number of threads the HTTP connector keeps running.'
+
+      apache_tomcat__server_xml_connector_port:
+        type: 'int'
+        required: false
+        default: 8080
+        description: 'Port of the HTTP connector.'
+
+      apache_tomcat__server_xml_shutdown_port:
+        type: 'int'
+        required: false
+        default: 8005
+        description: 'Port on which Tomcat waits for a shutdown command.'
+
+      apache_tomcat__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service.'
+
+      apache_tomcat__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of tomcat.service.'
+
+      apache_tomcat__skip_admin_webapps:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Skips the installation of the Manager Web GUIs.'
+
+      apache_tomcat__skip_root_webapp:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Skips the installation of the ROOT and documentation webapps.'
+
+      apache_tomcat__users__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users allowed to access the Manager Web GUIs. Dependent-role injection.'
+
+      apache_tomcat__users__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users allowed to access the Manager Web GUIs. Group-level override.'
+
+      apache_tomcat__users__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users allowed to access the Manager Web GUIs. Host-level override.'
+
+      apache_tomcat__webapps_docs_context_xml_allow:
+        type: 'str'
+        required: false
+        description: 'Regex of the IP addresses allowed to access the documentation webapp. Mandatory unless `apache_tomcat__skip_root_webapp` is set.'
+
+      apache_tomcat__webapps_manager_context_xml_allow:
+        type: 'str'
+        required: false
+        description: 'Regex of the IP addresses allowed to access the manager and host-manager webapps. Mandatory unless `apache_tomcat__skip_admin_webapps` is set.'
+
+      apache_tomcat__webapps_manager_web_xml_max_file_size:
+        type: 'int'
+        required: false
+        default: 52428800
+        description: 'File size limit in bytes for WAR uploads through the Manager App.'
+
+      apache_tomcat__webapps_manager_web_xml_max_request_size:
+        type: 'int'
+        required: false
+        default: 52428800
+        description: 'Request size limit in bytes for the Manager App.'
