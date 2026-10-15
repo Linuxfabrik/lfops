@@ -251,6 +251,7 @@ apache_httpd__mpm_event_max_connections_per_child: 0
 apache_httpd__mpm_event_max_request_workers: 400
 apache_httpd__mpm_event_max_spare_threads: 250
 apache_httpd__mpm_event_min_spare_threads: 75
+apache_httpd__mpm_event_server_limit: '{{ ([apache_httpd__mpm_event_max_request_workers // apache_httpd__mpm_event_threads_per_child, 1] | max) * 2 }}'  # upstream default: 16
 apache_httpd__mpm_event_start_servers: 3
 apache_httpd__mpm_event_thread_limit: 64
 apache_httpd__mpm_event_threads_per_child: 25

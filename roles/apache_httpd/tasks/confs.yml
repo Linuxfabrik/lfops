@@ -23,6 +23,39 @@
     - 'item["state"] | d("present") == "absent"'
   loop: '{{ apache_httpd__conf__combined_var }}'
 
+# Apache ignores a changed ServerLimit on reload (event.c: "changing ServerLimit to X from original
+# value of Y not allowed during restart"), so a new value has to reach a restart. The check runs
+# before the template task, against the file that is still deployed.
+- name: 'grep ServerLimit from the deployed mpm_event configuration'
+  ansible.builtin.command:
+    argv:
+      - 'grep'
+      - '--count'
+      - '--extended-regexp'
+      - '^ServerLimit +{{ apache_httpd__mpm_event_server_limit }}$'
+      - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}conf-available/mpm_event.conf'
+  register: '__apache_httpd__mpm_event_server_limit_result'
+  changed_when: false
+  failed_when: '__apache_httpd__mpm_event_server_limit_result["rc"] > 2'
+  check_mode: false # a read-only check
+  when:
+    # the role's own mods entry always carries enabled and state, so a user entry merges into it
+    - 'apache_httpd__mods__combined_var
+       | selectattr("filename", "eq", "mpm_event")
+       | selectattr("enabled", "eq", true)
+       | selectattr("state", "ne", "absent")
+       | list | length > 0'
+
+- name: 'Request a restart of {{ __apache_httpd__service_name }}, which runs with another ServerLimit than configured'
+  ansible.builtin.debug:
+    msg: 'ServerLimit changes to {{ apache_httpd__mpm_event_server_limit }}, so {{ __apache_httpd__service_name }} is restarted instead of reloaded'
+  changed_when: true # notify the restart handler
+  notify:
+    - 'apache_httpd: httpd -t; systemctl restart httpd'
+  when:
+    - '__apache_httpd__mpm_event_server_limit_result is not skipped'
+    - '__apache_httpd__mpm_event_server_limit_result["rc"] != 0'
+
 - name: 'Create conf-available configs'
   ansible.builtin.template:
     backup: true

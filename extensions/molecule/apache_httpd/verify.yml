@@ -12,6 +12,8 @@
 # And the OWASP Core Rule Set: by an attack that the running Apache blocks, not by the rule files.
 # And the PHP handler and mod_remoteip: by the status of a request for a missing PHP file and by the
 # client address Apache logs for it.
+# ServerLimit is checked at the end, by what makes it effective: a server that started after the
+# configuration was written.
 - name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -386,3 +388,34 @@
           {{ __molecule__apache_httpd_curl_missing_php_result["stdout"] }},
           "{{ __molecule__apache_httpd_missing_php_log_result["stdout"] }}" and
           "{{ __molecule__apache_httpd_missing_php_access_result["stdout"] }}"
+
+    # Apache ignores a changed ServerLimit on reload, so a server that was only reloaded runs with
+    # the old value while its configuration says otherwise. The running value is not exposed by
+    # Apache, so this asks for what makes it effective: the server started after mpm_event.conf
+    # was last written.
+    - name: 'stat mpm_event.conf'
+      ansible.builtin.stat:
+        path: '{{ (ansible_facts["os_family"] == "Debian") | ternary("/etc/apache2/lfops-conf-available", "/etc/httpd/conf-available") }}/mpm_event.conf'
+      register: '__molecule__apache_httpd_mpm_event_conf_result'
+
+    - name: 'systemctl show --property=ExecMainStartTimestamp --value <service>' # noqa command-instead-of-module (ansible.builtin.service does not report when the service started)
+      ansible.builtin.command: >-
+        systemctl show --property=ExecMainStartTimestamp --value {{ __molecule__service }}
+      register: '__molecule__apache_httpd_start_timestamp_result'
+      changed_when: false
+      vars:
+        __molecule__service: '{{ (ansible_facts["os_family"] == "Debian") | ternary("apache2.service", "httpd.service") }}'
+
+    - name: 'date --date=<start of Apache> +%s'
+      ansible.builtin.command: >-
+        date --date='{{ __molecule__apache_httpd_start_timestamp_result["stdout"] }}' +%s
+      register: '__molecule__apache_httpd_start_result'
+      changed_when: false
+
+    - name: 'Assert Apache started after the last change of mpm_event.conf'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_start_result["stdout"] | int >= __molecule__apache_httpd_mpm_event_conf_result["stat"]["mtime"] | int'
+        fail_msg: >-
+          Apache started {{ __molecule__apache_httpd_start_result["stdout"] }}, mpm_event.conf was written
+          {{ __molecule__apache_httpd_mpm_event_conf_result["stat"]["mtime"] }}

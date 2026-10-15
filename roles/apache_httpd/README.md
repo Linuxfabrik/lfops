@@ -1041,6 +1041,13 @@ Best for PHP-FPM. Default.
 * Type: Number.
 * Default: `75`
 
+`apache_httpd__mpm_event_server_limit`
+
+* See [ServerLimit](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#serverlimit). Apache ignores a changed value on reload, so the role restarts Apache when it changes.
+* Type: Number.
+* Default: twice `apache_httpd__mpm_event_max_request_workers` divided by `apache_httpd__mpm_event_threads_per_child`, at least `2`
+* Deviates from the upstream default `16`: a child process that is told to stop keeps its scoreboard slot for as long as one of its connections lives (a WebSocket, a long download), and while no slot is free Apache cannot start a replacement and logs `AH03490: scoreboard is full, not at MaxRequestWorkers`, even though `MaxRequestWorkers` is far from reached. The default leaves as many spare slots as `apache_httpd__mpm_event_max_request_workers` needs child processes.
+
 `apache_httpd__mpm_event_start_servers`
 
 * See [StartServers](https://httpd.apache.org/docs/2.4/mod/mpm_common.html#startservers).
@@ -1067,6 +1074,7 @@ apache_httpd__mpm_event_max_connections_per_child: 0
 apache_httpd__mpm_event_max_request_workers: 400
 apache_httpd__mpm_event_max_spare_threads: 250
 apache_httpd__mpm_event_min_spare_threads: 75
+apache_httpd__mpm_event_server_limit: 32
 apache_httpd__mpm_event_start_servers: 3
 apache_httpd__mpm_event_thread_limit: 64
 apache_httpd__mpm_event_threads_per_child: 25

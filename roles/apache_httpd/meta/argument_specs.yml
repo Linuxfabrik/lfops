@@ -363,6 +363,19 @@ argument_specs:
         description: >-
           Minimum number of idle threads (`MinSpareThreads`).
 
+      apache_httpd__mpm_event_server_limit:
+        type: 'int'
+        required: false
+        description: >-
+          Upper limit for the number of child processes (`ServerLimit`),
+          including those that are shutting down but still serve a
+          connection. Defaults to twice the child processes that
+          `apache_httpd__mpm_event_max_request_workers` needs. Keep it above
+          `apache_httpd__mpm_event_max_request_workers` divided by
+          `apache_httpd__mpm_event_threads_per_child`, otherwise a lingering
+          child leaves no room for its replacement. A change takes effect
+          with a restart, which the role performs.
+
       apache_httpd__mpm_event_start_servers:
         type: 'int'
         required: false

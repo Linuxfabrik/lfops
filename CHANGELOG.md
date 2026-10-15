@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: With the event MPM, Apache keeps free room for the replacement of a child process that still serves a long connection while it shuts down, so a burst of requests no longer ends in `AH03490: scoreboard is full, not at MaxRequestWorkers`. The new `apache_httpd__mpm_event_server_limit` sets `ServerLimit` (default: twice what `MaxRequestWorkers` needs), and the run restarts Apache once when the value changes.
 * **role:postgresql_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down PostgreSQL.
 * **role:mongodb**: The daily dump runs with low CPU and IO priority, so it no longer slows down MongoDB.
 * **role:mariadb_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down MariaDB.
