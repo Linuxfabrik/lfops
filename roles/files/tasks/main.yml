@@ -85,6 +85,10 @@
     ansible.builtin.file:
       src: '{{ (item["state"] | d("present") != "absent") | ternary(item["src"], omit) }}'
       path: '{{ item["dest"] }}'
+      # Without this, mode, owner and group are applied to the target of the link,
+      # e.g. a linked directory ends up as 0644 root:root and can no longer be entered.
+      # Verified against ansible-core 2.16 on Rocky 10.
+      follow: false
       state: '{{ (item["state"] | d("present") == "present") | ternary("link", "absent") }}'
       mode: '{{ item["mode"] | d("0o644") }}'
       owner: '{{ item["owner"] | d("root") }}'

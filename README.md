@@ -86,6 +86,14 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
 
 If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-core 2.16**. If all your managed nodes have Python >= 3.8 (e.g. RHEL 9+, Debian 12+, Ubuntu 22.04+), you can use **ansible-core 2.18** for the latest features.
 
+**Set the Python interpreter of the managed nodes.** Since ansible-core 2.17, Ansible no longer prefers the system Python of the distribution, but the newest `python3.X` from its list of known versions that it finds on the host. Some roles install an additional Python, for example duplicity (Python 3.11 on RHEL 9, Python 3.13 on RHEL 10). From the next run on, Ansible then runs its modules under that Python, which lacks the Python libraries of the distribution, and roles such as kernel_settings, monitoring_plugins and python_venv fail. Pin the system Python in the inventory for all hosts except RHEL 8, where ansible-core 2.16 already picks `/usr/libexec/platform-python`:
+
+```yaml
+ansible_python_interpreter: '/usr/bin/python3'
+```
+
+Tasks that run on the Ansible controller are not affected by this setting, they use the Python that runs Ansible.
+
 
 ## Installation
 
@@ -409,6 +417,18 @@ ansible-playbook linuxfabrik.lfops.nextcloud --limit myhost \
 ```
 
 Some roles restart a service and then talk to it in the same run, for example `keycloak` (provisions the bootstrap admin), `influxdb` (creates users and databases) and `opensearch` (runs `securityadmin.sh`). Do not use this variable during an initial installation of those roles.
+
+#### `lfops__trusted_proxies`
+
+List of the reverse proxies (IP addresses or CIDR ranges, IPv4 and IPv6) in front of a host. Roles that evaluate a forwarded client address believe it from these addresses only. Currently it is the default of `apache_httpd__mod_remoteip_internal_proxy` in the `apache_httpd` role, which enables `mod_remoteip` as soon as the list is not empty, so the logs, `Require ip` and fail2ban see the client instead of the proxy.
+
+Every address listed here can claim any client address, so list the proxies only, never a whole client network. The default is an empty list, which trusts no proxy.
+
+```yaml
+lfops__trusted_proxies:
+  - '192.0.2.4'
+  - '2001:db8::4'
+```
 
 The `icingadb` role restarts `icinga2`, which it does not own. A restart deferred there cannot be flushed through `icingadb`; use the `icinga2_master` role instead (`--tags icinga2_master:state --extra-vars='icinga2_master__service_state=restarted'`).
 

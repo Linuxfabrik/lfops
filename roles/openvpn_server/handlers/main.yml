@@ -6,3 +6,5 @@
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__openvpn_server__service_state_result is not defined or __openvpn_server__service_state_result is not changed'
     - 'openvpn_server__service_state != "stopped"'
+    # after an upgrade, the operator restarts in a maintenance window, see the end-of-play message
+    - 'not (__openvpn_server__upgraded | bool)'

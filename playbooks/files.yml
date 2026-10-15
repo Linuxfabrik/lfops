@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.files'
   hosts:
     - 'lfops_files'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

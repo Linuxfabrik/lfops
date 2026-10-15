@@ -3,6 +3,8 @@
     name:
       - 'compat-openssl10'
     state: 'present'
+  retries: 3 # ride out a brief outage of the package repository
+  delay: 10
   tags:
     - 'mariadb_server'
     - 'mariadb_server:dump'

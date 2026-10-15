@@ -41,8 +41,12 @@
     ansible.builtin.get_url:
       url: 'https://github.com/NETWAYS/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
 
   - name: 'copy /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz to the server' # noqa risky-file-permissions (temp file)
@@ -113,6 +117,10 @@
         set -euo pipefail
         shopt -s nullglob
 
+        # start from an empty directory: the flattened copy outlives the run,
+        # so the graph of a plugin that was renamed or removed upstream would
+        # otherwise end up in graphs.ini forever
+        rm -rf /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana
         mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana
         for dir in "/tmp/ansible.monitoring-plugins-repo/check-plugins"/*/; do
             # dir ends in a slash, so basename drops it and gives you the plugin name
@@ -127,6 +135,8 @@
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
@@ -137,6 +147,8 @@
       dest: '/tmp/ansible.monitoring-plugins-repo-flattened/icingaweb2-module-grafana/z00-custom.ini'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
 
   - name: 'Assemble /tmp/ansible.icingaweb2-module-grafana-combined.ini' # noqa risky-file-permissions (temp file)
@@ -146,6 +158,8 @@
       delimiter: '\n\n'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     check_mode: false # run task even if `--check` is specified
     changed_when: false # no change on the remote host
 

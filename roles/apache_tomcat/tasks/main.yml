@@ -27,6 +27,8 @@
         - 'tomcat-webapps'      # installs java and tomcat, too
         - 'tomcat-docs-webapp'  # otherwise some links will be broken on the ROOT startpage
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'not apache_tomcat__skip_root_webapp | bool'
 
@@ -35,6 +37,8 @@
       name:
         - 'tomcat-admin-webapps'  # installs java and tomcat, too
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'not apache_tomcat__skip_admin_webapps | bool'
 
@@ -43,6 +47,8 @@
       name:
         - 'tomcat'  # installs java, too
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'apache_tomcat__skip_admin_webapps | bool'
 

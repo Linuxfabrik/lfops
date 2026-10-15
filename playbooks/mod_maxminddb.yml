@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.mod_maxminddb'
   hosts:
     - 'lfops_mod_maxminddb'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

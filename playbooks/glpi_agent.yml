@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.glpi_agent'
   hosts:
     - 'lfops_glpi_agent'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -1,0 +1,8 @@
+# A freshly created xfs in an image file, mounted through a loop device, stands in for a new data
+# volume: it carries no SELinux labels until the role relabels it. converge.yml creates the image.
+mount__mounts__group_var:
+  - path: '/srv/lfops-molecule'
+    src: '/var/tmp/lfops-molecule.img'
+    fstype: 'xfs'
+    opts: 'loop'
+    state: 'mounted'

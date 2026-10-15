@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import contextlib
+import multiprocessing
 import os
 import unittest
 from typing import ClassVar
@@ -45,8 +46,13 @@ class _FakeBitwarden:
     """Minimal stand-in for the Bitwarden client used by the lookup."""
 
     items_by_search: ClassVar[list] = []
+    # what a forced sync brings into the cache, None for no change
+    items_after_forced_sync = None
     item_by_id = None
     created_items: ClassVar[list] = []
+    sync_calls: ClassVar[list] = []
+    # what sync() reports, True for a sync that actually ran
+    sync_result = False
     vault_status = 'unlocked'
 
     mutex_held = False
@@ -69,8 +75,11 @@ class _FakeBitwarden:
     def get_not_unlocked_message(self, status):
         return f'vault reports status "{status}"'
 
-    def sync(self, *args, **kwargs):
-        pass
+    def sync(self, force=False, run_id=None, **kwargs):
+        type(self).sync_calls.append({'force': force, 'run_id': run_id})
+        if force and type(self).items_after_forced_sync is not None:
+            type(self).items_by_search = type(self).items_after_forced_sync
+        return force or type(self).sync_result
 
     def get_items(
         self,
@@ -115,8 +124,11 @@ class _BitwardenLookupTestCase(unittest.TestCase):
         self._orig = lookup_mod.Bitwarden
         lookup_mod.Bitwarden = _FakeBitwarden
         _FakeBitwarden.items_by_search = []
+        _FakeBitwarden.items_after_forced_sync = None
         _FakeBitwarden.item_by_id = None
         _FakeBitwarden.created_items = []
+        _FakeBitwarden.sync_calls = []
+        _FakeBitwarden.sync_result = False
         _FakeBitwarden.mutex_held = False
         _FakeBitwarden.vault_status = 'unlocked'
         # a value leaking in from the caller's environment would flip the
@@ -208,6 +220,59 @@ class TestRun(_BitwardenLookupTestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['username'], 'dba')
         self.assertEqual(result[0]['password'], 'linuxfabrik')
+
+    def test_missing_item_is_searched_again_after_a_sync_before_it_is_created(self):
+        # the cache predates an item created elsewhere during this run
+        _FakeBitwarden.items_after_forced_sync = [
+            {
+                'name': 'host - db',
+                'login': {'username': 'dba', 'password': 'linuxfabrik'},
+            },
+        ]
+        result = self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
+        self.assertEqual(_FakeBitwarden.created_items, [])
+        self.assertEqual(result[0]['password'], 'linuxfabrik')
+        self.assertEqual([c['force'] for c in _FakeBitwarden.sync_calls], [False, True])
+
+    def test_no_second_sync_if_the_lookup_has_just_synced(self):
+        _FakeBitwarden.sync_result = True
+        self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
+        self.assertEqual(len(_FakeBitwarden.created_items), 1)
+        self.assertEqual(len(_FakeBitwarden.sync_calls), 1)
+
+    def test_sync_gets_the_run_id(self):
+        self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
+        self.assertEqual(
+            _FakeBitwarden.sync_calls[0]['run_id'], lookup_mod.get_run_id()
+        )
+
+
+def _put_run_id(queue):
+    queue.put(lookup_mod.get_run_id())
+
+
+class TestGetRunId(unittest.TestCase):
+    def test_forked_worker_gets_the_run_id_of_its_parent(self):
+        # Ansible forks its workers without exec, like multiprocessing's fork context
+        run_id = lookup_mod.get_run_id()
+        self.assertIsNotNone(run_id)
+        ctx = multiprocessing.get_context('fork')
+        queue = ctx.Queue()
+        worker = ctx.Process(target=_put_run_id, args=(queue,))
+        worker.start()
+        worker.join()
+        self.assertEqual(queue.get(timeout=5), run_id)
+
+    def test_no_proc_gives_no_run_id(self):
+        def _missing(pid, name):
+            raise FileNotFoundError(name)
+
+        orig = lookup_mod._read_proc
+        lookup_mod._read_proc = _missing
+        try:
+            self.assertIsNone(lookup_mod.get_run_id())
+        finally:
+            lookup_mod._read_proc = orig
 
 
 if __name__ == '__main__':

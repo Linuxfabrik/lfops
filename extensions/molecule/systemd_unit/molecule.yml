@@ -1,0 +1,2 @@
+# Molecule scenario marker for the 'systemd_unit' scenario, run with
+# `molecule test --scenario-name systemd_unit`.

@@ -21,6 +21,8 @@ This role does not configure the VM's network interfaces.
 
 ## Known Limitations
 
+The `hetzner.hcloud` collection declares ansible-core 2.19 or newer as a requirement. With an older ansible-core, Ansible prints the warning `Collection hetzner.hcloud does not support Ansible version ...` on every run; the modules this role uses work regardless.
+
 It is currently not possible to start a server with only an internal network *and* a fixed IP (see https://github.com/ansible-collections/hetzner.hcloud/issues/172). As a workaround, the server can be created with `hetzner_vm__state: 'stopped'` and then started:
 ```bash
 ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars="hetzner_vm__state='stopped'"
@@ -32,7 +34,7 @@ ansible-playbook --inventory=inventory linuxfabrik.lfops.hetzner_vm --extra-vars
 
 Manual steps:
 
-* Install the Python library `hcloud` on the Ansible control node (use `pip install --user --upgrade hcloud`).
+* Install the Python libraries `python-dateutil` and `requests` on the Ansible control node (use `pip install --user --upgrade python-dateutil requests`). The `hetzner.hcloud` collection ships its own copy of the `hcloud` library.
 * Import your public SSH-key into Hetzner (your project > Security > SSH Keys).
 * Optional: install the [hcloud command line tool](https://github.com/hetznercloud/cli/releases).
 

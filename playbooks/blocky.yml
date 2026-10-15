@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.blocky'
   hosts:
     - 'lfops_blocky'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

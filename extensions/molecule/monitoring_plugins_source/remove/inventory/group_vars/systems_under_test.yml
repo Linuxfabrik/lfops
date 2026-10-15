@@ -1,4 +1,6 @@
 # The inventory already asks for the source install, as on a host that is being switched. The
 # converge overrides the method for the package install that precedes the removal.
 monitoring_plugins__install_method: 'source'
-monitoring_plugins__version: '8.0.0'
+# The latest release, see playbooks/monitoring-plugins-latest.yml, which converge.yml imports.
+monitoring_plugins__version: '{{ lookup("ansible.builtin.file",
+    lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/monitoring-plugins-version") }}'

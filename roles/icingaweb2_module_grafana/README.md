@@ -70,6 +70,12 @@ icingaweb2_module_grafana__version: 'v3.1.3'
 * Type: Bool.
 * Default: `'{{ grafana__auth_jwt }}'`
 
+`icingaweb2_module_grafana__auth_jwt__expires`
+
+* How long, in seconds, the JWT embedded in a Grafana graph stays valid. Grafana keeps no session for it, so the graph shows the Grafana login once the token has expired, until the page in IcingaWeb2 is reloaded. Anyone who obtains the URL of a graph can use Grafana as `grafana-admin` for this long.
+* Type: Number.
+* Default: `259200` (3 days)
+
 `icingaweb2_module_grafana__auth_jwt__priv_key_file`
 
 * Path to the private key file used for JWT-based Grafana authentication.
@@ -109,6 +115,7 @@ Example:
 ```yaml
 # optional
 icingaweb2_module_grafana__auth_jwt: false
+icingaweb2_module_grafana__auth_jwt__expires: 259200
 icingaweb2_module_grafana__auth_jwt__priv_key_file: '/etc/grafana/jwt.key.priv'
 icingaweb2_module_grafana__custom_graphs_config: |-
   [icingacli-x509]

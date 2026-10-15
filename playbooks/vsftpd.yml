@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.vsftpd'
   hosts:
     - 'lfops_vsftpd'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

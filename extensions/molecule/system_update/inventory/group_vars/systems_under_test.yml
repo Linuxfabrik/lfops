@@ -21,3 +21,10 @@ system_update__post_update_code: |-
   touch /var/tmp/molecule-system_update-post-update-code
 system_update__pre_update_code: |-
   touch /var/tmp/molecule-system_update-pre-update-code
+
+# The fixture repository verify.yml builds for the security lane. Not `security`: from
+# rocky-repos 8.10 on, Rocky 8 ships a disabled [security] section in
+# /etc/yum.repos.d/Rocky-Security.repo, and dnf ignores a second section with the same id,
+# so a fixture called `security` stays disabled once the regular lane has updated the host.
+system_update__security_repos:
+  - 'lfops-security-test'

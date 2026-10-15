@@ -1,0 +1,42 @@
+# the state the guard of every database update that is not forced is computed from
+# (__aide__update_db_allowed in vars/main.yml): the handler reads it before the role changes a
+# monitored file, update-db-if-clean.yml right before it updates.
+
+# the result of the last check is read below, so a check that is running right now has to finish
+# first. 5 minutes at most, then the run fails. `systemctl is-active` prints the state; it
+# exits 0 for active only, not for activating. failed_when, not `failed_when: false`, since
+# ansible-core 2.16 moves on silently after the last retry otherwise.
+- name: 'systemctl is-active aidecheck.service (wait up to 5 minutes for a running check to finish)' # noqa command-instead-of-module (read-only state query in a retry loop)
+  ansible.builtin.command: 'systemctl is-active aidecheck.service'
+  register: '__aide__check_active_result'
+  until: '__aide__check_active_result["stdout"] not in ["active", "activating", "deactivating", "reloading"]'
+  retries: 30
+  delay: 10
+  changed_when: false
+  failed_when: '__aide__check_active_result["stdout"] in ["active", "activating", "deactivating", "reloading"]'
+  check_mode: false
+
+# without a database there is nothing to update: the init in tasks/main.yml creates it from the
+# new config.
+- name: 'stat /var/lib/aide/aide.db.gz'
+  ansible.builtin.stat:
+    path: '/var/lib/aide/aide.db.gz'
+  register: '__aide__db_stat_result'
+
+# a database without the check unit was not created by this role (CIS hardening, a manual
+# cron job, ...), and no check of this role has ever vouched for it. re-baselining it would
+# accept everything that changed since it was created, so it is left alone.
+- name: 'stat /etc/systemd/system/aidecheck.service'
+  ansible.builtin.stat:
+    path: '/etc/systemd/system/aidecheck.service'
+  register: '__aide__check_unit_stat_result'
+
+# `aide --check` exits non-zero on any finding, so a failed aidecheck.service is what "the
+# last check reported changes" looks like. rc 0 means failed. a unit that does not exist yet
+# reports rc 1, like one that never failed.
+- name: 'systemctl is-failed aidecheck.service' # noqa command-instead-of-module (read-only state query)
+  ansible.builtin.command: 'systemctl is-failed aidecheck.service'
+  register: '__aide__check_failed_result'
+  changed_when: false
+  failed_when: false
+  check_mode: false

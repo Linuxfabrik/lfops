@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_collabora'
   hosts:
     - 'lfops_repo_collabora'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

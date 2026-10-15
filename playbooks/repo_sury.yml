@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_sury'
   hosts:
     - 'lfops_repo_sury'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

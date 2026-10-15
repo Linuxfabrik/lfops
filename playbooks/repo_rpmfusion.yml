@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_rpmfusion'
   hosts:
     - 'lfops_repo_rpmfusion'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

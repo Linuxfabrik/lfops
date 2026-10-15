@@ -10,6 +10,7 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 
 ## How the Role Behaves
 
+* If any `sunrpc.*` setting is configured (the mariadb_server role sets `sunrpc.tcp_slot_table_entries`), the role loads the `sunrpc` kernel module and lists it in `/etc/modules-load.d/sunrpc.conf`, since the `sunrpc.*` settings only exist while the module is loaded and nothing else loads it at boot on a host without NFS. `options sunrpc` lines in `/etc/modprobe.d/` are commented out in the process. The file stays in place when the `sunrpc.*` settings are removed later.
 * On Ubuntu 22.04 the role removes `kernel.sched_min_granularity_ns` and `kernel.sched_wakeup_granularity_ns` from the TuneD profile it builds on (a `drop` entry in its own profile). The TuneD release of Ubuntu 22.04 sets them although its 5.15 kernel has neither, and TuneD's own verification would otherwise fail on every run.
 
 

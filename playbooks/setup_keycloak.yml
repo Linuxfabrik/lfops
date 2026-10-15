@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.setup_keycloak'
   hosts:
     - 'lfops_setup_keycloak'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -34,7 +35,7 @@
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
+        - 'ansible_facts["os_family"] in ["Debian", "RedHat"] and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_keycloak__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'

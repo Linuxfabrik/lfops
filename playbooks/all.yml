@@ -118,6 +118,7 @@
 - import_playbook: 'repo_monitoring_plugins.yml'
 - import_playbook: 'repo_mydumper.yml'
 - import_playbook: 'repo_opensearch.yml'
+- import_playbook: 'repo_openvpn.yml'
 - import_playbook: 'repo_postgresql.yml'
 - import_playbook: 'repo_proxysql.yml'
 - import_playbook: 'repo_redis.yml'

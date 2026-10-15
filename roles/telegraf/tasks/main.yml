@@ -4,6 +4,8 @@
     ansible.builtin.package:
       name: 'telegraf'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Deploy /etc/telegraf/telegraf.conf'
     ansible.builtin.template:

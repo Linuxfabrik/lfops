@@ -20,7 +20,7 @@
       dest: '/usr/local/libexec/do-reboot'
       owner: 'root'
       group: 'root'
-      mode: 0o744
+      mode: 0o700 # carries the credentials of the Icinga API user and the Rocket.Chat webhook
 
   - name: 'Deploy /usr/local/sbin/schedule-reboot'
     ansible.builtin.template:

@@ -9,11 +9,11 @@ Which Ansible role is proven to run on which OS?
 | Role                                  | Deb 12 | Deb 13 | RHEL 8 | RHEL 9 | RHEL 10 | Ubu 22.04 | Ubu 24.04 | Ubu 26.04 | Other                                        |
 |---------------------------------------|:------:|:------:|:------:|:------:|:-------:|:---------:|:---------:|:---------:|----------------------------------------------|
 | acme_sh                               |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
-| aide                                  |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| aide                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | alternatives                          |   x    |   x    |   x    |   x    |   (x)   |     x     |     x     |    (x)    |                                              |
 | ansible_init                          |        |        |        |        |         |           |           |           | Fedora 35+                                   |
-| apache_httpd                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
-| apache_solr                           |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| apache_httpd                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | no OWASP CRS on Ubu 22.04, ModSecurity 2.9.5 |
+| apache_solr                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | apache_tomcat                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | apps                                  |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | at                                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
@@ -35,7 +35,7 @@ Which Ansible role is proven to run on which OS?
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| duplicity                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
+| duplicity                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | elastic_agent                         |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elastic_agent_fleet_server            |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elasticsearch                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
@@ -100,18 +100,18 @@ Which Ansible role is proven to run on which OS?
 | lynis                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mailto_root                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mailx                                 |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
-| mariadb_server                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Galera on Debian is untested                 |
+| mariadb_server                        |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Galera on Debian is untested                 |
 | mastodon                              |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | matomo_import_logs                    |  (x)   |   x    |  (x)   |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | maxmind_geoip                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| mirror                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| mirror                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| mongodb                               |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| mongodb                               |   x    |        |   x    |   x    |    x    |     x     |     x     |           |                                              |
 | monitoring_plugins                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Debian 9, Fedora, SLES 15, SLES 16, Windows  |
 | monitoring_plugins_grafana_dashboards |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | moodle                                |   -    |   -    |   x    |   x    |   (x)   |           |           |           |                                              |
 | motd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| mount                                 |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| mount                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | network                               |   -    |   -    |   x    |   x    |    x    |           |           |           |                                              |
 | nextcloud                             |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_client                            |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -119,7 +119,7 @@ Which Ansible role is proven to run on which OS?
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | open_vm_tools                         |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | opensearch                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
-| openvpn_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| openvpn_server                        |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | php                                   |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
@@ -145,10 +145,11 @@ Which Ansible role is proven to run on which OS?
 | repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
-| repo_mongodb                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |
-| repo_mydumper                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_mydumper                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
+| repo_openvpn                          |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_redis                            |   x    |   x    |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
@@ -168,7 +169,7 @@ Which Ansible role is proven to run on which OS?
 | sshd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora                                       |
 | system_update                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | systemd_journald                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| systemd_unit                          |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| systemd_unit                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | telegraf                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | timezone                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | tmux                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |

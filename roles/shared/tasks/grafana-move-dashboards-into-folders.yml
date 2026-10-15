@@ -1,0 +1,92 @@
+# Grafana 13.1 and newer files every dashboard that grizzly adds or updates in the root,
+# because grizzly sends the folder as `folderId` and Grafana only reads `folderUid` from
+# 13.1 on (grafana/grafana#122027, "Dashboards: Skip service for /api/dashboard/db").
+# A dashboard moved into the root that way also loses the viewer permission it inherited
+# from the folder, so the embedded graphs in IcingaWeb2 fail with "403". These tasks save
+# every dashboard that is not in the folder of its grizzly resource again, this time
+# with `folderUid`, which puts it back and restores the permission. Grafana versions that
+# file the dashboards correctly have nothing to fix, so nothing is saved there.
+# Verified against Grafana 13.2.2 on Rocky 9.
+#
+# Expects:
+# * shared__grafana_dashboards: list of {"uid": ..., "folder": ...}, the folder each dashboard belongs into
+# * shared__grafana_token: token of a service account with the Admin role
+# * shared__grafana_url
+# * shared__grafana_validate_certs
+
+
+# shared__grafana_dashboards usually parses the grizzly resources; evaluate it only once
+- name: 'collect the dashboards and their folders from the grizzly resources'
+  ansible.builtin.set_fact:
+    __shared__grafana_dashboards: '{{ shared__grafana_dashboards }}'
+
+
+- block:
+
+  - name: 'get the folder of every dashboard: GET {{ shared__grafana_url }}/api/search?type=dash-db'
+    ansible.builtin.uri:
+      url: '{{ shared__grafana_url }}/api/search?type=dash-db&limit=5000'
+      validate_certs: '{{ shared__grafana_validate_certs }}'
+      headers:
+        Accept: 'application/json'
+        Authorization: 'Bearer {{ shared__grafana_token }}'
+    register: '__shared__grafana_search_result'
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'find the dashboards that are not in their folder'
+    ansible.builtin.set_fact:
+      # A dashboard that Grafana does not know (grizzly failed to apply it) is left alone,
+      # and so is one that belongs into the root, which grizzly calls "general".
+      __shared__grafana_misfiled_dashboards: >-
+        {%- set misfiled = [] -%}
+        {%- for dashboard in __shared__grafana_dashboards -%}
+        {%-   if dashboard['folder'] not in ['', 'general']
+                and dashboard['uid'] in __shared__grafana_current_folders
+                and __shared__grafana_current_folders[dashboard['uid']] != dashboard['folder'] -%}
+        {%-     set _ = misfiled.append(dashboard) -%}
+        {%-   endif -%}
+        {%- endfor -%}
+        {{ misfiled }}
+    vars:
+      # uid => uid of the folder the dashboard is in now, '' for the root
+      __shared__grafana_current_folders: >-
+        {{
+          dict(
+            __shared__grafana_search_result['json'] | map(attribute='uid')
+            | zip(__shared__grafana_search_result['json'] | map(attribute='folderUid', default=''))
+          )
+        }}
+
+  - name: 'get the misfiled dashboards: GET {{ shared__grafana_url }}/api/dashboards/uid/<uid>'
+    ansible.builtin.uri:
+      url: '{{ shared__grafana_url }}/api/dashboards/uid/{{ item["uid"] }}'
+      validate_certs: '{{ shared__grafana_validate_certs }}'
+      headers:
+        Accept: 'application/json'
+        Authorization: 'Bearer {{ shared__grafana_token }}'
+    register: '__shared__grafana_misfiled_dashboards_result'
+    loop: '{{ __shared__grafana_misfiled_dashboards }}'
+    loop_control:
+      label: '{{ item["uid"] }}'
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'move the misfiled dashboards into their folder: POST {{ shared__grafana_url }}/api/dashboards/db'
+    ansible.builtin.uri:
+      url: '{{ shared__grafana_url }}/api/dashboards/db'
+      validate_certs: '{{ shared__grafana_validate_certs }}'
+      method: 'POST'
+      body_format: 'json'
+      body:
+        dashboard: '{{ item["json"]["dashboard"] }}'
+        folderUid: '{{ item["item"]["folder"] }}'
+        message: 'Moved into its folder by LFOps (grizzly files it in the root on Grafana 13.1+)'
+        overwrite: true
+      headers:
+        Accept: 'application/json'
+        Authorization: 'Bearer {{ shared__grafana_token }}'
+    loop: '{{ __shared__grafana_misfiled_dashboards_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"]["uid"] }} -> {{ item["item"]["folder"] }}'
+    changed_when: true # the task only runs for a dashboard that is in the wrong folder
+
+  when: '__shared__grafana_dashboards | length > 0'

@@ -1,8 +1,8 @@
 # Ansible Role linuxfabrik.lfops.acme_sh
 
-This role installs [acme.sh](https://github.com/acmesh-official/acme.sh) and enables issuing certificates with [Let's Encrypt](https://letsencrypt.org). Issued certificates are copied from `/etc/acme.sh` to the appropriate subfolders of `/etc/pki/`.
+This role installs [acme.sh](https://github.com/acmesh-official/acme.sh) and enables issuing certificates with [Let's Encrypt](https://letsencrypt.org). Issued certificates are copied from `/etc/acme.sh` to `/etc/pki/tls/` (Red Hat family) or `/etc/ssl/` (Debian and Ubuntu).
 
-After running this role, configure Apache HTTPd as follows:
+Reference them in an Apache HTTPd vHost as follows (Red Hat family):
 ```
 SSLEngine on
 SSLCertificateFile      /etc/pki/tls/certs/www.example.com.crt
@@ -18,31 +18,26 @@ SSLCertificateChainFile /etc/pki/tls/certs/www.example.com-chain.crt
 
 Certificates are issued with the key type set by `acme_sh__key_length`, which defaults to ECDSA P-256 (`ec-256`). ECDSA P-256 offers security equivalent to RSA-3072 at a lower handshake cost and is universally supported by current clients. A certificate that was previously issued as RSA is reissued as ECDSA: acme.sh keeps RSA and ECDSA certificates in separate stores, so the ECDSA certificate is issued next to the existing RSA one and then installed to the same paths under `/etc/pki/`. Apache picks up the new certificate on reload without any vHost change. The superseded RSA certificate is dropped from acme.sh's renewal list, and its files are left in place. To keep issuing RSA, set `acme_sh__key_length` to an RSA value such as `4096`.
 
-The role installs a certificate to `/etc/pki/` and runs the reload command only when it just (re)issued that certificate, or when the installed file is missing (self-heal). It does not reinstall and reload on every run. Ongoing renewals are installed and reloaded by acme.sh itself, driven by the `acme-sh` systemd timer, using the paths saved at install time.
+The role installs a certificate and runs the reload command only when it just (re)issued that certificate, or when the installed file differs from the one acme.sh issued (self-heal). It does not reinstall and reload on every run. Ongoing renewals are installed and reloaded by acme.sh itself, driven by the `acme-sh` systemd timer, using the paths saved at install time.
 
+A vHost that references a certificate before it is issued keeps Apache HTTPd from starting, while acme.sh needs a running web server to answer the HTTP-01 challenge. The `apache_httpd` playbook and the `setup_*` playbooks that contain `apache_httpd` therefore have `apache_httpd` create a self-signed placeholder at every path of `acme_sh__certificates` that does not exist yet, so Apache HTTPd starts, and this role replaces the placeholder at the same path once the certificate is issued. Enable this role in such a playbook with its skip variable (see the [playbooks README](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md)) to get a fresh host up with its certificates in a single run.
 
-## Dependent Roles
-
-Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
-
-* `openssl` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
-* `tar` must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+Before issuing, the role runs the handlers notified so far in the play, so that a vHost for the ACME challenge that an earlier role just deployed is already served.
 
 
 ## Requirements
 
-Manual steps:
+* Every name and alternative name in `acme_sh__certificates` resolves to this host, and the host is reachable from the Internet on port 80.
+* A web server on this host serves `http://<name>/.well-known/acme-challenge/` from `/var/www/html/letsencrypt/.well-known/acme-challenge/`. With LFOps, a vHost like this one in `apache_httpd__vhosts__host_var` does so:
 
-* Configure a web server. The playbook does not set this up. If you are using LFOps to manage an Apache reverse proxy, a virtual host working for acme might be defined like this:
-
-```yaml
-apache_httpd__vhosts__host_var:
-  - conf_server_name: 'www.example.com'
-    enabled: true
-    state: 'present'
-    template: 'redirect'
-    virtualhost_port: 80
-```
+    ```yaml
+    apache_httpd__vhosts__host_var:
+      - conf_server_name: 'www.example.com'
+        enabled: true
+        state: 'present'
+        template: 'redirect'
+        virtualhost_port: 80
+    ```
 
 
 ## Tags
@@ -93,7 +88,7 @@ apache_httpd__vhosts__host_var:
 
         * Optional. Command to execute after issue/renew to reload the server.
         * Type: String.
-        * Default: `'systemctl reload httpd'`
+        * Default: `'systemctl reload httpd'` (Red Hat family), `'systemctl reload apache2'` (Debian and Ubuntu)
 
 Example:
 ```yaml
@@ -144,7 +139,7 @@ acme_sh__certificates:
 
 * The reload command which should be executed on the local host after the certificates were installed.
 * Type: String.
-* Default: `reload_cmd` subkey of the `acme_sh__certificates` item, or `'systemctl reload httpd'`
+* Default: `reload_cmd` subkey of the `acme_sh__certificates` item, or `'systemctl reload httpd'` (Red Hat family), `'systemctl reload apache2'` (Debian and Ubuntu)
 
 `acme_sh__timer_enabled`
 

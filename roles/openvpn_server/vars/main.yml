@@ -1,1 +1,12 @@
 __openvpn_server__selinux_etc_type: 'openvpn_etc_t'
+# true in the run that replaced an installed OpenVPN with another version
+__openvpn_server__upgraded: '{{
+    __openvpn_server__version_before_result["rc"] | d(1) == 0
+    and __openvpn_server__version_result["rc"] | d(1) == 0
+    and __openvpn_server__version_before_result["stdout"] | d("") != __openvpn_server__version_result["stdout"] | d("")
+  }}'
+__openvpn_server__upgrade_message: >-
+  openvpn_server: OpenVPN was updated from {{ __openvpn_server__version_before_result["stdout"] | d("") }}
+  to {{ __openvpn_server__version_result["stdout"] | d("") }}. The role did not restart the service.
+  In a maintenance window, run `systemctl daemon-reload && systemctl restart openvpn-server@server.service`,
+  which drops every connected client, so that OpenVPN runs with the new unit file and configuration.

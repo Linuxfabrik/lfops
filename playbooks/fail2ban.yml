@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.fail2ban'
   hosts:
     - 'lfops_fail2ban'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

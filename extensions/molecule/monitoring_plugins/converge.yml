@@ -1,2 +1,6 @@
+- name: 'Look up the latest monitoring plugins release'
+  ansible.builtin.import_playbook: '../playbooks/monitoring-plugins-latest.yml'
+
+
 - name: 'Converge monitoring_plugins playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.monitoring_plugins'

@@ -41,9 +41,19 @@ This role supports both Red Hat and Debian-based systems. The following paths an
 * User/Group: Red Hat `apache`/`apache`, Debian `www-data`/`www-data`
 * PHP-FPM socket: Red Hat `/run/php-fpm/www.sock`, Debian `/run/php/www.sock`
 
+The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controller and copied to the target, so only the controller needs access to GitHub. The role checks the archive against a SHA-256 checksum it carries for each supported release, taken from an archive whose signature by the CRS project was verified, and aborts on a mismatch. The role deploys the rules to `/etc/httpd/modsecurity.d/crs/`, but does not activate them: include `modsecurity.d/crs/crs-setup.conf` and `modsecurity.d/crs/rules/*.conf` in a vHost (see [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md)). Each version is kept in its own directory, so a change of `apache_httpd__mod_security_coreruleset_version` switches the symlink and reloads Apache, and setting the previous version again rolls back. `crs-setup.conf` is reset to the shipped example on every run; put your CRS settings into the vHost.
+
+A vHost that references a certificate file that does not exist yet keeps Apache from starting. For every entry in `apache_httpd__placeholder_certificates__*_var` whose certificate is missing, the role therefore creates a self-signed placeholder (`<name>.crt`, `<name>-chain.crt`, `<name>-fullchain.crt` and `<name>.key`, valid for 365 days) before it deploys the vHosts. An existing file is never touched. The playbooks that run `acme_sh` together with this role fill the list with the certificates of `acme_sh__certificates`, and `acme_sh` replaces the placeholders once the certificates are issued.
+
 This role does NOT:
 
+* change the owner of what lies below the document root. Apache only reads it by default, and what an application has to write is handed to the web server user by the role that installs the application (`nextcloud`, `wordpress`, `grav`, `moodle`, ...). Content placed by hand below a vHost that has to be writable needs its owner set by hand, for the writable directories only.
 * install PHP or PHP-FPM. It prefers PHP-FPM over mod_php, but installs neither.
+
+
+## Known Limitations
+
+* The OWASP Core Rule Set needs ModSecurity 2.9.6 or newer. Ubuntu 22.04 ships 2.9.5, so `apache_httpd__skip_mod_security_coreruleset` has to stay `true` there.
 
 
 ## Dependent Roles
@@ -70,15 +80,21 @@ Manual steps:
 * Creates symlink for the log directory.
 * Sets ownership on everything below the document root (`chown --no-dereference apache:apache`), not on the document root itself.
 * Hardens permissions on the config directory (`chmod -R g-w`).
+* Creates missing placeholder certificates (see `apache_httpd:certs`).
 * Ensures httpd service is in the desired state.
 * Triggers: httpd.service reload, or restart when a module is enabled or disabled (see `apache_httpd:mods`).
+
+`apache_httpd:certs`
+
+* Installs `openssl` and creates a self-signed placeholder for every certificate in `apache_httpd__placeholder_certificates__*_var` that does not exist yet.
+* Triggers: none.
 
 `apache_httpd:configure`
 
 * Creates or updates the global Apache configuration (`httpd.conf`).
 * Removes rpmnew/rpmsave files (and Debian equivalents).
 * Removes, creates, disables, and enables conf-available configs.
-* Triggers: httpd.service reload.
+* Triggers: httpd.service reload, or a restart on Debian and Ubuntu where Apache still runs with the PID file of an earlier version of the role (`/run/apache2.pid`).
 
 `apache_httpd:htpasswd`
 
@@ -87,11 +103,12 @@ Manual steps:
 
 `apache_httpd:mod_security_coreruleset`
 
+* Aborts if the installed ModSecurity is older than 2.9.6, which the Core Rule Set 4 needs.
 * Installs `tar`.
-* Downloads and verifies the OWASP ModSecurity Core Rule Set (CRS).
-* Extracts the archive and creates a symlink to the CRS directory.
+* Downloads the OWASP ModSecurity Core Rule Set (CRS) on the Ansible controller.
+* Extracts the archive to `/etc/httpd/modsecurity.d/` and points the `modsecurity.d/crs` symlink at it.
 * Copies the default `crs-setup.conf.example` to `crs-setup.conf`.
-* Triggers: none.
+* Triggers: httpd.service reload.
 
 `apache_httpd:mods`
 
@@ -107,6 +124,7 @@ Manual steps:
 
 `apache_httpd:vhosts`
 
+* Creates missing placeholder certificates (see `apache_httpd:certs`).
 * Disables and removes sites-available vHosts.
 * Creates DocumentRoot directories for all vHosts.
 * Creates and enables sites-available vHosts.
@@ -381,11 +399,33 @@ apache_httpd__conf_trace_enable: 'Off'
         * Optional. State of the package, one of `present`, `absent`.
         * Type: String.
 
-`apache_httpd__skip_document_root_chown`
+`apache_httpd__placeholder_certificates__group_var` / `apache_httpd__placeholder_certificates__host_var`
 
-* Set to true to skip handing the content of the document root to the web server user. The document root directory itself keeps the owner the httpd package gives it, since the package's tmpfiles rule resets it on every boot anyway.
-* Type: Bool.
-* Default: `false`
+* Certificates for which the role creates a self-signed placeholder if the certificate file does not exist yet, so that a vHost referencing it can start before the certificate is issued. The files are named like the ones `acme_sh` installs: `<cert_path>/<name>.crt`, `<cert_path>/<name>-chain.crt`, `<cert_path>/<name>-fullchain.crt` and `<key_path>/<name>.key`.
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `cert_path`:
+
+        * Mandatory. Directory of the certificate files.
+        * Type: String.
+
+    * `key_path`:
+
+        * Mandatory. Directory of the private key.
+        * Type: String.
+
+    * `name`:
+
+        * Mandatory. Name of the certificate, also used as its CN.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. `absent` only stops the role from creating a placeholder, it does not remove any file.
+        * Type: String.
+        * Default: `'present'`
 
 `apache_httpd__skip_php_fpm`
 
@@ -440,7 +480,10 @@ apache_httpd__mods__host_var:
 apache_httpd__packages__host_var:
   - name: 'mod_qos'
     state: 'present'
-apache_httpd__skip_document_root_chown: true
+apache_httpd__placeholder_certificates__host_var:
+  - name: 'www.example.com'
+    cert_path: '/etc/pki/tls/certs'
+    key_path: '/etc/pki/tls/private'
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
@@ -719,6 +762,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 `php_set_handler`
 
 * Set the handler for PHP. Socket-based: `SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"`. Network-based: `SetHandler "proxy:fcgi://127.0.0.1:9000/"`. Only rendered if `apache_httpd__skip_php_fpm` is `false`.
+* The handler only applies to PHP files that exist below the `DocumentRoot` of this host. For any other `.php` request Apache answers 404 itself instead of passing it to PHP-FPM, so a scanner probing for PHP files ties up no pool worker. A network-based handler therefore needs the scripts on this host as well, under the same path.
 * Applies to: app, localhost, wordpress.
 * Type: String.
 * Default: `'SetHandler "proxy:unix:/run/php-fpm/www.sock|fcgi://localhost"'`
@@ -869,19 +913,47 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 ```
 
 
+## Optional Role Variables - mod_remoteip
+
+`apache_httpd__mod_remoteip_internal_proxy`
+
+* List of reverse proxies (IP addresses or CIDR ranges, IPv4 and IPv6) in front of this server. As soon as it lists one, the role enables `mod_remoteip` and takes the client address from the `X-Forwarded-For` header of requests that come from these proxies, so the access log, the error log, `Require ip` and fail2ban see the client instead of the proxy. See [RemoteIPInternalProxy](https://httpd.apache.org/docs/2.4/mod/mod_remoteip.html#remoteipinternalproxy).
+* Every address listed here can claim any client address, `127.0.0.1` included, which passes `Require local`. List the proxies only, never a whole client network.
+* Type: List.
+* Default: `lfops__trusted_proxies`, otherwise `[]` (`mod_remoteip` stays disabled)
+
+Example:
+```yaml
+# optional - mod_remoteip
+apache_httpd__mod_remoteip_internal_proxy:
+  - '192.0.2.4'
+  - '2001:db8::4'
+```
+
+
+## Mandatory Role Variables - mod_security (security2)
+
+Only mandatory if `apache_httpd__skip_mod_security_coreruleset` is `false`.
+
+`apache_httpd__mod_security_coreruleset_version`
+
+* The OWASP ModSecurity Core Rule Set (CRS) version number without "v". The role deploys the releases the CRS project supports with security fixes: `4.25.2` (LTS), `4.29.0` and `4.30.0`.
+* Type: String.
+
+Example:
+```yaml
+# mandatory - mod_security
+apache_httpd__mod_security_coreruleset_version: '4.30.0'
+```
+
+
 ## Optional Role Variables - mod_security (security2)
 
 `apache_httpd__mod_security_coreruleset_url`
 
-* The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers.
+* The OWASP ModSecurity Core Rule Set (CRS) Download URL. Change this if you are running your own mirror servers. The archive has to be identical to the one GitHub serves, since the role checks its SHA-256 checksum.
 * Type: String.
 * Default: `'https://github.com/coreruleset/coreruleset/archive'`
-
-`apache_httpd__mod_security_coreruleset_version`
-
-* The OWASP ModSecurity Core Rule Set (CRS) version number without "v".
-* Type: String.
-* Default: `'4.27.0'`
 
 `apache_httpd__skip_mod_security_coreruleset`
 
@@ -893,8 +965,7 @@ Example:
 ```yaml
 # optional - mod_security
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.27.0'
-apache_httpd__skip_mod_security_coreruleset: true
+apache_httpd__skip_mod_security_coreruleset: false
 ```
 
 
@@ -1156,6 +1227,17 @@ apache_httpd__wsgi_python_home: '/opt/python'
 apache_httpd__wsgi_python_path: '/var/www/html/python/'
 apache_httpd__wsgi_script_alias: '/ /var/www/html/python/index.py'
 ```
+
+
+## Troubleshooting
+
+**The run aborts with ``Set `apache_httpd__mod_security_coreruleset_version` to a version this role supports``**
+
+* The OWASP Core Rule Set is deployed (`apache_httpd__skip_mod_security_coreruleset: false`), but its version is not set, or the role carries no checksum for it. Set one of the listed versions, or skip the deployment.
+
+**The CRS download fails with `The checksum for /tmp/ansible.coreruleset-v<version>.tar.gz did not match`**
+
+* The archive differs from the one the role knows for this release. Do not deploy it. Check `apache_httpd__mod_security_coreruleset_url` (a mirror has to serve the unmodified GitHub archive) and verify the archive against the release signature as described in the [CRS installation guide](https://coreruleset.org/docs/deployment/install/).
 
 
 ## License

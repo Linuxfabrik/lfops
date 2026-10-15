@@ -1,0 +1,40 @@
+# {{ ansible_managed }}
+# 2026100101
+
+# Named aidecheck.service / aidecheck.timer, without a dash, since the CIS benchmarks for the
+# Red Hat family check for units of exactly these names. Neither the aide rpm nor the aide
+# package of Debian and Ubuntu ships a check unit, so the name collides with nothing; Debian's
+# aide-common ships dailyaidecheck.service, which the role removes (tasks/Debian.yml).
+
+[Unit]
+Description=AIDE file integrity check
+Documentation=man:aide(1)
+# a check that runs while the system_update role installs packages reports them. when the timer
+# fires during an update, systemd starts the check once the update has finished. ordering on a
+# unit that does not exist is ignored.
+# after multi-user.target: the check after boot waits until the services are up, since some of
+# them rewrite monitored files when they start (postfix its aliases.db). the target then does
+# not order itself after this unit, as it would for a unit it wants, since that would be a loop
+# (unit_add_default_target_dependency() in src/core/unit.c, systemd 239 and newer).
+# unattended-upgrades (apt-daily-upgrade.service) likewise.
+After=apt-daily-upgrade.service multi-user.target security-update.service update-and-reboot.service
+
+[Service]
+# simple, not oneshot: multi-user.target, which wants this unit (see below), is ordered after
+# it and would otherwise hold back the boot until the check has finished.
+Type=simple
+# `aide --check` exits non-zero on any finding (1 added, 2 removed, 4 changed, 14+ errors),
+# which leaves this unit in the failed state. monitoring and the system_update role rely on
+# exactly that. --check right after the binary, since the CIS benchmark for RHEL 9 matches
+# `aide --check`. --config, since the aide binaries of Debian and Ubuntu are built without a
+# default config file.
+# flock: every aide run of LFOps (this check, the role, system_update, the dpkg hook) takes
+# /run/aide.lock, so they run one after the other. aide locks its report file itself, but a
+# second run then exits with 21 (LOCK_ERROR) instead of waiting.
+ExecStart=/usr/bin/flock /run/aide.lock {{ __aide__binary_path }} --check --config=/etc/aide.conf
+IOSchedulingClass=idle
+Nice=19
+
+[Install]
+# the CIS benchmarks want aidecheck.service enabled, which also runs a check after every boot
+WantedBy=multi-user.target

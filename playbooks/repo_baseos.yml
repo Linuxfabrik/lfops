@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_baseos'
   hosts:
     - 'lfops_repo_baseos'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

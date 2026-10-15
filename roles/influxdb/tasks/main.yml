@@ -6,6 +6,8 @@
         - 'curl' # required by the `/usr/lib/influxdb/scripts/influxd-systemd-start.sh` script
         - 'influxdb'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'influxdb'
@@ -131,6 +133,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'influxdb: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/influxdb-dump.service'
     ansible.builtin.template:
@@ -140,6 +143,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'influxdb: systemctl daemon-reload'
 
   - name: 'systemctl {{ influxdb__dump_timer_enabled | bool | ternary("enable", "disable") }} --now influxdb-dump.timer'
     ansible.builtin.systemd:

@@ -5,6 +5,8 @@
       name:
         - 'grafana'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'grafana'
@@ -149,6 +151,8 @@
       name:
         - 'chkconfig'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora" and ansible_facts["distribution_major_version"] | int >= 9'
 
@@ -277,6 +281,8 @@
       label: '{{ item["json"]["name"] | d(item) }}'
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'not grafana__skip_token_to_bitwarden'
       - 'not (item["skipped"] is defined and item["skipped"])'

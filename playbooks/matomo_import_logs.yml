@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.matomo_import_logs'
   hosts:
     - 'lfops_matomo_import_logs'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

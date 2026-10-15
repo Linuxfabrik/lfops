@@ -1,0 +1,6 @@
+# Ubuntu 22.04 ships ModSecurity 2.9.5, which rejects the rules of the OWASP Core Rule Set 4, so the
+# role refuses to deploy them there. The host runs the rest of the scenario without them.
+apache_httpd__conf__host_var:
+  - filename: 'z00-crs'
+    state: 'absent'
+apache_httpd__skip_mod_security_coreruleset: true

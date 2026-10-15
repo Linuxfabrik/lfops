@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: '{{ __php__base_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'php'
@@ -26,6 +28,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
@@ -37,6 +41,8 @@
     ansible.builtin.package:
       name: '{{ __php__base_packages }}'
       state: 'latest'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:
@@ -105,6 +111,8 @@
       name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   tags:
     - 'php'
@@ -124,6 +132,8 @@
   - name: 'apt update # update the cache'
     ansible.builtin.apt:
       update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     changed_when: false # refreshing the package cache is not a config change
     when: 'ansible_facts["os_family"] == "Debian"'
 
@@ -133,6 +143,8 @@
       name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'latest'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     notify: 'php: php-fpm --test; restart php-fpm'
 
   tags:
@@ -354,6 +366,11 @@
     loop_control:
       label: '{{ item["name"] }}'
     notify: 'php: php-fpm --test; restart php-fpm'
+    # The pools set memory_limit, max_execution_time etc. from the php__ini_* variables, and a
+    # pool value takes precedence over the ini file, so a run with 'php:ini' alone must deploy
+    # them too.
+    tags:
+      - 'php:ini'
 
   # 'php:update' is included because a version change moves __php__fpm_pools_path to the new
   # version's tree, which the package ships with nothing but its own default pool.
@@ -386,6 +403,43 @@
   tags:
     - 'php'
     - 'php:logrotate'
+    - 'php:update'
+
+
+- block:
+
+  # The ordering belongs to the consuming unit, Apache. The php-fpm package of RHEL and Remi only
+  # lets httpd pull php-fpm in (`Wants=` in `httpd.service.d/php-fpm.conf`, below /usr/lib or /etc
+  # depending on the build; php-fpm 8.0 to 8.5 on Rocky 8, 9 and 10), Debian does not even that,
+  # so both start in parallel at boot. On a host without Apache the ordering is ignored. No
+  # restart: an ordering drop-in takes effect at the next boot.
+  - name: 'mkdir -p /etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/z00-php.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/z00-php.conf.j2'
+      dest: '/etc/systemd/system/{{ __shared__apache_httpd_service_name }}.service.d/z00-php.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__php__z00_php_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__php__z00_php_result is changed'
+
+  # 'php:update' is included because a version change renames the PHP-FPM unit on Debian.
+  tags:
+    - 'php'
+    - 'php:fpm'
     - 'php:update'
 
 

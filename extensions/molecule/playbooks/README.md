@@ -56,6 +56,10 @@ Depending on the backend a scenario uses:
 
 * Removes the containers.
 
+`monitoring-plugins-latest.yml`
+
+* Looks up the latest release of the Linuxfabrik Monitoring Plugins on GitHub once per run and writes it to `$MOLECULE_EPHEMERAL_DIRECTORY/monitoring-plugins-version`. Scenarios that deploy the plugins import it at the top of their `converge.yml` and read the file into `monitoring_plugins__version` in their `group_vars`, so they always test the current release. The file lookup also reaches nested `ansible-playbook` runs.
+
 
 ## Mandatory Variables
 

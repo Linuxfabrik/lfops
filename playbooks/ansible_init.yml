@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.ansible_init'
   hosts:
     - 'lfops_ansible_init'
+  force_handlers: true
 
   roles:
 

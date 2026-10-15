@@ -23,3 +23,7 @@
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__clamav__clamonacc_service_state_result is not defined or __clamav__clamonacc_service_state_result is not changed'
     - 'clamav__clamonacc_service_state != "stopped"'
+
+- name: 'clamav: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true

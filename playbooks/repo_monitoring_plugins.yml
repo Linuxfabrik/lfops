@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.repo_monitoring_plugins'
   hosts:
     - 'lfops_repo_monitoring_plugins'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

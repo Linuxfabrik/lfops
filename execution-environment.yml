@@ -26,13 +26,14 @@ dependencies:
   python:
     - 'ansible-lint'
     - 'cs' # required for ngine_io.cloudstack
-    - 'hcloud' # required for hetzner.hcloud
     - 'jmespath' # required for community.general.json_query
     - 'mitogen'
     - 'netaddr' # required for ansible.utils.ipaddr
     - 'openstacksdk' # required for openstack.cloud
     - 'passlib' # required for ansible.builtin.password_hash filter
+    - 'python-dateutil' # required for hetzner.hcloud
     - 'pywinrm'
+    - 'requests' # required for hetzner.hcloud
 
   python_interpreter:
     package_system: 'python3.11'

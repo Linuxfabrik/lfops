@@ -1,1 +1,3 @@
-monitoring_plugins__version: '5.0.0'
+# The latest release, see playbooks/monitoring-plugins-latest.yml, which converge.yml imports.
+monitoring_plugins__version: '{{ lookup("ansible.builtin.file",
+    lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/monitoring-plugins-version") }}'

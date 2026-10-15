@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.python_venv'
   hosts:
     - 'lfops_python_venv'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

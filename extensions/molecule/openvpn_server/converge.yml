@@ -1,0 +1,75 @@
+# A throwaway PKI on every target: a CA, the server certificate, a CRL and two client
+# certificates. `client` is valid, `client-noeku` lacks the TLS Web Client Authentication key
+# usage; verify.yml expects the server to refuse the latter. Each target creates its own PKI
+# with its own OpenSSL, so the PKCS #12 files are readable there (OpenSSL 1.1.1 on RHEL 8, 3.x
+# on RHEL 9 and 10).
+- name: 'Create a test PKI'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'dnf install openssl'
+      ansible.builtin.package:
+        name: 'openssl'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+    - name: 'mkdir /etc/pki/molecule-openvpn'
+      ansible.builtin.file:
+        path: '/etc/pki/molecule-openvpn'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Create CA, server certificate, CRL and client certificates'
+      ansible.builtin.shell:
+        cmd: |
+          set -o errexit
+          cd /etc/pki/molecule-openvpn
+          cat > ext.cnf <<'EOT'
+          [server]
+          basicConstraints = CA:FALSE
+          keyUsage = digitalSignature, keyEncipherment
+          extendedKeyUsage = serverAuth
+          [client]
+          basicConstraints = CA:FALSE
+          keyUsage = digitalSignature
+          extendedKeyUsage = clientAuth
+          [noeku]
+          basicConstraints = CA:FALSE
+          keyUsage = digitalSignature
+          EOT
+          cat > ca.cnf <<'EOT'
+          [ca]
+          default_ca = molecule
+          [molecule]
+          database = index.txt
+          crlnumber = crlnumber
+          default_md = sha256
+          default_crl_days = 30
+          EOT
+          touch index.txt
+          echo 01 > crlnumber
+          openssl req -x509 -newkey rsa:2048 -nodes -keyout ca.key -out ca.crt -days 30 -subj /CN=molecule-ca
+          sign() {
+              openssl req -newkey "rsa:${3}" -nodes -keyout "${1}.key" -out "${1}.csr" -subj "/CN=${1}"
+              openssl x509 -req -in "${1}.csr" -CA ca.crt -CAkey ca.key -CAcreateserial \
+                  -out "${1}.crt" -days 30 -sha256 -extfile ext.cnf -extensions "${2}"
+              openssl pkcs12 -export -in "${1}.crt" -inkey "${1}.key" -certfile ca.crt \
+                  -out "${1}.p12" -passout pass:
+          }
+          sign server server 2048
+          sign client client 2048
+          sign client-noeku noeku 2048
+          openssl ca -config ca.cnf -gencrl -keyfile ca.key -cert ca.crt -out crl.pem
+          chmod 0400 ./*.key ./*.p12
+          # read by OpenVPN after it dropped its privileges to the openvpn user
+          chmod 0644 crl.pem
+        creates: '/etc/pki/molecule-openvpn/crl.pem'
+        executable: '/bin/bash'
+
+
+- name: 'Converge openvpn_server playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.openvpn_server'

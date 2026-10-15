@@ -15,11 +15,15 @@
     ansible.builtin.package:
       name: '{{ __r__required_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Install the build dependencies of the CRAN packages'
     ansible.builtin.package:
       name: '{{ __r__build_dependency_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - 'not r__skip_build_dependency_installation | bool'
 

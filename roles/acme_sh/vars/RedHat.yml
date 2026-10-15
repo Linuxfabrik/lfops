@@ -1,2 +1,0 @@
-__acme_sh__cert_path: '/etc/pki/tls/certs'
-__acme_sh__key_path: '/etc/pki/tls/private'

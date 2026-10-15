@@ -1,9 +1,24 @@
-apache_httpd__skip_document_root_chown: false
 apache_httpd__skip_mod_security_coreruleset: true
 apache_httpd__skip_php_fpm: false
 apache_httpd__systemd_enabled: true
 apache_httpd__systemd_state: 'started'
 apache_httpd__systemd_timeout_stop_sec: 5
+
+
+# Placeholder Certificates
+# ------------------------
+
+apache_httpd__placeholder_certificates__combined_var: '{{ (
+      apache_httpd__placeholder_certificates__role_var +
+      apache_httpd__placeholder_certificates__dependent_var +
+      apache_httpd__placeholder_certificates__group_var +
+      apache_httpd__placeholder_certificates__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+apache_httpd__placeholder_certificates__dependent_var: []
+apache_httpd__placeholder_certificates__group_var: []
+apache_httpd__placeholder_certificates__host_var: []
+apache_httpd__placeholder_certificates__role_var: []
 
 
 # Apache Module Installation
@@ -143,6 +158,12 @@ apache_httpd__conf__role_var:
     state: 'present'
     template: 'python'
 
+  # The RemoteIP* directives only exist with mod_remoteip loaded, so this follows its mods entry.
+  - filename: 'remoteip'
+    enabled: '{{ apache_httpd__mod_remoteip_internal_proxy | length > 0 }}'
+    state: 'present'
+    template: 'remoteip'
+
   - filename: 'ssl'
     enabled: true
     state: 'present'
@@ -208,12 +229,13 @@ apache_httpd__mod_http2_protocols: 'h2 http/1.1'  # upstream default: http/1.1
 apache_httpd__mod_http2_stream_max_mem_size: 65536
 apache_httpd__mod_http2_window_size: 65535
 
+# mod_remoteip
+apache_httpd__mod_remoteip_internal_proxy: '{{ lfops__trusted_proxies | d([]) }}'
+
 # mod_security
-# normally nothing that you have to change
 # get details from https://coreruleset.org/docs/deployment/install/
 # origin: https://github.com/coreruleset/coreruleset/releases
 apache_httpd__mod_security_coreruleset_url: 'https://github.com/coreruleset/coreruleset/archive'
-apache_httpd__mod_security_coreruleset_version: '4.27.0'
 
 # mod_ssl
 apache_httpd__mod_ssl_ssl_use_stapling: 'off'

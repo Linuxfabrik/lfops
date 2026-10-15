@@ -1,0 +1,49 @@
+- name: 'Playbook linuxfabrik.lfops.repo_openvpn'
+  hosts:
+    - 'lfops_repo_openvpn'
+  force_handlers: true
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      # CRB is shipped in the Rocky default repo file (Rocky 9+, formerly from EPEL), so enable it there only.
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
+        - 'not repo_openvpn__skip_repo_baseos | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'not repo_openvpn__skip_repo_epel | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_openvpn'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'print-messages.yml'
+      tags:
+        - 'always'

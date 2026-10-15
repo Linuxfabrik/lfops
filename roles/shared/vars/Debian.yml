@@ -1,2 +1,3 @@
 __shared__apache_httpd_group: 'www-data'
+__shared__apache_httpd_service_name: 'apache2'
 __shared__apache_httpd_user: 'www-data'

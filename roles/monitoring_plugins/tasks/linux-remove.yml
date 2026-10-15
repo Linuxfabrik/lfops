@@ -126,6 +126,7 @@
     vars:
       __monitoring_plugins__manifest_allowed: '{{
           "^(/usr/lib64/nagios/plugins/[^/]+"
+          ~ "|/usr/lib64/nagios/plugins/device-(mibs|oids)/.+"
           ~ "|/usr/lib64/linuxfabrik-monitoring-plugins"
           ~ "|/etc/sudoers[.]d/linuxfabrik-monitoring-plugins(-logging)?"
           ~ "|/etc/bash_completion[.]d/linuxfabrik-monitoring-plugins"
@@ -134,9 +135,28 @@
     loop: '{{
         (__monitoring_plugins__manifest["content"] | d("") | b64decode).splitlines()
         | select("match", __monitoring_plugins__manifest_allowed)
-        | reject("search", "/[.][.]?$")
+        | reject("search", "/[.][.]?(/|$)")
         | list
       }}'
+
+  # The data directories of the snmp plugin go once they are empty, as with the one-line
+  # installer. Device definitions an admin put there keep them in place.
+  - name: 'find /usr/lib64/nagios/plugins/{{ item }} -type d -empty -delete -print'
+    ansible.builtin.command:
+      argv:
+        - 'find'
+        - '/usr/lib64/nagios/plugins/{{ item }}'
+        - '-type'
+        - 'd'
+        - '-empty'
+        - '-delete'
+        - '-print'
+      removes: '/usr/lib64/nagios/plugins/{{ item }}'
+    register: '__monitoring_plugins__remove_snmp_dirs_result'
+    changed_when: '__monitoring_plugins__remove_snmp_dirs_result["stdout"] | length > 0'
+    loop:
+      - 'device-mibs'
+      - 'device-oids'
 
   # Hosts set up before the manifest existed, by hand, from a zip or by an earlier version of
   # this role, carry whatever that release placed. The list holds every name any release ever

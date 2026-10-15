@@ -1,0 +1,9 @@
+# converge.yml creates a throwaway PKI on the target below /etc/pki (cert_t, which openvpn_t
+# may read), so the role does not copy certificate and CRL from the inventory.
+openvpn_server__client_network: '192.0.2.0'
+openvpn_server__crl_verify: '/etc/pki/molecule-openvpn/crl.pem'
+openvpn_server__crl_verify_skip_deploy: true
+openvpn_server__pkcs12: '/etc/pki/molecule-openvpn/server.p12'
+openvpn_server__pkcs12_skip_deploy: true
+openvpn_server__pushs:
+  - 'route 198.51.100.0 255.255.255.0'

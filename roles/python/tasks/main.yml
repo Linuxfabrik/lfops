@@ -25,6 +25,8 @@
       name:
         - 'python{{ python__version }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Combined Modules:'
     ansible.builtin.debug:
@@ -35,6 +37,8 @@
       name: '{{ (python__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (python__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Remove additional python modules'
     ansible.builtin.package:

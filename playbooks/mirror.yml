@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.mirror'
   hosts:
     - 'lfops_mirror'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -17,13 +18,6 @@
 
 
   roles:
-
-    - role: 'linuxfabrik.lfops.apps'
-      apps__apps__dependent_var: '{{
-          mirror__apps__apps__dependent_var
-        }}'
-      when:
-        - 'not mirror__skip_apps | d(false)'
 
     - role: 'linuxfabrik.lfops.yum_utils'
       when:

@@ -66,6 +66,8 @@
     ansible.builtin.package:
       name: '{{ __selinux__module_compilation_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   # Everything from here up to the "semodule --install" below only writes into a scratch directory
   # and never touches the managed system, hence the `changed_when: false` and `check_mode: false` on

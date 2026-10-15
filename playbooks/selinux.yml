@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.selinux'
   hosts:
     - 'lfops_selinux'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -269,6 +269,14 @@ argument_specs:
           Global log directive for requests not handled by any vHost
           (`CustomLog`). Unset omits the directive.
 
+      apache_httpd__mod_remoteip_internal_proxy:
+        type: 'list'
+        elements: 'str'
+        required: false
+        description: >-
+          Reverse proxies whose `X-Forwarded-For` header is believed
+          (`RemoteIPInternalProxy`). Defaults to `lfops__trusted_proxies`.
+
       apache_httpd__mod_security_coreruleset_url:
         type: 'str'
         required: false
@@ -279,9 +287,9 @@ argument_specs:
       apache_httpd__mod_security_coreruleset_version:
         type: 'str'
         required: false
-        default: '4.27.0'
         description: >-
-          Version of the OWASP Core Rule Set to deploy.
+          Version of the OWASP Core Rule Set to deploy. Mandatory unless
+          apache_httpd__skip_mod_security_coreruleset is true.
 
       apache_httpd__mod_ssl_ssl_use_stapling:
         type: 'str'
@@ -493,12 +501,32 @@ argument_specs:
           Packages installed via the OS package manager. Host-level
           override.
 
-      apache_httpd__skip_document_root_chown:
-        type: 'bool'
+      apache_httpd__placeholder_certificates__dependent_var:
+        type: 'list'
+        elements: 'dict'
         required: false
-        default: false
+        default: []
         description: >-
-          Skip the recursive chown of the document root.
+          Certificates that get a self-signed placeholder while missing.
+          Dependent-role injection.
+
+      apache_httpd__placeholder_certificates__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Certificates that get a self-signed placeholder while missing.
+          Group-level override.
+
+      apache_httpd__placeholder_certificates__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: >-
+          Certificates that get a self-signed placeholder while missing.
+          Host-level override.
 
       apache_httpd__skip_mod_security_coreruleset:
         type: 'bool'

@@ -5,6 +5,8 @@
       name:
         - 'borgbackup'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir /etc/borg'
     ansible.builtin.file:
@@ -58,7 +60,7 @@
       dest: '/usr/local/bin/borg-backup'
       owner: 'root'
       group: 'root'
-      mode: 0o755
+      mode: 0o700 # carries the credentials of the Icinga API user
 
   tags:
     - 'borg_local'
