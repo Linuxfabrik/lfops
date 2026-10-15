@@ -1,0 +1,12 @@
+# skip the restart if the operator deferred restarts LFOps-wide, if the service was just started
+# (redundant), or if the user wants it stopped. `is not defined` covers a run that skips the state
+# block (`--skip-tags curaline:state`). this guard is only sound because the state task runs after
+# every task that notifies this handler.
+- name: 'curaline: restart cdr-client'
+  ansible.builtin.service:
+    name: 'cdr-client'
+    state: 'restarted'
+  when:
+    - 'not (lfops__skip_restart_handlers | d(false) | bool)'
+    - '__curaline__service_state_result is not defined or __curaline__service_state_result is not changed'
+    - 'curaline__service_state != "stopped"'

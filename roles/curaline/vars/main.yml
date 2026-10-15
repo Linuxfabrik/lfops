@@ -1,0 +1,20 @@
+__curaline__config_dir: '/etc/swisscom-schweiz-ag/cdr-client'
+__curaline__install_dir: '/usr/lib/swisscom-schweiz-ag/cdr-client'
+
+# the connectors that are not removed. the ones without a `state` come first, since `rejectattr`
+# cannot test an attribute that is not there.
+__curaline__connectors_present: '{{
+      (curaline__connectors__combined_var | selectattr("state", "undefined") | list) +
+      (curaline__connectors__combined_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list)
+  }}'
+
+# every folder the client reads from or writes to: the temporary download folder plus the
+# source, target and archive folders of the present connectors. The client creates the
+# subfolders below them (such as `error`) itself.
+__curaline__folders: '{{ (
+      [curaline__local_folder] +
+      (__curaline__connectors_present | selectattr("source-folder", "defined") | map(attribute="source-folder") | list) +
+      (__curaline__connectors_present | selectattr("target-folder", "defined") | map(attribute="target-folder") | list) +
+      (__curaline__connectors_present | selectattr("source-archive-folder", "defined") | map(attribute="source-archive-folder") | list)
+    ) | unique | sort
+  }}'

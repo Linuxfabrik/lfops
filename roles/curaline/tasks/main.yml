@@ -1,0 +1,260 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # simple checks (required, type, choices) live in meta/argument_specs.yml.
+  - name: 'Check variable constraints'
+    ansible.builtin.assert:
+      that:
+        - 'curaline__version is regex("^[0-9]+\.[0-9]+\.[0-9]+$")'
+        - '__curaline__connectors_present | length > 0'
+        - 'ansible_facts["architecture"] == "x86_64"'
+      quiet: true
+      fail_msg: >-
+        curaline__version must look like "6.2.1", at least one connector must be present in
+        curaline__connectors__*_var, and the host must be x86_64 (the curaLINE client is only
+        published for linux-amd64).
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  - name: 'Install required packages'
+    ansible.builtin.package:
+      name: '{{ __curaline__required_packages }}'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  - name: 'groupadd --system curaline'
+    ansible.builtin.group:
+      name: 'curaline'
+      state: 'present'
+      system: true
+
+  - name: 'useradd --system curaline'
+    ansible.builtin.user:
+      name: 'curaline'
+      comment: 'curaLINE Service Account'
+      group: 'curaline'
+      home: '{{ __curaline__install_dir }}'
+      create_home: false
+      shell: '/usr/sbin/nologin'
+      system: true
+      state: 'present'
+
+  - name: 'mkdir -p {{ __curaline__config_dir }}'
+    ansible.builtin.file:
+      path: '{{ __curaline__config_dir }}'
+      state: 'directory'
+      owner: 'curaline'
+      group: 'curaline'
+      mode: 0o750
+
+  # the folders of the connectors are not recursed into on purpose: the files in them belong to
+  # whatever delivers or collects them.
+  - name: 'mkdir -p {{ __curaline__folders | join(" ") }}'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      owner: 'curaline'
+      group: 'curaline'
+      mode: 0o755
+    loop: '{{ __curaline__folders }}'
+
+  tags:
+    - 'curaline'
+
+
+- block:
+
+  - name: 'mkdir -p {{ __curaline__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ __curaline__install_dir }}'
+      state: 'directory'
+      owner: 'curaline'
+      group: 'curaline'
+      mode: 0o755
+
+  - name: 'cat {{ __curaline__install_dir }}/.ansible-version'
+    ansible.builtin.command: 'cat {{ __curaline__install_dir }}/.ansible-version'
+    register: '__curaline__installed_version_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+
+  # the tarball ships its own Java runtime and the client unpacks into and writes to its own
+  # directory (for example `.cache`), so the whole directory belongs to the service account.
+  - name: 'Install cdr-client {{ curaline__version }}'
+    when:
+      - '__curaline__installed_version_result["stdout"] | trim != curaline__version | string'
+    block:
+
+      # download on the controller and let `unarchive` upload it, so that targets without
+      # internet access can be provisioned. see "How the Role Behaves" in the README.
+      - name: 'curl --output /tmp/ansible.cdr-client-{{ curaline__version }}-linux-amd64.tar.gz https://cdr.health.swisscom.ch/share/downloads/cdr-client-{{ curaline__version }}-linux-amd64.tar.gz' # noqa risky-file-permissions (temporary file)
+        ansible.builtin.get_url:
+          url: 'https://cdr.health.swisscom.ch/share/downloads/cdr-client-{{ curaline__version }}-linux-amd64.tar.gz'
+          dest: '/tmp/ansible.cdr-client-{{ curaline__version }}-linux-amd64.tar.gz'
+          mode: 0o644
+        retries: 3 # ride out a brief outage of the download source
+        delay: 10
+        delegate_to: 'localhost'
+        become: false
+        vars:
+          ansible_become: false # noqa var-naming[pattern]
+        changed_when: false # not an actual change on the target
+        check_mode: false # run task even if `--check` is specified
+
+      # a stale file of the previous version (a renamed jar, for example) would end up on the
+      # class path, so start from an empty directory.
+      - name: 'rm -rf {{ __curaline__install_dir }}'
+        ansible.builtin.file:
+          path: '{{ __curaline__install_dir }}'
+          state: 'absent'
+
+      - name: 'mkdir {{ __curaline__install_dir }}'
+        ansible.builtin.file:
+          path: '{{ __curaline__install_dir }}'
+          state: 'directory'
+          owner: 'curaline'
+          group: 'curaline'
+          mode: 0o755
+
+      - name: 'tar --extract --gzip --strip-components=1 --directory {{ __curaline__install_dir }}'
+        ansible.builtin.unarchive:
+          src: '/tmp/ansible.cdr-client-{{ curaline__version }}-linux-amd64.tar.gz'
+          dest: '{{ __curaline__install_dir }}'
+          owner: 'curaline'
+          group: 'curaline'
+          extra_opts:
+            - '--strip-components=1'
+        notify: 'curaline: restart cdr-client'
+
+      # written last: an aborted installation is repeated by the next run. a state marker is not
+      # a config file, so `copy` is fine here.
+      - name: 'echo {{ curaline__version }} > {{ __curaline__install_dir }}/.ansible-version'
+        ansible.builtin.copy:
+          dest: '{{ __curaline__install_dir }}/.ansible-version'
+          content: '{{ curaline__version }}'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+  tags:
+    - 'curaline'
+    - 'curaline:update'
+
+
+- block:
+
+  - name: 'Deploy {{ __curaline__config_dir }}/application-customer.yaml'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/swisscom-schweiz-ag/cdr-client/application-customer.yaml.j2'
+      dest: '{{ __curaline__config_dir }}/application-customer.yaml'
+      owner: 'curaline'
+      group: 'curaline'
+      mode: 0o640 # contains the client secret
+    diff: false # keep the client secret out of `--diff` output
+    notify: 'curaline: restart cdr-client'
+
+  - name: 'Deploy {{ __curaline__config_dir }}/logback-service.xml'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/swisscom-schweiz-ag/cdr-client/logback-service.xml.j2'
+      dest: '{{ __curaline__config_dir }}/logback-service.xml'
+      owner: 'curaline'
+      group: 'curaline'
+      mode: 0o640
+    notify: 'curaline: restart cdr-client'
+
+  # the unit is templated whole, not as a drop-in, because the tarball ships none that fits: its
+  # unit uses a dynamic user, while the client has to own its installation and data folders.
+  - name: 'Deploy /etc/systemd/system/cdr-client.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/cdr-client.service.j2'
+      dest: '/etc/systemd/system/cdr-client.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__curaline__unit_result'
+    notify: 'curaline: restart cdr-client'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__curaline__unit_result is changed'
+
+  tags:
+    - 'curaline'
+    - 'curaline:configure'
+
+
+# its own block, because an update unpacks new files into bin/ that need the file context as well.
+- block:
+
+  # systemd starts the client from /usr/lib, where it needs the bin_t type to be allowed to
+  # execute it.
+  - name: 'semanage fcontext --add --type bin_t "{{ __curaline__install_dir }}/bin(/.*)?"'
+    community.general.sefcontext:
+      target: '{{ __curaline__install_dir }}/bin(/.*)?'
+      setype: 'bin_t'
+      state: 'present'
+
+  - name: 'restorecon -RFv {{ __curaline__install_dir }}/bin'
+    ansible.builtin.command: 'restorecon -RFv {{ __curaline__install_dir }}/bin'
+    register: '__curaline__restorecon_result'
+    changed_when: '__curaline__restorecon_result["stdout"] | length > 0'
+
+  when:
+    - 'ansible_facts["os_family"] == "RedHat"'
+    - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+  tags:
+    - 'curaline'
+    - 'curaline:configure'
+    - 'curaline:update'
+
+
+- block:
+
+  # the state task runs after every task that notifies the restart handler, see handlers/main.yml.
+  - name: 'systemctl {{ curaline__service_enabled | bool | ternary("enable", "disable") }} cdr-client.service'
+    ansible.builtin.service:
+      name: 'cdr-client.service'
+      enabled: '{{ curaline__service_enabled | bool }}'
+
+  - name: 'systemctl {{ curaline__service_state | regex_replace("p?ed$", "") }} cdr-client.service'
+    ansible.builtin.service:
+      name: 'cdr-client.service'
+      state: '{{ curaline__service_state }}'
+    register: '__curaline__service_state_result'
+
+  tags:
+    - 'curaline'
+    - 'curaline:state'
+
+
+- block:
+
+  - name: 'Flush handlers so that the restart happens before other roles continue'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'curaline'
+    - 'curaline:configure'
+    - 'curaline:state'
+    - 'curaline:update'

@@ -32,6 +32,7 @@ Which Ansible role is proven to run on which OS?
 | core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| curaline                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | x86_64 only                                  |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |

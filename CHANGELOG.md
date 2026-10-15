@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:curaline, playbook:curaline**: Add a role and playbook that install and configure the curaLINE Client of Swisscom, which exchanges files with the curaLINE Document Routing service.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.2.
 * **role:duplicity**: `duplicity__archive_dir` sets the directory of duplicity's local metadata cache, for example to keep the cache of a separate long-term backup apart from the daily one. Without it, the cache stays in `~/.cache/duplicity`.
 * **role:systemd_unit**: Manages systemd socket units with `systemd_unit__sockets__host_var` / `systemd_unit__sockets__group_var`, for example to forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.

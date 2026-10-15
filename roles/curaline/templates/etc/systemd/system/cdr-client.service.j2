@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+# 2026101501
+
+[Unit]
+Description=curaLINE CDR Client
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=curaline
+Group=curaline
+WorkingDirectory={{ __curaline__install_dir }}
+ExecStart={{ __curaline__install_dir }}/bin/cdr-client-service
+LogsDirectory=cdr-client
+LogsDirectoryMode=0750
+Restart=on-failure
+RestartSec=10s
+SuccessExitStatus=143
+SyslogIdentifier=cdr-client
+
+[Install]
+WantedBy=multi-user.target

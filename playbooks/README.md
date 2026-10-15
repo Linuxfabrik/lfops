@@ -212,6 +212,13 @@ Calls the following roles (in order):
 * [crypto_policy](https://github.com/Linuxfabrik/lfops/tree/main/roles/crypto_policy)
 
 
+## curaline.yml
+
+Calls the following roles (in order):
+
+* [curaline](https://github.com/Linuxfabrik/lfops/tree/main/roles/curaline)
+
+
 ## dnf_makecache.yml
 
 Calls the following roles (in order):
