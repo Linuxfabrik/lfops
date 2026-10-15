@@ -1,0 +1,3 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: the mariadb-dump timer and service run under systemd, and the repositories differ per
+# OS family.

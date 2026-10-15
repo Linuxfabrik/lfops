@@ -1,0 +1,15 @@
+# The dump user enables the daily mariadb-dump, which needs mydumper from the mydumper repository.
+mariadb_server__admin_user:
+  username: 'mariadb-admin'
+  password: 'linuxfabrik'
+
+# A schema for the dump to find in verify.yml.
+mariadb_server__databases__group_var:
+  - name: 'molecule'
+    state: 'present'
+
+mariadb_server__dump_user:
+  username: 'mariadb-dump'
+  password: 'linuxfabrik'
+
+repo_mariadb__version: '11.8'
