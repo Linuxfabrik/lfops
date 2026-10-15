@@ -7,17 +7,17 @@
     # that proves the partition and the PV on it were grown. growpart resizes a PV on the partition
     # itself (maybe_lvm_resize, verified with cloud-utils-growpart 0.33 on Rocky 9), so the
     # pvresize of the lvm_pv module finds nothing left to do here; the unit tests cover it.
-    - name: 'pvs --options vg_name,pv_size /dev/vdb1'
-      ansible.builtin.command: 'pvs --noheadings --nosuffix --units m --options vg_name,pv_size /dev/vdb1'
+    - name: 'pvs --options vg_name,pv_size /dev/vdb10'
+      ansible.builtin.command: 'pvs --noheadings --nosuffix --units m --options vg_name,pv_size /dev/vdb10'
       changed_when: false
-      register: '__molecule__lvm_pvs_vdb1_result'
+      register: '__molecule__lvm_pvs_vdb10_result'
 
-    - name: 'Assert that /dev/vdb1 is a PV of the VG "molecule" and was grown to the disk size'
+    - name: 'Assert that /dev/vdb10 is a PV of the VG "molecule" and was grown to the disk size'
       ansible.builtin.assert:
         that:
-          - '__molecule__lvm_pvs_vdb1_result["stdout"].split()[0] == "molecule"'
-          - '__molecule__lvm_pvs_vdb1_result["stdout"].split()[1] | float > 1900'
-        fail_msg: '{{ __molecule__lvm_pvs_vdb1_result["stdout"] }}'
+          - '__molecule__lvm_pvs_vdb10_result["stdout"].split()[0] == "molecule"'
+          - '__molecule__lvm_pvs_vdb10_result["stdout"].split()[1] | float > 1900'
+        fail_msg: '{{ __molecule__lvm_pvs_vdb10_result["stdout"] }}'
 
     # "gone" was removed although it still held an LV, and "multi" took over its PV. The extent
     # size is still the one "multi" was created with.

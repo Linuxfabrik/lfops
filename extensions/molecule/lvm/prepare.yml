@@ -4,19 +4,31 @@
   ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
 
 
-# A partition on /dev/vdb that does not fill the disk, so the role has something to grow. sfdisk
+# A partition on /dev/vdb that does not fill the disk, so the role has something to grow. It is
+# partition number 10, so a two-digit number has to survive the partition number extraction. sfdisk
 # comes with util-linux and is therefore on every image.
-- name: 'Create a partition that leaves room to grow on /dev/vdb'
+- name: 'Create partition 10 that leaves room to grow on /dev/vdb'
   hosts: 'systems_under_test'
   gather_facts: false
 
   tasks:
 
-    - name: 'echo ",512M" | sfdisk --label dos /dev/vdb'
+    - name: 'sfdisk --label gpt /dev/vdb'
       ansible.builtin.command:
-        cmd: 'sfdisk --label dos /dev/vdb'
-        stdin: ',512M'
-        creates: '/dev/vdb1'
+        cmd: 'sfdisk --label gpt /dev/vdb'
+        # nine 1 MiB placeholders, then the 512 MiB partition 10
+        stdin: |
+          ,1M
+          ,1M
+          ,1M
+          ,1M
+          ,1M
+          ,1M
+          ,1M
+          ,1M
+          ,1M
+          ,512M
+        creates: '/dev/vdb10'
 
 
 # The starting layout. converge changes it into the one in group_vars, so the scenario covers what
@@ -52,7 +64,7 @@
       # no growpart yet, so the PV keeps the size of the 512 MiB partition
       - name: 'molecule'
         pvs:
-          - '/dev/vdb1'
+          - '/dev/vdb10'
       - name: 'multi'
         pvs:
           - '/dev/vdc'

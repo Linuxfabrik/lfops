@@ -49,7 +49,7 @@ lvm__vgs__group_var:
   # disk and the PV with it; this is how a VM disk grown on the hypervisor is picked up.
   - name: 'molecule'
     pvs:
-      - '/dev/vdb1'
+      - '/dev/vdb10'
     growpart: true
   # removed with the LV that is still in it. Its PV is taken over by the VG below in the same run.
   - name: 'gone'

@@ -125,6 +125,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lvm**: `growpart: true` grows the right partition when the PV is partition 10 or higher, such as `/dev/vda12` or `/dev/nvme0n1p12`. Until now it addressed partition 2 there, or failed.
+* **role:lvm**: The argument specs name the `fstype` subkey correctly and accept `lvm__lvs__dependent_var` and `lvm__vgs__dependent_var`, so the `setup_*` playbooks can inject LVs and VGs.
 * **role:repo_mongodb**: On RHEL, the repository key always matches `repo_mongodb__version`, instead of reusing the key of an earlier run with another version, which made the installation fail.
 * **role:repo_mongodb**: On Ubuntu, the role points to MongoDB's Ubuntu repository instead of the Debian one, so MongoDB can be installed there.
 * **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
