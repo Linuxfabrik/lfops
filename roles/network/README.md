@@ -6,6 +6,7 @@ Concretely, this role:
 
 * Calls `fedora.linux_system_roles.network` with whatever `network_connections` or `network_state` you pass in (host or group vars). With neither set, the upstream role is not called at all, so it neither installs nor starts NetworkManager.
 * On Red Hat-family hosts only: removes the `hc-utils` package (Hetzner Cloud utilities). They install legacy ifcfg scripts that fight with NetworkManager. The task tolerates the package not being installed (`ignore_errors: true`).
+* If `network_connections` is set, removes every connection profile whose name starts with `cloud-init ` and that is not listed in `network_connections`. cloud-init leaves such a profile behind when the package is removed (see the `cloud_init` role). With an `autoconnect-priority` of 120 it wins against the configured connection on the next boot and brings back the DHCP settings and DNS servers of the provider. The profiles are removed after the configured connections have been brought up. Other profiles, such as `System eth0` on Rocky 8 and 9, are not touched; list them with `persistent_state: 'absent'` in `network_connections`.
 * Prints a reminder that NetworkManager may need to be restarted by hand (`systemctl restart NetworkManager`) whenever the upstream role changed a connection profile. The upstream role applies connections via NetworkManager APIs, but a few changes (e.g. plugin reloads) require a service restart. The reminder is repeated in the block of manual steps that every LFOps playbook prints above the `PLAY RECAP`.
 
 
@@ -28,7 +29,7 @@ Manual steps:
 
 `network`
 
-* Configures the network and removes `hc-utils` (Hetzner) on Red Hat hosts.
+* Configures the network, removes the connection profiles cloud-init left behind, and removes `hc-utils` (Hetzner) on Red Hat hosts.
 * Triggers: none.
 
 
@@ -58,9 +59,7 @@ network_connections:
     state: 'up'
 
   # remove the default connections
-  # check with `nmcli connection show`
-  - name: 'cloud-init eth0'
-    persistent_state: 'absent'
+  # check with `nmcli connection show`; profiles named "cloud-init ..." are removed by the role itself
   - name: 'System eth0'
     persistent_state: 'absent'
   - name: 'System eth1'

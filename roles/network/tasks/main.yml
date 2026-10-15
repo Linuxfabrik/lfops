@@ -1,5 +1,44 @@
 - block:
 
+  # Before the first run, NetworkManager may be neither installed nor running; the upstream role
+  # sets it up, and there is nothing to clean up yet.
+  - name: 'Gather the service facts to see whether NetworkManager runs'
+    ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
+    when:
+      - 'network_connections | d([]) | length > 0'
+
+  # cloud-init leaves its connection profile behind when the package is removed (see the
+  # cloud_init role). Hetzner's Rocky 10 image names it "cloud-init eth0", and with its
+  # autoconnect-priority of 120 it wins against the connection configured below after the next
+  # reboot, bringing back the DHCP settings and the provider's DNS servers. Rocky 8 and 9 name
+  # theirs "System eth0" instead, which the inventory removes explicitly.
+  - name: 'nmcli --terse --fields NAME connection show # look for profiles left behind by cloud-init'
+    ansible.builtin.command: 'nmcli --terse --fields NAME connection show'
+    register: '__network__nmcli_connections_result'
+    changed_when: false
+    check_mode: false
+    when:
+      - 'network_connections | d([]) | length > 0'
+      - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
+
+  # The upstream role reads network_connections only, so the profiles are appended to it (hence the
+  # name that does not follow our scheme). They come last, so the configured connections are
+  # brought up before the old profile goes away.
+  - name: 'Remove the connection profiles left behind by cloud-init' # noqa var-naming[pattern]
+    ansible.builtin.set_fact:
+      network_connections: >-
+        {{
+          network_connections
+          + (__network__nmcli_connections_result["stdout_lines"] | d([])
+            | select("match", "^cloud-init ")
+            | difference(network_connections | map(attribute="name"))
+            | map("community.general.dict_kv", "name")
+            | map("combine", {"persistent_state": "absent"})
+            | list)
+        }}
+    when:
+      - 'network_connections | d([]) | length > 0'
+
   # Only when there is something to configure. The upstream module creates and destroys a
   # NetworkManager checkpoint even for an empty configuration, and it occasionally hangs for good
   # while Python tears down its libnm client afterwards: g_dbus_connection_signal_unsubscribe()
