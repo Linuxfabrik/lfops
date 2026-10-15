@@ -1,0 +1,12 @@
+# The generic cloud image comes up with the "cloud-init enp1s0" profile (autoconnect-priority
+# 120). The network role has to replace it by this connection, so verify.yml can prove that the
+# configured profile, not the cloud-init one, is the active one. DHCP, so the VM stays reachable
+# for Molecule.
+network_connections:
+  - name: 'enp1s0'
+    type: 'ethernet'
+    autoconnect: true
+    interface_name: 'enp1s0'
+    ip:
+      dhcp4: true
+    state: 'up'

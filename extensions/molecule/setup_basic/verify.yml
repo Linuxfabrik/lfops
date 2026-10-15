@@ -2,6 +2,30 @@
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
+    # Only the host that carries network_connections, see inventory/host_vars/rocky10-vm.yml.
+    - name: 'nmcli --terse --fields NAME connection show --active'
+      ansible.builtin.command: 'nmcli --terse --fields NAME connection show --active'
+      changed_when: false
+      register: '__molecule__nmcli_active_result'
+      when:
+        - 'network_connections is defined'
+
+    - name: 'nmcli --terse --fields NAME connection show'
+      ansible.builtin.command: 'nmcli --terse --fields NAME connection show'
+      changed_when: false
+      register: '__molecule__nmcli_all_result'
+      when:
+        - 'network_connections is defined'
+
+    - name: 'Assert that the configured connection is active and the profile cloud-init left behind is gone'
+      ansible.builtin.assert:
+        that:
+          - '"enp1s0" in __molecule__nmcli_active_result["stdout_lines"]'
+          - '__molecule__nmcli_all_result["stdout_lines"] | select("match", "^cloud-init ") | list | length == 0'
+        fail_msg: '{{ __molecule__nmcli_all_result["stdout_lines"] | to_json }}'
+      when:
+        - 'network_connections is defined'
+
     # Running a plugin instead of stat-ing it proves the deployed payload executes and its bundled
     # runtime resolves, which a stat cannot tell you.
     - name: '/usr/lib64/nagios/plugins/about-me'
