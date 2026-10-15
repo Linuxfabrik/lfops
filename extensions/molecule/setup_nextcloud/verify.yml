@@ -73,3 +73,34 @@
         fail_msg: 'mariadbd runs as "{{ __molecule__mariadbd_label_result["stdout"] | trim }}" instead of mysqld_t, so the mysqld_exec_t label on the binary is missing.'
       when:
         - '__molecule__mariadbd_label_result is not skipped'
+
+
+# The dump must not slow down MariaDB. Ask systemd for the effective values instead of reading the
+# unit file, so a unit that fails to load or a setting it rejects shows up here.
+- name: 'Verify mariadb-dump.service runs with low CPU and IO priority'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'systemctl show mariadb-dump.service'
+      ansible.builtin.command: >-
+        systemctl show mariadb-dump.service
+        --property=CPUWeight,IOSchedulingClass,IOSchedulingPriority,IOWeight,Nice
+      register: '__molecule__mariadb_dump_show_result'
+      changed_when: false
+
+    - name: 'Assert the dump runs niced, best-effort and with a low CPU and IO weight'
+      ansible.builtin.assert:
+        that:
+          - '"CPUWeight=20" in __molecule__mariadb_dump_show_result["stdout_lines"]'
+          - '"IOSchedulingClass=2" in __molecule__mariadb_dump_show_result["stdout_lines"]'  # 2 = best-effort
+          - '"IOSchedulingPriority=7" in __molecule__mariadb_dump_show_result["stdout_lines"]'
+          - '"IOWeight=20" in __molecule__mariadb_dump_show_result["stdout_lines"]'
+          - '"Nice=19" in __molecule__mariadb_dump_show_result["stdout_lines"]'
+        fail_msg: 'mariadb-dump.service has unexpected priorities: {{ __molecule__mariadb_dump_show_result["stdout_lines"] }}'
+
+    # the dump itself has to work with the mydumper of each platform, not just carry the settings
+    - name: 'systemctl start mariadb-dump.service'
+      ansible.builtin.command: 'systemctl start mariadb-dump.service'
+      changed_when: false

@@ -85,6 +85,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:postgresql_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down PostgreSQL.
+* **role:mongodb**: The daily dump runs with low CPU and IO priority, so it no longer slows down MongoDB.
+* **role:mariadb_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down MariaDB.
+* **role:influxdb**: The daily dump runs with low CPU and IO priority, so it no longer slows down InfluxDB.
+* **role:gitlab_ce**: The daily dump runs with low CPU and IO priority, so it no longer slows down GitLab.
 * **role:redis, role:valkey**: Redis and Valkey also listen on a Unix socket that only the members of their group may use, on RHEL at the path the package ships (`/run/redis/redis.sock`, `/run/valkey/valkey.sock`).
 * **role:apache_httpd**: Apache answers requests for PHP files that do not exist with 404 itself instead of passing them to PHP-FPM, so scanners no longer tie up pool workers or fill the error log.
 * **playbook:setup_basic**: Checks the variables of all its roles, the compiled firewall in the Firewall Builder repository and the reachability of the Icinga2 master before it changes anything on the host, so a missing prerequisite no longer aborts the run halfway through, after SSH was already hardened.
@@ -125,6 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: The daily dump works with the mydumper that Debian and Ubuntu ship.
 * **role:lvm**: `growpart: true` grows the right partition when the PV is partition 10 or higher, such as `/dev/vda12` or `/dev/nvme0n1p12`. Until now it addressed partition 2 there, or failed.
 * **role:lvm**: The argument specs name the `fstype` subkey correctly and accept `lvm__lvs__dependent_var` and `lvm__vgs__dependent_var`, so the `setup_*` playbooks can inject LVs and VGs.
 * **role:repo_mongodb**: On RHEL, the repository key always matches `repo_mongodb__version`, instead of reusing the key of an earlier run with another version, which made the installation fail.

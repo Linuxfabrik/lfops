@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022050901
+# 2026101301
 
 [Unit]
 Description=Dumps (Backups) for InfluxDB
@@ -8,3 +8,10 @@ Description=Dumps (Backups) for InfluxDB
 ExecStart=/usr/local/bin/influxdb-dump
 Type=oneshot
 User=root
+# the dump must not slow down InfluxDB and the applications behind it. Nice= and the CPU / IO
+# weights (default 100) only matter under contention, so an idle host dumps at full speed.
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+CPUWeight=20
+IOWeight=20

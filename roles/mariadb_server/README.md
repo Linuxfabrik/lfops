@@ -25,6 +25,11 @@ By default, Ansible runs each task on all hosts affected by a play before starti
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* `mariadb-dump.service` runs with `Nice=19`, best-effort IO priority 7 and `CPUWeight=` / `IOWeight=` of `20` (systemd default: `100`), so the dump does not slow down the application on a busy host. The weights only take effect under contention. `IOWeight=` only has an effect on block devices that use the BFQ IO scheduler; with `none` or `mq-deadline`, as on a RHEL 9 VM with virtio disks, it is ignored. The IO class is deliberately not `idle`: `mydumper` holds a read lock on every non-InnoDB table (MyISAM, Aria, most of `mysql.*`) until it has dumped that table, and an idle dump could stretch that lock and keep writes waiting.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
