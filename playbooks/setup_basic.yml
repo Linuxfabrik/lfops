@@ -61,6 +61,8 @@
         skip: '{{ setup_basic__skip_motd | d(false) }}'
       - name: 'at'
         skip: '{{ setup_basic__skip_at | d(false) }}'
+      - name: 'cron'
+        skip: '{{ setup_basic__skip_cron | d(false) }}'
       - name: 'python'
         skip: '{{ setup_basic__skip_python | d(false) }}'
       - name: 'python_venv'
@@ -301,6 +303,10 @@
     - role: 'linuxfabrik.lfops.at'
       when:
         - 'not setup_basic__skip_at | d(false)'
+
+    - role: 'linuxfabrik.lfops.cron'
+      when:
+        - 'not setup_basic__skip_cron | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       when:
