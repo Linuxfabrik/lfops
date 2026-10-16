@@ -90,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mariadb_server**: The role no longer sets `sunrpc.tcp_slot_table_entries`, which only concerns NFS clients, and removes it from the kernel settings of hosts that got it from an earlier version.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
 * **role:apache_tomcat**: The Tomcat 9.0 configuration follows the files shipped with the current RHEL 8 and 9 packages.
 * **role:apache_tomcat**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
