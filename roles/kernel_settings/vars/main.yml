@@ -1,3 +1,102 @@
-# The role's own sysctl defaults. A vars/<platform>.yml overrides this where the TuneD of that
-# platform needs a correction, see vars/Ubuntu22.yml.
-__kernel_settings__sysctl__role_var: []
+# The role's own sysctl defaults: the hardening baseline below, plus what a vars/<platform>.yml
+# adds in __kernel_settings__sysctl__platform where the TuneD of that platform needs a
+# correction, see vars/Ubuntu22.yml.
+__kernel_settings__sysctl__role_var: '{{ __kernel_settings__sysctl__hardening + __kernel_settings__sysctl__platform }}'
+__kernel_settings__sysctl__platform: []
+
+# Hardening baseline, sorted by name. The numbers are the recommendations of the CIS Red Hat
+# Enterprise Linux 10 Benchmark v1.0.1; the CIS Debian Linux 12 Benchmark v1.0.1 covers ASLR,
+# ptrace_scope and the network part with the same values. Values that only Lynis (KRNL-6000) asks
+# for are marked as such. Left out on purpose:
+# * net.ipv4.ip_forward, net.ipv4.conf.*.forwarding, net.ipv6.conf.*.forwarding: forwarding off
+#   breaks container hosts, KVM hosts, VPN servers and routers (CIS Level 2 on RHEL 10, Level 1
+#   on Debian 12).
+# * net.ipv4.conf.*.rp_filter = 1 and net.ipv6.conf.*.accept_ra = 0 (CIS 3.3.1.12, 3.3.1.13,
+#   3.3.2.7, 3.3.2.8): strict reverse path filtering drops asymmetrically routed traffic, and
+#   without router advertisements a host configured by SLAAC loses its IPv6 default route.
+# * fs.protected_fifos = 2, fs.protected_regular = 2, kernel.modules_disabled = 1 and
+#   kernel.sysrq = 0, which only Lynis asks for: the first two also refuse an O_CREAT open of
+#   a file another user owns in group-writable sticky directories, kernel.modules_disabled
+#   blocks every module load until the next reboot, and kernel.sysrq = 0 takes away the
+#   emergency keys on the console.
+# fs.suid_dumpable belongs to the core_dumps role, which injects it.
+__kernel_settings__sysctl__hardening:
+  # CIS 1.5.2
+  - name: 'fs.protected_hardlinks'
+    value: 1
+  # CIS 1.5.3
+  - name: 'fs.protected_symlinks'
+    value: 1
+  # CIS 1.5.5
+  - name: 'kernel.dmesg_restrict'
+    value: 1
+  # CIS 1.5.6 accepts 1 or 2, Lynis asks for 2: %pK pointers read as 0 for root as well.
+  # 1 on Ubuntu 22.04 and 24.04, see vars/Ubuntu24.yml.
+  - name: 'kernel.kptr_restrict'
+    value: 2
+  # CIS 1.5.8
+  - name: 'kernel.randomize_va_space'
+    value: 2
+  # Lynis. Unprivileged bpf() off, like the default 2 of CONFIG_BPF_UNPRIV_DEFAULT_OFF, but
+  # without a way back: once it is 1, the kernel refuses to change it until the next reboot
+  # (bpf_unpriv_handler() in kernel/bpf/syscall.c, Linux 7.3).
+  - name: 'kernel.unprivileged_bpf_disabled'
+    value: 1
+  # CIS 1.5.7
+  - name: 'kernel.yama.ptrace_scope'
+    value: 1
+  # Lynis. Constant blinding for the BPF programs of privileged users as well, at a small
+  # cost in JIT performance (bpf_jit_blinding_enabled() in include/linux/filter.h, Linux 7.3).
+  - name: 'net.core.bpf_jit_harden'
+    value: 2
+  # CIS 3.3.1.8
+  - name: 'net.ipv4.conf.all.accept_redirects'
+    value: 0
+  # CIS 3.3.1.14
+  - name: 'net.ipv4.conf.all.accept_source_route'
+    value: 0
+  # CIS 3.3.1.16
+  - name: 'net.ipv4.conf.all.log_martians'
+    value: 1
+  # CIS 3.3.1.10
+  - name: 'net.ipv4.conf.all.secure_redirects'
+    value: 0
+  # CIS 3.3.1.4
+  - name: 'net.ipv4.conf.all.send_redirects'
+    value: 0
+  # CIS 3.3.1.9
+  - name: 'net.ipv4.conf.default.accept_redirects'
+    value: 0
+  # CIS 3.3.1.15
+  - name: 'net.ipv4.conf.default.accept_source_route'
+    value: 0
+  # CIS 3.3.1.17
+  - name: 'net.ipv4.conf.default.log_martians'
+    value: 1
+  # CIS 3.3.1.11
+  - name: 'net.ipv4.conf.default.secure_redirects'
+    value: 0
+  # CIS 3.3.1.5
+  - name: 'net.ipv4.conf.default.send_redirects'
+    value: 0
+  # CIS 3.3.1.7
+  - name: 'net.ipv4.icmp_echo_ignore_broadcasts'
+    value: 1
+  # CIS 3.3.1.6
+  - name: 'net.ipv4.icmp_ignore_bogus_error_responses'
+    value: 1
+  # CIS 3.3.1.18
+  - name: 'net.ipv4.tcp_syncookies'
+    value: 1
+  # CIS 3.3.2.3
+  - name: 'net.ipv6.conf.all.accept_redirects'
+    value: 0
+  # CIS 3.3.2.5
+  - name: 'net.ipv6.conf.all.accept_source_route'
+    value: 0
+  # CIS 3.3.2.4
+  - name: 'net.ipv6.conf.default.accept_redirects'
+    value: 0
+  # CIS 3.3.2.6
+  - name: 'net.ipv6.conf.default.accept_source_route'
+    value: 0
