@@ -1,7 +1,9 @@
 # {{ ansible_managed }}
-# 2026092501
+# 2026101601
 
-# Fail2Ban filter to match access to unknown / not-served ports. This filter works with the default logging of fwbuilder.
+# Fail2Ban filter to match access to unknown / not-served ports. This filter works with the default logging of fwbuilder (iptables) and
+# FirewallFabrik (nftables, `log prefix "RULE <n> -- DENY " level info`): the kernel prints the same
+# fields in both cases.
 
 [INCLUDES]
 
@@ -28,7 +30,10 @@ _deny = (?:RULE \d+ -- DENY|REJECT|DENY) IN=.*SRC=<HOST> DST=(?:<server-ips>)
 # PROTO=UDP SPT=... DPT=... ]"), which is a packet this host sent. `[^[]*` keeps the match on the
 # outer header, so an ICMP error never counts as a scan.
 #
-# Verified with fail2ban 1.1.0 on Rocky 9.
+# Verified with fail2ban 1.1.0 on Rocky 9 (iptables), and with the nftables ruleset of a
+# FirewallFabrik host firewall on Rocky 8 (nftables 0.9.3, fail2ban 1.0.2) and Rocky 10 (nftables
+# 1.1.1, fail2ban 1.1.0): a SYN to an unserved TCP port and a UDP packet match, the accepted SSH
+# connection and the replies the host sends do not, and the jail on the systemd backend bans.
 failregex = ^%(__prefix_line)s<_deny> [^[]*PROTO=TCP .*DPT=(?!(?:<allowed-ports>)\b)\d+ .*RES=0x[0-9a-f]{2} (?:AE )?(?:CWR )?(?:ECE )?(?:URG )?SYN URGP=
             ^%(__prefix_line)s<_deny> [^[]*PROTO=UDP .*DPT=(?!(?:<allowed-ports>)\b)\d
 

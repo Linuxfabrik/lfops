@@ -49,7 +49,7 @@ fail2ban__jails__host_var:
 | `apache-noscript` | Static Apache sites, not wikis or forums | Clients that request scripts which do not exist. |
 | `apache-overflows` | Any Apache web server | Clients that send overlong or malformed request lines. |
 | `apache-scanner` | Reverse proxies and web servers that never serve backups or dumps | Clients that probe for `.env` files, backups, archives and database dumps, even if the answer is a redirect rather than a 404. Limit `logpath` to the vHosts concerned. |
-| `portscan` | Hosts with an iptables firewall that logs denied packets | Clients that touch a port that is not allowed. |
+| `portscan` | Hosts with an iptables or nftables firewall that logs denied packets | Clients that touch a port that is not allowed. |
 | `sshd` | Any host with sshd | Clients that fail the SSH login repeatedly. |
 | `wordpress-login` | The reverse proxy in front of WordPress, where the log holds the visitor's address; behind the proxy it would ban the proxy (limit `logpath` to the WordPress vHosts) | Clients that fail the WordPress login repeatedly. |
 
@@ -69,7 +69,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 ## Requirements
 
 * Optional: The `apache-*` and `wordpress-login` jails read the Apache access logs below `/var/log/httpd/` (`/var/log/apache2/` on Debian and Ubuntu). A jail whose `logpath` matches no file is skipped by fail2ban with an error, so enable the Apache jails on hosts that run Apache only.
-* Optional: The `portscan` filter matches the kernel log of an iptables firewall that logs denied packets, as fwbuilder generates it, read through the systemd journal. Without such a firewall the jail never bans.
+* Optional: The `portscan` filter matches the kernel log of an iptables or nftables firewall that logs denied packets, as fwbuilder and FirewallFabrik generate it, read through the systemd journal. Without such a firewall the jail never bans.
 
 
 ## Tags
