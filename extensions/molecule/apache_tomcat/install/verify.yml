@@ -36,7 +36,7 @@
         port: '{{ apache_tomcat__server_xml_connector_port | d(8080) }}'
         timeout: 60
 
-    - name: 'systemctl show --property=MainPID --value tomcat.service'
+    - name: 'systemctl show --property=MainPID --value tomcat.service' # noqa command-instead-of-module (the test only needs the MainPID of the unit)
       ansible.builtin.command: 'systemctl show --property=MainPID --value tomcat.service'
       register: '__molecule__tomcat_mainpid_result'
       changed_when: false
