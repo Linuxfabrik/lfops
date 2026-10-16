@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:sshd, playbook:setup_basic**: `PermitRootLogin` defaults to `no`, as the CIS Benchmarks require. A run in which Ansible logs in as root aborts before sshd is changed, instead of locking Ansible out. Log in as an unprivileged user with sudo, or set `sshd__permit_root_login: 'prohibit-password'` for hosts that Ansible has to reach as root.
 * **role:sshd**: sshd disconnects a client that has not answered for 30 seconds (`ClientAliveInterval 15`), as the CIS Benchmarks require. Set `sshd__client_alive_interval: 0` to keep idle sessions with an unresponsive client open.
+* **role:kernel_modules**: The `usb-storage` kernel module is blocked by default, as the CIS Benchmarks require, which stops USB flash drives and USB disks after the next reboot. The run aborts on hosts with a USB disk attached, since a host booting from one would no longer boot. Add `kernel_modules__modules__host_var: [{name: 'usb-storage', enabled: true}]` to the inventory of hosts that need USB storage.
 * **role:apache_tomcat**: `--tags apache_tomcat:configure` no longer deploys `/etc/logrotate.d/tomcat`. Use `--tags apache_tomcat:logrotate` for it.
 * **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
 * **role:repo_mydumper**: On the Red Hat family, mydumper comes from the official mydumper repository instead of `repo.linuxfabrik.ch`, and dnf checks the package signature. A `repo_mydumper__mirror_url` must therefore serve the signed packages of the official repository unchanged, otherwise the installation fails with a signature error.
@@ -93,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:mariadb_server**: The role no longer sets `sunrpc.tcp_slot_table_entries`, which only concerns NFS clients, and removes it from the kernel settings of hosts that got it from an earlier version.
+* **role:kernel_modules**: Every blocked module is also blacklisted, so the CIS audit, which checks for both lines, accepts the configuration.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
 * **role:apache_tomcat**: The Tomcat 9.0 configuration follows the files shipped with the current RHEL 8 and 9 packages.
 * **role:apache_tomcat**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
