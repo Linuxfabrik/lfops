@@ -65,9 +65,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `apache_tomcat__skip_repo_baseos`
-* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)
-* [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)
 * [apache_tomcat](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_tomcat)
 
 

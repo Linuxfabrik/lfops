@@ -1,5 +1,13 @@
 apache_tomcat__context_xml_cache_max_size: 10240
 
+apache_tomcat__env_xms: '1024M'
+apache_tomcat__env_xmx: '1024M'
+apache_tomcat__env_xx: '+UseParallelGC'
+
+# referencing the logrotate role's variable keeps the retention consistent across the host.
+# d() is required, since role defaults are only loaded for roles that are part of the play.
+apache_tomcat__logrotate: '{{ logrotate__rotate | d(14) }}'
+
 apache_tomcat__roles__combined_var: '{{ (
       apache_tomcat__roles__role_var +
       apache_tomcat__roles__dependent_var +
@@ -16,6 +24,7 @@ apache_tomcat__roles__role_var:
   - name: 'manager-gui'
 apache_tomcat__server_xml_connector_compressable_mime_types: 'text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml'
 apache_tomcat__server_xml_connector_compression: 'on'
+apache_tomcat__server_xml_connector_connection_timeout: 20000
 apache_tomcat__server_xml_connector_max_threads: 200
 apache_tomcat__server_xml_connector_min_spare_threads: 10
 apache_tomcat__server_xml_connector_port: 8080
@@ -39,3 +48,6 @@ apache_tomcat__users__dependent_var: []
 apache_tomcat__users__group_var: []
 apache_tomcat__users__host_var: []
 apache_tomcat__users__role_var: []
+
+apache_tomcat__webapps_manager_web_xml_max_file_size: 52428800
+apache_tomcat__webapps_manager_web_xml_max_request_size: 52428800

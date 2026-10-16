@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:apache_tomcat**: `--tags apache_tomcat:configure` no longer deploys `/etc/logrotate.d/tomcat`. Use `--tags apache_tomcat:logrotate` for it.
+* **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
+* **role:repo_mydumper**: On the Red Hat family, mydumper comes from the official mydumper repository instead of `repo.linuxfabrik.ch`, and dnf checks the package signature. A `repo_mydumper__mirror_url` must therefore serve the signed packages of the official repository unchanged, otherwise the installation fails with a signature error.
 * **role:apache_httpd**: The role no longer hands everything below the document root to the web server user, so a hole in a web application can no longer rewrite the code of every site on the host. The roles that install an application set the owners they need. For content placed by hand that Apache has to write, give the writable directories to `apache` (`www-data` on Debian and Ubuntu) yourself. Remove `apache_httpd__skip_document_root_chown` from your inventory.
 * **role:openvpn_server**: The role requires OpenVPN 2.7 and installs or upgrades it from the OpenVPN repository, which the `openvpn_server` playbook enables with the new `repo_openvpn` role. The upgrade restarts the OpenVPN service from within the package and drops every client, so run it in a maintenance window and restart the service once more afterwards, as the message at the end of the run says. The server refuses client certificates with an RSA key below 2048 bits, a SHA-1 signature or without the TLS Web Client Authentication key usage, and no longer accepts several clients with the same certificate; set `openvpn_server__duplicate_cn: true` where clients share one. Clients that only speak TLS 1.2 and carry the `tls-cipher` line of the former example client config must drop that line. Remove `openvpn_server__dh` and `openvpn_server__dh_skip_deploy` from your inventory.
 * **role:apache_httpd**: `apache_httpd__mod_security_coreruleset_version` has no default anymore and accepts only the OWASP Core Rule Set releases the CRS project supports with security fixes, currently `4.25.2`, `4.29.0` and `4.30.0`. On hosts with `apache_httpd__skip_mod_security_coreruleset: false`, set it in the inventory, otherwise the run aborts.
@@ -46,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:fail2ban**: The `apache-scanner` filter and jail ban clients that probe for `.env` files, backups, archives and database dumps. A reverse proxy in front of GitLab answers such requests with a redirect, which the `apache-404` jail never counts. All four Apache jails take `bantime`, `findtime`, `logpath` and `maxretry` variables.
+* **role:apache_tomcat**: With `lfops__remove_rpmnew_rpmsave`, the role also removes the `.rpmnew` and `.rpmsave` files next to the Tomcat configuration files it deploys.
+* **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10.
 * **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
 * **role:redis**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.2.
@@ -88,6 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:apache_httpd**: With the event MPM, Apache keeps free room for the replacement of a child process that still serves a long connection while it shuts down, so a burst of requests no longer ends in `AH03490: scoreboard is full, not at MaxRequestWorkers`. The new `apache_httpd__mpm_event_server_limit` sets `ServerLimit` (default: twice what `MaxRequestWorkers` needs), and the run restarts Apache once when the value changes.
+* **role:apache_tomcat**: The Tomcat 9.0 configuration follows the files shipped with the current RHEL 8 and 9 packages.
+* **role:apache_tomcat**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
 * **role:postgresql_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down PostgreSQL.
 * **role:mongodb**: The daily dump runs with low CPU and IO priority, so it no longer slows down MongoDB.
 * **role:mariadb_server**: The daily dump runs with low CPU and IO priority, so it no longer slows down MariaDB.
@@ -129,10 +136,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+* **playbook:apache_tomcat**: The playbook no longer enables the EPEL and CRB repositories or installs `policycoreutils`, none of which Tomcat needs, and `apache_tomcat__skip_repo_baseos` has no effect.
 * **role:github_project_createrepo**: `github_project_createrepo__webserver_user` is gone, since the web server no longer gets an ACL entry; remove it from your inventory.
 
 ### Fixed
 
+* **role:apache_tomcat**: Changing `apache_tomcat__env_xms`, `apache_tomcat__env_xmx` or `apache_tomcat__env_xx` restarts Tomcat, so the new JVM settings take effect right away instead of at the next restart.
+* **role:apache_tomcat**: `apache_tomcat__skip_admin_webapps: true` no longer aborts the run on a host with the ROOT webapp.
+* **role:apache_tomcat**: The role no longer aborts on an undefined variable when `apache_tomcat__server_xml_connector_connection_timeout`, `apache_tomcat__webapps_manager_web_xml_max_file_size` or `apache_tomcat__webapps_manager_web_xml_max_request_size` is not set in the inventory, and uses the documented defaults.
+* **playbook:mariadb_server**: Debian and Ubuntu install mydumper from the official mydumper repository, so the daily dump also works on Debian 13 (all playbooks that install MariaDB with dumps).
 * **role:mariadb_server**: The daily dump works with the mydumper that Debian and Ubuntu ship.
 * **role:lvm**: `growpart: true` grows the right partition when the PV is partition 10 or higher, such as `/dev/vda12` or `/dev/nvme0n1p12`. Until now it addressed partition 2 there, or failed.
 * **role:lvm**: The argument specs name the `fstype` subkey correctly and accept `lvm__lvs__dependent_var` and `lvm__vgs__dependent_var`, so the `setup_*` playbooks can inject LVs and VGs.
@@ -255,6 +267,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:apache_tomcat**: The host-manager webapp only accepts the clients that `apache_tomcat__webapps_manager_context_xml_allow` allows, as documented, instead of those that `apache_tomcat__webapps_docs_context_xml_allow` allows.
 * **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
 * **role:openvpn_server**: The server negotiates TLS 1.2 only with forward secrecy and checks client certificates against OpenSSL security level 2 ([#358](https://github.com/Linuxfabrik/lfops/issues/358)).
 * **role:apache_httpd**: The OWASP Core Rule Set archive is checked against a SHA-256 checksum before it is deployed, so a tampered or corrupted download aborts the run.

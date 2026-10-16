@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025082101
+# 2026100101
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -25,7 +25,7 @@ handlers = 1catalina.org.apache.juli.AsyncFileHandler, 2localhost.org.apache.jul
 # Describes specific configuration info for Handlers.
 ############################################################
 
-1catalina.org.apache.juli.AsyncFileHandler.level = FINE
+1catalina.org.apache.juli.AsyncFileHandler.level = ALL
 1catalina.org.apache.juli.AsyncFileHandler.directory = ${catalina.base}/logs
 1catalina.org.apache.juli.AsyncFileHandler.prefix = catalina.
 1catalina.org.apache.juli.AsyncFileHandler.maxDays = 90
@@ -33,7 +33,7 @@ handlers = 1catalina.org.apache.juli.AsyncFileHandler, 2localhost.org.apache.jul
 # disabling rotatable since we use logrotate
 1catalina.org.apache.juli.AsyncFileHandler.rotatable = false
 
-2localhost.org.apache.juli.AsyncFileHandler.level = FINE
+2localhost.org.apache.juli.AsyncFileHandler.level = ALL
 2localhost.org.apache.juli.AsyncFileHandler.directory = ${catalina.base}/logs
 2localhost.org.apache.juli.AsyncFileHandler.prefix = localhost.
 2localhost.org.apache.juli.AsyncFileHandler.maxDays = 90
@@ -41,7 +41,7 @@ handlers = 1catalina.org.apache.juli.AsyncFileHandler, 2localhost.org.apache.jul
 # disabling rotatable since we use logrotate
 2localhost.org.apache.juli.AsyncFileHandler.rotatable = false
 
-3manager.org.apache.juli.AsyncFileHandler.level = FINE
+3manager.org.apache.juli.AsyncFileHandler.level = ALL
 3manager.org.apache.juli.AsyncFileHandler.directory = ${catalina.base}/logs
 3manager.org.apache.juli.AsyncFileHandler.prefix = manager.
 3manager.org.apache.juli.AsyncFileHandler.maxDays = 90
@@ -49,7 +49,7 @@ handlers = 1catalina.org.apache.juli.AsyncFileHandler, 2localhost.org.apache.jul
 # disabling rotatable since we use logrotate
 3manager.org.apache.juli.AsyncFileHandler.rotatable = false
 
-4host-manager.org.apache.juli.AsyncFileHandler.level = FINE
+4host-manager.org.apache.juli.AsyncFileHandler.level = ALL
 4host-manager.org.apache.juli.AsyncFileHandler.directory = ${catalina.base}/logs
 4host-manager.org.apache.juli.AsyncFileHandler.prefix = host-manager.
 4host-manager.org.apache.juli.AsyncFileHandler.maxDays = 90
@@ -57,7 +57,7 @@ handlers = 1catalina.org.apache.juli.AsyncFileHandler, 2localhost.org.apache.jul
 # disabling rotatable since we use logrotate
 4host-manager.org.apache.juli.AsyncFileHandler.rotatable = false
 
-java.util.logging.ConsoleHandler.level = FINE
+java.util.logging.ConsoleHandler.level = ALL
 java.util.logging.ConsoleHandler.formatter = org.apache.juli.OneLineFormatter
 java.util.logging.ConsoleHandler.encoding = UTF-8
 
@@ -79,9 +79,6 @@ org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/host-manager].ha
 # For example, set the org.apache.catalina.util.LifecycleBase logger to log
 # each component that extends LifecycleBase changing state:
 #org.apache.catalina.util.LifecycleBase.level = FINE
-
-# To see debug messages in TldLocationsCache, uncomment the following line:
-#org.apache.jasper.compiler.TldLocationsCache.level = FINE
 
 # To see debug messages for HTTP/2 handling, uncomment the following line:
 #org.apache.coyote.http2.level = FINE
