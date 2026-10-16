@@ -1,0 +1,176 @@
+argument_specs:
+  main:
+    options:
+
+      curaline__cdr_api_base_path:
+        type: 'str'
+        required: false
+        default: 'api/documents'
+        description: 'Base path of the curaLINE document API.'
+
+      curaline__cdr_api_host:
+        type: 'str'
+        required: false
+        default: 'cdr.health.swisscom.ch'
+        description: 'Host name of the curaLINE API.'
+
+      curaline__cdr_api_port:
+        type: 'int'
+        required: false
+        default: 443
+        description: 'Port of the curaLINE document API.'
+
+      curaline__cdr_api_scheme:
+        type: 'str'
+        required: false
+        default: 'https'
+        choices:
+          - 'http'
+          - 'https'
+        description: 'Scheme of the curaLINE document API.'
+
+      curaline__client_id:
+        type: 'str'
+        required: true
+        description: 'The client ID of the application registered for this client.'
+
+      curaline__client_secret:
+        type: 'str'
+        required: true
+        no_log: true
+        description: 'The client secret that belongs to the client ID.'
+
+      curaline__connectors__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Connectors. Dependent-role injection.'
+
+      curaline__connectors__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Connectors. Group-level override.'
+
+      curaline__connectors__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Connectors. Host-level override.'
+
+      curaline__credential_api_base_path:
+        type: 'str'
+        required: false
+        default: 'api/client-credentials'
+        description: 'Base path of the curaLINE credential API.'
+
+      curaline__credential_api_host:
+        type: 'str'
+        required: false
+        description: 'Host name of the curaLINE credential API. Defaults to curaline__cdr_api_host.'
+
+      curaline__credential_api_port:
+        type: 'int'
+        required: false
+        description: 'Port of the curaLINE credential API. Defaults to curaline__cdr_api_port.'
+
+      curaline__credential_api_scheme:
+        type: 'str'
+        required: false
+        choices:
+          - 'http'
+          - 'https'
+        description: 'Scheme of the curaLINE credential API. Defaults to curaline__cdr_api_scheme.'
+
+      curaline__file_busy_test_strategy:
+        type: 'str'
+        required: false
+        default: 'file_size_changed'
+        choices:
+          - 'always_busy'
+          - 'file_size_changed'
+          - 'never_busy'
+        description: 'How the client decides that a file in a source folder is completely written.'
+
+      curaline__file_synchronization_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the client uploads and downloads files.'
+
+      curaline__group:
+        type: 'str'
+        required: false
+        default: 'swisscom-schweiz-ag-cdr-client'
+        description: 'Group of the service, created as a system group if it does not exist.'
+
+      curaline__idp_endpoint:
+        type: 'str'
+        required: false
+        description: 'The OAuth2 token endpoint of the identity provider. Defaults to the one of curaline__tenant_id.'
+
+      curaline__last_credential_renewal_time:
+        type: 'str'
+        required: false
+        default: '1970-01-01T00:00:00Z'
+        description: 'When the client credential was last renewed.'
+
+      curaline__local_folder:
+        type: 'str'
+        required: false
+        default: '/data/cdr-inflight'
+        description: 'Folder for temporary downloads.'
+
+      curaline__renew_credential:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Whether the client renews its client secret on its own.'
+
+      curaline__schedule_delay:
+        type: 'str'
+        required: false
+        default: 'PT10M'
+        description: 'Interval between two upload and download runs, as an ISO 8601 duration.'
+
+      curaline__scope:
+        type: 'str'
+        required: false
+        default: 'https://identity.health.swisscom.ch/CdrApi/.default'
+        description: 'The OAuth2 scope of the token request.'
+
+      curaline__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service.'
+
+      curaline__service_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Changes the state of the service.'
+
+      curaline__tenant_id:
+        type: 'str'
+        required: false
+        default: '70b434db-eccb-4280-95dc-1e59220aca55'
+        description: 'The Entra ID tenant that issues the tokens.'
+
+      curaline__user:
+        type: 'str'
+        required: false
+        default: 'swisscom-schweiz-ag-cdr-client'
+        description: 'User of the service, created as a system user if it does not exist. An existing user is not modified.'
+
+      curaline__version:
+        type: 'str'
+        required: true
+        description: 'The version of the curaLINE client to install.'
