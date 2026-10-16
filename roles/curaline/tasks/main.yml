@@ -37,41 +37,58 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'groupadd --system curaline'
+  # an existing group keeps its GID, `ansible.builtin.group` only sets `system` on creation.
+  - name: 'groupadd --system {{ curaline__group }}'
     ansible.builtin.group:
-      name: 'curaline'
+      name: '{{ curaline__group }}'
       state: 'present'
       system: true
 
-  - name: 'useradd --system curaline'
+  # an existing account, such as the `hnet` account of an H-Net SecureClient installation, is taken over as it is. `ansible.builtin.user` would rewrite its home, shell and comment and break the other software using it.
+  - name: 'getent passwd {{ curaline__user }}'
+    ansible.builtin.command: 'getent passwd {{ curaline__user }}'
+    register: '__curaline__getent_passwd_result'
+    changed_when: false
+    failed_when: '__curaline__getent_passwd_result["rc"] not in [0, 2]'
+    check_mode: false
+
+  - name: 'useradd --system --gid {{ curaline__group }} --home-dir {{ __curaline__state_dir }} --no-create-home --shell /usr/sbin/nologin {{ curaline__user }}'
     ansible.builtin.user:
-      name: 'curaline'
+      name: '{{ curaline__user }}'
       comment: 'curaLINE Service Account'
-      group: 'curaline'
-      home: '{{ __curaline__install_dir }}'
+      group: '{{ curaline__group }}'
+      home: '{{ __curaline__state_dir }}'
       create_home: false
       shell: '/usr/sbin/nologin'
       system: true
       state: 'present'
+    when: '__curaline__getent_passwd_result["rc"] == 2'
 
   - name: 'mkdir -p {{ __curaline__config_dir }}'
     ansible.builtin.file:
       path: '{{ __curaline__config_dir }}'
       state: 'directory'
-      owner: 'curaline'
-      group: 'curaline'
+      owner: '{{ curaline__user }}'
+      group: '{{ curaline__group }}'
       mode: 0o750
 
-  # the folders of the connectors are not recursed into on purpose: the files in them belong to
-  # whatever delivers or collects them.
+  - name: 'stat {{ __curaline__folders | join(" ") }}'
+    ansible.builtin.stat:
+      path: '{{ item }}'
+    loop: '{{ __curaline__folders }}'
+    register: '__curaline__folders_stat_result'
+
+  # only missing folders are created. existing ones, such as the `/data/xml` tree of an H-Net SecureClient installation, keep their owner and mode, and the files in them belong to whatever delivers or collects them.
   - name: 'mkdir -p {{ __curaline__folders | join(" ") }}'
     ansible.builtin.file:
-      path: '{{ item }}'
+      path: '{{ item["item"] }}'
       state: 'directory'
-      owner: 'curaline'
-      group: 'curaline'
+      owner: '{{ curaline__user }}'
+      group: '{{ curaline__group }}'
       mode: 0o755
-    loop: '{{ __curaline__folders }}'
+    loop: '{{ __curaline__folders_stat_result["results"] | rejectattr("stat.exists") | list }}'
+    loop_control:
+      label: '{{ item["item"] }}'
 
   tags:
     - 'curaline'
@@ -83,8 +100,8 @@
     ansible.builtin.file:
       path: '{{ __curaline__install_dir }}'
       state: 'directory'
-      owner: 'curaline'
-      group: 'curaline'
+      owner: '{{ curaline__user }}'
+      group: '{{ curaline__group }}'
       mode: 0o755
 
   - name: 'cat {{ __curaline__install_dir }}/.ansible-version'
@@ -94,8 +111,7 @@
     failed_when: false
     check_mode: false
 
-  # the tarball ships its own Java runtime and the client unpacks into and writes to its own
-  # directory (for example `.cache`), so the whole directory belongs to the service account.
+  # the tarball ships its own Java runtime. the whole directory belongs to the service account, as the Debian package of the client does it on every start of the service.
   - name: 'Install cdr-client {{ curaline__version }}'
     when:
       - '__curaline__installed_version_result["stdout"] | trim != curaline__version | string'
@@ -128,19 +144,19 @@
         ansible.builtin.file:
           path: '{{ __curaline__install_dir }}'
           state: 'directory'
-          owner: 'curaline'
-          group: 'curaline'
+          owner: '{{ curaline__user }}'
+          group: '{{ curaline__group }}'
           mode: 0o755
 
       - name: 'tar --extract --gzip --strip-components=1 --directory {{ __curaline__install_dir }}'
         ansible.builtin.unarchive:
           src: '/tmp/ansible.cdr-client-{{ curaline__version }}-linux-amd64.tar.gz'
           dest: '{{ __curaline__install_dir }}'
-          owner: 'curaline'
-          group: 'curaline'
+          owner: '{{ curaline__user }}'
+          group: '{{ curaline__group }}'
           extra_opts:
             - '--strip-components=1'
-        notify: 'curaline: restart cdr-client'
+        notify: 'curaline: restart swisscom-schweiz-ag-cdr-client'
 
       # written last: an aborted installation is repeated by the next run. a state marker is not
       # a config file, so `copy` is fine here.
@@ -148,9 +164,16 @@
         ansible.builtin.copy:
           dest: '{{ __curaline__install_dir }}/.ansible-version'
           content: '{{ curaline__version }}'
-          owner: 'root'
-          group: 'root'
+          owner: '{{ curaline__user }}'
+          group: '{{ curaline__group }}'
           mode: 0o644
+
+  # hands an existing installation over after a change of `curaline__user` or `curaline__group`.
+  - name: 'chown -R --changes {{ curaline__user }}:{{ curaline__group }} {{ __curaline__install_dir }}'
+    ansible.builtin.command: 'chown --recursive --no-dereference --changes {{ curaline__user }}:{{ curaline__group }} {{ __curaline__install_dir }}'
+    register: '__curaline__chown_result'
+    changed_when: '__curaline__chown_result["stdout"] | length > 0'
+    notify: 'curaline: restart swisscom-schweiz-ag-cdr-client'
 
   tags:
     - 'curaline'
@@ -164,34 +187,33 @@
       backup: true
       src: 'etc/swisscom-schweiz-ag/cdr-client/application-customer.yaml.j2'
       dest: '{{ __curaline__config_dir }}/application-customer.yaml'
-      owner: 'curaline'
-      group: 'curaline'
+      owner: '{{ curaline__user }}'
+      group: '{{ curaline__group }}'
       mode: 0o640 # contains the client secret
     diff: false # keep the client secret out of `--diff` output
-    notify: 'curaline: restart cdr-client'
+    notify: 'curaline: restart swisscom-schweiz-ag-cdr-client'
 
   - name: 'Deploy {{ __curaline__config_dir }}/logback-service.xml'
     ansible.builtin.template:
       backup: true
       src: 'etc/swisscom-schweiz-ag/cdr-client/logback-service.xml.j2'
       dest: '{{ __curaline__config_dir }}/logback-service.xml'
-      owner: 'curaline'
-      group: 'curaline'
+      owner: '{{ curaline__user }}'
+      group: '{{ curaline__group }}'
       mode: 0o640
-    notify: 'curaline: restart cdr-client'
+    notify: 'curaline: restart swisscom-schweiz-ag-cdr-client'
 
-  # the unit is templated whole, not as a drop-in, because the tarball ships none that fits: its
-  # unit uses a dynamic user, while the client has to own its installation and data folders.
-  - name: 'Deploy /etc/systemd/system/cdr-client.service'
+  # the unit is templated whole, not as a drop-in, because the one of the Debian package uses a dynamic user, while the client has to run under a static account that owns its installation and data folders. the name is the same, so this unit takes precedence over the one of the package.
+  - name: 'Deploy /etc/systemd/system/swisscom-schweiz-ag-cdr-client.service'
     ansible.builtin.template:
       backup: true
-      src: 'etc/systemd/system/cdr-client.service.j2'
-      dest: '/etc/systemd/system/cdr-client.service'
+      src: 'etc/systemd/system/swisscom-schweiz-ag-cdr-client.service.j2'
+      dest: '/etc/systemd/system/swisscom-schweiz-ag-cdr-client.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__curaline__unit_result'
-    notify: 'curaline: restart cdr-client'
+    notify: 'curaline: restart swisscom-schweiz-ag-cdr-client'
 
   - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
@@ -232,14 +254,14 @@
 - block:
 
   # the state task runs after every task that notifies the restart handler, see handlers/main.yml.
-  - name: 'systemctl {{ curaline__service_enabled | bool | ternary("enable", "disable") }} cdr-client.service'
+  - name: 'systemctl {{ curaline__service_enabled | bool | ternary("enable", "disable") }} swisscom-schweiz-ag-cdr-client.service'
     ansible.builtin.service:
-      name: 'cdr-client.service'
+      name: 'swisscom-schweiz-ag-cdr-client.service'
       enabled: '{{ curaline__service_enabled | bool }}'
 
-  - name: 'systemctl {{ curaline__service_state | regex_replace("p?ed$", "") }} cdr-client.service'
+  - name: 'systemctl {{ curaline__service_state | regex_replace("p?ed$", "") }} swisscom-schweiz-ag-cdr-client.service'
     ansible.builtin.service:
-      name: 'cdr-client.service'
+      name: 'swisscom-schweiz-ag-cdr-client.service'
       state: '{{ curaline__service_state }}'
     register: '__curaline__service_state_result'
 
