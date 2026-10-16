@@ -143,6 +143,21 @@
         that: '__molecule__postfix_relayhost_result["stdout"] | trim == postfix__relayhost'
         fail_msg: '{{ __molecule__postfix_relayhost_result["stdout"] }}'
 
+    # Lynis MAIL-8818 flags a banner that holds $mail_name (Postfix), the OS or the Linux flavour.
+    # Ask the running daemon, since the unset default would look fine in main.cf.
+    - name: 'postconf -h smtpd_banner'
+      ansible.builtin.command: 'postconf -h smtpd_banner'
+      changed_when: false
+      register: '__molecule__postfix_banner_result'
+
+    - name: 'Assert that the SMTP banner discloses neither the MTA nor the OS'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__postfix_banner_result["stdout"] == "$myhostname ESMTP LFOps"'
+          - '"mail_name" not in __molecule__postfix_banner_result["stdout"]'
+          - '"linux" not in __molecule__postfix_banner_result["stdout"] | lower'
+        fail_msg: '{{ __molecule__postfix_banner_result["stdout"] }}'
+
     - name: 'postconf -h sender_canonical_maps recipient_canonical_maps'
       ansible.builtin.command: 'postconf -h sender_canonical_maps recipient_canonical_maps'
       changed_when: false

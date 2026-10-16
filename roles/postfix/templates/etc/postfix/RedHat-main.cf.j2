@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026090901
+# 2026101601
 
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
@@ -605,6 +605,7 @@ recipient_delimiter = {{ postfix__recipient_delimiter }}
 #
 #smtpd_banner = $myhostname ESMTP $mail_name
 #smtpd_banner = $myhostname ESMTP $mail_name ($mail_version)
+smtpd_banner = {{ postfix__smtpd_banner }}
 
 # PARALLEL DELIVERY TO THE SAME DESTINATION
 #

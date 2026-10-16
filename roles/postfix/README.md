@@ -346,6 +346,13 @@ postfix__relayhost: 'mail.example.com:587'
 * Type: Bool.
 * Default: `false`
 
+`postfix__smtpd_banner`
+
+* The text of the SMTP greeting banner. It must start with `$myhostname` (RFC 5321). The default carries no software name, OS name or version, which keeps Lynis test MAIL-8818 quiet; avoid `$mail_name`, `Postfix` and anything containing `Linux` for the same reason.
+* See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_banner)
+* Type: String.
+* Default: `'$myhostname ESMTP LFOps'`
+
 `postfix__smtpd_tls_cert_file`
 
 * See [postfix.org](https://www.postfix.org/postconf.5.html#smtpd_tls_cert_file)
@@ -461,6 +468,7 @@ postfix__smtp_sasl_security_options:
   - 'noanonymous'
 postfix__smtp_tls_security_level: 'encrypt'
 postfix__smtp_tls_wrappermode: true
+postfix__smtpd_banner: '$myhostname ESMTP LFOps'
 postfix__smtpd_tls_cert_file: '/etc/pki/tls/certs/postfix.pem'
 postfix__smtpd_tls_key_file: '/etc/pki/tls/private/postfix.key'
 postfix__smtpd_tls_security_level: 'may'
