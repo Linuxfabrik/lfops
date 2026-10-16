@@ -64,18 +64,7 @@ fail2ban__jails__combined_var: '{{ (
 fail2ban__jails__dependent_var: []
 fail2ban__jails__group_var: []
 fail2ban__jails__host_var: []
-# The Apache jails need an access log to read, otherwise fail2ban skips them with an error. They
-# are therefore only on for hosts that run the apache_httpd role.
 fail2ban__jails__role_var:
-  - filename: 'z10-apache-404'
-    state: '{{ "present" if "lfops_apache_httpd" in group_names else "absent" }}'
-    template: 'apache-404'
-  - filename: 'z10-apache-dos'
-    state: '{{ "present" if "lfops_apache_httpd" in group_names else "absent" }}'
-    template: 'apache-dos'
-  - filename: 'z10-apache-scanner'
-    state: '{{ "present" if "lfops_apache_httpd" in group_names else "absent" }}'
-    template: 'apache-scanner'
   - filename: 'z10-portscan'
     state: 'present'
     template: 'portscan'

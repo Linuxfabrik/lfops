@@ -40,8 +40,7 @@
           - 'ansible_facts["services"]["fail2ban.service"]["status"] == "enabled"'
         fail_msg: 'fail2ban.service is {{ ansible_facts["services"]["fail2ban.service"] | d("absent") }}'
 
-    # The jails the server actually runs: five from the role defaults (the three Apache jails
-    # because the host is in lfops_apache_httpd), one defined from the
+    # The jails the server actually runs: two from the role defaults, one defined from the
     # inventory through the raw template. A jail missing here never made it past the server.
     - name: 'fail2ban-client status {{ item }}'
       ansible.builtin.command: 'fail2ban-client status {{ item }}'
@@ -50,9 +49,6 @@
       failed_when: false
       check_mode: false
       loop:
-        - 'apache-404'
-        - 'apache-dos'
-        - 'apache-scanner'
         - 'molecule-journal'
         - 'portscan'
         - 'sshd'
