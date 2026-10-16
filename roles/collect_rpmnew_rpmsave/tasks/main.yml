@@ -33,7 +33,7 @@
 
   - name: 'Map files to their package info'
     ansible.builtin.set_fact:
-      __collect_rpmnew_rpmsave__package_file_mappings: "{{ __collect_rpmnew_rpmsave__package_file_mappings | default({}) | combine({ item.item.path: __collect_rpmnew_rpmsave__os_name_version + '__' + item.stdout }) }}"
+      __collect_rpmnew_rpmsave__package_file_mappings: "{{ __collect_rpmnew_rpmsave__package_file_mappings | default({}) | combine({item.item.path: __collect_rpmnew_rpmsave__os_name_version + '__' + item.stdout}) }}"
     loop: '{{ __collect_rpmnew_rpmsave__package_info.results }}'
     loop_control:
       label: '{{ item.item.path }}'

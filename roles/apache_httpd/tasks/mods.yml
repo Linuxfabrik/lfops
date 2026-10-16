@@ -50,7 +50,7 @@
     path: '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}mods-enabled/{{ item["filename"] }}.conf'
     mode: 0o644
     state: 'link'
-    force: '{{ ansible_check_mode|d() | bool }}' # prevent errors with --check
+    force: '{{ ansible_check_mode | d() | bool }}' # prevent errors with --check
   loop: '{{ apache_httpd__mods__combined_var }}'
   when:
     - 'item["enabled"] | d(true) | bool'

@@ -709,7 +709,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'Install {{ __mariadb_server__dump_mydumper_dependencies | join (" ") }}'
+  - name: 'Install {{ __mariadb_server__dump_mydumper_dependencies | join(" ") }}'
     ansible.builtin.package:
       name: '{{ __mariadb_server__dump_mydumper_dependencies }}'
       state: 'present'
@@ -856,7 +856,7 @@
 
   - name: 'Build role to members mapping'
     ansible.builtin.set_fact:
-      __mariadb_server__roles2members: '{{ __mariadb_server__roles2members | default({}) | combine({ item["name"]: __mariadb_server__members }) }}'
+      __mariadb_server__roles2members: '{{ __mariadb_server__roles2members | default({}) | combine({item["name"]: __mariadb_server__members}) }}'
     vars:
       __mariadb_server__members: >-
         {%- set members = [] -%}

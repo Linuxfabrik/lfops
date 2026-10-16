@@ -85,7 +85,7 @@
   - name: 'install grafana plugins'
     community.grafana.grafana_plugin:
       name: '{{ item["name"] }}'
-      state: '{{ item ["state"] | d("present") }}'
+      state: '{{ item["state"] | d("present") }}'
     loop: '{{ grafana__plugins__combined_var }}'
     notify: 'grafana: restart grafana-server'
 

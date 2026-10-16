@@ -39,7 +39,7 @@
     ansible.builtin.git:
       repo: '{{ item["url"] }}'
       dest: '{{ ansible_init__ansinv_path }}/{{ item["name"] }}'
-      version: '{{ item["version"] |d("main") }}'
+      version: '{{ item["version"] | d("main") }}'
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     loop: '{{ ansible_init__inventories }}'
@@ -56,7 +56,7 @@
     ansible.builtin.git:
       repo: '{{ item["url"] }}'
       dest: '{{ ansible_init__ansinv_path }}../roles/{{ item["name"] }}'
-      version: '{{ item["version"] |d("main") }}'
+      version: '{{ item["version"] | d("main") }}'
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     loop: '{{ ansible_init__roles }}'

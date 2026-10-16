@@ -84,7 +84,7 @@
         user_domain_name: 'default'
       region_name: '{{ infomaniak_vm__region_name }}'
       name: '{{ item["name"] }}--subnet'
-      network_name: '{{ item ["name"] }}'
+      network_name: '{{ item["name"] }}'
       cidr: '{{ item["cidr"] }}'
       gateway_ip: '{{ item["cidr"] | ansible.utils.nthhost("1") }}'
       enable_dhcp: false
