@@ -142,3 +142,7 @@ kernel_modules__modules__role_var:
   # keep working. Re-enable it in the inventory of hosts that need it.
   - name: 'tun'
     enabled: false
+  # CIS. USB mass storage. Breaks: USB flash drives and USB disks, and booting from a USB
+  # or SD card reader (the role refuses to block it while such a disk is attached).
+  - name: 'usb-storage'
+    enabled: false
