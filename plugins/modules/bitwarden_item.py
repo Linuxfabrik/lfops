@@ -424,8 +424,8 @@ def run_module():
 
         result['changed'] = changed
         # move username and password higher for easier access
-        result['username'] = result['login']['username']
-        result['password'] = result['login']['password']
+        result['username'] = result['login'].get('username')
+        result['password'] = result['login'].get('password')
 
     module.exit_json(**result)
 

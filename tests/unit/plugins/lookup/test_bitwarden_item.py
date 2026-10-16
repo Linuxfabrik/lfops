@@ -221,6 +221,17 @@ class TestRun(_BitwardenLookupTestCase):
         self.assertEqual(result[0]['username'], 'dba')
         self.assertEqual(result[0]['password'], 'linuxfabrik')
 
+    def test_omitted_username_is_lifted_as_none(self):
+        # bw 2026.10.0 omits an unset username instead of returning null
+        item = {'id': 'abc', 'name': 'host - db', 'login': {'password': 'linuxfabrik'}}
+        for term in ({'name': 'host - db'}, {'id': 'abc'}):
+            with self.subTest(term=term):
+                _FakeBitwarden.items_by_search = [dict(item)]
+                _FakeBitwarden.item_by_id = dict(item)
+                result = self.lookup.run([term])
+                self.assertIsNone(result[0]['username'])
+                self.assertEqual(result[0]['password'], 'linuxfabrik')
+
     def test_missing_item_is_searched_again_after_a_sync_before_it_is_created(self):
         # the cache predates an item created elsewhere during this run
         _FakeBitwarden.items_after_forced_sync = [

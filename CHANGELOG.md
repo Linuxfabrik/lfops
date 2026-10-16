@@ -139,6 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
+* **plugin:bitwarden_item, module:bitwarden_item**: Items without a username work with Bitwarden CLI 2026.10.0, where the lookup and the module aborted with `KeyError: 'username'`.
 * **role:kernel_settings**: The role no longer prints the `Conditional result ... was of type 'int'` deprecation warning.
 * **role:apache_tomcat**: Changing `apache_tomcat__env_xms`, `apache_tomcat__env_xmx` or `apache_tomcat__env_xx` restarts Tomcat, so the new JVM settings take effect right away instead of at the next restart.
 * **role:apache_tomcat**: `apache_tomcat__skip_admin_webapps: true` no longer aborts the run on a host with the ROOT webapp.

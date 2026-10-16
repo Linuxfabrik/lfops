@@ -393,8 +393,8 @@ class LookupModule(LookupBase):
                 display.vvv(f'lfbwlp - run - get item by id: {id_}')
                 if result:
                     # move username and password higher for easier access
-                    result['username'] = result['login']['username']
-                    result['password'] = result['login']['password']
+                    result['username'] = result['login'].get('username')
+                    result['password'] = result['login'].get('password')
                     ret.append(result)
                     continue  # done here, go to next term
                 else:
@@ -425,8 +425,8 @@ class LookupModule(LookupBase):
             if len(result) == 1:
                 display.vvv('lfbwlp - run - found existing item')
                 # move username and password higher for easier access
-                result[0]['username'] = result[0]['login']['username']
-                result[0]['password'] = result[0]['login']['password']
+                result[0]['username'] = result[0]['login'].get('username')
+                result[0]['password'] = result[0]['login'].get('password')
                 ret.append(result[0])
             elif not self.get_option('create'):
                 # the user declared that this run must not mint new secrets
@@ -465,8 +465,8 @@ class LookupModule(LookupBase):
                 display.vvv('lfbwlp - run - item created')
 
                 # move username and password higher for easier access
-                out['username'] = out['login']['username']
-                out['password'] = out['login']['password']
+                out['username'] = out['login'].get('username')
+                out['password'] = out['login'].get('password')
                 ret.append(out)
 
         # always returns a list of dicts; see the RETURN block above for the shape

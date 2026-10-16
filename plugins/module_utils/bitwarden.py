@@ -506,9 +506,11 @@ class Bitwarden:
         for item in self._cache['items']:
             if item.get('type') != 1:
                 continue  # skip non-login items (cards, secure notes, identities)
+            # `bw` omits an unset username instead of returning null (verified against
+            # bw 2026.10.0 on Fedora 44), so a missing key counts as no username
             if (
                 item['name'] == name
-                and (item['login']['username'] == username)
+                and (item['login'].get('username') == username)
                 and (item.get('folderId') == folder_id)
                 and (
                     # cover case if collectionIds is an empty list
@@ -616,7 +618,7 @@ class Bitwarden:
         login=None,
         notes=None,
         organization_id=None,
-        collection_ids=None,
+        collection_id=None,
         folder_id=None,
     ):
         """Get an item.login object from the vault.
@@ -625,7 +627,7 @@ class Bitwarden:
 
         {
           "organizationId": null,
-          "collectionIds": null,
+          "collectionIds": [],
           "folderId": null,
           "type": 1,
           "name": "Item name",
@@ -640,7 +642,8 @@ class Bitwarden:
         }
         """
         item = self._get_template('item')
-        item['collectionIds'] = collection_ids
+        # a list, as `bw` returns it, so the module's diff does not see a change
+        item['collectionIds'] = [collection_id] if collection_id else []
         item['folderId'] = folder_id
         item['login'] = login
         item['name'] = name

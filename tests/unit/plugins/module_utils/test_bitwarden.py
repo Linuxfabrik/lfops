@@ -244,6 +244,15 @@ class TestGetItems(unittest.TestCase):
                     'collectionIds': [],
                     'organizationId': None,
                 },
+                {
+                    # bw 2026.10.0 omits an unset username instead of returning null
+                    'type': 1,
+                    'name': 'host - web',
+                    'login': {'password': 'linuxfabrik'},
+                    'folderId': None,
+                    'collectionIds': [],
+                    'organizationId': None,
+                },
             ],
         }
 
@@ -259,6 +268,31 @@ class TestGetItems(unittest.TestCase):
 
     def test_no_match_returns_empty(self):
         self.assertEqual(self.bw.get_items('does-not-exist', username='dba'), [])
+
+    def test_omitted_username_matches_no_username(self):
+        matches = self.bw.get_items('host - web')
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]['name'], 'host - web')
+
+    def test_omitted_username_does_not_match_a_username(self):
+        self.assertEqual(self.bw.get_items('host - web', username='dba'), [])
+
+
+class TestGetTemplateItem(unittest.TestCase):
+    def setUp(self):
+        self.bw = _make_bitwarden()
+        # seed the template so no API call is made
+        self.bw._cache['templates']['item'] = {'type': 1, 'name': 'Item name'}
+
+    def test_collection_id_becomes_a_list(self):
+        # `bw` returns collectionIds as a list; a plain string would make the
+        # module see a change on every run
+        item = self.bw.get_template_item('host - db', collection_id='c1')
+        self.assertEqual(item['collectionIds'], ['c1'])
+
+    def test_no_collection_id_gives_an_empty_list(self):
+        item = self.bw.get_template_item('host - db')
+        self.assertEqual(item['collectionIds'], [])
 
 
 _LOGIN_ITEM = {
