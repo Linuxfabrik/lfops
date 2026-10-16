@@ -10,6 +10,10 @@ The role does nothing on its own and relies on the [linux_system_roles.kernel_se
 
 ## How the Role Behaves
 
+* By default the role applies a sysctl hardening baseline that follows the CIS Benchmarks: `kernel.dmesg_restrict`, `kernel.kptr_restrict` and `kernel.yama.ptrace_scope` restrict kernel information and process tracing to root and parent processes, ICMP redirects are neither accepted nor sent, source-routed packets are dropped, and martian packets are logged. On top of that, BPF programs are hardened for every user and unprivileged `bpf()` is switched off for good. The full list with the reasoning is in `vars/main.yml`. Forwarding, strict reverse path filtering and IPv6 router advertisements are left alone, since changing them breaks container hosts, routers, asymmetric routing and SLAAC.
+* With `kernel.yama.ptrace_scope = 1`, a process without `CAP_SYS_PTRACE` can only attach to its own descendants, so an unprivileged user can no longer run `gdb -p` or `strace -p` against a running process of its own. root is not affected.
+* TuneD applies `/etc/sysctl.d/*.conf` and `/etc/sysctl.conf` again after its profile (`reapply_sysctl` in `/etc/tuned/tuned-main.conf`), so a value set there wins over the same key set by this role, and TuneD's verification of the role's value fails. Set such values through this role instead. Ubuntu 22.04 and 24.04 ship `kernel.kptr_restrict = 1` in `/etc/sysctl.d/10-kernel-hardening.conf`, which is why the baseline uses `1` there instead of `2`.
+* `kernel.unprivileged_bpf_disabled = 1` cannot be changed again on a running kernel. Overriding it in the inventory, or removing it with `state: 'absent'`, takes effect with the next reboot.
 * If any `sunrpc.*` setting is configured (the mariadb_server role sets `sunrpc.tcp_slot_table_entries`), the role loads the `sunrpc` kernel module and lists it in `/etc/modules-load.d/sunrpc.conf`, since the `sunrpc.*` settings only exist while the module is loaded and nothing else loads it at boot on a host without NFS. `options sunrpc` lines in `/etc/modprobe.d/` are commented out in the process. The file stays in place when the `sunrpc.*` settings are removed later.
 * On Ubuntu 22.04 the role removes `kernel.sched_min_granularity_ns` and `kernel.sched_wakeup_granularity_ns` from the TuneD profile it builds on (a `drop` entry in its own profile). The TuneD release of Ubuntu 22.04 sets them although its 5.15 kernel has neither, and TuneD's own verification would otherwise fail on every run.
 
@@ -59,21 +63,83 @@ These variables are intended to be used in a host / group variable file in the A
 
 * sysctl settings. Entries are identified by `name`, so an entry from the inventory is merged into the default entry of the same name.
 * Type: List of dictionaries.
-* Default: on Ubuntu 22.04
+* Default: the hardening baseline from `vars/main.yml`:
+
+    ```yaml
+    - name: 'fs.protected_hardlinks'
+      value: 1
+    - name: 'fs.protected_symlinks'
+      value: 1
+    - name: 'kernel.dmesg_restrict'
+      value: 1
+    - name: 'kernel.kptr_restrict'
+      value: 2
+    - name: 'kernel.randomize_va_space'
+      value: 2
+    - name: 'kernel.unprivileged_bpf_disabled'
+      value: 1
+    - name: 'kernel.yama.ptrace_scope'
+      value: 1
+    - name: 'net.core.bpf_jit_harden'
+      value: 2
+    - name: 'net.ipv4.conf.all.accept_redirects'
+      value: 0
+    - name: 'net.ipv4.conf.all.accept_source_route'
+      value: 0
+    - name: 'net.ipv4.conf.all.log_martians'
+      value: 1
+    - name: 'net.ipv4.conf.all.secure_redirects'
+      value: 0
+    - name: 'net.ipv4.conf.all.send_redirects'
+      value: 0
+    - name: 'net.ipv4.conf.default.accept_redirects'
+      value: 0
+    - name: 'net.ipv4.conf.default.accept_source_route'
+      value: 0
+    - name: 'net.ipv4.conf.default.log_martians'
+      value: 1
+    - name: 'net.ipv4.conf.default.secure_redirects'
+      value: 0
+    - name: 'net.ipv4.conf.default.send_redirects'
+      value: 0
+    - name: 'net.ipv4.icmp_echo_ignore_broadcasts'
+      value: 1
+    - name: 'net.ipv4.icmp_ignore_bogus_error_responses'
+      value: 1
+    - name: 'net.ipv4.tcp_syncookies'
+      value: 1
+    - name: 'net.ipv6.conf.all.accept_redirects'
+      value: 0
+    - name: 'net.ipv6.conf.all.accept_source_route'
+      value: 0
+    - name: 'net.ipv6.conf.default.accept_redirects'
+      value: 0
+    - name: 'net.ipv6.conf.default.accept_source_route'
+      value: 0
+    ```
+
+    On Ubuntu 22.04 additionally:
 
     ```yaml
     - name: 'drop'
       value: 'kernel.sched_min_granularity_ns,kernel.sched_wakeup_granularity_ns'
+    - name: 'kernel.kptr_restrict'
+      value: 1
     ```
 
-    `[]` on all other platforms.
+    On Ubuntu 24.04 additionally:
 
-* Deviates from the upstream default `[]` on Ubuntu 22.04: the TuneD profile there sets two scheduler sysctls that the 5.15 kernel does not have, and TuneD's own verification would fail on every run (see "How the Role Behaves").
+    ```yaml
+    - name: 'kernel.kptr_restrict'
+      value: 1
+    ```
+
+* Deviates from the upstream default `[]`: a host deployed with LFOps should pass the sysctl checks of the CIS Benchmarks without further inventory. On Ubuntu 22.04 the TuneD profile also sets two scheduler sysctls that the 5.15 kernel does not have, and TuneD's own verification would fail on every run (see "How the Role Behaves").
 * Subkeys:
 
     * `name`:
 
-        * Mandatory. Name of the sysctl, or `drop` to remove options from the TuneD profile the role builds on. An inventory entry named `drop` replaces the value of the default one, so list the two scheduler sysctls there as well on Ubuntu 22.04.
+        * Mandatory. Name of the sysctl, or `drop` to remove options from the TuneD profile the role builds on. An inventory entry replaces the value of the default entry of the same name; an entry named `drop` therefore has to list the two scheduler sysctls as well on Ubuntu 22.04.
         * Type: String.
 
     * `state`:
@@ -145,6 +211,13 @@ kernel_settings__systemd_cpu_affinity__group_var: '1,3,5,7'
 kernel_settings__transparent_hugepages__group_var: 'madvise'
 kernel_settings__transparent_hugepages_defrag__group_var: 'defer'
 ```
+
+
+## Troubleshooting
+
+**The run aborts in `fedora.linux_system_roles.kernel_settings`, and the TuneD log names a missing `net.ipv6.*` sysctl**
+
+* IPv6 is switched off on the kernel command line (`ipv6.disable=1`), so the `net.ipv6.*` sysctls of the hardening baseline do not exist, and TuneD's verification fails on them. Remove them for this host with `state: 'absent'` entries in `kernel_settings__sysctl__host_var`.
 
 
 ## License

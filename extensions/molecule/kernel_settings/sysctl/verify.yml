@@ -50,3 +50,30 @@
       ansible.builtin.command: 'tuned-adm verify --ignore-missing'
       become: true
       changed_when: false
+
+    # after the reboot, so the values prove that TuneD applies the baseline at boot
+    - name: 'Load the hardening baseline of the kernel_settings role'
+      ansible.builtin.include_vars:
+        file: '{{ playbook_dir }}/../../../../roles/kernel_settings/vars/main.yml'
+
+    - name: 'sysctl --values <the keys of the hardening baseline>'
+      ansible.builtin.command: 'sysctl --values {{ __kernel_settings__sysctl__hardening | map(attribute="name") | join(" ") }}'
+      changed_when: false
+      register: '__molecule__sysctl_values_result'
+
+    - name: 'Assert that the kernel uses the hardening baseline, with the value the inventory overrides'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__sysctl_values_result["stdout_lines"] == __molecule__expected'
+        fail_msg: '{{ __kernel_settings__sysctl__hardening | map(attribute="name") | zip(__molecule__sysctl_values_result["stdout_lines"]) | map("join", "=") | list }}'
+      vars:
+        # the baseline as name -> value, with the value the inventory overrides
+        __molecule__baseline: '{{
+            dict(__kernel_settings__sysctl__hardening | map(attribute="name")
+              | zip(__kernel_settings__sysctl__hardening | map(attribute="value")))
+            | combine({"kernel.kptr_restrict": 1})
+          }}'
+        __molecule__expected: '{{
+            __kernel_settings__sysctl__hardening | map(attribute="name")
+            | map("extract", __molecule__baseline) | map("string") | list
+          }}'
