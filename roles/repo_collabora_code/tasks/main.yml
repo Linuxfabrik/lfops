@@ -5,6 +5,8 @@
     ansible.builtin.rpm_key:
       key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-centos8/repodata/repomd.xml.key'
       state: 'present'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
 
   - name: 'deploy /etc/yum.repos.d/Collabora.repo (mirror: {{ repo_collabora_code__mirror_url | default(default) }})'
     ansible.builtin.template:

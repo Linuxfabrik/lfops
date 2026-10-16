@@ -1,0 +1,30 @@
+# re-baseline after the role changed /etc/aide.conf, its own units or the timer's enable
+# symlink, otherwise the next check reports every path the new rules add or drop, and the
+# role's own files. only under the guard __aide__update_db_allowed (vars/main.yml), computed from
+# the state tasks/check-state.yml read before the role changed anything. unlike system_update
+# and aide-dpkg-hook, the handler does not run a fresh check first: the role has already changed
+# monitored files by now, so a fresh check would always fail, and one before the changes would
+# add a full check to every run. what changed since the last check is accepted along with the
+# role's change, see the README.
+
+# the same tasks `--tags aide:update_db_force` runs. handlers are not filtered by tags, so the
+# included tasks also run under --tags aide:configure or aide:state.
+- name: 'aide: update the AIDE database'
+  ansible.builtin.include_tasks: 'update-db.yml'
+  listen: 'aide: update database'
+  when:
+    - '__aide__update_db_allowed | bool'
+
+- name: 'aide: report that the database was left alone'
+  ansible.builtin.debug:
+    msg: '{{ __aide__update_db_left_alone_message }}'
+  listen: 'aide: update database'
+  when:
+    - '__aide__update_db_refused | bool'
+
+- name: 'aide: collect the message for the end of the play'
+  ansible.builtin.set_fact:
+    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__aide__update_db_left_alone_message] }}'
+  listen: 'aide: update database'
+  when:
+    - '__aide__update_db_refused | bool'

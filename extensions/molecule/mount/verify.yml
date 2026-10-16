@@ -1,0 +1,35 @@
+- name: 'Verify mount relabels a freshly created filesystem'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # What the relabelling is for: the mount point and what is created on it carry the context
+    # the policy assigns to the path, not unlabeled_t, which confined services may not access.
+    - name: 'touch /srv/lfops-molecule/probe'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule/probe'
+        state: 'touch'
+        mode: 0o644
+      changed_when: false
+
+    - name: 'stat --format=%C /srv/lfops-molecule /srv/lfops-molecule/probe; matchpathcon -n /srv/lfops-molecule /srv/lfops-molecule/probe'
+      ansible.builtin.shell:
+        cmd: |
+          set -o errexit -o pipefail
+          stat --format=%C /srv/lfops-molecule /srv/lfops-molecule/probe | cut --delimiter=: --fields=3
+          matchpathcon -n /srv/lfops-molecule /srv/lfops-molecule/probe | cut --delimiter=: --fields=3
+        executable: '/bin/bash'
+      register: '__molecule__context_result'
+      changed_when: false
+
+    - name: 'Assert that the mount point and a new file on it carry the type the policy assigns'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__context_result["stdout_lines"][0:2] == __molecule__context_result["stdout_lines"][2:4]'
+          - '"unlabeled_t" not in __molecule__context_result["stdout"]'
+        fail_msg: '{{ __molecule__context_result["stdout_lines"] }}'
+
+    - name: 'rm /srv/lfops-molecule/probe'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule/probe'
+        state: 'absent'

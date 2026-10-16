@@ -1,0 +1,19 @@
+# The empty filesystem the role mounts. It has to exist before the playbook runs, and is created
+# only once, so the idempotence step mounts the same, by then labelled filesystem again.
+- name: 'Create an empty xfs image'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'truncate --size=300M /var/tmp/lfops-molecule.img; mkfs.xfs /var/tmp/lfops-molecule.img'
+      ansible.builtin.shell:
+        cmd: |
+          set -o errexit
+          truncate --size=300M /var/tmp/lfops-molecule.img
+          mkfs.xfs -q /var/tmp/lfops-molecule.img
+        creates: '/var/tmp/lfops-molecule.img'
+        executable: '/bin/bash'
+
+
+- name: 'Converge mount playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mount'

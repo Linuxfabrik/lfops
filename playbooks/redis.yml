@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.redis'
   hosts:
     - 'lfops_redis'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -48,7 +49,7 @@
     - role: 'linuxfabrik.lfops.repo_redis'
       when:
         - 'ansible_facts["os_family"] == "Debian"' # not available for RedHat, instead using repo_remi there
-        - 'not redis__skip_repo_redis'
+        - 'not redis__skip_repo_redis | d(false)'
 
     - role: 'linuxfabrik.lfops.redis'
 

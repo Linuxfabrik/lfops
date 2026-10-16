@@ -42,6 +42,7 @@ This role never exposes to the world that PHP is installed on the server, no mat
 * The `[global]` section of the PHP-FPM configuration is deployed as `z00-linuxfabrik-global.conf` next to the pools, because `php-fpm.conf` itself belongs to the package. Which side wins depends on where the packaged `php-fpm.conf` puts its `include=` line, and the families differ: RedHat reads the pool directory before its own `[global]`, so the package overrides the drop-in, while Debian reads it after and the drop-in overrides the package. The role therefore sets only directives that no packaged `php-fpm.conf` touches (`log_level` and the `emergency_restart_*` pair), which take effect on both. `error_log`, `pid` and `daemonize` are deliberately left out: they are exactly what the packages set, so setting them here would move them on Debian and silently do nothing on RedHat.
 * With `pm = dynamic` the master checks once per second whether `pm.min_spare_servers` workers are idle. If not, it forks a batch of workers and doubles the batch size for the next check, up to `pm.max_spawn_rate` (32). From a batch size of 8 on, every one of those checks logs `seems busy (you may need to increase pm.start_servers, or pm.min/max_spare_servers)` at warning level, and unlike the `server reached pm.max_children setting` warning beside it, this one has no once-only guard, so it repeats every second for as long as the shortfall lasts. The batch size falls back to 1 as soon as the pool has `pm.min_spare_servers` idle workers again, and also when `pm.max_children` is reached, so the warning needs four consecutive seconds of shortfall before it appears at all. An ordinary traffic spike therefore writes a block of these warnings while the pool still had capacity to spare: `server reached pm.max_children setting` is the saturation signal, `seems busy` only a hint that the pool could not refill its idle reserve fast enough. Raising `php__fpm_pool_conf_pm_start_servers__*_var` and `php__fpm_pool_conf_pm_min_spare_servers__*_var` does that, at the cost of that many resident workers per pool; on a host where spikes are normal, pass `--ignore='seems busy'` to the `php-fpm-logfile` [Monitoring Plugin](https://github.com/Linuxfabrik/monitoring-plugins) instead.
 * Each pool listens on its own Unix socket below the FPM runtime directory (`/run/php-fpm/<pool>.sock` on RedHat, `/run/php/<pool>.sock` on Debian). The socket belongs to `root` and carries a POSIX ACL entry for the web server user (`listen.acl_users`), so a pool running as its own user still hands the web server access without either of them owning the socket. On Debian this deviates from the packaged pool file, which uses `listen.owner` / `listen.group` instead. On Debian the packaged php-fpm systemd unit additionally maintains a version-agnostic `update-alternatives` alias at `/run/php/php-fpm.sock` pointing at the socket of the default `www` pool. That alias only ever tracks `www`, so configure the web server with the explicit per-pool socket path rather than the generic one. RedHat ships no such alias.
+* The role orders Apache after PHP-FPM at boot with the drop-in `/etc/systemd/system/httpd.service.d/z00-php.conf` (`apache2.service.d` on Debian). The RHEL package only makes httpd pull in php-fpm and Debian does not even that, so both otherwise start side by side, and the first requests after a reboot fail with `AH02454: FCGI: attempt to connect to Unix domain socket ... failed` until the PHP-FPM socket exists. On a host without Apache the ordering is ignored. It takes effect at the next boot, without a restart.
 * The pool sets `env[PATH]`, which upstream leaves unset: with `clear_env` at its default the worker environment is empty, so `getenv("PATH")` returns nothing, which trips applications that shell out and fails Nextcloud's "PHP getenv" setup check.
 * Every pool gets its own WSDL cache directory below `/var/lib/php/wsdlcache`, owned like its session directory. The SOAP extension caches parsed WSDL files there, so a `SoapClient` does not refetch and reparse the service description on every request. PHP's own default is `/tmp`, which on RedHat means the php-fpm unit's `PrivateTmp` namespace and therefore a cache thrown away on every restart, and on Debian the shared `/tmp`. Only relevant to applications using `SoapClient`: without the `soap` extension installed the setting is inert, and `ini_get('soap.wsdl_cache_dir')` returns an empty string.
 * Every pool answers on the same two FPM-internal endpoints, `/fpm-status` (the status page) and `/fpm-ping` (a liveness check returning `pong`). Which pool answers is decided by the socket the request arrives on, not by the path, so a second pool is published by giving it its own `Location` pointing at that pool's socket while keeping `/fpm-status` as the path sent to FPM. The `localhost` vHost of the [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role does this for the `www` pool, which is what the `php-fpm-status` and `php-fpm-ping` [Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) check by default; `php-fpm-status` accepts `--url` several times for the additional pools. Both endpoints are reachable for anyone who can reach the pool socket, so take care with a vHost that forwards its whole URI space to a pool, or with a reverse proxy that passes unknown paths through. Set `pm_status_path` and / or `ping_path` to an empty string to turn them off for a pool.
@@ -69,6 +70,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs and removes the configured PHP modules.
 * Deploys the `z00-linuxfabrik.ini` for every SAPI.
 * Deploys and removes the PHP-FPM pools and the `[global]` drop-in, together with their session, opcache and log directories.
+* Deploys the systemd drop-in that orders Apache after PHP-FPM at boot.
 * Deploys the logrotate configuration for the per-pool logs (Debian only).
 * Manages the state of the php-fpm service.
 * Pins the `php`, `phar` and `phar.phar` alternatives (Debian with `php__version` set only).
@@ -82,12 +84,14 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `php:fpm`
 
 * Deploys and removes the PHP-FPM pools, and the `[global]` drop-in next to them. On Debian these live under the declared version's tree, on RedHat under `/etc/php-fpm.d`.
+* Deploys the systemd drop-in that orders Apache after PHP-FPM at boot.
 * Creates the shared opcache directory, the php-fpm log directory and one session directory per pool, and relabels them on SELinux hosts.
 * Triggers: php-fpm.service restart.
 
 `php:ini`
 
 * Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
+* Deploys the PHP-FPM pools, since they take over several `php__ini_*` values, such as `memory_limit`.
 * Triggers: php-fpm.service restart.
 
 `php:logrotate`
@@ -206,6 +210,7 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_max_execution_time__group_var` / `php__ini_max_execution_time__host_var`
 
 * This sets the maximum time in seconds a script is allowed to run before it is terminated by the parser. This helps prevent poorly written scripts from tying up the server. The default setting is 30. When running PHP from the command line the default setting is 0. [php.net](https://www.php.net/manual/en/info.configuration.php)
+* The PHP-FPM pools also set it as `php_admin_value[max_execution_time]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_max_execution_time` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: Number.
 * Default: `30`
 
@@ -224,12 +229,14 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_max_input_vars__group_var` / `php__ini_max_input_vars__host_var`
 
 * How many input variables may be accepted (limit is applied to `$_GET`, `$_POST` and `$_COOKIE` superglobal separately). Use of this directive mitigates the possibility of denial of service attacks which use hash collisions. If there are more input variables than specified by this directive, an E_WARNING is issued, and further input variables are truncated from the request. [php.net](https://www.php.net/manual/en/info.configuration.php)
+* The PHP-FPM pools also set it as `php_admin_value[max_input_vars]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_max_input_vars` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: Number.
 * Default: `1000`
 
 `php__ini_memory_limit__group_var` / `php__ini_memory_limit__host_var`
 
 * This sets the maximum amount of memory in bytes that ONE RUNNING SCRIPT is allowed to allocate. This helps prevent poorly written scripts for eating up all available memory on a server. Note that to have no memory limit, set this directive to -1. Again: PHP memory_limit is per-script, just as a highway's speed limit is per-vehicle. [php.net](https://www.php.net/manual/en/ini.core.php)
+* The PHP-FPM pools also set it as `php_admin_value[memory_limit]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_memory_limit` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'128M'`
 
@@ -296,12 +303,14 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_post_max_size__group_var` / `php__ini_post_max_size__host_var`
 
 * Sets max size of post data allowed. This setting also affects file upload. To upload large files, this value must be larger than upload_max_filesize. [php.net](https://www.php.net/manual/en/ini.core.php)
+* The PHP-FPM pools also set it as `php_admin_value[post_max_size]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_post_max_size` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'8M'`
 
 `php__ini_session_cookie_httponly__group_var` / `php__ini_session_cookie_httponly__host_var`
 
 * Marks the session cookie as HttpOnly, so it is not accessible to JavaScript via `document.cookie`, mitigating cookie theft via XSS. [php.net](https://www.php.net/manual/en/session.configuration.php)
+* The PHP-FPM pools also set it as `php_value[session.cookie_httponly]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_value_session_cookie_httponly` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'On'`
 
@@ -311,6 +320,7 @@ Variables for `php.ini` directives and their default values, defined and support
 * `Lax` sends the cookie on same-site requests and on top-level cross-site navigations, but not on cross-site POSTs, iframes or XHR, which is what stops a foreign page from acting under the visitor's session. `Strict` withholds it on a top-level navigation as well, so a user following a link from an email lands logged out until the next click. `None` switches the protection off and only works together with `php__ini_session_cookie_secure__*_var`, otherwise browsers drop the cookie entirely. An empty string emits no attribute and leaves the decision to the browser, which differs between Chrome, Firefox and Safari.
 * Set `None` (with `Secure`) for an application whose identity provider returns through a cross-site POST, as SAML HTTP-POST binding and the OIDC `form_post` response mode do: with `Lax` the callback arrives without the session and the login loops. On a host serving more than one application, set it for that pool alone via `php_value_session_cookie_samesite` in `php__fpm_pools__*_var` instead of host-wide. Applications embedded from another registrable domain need it too. An identity provider or an embedded service under the same registrable domain, for example Collabora at `office.example.com` inside Nextcloud at `cloud.example.com`, counts as same-site and is unaffected.
 * Only deployed from PHP 7.3 on, since PHP 7.2 does not know the directive.
+* The PHP-FPM pools also set it as `php_value[session.cookie_samesite]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_value_session_cookie_samesite` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'Lax'`
 * Deviates from the upstream default, which is an empty string up to PHP 8.5 and therefore emits no attribute at all. PHP itself moves to `Lax` in 8.6, so this anticipates the upstream default rather than departing from it.
@@ -321,6 +331,7 @@ Variables for `php.ini` directives and their default values, defined and support
 * Set it to `'Off'` for a site genuinely served over plain HTTP, which otherwise cannot log anyone in: the browser accepts the cookie and then never returns it. On a host serving both, set it for the affected pool alone via `php_value_session_cookie_secure` in `php__fpm_pools__*_var`.
 * What decides is the scheme the browser uses, not what PHP sees. A site behind a reverse proxy that terminates TLS and forwards plain HTTP is an HTTPS site for this purpose, and is exactly the case where PHP cannot work the flag out for itself.
 * Switching an HTTPS host from `'Off'` to `'On'` logs nobody out. PHP only sends `Set-Cookie` when it creates a session ID, so a running session resumes untouched and its existing cookie keeps its old attributes until the application regenerates the ID, usually at the next login, or the session expires.
+* The PHP-FPM pools also set it as `php_value[session.cookie_secure]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_value_session_cookie_secure` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'On'`
 * Deviates from the upstream default `Off`: without the flag the session ID travels in cleartext on any `http://` request to the host, before a redirect to HTTPS can fire, and LFOps deploys these sites behind TLS. PHP sets the flag on its own only when it sees HTTPS itself, which it does not when TLS is terminated in front of it.
@@ -352,6 +363,7 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_upload_max_filesize__group_var` / `php__ini_upload_max_filesize__host_var`
 
 * The maximum size of an uploaded file. [php.net](https://www.php.net/manual/en/ini.core.php)
+* The PHP-FPM pools also set it as `php_admin_value[upload_max_filesize]`, which takes precedence over the `z00-linuxfabrik.ini`. Set `php_admin_value_upload_max_filesize` in `php__fpm_pools__*_var` for a different value per pool.
 * Type: String.
 * Default: `'2M'`
 

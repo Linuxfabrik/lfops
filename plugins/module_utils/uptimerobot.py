@@ -33,9 +33,6 @@ API_BASE = 'https://api.uptimerobot.com/v2/'
 ENV_API_KEY = 'UPTIMEROBOT_API_KEY'
 DEFAULT_API_KEY_FILE = '~/.uptimerobot'
 
-# How many items v2 returns per page. We page until pagination['total'] is reached.
-PAGE_SIZE = 50
-
 # When the API returns 429 (rate limit), wait this many seconds and retry once.
 DEFAULT_RATE_LIMIT_RETRY_SECONDS = 10
 
@@ -77,14 +74,28 @@ _WRITE_INVALIDATES = {
 MONITOR_TYPE = {'http': 1, 'keyw': 2, 'ping': 3, 'port': 4, 'beat': 5}
 MONITOR_STATUS_READ = {0: 'paused', 1: 'wait', 2: 'up', 8: 'seems_down', 9: 'down'}
 MONITOR_STATUS_WRITE = {'paused': 0, 'up': 1}  # write side only allows pause/un-pause
+# The preset of a port monitor, not its port number. Verified against the
+# UptimeRobot v2 API on 2026-10-09: newMonitor without `port` monitors the port
+# in MONITOR_SUB_TYPE_PORT for codes 1 to 6 and rejects a port number such as 443
+# ("port must not be greater than 65535"); with `port`, the port wins. editMonitor
+# ignores `sub_type` altogether, and getMonitors reports 1 for every port monitor,
+# so only `port` tells which preset is in effect.
 MONITOR_SUB_TYPE = {
     'http': 1,
+    'https': 2,
+    'ftp': 3,
+    'smtp': 4,
+    'pop3': 5,
+    'imap': 6,
+    'custom': 99,
+}
+MONITOR_SUB_TYPE_PORT = {
+    'http': 80,
     'https': 443,
     'ftp': 21,
     'smtp': 25,
     'pop3': 110,
     'imap': 143,
-    'custom': 99,
 }
 KEYWORD_TYPE = {'exist': 1, 'notex': 2}
 KEYWORD_CASE_TYPE = {'cs': 0, 'ci': 1}
@@ -99,7 +110,7 @@ HTTP_METHOD = {
     'options': 7,
 }
 POST_TYPE = {'key-value': 1, 'raw data': 2}
-POST_CONTENT_TYPE = {'text/html': 0, 'content/json': 1}
+POST_CONTENT_TYPE = {'application/json': 1, 'content/json': 1, 'text/html': 0}
 DISABLE_DOMAIN_EXPIRE = {'enable': 0, 'disable': 1}
 
 MWINDOW_TYPE = {'once': 1, 'daily': 2, 'weekly': 3, 'monthly': 4}
@@ -414,13 +425,18 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
             module.log(f'uptimerobot: POST {endpoint} stat=ok pages={pages}')
             return True, item
 
-        pagination = payload.get('pagination') or {}
-        if not pagination:
+        # getMonitors, getMWindows and getPSPs nest `total` in `pagination`,
+        # getAlertContacts puts it at the top level, so its records past the first
+        # page were lost. Step by what the page held, which also stays right if a
+        # `limit` is ever sent. Verified against the UptimeRobot v2 API on 2026-10-09.
+        pagination = payload.get('pagination') or (
+            payload if 'total' in payload else {}
+        )
+        if not pagination or not item:
             break
-        total = pagination.get('total', len(aggregated))
-        if offset + PAGE_SIZE >= total:
+        offset += len(item)
+        if offset >= int(pagination.get('total', 0)):
             break
-        offset += PAGE_SIZE
 
     module.log(
         f'uptimerobot: POST {endpoint} stat=ok pages={pages} items={len(aggregated)}'
@@ -603,10 +619,12 @@ def _translate_mwindow_response(item):
     if 'type' in item and item['type'] is not None:
         read_type = {v: k for k, v in MWINDOW_TYPE.items()}
         item['type'] = read_type.get(item['type'], item['type'])
-    if 'value' in item and item['value'] is not None:
-        # `value` is a dash-separated list of day-IDs for weekly windows
-        # (e.g. "1-3-5"), or a list of day-of-month integers for monthly.
-        # Translate weekday IDs back to labels; leave monthly numbers alone.
+    # `value` is a dash-separated list of day-IDs for weekly windows
+    # (e.g. "1-3-5"), or a list of day-of-month integers for monthly.
+    # Translate weekday IDs back to labels; leave monthly numbers alone, as
+    # day 1 to 7 of the month would otherwise read as a weekday. `type` has
+    # already been translated to its label above.
+    if item.get('type') == 'weekly' and item.get('value') is not None:
         read_day = {v: k for k, v in MWINDOW_DAY.items()}
         if isinstance(item['value'], str) and '-' in item['value']:
             parts = []

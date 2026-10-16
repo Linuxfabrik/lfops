@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.haveged'
   hosts:
     - 'lfops_haveged'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

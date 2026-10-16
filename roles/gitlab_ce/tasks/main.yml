@@ -4,6 +4,8 @@
     ansible.builtin.package:
       name: 'gitlab-ce'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     environment:
       EXTERNAL_URL: '{{ gitlab_ce__rb_external_url }}'
     when: 'not (gitlab_ce__version is defined and gitlab_ce__version | length > 0)'
@@ -12,6 +14,8 @@
     ansible.builtin.package:
       name: 'gitlab-ce-{{ gitlab_ce__version }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     environment:
       EXTERNAL_URL: '{{ gitlab_ce__rb_external_url }}'
     when: 'gitlab_ce__version is defined and gitlab_ce__version | length > 0'
@@ -38,6 +42,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'gitlab_ce: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/gitlab-dump.timer'
     ansible.builtin.template:
@@ -47,14 +52,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'gitlab_ce__systemd_service_template_result'
+    notify: 'gitlab_ce: systemctl daemon-reload'
 
   - name: 'systemctl enable gitlab-dump.timer --now'
     ansible.builtin.systemd:
       name: 'gitlab-dump.timer'
       state: 'started'
       enabled: true
-      daemon_reload: '{{ gitlab_ce__systemd_service_template_result is changed }}'
 
   - name: 'Deploy /etc/gitlab/gitlab.rb'
     ansible.builtin.template:

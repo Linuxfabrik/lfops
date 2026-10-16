@@ -15,6 +15,10 @@ system_update__security_enabled: true
 # the reboot window is owned by the schedule_reboot role; d() fallback keeps this
 # role usable if it is ever run without schedule_reboot in the play.
 system_update__security_on_calendar: '*-*-* {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'
+# the security lane runs the same hooks as the regular one unless told otherwise.
+# set either to '' to keep the daily lane free of code the weekly lane runs.
+system_update__security_post_update_code: '{{ system_update__post_update_code | d("") }}'
+system_update__security_pre_update_code: '{{ system_update__pre_update_code | d("") }}'
 system_update__security_repos:
   - 'security'
 system_update__update_day: 'Tue'

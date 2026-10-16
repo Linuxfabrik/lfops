@@ -15,7 +15,7 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
 `lvm:filesystem`
 
-* Creates filesystems on logical volumes.
+* Installs the tools for the file systems in use, creates filesystems on logical volumes.
 * Triggers: none.
 
 `lvm:info`
@@ -30,12 +30,12 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
 `lvm:mount`
 
-* Creates mount directories, mounts volumes, restorecon.
+* Mounts volumes, sets owner and mode of their mount directories, restorecon.
 * Triggers: none.
 
 `lvm:vg`
 
-* Installs growpart, runs it (if enabled), creates/resizes PVs, creates/extends/removes VGs.
+* Installs lvm2 and growpart, runs growpart (if enabled), creates/resizes PVs, creates/extends/removes VGs.
 * Triggers: none.
 
 
@@ -58,36 +58,36 @@ This role manages LVM (Logical Volume Manager) including partitions, physical vo
 
     * `size`:
 
-        * Mandatory (for state=present). Absolute size of the LV (relative sizes with `+` or `-` prefix are not allowed). Supports formats like `10G`, `512M`, `100%FREE`, `50%VG`, `50%PVS`, `50%ORIGIN`.
+        * Mandatory (for state=present). Absolute size of the LV (relative sizes with `+` or `-` prefix are not allowed). Supports formats like `10G`, `512M`, `100%FREE`, `50%VG`, `50%PVS`, `50%ORIGIN`. For an LV that already exists, `N%FREE` sets it to N% of the space that is free in the VG right now, not to its current size plus that space. To have an existing LV fill its VG, use `100%VG` if it is the only LV, or an absolute size.
         * Type: String.
 
     * `fstype`:
 
-        * Optional. Filesystem type. Note that on RHEL 10, `mkfs.xfs` refuses to create an XFS file system smaller than 300 MB.
+        * Optional. Filesystem type. The role installs the tools for `xfs` and `ext2` / `ext3` / `ext4`; for any other type, install them beforehand. Note that on RHEL 10, `mkfs.xfs` refuses to create an XFS file system smaller than 300 MB.
         * Type: String.
         * Default: `'xfs'`
 
     * `resizefs`:
 
-        * Optional. Resize the underlying filesystem when extending the LV.
+        * Optional. Resize the filesystem together with the LV.
         * Type: Bool.
         * Default: `true`
 
     * `shrink`:
 
-        * Optional. Allow shrinking the LV.
+        * Optional. Allow shrinking the LV. Also needs `force: true`. XFS cannot be shrunk.
         * Type: Bool.
         * Default: `false`
 
     * `force`:
 
-        * Optional. Force removal of LV. Only used when `state: absent`.
+        * Optional. Has to be `true` to shrink (together with `shrink: true`) or to remove (`state: absent`) the LV. The role refuses both otherwise, so that no file system is destroyed by mistake.
         * Type: Bool.
         * Default: `false`
 
     * `mount_path`:
 
-        * Optional. Mount point path. If specified, the directory will be created, the LV will be mounted, and `restorecon` will be run automatically on the mount path.
+        * Optional. Mount point path. If specified, the directory will be created, the LV will be mounted, and on hosts with SELinux enabled, `restorecon` will be run automatically on the mount path.
         * Type: String.
 
     * `mount_opts`:
@@ -217,8 +217,17 @@ lvm__vgs__host_var:
   # pvresize and growpart
   - name: 'rl'
     pvs:
-      - '/dev/vdb3'
+      - '/dev/vda3'
     growpart: true
+```
+
+to extend an existing volume group with an additional device (`/dev/vdb`). `pvs` is the complete list of PVs of the VG, so also list the existing ones (see `pvs` on the host). PVs that are not listed are removed from the VG:
+```yaml
+lvm__vgs__host_var:
+  - name: 'rl'
+    pvs:
+      - '/dev/vda3'
+      - '/dev/vdb'
 ```
 
 grow a partition:

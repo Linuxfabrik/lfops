@@ -28,10 +28,14 @@
         - 'rrdtool'
         - 'unzip'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Get latest release version'
     ansible.builtin.uri:
       url: 'https://api.github.com/repos/librenms/librenms/releases/latest'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     register: '__librenms__github_release'
     check_mode: false # run task even if `--check` is specified
     run_once: true
@@ -56,6 +60,8 @@
       dest: '/opt/librenms'
       force: false
       version: '{{ __librenms__github_release["json"]["tag_name"] }}'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     become: true
     become_user: 'librenms'
     vars:
@@ -116,6 +122,8 @@
       name: 'pip'
       version: '{{ __librenms__pip_bootstrap_version }}'
       extra_args: '--user'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     become: true
     become_user: 'librenms'
     vars:
@@ -135,6 +143,8 @@
       requirements: '/opt/librenms/requirements.txt'
       extra_args: '--user'
       executable: '{{ __librenms__pip_executable }}'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     become: true
     become_user: 'librenms'
     vars:

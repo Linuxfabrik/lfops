@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022070401
+# 2026092501
 
 # Fail2Ban filter to match access to unknown / not-served ports. This filter works with the default logging of fwbuilder.
 
@@ -11,9 +11,26 @@ before = common.conf
 [Definition]
 _daemon = kernel
 
-failregex = ^%(__prefix_line)sRULE \d+ -- DENY IN=.*SRC=<HOST> DST=(<server-ips>) .*DPT=(?!<allowed-ports>)
-            ^%(__prefix_line)sREJECT IN=.*SRC=<HOST> DST=(<server-ips>) .*DPT=(?!<allowed-ports>)
-            ^%(__prefix_line)sDENY IN=.*SRC=<HOST> DST=(<server-ips>) .*DPT=(?!<allowed-ports>)
+# The prefixes a denied packet can carry: the rule number fwbuilder logs by default, and the bare
+# REJECT / DENY of a ruleset that logs without one.
+_deny = (?:RULE \d+ -- DENY|REJECT|DENY) IN=.*SRC=<HOST> DST=(?:<server-ips>)
+
+# Only a packet that opens a connection counts as a scan. On TCP that is a SYN without ACK, and
+# the kernel prints the flags in a fixed order after the reserved bits ("RES=0x%02x " followed by
+# "AE CWR ECE URG ACK PSH RST SYN FIN", net/netfilter/nf_log_syslog.c), so every other combination
+# carries a flag before the SYN slot and is left alone. Those are the packets of a connection the
+# firewall no longer tracks - a late FIN of a half-closed connection, an RST, an ACK
+# mid-connection - which is ordinary traffic and no scan. UDP carries no flags, so there the
+# destination port alone decides, and a late UDP reply still matches: the log line holds no
+# connection state, and trusting well-known source ports would let a scanner in that spoofs them.
+#
+# An ICMP error quotes the packet it answers in brackets ("PROTO=ICMP TYPE=3 CODE=3 [SRC=...
+# PROTO=UDP SPT=... DPT=... ]"), which is a packet this host sent. `[^[]*` keeps the match on the
+# outer header, so an ICMP error never counts as a scan.
+#
+# Verified with fail2ban 1.1.0 on Rocky 9.
+failregex = ^%(__prefix_line)s<_deny> [^[]*PROTO=TCP .*DPT=(?!(?:<allowed-ports>)\b)\d+ .*RES=0x[0-9a-f]{2} (?:AE )?(?:CWR )?(?:ECE )?(?:URG )?SYN URGP=
+            ^%(__prefix_line)s<_deny> [^[]*PROTO=UDP .*DPT=(?!(?:<allowed-ports>)\b)\d
 
 journalmatch  = _TRANSPORT=kernel
 
@@ -22,5 +39,15 @@ journalmatch  = _TRANSPORT=kernel
 # journalctl _TRANSPORT=kernel
 #
 # example log lines:
+#
+# a TCP connection attempt to a port that is not served, which is what the jail bans:
 # |  2022-07-05T09:55:45.531526myhostname kernel: [  777.149899] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=16105 DF PROTO=TCP SPT=34436 DPT=23 WINDOW=64240 RES=0x00 SYN URGP=0
-# |  2022-07-05T09:55:46.543422myhostname kernel: [  778.161797] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=60 TOS=0x00 PREC=0x00 TTL=64 ID=16106 DF PROTO=TCP SPT=34436 DPT=23 WINDOW=64240 RES=0x00 SYN URGP=0
+#
+# a UDP packet to a port that is not served, banned as well:
+# |  2022-07-05T09:55:46.543422myhostname kernel: [  778.161797] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=48 TOS=0x00 PREC=0x00 TTL=64 ID=16106 PROTO=UDP SPT=34436 DPT=161 LEN=28
+#
+# the late FIN of a half-closed connection, which the filter ignores:
+# |  2022-07-05T09:56:12.117043myhostname kernel: [  804.735018] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=52 TOS=0x00 PREC=0x00 TTL=64 ID=16107 DF PROTO=TCP SPT=443 DPT=51832 WINDOW=501 RES=0x00 ACK FIN URGP=0
+#
+# an ICMP error answering a UDP packet this host sent, which the filter ignores:
+# |  2022-07-05T09:56:30.402117myhostname kernel: [  823.020092] RULE 10 -- DENY IN=enp1s0 OUT= MAC=52:54:00:f1:1e:cf:52:54:00:ce:75:8f:08:00 SRC=192.168.122.1 DST=192.168.122.106 LEN=76 TOS=0x00 PREC=0xC0 TTL=64 ID=16108 PROTO=ICMP TYPE=3 CODE=3 [SRC=192.168.122.106 DST=192.168.122.1 LEN=48 TOS=0x00 PREC=0x00 TTL=64 ID=5 PROTO=UDP SPT=51000 DPT=53 LEN=28 ]

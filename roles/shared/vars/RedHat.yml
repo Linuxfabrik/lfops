@@ -1,2 +1,3 @@
 __shared__apache_httpd_group: 'apache'
+__shared__apache_httpd_service_name: 'httpd'
 __shared__apache_httpd_user: 'apache'

@@ -10,10 +10,14 @@
     - name: 'Get latest grizzly release version'
       ansible.builtin.uri:
         url: 'https://api.github.com/repos/grafana/grizzly/releases/latest'
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       register: 'grafana_grizzly__github_release'
       check_mode: false # run task even if `--check` is specified
       delegate_to: 'localhost'
       become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
       run_once: true
 
     - name: 'Store the latest release version'
@@ -28,8 +32,12 @@
       url: 'https://github.com/grafana/grizzly/releases/download/{{ grafana_grizzly__github_version }}/grr-linux-amd64'
       dest: '/tmp/ansible.grr-{{ grafana_grizzly__github_version }}'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
@@ -66,6 +74,25 @@
     register: 'grafana_grizzly__grr_apply_result'
     changed_when: '"added" in grafana_grizzly__grr_apply_result["stdout"] or "updated" in grafana_grizzly__grr_apply_result["stdout"]'
     loop: '{{ lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) }}'
+
+  - name: 'Move the dashboards that grizzly filed in the root into their folder'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'grafana-move-dashboards-into-folders.yml'
+    vars:
+      shared__grafana_dashboards: >-
+        {%- set dashboards = [] -%}
+        {%- for file in lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) -%}
+        {%-   for resource in lookup("ansible.builtin.file", file) | ansible.builtin.from_yaml_all -%}
+        {%-     if resource is mapping and resource["kind"] | d("") == "Dashboard" and resource["metadata"]["folder"] | d("") | length -%}
+        {%-       set _ = dashboards.append({"uid": resource["metadata"]["name"], "folder": resource["metadata"]["folder"]}) -%}
+        {%-     endif -%}
+        {%-   endfor -%}
+        {%- endfor -%}
+        {{ dashboards }}
+      shared__grafana_token: '{{ grafana_grizzly__grafana_service_account_login["password"] }}'
+      shared__grafana_url: '{{ grafana_grizzly__grafana_url }}'
+      shared__grafana_validate_certs: '{{ grafana__validate_certs | d(true) }}'
 
   - name: 'rm -rf /tmp/ansible.grafana_grizzly'
     ansible.builtin.file:

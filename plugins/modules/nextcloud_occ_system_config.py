@@ -211,8 +211,9 @@ def main():
     result['current_value'] = current_value
 
     if state == 'present':
-        # check if the current value matches the desired value
-        if current_value == value:
+        # check if the current value matches the desired value. a missing key also reads as
+        # '', so it has to exist, otherwise `value: ''` would never create it.
+        if key_exists and current_value == value:
             module.exit_json(**result)
 
         # else, the value will be changed

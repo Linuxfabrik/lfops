@@ -1,10 +1,12 @@
 - name: 'Playbook linuxfabrik.lfops.setup_icinga2_master'
   hosts:
     - 'lfops_setup_icinga2_master'
+  force_handlers: true
 
 
   vars:
 
+    setup_icinga2_master__acme_sh__skip_role__internal_var: '{{ setup_icinga2_master__acme_sh__skip_role | d(true) }}'
     setup_icinga2_master__apache_httpd__skip_injections__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_injections | d(setup_icinga2_master__apache_httpd__skip_role__internal_var) }}'
     setup_icinga2_master__apache_httpd__skip_role__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_role | d(false) }}'
     setup_icinga2_master__chromium_headless__skip_role__internal_var: '{{ setup_icinga2_master__chromium_headless__skip_role | d(setup_icinga2_master__icingaweb2_module_pdfexport__skip_role__internal_var) }}'
@@ -196,6 +198,7 @@
         - 'not setup_icinga2_master__repo_sury__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.php'
+      php__ini_memory_limit__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__ini_memory_limit__dependent_var, "") }}'
       php__ini_post_max_size__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__ini_post_max_size__dependent_var, "") }}'
       php__ini_upload_max_filesize__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__php__ini_upload_max_filesize__dependent_var, "") }}'
       php__modules__dependent_var: '{{
@@ -209,6 +212,7 @@
 
     - role: 'linuxfabrik.lfops.apache_httpd'
       apache_httpd__mods__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__apache_httpd__mods__dependent_var, "") }}'
+      apache_httpd__placeholder_certificates__dependent_var: '{{ acme_sh__apache_httpd__placeholder_certificates__dependent_var }}'
       apache_httpd__vhosts__dependent_var: '{{ (not setup_icinga2_master__icingaweb2__skip_injections__internal_var) | ternary(icingaweb2__apache_httpd__vhosts__dependent_var, "") }}'
       when:
         - 'not setup_icinga2_master__apache_httpd__skip_role__internal_var'
@@ -233,6 +237,8 @@
 
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
+        # a source install needs no package repository, and re-registering it would undo its removal
+        - 'monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags'
         - 'not setup_icinga2_master__repo_monitoring_plugins__skip_role__internal_var'
 
     # note: monitoring_plugins role needs to run after the icingaweb2 role to deploy the icons
@@ -399,6 +405,12 @@
     - role: 'linuxfabrik.lfops.monitoring_plugins_grafana_dashboards'
       when:
         - 'not setup_icinga2_master__monitoring_plugins_grafana_dashboards__skip_role__internal_var'
+
+    # last, so that the port 80 vHost of apache_httpd is up to answer the ACME challenge.
+    # replaces the placeholder certificates apache_httpd created for its certificates.
+    - role: 'linuxfabrik.lfops.acme_sh'
+      when:
+        - 'not setup_icinga2_master__acme_sh__skip_role__internal_var'
 
 
   post_tasks:

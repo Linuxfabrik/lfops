@@ -1,0 +1,3 @@
+# The checks are the same as for Solr 9; the expected Java follows from apache_solr__version.
+- name: 'Verify Apache Solr 10'
+  ansible.builtin.import_playbook: '../install/verify.yml'

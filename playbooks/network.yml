@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.network'
   hosts:
     - 'lfops_network'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082501
+# 2026092201
 
 # The single reboot actor. Run by schedule-reboot.service (a timer at the reboot
 # window, ordered After= the update lanes) and by `schedule-reboot --now`. Reboots
@@ -26,13 +26,15 @@ send_msg () {
         printf '\n%s\n' "$body"
     } | sendmail -oi -t -f "$MAIL_FROM"
 {% if schedule_reboot__rocketchat_url is defined and schedule_reboot__rocketchat_url | length %}
+    # The webhook URL carries its token, so it reaches curl through a pipe rather than the command
+    # line, which every local user can read in the process list.
     /usr/bin/curl --silent --output /dev/null --data-urlencode \
         "text=${subject}
 
         ${body}
         {{ schedule_reboot__rocketchat_msg_suffix }}" \
         --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
-        "{{ schedule_reboot__rocketchat_url }}"
+        --config <(printf 'url = "%s"\n' '{{ schedule_reboot__rocketchat_url }}')
 {% endif %}
 }
 
@@ -67,7 +69,9 @@ send_msg "$SUBJECT_PREFIX - Automatic reboot due to ${reasons%, }" "$MSGBODY"
 # needed for Icinga to set downtime (max. 5 minutes downtime)
 START_TIME=$(date +%s)
 END_TIME=$(( START_TIME + 300 ))
-curl --connect-timeout 5 --insecure --silent --user '{{ schedule_reboot__icinga2_api_user_login["username"] }}:{{ schedule_reboot__icinga2_api_user_login["password"] }}' --header 'Accept: application/json' --request POST '{{ schedule_reboot__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+# The credentials reach curl as a header read from a pipe that the printf builtin fills, so they
+# never show up in the process list the way `curl --user` would put them there.
+curl --connect-timeout 5 --insecure --silent --header @<(printf 'Authorization: Basic %s\n' '{{ (schedule_reboot__icinga2_api_user_login["username"] ~ ":" ~ schedule_reboot__icinga2_api_user_login["password"]) | b64encode }}') --header 'Accept: application/json' --request POST '{{ schedule_reboot__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
 {
     "type": "Host",
     "filter": "match(\"{{ schedule_reboot__icinga2_hostname }}\", host.name)",

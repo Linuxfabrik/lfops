@@ -15,11 +15,15 @@
     ansible.builtin.package:
       name: '{{ __nextcloud__required_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
     ansible.builtin.get_url:
       url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
       dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
 
   - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/'
     ansible.builtin.unarchive:

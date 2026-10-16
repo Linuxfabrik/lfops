@@ -12,6 +12,8 @@
     ansible.builtin.package:
       name: '{{ __clamav__packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir -p /etc/systemd/system/clamav-clamonacc.service.d/'
     ansible.builtin.file:
@@ -37,6 +39,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'clamav: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/clamav-clamdscan.timer'
     ansible.builtin.template:
@@ -46,7 +49,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'clamav__systemd_clamdscan_timer_result'
+    notify: 'clamav: systemctl daemon-reload'
 
   - name: 'Deploy /usr/local/bin/clamav-virusevent.sh'
     ansible.builtin.template:
@@ -203,7 +206,6 @@
       name: 'clamav-clamdscan.timer'
       enabled: '{{ clamav__clamdscan_timer_enabled }}'
       state: '{{ clamav__clamdscan_timer_enabled | bool | ternary("started", "stopped") }}'
-      daemon_reload: '{{ clamav__systemd_clamdscan_timer_result is changed }}'
 
   - name: 'systemctl {{ clamav__freshclam_service_enabled | bool | ternary("enable", "disable") }} --now clamav-freshclam.service'
     ansible.builtin.service:

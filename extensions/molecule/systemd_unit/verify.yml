@@ -1,0 +1,37 @@
+- name: 'Verify systemd_unit forwards a connection to the socket on to the backend'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    # service_facts lists services only, so the socket is asked for directly. Without state and
+    # enabled, the module only reports.
+    - name: 'systemctl show lfops-molecule-proxy.socket'
+      ansible.builtin.systemd:
+        name: 'lfops-molecule-proxy.socket'
+      register: '__molecule__socket_result'
+
+    - name: 'Assert that the socket is running and enabled, and that its service waits for a connection'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__socket_result["status"]["ActiveState"] == "active"'
+          - '__molecule__socket_result["status"]["UnitFileState"] == "enabled"'
+          - 'ansible_facts["services"]["lfops-molecule-proxy.service"]["status"] != "enabled"'
+        fail_msg: '{{ __molecule__socket_result["status"] | to_json }}'
+
+    # What the socket is for: a connection to the IPv6 address ends up at the backend on IPv4.
+    # /os-release is a file of the backend's working directory, /etc.
+    - name: 'GET http://[::1]:18080/os-release'
+      ansible.builtin.uri:
+        url: 'http://[::1]:18080/os-release'
+        return_content: true
+      register: '__molecule__proxy_result'
+      changed_when: false
+
+    - name: 'Assert that the answer is the content of the backend'
+      ansible.builtin.assert:
+        that:
+          - '"ID=" in __molecule__proxy_result["content"]'
+        fail_msg: '{{ __molecule__proxy_result | to_json }}'

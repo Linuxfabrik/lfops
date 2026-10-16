@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'remove' sub-scenario, run with
+# `molecule test --scenario-name monitoring_plugins_source/remove`.
+#
+# Covers the switch from the package to the source install as the role README describes it: the
+# package is installed, then removed together with its repository while the inventory already
+# asks for the source install. The 'install' sub-scenario covers the source install itself.

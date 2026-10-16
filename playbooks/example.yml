@@ -1,6 +1,10 @@
 - name: 'Playbook linuxfabrik.lfops.example'
   hosts:
     - 'lfops_example'
+  # run the handlers notified so far even if a later task fails. otherwise a deployed config
+  # never reaches the running service: every later run reports the file unchanged and
+  # notifies nothing again.
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

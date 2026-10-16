@@ -21,8 +21,11 @@ __example__supported_versions:
 #     - role: 'linuxfabrik.lfops.python'
 #       python__modules__dependent_var: '{{ example__python__modules__dependent_var }}'
 #
-# Jinja evaluation is lazy, so the filter only runs when a consumer actually reads the
-# variable. Internal (`__`-prefixed) dict first, public variable second.
+# A consumer templates this variable even where it does not use it, for example in the
+# branch of a `ternary()` that a skipped role leaves untaken. It therefore has to give a
+# valid value on every platform, hence `default=[]`. If the role cannot work without the
+# value, it asserts its supported platforms itself, as `roles/duplicity` does.
+# Internal (`__`-prefixed) dict first, public variable second.
 __example__python__modules__dependent_var:
   Debian:
     - name: 'python-example'
@@ -30,5 +33,5 @@ __example__python__modules__dependent_var:
     - name: 'python3-example'
 example__python__modules__dependent_var: '{{
     __example__python__modules__dependent_var
-    | linuxfabrik.lfops.platform_select(ansible_facts)
+    | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
   }}'

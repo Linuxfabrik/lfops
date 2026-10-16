@@ -19,6 +19,8 @@
         - 'collaboraofficebasis-writer'
         - 'coolwsd'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'touch /var/log/coolwsd.log & chmod 0640 /var/log/coolwsd.log'
     ansible.builtin.file:
@@ -99,6 +101,8 @@
       name: '{{ (collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (collabora__language_packages__combined_var  | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'remove language packages'
     ansible.builtin.package:

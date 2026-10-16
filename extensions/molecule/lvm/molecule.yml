@@ -1,0 +1,9 @@
+# Molecule scenario marker for the 'lvm' scenario, run with
+# `molecule test --scenario-name lvm`.
+#
+# It overrides the prepare step (see prepare.yml), which partitions the first additional disk and
+# runs the role once with a starting layout. converge then changes that layout into the one in
+# group_vars, so the scenario covers growing, extending, shrinking and removing, not only creating.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

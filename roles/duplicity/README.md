@@ -103,6 +103,12 @@ duplicity__swift_login:
 
 ## Optional Role Variables
 
+`duplicity__archive_dir`
+
+* The directory for duplicity's local metadata cache (`--archive-dir`). Duplicity creates one subdirectory per backup URL in it, named after the MD5 hash of the URL. `duba` passes it to both the backup and the cleanup. Empty means the duplicity default, `~/.cache/duplicity`. Use it to keep the cache of a separate `duba` setup (for example long-term backups to changing targets) apart, so that it can be deleted without touching the cache of the daily backup.
+* Type: String.
+* Default: `''`
+
 `duplicity__backup_backend`
 
 * The backup backend being used. Possible options: `swift`, `sftp`.
@@ -129,22 +135,35 @@ duplicity__swift_login:
 
 `duplicity__backup_retention_time`
 
-* The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`.
+* The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. `duba` removes a backup chain (a full backup and its incrementals) only once its newest backup is older than this, so with the defaults and one backup a day the oldest backup you can restore is between 31 and 61 days old.
 * Type: String.
 * Default: `'30D'`
 
 `duplicity__backup_sources__host_var` / `duplicity__backup_sources__group_var`
 
-* List of dictionaries with directories to backup.
+* List of dictionaries with directories to backup. `duba` skips paths that do not exist on the host, so the default covers the data of every application LFOps deploys. Databases are covered by the dumps their roles write below `/backup`, not by their data directories, since a copy of the live database files cannot be restored.
 * Type: List of dictionaries.
 * Default:
 
     * `/backup`
+    * `/data` (Nextcloud and Moodle data)
     * `/etc`
     * `/home`
     * `/opt`
     * `/root`
+    * `/srv` (Shiny Server apps)
+    * `/var/lib/aide` (the AIDE database, see the [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide) role)
+    * `/var/lib/grafana` (dashboards, users, API tokens and alerting in `grafana.db`)
+    * `/var/lib/icinga2` (the Icinga2 CA and the node certificates)
+    * `/var/lib/shiny-server`
+    * `/var/lib/turn` (the coturn user database)
+    * `/var/mail` and `/var/spool/mail` (local mailboxes; one of the two is a symlink, depending on the distribution)
+    * `/var/named` (BIND zone files, journals of dynamic zones, DNSSEC keys)
+    * `/var/solr/data` (Apache Solr cores)
     * `/var/spool/cron`
+    * `/var/www` (Grav, Moodle, Nextcloud, WordPress), without the repository mirrors in `/var/www/html/github-repos` and `/var/www/html/reposync-repos`
+
+    To keep a large directory out of the backup on a host, for example `/data` on a KVM host storing its VM images there, set it to `state: 'absent'`.
 
 * Subkeys:
 
@@ -234,6 +253,7 @@ duplicity__swift_login:
 Example:
 ```yaml
 # optional
+duplicity__archive_dir: ''
 duplicity__backup_backend: 'swift'
 duplicity__backup_dest: 'swift://{{ duplicity__backup_dest_container | regex_replace("/$", "") }}'
 duplicity__backup_dest_container: '{{ ansible_nodename }}'

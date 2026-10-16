@@ -1,0 +1,19 @@
+# wordpress__url split into its host and its path. An instance is identified by both, so several
+# instances can share a machine as pseudo hosts in the inventory, under different host names as
+# well as under different paths of the same host name.
+#
+# regex_replace instead of urlsplit: for a bare host from an inventory that predates the scheme
+# in wordpress__url, urlsplit returns an empty hostname, and setup_wordpress runs apache_httpd and
+# selinux, which use these values, before the role's assert can abort. The regexes return the
+# same host and path for both forms.
+__wordpress__host: '{{ wordpress__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
+# '' for an instance at the root of its host name, otherwise for example '/blog'
+__wordpress__path: '{{ wordpress__url | regex_replace("^(https?://)?[^/]*", "") | regex_replace("/+$", "") }}'
+
+# names everything that exists once per instance (systemd units, export directory), for example
+# 'example.com' or 'example.com-blog'
+__wordpress__instance: '{{ __wordpress__host ~ (__wordpress__path | replace("/", "-")) }}'
+
+# All instances under one host name share its vHost, so its DocumentRoot is the installation
+# directory without the path of the instance, which is the same for all of them.
+__wordpress__document_root: '{{ wordpress__install_dir | regex_replace("/+$", "") | regex_replace((__wordpress__path | regex_escape) ~ "$", "") }}'

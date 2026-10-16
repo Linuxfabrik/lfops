@@ -1,19 +1,27 @@
 # {{ ansible_managed }}
-# 2023111701
+# 2026100601
 
 [Unit]
 After=syslog.target network.target
 Description=Solr Service
 
 [Service]
-ExecStart=/opt/solr/bin/solr start
-ExecStop=/opt/solr/bin/solr stop
-Group=solr
+{% if apache_solr__version is version('10.0.0', '>=') %}
+# Solr 10 starts in SolrCloud mode with an embedded ZooKeeper by default; the role runs a single
+# instance without ZooKeeper, as with Solr 9
+ExecStart={{ apache_solr__install_dir }}/solr/bin/solr start --user-managed
+{% else %}
+ExecStart={{ apache_solr__install_dir }}/solr/bin/solr start
+{% endif %}
+ExecStop={{ apache_solr__install_dir }}/solr/bin/solr stop
+Group={{ apache_solr__group }}
 LimitNOFILE=65000
 LimitNPROC=65000
 SuccessExitStatus=5 6
 Type=forking
-User=solr
+# files Solr creates get the modes the role sets on the existing ones (0640, 0750)
+UMask=0027
+User={{ apache_solr__user }}
 
 [Install]
 WantedBy=multi-user.target

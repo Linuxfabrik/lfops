@@ -6,6 +6,7 @@ __mongodb__supported_versions_per_os_family:
   Debian:
     - '6.0'
     - '7.0'
+    - '8.0'
   RedHat:
     - '4.2'
     - '4.4'

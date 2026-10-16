@@ -2,6 +2,7 @@
   hosts:
     - 'lfops_hetzner_vm'
   gather_facts: false
+  force_handlers: true
 
   roles:
 

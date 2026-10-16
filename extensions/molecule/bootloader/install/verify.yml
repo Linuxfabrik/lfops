@@ -87,17 +87,14 @@
       ansible.builtin.assert:
         that: '"psi=1" in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
 
-    # The option is only worth setting if the kernel acts on it. RHEL 8 ships kernels without
-    # pressure stall information, so this is checked everywhere else.
+    # The option is only worth setting if the kernel acts on it. On RHEL 8, 9 and 10 psi=1 is what
+    # switches the pressure stall information on (CONFIG_PSI_DEFAULT_DISABLED=y), Debian and
+    # Ubuntu keep it on by default.
     - name: 'slurp /proc/pressure/cpu'
       ansible.builtin.slurp:
         src: '/proc/pressure/cpu'
       register: '__molecule__proc_pressure_cpu_result'
-      when:
-        - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int < 9)'
 
     - name: 'Assert that the kernel reports pressure stall information'
       ansible.builtin.assert:
         that: '(__molecule__proc_pressure_cpu_result["content"] | ansible.builtin.b64decode) is search("^some ")'
-      when:
-        - 'not (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int < 9)'

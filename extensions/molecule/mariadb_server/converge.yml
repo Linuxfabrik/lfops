@@ -1,0 +1,2 @@
+- name: 'Converge mariadb_server playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mariadb_server'

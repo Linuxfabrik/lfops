@@ -51,10 +51,20 @@
 
     # keycloak__expose_healthcheck_endpoints and keycloak__expose_metrics_endpoints are
     # build-time options: reaching them proves kc.sh build ran with what the scenario set.
+    # The first request after a start can return 503: the cluster health check starts
+    # unhealthy when JDBC_PING has no coordinator in the database yet, and a request only
+    # triggers an asynchronous re-check while it reports the previous result
+    # (JdbcPingClusterHealthImpl). Verified against Keycloak 26.8.0 on Rocky 9.
     - name: 'curl {{ __molecule__keycloak_management_url }}/health/ready'
       ansible.builtin.uri:
         url: '{{ __molecule__keycloak_management_url }}/health/ready'
-        status_code: 200
+        status_code:
+          - 200
+          - 503
+      register: '__molecule__keycloak_health_ready'
+      until: '__molecule__keycloak_health_ready["status"] == 200'
+      retries: 3
+      delay: 10
 
     - name: 'curl {{ __molecule__keycloak_management_url }}/metrics'
       ansible.builtin.uri:

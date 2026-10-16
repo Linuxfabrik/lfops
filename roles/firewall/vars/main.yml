@@ -1,0 +1,2 @@
+# The controller-side clone of firewall__fwbuilder_repo_url, one per repository.
+__firewall__fwbuilder_repo_dir: '/tmp/ansible.fwb-{{ firewall__fwbuilder_repo_url | d("") | hash("sha1") }}'

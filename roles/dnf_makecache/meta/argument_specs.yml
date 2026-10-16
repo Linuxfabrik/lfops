@@ -12,7 +12,6 @@ argument_specs:
         type: 'str'
         required: false
         choices:
-          - 'reloaded'
           - 'restarted'
           - 'started'
           - 'stopped'

@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+# 2026100601
+
+# Apache passes PHP requests to the socket of PHP-FPM, which only exists once PHP-FPM is up. Without
+# this ordering both start side by side at boot, and the first requests fail with `AH02454: FCGI:
+# attempt to connect to Unix domain socket ... failed` until the socket appears.
+[Unit]
+After={{ __php__fpm_service_name }}.service

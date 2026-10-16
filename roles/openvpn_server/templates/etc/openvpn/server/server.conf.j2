@@ -1,29 +1,39 @@
 # {{ ansible_managed }}
-# 2024070302
+# 2026100602
 
-auth SHA384
-cipher AES-256-GCM
-tls-cipher TLS-RSA-WITH-AES-256-GCM-SHA384:TLS-RSA-WITH-AES-256-CBC-SHA256:TLS-RSA-WITH-AES-256-CBC-SHA
-tls-server
+# Requires OpenVPN 2.7. The data channel ciphers are negotiated, the default
+# AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305 covers every client since OpenVPN 2.5.
+# DH parameters are not needed: `dh none` is the default since OpenVPN 2.7, and TLS 1.3 as
+# well as the ECDHE suites of TLS 1.2 do not use them.
 tls-version-min 1.2
+# OpenSSL security level 2 instead of OpenVPN's `legacy` (level 1): rejects certificates with
+# RSA keys below 2048 bits or SHA-1 signatures
+tls-cert-profile preferred
+# only accept client certificates with the TLS Web Client Authentication key usage
+remote-cert-tls client
 
+# the crl file (or directory) is read every time a peer connects,
 # and it has to contain at least one item
-# crl file (or directory) is read every time a peer connects,
 crl-verify {{ openvpn_server__crl_verify }}
-dh {{ openvpn_server__dh }}
 pkcs12 {{ openvpn_server__pkcs12 }}
 
 port {{ openvpn_server__port }}
 dev tun
 proto udp
-persist-key
+{% if ansible_facts["distribution_major_version"] in ["8", "9"] %}
+# data channel offload cannot work here: the SELinux policy denies openvpn_t the generic
+# netlink socket. Without this, every start logs an AVC denial for the probe.
+disable-dco
+{% endif %}
 persist-tun
 user openvpn
 group openvpn
 explicit-exit-notify 1
 
 client-config-dir /etc/openvpn/ccd
+{% if openvpn_server__duplicate_cn | bool %}
 duplicate-cn
+{% endif %}
 keepalive 10 60
 topology subnet
 
@@ -38,6 +48,7 @@ server {{ openvpn_server__client_network }} {{ openvpn_server__client_netmask }}
 #log-append /var/log/openvpn.log
 #syslog #}
 status /var/log/openvpn-status.log
+status-version 2
 # 0 is silent, except for fatal errors
 # 4 is reasonable for general usage
 # 5 and 6 can help to debug connection problems

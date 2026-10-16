@@ -19,6 +19,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import contextlib
 import copy
 import unittest
 import unittest.mock
@@ -93,9 +94,18 @@ class _FakeBitwarden:
     edited: ClassVar[list] = []
     created: ClassVar[list] = []
     vault_status = 'unlocked'
+    mutex_held = False
 
     def __init__(self, *args, **kwargs):
         pass
+
+    @contextlib.contextmanager
+    def mutex(self, *args, **kwargs):
+        type(self).mutex_held = True
+        try:
+            yield self
+        finally:
+            type(self).mutex_held = False
 
     @property
     def status(self):
@@ -130,7 +140,7 @@ class _FakeBitwarden:
         login=None,
         notes=None,
         organization_id=None,
-        collection_ids=None,
+        collection_id=None,
         folder_id=None,
     ):
         return {
@@ -138,7 +148,7 @@ class _FakeBitwarden:
             'login': login,
             'notes': notes,
             'organizationId': organization_id,
-            'collectionIds': collection_ids,
+            'collectionIds': [collection_id] if collection_id else [],
             'folderId': folder_id,
         }
 
@@ -153,7 +163,9 @@ class _FakeBitwarden:
         return result
 
     def create_item(self, item):
-        type(self).created.append(copy.deepcopy(item))
+        type(self).created.append(
+            {**copy.deepcopy(item), 'under_mutex': self.mutex_held}
+        )
         result = copy.deepcopy(item)
         result['id'] = 'new-id'
         return result
@@ -164,6 +176,7 @@ class TestMain(unittest.TestCase):
         _FakeBitwarden.items = []
         _FakeBitwarden.edited = []
         _FakeBitwarden.created = []
+        _FakeBitwarden.mutex_held = False
         _FakeBitwarden.vault_status = 'unlocked'
         self._patchers = [
             unittest.mock.patch.object(mod, 'Bitwarden', _FakeBitwarden),
@@ -193,6 +206,14 @@ class TestMain(unittest.TestCase):
                     mod.run_module()
                 self.assertIn(status, ctx.exception.args[0]['msg'])
                 self.assertEqual(_FakeBitwarden.created, [])
+
+    def test_item_is_created_under_the_mutex_and_mutex_is_released(self):
+        result = self._run(
+            {'name': 'host - db', 'username': 'dba', 'password': 'linuxfabrik'}
+        )
+        self.assertTrue(result['changed'])
+        self.assertTrue(_FakeBitwarden.created[0]['under_mutex'])
+        self.assertFalse(_FakeBitwarden.mutex_held)
 
     def test_check_mode_create_does_not_write(self):
         _FakeBitwarden.items = []  # nothing exists -> would create
@@ -239,6 +260,21 @@ class TestMain(unittest.TestCase):
         )
         self.assertTrue(result['changed'])
         self.assertEqual(len(_FakeBitwarden.edited), 1)
+
+    def test_item_as_bw_returns_it_is_not_changed(self):
+        # what bw 2026.10.0 returns for an item without a username in a collection:
+        # no username and totp keys, collectionIds as a list
+        _FakeBitwarden.items = [
+            {
+                **_EXISTING_ITEM,
+                'collectionIds': ['c1'],
+                'login': {'password': 'linuxfabrik-existing', 'uris': []},
+            }
+        ]
+        result = self._run({'name': 'host - db', 'collection_id': 'c1'})
+        self.assertFalse(result['changed'])
+        self.assertEqual(_FakeBitwarden.edited, [])
+        self.assertIsNone(result['username'])
 
 
 if __name__ == '__main__':

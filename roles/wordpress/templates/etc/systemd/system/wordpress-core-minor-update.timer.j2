@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026091601
+
+[Unit]
+Description=WordPress Core Minor Update Timer for {{ __wordpress__instance }}
+
+[Timer]
+OnCalendar={{ wordpress__on_calendar_core_minor_update }}
+Unit=wordpress-core-minor-update-{{ __wordpress__instance }}.service
+
+[Install]
+WantedBy=timers.target

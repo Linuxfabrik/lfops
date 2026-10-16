@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.icingaweb2'
   hosts:
     - 'lfops_icingaweb2'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:
@@ -38,7 +39,7 @@
 
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
-        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
+        - 'ansible_facts["os_family"] in ["Debian", "RedHat"] and ansible_facts["distribution"] != "Fedora"'
         - 'not icingaweb2__skip_repo_mydumper | default(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
@@ -72,6 +73,9 @@
         - 'not icingaweb2__skip_repo_remi | default(false)'
 
     - role: 'linuxfabrik.lfops.php'
+      php__ini_memory_limit__dependent_var: '{{
+          icingaweb2__php__ini_memory_limit__dependent_var
+        }}'
       php__ini_post_max_size__dependent_var: '{{
           icingaweb2__php__ini_post_max_size__dependent_var
         }}'

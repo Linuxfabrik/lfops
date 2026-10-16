@@ -13,6 +13,14 @@ updates:
           - '*'
 
   - package-ecosystem: 'pip'
+    directory: '/.github/ansible-builder'
+    schedule:
+      interval: 'weekly'
+      day: 'friday'
+      time: '05:00'
+      timezone: 'Etc/UTC'
+
+  - package-ecosystem: 'pip'
     directory: '/.github/docs'
     schedule:
       interval: 'weekly'
@@ -35,3 +43,17 @@ updates:
       day: 'friday'
       time: '05:00'
       timezone: 'Etc/UTC'
+
+  # Only 2.16: the last ansible-core series that supports Python 3.6 on the managed node, whose
+  # module_utils the RHEL 8 unit tests import (see the requirements.txt there).
+  - package-ecosystem: 'pip'
+    directory: '/.github/unit-tests-py36-ansible-core'
+    schedule:
+      interval: 'weekly'
+      day: 'friday'
+      time: '05:00'
+      timezone: 'Etc/UTC'
+    ignore:
+      - dependency-name: 'ansible-core'
+        versions:
+          - '>= 2.17'

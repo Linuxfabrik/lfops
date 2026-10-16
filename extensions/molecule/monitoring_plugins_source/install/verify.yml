@@ -1,0 +1,254 @@
+- name: 'Verify the source install of the monitoring plugins'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Read the shebang of the cpu-usage plugin'
+      ansible.builtin.command: 'head -1 /usr/lib64/nagios/plugins/cpu-usage'
+      register: '__molecule__cpu_usage_shebang'
+      changed_when: false
+
+    - name: 'Assert the plugin shebang points at the source venv interpreter'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cpu_usage_shebang["stdout"] == "#!/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python"'
+
+    - name: 'Run the cpu-usage plugin'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/cpu-usage'
+      register: '__molecule__cpu_usage_run'
+      changed_when: false
+      failed_when: false
+
+    # A plugin that runs proves the whole chain works: the venv interpreter is used, the
+    # Linuxfabrik library deployed from GitHub is importable, and the third-party
+    # dependencies installed into the venv resolve. A broken import chain would surface as a
+    # Python traceback / ModuleNotFoundError instead of a Nagios-style plugin result.
+    - name: 'Assert the plugin runs under the venv (Linuxfabrik library and dependencies resolve)'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cpu_usage_run["rc"] != 127'
+          - '__molecule__cpu_usage_run["stdout"] | length > 0'
+          - '"Traceback" not in __molecule__cpu_usage_run["stderr"]'
+          - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stdout"]'
+          - '"ModuleNotFoundError" not in __molecule__cpu_usage_run["stderr"]'
+
+    # cpu-usage above only needs psutil, and it cannot cover the HTTP dependencies: the library
+    # imports httpx lazily inside `lib.url.fetch()` and answers a missing module with a plain
+    # sentence instead of an exception, so a venv without httpx passes every assertion above
+    # while every check that speaks HTTP is dead. Only a plugin that actually fetches something
+    # reaches that guard.
+    #
+    # nginx-status is used for it because it gets there without any preconditions: it needs no
+    # arguments, its default URL is on localhost, so the host needs no internet access, and it
+    # needs no nginx either. Without a listener the plugin reports a refused connection, which is
+    # the expected result here. Both outcomes are UNKNOWN, so the exit code cannot tell them
+    # apart and the assertion goes by the message.
+    - name: 'Run the nginx-status plugin (reaches lib.url.fetch without arguments)'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/nginx-status'
+      register: '__molecule__nginx_status_run'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the HTTP dependencies of the Linuxfabrik library resolve'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nginx_status_run["rc"] != 127'
+          - '__molecule__nginx_status_run["stdout"] | length > 0'
+          - '"is not installed" not in __molecule__nginx_status_run["stdout"]'
+          - '"Traceback" not in __molecule__nginx_status_run["stderr"]'
+        fail_msg: >-
+          nginx-status answered "{{ __molecule__nginx_status_run["stdout"] | trim }}" instead of
+          reaching the network, so the venv is missing a Python module that lib.url needs and
+          every check that speaks HTTP fails.
+
+    # The plugins run as root via sudo, so a plugin, a library module or the venv interpreter
+    # that the monitoring user could write would be arbitrary root code execution. Assert the
+    # whole sudo-run chain is owned by root.
+    - name: 'Stat the plugin, the bundled library and the venv interpreter'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/usr/lib64/nagios/plugins/cpu-usage'
+        - '/usr/lib64/nagios/plugins/lib/base.py'
+        - '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+      register: '__molecule__ownership'
+      changed_when: false
+
+    - name: 'Assert the plugins, the library and the venv are owned by root'
+      ansible.builtin.assert:
+        that:
+          - 'item["stat"]["pw_name"] == "root"'
+        fail_msg: '{{ item["item"] }} is owned by {{ item["stat"]["pw_name"] }}, not root; the monitoring user could edit code that runs as root via sudo'
+      loop: '{{ __molecule__ownership["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # The snmp plugin reads its OID lists and MIBs from directories next to itself. Without
+    # them every call ends in an I/O error before any SNMP request is sent. The manifest has to
+    # list each file, so that a removal takes them away and leaves the device definitions of the
+    # admin in place.
+    - name: 'Stat the default OID list of the snmp plugin'
+      ansible.builtin.stat:
+        path: '/usr/lib64/nagios/plugins/device-oids/any-any-any.csv'
+      register: '__molecule__snmp_device_oids'
+
+    - name: 'Read the install manifest'
+      ansible.builtin.slurp:
+        src: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+      register: '__molecule__manifest'
+
+    - name: 'Assert the OID list is deployed, readable and listed in the manifest'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__snmp_device_oids["stat"]["exists"]'
+          - '__molecule__snmp_device_oids["stat"]["mode"] == "0644"'
+          - '__molecule__snmp_device_oids["stat"]["pw_name"] == "root"'
+          - '"/usr/lib64/nagios/plugins/device-oids/any-any-any.csv" in (__molecule__manifest["content"] | b64decode).splitlines()'
+
+    # Only the modules and the LICENSE of the library are deployed, the same set the release zip
+    # bundles; the documentation and development files of the repository have no business on a
+    # monitored host. `__pycache__` appears as soon as a plugin has run.
+    - name: 'List what the bundled library directory holds besides its modules'
+      ansible.builtin.find:
+        paths: '/usr/lib64/nagios/plugins/lib'
+        file_type: 'any'
+        hidden: true
+        excludes:
+          - '*.py'
+          - 'LICENSE'
+          - '__pycache__'
+      register: '__molecule__lib_extra'
+
+    - name: 'Assert the bundled library holds its modules and LICENSE only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lib_extra["files"] | length == 0'
+        fail_msg: '{{ __molecule__lib_extra["files"] | map(attribute="path") | join(", ") }} should not be deployed'
+
+    # The Defaults that keep the plugin calls out of the authentication log ship in a drop-in of
+    # their own, because sudo-rs knows none of them and prints a warning for each of them on
+    # every sudo call by any user. The role therefore places it only where the classic sudo from
+    # sudo.ws runs, and takes it away again where it does not.
+    - name: 'Find out which sudo implementation the host runs'
+      ansible.builtin.command: 'sudo --version'
+      register: '__molecule__sudo_version'
+      changed_when: false
+
+    - name: 'Stat the logging sudoers drop-in'
+      ansible.builtin.stat:
+        path: '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
+      register: '__molecule__sudoers_logging'
+      changed_when: false
+
+    - name: 'Assert the logging sudoers drop-in is there where the classic sudo runs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__sudoers_logging["stat"]["exists"]'
+          - '__molecule__sudoers_logging["stat"]["mode"] == "0440"'
+        fail_msg: >-
+          this host runs the classic sudo, so it should carry
+          /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging with mode 0440; without it every
+          check writes five entries into the authentication log
+      when:
+        - '"sudo-rs" not in __molecule__sudo_version["stdout"]'
+
+    - name: 'Assert the logging sudoers drop-in is absent where sudo-rs runs'
+      ansible.builtin.assert:
+        that:
+          - 'not __molecule__sudoers_logging["stat"]["exists"]'
+        fail_msg: >-
+          this host runs sudo-rs, which knows none of the settings in
+          /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging and would warn about each of them
+          on every sudo call by any user
+      when:
+        - '"sudo-rs" in __molecule__sudo_version["stdout"]'
+
+    # The point of splitting the drop-in in two: whatever the host runs, an ordinary sudo call
+    # has to stay silent. A drop-in the local sudo cannot parse makes every sudo call by every
+    # user on the host noisy, which is what the plugins deployed here would otherwise cause.
+    - name: 'Run a sudo call that has nothing to do with monitoring'
+      ansible.builtin.command: 'sudo -n /bin/true'
+      register: '__molecule__sudo_run'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert sudo complains about none of our drop-ins'
+      ansible.builtin.assert:
+        that:
+          - '"unknown setting" not in __molecule__sudo_run["stderr"]'
+          - '"linuxfabrik-monitoring-plugins" not in __molecule__sudo_run["stderr"]'
+        fail_msg: >-
+          sudo answered "{{ __molecule__sudo_run["stderr"] | trim }}" on a call that has nothing
+          to do with monitoring, so one of our sudoers drop-ins does not parse here
+
+    # The venv has to hold exactly the versions the lockfiles pin. The requirements file the role
+    # pushed is the only record of the merged pins on the host; a version that differs from it
+    # means pip resolved something on its own, which the hash-pinned install rules out.
+    - name: 'Compare the venv with the pinned requirements'
+      ansible.builtin.command:
+        argv:
+          - '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+          - '-c'
+          - |
+            import importlib.metadata, re, sys
+            wrong = []
+            for line in open('/usr/lib64/linuxfabrik-monitoring-plugins/wheels/requirements.txt'):
+                match = re.match(r'([A-Za-z0-9][A-Za-z0-9._-]*)==(\S+)', line)
+                if not match:
+                    continue
+                try:
+                    installed = importlib.metadata.version(match.group(1))
+                except importlib.metadata.PackageNotFoundError:
+                    installed = 'missing'
+                if installed != match.group(2):
+                    wrong.append(f'{match.group(1)} {installed} instead of {match.group(2)}')
+            print('\n'.join(wrong))
+            sys.exit(1 if wrong else 0)
+      register: '__molecule__venv_pins'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the venv holds exactly the pinned versions'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__venv_pins["rc"] == 0'
+        fail_msg: '{{ __molecule__venv_pins["stdout"] }}{{ __molecule__venv_pins["stderr"] }}'
+
+    # Without `nagios_run_sudo` every plugin that runs through sudo fails under enforcing SELinux.
+    # RHEL 10 carries no nagios policy and therefore no such boolean.
+    - name: 'getsebool nagios_run_sudo'
+      ansible.builtin.command: 'getsebool nagios_run_sudo'
+      register: '__molecule__nagios_run_sudo'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert nagios_run_sudo is on wherever it exists'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nagios_run_sudo["stdout"] is search("--> on$")'
+        fail_msg: '{{ __molecule__nagios_run_sudo["stdout"] }}'
+      when:
+        - '__molecule__nagios_run_sudo["rc"] == 0'
+
+    # Only RHEL gets the module, and only where SELinux is enabled.
+    - name: 'Gather the minimal facts (os_family, selinux)'
+      ansible.builtin.setup:
+        gather_subset:
+          - 'min'
+
+    - name: 'semodule --list'
+      ansible.builtin.command: 'semodule --list'
+      register: '__molecule__semodule_list'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'
+
+    - name: 'Assert the SELinux policy module is loaded'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik-monitoring-plugins" in __molecule__semodule_list["stdout_lines"] | map("split") | map("first") | list'
+        fail_msg: 'the linuxfabrik-monitoring-plugins SELinux module is not loaded'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["selinux"]["status"] != "disabled"'

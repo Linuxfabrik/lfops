@@ -32,7 +32,7 @@ This role is Red Hat-family only (DNF / YUM). It does not run on Debian / Ubuntu
 `dnf_makecache__timer_state`
 
 * State of `dnf-makecache.timer`.
-* Type: String. One of `reloaded`, `restarted`, `started`, `stopped`.
+* Type: String. One of `restarted`, `started`, `stopped`.
 * Default: `'started'` if `dnf_makecache__timer_enabled` is `true`, otherwise `'stopped'`.
 
 Example:

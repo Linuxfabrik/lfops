@@ -67,7 +67,9 @@ __duplicity__python_venv__venvs__dependent_var:
       python_executable: 'python3.13'
       exposed_binaries:
         - 'duplicity'
+# `default=[]`: consumers template this variable even where duplicity does not run (see
+# "OS-specific Dependent Variables" in CONTRIBUTING.md). The role itself asserts the platform.
 duplicity__python_venv__venvs__dependent_var: '{{
     __duplicity__python_venv__venvs__dependent_var
-    | linuxfabrik.lfops.platform_select(ansible_facts)
+    | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
   }}'

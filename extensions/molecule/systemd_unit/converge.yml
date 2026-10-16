@@ -1,0 +1,23 @@
+# systemd-socket-proxyd may only bind and connect to ports of its own SELinux type. Label the ports
+# the scenario forwards, the way an admin does with `selinux__ports__host_var` of the selinux role.
+- name: 'Label the ports of the socket proxy'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  tasks:
+
+    - name: 'semanage port --add --type systemd_socket_proxyd_port_t --proto tcp {{ item }}'
+      community.general.seport:
+        setype: 'systemd_socket_proxyd_port_t'
+        ports:
+          - '{{ item }}'
+        proto: 'tcp'
+        state: 'present'
+      loop:
+        - 18080
+        - 18081
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+
+- name: 'Converge systemd_unit playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.systemd_unit'

@@ -11,10 +11,14 @@
   - name: 'Get all moodle release versions'
     ansible.builtin.uri:
       url: 'https://api.github.com/repos/moodle/moodle/tags'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     register: 'moodle__github_release'
     check_mode: false # run task even if `--check` is specified
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     run_once: true
 
   - name: 'Get the latest patch version of moodle v{{ moodle__version }}'
@@ -43,8 +47,12 @@
       url: 'https://github.com/moodle/moodle/archive/refs/tags/{{ moodle__github_version }}.tar.gz'
       dest: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 
@@ -188,8 +196,12 @@
       url: '{{ moodle__moosh_download_url }}'
       dest: '/tmp/moosh.zip'
       mode: 0o644
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     changed_when: false # not an actual config change on the server
     check_mode: false # run task even if `--check` is specified
 

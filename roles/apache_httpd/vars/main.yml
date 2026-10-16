@@ -1,0 +1,10 @@
+# SHA-256 of the GitHub source archive (archive/refs/tags/v<version>.tar.gz) of every OWASP CRS
+# release the role deploys. Each archive was checked against the detached signature the CRS project
+# publishes with the release (coreruleset-<version>.tar.gz.asc), made by the CRS release key
+# 3600 6F0E 0BA1 6783 2158 8211 38EE ACA1 AB8A 6E72 (https://coreruleset.org/security.asc).
+# Only the releases the CRS project supports are listed (SECURITY.md in the CRS repository): the two
+# latest releases and the latest release of the 4.25 LTS line.
+__apache_httpd__mod_security_coreruleset_sha256:
+  '4.25.2': 'a3ecf5d5b0f8001e2eaf2006448fc8e22d6b645d7fc1c71268be5b99a7395a2d'
+  '4.29.0': 'cedd55533de917b6e397352a67a31993da4c07816f1fefcc94eacf542fc86337'
+  '4.30.0': 'a4bb3688ef6205b64471a9ccbf0d7b024eb8edf39b97c6f6c0006e7a948f8550'

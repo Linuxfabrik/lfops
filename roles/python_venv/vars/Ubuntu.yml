@@ -1,0 +1,10 @@
+# Ubuntu is loaded on top of its Debian os_family and currently needs no
+# Ubuntu-specific overrides. It is kept as an explicit copy of Debian.yml so
+# later Ubuntu-specific drift has a dedicated home instead of silently
+# inheriting Debian values.
+# python3-packaging is a requirement of `ansible.builtin.pip` on the managed node and is absent
+# from a minimal installation.
+__python_venv__required_packages:
+  - 'python3-dev'
+  - 'python3-packaging'
+  - 'python3-venv'

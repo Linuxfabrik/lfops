@@ -1,0 +1,120 @@
+argument_specs:
+  main:
+    options:
+
+      bind__allow_new_zones:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'If true, zones can be added at runtime via `rndc addzone`.'
+
+      bind__allow_query_cache:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'trusted'
+        description: 'ACLs or address match lists which are allowed to query the cache.'
+
+      bind__allow_recursion:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'trusted'
+        description: 'ACLs or address match lists which are allowed to initiate recursive queries.'
+
+      bind__allow_transfer:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'none'
+        description: 'The global allow-transfer option. Can be overwritten per zone.'
+
+      bind__dnssec_validate_except:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default: []
+        description: 'Domains below which named does not validate DNSSEC.'
+
+      bind__dnssec_validation:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables DNSSEC validation of the answers named resolves.'
+
+      bind__forwarders:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - '1.0.0.1'
+          - '1.1.1.1'
+        description: 'DNS servers to which queries for unknown domain names are forwarded.'
+
+      bind__keys:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Keys for use with TSIG or the command channel (rndc).'
+
+      bind__listen_ipv6:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Enables or disables listening on IPv6.'
+
+      bind__listen_on_addresses:
+        type: 'list'
+        elements: 'str'
+        required: false
+        default:
+          - 'any'
+        description: 'Addresses on which the server listens.'
+
+      bind__named_conf_raw:
+        type: 'str'
+        required: false
+        description: 'Raw content which is appended to the end of /etc/named.conf.'
+
+      bind__named_service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the named service.'
+
+      bind__named_service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'The state of the named service.'
+
+      bind__recursion:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables recursion.'
+
+      bind__rpz_zone:
+        type: 'str'
+        required: false
+        description: 'Name of the response policy zone.'
+
+      bind__trusted_networks:
+        type: 'list'
+        elements: 'str'
+        required: true
+        description: 'Networks from which DNS queries are allowed. Results in the trusted ACL.'
+
+      bind__zones:
+        type: 'list'
+        elements: 'dict'
+        required: true
+        description: 'The zones named serves, forwards or fetches from other servers.'

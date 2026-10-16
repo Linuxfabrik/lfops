@@ -1,0 +1,80 @@
+# Variables the playbook under test needs, applied to every system under test.
+#
+# Each host is the primary of its own zone `<host>.example` and the secondary of a neighbour's
+# zone, so the three hosts form a ring and every BIND version runs both sides of a zone transfer.
+# Rocky 9 and 10 also forward a third host's zone to its primary. `.example` is not delegated
+# in the signed root, so validating that forwarded answer fails unless the role excludes the
+# forward zone from DNSSEC validation. BIND 9.11 cannot exclude zones, so Rocky 8 forwards
+# nothing and validates everything.
+#
+# The `primary`/`secondary` keywords need BIND 9.12 or later, so Rocky 8 uses `master`/`slave`.
+__molecule__bind_peers:
+  rocky8-vm:
+    forward_to: ''
+    primary_type: 'master'
+    secondary_of: 'rocky10-vm'
+    secondary_type: 'slave'
+  rocky9-vm:
+    forward_to: 'rocky10-vm'
+    primary_type: 'primary'
+    secondary_of: 'rocky8-vm'
+    secondary_type: 'secondary'
+  rocky10-vm:
+    forward_to: 'rocky8-vm'
+    primary_type: 'primary'
+    secondary_of: 'rocky9-vm'
+    secondary_type: 'secondary'
+
+__molecule__bind_peer: '{{ __molecule__bind_peers[inventory_hostname] }}'
+
+# A peer that LFOPS_TEST_TARGETS left out has no address to transfer from or forward to.
+__molecule__bind_forward_to: '{{
+    __molecule__bind_peer["forward_to"]
+    if __molecule__bind_peer["forward_to"] in ansible_play_hosts_all else ""
+  }}'
+__molecule__bind_secondary_of: '{{
+    __molecule__bind_peer["secondary_of"]
+    if __molecule__bind_peer["secondary_of"] in ansible_play_hosts_all else ""
+  }}'
+
+# The TXT record names the host that serves the zone as its primary, so an answer proves which
+# server it came from.
+__molecule__bind_primary_zone:
+  name: '{{ inventory_hostname | replace("-vm", "") }}.example'
+  type: '{{ __molecule__bind_peer["primary_type"] }}'
+  allow_transfer:
+    - 'localnets'
+  raw: |-
+    $TTL 1H
+
+    @ IN SOA ns.{{ inventory_hostname | replace("-vm", "") }}.example. root.example.com. (
+        2026100201 ; <SERNO>
+        1H         ; <TIME-TO-REFRESH>
+        1H         ; <TIME-TO-RETRY>
+        1W         ; <TIME-TO-EXPIRE>
+        1D )       ; <minimum-TTL>
+
+    @ IN NS ns
+
+    ns    IN A   192.0.2.53
+    owner IN TXT "{{ inventory_hostname }}"
+
+__molecule__bind_secondary_zone:
+  name: '{{ __molecule__bind_secondary_of | replace("-vm", "") }}.example'
+  type: '{{ __molecule__bind_peer["secondary_type"] }}'
+  masters:
+    - '{{ hostvars[__molecule__bind_secondary_of]["ansible_host"] | d("") }}'
+
+__molecule__bind_forward_zone:
+  name: '{{ __molecule__bind_forward_to | replace("-vm", "") }}.example'
+  type: 'forward'
+  forwarders:
+    - '{{ hostvars[__molecule__bind_forward_to]["ansible_host"] | d("") }}'
+
+bind__trusted_networks:
+  - '192.0.2.0/24'
+bind__zones: '{{
+    [__molecule__bind_primary_zone]
+    + ([__molecule__bind_secondary_zone] if __molecule__bind_secondary_of | length > 0 else [])
+    + ([__molecule__bind_forward_zone] if __molecule__bind_forward_to | length > 0 else [])
+  }}'

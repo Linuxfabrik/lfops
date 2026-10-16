@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022111801
+# 2026101301
 
 [Unit]
 Description=PostgreSQL Dump Service
@@ -8,6 +8,13 @@ Description=PostgreSQL Dump Service
 ExecStart=/usr/local/sbin/postgresql-dump
 Type=oneshot
 User=root
+# the dump must not slow down PostgreSQL and the applications behind it. Nice= and the CPU / IO
+# weights (default 100) only matter under contention, so an idle host dumps at full speed.
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+CPUWeight=20
+IOWeight=20
 
 [Install]
 WantedBy=basic.target

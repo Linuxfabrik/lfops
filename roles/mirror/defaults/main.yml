@@ -4,11 +4,5 @@ mirror__webserver_user: 'apache'
 
 # -----------------------------------------------------------------------------
 
-mirror__apps__apps__dependent_var:
-  - name: 'createrepo'
-    state: 'present'
-  - name: 'git'
-    state: 'present'
-
 mirror__python__modules__dependent_var:
   - name: 'python3-pyyaml'

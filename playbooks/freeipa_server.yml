@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.freeipa_server'
   hosts:
     - 'lfops_freeipa_server'
+  force_handlers: true
 
   # The ansible-freeipa modules rely on ipalib's global API singleton and fail
   # with `API.bootstrap() already called` under strategies that reuse the

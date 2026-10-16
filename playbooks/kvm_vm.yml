@@ -3,6 +3,7 @@
   hosts:
     - 'lfops_kvm_vm'
   gather_facts: false
+  force_handlers: true
 
   roles:
 

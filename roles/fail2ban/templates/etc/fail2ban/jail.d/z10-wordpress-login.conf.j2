@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026091501
+
+[wordpress-login]
+bantime  = {{ fail2ban__jail_wordpress_login_bantime }}
+enabled  = true
+findtime = {{ fail2ban__jail_wordpress_login_findtime }}
+logpath  = /var/log/httpd/*access?log
+maxretry = {{ fail2ban__jail_wordpress_login_maxretry }}
+port     = http,https

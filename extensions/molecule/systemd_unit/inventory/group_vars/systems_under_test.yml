@@ -1,0 +1,34 @@
+# A TCP forwarder without a proxy server, the way a firewall hands IPv6 traffic to an IPv4-only
+# backend: systemd listens on [::1]:18080 and systemd-socket-proxyd passes every connection on to a
+# backend on 127.0.0.1:18081. The backend serves /etc over HTTP; python -m http.server is the one
+# web server every target has. It runs with the interpreter Ansible uses on the host, since RHEL 8
+# ships no python3 binary, only platform-python. Python 3.6 of RHEL 8 lacks the --directory option,
+# hence the WorkingDirectory.
+#
+# On the Red Hat family, systemd-socket-proxyd runs in its own SELinux domain, which binds and
+# connects only to ports of the type systemd_socket_proxyd_port_t. converge.yml labels the two
+# ports below, like an admin does with the selinux role.
+systemd_unit__services__group_var:
+  - name: 'lfops-molecule-backend'
+    description: 'LFOps Molecule backend'
+    raw_service: |-
+      ExecStart={{ ansible_facts["python"]["executable"] }} -m http.server 18081 --bind 127.0.0.1
+      WorkingDirectory=/etc
+    wanted_by: 'multi-user.target'
+  # started by the first connection to the socket, so neither enabled nor started on its own
+  - name: 'lfops-molecule-proxy'
+    description: 'LFOps Molecule socket proxy'
+    raw_unit: |-
+      Requires=lfops-molecule-backend.service lfops-molecule-proxy.socket
+      After=lfops-molecule-backend.service lfops-molecule-proxy.socket
+    raw_service: |-
+      ExecStart=/usr/lib/systemd/systemd-socket-proxyd 127.0.0.1:18081
+    state: 'present'
+    enabled: false
+
+systemd_unit__sockets__group_var:
+  - name: 'lfops-molecule-proxy'
+    description: 'LFOps Molecule socket proxy'
+    raw_socket: |-
+      ListenStream=[::1]:18080
+      FreeBind=true

@@ -1,0 +1,6 @@
+# Java package per Solr major version. Solr 9 requires Java 11 or newer and is tested with 17,
+# Solr 10 requires Java 21. Solr 8 is EOL and only kept for existing installations.
+__apache_solr__java_package:
+  '10': 'java-21-openjdk-headless'
+  '8': 'java-1.8.0-openjdk-headless'
+  '9': 'java-17-openjdk-headless'

@@ -48,7 +48,13 @@ def _make_collection_importable():
 
 
 def _init_plugin_loader():
-    from ansible.plugins.loader import init_plugin_loader
+    try:
+        from ansible.plugins.loader import init_plugin_loader
+    except ImportError:
+        # the Python 3.6 managed-node tier (see tox.ini), which only has the module_utils of
+        # ansible-core, without the dependencies of its controller part. Only the lookup tests
+        # pull plugins through the loader, and they belong to the controller tier.
+        return
     from ansible.utils.collection_loader import AnsibleCollectionConfig
 
     # the finder is process-global and may only be installed once

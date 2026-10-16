@@ -1,0 +1,4 @@
+# The firewall converge switches to. prepare.yml sets the hosts up with fwbuilder, so the run
+# has to stop, disable and mask fwb.service, and the idempotence step proves that masking the
+# unit the role deployed itself does not report a change on every run.
+firewall__firewall: 'nftables'

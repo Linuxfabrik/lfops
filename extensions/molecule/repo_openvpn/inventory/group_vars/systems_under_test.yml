@@ -1,0 +1,2 @@
+# The scenario runs against the upstream Copr repository, not against a mirror.
+repo_openvpn__mirror_url: ''

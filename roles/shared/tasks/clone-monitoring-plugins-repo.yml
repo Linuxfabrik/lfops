@@ -15,8 +15,12 @@
       dest: '/tmp/ansible.monitoring-plugins-repo'
       version: '{{ __shared__monitoring_plugins_version }}'
       depth: 1
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
     delegate_to: 'localhost'
     become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
     throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
     check_mode: false # run task even if `--check` is specified
 
@@ -28,6 +32,8 @@
         state: 'absent'
       delegate_to: 'localhost'
       become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
       throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
       changed_when: false # no change on the remote host
 
@@ -37,7 +43,11 @@
         dest: '/tmp/ansible.monitoring-plugins-repo'
         version: '{{ __shared__monitoring_plugins_version }}'
         depth: 1
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
       delegate_to: 'localhost'
       become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
       throttle: 1 # serialize: shared git working dir on the controller, avoid races between hosts
       check_mode: false # run task even if `--check` is specified

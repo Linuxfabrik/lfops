@@ -1,3 +1,8 @@
+# handlers run in the order they are defined here, so daemon-reload precedes the restart
+- name: 'openvpn_server: systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
+
 - name: 'openvpn_server: restart openvpn-server@server.service'
   ansible.builtin.service:
     name: 'openvpn-server@server.service'

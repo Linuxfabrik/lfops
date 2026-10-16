@@ -14,6 +14,18 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Python 3 and the `python3-libvirt` and `python3-lxml` modules must be installed (role: [linuxfabrik.lfops.python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python)).
 
 
+## Requirements
+
+Manual steps:
+
+* The [kernel_modules](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_modules) role, which `setup_basic` runs, blocks the `tun` kernel module by default. libvirt VM networking needs it, so allow it in the inventory:
+```yaml
+kernel_modules__modules__host_var:
+  - name: 'tun'
+    enabled: true
+```
+
+
 ## Tags
 
 `kvm_host`

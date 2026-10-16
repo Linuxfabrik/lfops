@@ -6,6 +6,25 @@
     - 'always'
 
 
+- block:
+
+  - name: 'Assert that the OWASP Core Rule Set version is set and supported'
+    ansible.builtin.assert:
+      that:
+        - 'apache_httpd__mod_security_coreruleset_version is defined'
+        - 'apache_httpd__mod_security_coreruleset_version in __apache_httpd__mod_security_coreruleset_sha256'
+      quiet: true
+      fail_msg: >-
+        Set `apache_httpd__mod_security_coreruleset_version` to a version this role supports:
+        {{ __apache_httpd__mod_security_coreruleset_sha256 | list | join(", ") }}.
+        Or set `apache_httpd__skip_mod_security_coreruleset: true`.
+
+  when:
+    - 'not apache_httpd__skip_mod_security_coreruleset | bool'
+  tags:
+    - 'always'
+
+
 # Manage required system packages (Installation)
 - block:
 
@@ -17,6 +36,8 @@
     ansible.builtin.package:
       name: '{{ q("flattened", __apache_httpd__base_packages) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Combined Packages:'
     ansible.builtin.debug:
@@ -32,6 +53,8 @@
       name: '{{ (apache_httpd__packages__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
           + (apache_httpd__packages__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir -p {{ __apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
     ansible.builtin.file:
@@ -63,7 +86,7 @@
 
   - ansible.builtin.include_tasks: 'mod_security_coreruleset.yml'
   when:
-    - 'not apache_httpd__skip_mod_security_coreruleset'
+    - 'not apache_httpd__skip_mod_security_coreruleset | bool'
 
   tags:
     - 'apache_httpd'
@@ -72,6 +95,17 @@
 
 # Manage global Apache config
 - block:
+
+  # Before the role set PidFile, Apache on Debian and Ubuntu wrote its PID to the compiled-in
+  # default /run/apache2.pid, where apachectl no longer looks. `apachectl graceful` then takes
+  # the server for stopped, tries to start a second one and fails on the bound ports, so such a
+  # server has to be restarted once instead of reloaded.
+  - name: 'stat /run/apache2.pid'
+    ansible.builtin.stat:
+      path: '/run/apache2.pid'
+    register: '__apache_httpd__legacy_pid_file_result'
+    when:
+      - 'ansible_facts["os_family"] == "Debian"'
 
   - name: 'Create or update global Apache configuration {{ __apache_httpd__config_file }}'
     ansible.builtin.template:
@@ -83,6 +117,15 @@
       mode: 0o644
     notify:
       - 'apache_httpd: httpd -t; systemctl reload httpd'
+
+  - name: 'Request a restart of {{ __apache_httpd__service_name }}, which runs with the PID file of an earlier role version'
+    ansible.builtin.debug:
+      msg: '/run/apache2.pid exists, so {{ __apache_httpd__service_name }} is restarted instead of reloaded'
+    changed_when: true # notify the restart handler; the reload handler skips this case
+    notify:
+      - 'apache_httpd: httpd -t; systemctl restart httpd'
+    when:
+      - '__apache_httpd__legacy_pid_file_result["stat"]["exists"] | d(false)'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:
@@ -123,6 +166,66 @@
     - 'apache_httpd:htpasswd'
 
 
+# A vHost that references a certificate that does not exist yet keeps httpd from starting, and
+# such a certificate is often issued by acme_sh over the port 80 vHost of this very server. A
+# self-signed placeholder at the same path lets httpd start, and acme_sh replaces it once the
+# certificate is issued. Only missing files are created, an existing certificate is never touched.
+- block:
+
+  - name: 'Install openssl to create placeholder certificates'
+    ansible.builtin.package:
+      name: 'openssl'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  # only creates a missing directory, so the mode of an existing one such as /etc/ssl/private
+  # (0710 root:ssl-cert on Debian) is left alone
+  - name: 'mkdir --parents --mode={{ item[1] }} {{ item[0] }}'
+    ansible.builtin.command:
+      cmd: 'mkdir --parents --mode={{ item[1] }} {{ item[0] }}'
+      creates: '{{ item[0] }}'
+    loop: '{{ ((apache_httpd__placeholder_certificates__combined_var | map(attribute="cert_path") | product(["0755"]) | list)
+        + (apache_httpd__placeholder_certificates__combined_var | map(attribute="key_path") | product(["0700"]) | list))
+        | unique }}'
+
+  # openssl writes the key with mode 0600 (verified with OpenSSL 1.1.1 on RHEL 8)
+  - name: 'openssl req -x509 -newkey ec -subj /CN=... -keyout <name>.key -out <name>.crt'
+    ansible.builtin.command:
+      cmd: >-
+        openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 365
+        -subj '/CN={{ item["name"] }}'
+        -keyout '{{ item["key_path"] }}/{{ item["name"] }}.key'
+        -out '{{ item["cert_path"] }}/{{ item["name"] }}.crt'
+      creates: '{{ item["cert_path"] }}/{{ item["name"] }}.crt'
+    loop: '{{ apache_httpd__placeholder_certificates__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}'
+    when:
+      - 'item["state"] | d("present") != "absent"'
+
+  # a self-signed certificate is its own chain
+  - name: 'cp <name>.crt <name>{{ item[1] }}.crt'
+    ansible.builtin.command:
+      cmd: >-
+        cp
+        '{{ item[0]["cert_path"] }}/{{ item[0]["name"] }}.crt'
+        '{{ item[0]["cert_path"] }}/{{ item[0]["name"] }}{{ item[1] }}.crt'
+      creates: '{{ item[0]["cert_path"] }}/{{ item[0]["name"] }}{{ item[1] }}.crt'
+    loop: '{{ apache_httpd__placeholder_certificates__combined_var | product(["-chain", "-fullchain"]) | list }}'
+    loop_control:
+      label: '{{ item[0]["name"] }}{{ item[1] }}'
+    when:
+      - 'item[0]["state"] | d("present") != "absent"'
+
+  when:
+    - 'apache_httpd__placeholder_certificates__combined_var | map(attribute="state", default="present") | select("ne", "absent") | list | length > 0'
+  tags:
+    - 'apache_httpd'
+    - 'apache_httpd:certs'
+    - 'apache_httpd:vhosts'
+
+
 - block:
 
   - ansible.builtin.include_tasks: 'vhosts.yml'
@@ -139,18 +242,6 @@
       path: '{{ __apache_httpd__config_path }}'
       mode: 'g-w'
       recurse: true
-
-  # Only the content of the document root, not the directory itself: httpd's tmpfiles rule
-  # (`d /var/www/html 755 root root`) resets the directory to root:root on every boot and on every
-  # package transaction that installs a tmpfiles file, so a chown of it never lasts and breaks
-  # idempotence on a fresh host. Verified with httpd 2.4.62 on Rocky 9. --no-dereference, so a
-  # symlink in the document root does not hand its target to the web server user.
-  - name: 'chown --no-dereference apache:apache everything below {{ apache_httpd__conf_document_root }}'
-    ansible.builtin.command: 'find {{ apache_httpd__conf_document_root | quote }} -mindepth 1 \( ! -user {{ __shared__apache_httpd_user }} -o ! -group {{ __shared__apache_httpd_group }} \) -exec chown --changes --no-dereference {{ __shared__apache_httpd_user }}:{{ __shared__apache_httpd_group }} {} +'
-    register: 'apache_httpd__chown_document_root_result'
-    changed_when: 'apache_httpd__chown_document_root_result["stdout"] | length > 0'
-    ignore_errors: true
-    when: 'not apache_httpd__skip_document_root_chown'
 
   tags:
     - 'apache_httpd'

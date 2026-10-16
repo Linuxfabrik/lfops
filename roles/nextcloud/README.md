@@ -154,20 +154,22 @@ nextcloud__users:
         * Mandatory. The configuration value.
         * Type: String.
 
-    * `force`:
+    * `type`:
 
-        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
-        * Type: Bool.
+        * Optional. Type of the value, either `array`, `boolean`, `float`, `integer` or `string`.
+        * Type: String.
+        * Default: `'string'`
 
     * `state`:
 
-        * Optional. Either `absent`, `disabled`, `enabled` or `present`. Note that `enabled` also installs the app.
+        * Optional. State of the config option, either `present` or `absent`.
         * Type: String.
-        * Default: `'enabled'`
+        * Default: `'present'`
 
 `nextcloud__apps__host_var` / `nextcloud__apps__group_var`
 
-* List of dictionaries containing Nextcloud apps to install.
+* List of dictionaries containing Nextcloud apps to install, enable, disable or remove.
+* An entry overrides only the subkeys it sets. The role default disables some apps, for example `activity`, `notifications` and `systemtags`; an entry for such an app without `state` keeps it disabled, so set `state: 'enabled'` explicitly.
 * Type: List of dictionaries.
 * Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
 * Subkeys:
@@ -177,11 +179,23 @@ nextcloud__users:
         * Mandatory. The app name.
         * Type: String.
 
+    * `force`:
+
+        * Optional. Set to `true` to install the app regardless of the Nextcloud version requirement.
+        * Type: Bool.
+        * Default: `false`
+
     * `state`:
 
-        * Optional. State of the app, either `present` or `absent`.
+        * Optional. State of the app:
+
+            * `absent`: Removes the app.
+            * `disabled`: Disables the app if it is enabled.
+            * `enabled`: Installs the app if it is missing, and enables it.
+            * `present`: Installs the app if it is missing, but leaves it disabled.
+
         * Type: String.
-        * Default: `'present'`
+        * Default: `'enabled'`
 
 `nextcloud__database_host`
 
@@ -367,10 +381,12 @@ nextcloud__app_configs__host_var:
     value: 'https://www.example.com'
     state: 'present'
 nextcloud__apps__host_var:
-  - name: 'bruteforcesettings'
-    state: 'present'
-  - name: 'weather'
-    state: 'absent'
+  - name: 'activity'
+    state: 'enabled'
+  - name: 'deck'
+    state: 'enabled'
+  - name: 'weather_status'
+    state: 'disabled'
 nextcloud__database_host: 'localhost'
 nextcloud__database_name: 'nextcloud'
 nextcloud__datadir: '/data'

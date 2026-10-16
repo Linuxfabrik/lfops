@@ -59,7 +59,7 @@ dependencies:
   'ansible.utils': '*'
   'ansible.windows': '*'
   'community.crypto': '<3.0.0' # we need python 3.6 support to run against rhel8
-  'community.general': '<9.0.0' # we need python 3.6 support to run against rhel8
+  'community.general': '>=7.0.0,<9.0.0' # >=7.0.0: modprobe `persistent`; <9.0.0: we need python 3.6 support to run against rhel8
   'community.grafana': '*'
   'community.libvirt': '*'
   'community.mongodb': '*'

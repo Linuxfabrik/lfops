@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.kernel_modules'
   hosts:
     - 'lfops_kernel_modules'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

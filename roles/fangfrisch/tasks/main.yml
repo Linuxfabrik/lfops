@@ -30,6 +30,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__fangfrisch__service_result'
 
   - name: 'Deploy /etc/systemd/system/fangfrisch.timer'
     ansible.builtin.template:
@@ -39,7 +40,13 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'fangfrisch__systemd_timer_result'
+    register: '__fangfrisch__timer_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler (the state task below needs the new units)
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__fangfrisch__service_result is changed or __fangfrisch__timer_result is changed'
 
   tags:
     - 'fangfrisch'
@@ -52,7 +59,6 @@
       name: 'fangfrisch.timer'
       enabled: '{{ fangfrisch__timer_enabled }}'
       state: '{{ fangfrisch__timer_enabled | bool | ternary("started", "stopped") }}'
-      daemon_reload: '{{ fangfrisch__systemd_timer_result is changed }}'
 
   tags:
     - 'fangfrisch'

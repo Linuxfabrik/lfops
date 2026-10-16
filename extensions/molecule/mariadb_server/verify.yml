@@ -1,0 +1,92 @@
+# The dump is the only consumer of mydumper, so the checks follow it: the installed mydumper
+# comes from the mydumper repository (not from the distribution, which ships 0.10.x or nothing),
+# and a dump of a real schema succeeds.
+- name: 'Verify the MariaDB dump with mydumper'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that mariadb.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["mariadb.service"]["state"] == "running"'
+
+    # service_facts does not list timers; without a state, the module only reports the status.
+    - name: 'systemctl show mariadb-dump.timer'
+      ansible.builtin.systemd:
+        name: 'mariadb-dump.timer'
+      register: '__molecule__mariadb_dump_timer_result'
+
+    - name: 'Assert that mariadb-dump.timer is active'
+      ansible.builtin.assert:
+        that: '__molecule__mariadb_dump_timer_result["status"]["ActiveState"] == "active"'
+
+    # The distribution packages are 0.10.x (Debian 12, Ubuntu) or missing (Debian 13), the
+    # repository ones are 1.x.
+    - name: 'mydumper --version'
+      ansible.builtin.command: 'mydumper --version'
+      register: '__molecule__mydumper_version_result'
+      changed_when: false
+
+    - name: 'Assert that mydumper is a 1.x release'
+      ansible.builtin.assert:
+        that: '__molecule__mydumper_version_result["stdout"] is match("mydumper v1\.")'
+        fail_msg: '{{ __molecule__mydumper_version_result["stdout"] }}'
+
+    # A repository that is configured but ignored would still let the distribution's package
+    # satisfy the install, so ask the package manager where the installed version comes from.
+    # awk reads to the end, since an early exit would kill apt-cache with SIGPIPE under pipefail.
+    - name: 'apt-cache policy mydumper'
+      ansible.builtin.shell:
+        cmd: >
+          set -o pipefail;
+          apt-cache policy mydumper
+          | awk '/\*\*\*/ {found = 1; next} found && /http/ && !printed {print; printed = 1}'
+        executable: '/bin/bash'
+      register: '__molecule__mydumper_source_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    - name: 'Assert that the installed mydumper comes from the official mydumper repository'
+      ansible.builtin.assert:
+        that: '"mydumper.github.io" in __molecule__mydumper_source_result["stdout"]'
+        fail_msg: 'Installed from: {{ __molecule__mydumper_source_result["stdout"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
+    # The mydumper project signs its RPMs, so the signature key tells the package from the
+    # repository apart from one rebuilt or mirrored elsewhere.
+    - name: 'rpm --query --queryformat %{RSAHEADER:pgpsig} mydumper'
+      # no module reports the signature of an installed package
+      ansible.builtin.command: "rpm --query --queryformat '%{RSAHEADER:pgpsig}' mydumper"  # noqa command-instead-of-module
+      register: '__molecule__mydumper_signature_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that the installed mydumper is signed by the mydumper project'
+      ansible.builtin.assert:
+        that: '"79ea15c0e82e34ba" in __molecule__mydumper_signature_result["stdout"]'
+        fail_msg: 'Signature: {{ __molecule__mydumper_signature_result["stdout"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    # Run the real dump, as the timer would, and look at its result.
+    - name: 'systemctl start mariadb-dump.service'
+      ansible.builtin.systemd:
+        name: 'mariadb-dump.service'
+        state: 'started'
+
+    - name: 'Find the dump of the molecule schema'
+      ansible.builtin.find:
+        paths: '/backup/mariadb-dump'
+        patterns: 'molecule-schema-create.sql*'
+      register: '__molecule__mariadb_dump_result'
+
+    - name: 'Assert that the dump contains the molecule schema'
+      ansible.builtin.assert:
+        that: '__molecule__mariadb_dump_result["matched"] == 1'

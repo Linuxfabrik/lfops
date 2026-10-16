@@ -8,6 +8,6 @@
     daily
     dateext
     missingok
-    rotate {{ apache_tomcat__logrotate | d(logrotate__rotate) | d(14) }}
+    rotate {{ apache_tomcat__logrotate }}
     su tomcat tomcat
 }

@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.collect_rpmnew_rpmsave'
   hosts:
     - 'lfops_collect_rpmnew_rpmsave'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

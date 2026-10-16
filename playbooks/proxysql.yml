@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.proxysql'
   hosts:
     - 'lfops_proxysql'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

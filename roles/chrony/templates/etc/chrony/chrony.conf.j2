@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+# 2026092901
+
+# Include configuration files found in /etc/chrony/conf.d.
+confdir /etc/chrony/conf.d
+
+{#
+  As on the Red Hat family, the sources from the inventory are the only ones: no distribution
+  pools, no `sourcedir /run/chrony-dhcp` and no `sourcedir /etc/chrony/sources.d`. Ubuntu 26.04
+  ships its default pools in sources.d/ubuntu-ntp-pools.sources with `nts prefer`, and chronyd
+  then selects only the preferred sources (sources.c, "reduce the list again only to the
+  preferred sources"), so the inventory's servers would never be used. Verified against
+  chrony 4.8-2ubuntu1 on Ubuntu 26.04.
+#}
+{% for item in chrony__ntp_pools %}
+pool {{ item }} iburst
+{% endfor %}
+{% for item in chrony__ntp_servers %}
+server {{ item }} iburst
+{% endfor %}
+
+{% for item in chrony__allow %}
+allow {{ item }}
+{% endfor %}
+
+{% if chrony__bindaddress is defined %}
+bindaddress {{ chrony__bindaddress }}
+{% endif %}
+
+{% if chrony__binddevice is defined %}
+binddevice {{ chrony__binddevice }}
+{% endif %}
+
+# This directive specify the file into which chronyd will store the rate
+# information.
+driftfile /var/lib/chrony/chrony.drift
+
+# Save NTS keys and cookies.
+ntsdumpdir /var/lib/chrony
+
+# Uncomment the following line to turn logging on.
+#log tracking measurements statistics
+
+# Log files location.
+logdir /var/log/chrony
+
+# Stop bad estimates upsetting machine clock.
+maxupdateskew 100.0
+
+# This directive enables kernel synchronisation (every 11 minutes) of the
+# real-time clock. Note that it can't be used along with the 'rtcfile' directive.
+rtcsync
+
+# Step the system clock instead of slewing it if the adjustment is larger than
+# one second, but only in the first three clock updates.
+makestep 1 3
+
+# Get TAI-UTC offset and leap seconds from the system tz database.
+{{ __chrony__leap_directive }}

@@ -40,6 +40,81 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # A real audit, restricted to a single test to keep it short, proves lynis finds its profile
+    # and include files and writes the report the lynis monitoring plugin reads.
+    - name: 'lynis audit system --quick --tests KRNL-5820'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests KRNL-5820'
+      args:
+        chdir: '/'
+      changed_when: false
+      register: '__molecule__lynis_audit_result'
+
+    - name: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      ansible.builtin.command: 'grep ^tests_executed= /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_report_result'
+
+    - name: 'Assert that the lynis audit ran the requested test'
+      ansible.builtin.assert:
+        that:
+          - '"KRNL-5820" in __molecule__lynis_report_result["stdout"]'
+        fail_msg: '{{ __molecule__lynis_audit_result["stdout_lines"][-20:] }}'
+
+    # aide runs last in setup_basic and creates its database after the handlers of every other
+    # role have run. A check straight after the play has to be clean: a file another role or one
+    # of its handlers wrote after the database was created would make it fail.
+    - name: 'systemctl start --wait aidecheck.service' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl show --property=Result aidecheck.service' # noqa command-instead-of-module (no module reads the Result of a finished unit)
+      ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
+      changed_when: false
+      register: '__molecule__aide_check_result'
+
+    - name: 'cat /var/log/aide/aide.log'
+      ansible.builtin.command: 'cat /var/log/aide/aide.log'
+      changed_when: false
+      register: '__molecule__aide_log_result'
+
+    - name: 'Assert that the AIDE check on the freshly set up host runs clean'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__aide_check_result["stdout"] == "success"'
+        fail_msg: '{{ __molecule__aide_log_result["stdout"] }}'
+
+    # nftables.service is Type=oneshot with RemainAfterExit=yes on every distribution under test,
+    # so "active" means `nft -f` loaded the distribution's ruleset. The ruleset itself is empty on
+    # the Red Hat family, so listing it would prove nothing more.
+    - name: 'systemctl is-active nftables.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active nftables.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__nftables_active_result'
+
+    - name: 'Assert that nftables.service is active'
+      ansible.builtin.assert:
+        that: '__molecule__nftables_active_result["stdout"] == "active"'
+        fail_msg: '{{ __molecule__nftables_active_result["stdout"] }}'
+
+    # Ask chronyd for its sources instead of reading the file: on Debian and Ubuntu chronyd only
+    # reads /etc/chrony/chrony.conf, so a file deployed to the wrong path would pass a file check
+    # and leave the configured source unused.
+    - name: 'chronyc -n -c sources'
+      ansible.builtin.command: 'chronyc -n -c sources'
+      changed_when: false
+      register: '__molecule__chronyc_sources_result'
+
+    # Only that source: the role configures no distribution pools and no DHCP sources, and a
+    # distribution default next to it (Ubuntu 26.04 ships its NTS pools with `prefer` in
+    # /etc/chrony/sources.d) would take over and chronyd would never use it. The source from the
+    # inventory also replaces the role's default ntp.metas.ch instead of being added to it.
+    - name: 'Assert that chronyd uses only the source configured in the inventory'
+      ansible.builtin.assert:
+        that: '__molecule__chronyc_sources_result["stdout_lines"] | map("split", ",") | map(attribute=2) | list == ["192.0.2.1"]'
+        fail_msg: '{{ __molecule__chronyc_sources_result["stdout_lines"] }}'
+
     # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
     # least valid enough to start with. Queried via systemctl instead of service_facts because the
     # unit differs per family (Type=forking on RHEL, Type=oneshot with RemainAfterExit on Debian,
@@ -67,6 +142,21 @@
       ansible.builtin.assert:
         that: '__molecule__postfix_relayhost_result["stdout"] | trim == postfix__relayhost'
         fail_msg: '{{ __molecule__postfix_relayhost_result["stdout"] }}'
+
+    # Lynis MAIL-8818 flags a banner that holds $mail_name (Postfix), the OS or the Linux flavour.
+    # Ask the running daemon, since the unset default would look fine in main.cf.
+    - name: 'postconf -h smtpd_banner'
+      ansible.builtin.command: 'postconf -h smtpd_banner'
+      changed_when: false
+      register: '__molecule__postfix_banner_result'
+
+    - name: 'Assert that the SMTP banner discloses neither the MTA nor the OS'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__postfix_banner_result["stdout"] == "$myhostname ESMTP LFOps"'
+          - '"mail_name" not in __molecule__postfix_banner_result["stdout"]'
+          - '"linux" not in __molecule__postfix_banner_result["stdout"] | lower'
+        fail_msg: '{{ __molecule__postfix_banner_result["stdout"] }}'
 
     - name: 'postconf -h sender_canonical_maps recipient_canonical_maps'
       ansible.builtin.command: 'postconf -h sender_canonical_maps recipient_canonical_maps'
@@ -147,3 +237,114 @@
 
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
+
+    # The inventory skips duplicity. Its venv must not be built anyway: python_venv used to get the
+    # duplicity venv regardless of setup_basic__skip_duplicity, and its pip install can fail.
+    - name: 'stat /opt/python-venv/duplicity'
+      ansible.builtin.stat:
+        path: '/opt/python-venv/duplicity'
+      register: '__molecule__duplicity_venv_stat_result'
+
+    - name: 'Assert that the duplicity venv is absent while duplicity is skipped'
+      ansible.builtin.assert:
+        that: 'not __molecule__duplicity_venv_stat_result["stat"]["exists"]'
+
+    # setup_basic puts psi=1 on the kernel command line of the Red Hat family, whose kernels keep
+    # no pressure stall information without it, and the bootloader role only requests the reboot
+    # that makes it effective. The first verify run therefore finds the request waiting in the
+    # schedule_reboot spool and reboots; the second one (after idempotence) finds the option on
+    # the running kernel already.
+    - name: 'Verify that the kernel command line of the Red Hat family carries psi=1'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+      block:
+
+      - name: 'grubby --info=ALL'
+        ansible.builtin.command: 'grubby --info=ALL'
+        register: '__molecule__grubby_info_result'
+        changed_when: false
+
+      - name: 'Assert that every boot entry has psi=1 on its command line'
+        ansible.builtin.assert:
+          that: '__molecule__grubby_info_result["stdout_lines"]
+              | select("match", "^args=")
+              | reject("search", "psi=1")
+              | list | length == 0'
+
+      - name: 'slurp /proc/cmdline'
+        ansible.builtin.slurp:
+          src: '/proc/cmdline'
+        register: '__molecule__proc_cmdline_result'
+
+      - name: 'stat /run/schedule-reboot/bootloader'
+        ansible.builtin.stat:
+          path: '/run/schedule-reboot/bootloader'
+        register: '__molecule__reboot_request_stat_result'
+        when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+      - name: 'Assert that the bootloader role requested a reboot at the maintenance window'
+        ansible.builtin.assert:
+          that: '__molecule__reboot_request_stat_result["stat"]["exists"] | bool'
+        when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+      - name: 'systemctl reboot'
+        ansible.builtin.reboot:  # yamllint disable-line rule:empty-values
+        when: '"psi=1" not in (__molecule__proc_cmdline_result["content"] | ansible.builtin.b64decode)'
+
+    # The point of psi=1: the plugin has to find pressure stall information on every platform,
+    # with the option on the Red Hat family and by default on Debian and Ubuntu.
+    # --severity-no-psi crit turns its "nothing to measure" OK into a failure.
+    - name: '/usr/lib64/nagios/plugins/psi-cpu --severity-no-psi crit'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/psi-cpu --severity-no-psi crit'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__psi_cpu_result'
+
+    - name: 'Assert that the psi-cpu monitoring plugin finds pressure stall information'
+      ansible.builtin.assert:
+        that: '__molecule__psi_cpu_result["rc"] == 0'
+        fail_msg: '{{ __molecule__psi_cpu_result["stdout"] }}'
+
+# The Icinga API credentials live in /usr/local/sbin/schedule-icinga-downtime, which only root may
+# read. A login shell of an unprivileged user sources /etc/profile.d/alias.sh, where they used to
+# be, so it must neither see them nor be able to run the script.
+- name: 'Verify the Icinga API credentials of the tools role are readable by root only'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'stat /usr/local/sbin/schedule-icinga-downtime'
+      ansible.builtin.stat:
+        path: '/usr/local/sbin/schedule-icinga-downtime'
+      register: '__molecule__schedule_icinga_downtime_stat_result'
+
+    - name: 'Assert that schedule-icinga-downtime is readable by root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__schedule_icinga_downtime_stat_result["stat"]["mode"] == "0700"'
+          - '__molecule__schedule_icinga_downtime_stat_result["stat"]["pw_name"] == "root"'
+        fail_msg: '/usr/local/sbin/schedule-icinga-downtime is {{ __molecule__schedule_icinga_downtime_stat_result["stat"] | d("missing") | to_json }}'
+
+    - name: 'runuser --user nobody -- bash --login -c "alias; declare -f; /usr/local/sbin/schedule-icinga-downtime 60"'
+      ansible.builtin.command:
+        argv:
+          - 'runuser'
+          - '--user'
+          - 'nobody'
+          - '--'
+          - 'bash'
+          - '--login'
+          - '-c'
+          - 'alias; declare -f; /usr/local/sbin/schedule-icinga-downtime 60'
+      register: '__molecule__nobody_login_shell_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that an unprivileged login shell neither sees nor uses the credentials'
+      ansible.builtin.assert:
+        that:
+          - '"alias reboot=" in __molecule__nobody_login_shell_result["stdout"]'
+          - '"linuxfabrik-downtime-api" not in __molecule__nobody_login_shell_result["stdout"]'
+          - '"Permission denied" in __molecule__nobody_login_shell_result["stderr"]'
+        fail_msg: '{{ __molecule__nobody_login_shell_result | to_json }}'

@@ -95,7 +95,7 @@ argument_specs:
         required: false
         default:
           - 22
-        description: 'Ports that may be accessed without being blocked by the portscan jail.'
+        description: 'Ports on which a connection attempt the firewall denies does not lead to a ban in the portscan jail.'
 
       fail2ban__jail_portscan_bantime:
         type: 'str'
@@ -108,6 +108,24 @@ argument_specs:
         required: false
         default: '7d'
         description: 'The ban duration for the sshd jail.'
+
+      fail2ban__jail_wordpress_login_bantime:
+        type: 'str'
+        required: false
+        default: '8h'
+        description: 'The ban duration for the wordpress-login jail.'
+
+      fail2ban__jail_wordpress_login_findtime:
+        type: 'str'
+        required: false
+        default: '10m'
+        description: 'The find time for the wordpress-login jail.'
+
+      fail2ban__jail_wordpress_login_maxretry:
+        type: 'int'
+        required: false
+        default: 5
+        description: 'The number of failed WordPress logins within the find time before an IP is banned.'
 
       fail2ban__jails__dependent_var:
         type: 'list'

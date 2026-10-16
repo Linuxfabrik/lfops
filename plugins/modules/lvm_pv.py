@@ -4,7 +4,12 @@
 # Based on lvol module by Jeroen Hoekx <jeroen.hoekx@dsquare.be>
 # GNU General Public License v3.0+ (see LICENSES/GPL-3.0-or-later.txt or https://www.gnu.org/licenses/gpl-3.0.txt)
 # SPDX-License-Identifier: GPL-3.0-or-later
-from __future__ import annotations
+
+# Local patch: upstream uses `from __future__ import annotations`, which Python 3.6 (the
+# platform-python on RHEL 8) rejects with a SyntaxError before the module even runs.
+from __future__ import absolute_import, division, print_function
+
+__metaclass__ = type
 
 DOCUMENTATION = r"""
 module: lvm_pv

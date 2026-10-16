@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2026052201
+# 2026100601
 
 [epel-testing]
 name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch
 # It is much more secure to use the metalink, but if you wish to use a local mirror
 # place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
-baseurl={{ repo_epel__mirror_url }}/epel/testing/${releasever_minor:+z}/Everything/x86_64
+baseurl={{ repo_epel__mirror_url }}/epel/testing/10/Everything/x86_64
 #metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
 #baseurl=https://download.example/pub/epel/testing/$releasever${releasever_minor:+z}/Everything/$basearch/
@@ -28,7 +28,7 @@ name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Deb
 # It is much more secure to use the metalink, but if you wish to use a local mirror
 # place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
-baseurl={{ repo_epel__mirror_url }}/epel/testing/${releasever_minor:+z}/Everything/x86_64/debug
+baseurl={{ repo_epel__mirror_url }}/epel/testing/10/Everything/x86_64/debug
 #metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
 #baseurl=https://download.example/pub/epel/testing/$releasever${releasever_minor:+z}/Everything/$basearch/debug/
@@ -49,7 +49,7 @@ name=Extra Packages for Enterprise Linux $releasever - Testing - $basearch - Sou
 # It is much more secure to use the metalink, but if you wish to use a local mirror
 # place its address here.
 {% if repo_epel__mirror_url is defined and repo_epel__mirror_url | length %}
-baseurl={{ repo_epel__mirror_url }}/epel/testing/${releasever_minor:+z}/Everything/source/tree/
+baseurl={{ repo_epel__mirror_url }}/epel/testing/10/Everything/source/tree/
 #metalink=https://mirrors.fedoraproject.org/metalink?repo=testing-source-epel$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
 #baseurl=https://download.example/pub/epel/testing/$releasever${releasever_minor:+z}/Everything/source/tree/

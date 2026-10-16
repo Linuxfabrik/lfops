@@ -6,6 +6,11 @@ This role installs and configures [bind](https://www.isc.org/bind/) as a DNS ser
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* `/etc/named.conf` follows the file that the bind package ships, with two deliberate differences: named listens on all IPv4 addresses instead of only on `127.0.0.1` (see `bind__listen_on_addresses`), and it does not restrict queries globally to `localhost` with `allow-query`. Instead, the `trusted` ACL (localhost, the local networks and `bind__trusted_networks`) controls who may use the cache and recursion (`bind__allow_query_cache`, `bind__allow_recursion`) and who may query the zones in `bind__zones`. Zones that named builds in itself, such as the empty reverse zones for private addresses, answer every client that can reach the server.
+
+
 ## Tags
 
 `bind`
@@ -143,9 +148,21 @@ bind__zones:
 * Type: List of strings.
 * Default: `['none']`
 
+`bind__dnssec_validate_except`
+
+* List of domains below which named does not validate DNSSEC. Needed for internal zones that named gets from other servers through `bind__named_conf_raw`, and for forwarders that strip the DNSSEC records. The names of the `forward`, `static-stub` and `stub` zones in `bind__zones` are excluded automatically. Not supported on RHEL 8, which has to use `bind__dnssec_validation: false` instead.
+* Type: List of strings.
+* Default: `[]`
+
+`bind__dnssec_validation`
+
+* Enables or disables DNSSEC validation of the answers named resolves, as the bind package does. Forged or broken answers for signed zones are answered with `SERVFAIL`. Zones below a signed parent that are only served internally have to be excluded, see `bind__dnssec_validate_except`. named uses the algorithms that the system-wide crypto policy allows.
+* Type: Bool.
+* Default: `true`
+
 `bind__forwarders`
 
-* List of DNS servers to which DNS queries to unknown domain names should be forwarded.
+* List of DNS servers to which DNS queries to unknown domain names should be forwarded. Reverse lookups for private and special-use addresses (RFC 1918, RFC 6303), such as `10.in-addr.arpa`, are answered locally from BIND's built-in empty zones instead (faster, independent of the forwarders, and without revealing the internal addressing to them), unless `bind__zones` contains the zone itself or a `forward`, `static-stub` or `stub` zone below it.
 * Type: List of strings.
 * Default: `['1.0.0.1', '1.1.1.1']`
 
@@ -174,15 +191,17 @@ bind__zones:
 
 `bind__listen_ipv6`
 
-* Enables or disables listening on IPv6.
+* Enables or disables listening on IPv6. If `true`, named listens on all IPv6 addresses.
 * Type: Bool.
 * Default: `false`
+* Deviates from the upstream default, which listens on `::1` only: the role serves IPv4 clients by default, and `true` covers the IPv6 clients of a network instead of only the local host.
 
 `bind__listen_on_addresses`
 
 * List of addresses on which the server will listen. This indirectly sets the listening interface(s).
 * Type: List of strings.
 * Default: `['any']`
+* Deviates from the upstream default `['127.0.0.1']`: the role sets up a DNS server for the network, which the clients cannot reach on the loopback address.
 
 `bind__named_conf_raw`
 
@@ -224,6 +243,9 @@ bind__allow_recursion:
   - 'none'
 bind__allow_transfer:
   - '192.0.2.0/24'
+bind__dnssec_validate_except:
+  - 'corp.example.com'
+bind__dnssec_validation: true
 bind__forwarders:
   - '1.0.0.1'
   - '1.1.1.1'
@@ -323,7 +345,7 @@ bind__zones:
 bind__zones:
   - name: 'example.com'
     file: 'forward.zone'
-    type: 'master'
+    type: 'slave'
     masters:
       - '192.0.2.2'
 

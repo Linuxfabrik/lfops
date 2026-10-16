@@ -1,6 +1,11 @@
 [tool.ruff]
 line-length = 88
 target-version = 'py39'
+# Modules and module_utils run on the managed node, down to Python 3.6 on RHEL 8, and their
+# tests run there too (tox.ini, py36-target). py37 is the oldest target ruff knows; it keeps
+# the formatter and pyupgrade from introducing newer syntax such as parenthesized context
+# managers.
+per-file-target-version = { 'plugins/module_utils/**' = 'py37', 'plugins/modules/**' = 'py37', 'tests/ansible_harness.py' = 'py37', 'tests/conftest.py' = 'py37', 'tests/unit/plugins/module_utils/**' = 'py37', 'tests/unit/plugins/modules/**' = 'py37' }
 # Vendored upstream code that is kept as-is so patches stay sendable, plus the
 # vulture whitelist, which is a list of bare names by construction and not
 # runnable Python.

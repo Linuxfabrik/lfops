@@ -4,6 +4,8 @@
     ansible.builtin.package:
       name: 'coturn'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'Deploy /etc/coturn/turnserver.conf'
     ansible.builtin.template:

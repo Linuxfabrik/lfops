@@ -114,10 +114,9 @@ class TestMain(unittest.TestCase):
                 'query': 'SELECT id FROM t',
             }
         )
-        with (
-            ansible_harness.patch_module(),
-            self.assertRaises(ansible_harness.AnsibleExitJson) as cm,
-        ):
+        with ansible_harness.patch_module(), self.assertRaises(
+            ansible_harness.AnsibleExitJson
+        ) as cm:
             mod.main()
         self.assertEqual(cm.exception.args[0]['query_result'], [{'id': 1}])
         self.assertFalse(cm.exception.args[0]['changed'])
@@ -130,10 +129,9 @@ class TestMain(unittest.TestCase):
                 'query': 'SELECT * FROM does_not_exist',
             }
         )
-        with (
-            ansible_harness.patch_module(),
-            self.assertRaises(ansible_harness.AnsibleFailJson) as cm,
-        ):
+        with ansible_harness.patch_module(), self.assertRaises(
+            ansible_harness.AnsibleFailJson
+        ) as cm:
             mod.main()
         self.assertIn('Query failed', cm.exception.args[0]['msg'])
 

@@ -1,0 +1,24 @@
+# wait until neither a job is queued for nor a run is in progress of apt-daily-upgrade.service,
+# aide-dpkg-update.service or aidecheck.service: the hook, the units and the update-db tasks of
+# the role start the latter two with --no-block. units that do not exist report inactive.
+- name: 'systemctl list-jobs; systemctl is-active (wait until the aide units are idle)' # noqa command-instead-of-module (read-only state query in a retry loop)
+  ansible.builtin.shell: |
+    set -o pipefail
+    # is-active exits non-zero as soon as one of the units is inactive, so its output is read
+    # without a pipe
+    states=$(systemctl is-active apt-daily-upgrade.service aide-dpkg-update.service aidecheck.service)
+    if [ -n "$(systemctl list-jobs --no-legend apt-daily-upgrade.service aide-dpkg-update.service aidecheck.service)" ]; then
+        echo 'queued'
+    elif grep --quiet --extended-regexp '^(active|activating|deactivating|reloading)$' <<< "$states"; then
+        echo 'running'
+    else
+        echo 'idle'
+    fi
+  args:
+    executable: '/bin/bash'
+  register: '__molecule__aide_idle_result'
+  until: '__molecule__aide_idle_result["stdout"] == "idle"'
+  retries: 120
+  delay: 5
+  changed_when: false
+  failed_when: '__molecule__aide_idle_result["stdout"] != "idle"'

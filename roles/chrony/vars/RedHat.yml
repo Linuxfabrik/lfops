@@ -1,0 +1,2 @@
+__chrony__conf_path: '/etc/chrony.conf'
+__chrony__service_name: 'chronyd.service'

@@ -11,10 +11,29 @@
 
 - block:
 
+  # duplicity runs from the venv that python_venv builds from this definition. It falls back
+  # to an empty list on other platforms, so without this check the role would set up backups
+  # that have no duplicity to run.
+  - name: 'Assert that this role supports the platform'
+    ansible.builtin.assert:
+      that:
+        - 'duplicity__python_venv__venvs__dependent_var | length > 0'
+      quiet: true
+      fail_msg: 'duplicity: {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_version"] }} is not supported by this role. Supported platforms: {{ __duplicity__python_venv__venvs__dependent_var.keys() | join(", ") }}.'
+
+  tags:
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
+
+- block:
+
   - name: 'Install required packages'
     ansible.builtin.package:
       name: '{{ __duplicity__required_packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
 
   - name: 'mkdir /etc/duba'
     ansible.builtin.file:
@@ -84,6 +103,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'duplicity: systemctl daemon-reload'
 
   - name: 'Deploy /usr/local/bin/duba'
     ansible.builtin.template:
@@ -118,7 +138,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
-    register: 'duplicity__systemd_duba_timer_result'
+    notify: 'duplicity: systemctl daemon-reload'
 
   tags:
     - 'duplicity'
@@ -133,7 +153,6 @@
       name: 'duba.timer'
       state: '{{ duplicity__timer_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ duplicity__timer_enabled | bool }}'
-      daemon_reload: '{{ duplicity__systemd_duba_timer_result | d({}) is changed }}'
 
   tags:
     - 'duplicity'

@@ -31,6 +31,37 @@
 
 - block:
 
+  - name: 'Remove socket units'
+    ansible.builtin.include_tasks: 'remove-unit.yml'
+    vars:
+      __systemd_unit__unit_type: 'socket'
+    loop: '{{ systemd_unit__sockets__combined_var
+        | selectattr("state", "defined")
+        | selectattr("state", "eq", "absent")
+        | list }}'
+    loop_control:
+      label: '{{ item["name"] }}.socket'
+
+  - name: 'Deploy the socket units to /etc/systemd/system'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/socket.j2'
+      dest: '/etc/systemd/system/{{ item["name"] }}.socket'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ systemd_unit__sockets__combined_var }}'
+    notify: 'systemd_unit: systemctl daemon-reload'
+
+  tags:
+    - 'systemd_unit'
+    - 'systemd_unit:sockets'
+
+
+- block:
+
   - name: 'Remove timer units'
     ansible.builtin.include_tasks: 'remove-unit.yml'
     vars:
@@ -99,6 +130,7 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.service'
       enabled: '{{ item["enabled"] | d(true) }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__services__combined_var }}'
@@ -109,16 +141,40 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.service'
       state: '{{ item["state"] | d("started") }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
     when:
       - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__services__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}.service - state: {{ item["state"] | d("started") }}'
 
+  - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.socket'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}.socket'
+      enabled: '{{ item["enabled"] | d(true) }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
+    when:
+      - 'item["state"] | d("present") != "absent"'
+    loop: '{{ systemd_unit__sockets__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}.socket - enabled: {{ item["enabled"] | d(true) }}'
+
+  - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}.socket'
+    ansible.builtin.systemd:
+      name: '{{ item["name"] }}.socket'
+      state: '{{ item["state"] | d("started") }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
+    when:
+      - 'item["state"] | d("started") not in ["present", "absent"]'
+    loop: '{{ systemd_unit__sockets__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}.socket - state: {{ item["state"] | d("started") }}'
+
   - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.timer'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.timer'
       enabled: '{{ item["enabled"] | d(true) }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__timers__combined_var }}'
@@ -129,6 +185,7 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.timer'
       state: '{{ item["state"] | d("started") }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
     when:
       - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__timers__combined_var }}'
@@ -139,6 +196,7 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.mount'
       enabled: '{{ item["enabled"] | d(true) }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__mounts__combined_var }}'
@@ -149,6 +207,7 @@
     ansible.builtin.systemd:
       name: '{{ item["name"] }}.mount'
       state: '{{ item["state"] | d("started") }}'
+    ignore_errors: '{{ ansible_check_mode }}' # a new unit file does not exist with `--check`, so systemd cannot find the unit
     when:
       - 'item["state"] | d("started") not in ["present", "absent"]'
     loop: '{{ systemd_unit__mounts__combined_var }}'

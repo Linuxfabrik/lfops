@@ -17,6 +17,8 @@
     ansible.builtin.package:
       name: '{{ __alternatives__packages }}'
       state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
     when:
       - '__alternatives__packages | length > 0'
 

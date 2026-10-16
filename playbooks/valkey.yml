@@ -1,6 +1,7 @@
 - name: 'Playbook linuxfabrik.lfops.valkey'
   hosts:
     - 'lfops_valkey'
+  force_handlers: true
 
   pre_tasks:
     - ansible.builtin.import_role:

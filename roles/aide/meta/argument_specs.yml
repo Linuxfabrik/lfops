@@ -1,0 +1,71 @@
+argument_specs:
+  main:
+    options:
+
+      aide__check_on_calendar:
+        type: 'str'
+        required: false
+        description: 'When aidecheck.timer runs the AIDE check, in systemd.time(7) format.'
+
+      aide__conf_raw:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Raw content inserted into /etc/aide.conf between the group definitions and the rules.'
+
+      aide__conf_report_level:
+        type: 'str'
+        required: false
+        default: 'added_removed_entries'
+        choices:
+          - 'added_removed_attributes'
+          - 'added_removed_entries'
+          - 'changed_attributes'
+          - 'database_attributes'
+          - 'list_entries'
+          - 'minimal'
+          - 'summary'
+        description: 'How much the AIDE report tells about each finding (report_level in aide.conf).'
+
+      aide__rules__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The rules in /etc/aide.conf. Dependent-role injection.'
+
+      aide__rules__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The rules in /etc/aide.conf. Group-level override.'
+
+      aide__rules__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The rules in /etc/aide.conf. Host-level override.'
+
+      aide__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether aidecheck.service is enabled, which runs the AIDE check after every boot.'
+
+      aide__timer_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether aidecheck.timer is enabled, which runs the AIDE check by aide__check_on_calendar.'
+
+      aide__timer_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'State of aidecheck.timer.'

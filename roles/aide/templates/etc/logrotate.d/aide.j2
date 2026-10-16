@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+# 2026092901
+# Based on the /etc/logrotate.d/aide shipped with aide on Rocky 8, 9 and 10, with `copy`
+# instead of `copytruncate`: aide overwrites its report on every check, and truncating the live
+# file would leave it empty until the next check, which is what an aborted check looks like.
+
+/var/log/aide/*.log {
+        weekly
+        missingok
+        rotate 4
+        compress
+        delaycompress
+        copy
+        minsize 100k
+}

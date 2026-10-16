@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import contextlib
 import copy
 import email.encoders
 import email.mime.application
@@ -17,6 +18,7 @@ import email.mime.multipart
 import email.mime.nonmultipart
 import email.parser
 import email.policy
+import fcntl
 import json
 import mimetypes
 import os
@@ -34,11 +36,18 @@ try:
     from ansible.utils.display import Display
 
     display = Display()
-except ImportError:
+except Exception:
     # When used from a module (not a lookup plugin), this code runs inside an AnsiballZ
-    # process on the remote host where ansible.utils.display is not available.
+    # process on the remote host where ansible.utils.display is not available, so the
+    # import raises ImportError. Under Mitogen the import itself succeeds, because
+    # Mitogen serves it from the controller, but loading ansible.constants then raises
+    # AnsibleError ("Missing base YAML definition file"), since the data files are not
+    # served along. Verified with Mitogen 0.3.53 and ansible-core 2.16 on Rocky Linux 9.
     class _NoopDisplay:
         def vvv(self, msg, **kwargs):
+            pass
+
+        def warning(self, msg, **kwargs):
             pass
 
     display = _NoopDisplay()
@@ -152,6 +161,23 @@ CACHE_DIR = os.environ.get('XDG_RUNTIME_DIR', '/tmp')  # nosec B108 - cache file
 CACHE_FILE = os.path.join(CACHE_DIR, 'lfops_bitwarden_cache.json')
 CACHE_VERSION = 2026032701
 
+# how long a process waits for another one to finish its sync, search and create. covers a
+# sync that needs all attempts of SYNC_RETRY_DELAYS, each of which can run into the timeout
+# of open_url.
+MUTEX_TIMEOUT = 600
+
+# `bw serve` briefly reports an empty vault right after a sync, see
+# https://github.com/bitwarden/clients/issues/23283
+# Verified against bw 2026.8.0 and 2026.9.0 on Rocky Linux 9: the list recovers
+# within a few seconds, so ask again a few times before giving up.
+EMPTY_LIST_RETRIES = 5
+EMPTY_LIST_RETRY_DELAY = 2
+
+# `bw serve` occasionally answers a sync with "HTTP Error 400: Bad Request" or does not
+# answer within the timeout at all, and succeeds again on the next attempt. Seconds to wait
+# before each further attempt; the error of the last one aborts the run.
+SYNC_RETRY_DELAYS = (10, 30, 60)
+
 
 class BitwardenException(Exception):
     pass
@@ -163,7 +189,65 @@ class Bitwarden:
     def __init__(self, hostname='127.0.0.1', port=8087):
         self._base_url = f'http://{hostname}:{port}'
         self._cache = None
+        self._mutex_fd = None
         self._load_cache()
+
+    def _acquire_mutex(self, timeout=MUTEX_TIMEOUT):
+        """Take the mutex, waiting at most `timeout` seconds. Use mutex() instead."""
+        if self._mutex_fd is not None:
+            return
+        mutex_file = f'{CACHE_FILE}.mutex'
+        try:
+            fd = os.open(mutex_file, os.O_RDWR | os.O_CREAT, 0o600)
+        except OSError as e:
+            raise BitwardenException(
+                f'Unable to open the mutex file {mutex_file}: {to_native(e)}'
+            ) from e
+        deadline = time.time() + timeout
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.time() >= deadline:
+                    os.close(fd)
+                    raise BitwardenException(
+                        f'Another process has held {mutex_file} for more than {timeout}s. '
+                        'Check for a hanging Ansible run using the Bitwarden lookup or module'
+                    ) from None
+                time.sleep(0.2)
+        self._mutex_fd = fd
+        display.vvv(f'lfbw - acquired mutex {mutex_file}')
+        self._load_cache()
+
+    def _release_mutex(self):
+        if self._mutex_fd is None:
+            return
+        fcntl.flock(self._mutex_fd, fcntl.LOCK_UN)
+        os.close(self._mutex_fd)
+        self._mutex_fd = None
+        display.vvv('lfbw - released mutex')
+
+    @contextlib.contextmanager
+    def mutex(self, timeout=MUTEX_TIMEOUT):
+        """Let only one process at a time sync, search and create.
+
+        Ansible evaluates a lookup in one worker process per host. Without the mutex,
+        workers that all miss an item create it once each, and each one overwrites the
+        cache file with its own view of the vault. The cache is re-read once the mutex
+        is held, so a process sees what the previous holder synced or created.
+
+        Hold it only for the duration of one lookup or module run. flock() belongs to
+        the open file, not to the process, so a second Bitwarden() in the same process,
+        for example the next evaluation of the same lookup, would otherwise wait for
+        the first one. This is also why the release must not be left to the end of the
+        process: Mitogen can run modules in an interpreter that stays alive.
+        """
+        self._acquire_mutex(timeout)
+        try:
+            yield self
+        finally:
+            self._release_mutex()
 
     def _api_call(self, url_path, method='GET', body=None, body_format='json'):
         url = f'{self._base_url}/{url_path}'
@@ -297,20 +381,74 @@ class Bitwarden:
             '`bw serve`'
         )
 
-    def sync(self, force=False, interval=60):
+    def sync(
+        self, force=False, interval=60, run_id=None, retry_delays=SYNC_RETRY_DELAYS
+    ):
         """Pull the latest vault data from server and repopulate the items cache.
-        Syncs only if the last sync was more than `interval` seconds ago, unless `force` is True.
+
+        With a `run_id` (the lookup passes one that identifies the Ansible run), syncs
+        once per run, since listing all items takes `bw serve` up to half a minute.
+        Without one, syncs only if the last sync was more than `interval` seconds ago.
+        `force` syncs in any case. A failed sync is tried again after each of the
+        `retry_delays` seconds. Returns whether it synced.
         """
-        if not force and time.time() - self._cache.get('sync_timestamp', 0) < interval:
-            display.vvv('lfbw - sync skipped, last sync was recent enough')
-            return
-        display.vvv(f'lfbw - syncing vault (force={force})')
-        self._api_call('sync', method='POST')
-        result = self._api_call('list/object/items')
-        self._cache['items'] = result['data']['data']
+        if not force and self._cache.get('items') is not None:
+            if run_id is not None and self._cache.get('sync_run_id') == run_id:
+                display.vvv('lfbw - sync skipped, already synced in this run')
+                return False
+            if (
+                run_id is None
+                and time.time() - self._cache.get('sync_timestamp', 0) < interval
+            ):
+                display.vvv('lfbw - sync skipped, last sync was recent enough')
+                return False
+        display.vvv(f'lfbw - syncing vault (force={force}, run_id={run_id})')
+        for delay in (*retry_delays, None):
+            try:
+                self._api_call('sync', method='POST')
+                items = self._list_items()
+                break
+            except (BitwardenException, TimeoutError) as e:
+                # TimeoutError: open_url raises it unwrapped when `bw serve` accepts the
+                # connection but does not answer within the timeout
+                if delay is None:
+                    raise
+                display.warning(
+                    f'lfbw - syncing the Bitwarden vault failed ({to_native(e)}), '
+                    f'trying again in {delay}s'
+                )
+                time.sleep(delay)
+        self._cache['items'] = items
+        self._cache['sync_run_id'] = run_id
         self._cache['sync_timestamp'] = time.time()
         display.vvv(f'lfbw - sync complete, cached {len(self._cache["items"])} items')
         self._save_cache()
+        return True
+
+    def _list_items(self, retries=EMPTY_LIST_RETRIES, delay=EMPTY_LIST_RETRY_DELAY):
+        """Return all items of the vault. An empty list is not trusted.
+
+        Right after a sync, `bw serve` answers `list/object/items` with `success: true`
+        and no items for a few seconds. Taken at face value, every item would look
+        missing and be created again, so ask again, and give up rather than accept an
+        empty vault.
+        """
+        for attempt in range(retries + 1):
+            items = self._api_call('list/object/items')['data']['data']
+            if items:
+                return items
+            if attempt < retries:
+                display.vvv(
+                    f'lfbw - bw serve returned an empty item list, retrying in {delay}s'
+                )
+                time.sleep(delay)
+        raise BitwardenException(
+            f'`bw serve` reported an empty vault {retries + 1} times in a row. It does '
+            'that for a few seconds after a sync '
+            '(https://github.com/bitwarden/clients/issues/23283), so the list is not '
+            'trusted, since every item would look missing and be created again. If the '
+            'vault really is empty, create any item in it first'
+        )
 
     def get_items(
         self,
@@ -368,9 +506,11 @@ class Bitwarden:
         for item in self._cache['items']:
             if item.get('type') != 1:
                 continue  # skip non-login items (cards, secure notes, identities)
+            # `bw` omits an unset username instead of returning null (verified against
+            # bw 2026.10.0 on Fedora 44), so a missing key counts as no username
             if (
                 item['name'] == name
-                and (item['login']['username'] == username)
+                and (item['login'].get('username') == username)
                 and (item.get('folderId') == folder_id)
                 and (
                     # cover case if collectionIds is an empty list
@@ -384,7 +524,9 @@ class Bitwarden:
         display.vvv(f'lfbw - found {len(matching_items)} matching item(s)')
         return matching_items
 
-    def get_item_by_id(self, item_id):
+    def get_item_by_id(
+        self, item_id, retries=EMPTY_LIST_RETRIES, delay=EMPTY_LIST_RETRY_DELAY
+    ):
         """Get an item by ID from Bitwarden. Looks in the cache first, then falls back to the
         API (the item may have been created externally). Returns the item; raises
         BitwardenException if the API does not know the ID.
@@ -396,8 +538,16 @@ class Bitwarden:
                 return item
         # fallback to API if not found in cache (item could have been created externally)
         display.vvv('lfbw - item not in cache, falling back to API')
-        result = self._api_call(f'object/item/{item_id}')
-        return result['data']
+        # in the same window after a sync in which `list/object/items` comes back empty,
+        # `bw serve` answers 400 for an existing item, see _list_items()
+        for attempt in range(retries + 1):
+            try:
+                return self._api_call(f'object/item/{item_id}')['data']
+            except BitwardenException:
+                if attempt == retries:
+                    raise
+                display.vvv(f'lfbw - item lookup failed, retrying in {delay}s')
+                time.sleep(delay)
 
     def generate(
         self,
@@ -468,7 +618,7 @@ class Bitwarden:
         login=None,
         notes=None,
         organization_id=None,
-        collection_ids=None,
+        collection_id=None,
         folder_id=None,
     ):
         """Get an item.login object from the vault.
@@ -477,7 +627,7 @@ class Bitwarden:
 
         {
           "organizationId": null,
-          "collectionIds": null,
+          "collectionIds": [],
           "folderId": null,
           "type": 1,
           "name": "Item name",
@@ -492,7 +642,8 @@ class Bitwarden:
         }
         """
         item = self._get_template('item')
-        item['collectionIds'] = collection_ids
+        # a list, as `bw` returns it, so the module's diff does not see a change
+        item['collectionIds'] = [collection_id] if collection_id else []
         item['folderId'] = folder_id
         item['login'] = login
         item['name'] = name
