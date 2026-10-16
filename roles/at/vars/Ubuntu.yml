@@ -1,0 +1,4 @@
+# at(1) is setuid and setgid daemon on Debian and Ubuntu and reads /etc/at.deny as group daemon,
+# so the root:daemon 0640 the package ships stays. The CIS Debian Linux 12 Benchmark v1.0.1
+# (2.4.2.1) accepts it. Verified with at on Debian 12 and 13 and Ubuntu 22.04, 24.04 and 26.04.
+__at__paths: []
