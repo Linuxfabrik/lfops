@@ -80,11 +80,13 @@
   - name: 'gitlab-ctl reconfigure'
     ansible.builtin.command: |-
       gitlab-ctl reconfigure
+    changed_when: true
     when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure and restart run in this order right after gitlab.rb changed)
 
   - name: 'gitlab-ctl restart'
     ansible.builtin.command: |-
       gitlab-ctl restart
+    changed_when: true
     when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure and restart run in this order right after gitlab.rb changed)
 
   tags:

@@ -46,6 +46,7 @@
     ansible.builtin.command: './configure'
     args:
       chdir: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'
+    changed_when: false # only writes build files
 
   - name: 'Create Apache `LoadModule` directive in {{ mod_maxminddb__apache_conf_modules_d }}'
     ansible.builtin.copy:

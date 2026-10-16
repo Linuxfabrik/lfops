@@ -197,8 +197,9 @@
     changed_when: '"already configured" not in __example__setup_result["stdout"]'
     failed_when: '__example__setup_result["rc"] != 0 and "already configured" not in __example__setup_result["stdout"]'
 
-  - name: 'example --generate-cache' # noqa: no-changed-when - no easy way to detect changes
+  - name: 'example --generate-cache'
     ansible.builtin.command: 'example --generate-cache'
+    changed_when: true # always runs, there is no easy way to tell whether it changed anything
 
   tags:
     - 'example'

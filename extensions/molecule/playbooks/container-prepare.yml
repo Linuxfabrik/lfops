@@ -9,6 +9,7 @@
         elif command -v apt-get > /dev/null 2>&1; then
           apt-get update && apt-get install -y python3
         fi
+      changed_when: false # only prepares the container image
 
     - name: 'Gather facts after Python is available'
       ansible.builtin.setup:  # yamllint disable-line rule:empty-values

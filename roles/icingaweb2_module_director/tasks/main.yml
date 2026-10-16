@@ -144,6 +144,7 @@
 
     - name: 'icingacli director kickstart run'
       ansible.builtin.command: 'icingacli director kickstart run'
+      changed_when: true
       when:
         - 'icingaweb2_module_director__kickstart_required_result.rc == 0 or icingaweb2_module_director__force_kickstart'
 
@@ -151,6 +152,7 @@
 
       - name: 'icingacli director kickstart run # re-run due to error'
         ansible.builtin.command: 'icingacli director kickstart run'
+        changed_when: true
 
   - name: 'systemctl {{ icingaweb2_module_director__service_enabled | bool | ternary("enable", "disable") }} --now icinga-director.service'
     ansible.builtin.systemd:

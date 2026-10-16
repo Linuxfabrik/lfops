@@ -90,6 +90,7 @@
       qemu-img resize
       {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
       {{ kvm_vm__boot_disk_size }}
+    changed_when: true
     when:
       - 'kvm_vm__boot_disk_create_result is changed' # noqa no-handler (only resize the disk created in this run)
 
@@ -172,6 +173,7 @@
       virt-customize
       --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
       --install {{ kvm_vm__packages | join(',') }}
+    changed_when: true
     when:
       - 'kvm_vm__packages is defined and kvm_vm__packages | length > 0'
       - '__kvm_vm__boot_disk_created'
@@ -192,6 +194,7 @@
       --root-password password:{{ kvm_vm__root_password | quote }}
       {% endif %}
       --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+    changed_when: true
     when:
       - '__kvm_vm__boot_disk_created'
       - 'not kvm_vm__skip_sysprep'
@@ -304,6 +307,7 @@
       --sound none
       --virt-type kvm
     register: 'kvm_vm__virt_install_result'
+    changed_when: true
     when: 'kvm_vm__name not in kvm_vm__virt_info_result["list_vms"]'
 
   # the installer path only has a populated disk once virt-install returned, so
@@ -322,6 +326,7 @@
       --root-password password:{{ kvm_vm__root_password | quote }}
       {% endif %}
       --add {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
+    changed_when: true
     when:
       - 'kvm_vm__virt_install_result is changed'
       - 'not kvm_vm__skip_sysprep'
@@ -372,6 +377,7 @@
         qemu-img resize
         {{ __kvm_vm__boot_disk_path | quote }}
         {{ kvm_vm__boot_disk_size }}
+    changed_when: true
     when:
       - 'kvm_vm__state != "running"'
       - '(kvm_vm__boot_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__boot_disk_size | ansible.builtin.human_to_bytes'
@@ -385,6 +391,7 @@
         virsh --connect {{ kvm_vm__connect_url }} blockresize {{ kvm_vm__name }}
         {{ __kvm_vm__boot_disk_path | quote }}
         {{ kvm_vm__boot_disk_size }}
+    changed_when: true
     when:
       - 'kvm_vm__state == "running"'
       - '(kvm_vm__boot_disk_info_result["stdout"] | from_json)["virtual-size"] < kvm_vm__boot_disk_size | ansible.builtin.human_to_bytes'

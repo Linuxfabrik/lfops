@@ -184,6 +184,7 @@
     ansible.builtin.command: "grafana cli admin reset-admin-password '{{ grafana__admin_login[\"password\"] }}'"
     args:
       chdir: '/usr/share/grafana' # fixes: Grafana-server Init Failed: Could not find config defaults, make sure homepath command line parameter is set or working directory is homepath
+    changed_when: true # always sets the password
 
   tags:
     - 'grafana'

@@ -46,6 +46,7 @@
     ansible.builtin.command: './configure'
     args:
       chdir: '{{ ansible_env["HOME"] }}/libmaxminddb-{{ libmaxminddb__version }}'
+    changed_when: false # only writes build files
 
   - name: 'make'
     community.general.make:
@@ -69,6 +70,7 @@
 
   - name: 'ldconfig'
     ansible.builtin.command: 'ldconfig'
+    changed_when: false # only refreshes the linker cache
 
   tags:
     - 'libmaxminddb'

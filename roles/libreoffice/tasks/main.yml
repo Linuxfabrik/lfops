@@ -110,6 +110,7 @@
     loop:
       - 'selinux-sofficebin'
       - 'selinux-java'
+    changed_when: false # only builds a file in /tmp
 
   - name: 'SELinux custom policy: semodule_package --outfile policy.pp --module policy.mod'
     ansible.builtin.command: |-
@@ -119,6 +120,7 @@
     loop:
       - 'selinux-sofficebin'
       - 'selinux-java'
+    changed_when: false # only builds a file in /tmp
 
   - name: 'SELinux custom policy: semodule --install policy.pp'
     ansible.builtin.command: |-
@@ -128,6 +130,7 @@
     loop:
       - 'selinux-sofficebin'
       - 'selinux-java'
+    changed_when: true
 
   when:
     - 'libreoffice__client_apache is defined'
