@@ -4,6 +4,7 @@
     ansible.builtin.get_url:
       url: 'https://packages.grafana.com/gpg.key'
       dest: '/tmp/ansible.grafana.key'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -17,6 +18,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.grafana.key'
       dest: '/etc/pki/rpm-gpg/grafana.key'
+      mode: 0o644
 
   # https://grafana.com/docs/grafana/latest/setup-grafana/installation/redhat-rhel-fedora/
   - name: 'deploy the Grafana repo (mirror: {{ repo_grafana__mirror_url }})'

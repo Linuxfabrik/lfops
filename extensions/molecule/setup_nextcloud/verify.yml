@@ -13,6 +13,7 @@
       ansible.builtin.command: 'php /var/www/html/nextcloud/occ status --output=json'
       args:
         chdir: '/var/www/html/nextcloud/'
+      become: true
       become_user: 'apache'
       register: '__molecule__nextcloud_status_result'
       changed_when: false
@@ -83,7 +84,7 @@
   become: true
   tasks:
 
-    - name: 'systemctl show mariadb-dump.service'
+    - name: 'systemctl show mariadb-dump.service' # noqa command-instead-of-module (the test asserts on the properties as systemd reports them)
       ansible.builtin.command: >-
         systemctl show mariadb-dump.service
         --property=CPUWeight,IOSchedulingClass,IOSchedulingPriority,IOWeight,Nice
@@ -101,6 +102,6 @@
         fail_msg: 'mariadb-dump.service has unexpected priorities: {{ __molecule__mariadb_dump_show_result["stdout_lines"] }}'
 
     # the dump itself has to work with the mydumper of each platform, not just carry the settings
-    - name: 'systemctl start mariadb-dump.service'
+    - name: 'systemctl start mariadb-dump.service' # noqa command-instead-of-module (starts the oneshot dump and waits for it to finish)
       ansible.builtin.command: 'systemctl start mariadb-dump.service'
       changed_when: false

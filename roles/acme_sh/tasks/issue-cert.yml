@@ -25,3 +25,4 @@
     --webroot /var/www/html/letsencrypt \
     --keylength '{{ acme_sh__key_length }}' \
     --server https://acme-v02.api.letsencrypt.org/directory
+  changed_when: true

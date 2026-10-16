@@ -26,7 +26,7 @@
 
   # prevent "AlgorithmClassUnknownError: Unknown policy property: `etm`"
   - name: 'dnf -y update crypto-policies-scripts'
-    ansible.builtin.package:
+    ansible.builtin.package: # noqa package-latest (the policy modules need current scripts)
       name: 'crypto-policies-scripts'
       state: 'latest'
     retries: 3 # ride out a brief outage of the package repository
@@ -55,7 +55,7 @@
       shared__reboot_reason: 'crypto_policy'
       shared__reboot_detail: 'system-wide crypto policy changed'
     when:
-      - '__crypto_policy__set_result is changed'
+      - '__crypto_policy__set_result is changed' # noqa no-handler (the reboot is requested in the run that changed the policy)
 
   tags:
     - 'crypto_policy'

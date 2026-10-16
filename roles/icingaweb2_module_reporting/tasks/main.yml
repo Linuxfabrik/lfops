@@ -28,6 +28,7 @@
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-module-reporting/archive/{{ icingaweb2_module_reporting__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -40,6 +41,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
+      mode: 0o644
 
   - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/reporting /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
     ansible.builtin.unarchive:
@@ -97,6 +99,7 @@
       src: '/usr/share/icingaweb2/modules/reporting/config/systemd/icinga-reporting.service'
       dest: '/etc/systemd/system/'
       remote_src: true
+      mode: 0o644
     notify: 'icingaweb2_module_reporting: systemctl daemon-reload'
 
   - name: 'systemctl {{ icingaweb2_module_reporting__service_enabled | bool | ternary("enable", "disable") }} --now icinga-reporting.service'

@@ -237,6 +237,7 @@
       ;"
     args:
       executable: '/bin/bash'
+    changed_when: true # sets a new password hash on every run
     when:
       - 'item["state"] | d("present") == "updated"'
     loop: "{{ icingaweb2__users__combined_var }}"

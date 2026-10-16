@@ -43,6 +43,7 @@
     ansible.builtin.get_url:
       url: '{{ icingaweb2_module_director__url }}'
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -55,6 +56,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      mode: 0o644
 
   - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/director /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
     ansible.builtin.unarchive:
@@ -97,13 +99,14 @@
       src: '/usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service'
       dest: '/etc/systemd/system/icinga-director.service'
       remote_src: true
+      mode: 0o644
     register: 'icingaweb2_module_director__systemd_service_template_result'
 
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:
       daemon_reload: true
     when:
-      - 'icingaweb2_module_director__systemd_service_template_result is changed'
+      - 'icingaweb2_module_director__systemd_service_template_result is changed' # noqa no-handler (the unit file is reloaded right after it changed, not at the end of the play)
 
   tags:
     - 'icingaweb2_module_director'
@@ -141,6 +144,7 @@
 
     - name: 'icingacli director kickstart run'
       ansible.builtin.command: 'icingacli director kickstart run'
+      changed_when: true
       when:
         - 'icingaweb2_module_director__kickstart_required_result.rc == 0 or icingaweb2_module_director__force_kickstart'
 
@@ -148,6 +152,7 @@
 
       - name: 'icingacli director kickstart run # re-run due to error'
         ansible.builtin.command: 'icingacli director kickstart run'
+        changed_when: true
 
   - name: 'systemctl {{ icingaweb2_module_director__service_enabled | bool | ternary("enable", "disable") }} --now icinga-director.service'
     ansible.builtin.systemd:

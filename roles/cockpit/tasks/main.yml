@@ -7,7 +7,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'install {{ cockpit__additional_packages | join (" ") }}'
+  - name: 'install {{ cockpit__additional_packages | join(" ") }}'
     ansible.builtin.package:
       name: '{{ cockpit__additional_packages }}'
       state: 'present'

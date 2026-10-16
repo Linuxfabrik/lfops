@@ -58,7 +58,7 @@
     ansible.builtin.systemd:
       name: 'nfs-server.service'
       state: 'reloaded'
-    when: 'nfs_server__etc_exports_result is changed'
+    when: 'nfs_server__etc_exports_result is changed' # noqa no-handler (reload right after /etc/exports changed)
 
   tags:
     - 'nfs_server'

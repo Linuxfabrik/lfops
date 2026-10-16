@@ -19,5 +19,5 @@
     sudo -u {{ __shared__apache_httpd_user }} php occ user:setting {{ ncuser["username"] }} {{ item }}
   args:
     chdir: '/var/www/html/nextcloud/'
-  # changed_when: there is no easy way to check for changes
+  changed_when: true # there is no easy way to check for changes
   loop: '{{ ncuser["settings"] | d([]) }}'

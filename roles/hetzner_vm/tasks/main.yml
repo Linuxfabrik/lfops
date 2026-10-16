@@ -1,7 +1,7 @@
 - block:
 
   - name: 'Manage the networks for the VM'
-    hetzner.hcloud.hcloud_network:
+    hetzner.hcloud.network:
       api_token: '{{ hetzner_vm__api_token }}'
       name: '{{ item["name"] }}'
       ip_range: '{{ item["cidr"] }}'
@@ -16,7 +16,7 @@
       - 'item["cidr"] is defined'
 
   - name: 'Manage the subnet for the VM'
-    hetzner.hcloud.hcloud_subnetwork:
+    hetzner.hcloud.subnetwork:
       api_token: '{{ hetzner_vm__api_token }}'
       network: '{{ item["name"] }}'
       ip_range: '{{ item["cidr"] }}'
@@ -33,7 +33,7 @@
       - 'item["cidr"] is defined'
 
   - name: 'Manage the routes for the network'
-    hetzner.hcloud.hcloud_route:
+    hetzner.hcloud.route:
       api_token: '{{ hetzner_vm__api_token }}'
       network: '{{ item[0]["name"] }}'
       destination: '{{ item[1]["destination"] }}'
@@ -48,7 +48,7 @@
       - 'hetzner_vm__state != "absent"'
 
   - name: 'Manage the firewall for the VM'
-    hetzner.hcloud.hcloud_firewall:
+    hetzner.hcloud.firewall:
       api_token: '{{ hetzner_vm__api_token }}'
       name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
       rules: '{{ hetzner_vm__firewall_rules }}'
@@ -63,7 +63,7 @@
     tags: 'hetzner_vm:firewalls'
 
   - name: 'Manage the VMs at Hetzner'
-    hetzner.hcloud.hcloud_server:
+    hetzner.hcloud.server:
       api_token: '{{ hetzner_vm__api_token }}'
       backups: '{{ hetzner_vm__backups }}'
       image: '{{ hetzner_vm__image }}'
@@ -83,7 +83,7 @@
       ansible_become: false # noqa var-naming[pattern]
 
   - name: 'Manage the firewall of the VM'
-    hetzner.hcloud.hcloud_firewall:
+    hetzner.hcloud.firewall:
       api_token: '{{ hetzner_vm__api_token }}'
       name: '{{ hetzner_vm__name }}' # name of the firewall. we use the name of the vm for this
       state: 'absent'
@@ -97,7 +97,7 @@
     tags: 'hetzner_vm:firewalls'
 
   - name: 'Attach the networks to the VM'
-    hetzner.hcloud.hcloud_server_network:
+    hetzner.hcloud.server_network:
       api_token: '{{ hetzner_vm__api_token }}'
       server: '{{ hetzner_vm__name }}'
       network: '{{ item["name"] }}'
@@ -113,7 +113,7 @@
       - 'item["fixed_ip"] is defined'
 
   - name: 'Manage the Volumes at Hetzner'
-    hetzner.hcloud.hcloud_volume:
+    hetzner.hcloud.volume:
       api_token: '{{ hetzner_vm__api_token }}'
       automount: false
       name: '{{ item["name"] }}'

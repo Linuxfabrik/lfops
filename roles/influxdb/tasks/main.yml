@@ -77,7 +77,7 @@
   - name: 'wait 5 seconds for influxdb to start'
     ansible.builtin.pause:
       seconds: 5
-    when: '__influxdb__service_state_result["changed"] | d(false) | bool'
+    when: '__influxdb__service_state_result["changed"] | d(false) | bool' # noqa no-handler (the wait has to happen before the API calls that follow)
 
   - block:
 

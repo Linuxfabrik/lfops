@@ -218,6 +218,7 @@
       {% if __icinga2_agent__pki_ticket | length > 0 %}
       --ticket '{{ __icinga2_agent__pki_ticket }}'
       {% endif %}
+    changed_when: true
     when:
       - '__icinga2_agent__node_setup_needed | bool'
 

@@ -78,7 +78,7 @@
       --use-account '{{ exoscale_vm__account }}'
       --output-format json
       --instance-type '{{ exoscale_vm__service_offering }}'
-      {% for item in  (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) %}
+      {% for item in (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) %}
       --security-group '{{ item }}'
       {% endfor %}
       --ssh-key '{{ exoscale_vm__ssh_key }}'
@@ -94,6 +94,7 @@
     become: false
     vars:
       ansible_become: false # noqa var-naming[pattern]
+    changed_when: true
     when:
       - 'exoscale_vm__state != "absent"'
       - 'exoscale_vm__name not in  exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
@@ -110,6 +111,7 @@
     become: false
     vars:
       ansible_become: false # noqa var-naming[pattern]
+    changed_when: true
     when:
       - 'exoscale_vm__state == "absent"'
       - 'exoscale_vm__name in exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'

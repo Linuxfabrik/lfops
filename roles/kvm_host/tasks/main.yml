@@ -8,7 +8,7 @@
 
 - block:
 
-  - name: 'install {{ __kvm_host__packages | join (" ") }}'
+  - name: 'install {{ __kvm_host__packages | join(" ") }}'
     ansible.builtin.package:
       name: '{{ __kvm_host__packages }}'
       state: 'present'

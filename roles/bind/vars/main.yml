@@ -3,10 +3,8 @@
 # as .internal that the signed root proves not to exist) fails with SERVFAIL. Exclude these zones
 # from DNSSEC validation, together with the zones listed by the user.
 __bind__dnssec_validate_except: '{{
-    (
-      __bind__forwarded_zones
-      + bind__dnssec_validate_except
-    )
+    (__bind__forwarded_zones
+      + bind__dnssec_validate_except)
     | unique
   }}'
 
@@ -119,10 +117,8 @@ __bind__empty_zones:
 # forward, static-stub or stub zone in bind__zones below it instead of passing the query on. Such
 # parents keep being forwarded, as do zones that bind__zones defines itself.
 __bind__empty_zones_without_forwarding: '{{
-    (
-      __bind__empty_zones
-      + (["resolver.arpa"] if ansible_facts["distribution_major_version"] | int >= 10 else [])
-    )
+    (__bind__empty_zones
+      + (["resolver.arpa"] if ansible_facts["distribution_major_version"] | int >= 10 else []))
     | reject("in", bind__zones | map(attribute="name") | map("lower") | list)
     | reject("in", __bind__forwarded_zones_and_parents)
     | list

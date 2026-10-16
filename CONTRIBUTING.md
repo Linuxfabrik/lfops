@@ -172,7 +172,7 @@ A new role delivers:
 * `roles/<role-name>/README.md`, following `roles/example/README.md` and "README" below.
 * `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
 * Updates to `playbooks/README.md`, `playbooks/all.yml`, `COMPATIBILITY.md` and `CHANGELOG.md`.
-* An update to `.ansible-lint-ignore` if the role defines a `__combined_var`.
+* An entry for `roles/<role-name>/defaults/main.yml` in `.ansible-lint-ignore` (`jinja[spacing]`), as the `__combined_var` expressions in the defaults span several lines.
 
 
 ### OS Coverage
@@ -281,7 +281,7 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
     * `run_once` stays only for a single read-only lookup shared to all hosts, e.g. a GitHub release API query stored with `set_fact`.
 * Download on the controller (`delegate_to: 'localhost'`) and copy to the target: release artifacts, Git checkouts, language packages. Only the controller needs outbound access; say who needs what in "How the Role Behaves". See `roles/example` and "Python dependencies for air-gapped targets".
 * Retry every download with `retries: 3` and `delay: 10`: `get_url`, `git`, `rpm_key` with a URL, `uri` lookups such as the GitHub release API, and every `package`, `apt`, `dnf` and `pip` task that installs or updates (not `state: 'absent'`). Since ansible-core 2.16 `retries` without `until` repeats until success. Never retry calls that change something, such as an API `POST`.
-* Always give `command` and `shell` tasks `changed_when`, `creates` or `removes`; `changed_when: false` when read-only.
+* Always give `command` and `shell` tasks `changed_when`, `creates` or `removes`; `changed_when: false` when read-only, and `changed_when: true # <reason>` when a command always runs and its effect cannot be detected.
 * Prefer `chown -R --changes` over `ansible.builtin.file` with `recurse: true` (slow on large trees), with `changed_when: '<result>["stdout"] | length > 0'`.
 * With `ansible.builtin.template`, always set `backup`, `src`, `dest`, `owner`, `group` and `mode`.
 * Prefer `ansible.builtin.assert` over `ansible.builtin.fail` with `when`, for consistency.

@@ -87,7 +87,8 @@
 
     - name: 'postmap {{ __postfix__map_type }}:/etc/postfix/sasl_passwd'
       ansible.builtin.command: 'postmap {{ __postfix__map_type }}:/etc/postfix/sasl_passwd'
-      when: 'postfix__deploy_sasl_password_result is changed'
+      changed_when: true
+      when: 'postfix__deploy_sasl_password_result is changed' # noqa no-handler (postmap has to run right after the file changed, the follow-up chmod needs the result)
       notify: 'postfix: reload postfix'
 
     - name: 'chmod 0600 /etc/postfix/sasl_passwd.{{ (__postfix__map_type == "lmdb") | ternary("lmdb", "db") }}'

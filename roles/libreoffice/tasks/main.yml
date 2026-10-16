@@ -23,6 +23,7 @@
     ansible.builtin.file:
       path: '/usr/share/httpd/.config/libreoffice'
       state: 'directory'
+      mode: 0o755
 
   - name: 'chown -R apache:apache /usr/share/httpd/.config'
     ansible.builtin.file:
@@ -53,6 +54,7 @@
       /usr/bin/soffice --headless --convert-to pdf myfile
     args:
       creates: '/usr/share/httpd/.config/libreoffice/4'
+    become: true
     become_user: 'apache'
 
   - name: 'restorecon -Fvr ...'
@@ -82,6 +84,7 @@
 
         #!!!! WARNING: 'usr_t' is a base type.
         allow httpd_t usr_t:file write;
+      mode: 0o644
 
   - name: 'SELinux custom policy: Allow jre/bin/java (via httpd) read access on sys/fs/cgroup'
     ansible.builtin.copy:
@@ -97,6 +100,7 @@
 
         #============= httpd_t ==============
         allow httpd_t cgroup_t:file read;
+      mode: 0o644
 
   - name: 'SELinux custom policy: checkmodule --mls -m --output policy.mod policy.te'
     ansible.builtin.command: |-
@@ -106,6 +110,7 @@
     loop:
       - 'selinux-sofficebin'
       - 'selinux-java'
+    changed_when: false # only builds a file in /tmp
 
   - name: 'SELinux custom policy: semodule_package --outfile policy.pp --module policy.mod'
     ansible.builtin.command: |-
@@ -115,6 +120,7 @@
     loop:
       - 'selinux-sofficebin'
       - 'selinux-java'
+    changed_when: false # only builds a file in /tmp
 
   - name: 'SELinux custom policy: semodule --install policy.pp'
     ansible.builtin.command: |-
@@ -124,6 +130,7 @@
     loop:
       - 'selinux-sofficebin'
       - 'selinux-java'
+    changed_when: true
 
   when:
     - 'libreoffice__client_apache is defined'

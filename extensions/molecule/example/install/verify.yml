@@ -53,3 +53,17 @@
       ansible.builtin.uri:
         url: 'http://127.0.0.1:8080/api/user/example-admin'
         status_code: 200
+
+    # A runtime directory that systemd-tmpfiles creates is not covered by package or service
+    # facts either. Check owner and mode, as that is what the service depends on.
+    - name: 'stat /run/example'
+      ansible.builtin.stat:
+        path: '/run/example'
+      register: '__molecule__example_run_dir_result'
+
+    - name: 'Assert that /run/example is owned by example with mode 0755'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__example_run_dir_result["stat"]["isdir"]'
+          - '__molecule__example_run_dir_result["stat"]["pw_name"] == "example"'
+          - '__molecule__example_run_dir_result["stat"]["mode"] == "0755"'
