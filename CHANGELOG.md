@@ -139,6 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:kernel_settings**: A run no longer fails on hosts whose kernel settings still contain a `sunrpc.*` value from an earlier run while the `sunrpc` module is not loaded.
 * **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
 * **plugin:bitwarden_item, module:bitwarden_item**: Items without a username work with Bitwarden CLI 2026.10.0, where the lookup and the module aborted with `KeyError: 'username'`.
 * **role:kernel_settings**: The role no longer prints the `Conditional result ... was of type 'int'` deprecation warning.
