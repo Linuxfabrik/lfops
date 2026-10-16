@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.
+**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server. Hosts set up with `setup_basic` follow more of the CIS Benchmarks out of the box: root can no longer log in over SSH, USB storage is blocked, a sysctl hardening baseline is applied, and the cron configuration is readable by root only. Before updating, make sure Ansible logs in with an unprivileged user, and allow USB storage on hosts that need it.
 
 ### Breaking Changes
 
