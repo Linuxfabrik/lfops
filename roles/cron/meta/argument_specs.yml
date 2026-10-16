@@ -1,0 +1,21 @@
+argument_specs:
+  main:
+    options:
+
+      cron__service_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the cron daemon is enabled at boot.'
+
+      cron__service_state:
+        type: 'str'
+        required: false
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: >-
+          State of the cron daemon. Defaults to started or stopped
+          depending on cron__service_enabled.
