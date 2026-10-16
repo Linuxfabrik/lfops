@@ -142,6 +142,7 @@ nextcloud__users:
 * List of dictionaries containing key-value pairs for configuring apps in Nextcloud.
 * Type: List of dictionaries.
 * Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
+* Deviates from the upstream default `'no'` for `support hide-app`: the Support section is hidden from the administration settings. Set it to `'no'` to enter an Enterprise subscription key there. The `support` app only accepts the string `'yes'`, not a boolean.
 * Subkeys:
 
     * `key`:
