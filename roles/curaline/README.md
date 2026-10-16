@@ -252,6 +252,7 @@ curaline__version: '6.2.1'
 * Folder for temporary downloads.
 * Type: String.
 * Default: `'/data/cdr-inflight'`
+* Deviates from the upstream default `${java.io.tmpdir}`: the unit runs the client with `PrivateTmp=yes`, so its `/tmp` is private to the service and is emptied on every stop and restart, which would lose the documents that are being downloaded.
 
 `curaline__renew_credential`
 

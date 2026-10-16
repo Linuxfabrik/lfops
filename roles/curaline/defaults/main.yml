@@ -28,7 +28,7 @@ curaline__idp_endpoint: 'https://login.microsoftonline.com/{{ curaline__tenant_i
 # a time in the past makes the client renew its credential immediately on start, if
 # curaline__renew_credential is enabled
 curaline__last_credential_renewal_time: '1970-01-01T00:00:00Z'
-curaline__local_folder: '/data/cdr-inflight'
+curaline__local_folder: '/data/cdr-inflight'  # upstream default: ${java.io.tmpdir}
 curaline__renew_credential: false  # upstream default: true
 curaline__schedule_delay: 'PT10M'
 curaline__scope: 'https://identity.health.swisscom.ch/CdrApi/.default'
