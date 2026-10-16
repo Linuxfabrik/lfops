@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2022111701
+# 2026091301
 
 # make sure the backup is not readable by others
 old_umask=$(umask)
@@ -14,10 +14,30 @@ umask 027
 
 source /etc/postgresql-dump.conf
 
+# the client tools of the running server: pg_dump refuses to dump a server that is newer than
+# itself, and /usr/bin may hold the tools of another installed PostgreSQL version
+BIN_DIR='{{ __postgresql_server__bin_dir }}'
+
 rm -rf "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
 
-DBS=$(sudo --user "$USERNAME" --login psql --tuples-only --command='SELECT datname FROM pg_database;')
+final_rc=0
+
+# roles and tablespaces belong to the cluster, not to a database, so pg_dump never includes them.
+# restore this file first, otherwise every `ALTER ... OWNER TO` of a database dump fails.
+sudo --user "$USERNAME" --login "$BIN_DIR/pg_dumpall" --globals-only > "$BACKUP_DIR/globals.sql"
+rc=$?
+if [ $rc -ne 0 ]; then
+    echo "Failed to dump the roles and tablespaces (Return Code $rc)."
+    final_rc=$rc
+else
+    echo 'Roles and tablespaces dumped.'
+fi
+gzip -9fn "$BACKUP_DIR/globals.sql"
+
+# the same selection as pg_dumpall: every database that accepts connections and is not left
+# invalid by an interrupted DROP DATABASE (datconnlimit -2). template0 does not accept connections.
+DBS=$(sudo --user "$USERNAME" --login "$BIN_DIR/psql" --no-align --tuples-only --command='SELECT datname FROM pg_database WHERE datallowconn AND datconnlimit != -2 ORDER BY datname;')
 if [ $? -ne 0 ]; then
     echo "Cannot connect to PostgreSQL with user '$USERNAME'."
     exit 1
@@ -28,27 +48,18 @@ if [ "$DBS" == '' ]; then
     exit 0
 fi
 
-final_rc=0
-for DB in $DBS; do
-    case $DB in
-    template* )
-        # do nothing
-        ;;
-    postgres )
-        # do nothing
-        ;;
-    *)
-        sudo --user "$USERNAME" --login pg_dump --clean "$DB" > "$BACKUP_DIR/dump-$DB.sql"
-        rc=$?
-        if [ $rc -ne 0 ]; then
-            echo "Failed to dump $DB (Return Code $rc)."
-            final_rc=$rc
-        else
-            echo "Database $DB dumped."
-        fi
-        gzip -9fn "$BACKUP_DIR/dump-$DB.sql"
-    esac
-done
+# one database name per line, so names containing spaces stay intact
+while IFS= read -r DB; do
+    sudo --user "$USERNAME" --login "$BIN_DIR/pg_dump" --clean "$DB" > "$BACKUP_DIR/dump-$DB.sql"
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "Failed to dump $DB (Return Code $rc)."
+        final_rc=$rc
+    else
+        echo "Database $DB dumped."
+    fi
+    gzip -9fn "$BACKUP_DIR/dump-$DB.sql"
+done <<< "$DBS"
 
 umask "$old_umask"
 
