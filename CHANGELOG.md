@@ -100,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:mariadb_server**: The role no longer sets `sunrpc.tcp_slot_table_entries`, which only concerns NFS clients, and removes it from the kernel settings of hosts that got it from an earlier version.
 * **role:kernel_modules**: Every blocked module is also blacklisted, so the CIS audit, which checks for both lines, accepts the configuration.
+* **role:at**: On the Red Hat family, `/etc/at.deny` is readable by root only, as the CIS Benchmarks require.
 * **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.
 * **role:postgresql_server**: The configuration is checked before PostgreSQL is restarted, so a broken setting in `postgresql.conf` or `pg_hba.conf` aborts the run with the error message instead of leaving PostgreSQL down after the restart.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
