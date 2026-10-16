@@ -144,6 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:kernel_settings**: A run no longer fails on hosts whose kernel settings still contain a `sunrpc.*` value from an earlier run while the `sunrpc` module is not loaded.
 * **role:postgresql_server**: `postgresql-dump` also saves the roles and tablespaces (`globals.sql.gz`), without which a restored database fails on every object owner, no longer skips the `postgres` database and databases whose name starts with `template`, and uses the client tools of the installed PostgreSQL version.
 * **role:postgresql_server**: Clients connecting to `localhost` are accepted over IPv6 as well, where they were rejected with `no pg_hba.conf entry for host "::1"`.
 * **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
