@@ -12,7 +12,7 @@
     when:
       - '(network_connections | d([]) | length > 0) or (network_state | d({}) | length > 0)'
 
-  - name: 'Remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager'
+  - name: 'Remove hc-utils # hetzner cloud utilities - they cause problems with NetworkManager' # noqa ignore-errors (may fail, for example due to unconfigured repos)
     ansible.builtin.package:
       name:
         - 'hc-utils'

@@ -17,6 +17,7 @@
       repo: 'https://github.com/Linuxfabrik/mirror.git'
       dest: '/opt/mirror'
       force: false
+      version: 'main'
     retries: 3 # ride out a brief outage of the download source
     delay: 10
 

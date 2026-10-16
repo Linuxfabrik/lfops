@@ -103,7 +103,7 @@
     ansible.builtin.systemd:
       daemon_reload: true
     when:
-      - 'icingaweb2_module_director__systemd_service_template_result is changed'
+      - 'icingaweb2_module_director__systemd_service_template_result is changed' # noqa no-handler (the unit file is reloaded right after it changed, not at the end of the play)
 
   tags:
     - 'icingaweb2_module_director'

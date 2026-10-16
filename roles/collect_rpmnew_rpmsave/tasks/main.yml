@@ -12,7 +12,7 @@
       recurse: true
     register: 'found_files'
 
-  - name: 'Get package name and version for each file'
+  - name: 'Get package name and version for each file' # noqa command-instead-of-module (no module maps a file to its owning package)
     ansible.builtin.command: "rpm -qf {{ item.path | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
     register: 'package_info'
     loop: '{{ found_files.files }}'

@@ -1,9 +1,13 @@
 # Offline mode disables installation of requirements.yml and schema refreshing
 offline: true
 
-# The example playbook references the fictional repo_example role on purpose, so it
-# can never pass the unskippable syntax-check.
+# - The example playbook references the fictional repo_example role on purpose, so it
+#   can never pass the unskippable syntax-check.
+# - galaxy.yml carries the non-semver version 'main' on purpose. The build workflow
+#   (.github/workflows/lf-build.yml) replaces it with the release tag. A noqa does not work
+#   for schema findings.
 exclude_paths:
+  - 'galaxy.yml'
   - 'playbooks/example.yml'
 
 skip_list:

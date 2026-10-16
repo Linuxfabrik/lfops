@@ -33,7 +33,7 @@
       ansible.builtin.command: 'systemd-analyze verify /etc/systemd/system/matomo-import-logs-{{ __molecule__site }}.service'
       changed_when: false
 
-    - name: 'systemctl is-enabled the timer'
+    - name: 'systemctl is-enabled the timer' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-enabled matomo-import-logs-{{ __molecule__site }}.timer'
       register: '__molecule__timer_enabled'
       changed_when: false
@@ -42,7 +42,7 @@
       ansible.builtin.assert:
         that: '__molecule__timer_enabled["stdout"] == "enabled"'
 
-    - name: 'systemctl is-active the timer'
+    - name: 'systemctl is-active the timer' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-active matomo-import-logs-{{ __molecule__site }}.timer'
       register: '__molecule__timer_active'
       changed_when: false

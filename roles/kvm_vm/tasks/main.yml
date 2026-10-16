@@ -91,7 +91,7 @@
       {{ (kvm_vm__pool_info_result["pools"][kvm_vm__pool]["path"] ~ '/' ~ kvm_vm__name ~ '-boot.qcow2') | quote }}
       {{ kvm_vm__boot_disk_size }}
     when:
-      - 'kvm_vm__boot_disk_create_result is changed'
+      - 'kvm_vm__boot_disk_create_result is changed' # noqa no-handler (only resize the disk created in this run)
 
   - name: >
       additional disks:

@@ -55,7 +55,7 @@
 
   when:
     # only install once, do not overwrite. whole purpose is to adjust files in this module.
-    - 'icingaweb2_module_company__mkdir_result is changed'
+    - 'icingaweb2_module_company__mkdir_result is changed' # noqa no-handler (only install once, do not overwrite)
   tags:
     - 'icingaweb2_module_company'
 

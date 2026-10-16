@@ -171,7 +171,8 @@
             | ansible.builtin.regex_search('([0-9]{1,3}\.){3}[0-9]{1,3}')
           }}
 
-    - name: 'Write the dynamic VM inventory'
+    # a single write that loops over ansible_play_hosts to emit every host at once
+    - name: 'Write the dynamic VM inventory' # noqa run-once[task] (the play uses the linear strategy, so every host has its address by now)
       ansible.builtin.copy:
         content: |
           molecule:
@@ -185,4 +186,4 @@
         dest: '{{ __molecule__ephemeral_dir }}/inventory/molecule_vm.yml'
         mode: 0o644
       delegate_to: 'localhost'
-      run_once: true # single write that loops over ansible_play_hosts to emit every host at once
+      run_once: true

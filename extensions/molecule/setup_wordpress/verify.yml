@@ -182,7 +182,7 @@
             return_content: true
           register: '__molecule__wordpress_minor_served_before_result'
 
-        - name: 'systemctl start wordpress-core-minor-update-second.example.com-instance2.service'
+        - name: 'systemctl start wordpress-core-minor-update-second.example.com-instance2.service' # noqa command-instead-of-module (triggers the unit once on demand, the test asserts on its result)
           ansible.builtin.command: 'systemctl start wordpress-core-minor-update-second.example.com-instance2.service'
           changed_when: false
 
@@ -217,14 +217,14 @@
 
     # The other installations are at the latest release, so the service has nothing to install,
     # but it runs the check as apache and exits cleanly.
-    - name: 'systemctl start wordpress-core-minor-update-<instance>.service'
+    - name: 'systemctl start wordpress-core-minor-update-<instance>.service' # noqa command-instead-of-module (triggers the unit once on demand, the test asserts on its result)
       ansible.builtin.command: 'systemctl start wordpress-core-minor-update-{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") | replace("/", "-") }}.service'
       changed_when: false
       loop: '{{ __molecule__wordpress_instances }}'
 
     # The cron service requests wp-cron.php through the vHost; an instance in a sub-path needs the
     # request under its path, which the access log of the host name shows.
-    - name: 'systemctl start wordpress-cron-<instance>.service'
+    - name: 'systemctl start wordpress-cron-<instance>.service' # noqa command-instead-of-module (triggers the unit once on demand, the test asserts on its result)
       ansible.builtin.command: 'systemctl start wordpress-cron-{{ item | urlsplit("hostname") }}{{ item | urlsplit("path") | replace("/", "-") }}.service'
       changed_when: false
       loop: '{{ __molecule__wordpress_instances }}'
@@ -242,7 +242,7 @@
 
     # converge.yml deploys further instances on the same host, as pseudo hosts in the inventory
     # would. Each instance needs its own timers, and none may replace another's.
-    - name: 'systemctl is-enabled <timer>'
+    - name: 'systemctl is-enabled <timer>' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-enabled {{ item }}'
       register: '__molecule__wordpress_timers_result'
       changed_when: false

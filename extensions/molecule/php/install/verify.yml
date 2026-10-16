@@ -449,7 +449,7 @@
         name: '{{ (ansible_facts["os_family"] == "Debian") | ternary("apache2", "httpd") }}'
         state: 'present'
 
-    - name: 'systemctl show --property=After <apache>.service'
+    - name: 'systemctl show --property=After <apache>.service' # noqa command-instead-of-module (the test asserts on the ordering of the unit as systemd resolves it)
       ansible.builtin.command: >-
         systemctl show --property=After
         {{ (ansible_facts["os_family"] == "Debian") | ternary("apache2.service", "httpd.service") }}
