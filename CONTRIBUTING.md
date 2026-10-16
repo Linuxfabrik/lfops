@@ -172,7 +172,7 @@ A new role delivers:
 * `roles/<role-name>/README.md`, following `roles/example/README.md` and "README" below.
 * `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
 * Updates to `playbooks/README.md`, `playbooks/all.yml`, `COMPATIBILITY.md` and `CHANGELOG.md`.
-* An update to `.ansible-lint-ignore` if the role defines a `__combined_var`.
+* An entry for `roles/<role-name>/defaults/main.yml` in `.ansible-lint-ignore` (`jinja[spacing]`), as the `__combined_var` expressions in the defaults span several lines.
 
 
 ### OS Coverage
