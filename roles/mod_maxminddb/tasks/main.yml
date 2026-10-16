@@ -54,11 +54,20 @@
       content: 'LoadModule maxminddb_module {{ __mod_maxminddb__module_path }}'
       mode: 0o644
 
-  - name: 'make install'
+  - name: 'make'
     community.general.make:
       chdir: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'
-      target: 'install'
-    ignore_errors: true
+    changed_when: false # only builds in the build directory, the copy below reports the change
+
+  # not `make install`, as its `apxs -i -a` also edits the Apache config: a second `LoadModule`
+  # in httpd.conf on Red Hat, a rewritten maxminddb.load plus a .bak~ file on Debian/Ubuntu.
+  # Verified against mod_maxminddb 1.2.0 on Rocky 8/9/10, Debian 13 and Ubuntu 24.04.
+  - name: 'cp src/.libs/mod_maxminddb.so {{ __mod_maxminddb__module_path }}'
+    ansible.builtin.copy:
+      src: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}/src/.libs/mod_maxminddb.so'
+      dest: '{{ __mod_maxminddb__module_path }}'
+      remote_src: true
+      mode: 0o755
 
   - name: 'a2enmod maxminddb'
     community.general.apache2_module:
