@@ -23,8 +23,7 @@ nextcloud__app_configs__role_var:
     type: 'integer'
     state: 'present'
   - key: 'dav buildCalendarSearchIndex'
-    value: true
-    type: 'boolean'
+    value: 'yes'
     state: 'present'
   - key: 'password_policy enforceHaveIBeenPwned'
     value: true
