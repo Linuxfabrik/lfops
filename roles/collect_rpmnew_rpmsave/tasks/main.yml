@@ -10,46 +10,46 @@
       file_type: 'file'
       patterns: '*.rpmnew,*.rpmsave'
       recurse: true
-    register: 'found_files'
+    register: '__collect_rpmnew_rpmsave__found_files'
 
   - name: 'Get package name and version for each file' # noqa command-instead-of-module (no module maps a file to its owning package)
     ansible.builtin.command: "rpm -qf {{ item.path | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
-    register: 'package_info'
-    loop: '{{ found_files.files }}'
+    register: '__collect_rpmnew_rpmsave__package_info'
+    loop: '{{ __collect_rpmnew_rpmsave__found_files.files }}'
     loop_control:
       label: '{{ item.path }}'
     changed_when: false
     failed_when:
-      - 'package_info["rc"] != 0'
-      - '"No such file or directory" not in package_info["stderr"]'
+      - '__collect_rpmnew_rpmsave__package_info["rc"] != 0'
+      - '"No such file or directory" not in __collect_rpmnew_rpmsave__package_info["stderr"]'
     when:
-      - 'found_files.files | length > 0'
+      - '__collect_rpmnew_rpmsave__found_files.files | length > 0'
 
   - name: 'Set fact for OS name and version'
     ansible.builtin.set_fact:
-      os_name_version: '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}'
+      __collect_rpmnew_rpmsave__os_name_version: '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}'
     when:
-      - 'found_files.files | length > 0'
+      - '__collect_rpmnew_rpmsave__found_files.files | length > 0'
 
   - name: 'Map files to their package info'
     ansible.builtin.set_fact:
-      package_file_mappings: "{{ package_file_mappings | default({}) | combine({ item.item.path: os_name_version + '__' + item.stdout }) }}"
-    loop: '{{ package_info.results }}'
+      __collect_rpmnew_rpmsave__package_file_mappings: "{{ __collect_rpmnew_rpmsave__package_file_mappings | default({}) | combine({ item.item.path: __collect_rpmnew_rpmsave__os_name_version + '__' + item.stdout }) }}"
+    loop: '{{ __collect_rpmnew_rpmsave__package_info.results }}'
     loop_control:
       label: '{{ item.item.path }}'
     when:
-      - 'found_files.files | length > 0'
+      - '__collect_rpmnew_rpmsave__found_files.files | length > 0'
       - 'item["rc"] == 0' # skip files which do not belong to a package anymore
 
   - name: 'Delete orphaned files'
     ansible.builtin.file:
       path: '{{ item["item"]["path"] }}'
       state: 'absent'
-    loop: '{{ package_info.results }}'
+    loop: '{{ __collect_rpmnew_rpmsave__package_info.results }}'
     loop_control:
       label: '{{ item.item.path }}'
     when:
-      - 'found_files.files | length > 0'
+      - '__collect_rpmnew_rpmsave__found_files.files | length > 0'
       - 'item["rc"] != 0'
 
   - name: 'Download rpmnew/rpmsave files to control node'
@@ -57,24 +57,24 @@
       src: "{{ item.key }}"
       dest: "/tmp/lfops/{{ item.value }}/{{ inventory_hostname }}/{{ item.key }}"
       flat: true
-    loop: '{{ package_file_mappings | dict2items }}'
+    loop: '{{ __collect_rpmnew_rpmsave__package_file_mappings | dict2items }}'
     loop_control:
       label: '{{ item.key }}'
     when:
-      - 'found_files.files | length > 0'
-      - 'package_file_mappings is defined and package_file_mappings | length > 0'
+      - '__collect_rpmnew_rpmsave__found_files.files | length > 0'
+      - '__collect_rpmnew_rpmsave__package_file_mappings is defined and __collect_rpmnew_rpmsave__package_file_mappings | length > 0'
 
   - name: 'Download original files to control node'
     ansible.builtin.fetch:
       src: "{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
       dest: "/tmp/lfops/{{ item.value }}/{{ inventory_hostname }}/{{ item.key | regex_replace('(.rpmnew|.rpmsave)$', '') }}"
       flat: true
-    loop: '{{ package_file_mappings | dict2items }}'
+    loop: '{{ __collect_rpmnew_rpmsave__package_file_mappings | dict2items }}'
     loop_control:
       label: '{{ item.key }}'
     when:
-      - 'found_files.files | length > 0'
-      - 'package_file_mappings is defined and package_file_mappings | length > 0'
+      - '__collect_rpmnew_rpmsave__found_files.files | length > 0'
+      - '__collect_rpmnew_rpmsave__package_file_mappings is defined and __collect_rpmnew_rpmsave__package_file_mappings | length > 0'
 
   tags:
     - 'collect_rpmnew_rpmsave'
