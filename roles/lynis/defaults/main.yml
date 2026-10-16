@@ -10,7 +10,7 @@ lynis__skip_tests__combined_var: '{{ (
 lynis__skip_tests__dependent_var: []
 lynis__skip_tests__group_var: []
 lynis__skip_tests__host_var: []
-lynis__skip_tests__role_var: []
+lynis__skip_tests__role_var: '{{ __lynis__skip_tests__role_var }}'  # upstream default: []
 
 lynis__timer_enabled: true
 lynis__timer_state: 'started'

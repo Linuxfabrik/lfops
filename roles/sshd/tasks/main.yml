@@ -6,6 +6,10 @@
     - 'always'
 
 
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
+
+
 - block:
 
   - name: 'Deploy /etc/ssh/sshd_config'

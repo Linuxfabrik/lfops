@@ -8,10 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server.
+**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server. Hosts set up with `setup_basic` follow more of the CIS Benchmarks out of the box: root can no longer log in over SSH, USB storage is blocked, a sysctl hardening baseline is applied, and the cron configuration is readable by root only. Before updating, make sure Ansible logs in with an unprivileged user, and allow USB storage on hosts that need it.
 
 ### Breaking Changes
 
+* **role:sshd, playbook:setup_basic**: `PermitRootLogin` defaults to `no`, as the CIS Benchmarks require. A run in which Ansible logs in as root aborts before sshd is changed, instead of locking Ansible out. Log in as an unprivileged user with sudo, or set `sshd__permit_root_login: 'prohibit-password'` for hosts that Ansible has to reach as root.
+* **role:sshd**: sshd disconnects a client that has not answered for 30 seconds (`ClientAliveInterval 15`), as the CIS Benchmarks require. Set `sshd__client_alive_interval: 0` to keep idle sessions with an unresponsive client open.
+* **role:kernel_modules**: The `usb-storage` kernel module is blocked by default, as the CIS Benchmarks require, which stops USB flash drives and USB disks after the next reboot. The run aborts on hosts with a USB disk attached, since a host booting from one would no longer boot. Add `kernel_modules__modules__host_var: [{name: 'usb-storage', enabled: true}]` to the inventory of hosts that need USB storage.
+* **role:kernel_settings**: A sysctl hardening baseline following the CIS Benchmarks is applied by default: ICMP redirects are neither accepted nor sent, source-routed packets are dropped, martian packets are logged, unprivileged users can no longer read the kernel log or attach a debugger to processes they did not start themselves, and unprivileged BPF is off for good. Override single values in `kernel_settings__sysctl__host_var`, or remove them with `state: 'absent'`.
 * **role:apache_tomcat**: `--tags apache_tomcat:configure` no longer deploys `/etc/logrotate.d/tomcat`. Use `--tags apache_tomcat:logrotate` for it.
 * **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
 * **role:repo_mydumper**: On the Red Hat family, mydumper comes from the official mydumper repository instead of `repo.linuxfabrik.ch`, and dnf checks the package signature. A `repo_mydumper__mirror_url` must therefore serve the signed packages of the official repository unchanged, otherwise the installation fails with a signature error.
@@ -47,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:cron, playbook:cron, playbook:setup_basic**: Add a role and playbook that keep the cron daemon running and make `/etc/crontab`, `/etc/cron.deny` and the `/etc/cron.*` directories readable by root only, as the CIS Benchmarks require.
 * **role:apache_tomcat**: With `lfops__remove_rpmnew_rpmsave`, the role also removes the `.rpmnew` and `.rpmsave` files next to the Tomcat configuration files it deploys.
 * **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10.
 * **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
@@ -69,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:duplicity**: The backup includes the data of the applications LFOps deploys by default: `/data`, `/srv`, `/var/lib/grafana`, `/var/lib/icinga2` (including the Icinga2 CA), `/var/lib/shiny-server`, `/var/lib/turn`, `/var/mail`, `/var/named`, `/var/solr/data`, `/var/spool/mail` and `/var/www` (without the repository mirrors). Hosts without these directories are not affected. On hosts with large data, for example VM images in `/data`, check the backup size or set the path to `state: 'absent'`.
 * **playbook:setup_basic**: Installs AIDE on every host, which checks file integrity twice a day and after every boot; skip it with `setup_basic__skip_aide`.
 * **role:aide, playbook:aide**: Add a role and playbook that install AIDE on Debian 12 and 13, RHEL 8, 9 and 10 and Ubuntu 22.04, 24.04 and 26.04 as the CIS benchmarks recommend, leaving `aidecheck.service` failed on any finding and keeping the database in step with `system_update` and `unattended-upgrades`.
-* **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`.
+* **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`. By default the role skips the tests whose suggestion LFOps deliberately does not follow, giving the reason for each in `custom.prf`.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
 * **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
@@ -90,6 +95,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mariadb_server**: The role no longer sets `sunrpc.tcp_slot_table_entries`, which only concerns NFS clients, and removes it from the kernel settings of hosts that got it from an earlier version.
+* **role:kernel_modules**: Every blocked module is also blacklisted, so the CIS audit, which checks for both lines, accepts the configuration.
+* **role:at**: On the Red Hat family, `/etc/at.deny` is readable by root only, as the CIS Benchmarks require.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
 * **role:apache_tomcat**: The Tomcat 9.0 configuration follows the files shipped with the current RHEL 8 and 9 packages.
 * **role:apache_tomcat**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
@@ -139,6 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:kernel_settings**: A run no longer fails on hosts whose kernel settings still contain a `sunrpc.*` value from an earlier run while the `sunrpc` module is not loaded.
 * **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
 * **plugin:bitwarden_item, module:bitwarden_item**: Items without a username work with Bitwarden CLI 2026.10.0, where the lookup and the module aborted with `KeyError: 'username'`.
 * **role:kernel_settings**: The role no longer prints the `Conditional result ... was of type 'int'` deprecation warning.

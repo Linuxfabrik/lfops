@@ -1,9 +1,46 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - name: 'Install at'
   ansible.builtin.package:
     name: 'at'
     state: 'present'
   retries: 3 # ride out a brief outage of the package repository
   delay: 10
+  tags:
+    - 'at'
+
+
+- block:
+
+  - name: 'stat {{ item["path"] }}'
+    ansible.builtin.stat:
+      path: '{{ item["path"] }}'
+    loop: '{{ __at__paths }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    register: '__at__paths_stat_result'
+
+  # A package update may reset the mode, so every run sets it again.
+  - name: 'chmod {{ item["mode"] | replace("0o", "") }} {{ item["path"] }}'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      owner: 'root'
+      group: 'root'
+      mode: '{{ item["mode"] }}'
+    loop: '{{ __at__paths }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    when:
+      - 'item["path"] in __at__existing_paths'
+    vars:
+      __at__existing_paths: '{{ __at__paths_stat_result["results"] | selectattr("stat.exists") | map(attribute="item.path") | list }}'
+
   tags:
     - 'at'
 
