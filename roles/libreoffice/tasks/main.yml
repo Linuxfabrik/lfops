@@ -53,6 +53,7 @@
       /usr/bin/soffice --headless --convert-to pdf myfile
     args:
       creates: '/usr/share/httpd/.config/libreoffice/4'
+    become: true
     become_user: 'apache'
 
   - name: 'restorecon -Fvr ...'

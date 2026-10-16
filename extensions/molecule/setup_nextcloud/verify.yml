@@ -13,6 +13,7 @@
       ansible.builtin.command: 'php /var/www/html/nextcloud/occ status --output=json'
       args:
         chdir: '/var/www/html/nextcloud/'
+      become: true
       become_user: 'apache'
       register: '__molecule__nextcloud_status_result'
       changed_when: false

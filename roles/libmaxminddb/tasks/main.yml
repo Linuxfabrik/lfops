@@ -46,16 +46,16 @@
       chdir: '{{ ansible_env["HOME"] }}/libmaxminddb-{{ libmaxminddb__version }}'
 
   - name: 'make'
-    ansible.builtin.make:
+    community.general.make:
       chdir: '{{ ansible_env["HOME"] }}/libmaxminddb-{{ libmaxminddb__version }}'
 
   - name: 'make check'
-    ansible.builtin.make:
+    community.general.make:
       chdir: '{{ ansible_env["HOME"] }}/libmaxminddb-{{ libmaxminddb__version }}'
       target: 'check'
 
   - name: 'make install'
-    ansible.builtin.make:
+    community.general.make:
       chdir: '{{ ansible_env["HOME"] }}/libmaxminddb-{{ libmaxminddb__version }}'
       target: 'install'
 

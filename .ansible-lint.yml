@@ -1,6 +1,11 @@
 # Offline mode disables installation of requirements.yml and schema refreshing
 offline: true
 
+# The example playbook references the fictional repo_example role on purpose, so it
+# can never pass the unskippable syntax-check.
+exclude_paths:
+  - 'playbooks/example.yml'
+
 skip_list:
   - 'key-order[task]'
   - 'name'

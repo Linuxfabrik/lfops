@@ -51,7 +51,7 @@
       content: 'LoadModule maxminddb_module {{ __mod_maxminddb__module_path }}'
 
   - name: 'make install'
-    ansible.builtin.make:
+    community.general.make:
       chdir: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'
       target: 'install'
     ignore_errors: true
