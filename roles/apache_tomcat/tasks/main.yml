@@ -1,5 +1,26 @@
 - block:
 
+  # argument_specs cannot express that a variable is mandatory only while another one is false
+  - name: 'Assert that apache_tomcat__webapps_docs_context_xml_allow is set'
+    ansible.builtin.assert:
+      that:
+        - 'apache_tomcat__skip_root_webapp | bool or apache_tomcat__webapps_docs_context_xml_allow is defined'
+      quiet: true
+      fail_msg: 'apache_tomcat__webapps_docs_context_xml_allow is mandatory unless apache_tomcat__skip_root_webapp is true.'
+
+  - name: 'Assert that apache_tomcat__webapps_manager_context_xml_allow is set'
+    ansible.builtin.assert:
+      that:
+        - 'apache_tomcat__skip_admin_webapps | bool or apache_tomcat__webapps_manager_context_xml_allow is defined'
+      quiet: true
+      fail_msg: 'apache_tomcat__webapps_manager_context_xml_allow is mandatory unless apache_tomcat__skip_admin_webapps is true.'
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Install tomcat-webapps ("ROOT" webapp)'
     ansible.builtin.package:
       name:
@@ -9,7 +30,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
     when:
-      - 'not apache_tomcat__skip_root_webapp'
+      - 'not apache_tomcat__skip_root_webapp | bool'
 
   - name: 'Install tomcat-admin-webapps'
     ansible.builtin.package:
@@ -19,7 +40,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
     when:
-      - 'not apache_tomcat__skip_admin_webapps'
+      - 'not apache_tomcat__skip_admin_webapps | bool'
 
   - name: 'Install tomcat'
     ansible.builtin.package:
@@ -29,7 +50,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
     when:
-      - 'apache_tomcat__skip_admin_webapps | d(false)'
+      - 'apache_tomcat__skip_admin_webapps | bool'
 
   tags:
     - 'apache_tomcat'
@@ -41,22 +62,25 @@
     ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
     check_mode: false # run task even if `--check` is specified
 
+  # the guard keeps this working under another role's tag on a host without tomcat, where the
+  # install block above is skipped; the fact stays undefined there.
   - name: 'Get tomcat version'
     ansible.builtin.set_fact:
-      tomcat__installed_version: '{{ (ansible_facts["packages"]["tomcat"][0]["version"] | d(ansible_facts["packages"]["tomcat"][0]["version"])) | regex_search("\d+\.\d+") }}'
+      __apache_tomcat__installed_version: '{{ ansible_facts["packages"]["tomcat"][0]["version"] | regex_search("\d+\.\d+") }}'
+    when:
+      - '"tomcat" in ansible_facts["packages"]'
 
-  - name: 'Assert that configuration templates for the installed Tomcat version exist'
+  - name: 'Assert that this role supports the installed version'
     ansible.builtin.assert:
       that:
-        - 'tomcat__installed_version in __apache_tomcat__supported_versions'
+        - '__apache_tomcat__installed_version in __apache_tomcat__supported_versions'
       quiet: true
-      fail_msg: 'Tomcat {{ tomcat__installed_version }} is not supported by this role. Supported versions: {{ __apache_tomcat__supported_versions | join(", ") }}.'
+      fail_msg: 'Tomcat {{ __apache_tomcat__installed_version }} is not supported by this role. Supported versions: {{ __apache_tomcat__supported_versions | join(", ") }}.'
+    when:
+      - '__apache_tomcat__installed_version is defined'
 
   tags:
-    - 'apache_tomcat'
-    - 'apache_tomcat:configure'
-    - 'apache_tomcat:users'
-    - 'apache_tomcat:state'
+    - 'always'
 
 
 - block:
@@ -66,26 +90,27 @@
   - name: 'Deploy /etc/tomcat/server.xml'
     ansible.builtin.template:
       backup: true
-      src: 'etc/tomcat/{{ tomcat__installed_version }}-server.xml.j2'
+      src: 'etc/tomcat/{{ __apache_tomcat__installed_version }}-server.xml.j2'
       dest: '/etc/tomcat/server.xml'
       owner: 'root'
       group: 'tomcat'
       mode: 0o644
     notify: 'apache_tomcat: restart tomcat.service'
 
-  - name: 'Copy tomcat config /etc/sysconfig'
+  - name: 'Deploy /etc/sysconfig/tomcat'
     ansible.builtin.template:
       backup: true
-      src: 'etc/sysconfig/{{ tomcat__installed_version }}-tomcat.j2'
+      src: 'etc/sysconfig/{{ __apache_tomcat__installed_version }}-tomcat.j2'
       dest: '/etc/sysconfig/tomcat'
       owner: 'root'
       group: 'root'
       mode: 0o644
+    notify: 'apache_tomcat: restart tomcat.service'
 
   - name: 'Deploy /etc/tomcat/context.xml'
     ansible.builtin.template:
       backup: true
-      src: 'etc/tomcat/{{ tomcat__installed_version }}-context.xml.j2'
+      src: 'etc/tomcat/{{ __apache_tomcat__installed_version }}-context.xml.j2'
       dest: '/etc/tomcat/context.xml'
       owner: 'root'
       group: 'tomcat'
@@ -95,14 +120,35 @@
   - name: 'Deploy /etc/tomcat/logging.properties'
     ansible.builtin.template:
       backup: true
-      src: 'etc/tomcat/{{ tomcat__installed_version }}-logging.properties.j2'
+      src: 'etc/tomcat/{{ __apache_tomcat__installed_version }}-logging.properties.j2'
       dest: '/etc/tomcat/logging.properties'
       owner: 'root'
       group: 'tomcat'
       mode: 0o644
     notify: 'apache_tomcat: restart tomcat.service'
 
-  - name: 'Copy tomcat logrotate template to /etc/logrotate.d'
+  # the package marks these as %config(noreplace), so an update leaves its own version next to
+  # them. verified with `rpm -qc` against tomcat 9.0.120 on Rocky 9 and tomcat 10.1.49 on Rocky 10.
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '{{ item }}'
+    loop:
+      - '/etc/sysconfig/tomcat'
+      - '/etc/tomcat/context.xml'
+      - '/etc/tomcat/logging.properties'
+      - '/etc/tomcat/server.xml'
+
+  tags:
+    - 'apache_tomcat'
+    - 'apache_tomcat:configure'
+
+
+- block:
+
+  - name: 'Deploy /etc/logrotate.d/tomcat'
     ansible.builtin.template:
       backup: true
       src: 'etc/logrotate.d/tomcat.j2'
@@ -113,7 +159,7 @@
 
   tags:
     - 'apache_tomcat'
-    - 'apache_tomcat:configure'
+    - 'apache_tomcat:logrotate'
 
 
 - block:
@@ -130,7 +176,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_root_webapp'
+      - 'not apache_tomcat__skip_root_webapp | bool'
 
   - name: 'Deploy /var/lib/tomcat/webapps/host-manager/META-INF/context.xml'
     ansible.builtin.template:
@@ -142,7 +188,7 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_root_webapp'
+      - 'not apache_tomcat__skip_admin_webapps | bool'
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/META-INF/context.xml'
     ansible.builtin.template:
@@ -154,19 +200,19 @@
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_admin_webapps'
+      - 'not apache_tomcat__skip_admin_webapps | bool'
 
   - name: 'Deploy /var/lib/tomcat/webapps/manager/WEB-INF/web.xml'
     ansible.builtin.template:
       backup: true
-      src: 'var/lib/tomcat/webapps/manager/WEB-INF/web.xml.j2'
+      src: 'var/lib/tomcat/webapps/manager/WEB-INF/{{ __apache_tomcat__installed_version }}-web.xml.j2'
       dest: '/var/lib/tomcat/webapps/manager/WEB-INF/web.xml'
       owner: 'root'
       group: 'tomcat'
       mode: 0o664
     notify: 'apache_tomcat: restart tomcat.service'
     when:
-      - 'not apache_tomcat__skip_admin_webapps'
+      - 'not apache_tomcat__skip_admin_webapps | bool'
 
   tags:
     - 'apache_tomcat'
@@ -175,19 +221,26 @@
 
 - block:
 
-  - name: 'Combined Users:'
+  - name: 'Combined Users'
     ansible.builtin.debug:
       var: 'apache_tomcat__users__combined_var'
 
   - name: 'Deploy /etc/tomcat/tomcat-users.xml'
     ansible.builtin.template:
       backup: true
-      src: 'etc/tomcat/{{ tomcat__installed_version }}-tomcat-users.xml.j2'
+      src: 'etc/tomcat/{{ __apache_tomcat__installed_version }}-tomcat-users.xml.j2'
       dest: '/etc/tomcat/tomcat-users.xml'
       owner: 'root'
       group: 'tomcat'
       mode: 0o640
     notify: 'apache_tomcat: restart tomcat.service'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/tomcat/tomcat-users.xml'
 
   tags:
     - 'apache_tomcat'
@@ -197,12 +250,12 @@
 - block:
 
   - name: 'systemctl {{ apache_tomcat__service_enabled | bool | ternary("enable", "disable") }} tomcat.service'
-    ansible.builtin.systemd:
+    ansible.builtin.service:
       name: 'tomcat.service'
-      enabled: '{{ apache_tomcat__service_enabled }}'
+      enabled: '{{ apache_tomcat__service_enabled | bool }}'
 
   - name: 'systemctl {{ apache_tomcat__service_state | regex_replace("p?ed$", "") }} tomcat.service'
-    ansible.builtin.systemd:
+    ansible.builtin.service:
       name: 'tomcat.service'
       state: '{{ apache_tomcat__service_state }}'
     register: '__apache_tomcat__service_state_result'
@@ -210,3 +263,16 @@
   tags:
     - 'apache_tomcat'
     - 'apache_tomcat:state'
+
+
+- block:
+
+  - name: 'Flush handlers so that Tomcat can be used by other roles later'
+    ansible.builtin.meta: 'flush_handlers'
+
+  tags:
+    - 'apache_tomcat'
+    - 'apache_tomcat:configure'
+    - 'apache_tomcat:state'
+    - 'apache_tomcat:users'
+    - 'apache_tomcat:webapps'

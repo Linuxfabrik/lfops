@@ -193,6 +193,20 @@ Variables for `valkey.conf` directives and their default values, defined and sup
 * Type: Number.
 * Default: unset
 
+`valkey__conf_unixsocket`
+
+* Path of the Unix socket Valkey listens on, in addition to the TCP port. Set it to `''` to listen on no Unix socket. [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
+* Type: String.
+* Default: `'/run/valkey/valkey.sock'` on RHEL, `'/run/valkey/valkey-server.sock'` on Debian and Ubuntu
+* Deviates from the upstream default on Debian and Ubuntu, whose package listens on no Unix socket: local clients such as Nextcloud connect faster through the socket than through TCP, and `valkey__conf_unixsocketperm` keeps it closed to anyone outside the `valkey` group.
+
+`valkey__conf_unixsocketperm`
+
+* Permissions of the Unix socket. Only the `valkey` user and the members of the `valkey` group can connect with `770`; a role that needs access adds its service user to the group. [valkey.conf](https://github.com/valkey-io/valkey/blob/8.0/valkey.conf)
+* Type: String.
+* Default: `'770'`
+* Deviates from the upstream default, which leaves the mode to the umask of the service, so that the socket is writable, and thus usable, by the `valkey` user only.
+
 Example:
 
 ```yaml
@@ -216,6 +230,8 @@ valkey__conf_tls_ca_cert_file: '/etc/valkey/ca.pem'
 valkey__conf_tls_cert_file: '/etc/valkey/valkey.pem'
 valkey__conf_tls_key_file: '/etc/valkey/valkey.key'
 valkey__conf_tls_port: 6379
+valkey__conf_unixsocket: '/run/valkey/valkey.sock'
+valkey__conf_unixsocketperm: '770'
 ```
 
 

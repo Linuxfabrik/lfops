@@ -23,13 +23,6 @@
 
 - block:
 
-  - name: 'rpm --query openvpn # version before this run' # noqa command-instead-of-module (package_facts would gather every package)
-    ansible.builtin.command: 'rpm --query --queryformat=%{VERSION} openvpn'
-    register: '__openvpn_server__version_before_result'
-    changed_when: false
-    failed_when: false
-    check_mode: false # run task even if `--check` is specified
-
   - block:
 
     # ansible.builtin.package cannot skip weak dependencies. The Copr packages recommend
@@ -45,6 +38,14 @@
       register: '__openvpn_server__dnf_result'
       retries: 3 # ride out a brief outage of the package repository
       delay: 10
+      # When dnf replaces the installed OpenVPN with a newer one, the package restarts the
+      # service itself, but the running process may still use the old systemd unit file (on
+      # RHEL 8, the package restarts before systemd has re-read the new one). The handler runs
+      # `systemctl daemon-reload` and restarts the service once more, so that the service
+      # definitely runs with the new unit file and the new configuration.
+      notify:
+        - 'openvpn_server: systemctl daemon-reload'
+        - 'openvpn_server: restart openvpn-server@server.service'
 
     rescue:
 
@@ -57,26 +58,6 @@
           EPEL ships outdated versions on RHEL 8 and 9. Enable the OpenVPN repository with the
           linuxfabrik.lfops.repo_openvpn role, which the openvpn_server playbook runs unless
           openvpn_server__skip_repo_openvpn is set.
-
-  - name: 'rpm --query openvpn # version after this run' # noqa command-instead-of-module (package_facts would gather every package)
-    ansible.builtin.command: 'rpm --query --queryformat=%{VERSION} openvpn'
-    register: '__openvpn_server__version_result'
-    changed_when: false
-    failed_when: false # in check mode, a fresh host has no OpenVPN yet
-    check_mode: false # run task even if `--check` is specified
-
-  # The package restarts openvpn-server@server.service on its own during an upgrade, but on
-  # RHEL 8 it does so with the unit file of the old package. The restart that applies the new
-  # unit file and the new configuration drops every client, so it is left to the operator.
-  - name: 'Report the OpenVPN upgrade to the operator'
-    ansible.builtin.debug:
-      msg: '{{ __openvpn_server__upgrade_message }}'
-    when: '__openvpn_server__upgraded | bool'
-
-  - name: 'Collect the OpenVPN upgrade message for the end of the play'
-    ansible.builtin.set_fact:
-      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__openvpn_server__upgrade_message] }}'
-    when: '__openvpn_server__upgraded | bool'
 
   # 0750: the daemon drops privileges to the openvpn user (`user openvpn` in server.conf) and
   # reads a client's file from here when that client connects, so the group needs to traverse

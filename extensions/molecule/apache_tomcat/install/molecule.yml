@@ -1,0 +1,5 @@
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name apache_tomcat/install`.
+#
+# Covers an ordinary run of the apache_tomcat playbook. The 'foreign_tags' sub-scenario covers a
+# run limited to another role's tag against hosts without Tomcat.

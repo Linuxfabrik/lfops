@@ -37,6 +37,20 @@
           - '__molecule__spool_stat_result["stat"]["isdir"]'
           - '__molecule__spool_stat_result["stat"]["mode"] == "0755"'
 
+    # do-reboot carries the credentials of the Icinga API user and the Rocket.Chat webhook, and
+    # only schedule-reboot.service runs it.
+    - name: 'stat /usr/local/libexec/do-reboot'
+      ansible.builtin.stat:
+        path: '/usr/local/libexec/do-reboot'
+      register: '__molecule__do_reboot_stat_result'
+
+    - name: 'Assert that do-reboot is readable by root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__do_reboot_stat_result["stat"]["mode"] == "0700"'
+          - '__molecule__do_reboot_stat_result["stat"]["pw_name"] == "root"'
+        fail_msg: '/usr/local/libexec/do-reboot is {{ __molecule__do_reboot_stat_result["stat"] | d("missing") | to_json }}'
+
     # Run the actor against the empty post-converge spool. do-reboot must exit 0
     # without rebooting; that it runs at all proves the usr_t libexec script is
     # executable under systemd/SELinux (the FHS-placement concern).

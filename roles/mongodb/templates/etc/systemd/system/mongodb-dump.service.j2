@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022083101
+# 2026101301
 
 [Unit]
 Description=MongoDB Dump Service
@@ -8,6 +8,16 @@ Description=MongoDB Dump Service
 ExecStart=/usr/local/sbin/mongodb-dump
 Type=oneshot
 User=root
+# the dump must not slow down mongod and the applications behind it. Nice= and the CPU / IO
+# weights (default 100) only matter under contention, so an idle host dumps at full speed.
+# best-effort instead of idle: with `mongodb__dump_method_file_based` the instance stays
+# write-locked (fsyncLock) while /var/lib/mongo is copied, and an idle IO class could starve
+# the copy and stretch that lock.
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+CPUWeight=20
+IOWeight=20
 
 [Install]
 WantedBy=basic.target

@@ -1,0 +1,5 @@
+# The role asserts these under the 'always' tag, so a run limited to another role's tag needs them
+# as well. Without them the run would abort on the inventory instead of exercising the version
+# discovery on a host without Tomcat.
+apache_tomcat__webapps_docs_context_xml_allow: ''
+apache_tomcat__webapps_manager_context_xml_allow: ''
