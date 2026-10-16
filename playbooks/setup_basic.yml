@@ -143,6 +143,15 @@
         - 'icinga2_agent'
         - 'icinga2_agent:node_setup'
 
+    - name: 'Run the preflight checks of the sshd role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.sshd'
+        tasks_from: 'preflight.yml'
+      when:
+        - 'not setup_basic__skip_sshd | d(false)'
+      tags:
+        - 'sshd'
+
 
   roles:
 

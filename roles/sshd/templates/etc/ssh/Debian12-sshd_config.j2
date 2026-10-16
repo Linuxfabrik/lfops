@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026060601
+# 2026101601
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
@@ -98,7 +98,7 @@ PrintMotd no
 TCPKeepAlive {{ sshd__tcp_keep_alive | bool | ternary("yes", "no") }}
 #PermitUserEnvironment no
 #Compression delayed
-#ClientAliveInterval 0
+ClientAliveInterval {{ sshd__client_alive_interval }}
 ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #PidFile /run/sshd.pid

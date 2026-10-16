@@ -12,7 +12,9 @@ The option descriptions below are condensed from `sshd_config(5)`.
 
 ## How the Role Behaves
 
-The role ships hardened defaults for several options that differ from the OpenSSH (or distribution) defaults: `X11Forwarding`, agent forwarding and TCP keepalives are off, `MaxAuthTries` and `ClientAliveCountMax` are stricter, and `LogLevel` is `VERBOSE` (which logs the key fingerprint used for each login). Each is overridable via the variables below.
+The role ships hardened defaults for several options that differ from the OpenSSH (or distribution) defaults: root may not log in, `X11Forwarding`, agent forwarding and TCP keepalives are off, `MaxAuthTries` and `ClientAliveCountMax` are stricter, an unresponsive client is disconnected after `ClientAliveInterval` × `ClientAliveCountMax` seconds (30 by default), and `LogLevel` is `VERBOSE` (which logs the key fingerprint used for each login). These follow the CIS Benchmarks. Each is overridable via the variables below.
+
+`PermitRootLogin` defaults to `no`. Before it deploys `sshd_config`, the role checks which user Ansible logs in as over SSH. If that is root and `sshd__permit_root_login` does not admit root logins with a key, the run aborts before anything is changed, since the reload would lock Ansible out of the host. Log in as an unprivileged user with sudo (see the [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login) role), or set `sshd__permit_root_login: 'prohibit-password'` for hosts that Ansible has to reach as root.
 
 `MaxAuthTries` defaults to `3`. Every public key an SSH agent offers counts as one attempt, so a client with more than three keys loaded in its agent may be rejected before the matching key is tried. In that case use `IdentitiesOnly yes` / an explicit `IdentityFile` on the client, or raise `sshd__max_auth_tries`.
 
@@ -61,9 +63,16 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `sshd__client_alive_count_max`
 
-* Number of client alive messages sshd may send without receiving any back from the client before it disconnects the session. Unlike `TCPKeepAlive`, these messages go through the encrypted channel and cannot be spoofed. Only takes effect together with a non-zero `ClientAliveInterval` (`0` by default, set it via `sshd__raw`).
+* Number of client alive messages sshd may send without receiving any back from the client before it disconnects the session. Unlike `TCPKeepAlive`, these messages go through the encrypted channel and cannot be spoofed. Only takes effect together with a non-zero `sshd__client_alive_interval`.
 * Type: Number.
 * Default: `2` (OpenSSH default: `3`)
+
+`sshd__client_alive_interval`
+
+* Seconds of inactivity after which sshd asks the client for a sign of life through the encrypted channel. `0` disables these messages, and with them the disconnect after `sshd__client_alive_count_max` unanswered ones.
+* Type: Number.
+* Default: `15`
+* Deviates from the upstream default `0`: without it, a session whose client vanished stays open until TCP gives up, which can take hours. The CIS Benchmarks require a non-zero value.
 
 `sshd__gssapi_authentication`
 
@@ -97,9 +106,10 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `sshd__permit_root_login`
 
-* Specifies whether root can log in using ssh. Possible options: `yes`, `prohibit-password`, `forced-commands-only`, `no`.
+* Specifies whether root can log in using ssh. Possible options: `yes`, `prohibit-password`, `forced-commands-only`, `no`. The role refuses to set a value that locks out the user Ansible logs in as (see "How the Role Behaves").
 * Type: String.
-* Default: `'yes'`
+* Default: `'no'`
+* Deviates from the upstream default `prohibit-password` (some distributions ship `yes`): administrators log in with a personal account and use sudo, so every privileged action can be traced to a person. The CIS Benchmarks require `no`.
 
 `sshd__port`
 
@@ -157,12 +167,13 @@ sshd__address_family: 'inet'
 sshd__allow_agent_forwarding: false
 sshd__allow_tcp_forwarding: true
 sshd__client_alive_count_max: 2
+sshd__client_alive_interval: 15
 sshd__gssapi_authentication: false
 sshd__log_level__host_var: 'VERBOSE'
 sshd__max_auth_tries: 3
 sshd__max_sessions: 10
 sshd__password_authentication: false
-sshd__permit_root_login: 'yes'
+sshd__permit_root_login: 'prohibit-password'
 sshd__port: 22
 sshd__raw: |-
   Match Group sftpusers

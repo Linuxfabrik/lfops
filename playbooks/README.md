@@ -1096,7 +1096,7 @@ Calls the following roles (in order):
 
 ## setup_basic.yml
 
-Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, and that the Icinga2 master is reachable. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
+Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, that the Icinga2 master is reachable, and that the new `sshd_config` still admits the user Ansible logs in as. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
 
 Calls the following roles (in order):
 

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026061601
+# 2026101601
 
 #	$OpenBSD: sshd_config,v 1.104 2021/07/02 05:11:21 dtucker Exp $
 
@@ -110,7 +110,7 @@ X11Forwarding {{ sshd__x11_forwarding | bool | ternary("yes", "no") }}
 TCPKeepAlive {{ sshd__tcp_keep_alive | bool | ternary("yes", "no") }}
 #PermitUserEnvironment no
 #Compression delayed
-#ClientAliveInterval 0
+ClientAliveInterval {{ sshd__client_alive_interval }}
 ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #PidFile /var/run/sshd.pid

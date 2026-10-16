@@ -37,6 +37,15 @@ argument_specs:
           Number of client alive messages sent without a reply before
           sshd disconnects the session.
 
+      sshd__client_alive_interval:
+        type: 'int'
+        required: false
+        default: 15
+        description: >-
+          Seconds of client inactivity after which sshd sends a client
+          alive message through the encrypted channel. `0` disables
+          these messages.
+
       sshd__gssapi_authentication:
         type: 'bool'
         required: false
@@ -94,7 +103,7 @@ argument_specs:
       sshd__permit_root_login:
         type: 'str'
         required: false
-        default: 'yes'
+        default: 'no'
         description: >-
           Whether root can log in via ssh: `yes`, `prohibit-password`,
           `forced-commands-only` or `no`.
