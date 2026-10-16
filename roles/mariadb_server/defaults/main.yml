@@ -1040,7 +1040,12 @@ mariadb_server__users__role_var: []
 mariadb_server__kernel_settings__sysctl__dependent_var:
   - name: 'fs.aio-max-nr'
     value: 1048576
+  # Removes the setting from the TuneD profile of hosts that got it from an earlier version of
+  # this role. It only concerns the NFS client: the number of RPC slots preallocated per TCP
+  # transport, while further slots are allocated on demand up to tcp_max_slot_table_entries
+  # (xprt_dynamic_alloc_slot() in net/sunrpc/xprt.c, Linux 7.3). MariaDB has no use for it, and
+  # it loaded the sunrpc module on every database server.
   - name: 'sunrpc.tcp_slot_table_entries'
-    value: 128
+    state: 'absent'
   - name: 'vm.swappiness'
     value: 10
