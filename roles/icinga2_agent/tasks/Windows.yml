@@ -117,7 +117,7 @@
     tags:
       - 'icinga2_agent:update'
 
-  - name: 'add host to icinga director'
+  - name: 'add host to icinga director at {{ icinga2_agent__icingaweb2_url }}/director/host'
     ansible.windows.win_uri:
       url: '{{ icinga2_agent__icingaweb2_url }}/director/host'
       url_username: '{{ icinga2_agent__icingaweb2_user_login["username"] }}'
@@ -132,10 +132,20 @@
           "display_name": "{{ icinga2_agent__director_host_object_display_name }}",
           "imports": {{ icinga2_agent__director_host_object_import | to_json }},
         }
-      status_code: 201
+      content_type: 'application/json'
+      status_code:
+        - 201
+        - 422
       headers:
         Accept: 'application/json'
-    ignore_errors: true
+      validate_certs: '{{ icinga2_agent__validate_certs }}'
+    register: '__icinga2_agent__director_host_result'
+    # The Director answers 422 "Trying to recreate icinga_host" for a host it already has, which
+    # is the expected answer on every run after the first one.
+    changed_when: '__icinga2_agent__director_host_result["status_code"] == 201'
+    failed_when:
+      - '__icinga2_agent__director_host_result["status_code"] != 201'
+      - '"Trying to recreate" not in (__icinga2_agent__director_host_result["json"] | d({}))["error"] | d("")'
     when:
       - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length > 0'
 
