@@ -1,0 +1,52 @@
+# The role's own skip-test entries: what LFOps deliberately does differently from what Lynis
+# suggests, plus what a vars/<platform>.yml adds in __lynis__skip_tests__platform. Where Lynis
+# and the CIS Benchmarks (Red Hat Enterprise Linux 10 v1.0.1, Debian Linux 12 v1.0.1) cover the
+# same setting and disagree, LFOps follows CIS. A suggestion only Lynis makes is skipped only for
+# a technical reason. Each entry names the reason in its comment, which ends up in custom.prf on
+# the host. Where Lynis checks several values in one test, only the single value is skipped
+# (SkipAtomicTest() in include/functions; KRNL-6000 per sysctl key, SSH-7408 per option).
+# Verified against the Lynis source (3.1.8).
+__lynis__skip_tests__role_var: '{{ __lynis__skip_tests__common + __lynis__skip_tests__platform }}'
+__lynis__skip_tests__platform: []
+
+__lynis__skip_tests__common:
+  - name: 'ACCT-9630'
+    comment: 'Without rules auditd still records SELinux denials and logins; useful rules depend on what the host runs, and a generic set costs I/O and disk on busy hosts.'
+  - name: 'AUTH-9282'
+    comment: 'An expiry date locks an account out on a fixed day, including the root password needed on the console.'
+  - name: 'AUTH-9284'
+    comment: 'Locked accounts are reported for information only.'
+  - name: 'AUTH-9328'
+    comment: 'LFOps keeps the umask 022 the distributions ship; a stricter umask breaks applications such as Icinga Web 2.'
+  - name: 'DBS-1884'
+    comment: 'The redis role binds to localhost with protected-mode; a password needs a secret from the inventory (redis__conf_requirepass).'
+  - name: 'DBS-1886'
+    comment: 'Renaming CONFIG breaks clients that use it; the redis role binds to localhost with protected-mode.'
+  - name: 'HRDN-7222'
+    comment: 'Compilers restricted to root break builds by other users, such as pip installing source packages into a venv, and package updates restore the mode.'
+  - name: 'HRDN-7230'
+    comment: 'AIDE checks file integrity; deploy ClamAV with the clamav role where a malware scanner is needed.'
+  - name: 'HTTP-6640'
+    comment: 'mod_evasive counts requests per client address and blocks every user behind a shared proxy or NAT; fail2ban covers brute force.'
+  - name: 'KRNL-6000:fs.protected_fifos'
+    comment: '2 also refuses O_CREAT opens of files another user owns in group-writable sticky directories, which shared directories rely on.'
+  - name: 'KRNL-6000:fs.protected_regular'
+    comment: '2 also refuses O_CREAT opens of files another user owns in group-writable sticky directories, which shared directories rely on.'
+  - name: 'KRNL-6000:kernel.modules_disabled'
+    comment: '1 blocks every module load until the next reboot, including drivers for hot-plugged hardware.'
+  - name: 'KRNL-6000:kernel.sysrq'
+    comment: '0 takes away the emergency keys (sync, remount read-only, reboot) on the console of a hung host.'
+  - name: 'KRNL-6000:net.ipv4.conf.all.forwarding'
+    comment: 'Forwarding off breaks container hosts, KVM hosts, VPN servers and routers.'
+  - name: 'LOGG-2190'
+    comment: 'Processes that still use deleted files after an update are reported by the needs-restarting monitoring plugin.'
+  - name: 'PHP-2372'
+    comment: 'Lynis reads expose_php from the php.ini the package ships; the php role turns it off in a drop-in that overrides it.'
+  - name: 'PHP-2376'
+    comment: 'allow_url_fopen = Off breaks applications that fetch URLs with file_get_contents(), for example app stores and update checks.'
+  - name: 'SSH-7408:allowtcpforwarding'
+    comment: 'Administrators and tools use SSH tunnels to reach services that only listen on localhost, such as databases and web consoles.'
+  - name: 'SSH-7408:maxsessions'
+    comment: 'The sshd role sets MaxSessions 10, as CIS 5.1.18 asks for; 2 breaks connection multiplexing.'
+  - name: 'SSH-7408:port'
+    comment: 'Another port only reduces log noise from scanners, while every client, jump host and firewall rule has to know it.'

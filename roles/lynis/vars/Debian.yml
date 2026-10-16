@@ -1,1 +1,8 @@
 __lynis__binary: '/usr/sbin/lynis'
+
+# at(1) is setuid and setgid daemon on Debian and Ubuntu and reads /etc/at.deny as group daemon,
+# so the at role keeps the root:daemon 0640 the package ships, as CIS 2.4.2.1 allows. Lynis
+# wants 0600 and cannot skip a single file of FILE-7524.
+__lynis__skip_tests__platform:
+  - name: 'FILE-7524'
+    comment: 'at reads /etc/at.deny as group daemon, so it keeps mode 0640, which CIS 2.4.2.1 allows; Lynis wants 0600.'
