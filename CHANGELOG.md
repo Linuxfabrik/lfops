@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:sshd, playbook:setup_basic**: `PermitRootLogin` defaults to `no`, as the CIS Benchmarks require. A run in which Ansible logs in as root aborts before sshd is changed, instead of locking Ansible out. Log in as an unprivileged user with sudo, or set `sshd__permit_root_login: 'prohibit-password'` for hosts that Ansible has to reach as root.
+* **role:sshd**: sshd disconnects a client that has not answered for 30 seconds (`ClientAliveInterval 15`), as the CIS Benchmarks require. Set `sshd__client_alive_interval: 0` to keep idle sessions with an unresponsive client open.
 * **role:apache_tomcat**: `--tags apache_tomcat:configure` no longer deploys `/etc/logrotate.d/tomcat`. Use `--tags apache_tomcat:logrotate` for it.
 * **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
 * **role:repo_mydumper**: On the Red Hat family, mydumper comes from the official mydumper repository instead of `repo.linuxfabrik.ch`, and dnf checks the package signature. A `repo_mydumper__mirror_url` must therefore serve the signed packages of the official repository unchanged, otherwise the installation fails with a signature error.
