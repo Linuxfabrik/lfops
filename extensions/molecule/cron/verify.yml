@@ -1,0 +1,86 @@
+- name: 'Verify the cron playbook left a working, root-only cron'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  tasks:
+
+    - name: 'systemctl is-active / is-enabled crond.service or cron.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} {{ (ansible_facts["os_family"] == "RedHat") | ternary("crond", "cron") }}.service'
+      loop:
+        - 'is-active'
+        - 'is-enabled'
+      register: '__molecule__cron_service_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that the cron daemon is active and enabled'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in ["active", "enabled"]'
+      loop: '{{ __molecule__cron_service_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # The daemon reads /etc/cron.d as root, so a job there has to run although the directory is
+    # 0700 now.
+    - name: 'Deploy /etc/cron.d/molecule-probe'
+      ansible.builtin.copy:
+        content: "* * * * * root touch /run/molecule-cron-probe\n"
+        dest: '/etc/cron.d/molecule-probe'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      changed_when: false
+
+    - name: 'Wait for the cron job to run'
+      ansible.builtin.wait_for:
+        path: '/run/molecule-cron-probe'
+        timeout: 150
+
+    - name: 'rm -f /etc/cron.d/molecule-probe /run/molecule-cron-probe'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/etc/cron.d/molecule-probe'
+        - '/run/molecule-cron-probe'
+      changed_when: false
+
+    - name: 'runuser --user nobody -- ls /etc/cron.d'
+      ansible.builtin.command: 'runuser --user nobody -- ls /etc/cron.d'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__cron_nobody_ls_result'
+
+    - name: 'Assert that an unprivileged user can no longer list the system cron jobs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cron_nobody_ls_result["rc"] != 0'
+          - '"Permission denied" in __molecule__cron_nobody_ls_result["stderr"]'
+        fail_msg: '{{ __molecule__cron_nobody_ls_result | to_json }}'
+
+    # crontab(1) of an unprivileged user still has to work: it reads /etc/cron.deny, which is
+    # 0600 on the Red Hat family now.
+    - name: 'runuser --user nobody -- crontab -l'
+      ansible.builtin.command: 'runuser --user nobody -- crontab -l'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__cron_nobody_crontab_result'
+
+    - name: 'Assert that crontab answers an unprivileged user with "no crontab", not with a refusal'
+      ansible.builtin.assert:
+        that:
+          - '"no crontab for nobody" in __molecule__cron_nobody_crontab_result["stderr"]'
+        fail_msg: '{{ __molecule__cron_nobody_crontab_result | to_json }}'
+
+    - name: 'stat /etc/crontab /etc/cron.d'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/etc/crontab'
+        - '/etc/cron.d'
+      register: '__molecule__cron_stat_result'
+
+    - name: 'Assert that /etc/crontab is 0600 and /etc/cron.d is 0700'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cron_stat_result["results"] | map(attribute="stat.mode") | list == ["0600", "0700"]'
+        fail_msg: '{{ __molecule__cron_stat_result["results"] | map(attribute="stat.mode") | list }}'
