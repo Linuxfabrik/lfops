@@ -13,7 +13,7 @@ This role installs and configures the curaLINE Client (`cdr-client`) of Swisscom
 * The installed version is recorded in `/usr/lib/swisscom-schweiz-ag/cdr-client/.ansible-version`. When it differs from `curaline__version`, the role removes `/usr/lib/swisscom-schweiz-ag/cdr-client`, unpacks the new version and restarts the service. The configuration lives in `/etc/swisscom-schweiz-ag/cdr-client` and survives the update.
 * The service runs as `curaline__user` and `curaline__group`. If they do not exist, the role creates them as a system user and group. An existing user is taken over as it is: the role changes neither its UID, home, shell nor comment, so other software using the account keeps working.
 * The installation directory belongs to `curaline__user`, as with the Debian package of the client. The role hands it over recursively when `curaline__user` or `curaline__group` change.
-* The systemd unit is modelled on the one of the Debian package, with the same name and directories, but with a static user instead of a dynamic one. The client gets `/var/lib/swisscom-schweiz-ag/cdr-client` as its `$HOME`, whatever the home of `curaline__user` is, and writes its log to `/var/log/swisscom-schweiz-ag/cdr-client`. The unit runs the client sandboxed: it may only write to its installation, configuration, state, cache and log directories and to the folders of its connectors. A unit installed by the Debian package is overridden by the one of the role.
+* The systemd unit is modelled on the one of the Debian package, with the same name, user, group and directories, but with a static user instead of a dynamic one. The client gets `/var/lib/swisscom-schweiz-ag/cdr-client` as its `$HOME`, whatever the home of `curaline__user` is, and writes its log to `/var/log/swisscom-schweiz-ag/cdr-client`. The unit runs the client sandboxed: it may only write to its installation, configuration, state, cache and log directories and to the folders of its connectors. A unit installed by the Debian package is overridden by the one of the role.
 * The folders of the connectors (`source-folder`, `target-folder`, `source-archive-folder`) and `curaline__local_folder` are created for `curaline__user` if they do not exist yet. Existing folders keep their owner, mode and content, so they must already be writable by `curaline__user`. Parent directories are created owned by `root`. The client creates the subfolders below them, such as `error`, itself.
 * The files in `/etc/swisscom-schweiz-ag/cdr-client` are re-rendered on every run (a timestamped backup is kept), so manual edits are overwritten. This includes the client secret in `application-customer.yaml`.
 * With `curaline__renew_credential: true` the client replaces the client secret in `application-customer.yaml` by itself, and the next run of the role sets the one from the inventory again. Leave it at `false` unless the secret in the inventory is renewed by hand.
@@ -233,7 +233,7 @@ curaline__version: '6.2.1'
 
 * Group of the service. Created as a system group if it does not exist. Set it to `'hnet'` to take over an H-Net SecureClient installation, see "Replacing the H-Net SecureClient".
 * Type: String.
-* Default: `'curaline'`
+* Default: `'swisscom-schweiz-ag-cdr-client'`
 
 `curaline__idp_endpoint`
 
@@ -295,7 +295,7 @@ curaline__version: '6.2.1'
 
 * User of the service. Created as a system user without a login shell if it does not exist. An existing user is not modified. Set it to `'hnet'` to take over an H-Net SecureClient installation, see "Replacing the H-Net SecureClient".
 * Type: String.
-* Default: `'curaline'`
+* Default: `'swisscom-schweiz-ag-cdr-client'`
 
 Example:
 ```yaml

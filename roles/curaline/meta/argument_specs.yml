@@ -104,7 +104,7 @@ argument_specs:
       curaline__group:
         type: 'str'
         required: false
-        default: 'curaline'
+        default: 'swisscom-schweiz-ag-cdr-client'
         description: 'Group of the service, created as a system group if it does not exist.'
 
       curaline__idp_endpoint:
@@ -167,7 +167,7 @@ argument_specs:
       curaline__user:
         type: 'str'
         required: false
-        default: 'curaline'
+        default: 'swisscom-schweiz-ag-cdr-client'
         description: 'User of the service, created as a system user if it does not exist. An existing user is not modified.'
 
       curaline__version:
