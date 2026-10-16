@@ -144,7 +144,7 @@
   # to a unique temp file and atomically renames into place, so running it per host is
   # race-safe even when all hosts share the same `/tmp` dest; with the version-pinned dest
   # the first host downloads and the rest find the file already present.
-  - name: 'curl --output /tmp/ansible.example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz' # noqa risky-file-permissions (temporary file)
+  - name: 'curl --output /tmp/ansible.example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz'
     ansible.builtin.get_url:
       url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
       dest: '/tmp/ansible.example-{{ example__version }}.tar.gz'
@@ -160,10 +160,11 @@
 
   # the header lists copy as an anti-pattern, but that applies to CONFIG files (use template).
   # a downloaded binary artifact is the documented exception: templating a tarball makes no sense.
-  - name: 'Copy /tmp/ansible.example-{{ example__version }}.tar.gz to the target' # noqa risky-file-permissions (temporary file)
+  - name: 'Copy /tmp/ansible.example-{{ example__version }}.tar.gz to the target'
     ansible.builtin.copy:
       src: '/tmp/ansible.example-{{ example__version }}.tar.gz'
       dest: '/tmp/example-{{ example__version }}.tar.gz'
+      mode: 0o644
 
   - name: 'tar xzf /tmp/example-{{ example__version }}.tar.gz -C /opt/example'
     ansible.builtin.unarchive:

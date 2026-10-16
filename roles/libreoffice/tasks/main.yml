@@ -23,6 +23,7 @@
     ansible.builtin.file:
       path: '/usr/share/httpd/.config/libreoffice'
       state: 'directory'
+      mode: 0o755
 
   - name: 'chown -R apache:apache /usr/share/httpd/.config'
     ansible.builtin.file:
@@ -83,6 +84,7 @@
 
         #!!!! WARNING: 'usr_t' is a base type.
         allow httpd_t usr_t:file write;
+      mode: 0o644
 
   - name: 'SELinux custom policy: Allow jre/bin/java (via httpd) read access on sys/fs/cgroup'
     ansible.builtin.copy:
@@ -98,6 +100,7 @@
 
         #============= httpd_t ==============
         allow httpd_t cgroup_t:file read;
+      mode: 0o644
 
   - name: 'SELinux custom policy: checkmodule --mls -m --output policy.mod policy.te'
     ansible.builtin.command: |-

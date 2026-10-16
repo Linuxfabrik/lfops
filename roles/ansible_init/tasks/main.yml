@@ -49,6 +49,7 @@
     ansible.builtin.file:
       path: '{{ ansible_init__ansinv_path }}../roles/'
       state: 'directory'
+      mode: 0o755
     when: 'ansible_init__roles is defined and ansible_init__roles | length > 0'
 
   - name: 'Clone the roles to ../roles/' # noqa ignore-errors (best effort, continue when a clone fails)

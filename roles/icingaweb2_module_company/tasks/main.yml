@@ -27,6 +27,7 @@
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-theme-company/archive/v1.0.0.tar.gz'
       dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -39,6 +40,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
       dest: '/tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
+      mode: 0o644
 
   - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/company /tmp/ansible.icingaweb2-theme-company-v1.0.0.tar.gz'
     ansible.builtin.unarchive:

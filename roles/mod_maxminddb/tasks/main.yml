@@ -19,6 +19,7 @@
     ansible.builtin.get_url:
       url: 'https://github.com/maxmind/mod_maxminddb/releases/download/{{ mod_maxminddb__version }}/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
       dest: '/tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -31,6 +32,7 @@
     ansible.builtin.file:
       path: '{{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }}'
       state: 'directory'
+      mode: 0o755
 
   - name: 'tar xfz --strip-components 1 -C {{ ansible_env["HOME"] }}/mod_maxminddb-{{ mod_maxminddb__version }} /tmp/mod_maxminddb-{{ mod_maxminddb__version }}.tar.gz'
     ansible.builtin.unarchive:
@@ -49,6 +51,7 @@
     ansible.builtin.copy:
       dest: '{{ mod_maxminddb__apache_conf_modules_d }}'
       content: 'LoadModule maxminddb_module {{ __mod_maxminddb__module_path }}'
+      mode: 0o644
 
   - name: 'make install'
     community.general.make:

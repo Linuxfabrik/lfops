@@ -123,7 +123,7 @@
       changed_when: false
       failed_when: false
 
-    - name: 'Deploy /boot/efi/lfops-molecule'
+    - name: 'Deploy /boot/efi/lfops-molecule' # noqa risky-file-permissions (vfat has no modes)
       ansible.builtin.copy:
         content: 'lfops-molecule'
         dest: '/boot/efi/lfops-molecule'

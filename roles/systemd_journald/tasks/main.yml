@@ -1,10 +1,9 @@
 - block:
 
-  - name: 'mkdir -p /var/log/journal'
+  - name: 'mkdir -p /var/log/journal' # noqa risky-file-permissions (they are managed by /usr/lib/tmpfiles.d/systemd.conf)
     ansible.builtin.file:
       path: '/var/log/journal'
       state: 'directory'
-      # not touching permissions, as they are managed by /usr/lib/tmpfiles.d/systemd.conf
 
   - name: 'Get size of /var/log/journal filesystem'
     ansible.builtin.shell:
@@ -22,6 +21,7 @@
     ansible.builtin.file:
       path: '/etc/systemd/journald.conf.d'
       state: 'directory'
+      mode: 0o755
 
   - name: 'Deploy /etc/systemd/journald.conf.d/'
     ansible.builtin.template:

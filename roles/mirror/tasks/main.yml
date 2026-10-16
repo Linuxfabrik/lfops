@@ -42,6 +42,7 @@
       src: '/opt/mirror/systemd/mirror-update.service'
       dest: '/etc/systemd/system/mirror-update.service'
       remote_src: true
+      mode: 0o644
     notify: 'mirror: systemctl daemon-reload'
 
   - name: 'cp /opt/mirror/systemd/mirror-update.timer /etc/systemd/system/mirror-update.timer'
@@ -49,6 +50,7 @@
       src: '/opt/mirror/systemd/mirror-update.timer'
       dest: '/etc/systemd/system/mirror-update.timer'
       remote_src: true
+      mode: 0o644
     notify: 'mirror: systemctl daemon-reload'
 
   - name: 'systemctl {{ mirror__timer_enabled | bool | ternary("enable", "disable") }} --now mirror-update.timer'

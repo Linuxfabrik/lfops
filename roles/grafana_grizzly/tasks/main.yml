@@ -57,11 +57,13 @@
     ansible.builtin.file:
       path: '/tmp/ansible.grafana_grizzly'
       state: 'directory'
+      mode: 0o755
 
   - name: 'copy the grizzly resources to /tmp/ansible.grafana_grizzly/'
     ansible.builtin.copy:
       src: '{{ item }}'
       dest: '/tmp/ansible.grafana_grizzly/{{ item | basename }}'
+      mode: 0o644
     loop: '{{ lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly/*.yml", wantlist=True) }}'
 
   - name: '/usr/local/bin/grr apply /tmp/ansible.grafana_grizzly/*.yml'

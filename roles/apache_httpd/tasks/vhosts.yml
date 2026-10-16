@@ -33,11 +33,10 @@
   loop_control:
     label: '{{ item["filename"] | d(item["conf_server_name"] ~ "." ~ item["virtualhost_port"]) }}'
 
-- name: 'Create DocumentRoot for all vHosts'
+- name: 'Create DocumentRoot for all vHosts' # noqa risky-file-permissions (owned by the app, we might need special ones such as sticky bits)
   ansible.builtin.file:
     path: '{{ item["conf_document_root"] | d(apache_httpd__conf_document_root ~ "/" ~ item["conf_server_name"]) }}'
     state: 'directory'
-    # do not set permissions, we might need special ones such as sticky bits
   when:
     - 'item["template"] in ["app", "localhost"]'
     - 'item["state"] | d("present") != "absent"'

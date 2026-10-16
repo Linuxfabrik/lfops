@@ -43,6 +43,7 @@
     ansible.builtin.get_url:
       url: '{{ icingaweb2_module_director__url }}'
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -55,6 +56,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
+      mode: 0o644
 
   - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/director /tmp/ansible.icingaweb2-module-director-{{ icingaweb2_module_director__version }}.tar.gz'
     ansible.builtin.unarchive:
@@ -97,6 +99,7 @@
       src: '/usr/share/icingaweb2/modules/director/contrib/systemd/icinga-director.service'
       dest: '/etc/systemd/system/icinga-director.service'
       remote_src: true
+      mode: 0o644
     register: 'icingaweb2_module_director__systemd_service_template_result'
 
   - name: 'systemctl daemon-reload'

@@ -19,6 +19,7 @@
     ansible.builtin.file:
       path: '/etc/systemd/system/clamav-clamonacc.service.d/'
       state: 'directory'
+      mode: 0o755
 
   - name: 'Deploy /etc/systemd/system/clamav-clamonacc.service.d/fdpass.conf'
     ansible.builtin.template:
