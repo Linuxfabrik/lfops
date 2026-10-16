@@ -252,8 +252,15 @@
       mode: 0o644
     register: 'mariadb_server__deploy_tmpfiles_result'
 
-  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf' # noqa no-handler no-changed-when (sadly no easy way to detect changes)
+  # systemd-tmpfiles reports nothing at the default log level. At debug level, stderr has a
+  # 'Created' or 'Changing' line for every change. Verified against systemd 239, 252 and 257 on
+  # Rocky 8, 9 and 10 for `d` rules.
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf' # noqa no-handler
     ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/mariadb-linuxfabrik.conf'
+    environment:
+      SYSTEMD_LOG_LEVEL: 'debug'
+    register: 'mariadb_server__tmpfiles_create_result'
+    changed_when: 'mariadb_server__tmpfiles_create_result["stderr"] is search("^(Created|Changing) ", multiline=True)'
     when:
       - 'mariadb_server__deploy_tmpfiles_result is changed'
 
@@ -264,8 +271,14 @@
       state: 'absent'
     register: 'mariadb_server__remove_old_tmpfiles_result'
 
-  - name: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf' # noqa no-handler no-changed-when
+  # the packaged mariadb.conf only holds `d` rules (checked in mariadb-server 10.5 on Rocky 9),
+  # see the systemd-tmpfiles output note above
+  - name: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf' # noqa no-handler
     ansible.builtin.command: 'systemd-tmpfiles --create /usr/lib/tmpfiles.d/mariadb.conf'
+    environment:
+      SYSTEMD_LOG_LEVEL: 'debug'
+    register: 'mariadb_server__tmpfiles_create_packaged_result'
+    changed_when: 'mariadb_server__tmpfiles_create_packaged_result["stderr"] is search("^(Created|Changing) ", multiline=True)'
     when:
       - 'mariadb_server__remove_old_tmpfiles_result is changed'
 

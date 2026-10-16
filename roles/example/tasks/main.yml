@@ -361,6 +361,28 @@
       daemon_reload: true
     when: '__example__z00_after_tuned_result is changed'
 
+  # runtime directories below /run are created by systemd-tmpfiles.
+  - name: 'Deploy /etc/tmpfiles.d/example.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/tmpfiles.d/example.conf.j2'
+      dest: '/etc/tmpfiles.d/example.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__example__tmpfiles_result'
+
+  # systemd-tmpfiles reports nothing at the default log level. At debug level, stderr has a
+  # 'Created' or 'Changing' line for every change. Verified against systemd 239, 252 and 257 on
+  # Rocky 8, 9 and 10 for `d` rules.
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/example.conf' # noqa no-handler (the directory is needed right away)
+    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/example.conf'
+    environment:
+      SYSTEMD_LOG_LEVEL: 'debug'
+    register: '__example__tmpfiles_create_result'
+    changed_when: '__example__tmpfiles_create_result["stderr"] is search("^(Created|Changing) ", multiline=True)'
+    when: '__example__tmpfiles_result is changed'
+
   tags:
     - 'example'
     - 'example:configure'
