@@ -90,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
 * **role:apache_tomcat**: The Tomcat 9.0 configuration follows the files shipped with the current RHEL 8 and 9 packages.
 * **role:apache_tomcat**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
@@ -139,6 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: The admin section of the `support` app is hidden again.
 * **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
 * **plugin:bitwarden_item, module:bitwarden_item**: Items without a username work with Bitwarden CLI 2026.10.0, where the lookup and the module aborted with `KeyError: 'username'`.
 * **role:kernel_settings**: The role no longer prints the `Conditional result ... was of type 'int'` deprecation warning.

@@ -38,8 +38,7 @@ nextcloud__app_configs__role_var:
     value: 'ch'
     state: 'present'
   - key: 'support hide-app'
-    value: true
-    type: 'boolean'
+    value: 'yes'  # upstream default: 'no'
     state: 'present'
   - key: 'text workspace_available'
     value: false
@@ -142,7 +141,7 @@ nextcloud__apps__role_var:
   - name: 'sharebymail'
     state: 'enabled'
   - name: 'support'
-    state: 'disabled'
+    state: 'enabled'
   - name: 'survey_client'
     state: 'disabled'
   - name: 'systemtags'
