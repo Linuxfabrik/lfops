@@ -273,9 +273,10 @@ argument_specs:
         type: 'list'
         elements: 'str'
         required: false
+        default: []
         description: >-
           Reverse proxies whose `X-Forwarded-For` header is believed
-          (`RemoteIPInternalProxy`). Defaults to `lfops__trusted_proxies`.
+          (`RemoteIPInternalProxy`).
 
       apache_httpd__mod_security_coreruleset_url:
         type: 'str'
