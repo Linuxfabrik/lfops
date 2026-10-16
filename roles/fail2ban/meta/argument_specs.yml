@@ -58,11 +58,41 @@ argument_specs:
         default: '10s'
         description: 'The find time for the apache-404 jail.'
 
+      fail2ban__jail_apache_404_logpath:
+        type: 'str'
+        required: false
+        default: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
+        description: 'The access log(s) the apache-404 jail reads.'
+
       fail2ban__jail_apache_404_maxretry:
         type: 'int'
         required: false
         default: 10
         description: 'The number of 404 errors within the find time before an IP is banned.'
+
+      fail2ban__jail_apache_dos_bantime:
+        type: 'str'
+        required: false
+        default: '5m'
+        description: 'The ban duration for the apache-dos jail.'
+
+      fail2ban__jail_apache_dos_findtime:
+        type: 'str'
+        required: false
+        default: '10s'
+        description: 'The find time for the apache-dos jail.'
+
+      fail2ban__jail_apache_dos_logpath:
+        type: 'str'
+        required: false
+        default: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
+        description: 'The access log(s) the apache-dos jail reads.'
+
+      fail2ban__jail_apache_dos_maxretry:
+        type: 'int'
+        required: false
+        default: 600
+        description: 'The number of requests within the find time before an IP is banned.'
 
       fail2ban__jail_apache_scanner_bantime:
         type: 'str'
@@ -79,7 +109,7 @@ argument_specs:
       fail2ban__jail_apache_scanner_logpath:
         type: 'str'
         required: false
-        default: '/var/log/httpd/*access?log'
+        default: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
         description: 'The access log(s) the apache-scanner jail reads.'
 
       fail2ban__jail_apache_scanner_maxretry:
@@ -144,6 +174,12 @@ argument_specs:
         required: false
         default: '10m'
         description: 'The find time for the wordpress-login jail.'
+
+      fail2ban__jail_wordpress_login_logpath:
+        type: 'str'
+        required: false
+        default: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
+        description: 'The access log(s) the wordpress-login jail reads.'
 
       fail2ban__jail_wordpress_login_maxretry:
         type: 'int'

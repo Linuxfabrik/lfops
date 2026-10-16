@@ -27,10 +27,15 @@ fail2ban__filters__role_var:
     template: 'wordpress-login'
 fail2ban__jail_apache_404_bantime: '8h'
 fail2ban__jail_apache_404_findtime: '10s'
+fail2ban__jail_apache_404_logpath: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
 fail2ban__jail_apache_404_maxretry: 10
+fail2ban__jail_apache_dos_bantime: '5m'
+fail2ban__jail_apache_dos_findtime: '10s'
+fail2ban__jail_apache_dos_logpath: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
+fail2ban__jail_apache_dos_maxretry: 600
 fail2ban__jail_apache_scanner_bantime: '8h'
 fail2ban__jail_apache_scanner_findtime: '10m'
-fail2ban__jail_apache_scanner_logpath: '/var/log/httpd/*access?log'
+fail2ban__jail_apache_scanner_logpath: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
 fail2ban__jail_apache_scanner_maxretry: 5
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
@@ -47,6 +52,7 @@ fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
 fail2ban__jail_sshd_bantime: '7d'
 fail2ban__jail_wordpress_login_bantime: '8h'
 fail2ban__jail_wordpress_login_findtime: '10m'
+fail2ban__jail_wordpress_login_logpath: '{{ "/var/log/apache2/*access?log" if ansible_facts["os_family"] == "Debian" else "/var/log/httpd/*access?log" }}'
 fail2ban__jail_wordpress_login_maxretry: 5
 fail2ban__jails__combined_var: '{{ (
       fail2ban__jails__role_var +
@@ -58,7 +64,18 @@ fail2ban__jails__combined_var: '{{ (
 fail2ban__jails__dependent_var: []
 fail2ban__jails__group_var: []
 fail2ban__jails__host_var: []
+# The Apache jails need an access log to read, otherwise fail2ban skips them with an error. They
+# are therefore only on for hosts that run the apache_httpd role.
 fail2ban__jails__role_var:
+  - filename: 'z10-apache-404'
+    state: '{{ "present" if "lfops_apache_httpd" in group_names else "absent" }}'
+    template: 'apache-404'
+  - filename: 'z10-apache-dos'
+    state: '{{ "present" if "lfops_apache_httpd" in group_names else "absent" }}'
+    template: 'apache-dos'
+  - filename: 'z10-apache-scanner'
+    state: '{{ "present" if "lfops_apache_httpd" in group_names else "absent" }}'
+    template: 'apache-scanner'
   - filename: 'z10-portscan'
     state: 'present'
     template: 'portscan'

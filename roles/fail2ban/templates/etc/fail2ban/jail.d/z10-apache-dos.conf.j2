@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2022070601
+# 2026101601
 
 [apache-dos]
-bantime  = 5m
+bantime  = {{ fail2ban__jail_apache_dos_bantime }}
 enabled  = true
-findtime = 10s
-logpath  = /var/log/httpd/*access?log
-maxretry = 600
+findtime = {{ fail2ban__jail_apache_dos_findtime }}
+logpath  = {{ fail2ban__jail_apache_dos_logpath }}
+maxretry = {{ fail2ban__jail_apache_dos_maxretry }}
 port     = http,https

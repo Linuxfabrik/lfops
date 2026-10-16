@@ -10,6 +10,8 @@ This role provides five additional filters:
   **Important:** in order to capture the client ip for all formats, this filter requires the ServerName to be a domain instead of an ip address when using a LogFormat where the canonical ServerName `%v` precedes the client IP `%h` (matomo, vhost_common).
 * apache-dos: Matches all incoming requests to Apache. Can be used to limit the number of allowed requests per client.
 * apache-scanner: Matches requests in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common) that probe for files a web server should never hand out, whatever the answer was: a backup, archive or database file such as `/backup.zip` or `/dump.sql` directly below the document root, a secrets or version-control entry such as `/.env` or `/.git/config`, the development-server paths `/@fs/` and `/__vite`, and the `..;/` path traversal. It catches what `apache-404` cannot: a reverse proxy in front of GitLab, for example, gets a redirect to the sign-in page for every such request, not a 404. The `z10-apache-scanner` jail bans IPs that probe too often. Point `fail2ban__jail_apache_scanner_logpath` at the access logs of the vHosts that never serve such files, since a site may legitimately offer a download like `/archive.zip`.
+
+The four Apache jails (apache-404, apache-dos, apache-scanner, wordpress-login) are configured alike: `fail2ban__jail_<name>_bantime`, `_findtime`, `_logpath` and `_maxretry`.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port. Only packets that open a connection count: a TCP SYN without ACK, PSH, RST or FIN, or any UDP packet. Reply traffic of a TCP connection the firewall no longer tracks, such as the late FIN of a half-closed connection, an RST or a mid-connection ACK, is ignored, and so are ICMP error messages, so a server that a local proxy talks to is not banned. TCP scans that send no plain SYN, such as FIN, NULL, Xmas, ACK and SYN/FIN scans, are therefore not banned either; they find no open port on a stateful firewall. A late UDP reply, for example a DNS answer that arrives after the firewall has forgotten the query, is still banned, since the kernel log cannot tell it apart from a UDP scan.
 * wordpress-login: Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common), also for WordPress in a sub-path such as `/blog`, which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
 
@@ -38,7 +40,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Requirements
 
-* Optional: The `apache-*` jails read the Apache logs below `/var/log/httpd/`.
+* Optional: The `apache-*` and `wordpress-login` jails read the Apache access logs below `/var/log/httpd/` (`/var/log/apache2/` on Debian and Ubuntu). A jail whose `logpath` matches no file is skipped by fail2ban with an error, so the jails that are on by default are only deployed to hosts in the `lfops_apache_httpd` group.
 * Optional: The `portscan` filter matches the kernel log of an iptables firewall that logs denied packets, as fwbuilder generates it, read through the systemd journal. Without such a firewall the jail never bans.
 
 
@@ -108,11 +110,41 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `'10s'`
 
+`fail2ban__jail_apache_404_logpath`
+
+* The access log(s) the apache-404 jail reads. Wildcards are allowed.
+* Type: String.
+* Default: `'/var/log/httpd/*access?log'` (`'/var/log/apache2/*access?log'` on Debian and Ubuntu)
+
 `fail2ban__jail_apache_404_maxretry`
 
 * The number of 404 errors within `fail2ban__jail_apache_404_findtime` before an IP is banned.
 * Type: Integer.
 * Default: `10`
+
+`fail2ban__jail_apache_dos_bantime`
+
+* The ban duration for the apache-dos jail.
+* Type: String.
+* Default: `'5m'`
+
+`fail2ban__jail_apache_dos_findtime`
+
+* The find time for the apache-dos jail. An IP is banned if it sends more than `fail2ban__jail_apache_dos_maxretry` requests within this duration.
+* Type: String.
+* Default: `'10s'`
+
+`fail2ban__jail_apache_dos_logpath`
+
+* The access log(s) the apache-dos jail reads. Wildcards are allowed.
+* Type: String.
+* Default: `'/var/log/httpd/*access?log'` (`'/var/log/apache2/*access?log'` on Debian and Ubuntu)
+
+`fail2ban__jail_apache_dos_maxretry`
+
+* The number of requests within `fail2ban__jail_apache_dos_findtime` before an IP is banned.
+* Type: Integer.
+* Default: `600`
 
 `fail2ban__jail_apache_scanner_bantime`
 
@@ -130,7 +162,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The access log(s) the apache-scanner jail reads. Wildcards are allowed.
 * Type: String.
-* Default: `'/var/log/httpd/*access?log'`
+* Default: `'/var/log/httpd/*access?log'` (`'/var/log/apache2/*access?log'` on Debian and Ubuntu)
 
 `fail2ban__jail_apache_scanner_maxretry`
 
@@ -198,6 +230,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `'10m'`
 
+`fail2ban__jail_wordpress_login_logpath`
+
+* The access log(s) the wordpress-login jail reads. Wildcards are allowed.
+* Type: String.
+* Default: `'/var/log/httpd/*access?log'` (`'/var/log/apache2/*access?log'` on Debian and Ubuntu)
+
 `fail2ban__jail_wordpress_login_maxretry`
 
 * The number of failed WordPress logins within `fail2ban__jail_wordpress_login_findtime` before an IP is banned.
@@ -208,7 +246,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The fail2ban jail definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `z10-portscan`, `z10-sshd`
+* Default: `z10-portscan`, `z10-sshd`, and on hosts in the `lfops_apache_httpd` group `z10-apache-404`, `z10-apache-dos`, `z10-apache-scanner`. `z10-wordpress-login` is opt-in, since on a reverse proxy the jail has to read the logs of the WordPress vHosts only.
 * Subkeys:
 
     * `filename`:
@@ -261,7 +299,12 @@ fail2ban__filters__host_var:
       ignoreregex =
 fail2ban__jail_apache_404_bantime: '8h'
 fail2ban__jail_apache_404_findtime: '10s'
+fail2ban__jail_apache_404_logpath: '/var/log/httpd/*access?log'
 fail2ban__jail_apache_404_maxretry: 10
+fail2ban__jail_apache_dos_bantime: '5m'
+fail2ban__jail_apache_dos_findtime: '10s'
+fail2ban__jail_apache_dos_logpath: '/var/log/httpd/*access?log'
+fail2ban__jail_apache_dos_maxretry: 600
 fail2ban__jail_apache_scanner_bantime: '8h'
 fail2ban__jail_apache_scanner_findtime: '10m'
 fail2ban__jail_apache_scanner_logpath: '/var/log/httpd/git.example.com-access.log'
@@ -282,14 +325,12 @@ fail2ban__jail_portscan_server_ips:
 fail2ban__jail_sshd_bantime: '7d'
 fail2ban__jail_wordpress_login_bantime: '8h'
 fail2ban__jail_wordpress_login_findtime: '10m'
+fail2ban__jail_wordpress_login_logpath: '/var/log/httpd/wordpress.example.com-access.log'
 fail2ban__jail_wordpress_login_maxretry: 5
 fail2ban__jails__host_var:
   - filename: 'z10-apache-dos'
     state: 'absent'
     template: 'apache-dos'
-  - filename: 'z10-apache-scanner'
-    state: 'present'
-    template: 'apache-scanner'
   - filename: 'z10-wordpress-login'
     state: 'present'
     template: 'wordpress-login'
