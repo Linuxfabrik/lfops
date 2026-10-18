@@ -31,7 +31,7 @@ Which Ansible role is proven to run on which OS?
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
 | core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
-| cron                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
+| cron_permissions                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |

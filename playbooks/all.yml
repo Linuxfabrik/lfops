@@ -20,7 +20,7 @@
 - import_playbook: 'collabora.yml'
 - import_playbook: 'core_dumps.yml'
 - import_playbook: 'coturn.yml'
-- import_playbook: 'cron.yml'
+- import_playbook: 'cron_permissions.yml'
 - import_playbook: 'crypto_policy.yml'
 - import_playbook: 'dnf_makecache.yml'
 - import_playbook: 'dnf_versionlock.yml'

@@ -1,0 +1,22 @@
+# The role only restricts an existing cron, so give every system under test one first, as a host
+# set up by its distribution or by an application such as LibreNMS has.
+- name: 'Install cron as the role expects to find it'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - name: 'Install cronie / cron'
+      ansible.builtin.package:
+        name: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("cronie", "cron") }}'
+        state: 'present'
+      retries: 3
+      delay: 10
+
+    - name: 'systemctl enable --now crond.service / cron.service'
+      ansible.builtin.service:
+        name: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("crond", "cron") }}.service'
+        enabled: true
+        state: 'started'
+
+
+- name: 'Converge cron_permissions playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.cron_permissions'

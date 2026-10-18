@@ -1,2 +1,0 @@
-__cron__package: 'cronie'
-__cron__service_name: 'crond'

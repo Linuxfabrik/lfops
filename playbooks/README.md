@@ -199,11 +199,11 @@ Calls the following roles (in order):
 * [coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)
 
 
-## cron.yml
+## cron_permissions.yml
 
 Calls the following roles (in order):
 
-* [cron](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron)
+* [cron_permissions](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron_permissions)
 
 
 ## crypto_policy.yml
@@ -1133,7 +1133,7 @@ Calls the following roles (in order):
 * [chrony](https://github.com/Linuxfabrik/lfops/tree/main/roles/chrony): `setup_basic__skip_chrony`
 * [motd](https://github.com/Linuxfabrik/lfops/tree/main/roles/motd): `setup_basic__skip_motd`
 * [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
-* [cron](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron): `setup_basic__skip_cron`
+* [cron_permissions](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron_permissions): `setup_basic__skip_cron_permissions`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`

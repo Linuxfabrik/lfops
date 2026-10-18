@@ -1,23 +1,7 @@
-- name: 'Verify the cron playbook left a working, root-only cron'
+- name: 'Verify the cron_permissions playbook left a working, root-only cron'
   hosts: 'systems_under_test'
-  gather_facts: true
+  gather_facts: false
   tasks:
-
-    - name: 'systemctl is-active / is-enabled crond.service or cron.service' # noqa command-instead-of-module (read-only state query)
-      ansible.builtin.command: 'systemctl {{ item }} {{ (ansible_facts["os_family"] == "RedHat") | ternary("crond", "cron") }}.service'
-      loop:
-        - 'is-active'
-        - 'is-enabled'
-      register: '__molecule__cron_service_result'
-      changed_when: false
-      failed_when: false
-
-    - name: 'Assert that the cron daemon is active and enabled'
-      ansible.builtin.assert:
-        that: 'item["stdout"] in ["active", "enabled"]'
-      loop: '{{ __molecule__cron_service_result["results"] }}'
-      loop_control:
-        label: '{{ item["item"] }}'
 
     # The daemon reads /etc/cron.d as root, so a job there has to run although the directory is
     # 0700 now.
