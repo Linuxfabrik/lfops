@@ -17,6 +17,30 @@
     ansible.builtin.debug:
       var: 'kernel_modules__modules__combined_var'
 
+  # dracut copies /etc/modprobe.d into the initramfs, so blocking usb-storage on a host that
+  # boots from a USB disk or an SD card reader makes it unbootable after the next kernel update.
+  # uas depends on usb-storage, so UAS disks are affected as well.
+  - name: 'lsblk --nodeps --noheadings --raw --output TRAN,NAME'
+    ansible.builtin.command: 'lsblk --nodeps --noheadings --raw --output TRAN,NAME'
+    register: '__kernel_modules__lsblk_result'
+    changed_when: false # read-only command, never changes anything
+    check_mode: false # also run in check mode
+    when:
+      - '"usb_storage" in __kernel_modules__blocked_module_names | map("replace", "-", "_") | list'
+
+  - name: 'Assert that no USB disk is attached while usb-storage gets blocked'
+    ansible.builtin.assert:
+      that:
+        - '__kernel_modules__lsblk_result["stdout_lines"] | select("match", "usb ") | list | length == 0'
+      quiet: true
+      fail_msg: >-
+        usb-storage is to be blocked, but the host has USB disks attached
+        ({{ __kernel_modules__lsblk_result["stdout_lines"] | select("match", "usb ") | map("split", " ") | map("last") | join(", ") }}).
+        If the host boots from one of them, it would no longer boot. Set `enabled: true` for
+        usb-storage in kernel_modules__modules__host_var, or detach the disks.
+    when:
+      - '__kernel_modules__lsblk_result is not skipped'
+
   # An `install <module> /bin/true` line prevents the module from being loaded,
   # both automatically and via a manual `modprobe`. Already-loaded modules stay
   # loaded until the next reboot (see README).

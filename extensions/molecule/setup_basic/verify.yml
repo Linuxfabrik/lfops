@@ -348,3 +348,153 @@
           - '"linuxfabrik-downtime-api" not in __molecule__nobody_login_shell_result["stdout"]'
           - '"Permission denied" in __molecule__nobody_login_shell_result["stderr"]'
         fail_msg: '{{ __molecule__nobody_login_shell_result | to_json }}'
+
+
+# The CIS defaults of setup_basic, asked of the running system. On the Red Hat family the play
+# above has rebooted the host by now, so the sysctl values prove that TuneD applies the
+# hardening baseline at boot as well, not only while the role runs.
+- name: 'Verify the CIS hardening defaults of setup_basic'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  vars:
+    __molecule__sysctl_defaults: '{{
+        __kernel_settings__sysctl__role_var
+        | linuxfabrik.lfops.combine_lod
+        | rejectattr("name", "eq", "drop")
+        | list
+      }}'
+  tasks:
+
+    - name: 'sshd -T'
+      ansible.builtin.command: 'sshd -T'
+      changed_when: false
+      register: '__molecule__sshd_effective_config_result'
+
+    # permitrootlogin comes from the shared Molecule inventory, which keeps root logins with a
+    # key for Molecule itself; it proves the variable reaches sshd.
+    - name: 'Assert that sshd runs with the hardened options'
+      ansible.builtin.assert:
+        that:
+          - '"clientalivecountmax 2" in __molecule__sshd_effective_config_result["stdout_lines"]'
+          - '"clientaliveinterval 15" in __molecule__sshd_effective_config_result["stdout_lines"]'
+          - '"permitrootlogin without-password" in __molecule__sshd_effective_config_result["stdout_lines"]
+            or "permitrootlogin prohibit-password" in __molecule__sshd_effective_config_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__sshd_effective_config_result["stdout_lines"] | select("search", "^(clientalive|permitrootlogin)") | list }}'
+
+    - name: 'Gather the distribution facts'
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+
+    # the role's defaults as the role computes them: the baseline plus the platform values
+    - name: 'Load the sysctl defaults of the kernel_settings role'
+      ansible.builtin.include_vars:
+        file: '{{ playbook_dir }}/../../../roles/kernel_settings/vars/{{ item }}'
+      loop:
+        - 'main.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+      when: '(playbook_dir ~ "/../../../roles/kernel_settings/vars/" ~ item) is file'
+
+    - name: 'sysctl --values <the keys of the kernel_settings defaults>'
+      ansible.builtin.command: 'sysctl --values {{ __molecule__sysctl_defaults | map(attribute="name") | join(" ") }}'
+      changed_when: false
+      register: '__molecule__sysctl_values_result'
+
+    - name: 'Assert that the running kernel uses every value of the kernel_settings defaults'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__sysctl_values_result["stdout_lines"] == __molecule__sysctl_defaults | map(attribute="value") | map("string") | list'
+        fail_msg: '{{ __molecule__sysctl_defaults | map(attribute="name") | zip(__molecule__sysctl_values_result["stdout_lines"]) | map("join", "=") | list }}'
+
+    # `install usb-storage /bin/true` makes modprobe run /bin/true instead of loading the module.
+    - name: 'modprobe usb-storage'
+      ansible.builtin.command: 'modprobe usb-storage'
+      changed_when: false
+
+    - name: 'slurp /proc/modules'
+      ansible.builtin.slurp:
+        src: '/proc/modules'
+      register: '__molecule__proc_modules_result'
+
+    - name: 'modprobe --showconfig'
+      ansible.builtin.command: 'modprobe --showconfig'
+      changed_when: false
+      register: '__molecule__modprobe_showconfig_result'
+
+    - name: 'Assert that usb-storage cannot be loaded and carries both lines the CIS audit asks for'
+      ansible.builtin.assert:
+        that:
+          - '"usb_storage " not in (__molecule__proc_modules_result["content"] | ansible.builtin.b64decode)'
+          - '"blacklist usb_storage" in __molecule__modprobe_showconfig_result["stdout_lines"]'
+          - '"install usb_storage /bin/true" in __molecule__modprobe_showconfig_result["stdout_lines"]'
+
+    # cron_permissions neither installs nor starts cron, so this only applies where the image
+    # brings it along. cron reads /etc/cron.d as root, so a job there has to run although the
+    # directory is 0700.
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Verify that a cron job runs although /etc/cron.d is 0700'
+      when:
+        - '"crond.service" in ansible_facts["services"] or "cron.service" in ansible_facts["services"]'
+      block:
+
+      - name: 'Deploy /etc/cron.d/molecule-probe'
+        ansible.builtin.copy:
+          content: "* * * * * root touch /run/molecule-cron-probe\n"
+          dest: '/etc/cron.d/molecule-probe'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+        changed_when: false
+
+      - name: 'Wait for the cron job to run'
+        ansible.builtin.wait_for:
+          path: '/run/molecule-cron-probe'
+          timeout: 150
+
+      - name: 'rm -f /etc/cron.d/molecule-probe /run/molecule-cron-probe'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop:
+          - '/etc/cron.d/molecule-probe'
+          - '/run/molecule-cron-probe'
+        changed_when: false
+
+    # Lynis has to accept the LFOps defaults: either they satisfy it, or roles/lynis skips the
+    # check with a reason.
+    # Lynis looks for each test ID as a substring of --tests (Register() in include/functions).
+    # Before 3.1.6 it rejects a space in any argument (SafeInput()), as the release on Debian 13
+    # does, so the IDs are separated by a slash.
+    - name: 'lynis audit system --quick --tests FILE-7524/KRNL-6000/SSH-7408'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests FILE-7524/KRNL-6000/SSH-7408'
+      args:
+        chdir: '/'
+      changed_when: false
+      register: '__molecule__lynis_cis_audit_result'
+
+    - name: 'cat /var/log/lynis-report.dat'
+      ansible.builtin.command: 'cat /var/log/lynis-report.dat'
+      changed_when: false
+      register: '__molecule__lynis_cis_report_result'
+
+    - name: 'Assert that Lynis accepts the sshd, file permission and sysctl defaults'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lynis_cis_report_result["stdout_lines"]
+              | select("match", "suggestion") | select("search", "=(FILE-7524|SSH-7408)[|]")
+              | list | length == 0'
+          - '__molecule__lynis_kernel_fields
+              | intersect(__molecule__sysctl_defaults | map(attribute="name") | list)
+              | length == 0'
+        fail_msg: '{{ __molecule__lynis_cis_report_result["stdout_lines"] | select("search", "=(FILE-7524|KRNL-6000|SSH-7408)[|]") | list }}'
+      vars:
+        # details[]=KRNL-6000|sysctl|desc:...;field:<key>;prefval:...;value:...;|
+        __molecule__lynis_kernel_fields: '{{
+            __molecule__lynis_cis_report_result["stdout_lines"]
+            | select("match", "details") | select("search", "=KRNL-6000[|]")
+            | map("regex_replace", "^.*;field:([^;]+);.*$", "\\1")
+            | list
+          }}'

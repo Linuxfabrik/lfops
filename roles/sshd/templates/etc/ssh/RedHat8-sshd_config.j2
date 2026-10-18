@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026060601
+# 2026101601
 
 #	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
@@ -120,7 +120,7 @@ PrintMotd no
 TCPKeepAlive {{ sshd__tcp_keep_alive | bool | ternary("yes", "no") }}
 #PermitUserEnvironment no
 #Compression delayed
-#ClientAliveInterval 0
+ClientAliveInterval {{ sshd__client_alive_interval }}
 ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #PidFile /var/run/sshd.pid

@@ -14,6 +14,7 @@ This role installs [Lynis](https://cisofy.com/lynis/), the security auditing too
 * The role deploys both units to `/etc/systemd/system` on every platform. On Debian and Ubuntu they replace the `lynis.timer` and `lynis.service` the package ships, so the audit runs at the same time and with the same options everywhere.
 * Every audit overwrites `/var/log/lynis.log` and `/var/log/lynis-report.dat`. `lynis show details <TEST-ID>` explains a finding from that log.
 * `/etc/lynis/custom.prf` is fully templated from `lynis__skip_tests`. On every run it is re-rendered (a timestamped backup is kept), so a hand-edited `custom.prf` is overwritten. Every audit on the host reads it: the daily one of `lynis.timer`, and a network scan with the lynis monitoring plugin from a management host.
+* By default `/etc/lynis/custom.prf` skips the Lynis tests whose suggestion LFOps deliberately does not follow, so the monitoring plugin only reports what is left to do. Where Lynis and the CIS Benchmarks cover the same setting and disagree, LFOps follows CIS (for example `MaxSessions 10` in sshd, where Lynis wants 2). A suggestion only Lynis makes is skipped only where following it would break something (for example `allow_url_fopen = Off` in PHP). Each entry carries its reason as a comment in `custom.prf`. A test that checks several values is only skipped for the one value, for example `KRNL-6000:kernel.sysrq` instead of all of `KRNL-6000`. To have Lynis report one of them again, add it to `lynis__skip_tests__host_var` or `lynis__skip_tests__group_var` with `state: 'absent'`.
 * To accept a finding the monitoring plugin reports, take its test ID from the plugin output. Where the plugin says "add `skip-test=NETW-3015` to `/etc/lynis/custom.prf`", add `- name: 'NETW-3015'` to `lynis__skip_tests__host_var` or `lynis__skip_tests__group_var`, and state the reason in `comment`. The finding disappears with the next audit.
 * The role validates each test ID before it writes the file. Lynis refuses to run at all if a setting line of a profile contains a character outside of letters, digits and `/[]()_|,.:;=-`, so a typo would otherwise silence the whole audit instead of one test.
 
@@ -59,7 +60,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Lynis tests to skip on the host, written to `/etc/lynis/custom.prf` as `skip-test=<name>` lines. Use this to accept a finding or a suggestion, for example one the lynis-logfile monitoring plugin reports.
 * Type: List of dictionaries.
-* Default: `[]`
+* Default: `ACCT-9630`, `AUTH-9282`, `AUTH-9284`, `AUTH-9328`, `BOOT-5264`, `DBS-1884`, `DBS-1886`, `HRDN-7222`, `HRDN-7230`, `HTTP-6640`, `KRNL-6000:fs.protected_fifos`, `KRNL-6000:fs.protected_regular`, `KRNL-6000:kernel.modules_disabled`, `KRNL-6000:kernel.sysrq`, `KRNL-6000:net.ipv4.conf.all.forwarding`, `LOGG-2190`, `PHP-2372`, `PHP-2376`, `SSH-7408:allowtcpforwarding`, `SSH-7408:maxsessions` and `SSH-7408:port`, on Debian and Ubuntu also `FILE-7524`, on Ubuntu 22.04 and 24.04 also `KRNL-6000:kernel.kptr_restrict`. `roles/lynis/vars/main.yml` gives the reason for each.
+* Deviates from the upstream default `[]`: Lynis would otherwise keep reporting every deliberate LFOps default as a suggestion (see "How the Role Behaves").
 * Subkeys:
 
     * `name`:

@@ -27,3 +27,8 @@ __molecule__instance_name: >-
 # on its own. A pool in a directory no package owns keeps that grant, and the rootless VM
 # creation it buys, working across upgrades. vm-create.yml asserts that the pool exists.
 kvm_vm__pool: '{{ lookup("env", "LFOPS_TEST_POOL") | d("lfops-molecule", true) }}'
+
+# Molecule logs in to every system under test as root (host_vars/*-vm.yml). The sshd role
+# defaults to `PermitRootLogin no` and refuses to deploy it while Ansible logs in as root, so
+# the scenarios that run sshd keep key-based root logins.
+sshd__permit_root_login: 'prohibit-password'

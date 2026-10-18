@@ -1,0 +1,8 @@
+# Ubuntu 22.04 and 24.04 ship kernel.kptr_restrict = 1 in /etc/sysctl.d/10-kernel-hardening.conf
+# (procps). TuneD re-applies /etc/sysctl.d over its profile (reapply_sysctl = 1,
+# _apply_system_sysctl() in tuned/plugins/plugin_sysctl.py), so the 2 of the hardening baseline
+# would never stick and `tuned-adm verify` fails on it. 1 is what CIS 1.5.6 accepts as well.
+# Verified with tuned 2.15.0 on Ubuntu 22.04; Ubuntu 26.04 no longer ships the file.
+__kernel_settings__sysctl__platform:
+  - name: 'kernel.kptr_restrict'
+    value: 1

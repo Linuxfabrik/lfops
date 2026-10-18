@@ -1,0 +1,7 @@
+# Replaces the list of vars/Ubuntu.yml. See vars/Debian.yml for FILE-7524, and
+# roles/kernel_settings/vars/Ubuntu24.yml for kernel.kptr_restrict.
+__lynis__skip_tests__platform:
+  - name: 'FILE-7524'
+    comment: 'at reads /etc/at.deny as group daemon, so it keeps mode 0640, which CIS 2.4.2.1 allows; Lynis wants 0600.'
+  - name: 'KRNL-6000:kernel.kptr_restrict'
+    comment: 'Ubuntu sets 1 in /etc/sysctl.d/10-kernel-hardening.conf, which TuneD re-applies over its profile; CIS 1.5.6 accepts 1.'

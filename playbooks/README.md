@@ -199,6 +199,13 @@ Calls the following roles (in order):
 * [coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)
 
 
+## cron_permissions.yml
+
+Calls the following roles (in order):
+
+* [cron_permissions](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron_permissions)
+
+
 ## crypto_policy.yml
 
 Calls the following roles (in order):
@@ -1096,7 +1103,7 @@ Calls the following roles (in order):
 
 ## setup_basic.yml
 
-Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, and that the Icinga2 master is reachable. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
+Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, that the Icinga2 master is reachable, and that the new `sshd_config` still admits the user Ansible logs in as. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
 
 Calls the following roles (in order):
 
@@ -1126,6 +1133,7 @@ Calls the following roles (in order):
 * [chrony](https://github.com/Linuxfabrik/lfops/tree/main/roles/chrony): `setup_basic__skip_chrony`
 * [motd](https://github.com/Linuxfabrik/lfops/tree/main/roles/motd): `setup_basic__skip_motd`
 * [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
+* [cron_permissions](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron_permissions): `setup_basic__skip_cron_permissions`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`
