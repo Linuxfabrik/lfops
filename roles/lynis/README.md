@@ -60,7 +60,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Lynis tests to skip on the host, written to `/etc/lynis/custom.prf` as `skip-test=<name>` lines. Use this to accept a finding or a suggestion, for example one the lynis-logfile monitoring plugin reports.
 * Type: List of dictionaries.
-* Default: `ACCT-9630`, `AUTH-9282`, `AUTH-9284`, `AUTH-9328`, `DBS-1884`, `DBS-1886`, `HRDN-7222`, `HRDN-7230`, `HTTP-6640`, `KRNL-6000:fs.protected_fifos`, `KRNL-6000:fs.protected_regular`, `KRNL-6000:kernel.modules_disabled`, `KRNL-6000:kernel.sysrq`, `KRNL-6000:net.ipv4.conf.all.forwarding`, `LOGG-2190`, `PHP-2372`, `PHP-2376`, `SSH-7408:allowtcpforwarding`, `SSH-7408:maxsessions` and `SSH-7408:port`, on Debian and Ubuntu also `FILE-7524`, on Ubuntu 22.04 and 24.04 also `KRNL-6000:kernel.kptr_restrict`. `roles/lynis/vars/main.yml` gives the reason for each.
+* Default: `ACCT-9630`, `AUTH-9282`, `AUTH-9284`, `AUTH-9328`, `BOOT-5264`, `DBS-1884`, `DBS-1886`, `HRDN-7222`, `HRDN-7230`, `HTTP-6640`, `KRNL-6000:fs.protected_fifos`, `KRNL-6000:fs.protected_regular`, `KRNL-6000:kernel.modules_disabled`, `KRNL-6000:kernel.sysrq`, `KRNL-6000:net.ipv4.conf.all.forwarding`, `LOGG-2190`, `PHP-2372`, `PHP-2376`, `SSH-7408:allowtcpforwarding`, `SSH-7408:maxsessions` and `SSH-7408:port`, on Debian and Ubuntu also `FILE-7524`, on Ubuntu 22.04 and 24.04 also `KRNL-6000:kernel.kptr_restrict`. `roles/lynis/vars/main.yml` gives the reason for each.
 * Deviates from the upstream default `[]`: Lynis would otherwise keep reporting every deliberate LFOps default as a suggestion (see "How the Role Behaves").
 * Subkeys:
 
