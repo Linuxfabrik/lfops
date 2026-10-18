@@ -429,34 +429,47 @@
           - '"blacklist usb_storage" in __molecule__modprobe_showconfig_result["stdout_lines"]'
           - '"install usb_storage /bin/true" in __molecule__modprobe_showconfig_result["stdout_lines"]'
 
-    # cron reads /etc/cron.d as root, so a job there has to run although the directory is 0700.
-    - name: 'Deploy /etc/cron.d/molecule-probe'
-      ansible.builtin.copy:
-        content: "* * * * * root touch /run/molecule-cron-probe\n"
-        dest: '/etc/cron.d/molecule-probe'
-        owner: 'root'
-        group: 'root'
-        mode: 0o644
-      changed_when: false
+    # cron_permissions neither installs nor starts cron, so this only applies where the image
+    # brings it along. cron reads /etc/cron.d as root, so a job there has to run although the
+    # directory is 0700.
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
 
-    - name: 'Wait for the cron job to run'
-      ansible.builtin.wait_for:
-        path: '/run/molecule-cron-probe'
-        timeout: 150
+    - name: 'Verify that a cron job runs although /etc/cron.d is 0700'
+      when:
+        - '"crond.service" in ansible_facts["services"] or "cron.service" in ansible_facts["services"]'
+      block:
 
-    - name: 'rm -f /etc/cron.d/molecule-probe /run/molecule-cron-probe'
-      ansible.builtin.file:
-        path: '{{ item }}'
-        state: 'absent'
-      loop:
-        - '/etc/cron.d/molecule-probe'
-        - '/run/molecule-cron-probe'
-      changed_when: false
+      - name: 'Deploy /etc/cron.d/molecule-probe'
+        ansible.builtin.copy:
+          content: "* * * * * root touch /run/molecule-cron-probe\n"
+          dest: '/etc/cron.d/molecule-probe'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+        changed_when: false
+
+      - name: 'Wait for the cron job to run'
+        ansible.builtin.wait_for:
+          path: '/run/molecule-cron-probe'
+          timeout: 150
+
+      - name: 'rm -f /etc/cron.d/molecule-probe /run/molecule-cron-probe'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop:
+          - '/etc/cron.d/molecule-probe'
+          - '/run/molecule-cron-probe'
+        changed_when: false
 
     # Lynis has to accept the LFOps defaults: either they satisfy it, or roles/lynis skips the
     # check with a reason.
-    - name: 'lynis audit system --quick --tests "FILE-7524 KRNL-6000 SSH-7408"'
-      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests "FILE-7524 KRNL-6000 SSH-7408"'
+    # Lynis looks for each test ID as a substring of --tests (Register() in include/functions).
+    # Before 3.1.6 it rejects a space in any argument (SafeInput()), as the release on Debian 13
+    # does, so the IDs are separated by a slash.
+    - name: 'lynis audit system --quick --tests FILE-7524/KRNL-6000/SSH-7408'
+      ansible.builtin.command: 'lynis audit system --quick --no-colors --tests FILE-7524/KRNL-6000/SSH-7408'
       args:
         chdir: '/'
       changed_when: false
