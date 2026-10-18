@@ -1,0 +1,30 @@
+- block:
+
+  # The role neither installs nor starts cron: LFOps schedules its jobs with systemd timers, and
+  # CIS 2.4.1 only applies where cron is installed. A path that does not exist (no cron on the
+  # host, or not shipped by the platform) is left alone.
+  - name: 'stat {{ item["path"] }}'
+    ansible.builtin.stat:
+      path: '{{ item["path"] }}'
+    loop: '{{ __cron_permissions__paths }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    register: '__cron_permissions__paths_stat_result'
+
+  # A package update may reset the mode of the paths the package owns, so every run sets it again.
+  - name: 'chmod {{ item["mode"] | replace("0o", "") }} {{ item["path"] }}'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      owner: 'root'
+      group: 'root'
+      mode: '{{ item["mode"] }}'
+    loop: '{{ __cron_permissions__paths }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    when:
+      - 'item["path"] in __cron_permissions__existing_paths'
+    vars:
+      __cron_permissions__existing_paths: '{{ __cron_permissions__paths_stat_result["results"] | selectattr("stat.exists") | map(attribute="item.path") | list }}'
+
+  tags:
+    - 'cron_permissions'

@@ -1,2 +1,0 @@
-- name: 'Converge cron playbook'
-  ansible.builtin.import_playbook: 'linuxfabrik.lfops.cron'

@@ -1,6 +1,6 @@
-- name: 'Playbook linuxfabrik.lfops.cron'
+- name: 'Playbook linuxfabrik.lfops.cron_permissions'
   hosts:
-    - 'lfops_cron'
+    - 'lfops_cron_permissions'
   force_handlers: true
 
   pre_tasks:
@@ -19,7 +19,7 @@
 
   roles:
 
-    - role: 'linuxfabrik.lfops.cron'
+    - role: 'linuxfabrik.lfops.cron_permissions'
 
 
   post_tasks:

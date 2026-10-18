@@ -1,2 +1,0 @@
-cron__service_enabled: true
-cron__service_state: '{{ "started" if (cron__service_enabled | bool) else "stopped" }}'
