@@ -90,7 +90,7 @@
       that:
         - '__shared__aide_check_failed_result["rc"] != 0'
       quiet: true
-      fail_msg: 'aide: The last AIDE check reported changes (aidecheck.service is failed), so the run was stopped before it changed anything. Review /var/log/aide/aide.log, then accept the current state with `ansible-navigator linuxfabrik.lfops.aide --inventory inventory --limit {{ inventory_hostname }} --tags aide:update_db_force` and run the playbook again. To deploy without that, set `lfops__skip_aide_check_before_run: true`; the AIDE database is then not updated after the run.'
+      fail_msg: 'aide: The last AIDE check reported changes (aidecheck.service is failed), so the run was stopped before it changed anything. Review /var/log/aide/aide.log, then accept the current state with `ansible-playbook --inventory inventory linuxfabrik.lfops.aide --limit {{ inventory_hostname }} --tags aide:update_db_force` and run the playbook again. To deploy without that, set `lfops__skip_aide_check_before_run: true`; the AIDE database is then not updated after the run.'
     when:
       - '__shared__aide_timer_active_result["stdout"] == "active"'
       - 'not __shared__aide_update_pending | bool'
