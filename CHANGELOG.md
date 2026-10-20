@@ -146,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: The package install works on SLE, where it failed with `No provider of 'linuxfabrik-monitoring-plugins-<version>*' found`.
 * **role:postgresql_server**: `postgresql-dump` also saves the roles and tablespaces (`globals.sql.gz`), without which a restored database fails on every object owner, no longer skips the `postgres` database and databases whose name starts with `template`, and uses the client tools of the installed PostgreSQL version.
 * **role:postgresql_server**: Clients connecting to `localhost` are accepted over IPv6 as well, where they were rejected with `no pg_hba.conf entry for host "::1"`.
 * **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
