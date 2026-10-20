@@ -917,10 +917,18 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 
 `apache_httpd__mod_remoteip_internal_proxy`
 
-* List of reverse proxies (IP addresses or CIDR ranges, IPv4 and IPv6) in front of this server. As soon as it lists one, the role enables `mod_remoteip` and takes the client address from the `X-Forwarded-For` header of requests that come from these proxies, so the access log, the error log, `Require ip` and fail2ban see the client instead of the proxy. See [RemoteIPInternalProxy](https://httpd.apache.org/docs/2.4/mod/mod_remoteip.html#remoteipinternalproxy).
-* Every address listed here can claim any client address, `127.0.0.1` included, which passes `Require local`. List the proxies only, never a whole client network.
+* Set this if a reverse proxy, load balancer or CDN sits in front of this Apache. Apache then sees the address of that proxy as the peer of every request, so the access log, the error log, `Require ip` rules and fail2ban all act on the proxy instead of the visitor: fail2ban would ban the proxy and lock out everybody, and `Require ip` could not tell visitors apart. The proxy passes the visitor's address in the `X-Forwarded-For` header. Any client can send that header, so Apache must believe it only from the proxies. Listing them here does exactly that: the role enables `mod_remoteip`, which takes the client address from `X-Forwarded-For` for requests from these proxies and leaves it alone for all others. See [RemoteIPInternalProxy](https://httpd.apache.org/docs/2.4/mod/mod_remoteip.html#remoteipinternalproxy).
+* Leave it empty if clients reach Apache directly. `mod_remoteip` then stays disabled.
+* The proxies as IP addresses or CIDR ranges (IPv4 and IPv6). Every address listed here can claim any client address, `127.0.0.1` included, which passes `Require local`. List the proxies only, never a whole client network.
+* The client address replaces the peer address of the request, so an application run by this Apache (PHP-FPM) no longer sees the proxy as the sender of `X-Forwarded-Proto` and `X-Forwarded-Host` and ignores them. What to do per application, when a proxy in front terminates TLS:
+
+    * Nextcloud: set `overwriteprotocol` to `https` in `nextcloud__sysconfig__host_var`, otherwise Nextcloud considers the request `http`. Alternatively leave this variable empty and list the proxy as `trusted_proxies 0` in `nextcloud__sysconfig__host_var`; Nextcloud then reads the client address and the protocol from the headers itself, and Apache logs the proxy.
+    * LibreNMS: leave this variable empty and list the proxy in `librenms__config_app_trusted_proxies`. With both set, LibreNMS ignores `X-Forwarded-Proto` and redirects to `http://`, and `librenms__url` does not change that.
+    * WordPress: nothing to do for the protocol, `wp-config.php` believes `X-Forwarded-Proto` from anyone. Leave `wordpress__trusted_proxies` empty while this variable is set, since WordPress then sees the client as the peer anyway; it only matters with this variable empty.
+    * Applications behind `ProxyPass`, for example Graylog and GitLab: the application sees this Apache as its peer either way, with the client in `X-Forwarded-For`, so this variable changes nothing for them. They need this Apache as their trusted proxy (for example `127.0.0.1`): `graylog_server__trusted_proxies` for Graylog, `trusted_proxies` in `gitlab.rb` for GitLab.
+
 * Type: List.
-* Default: `lfops__trusted_proxies`, otherwise `[]` (`mod_remoteip` stays disabled)
+* Default: `[]` (`mod_remoteip` stays disabled)
 
 Example:
 ```yaml

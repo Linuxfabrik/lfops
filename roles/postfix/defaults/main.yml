@@ -76,6 +76,7 @@ postfix__smtp_sasl_security_options:
   - 'noanonymous'
 postfix__smtp_tls_security_level: 'may'
 postfix__smtp_tls_wrappermode: false
+postfix__smtpd_banner: '$myhostname ESMTP LFOps'
 postfix__smtpd_tls_cert_file: '/etc/pki/tls/certs/postfix.pem'
 postfix__smtpd_tls_key_file: '/etc/pki/tls/private/postfix.key'
 postfix__smtpd_tls_security_level: 'may'

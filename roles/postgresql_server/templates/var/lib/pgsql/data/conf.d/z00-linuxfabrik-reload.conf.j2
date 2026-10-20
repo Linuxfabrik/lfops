@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026091302
+
+# Settings that PostgreSQL applies on a reload (every context other than "postmaster" and
+# "internal" in pg_settings). Settings that need a restart belong in z00-linuxfabrik.conf.
+
+#------------------------------------------------------------------------------
+# CONNECTIONS AND AUTHENTICATION
+#------------------------------------------------------------------------------
+
+# - Authentication -
+
+password_encryption = {{ postgresql_server__conf_password_encryption | d('scram-sha-256') }}

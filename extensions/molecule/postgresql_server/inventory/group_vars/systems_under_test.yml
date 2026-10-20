@@ -1,0 +1,31 @@
+# Variables the playbook under test needs, applied to every system under test.
+#
+# Where a value is compared in verify.yml, it deliberately differs from the role default, so the
+# check can tell "the running server uses what the inventory asked for" apart from "the running
+# server happens to use the packaged default".
+postgresql_server__version: '18'
+
+postgresql_server__conf_listen_addresses:
+  - '*'
+postgresql_server__conf_max_connections: 150
+
+postgresql_server__databases__group_var:
+  - name: 'app'
+    owner: 'app'
+  # the dump used to skip every database whose name starts with "template"
+  - name: 'template_app'
+    owner: 'app'
+
+# Replaces the catch-all default for Unix-socket connections in place, and adds a more specific
+# entry that only works if the role renders it before the defaults.
+postgresql_server__pg_hba_local_entries__group_var:
+  - database: 'all'
+    user: 'all'
+    auth_method: 'reject'
+  - database: 'app'
+    user: 'app'
+    auth_method: 'scram-sha-256'
+
+postgresql_server__users__group_var:
+  - username: 'app'
+    password: 'linuxfabrik'

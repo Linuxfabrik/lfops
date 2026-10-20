@@ -336,8 +336,8 @@
     # The scenario installs no PHP-FPM, so a request that Apache passes to the PHP handler fails
     # with 503 on the missing socket. A missing PHP file has to be answered with 404 by Apache
     # itself instead, which is what keeps scanners away from the pool. The request comes from the
-    # loopback address, which group_vars lists in lfops__trusted_proxies, so mod_remoteip has to log
-    # the address from X-Forwarded-For as the client.
+    # loopback address, which group_vars lists in apache_httpd__mod_remoteip_internal_proxy, so
+    # mod_remoteip has to log the address from X-Forwarded-For as the client.
     - name: 'curl --header "X-Forwarded-For: 203.0.113.7" https://<vhost>/molecule-missing.php' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
       ansible.builtin.command: >-
         curl --silent --insecure

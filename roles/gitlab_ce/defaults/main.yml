@@ -22,6 +22,8 @@ gitlab_ce__rb_gitlab_rails_uploads_directory: '/var/opt/gitlab/gitlab-rails/uplo
 gitlab_ce__rb_letsencrypt_enable: false
 gitlab_ce__rb_nginx_listen_https: false
 gitlab_ce__rb_nginx_listen_port: 80
+gitlab_ce__rb_nginx_real_ip_header: 'X-Forwarded-For'
+gitlab_ce__rb_nginx_real_ip_recursive: true
 gitlab_ce__rb_registry_database_enabled: true
 gitlab_ce__rb_registry_nginx_listen_https: false
 gitlab_ce__rb_registry_nginx_listen_port: 5050

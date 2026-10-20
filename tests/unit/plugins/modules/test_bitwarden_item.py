@@ -140,7 +140,7 @@ class _FakeBitwarden:
         login=None,
         notes=None,
         organization_id=None,
-        collection_ids=None,
+        collection_id=None,
         folder_id=None,
     ):
         return {
@@ -148,7 +148,7 @@ class _FakeBitwarden:
             'login': login,
             'notes': notes,
             'organizationId': organization_id,
-            'collectionIds': collection_ids,
+            'collectionIds': [collection_id] if collection_id else [],
             'folderId': folder_id,
         }
 
@@ -260,6 +260,21 @@ class TestMain(unittest.TestCase):
         )
         self.assertTrue(result['changed'])
         self.assertEqual(len(_FakeBitwarden.edited), 1)
+
+    def test_item_as_bw_returns_it_is_not_changed(self):
+        # what bw 2026.10.0 returns for an item without a username in a collection:
+        # no username and totp keys, collectionIds as a list
+        _FakeBitwarden.items = [
+            {
+                **_EXISTING_ITEM,
+                'collectionIds': ['c1'],
+                'login': {'password': 'linuxfabrik-existing', 'uris': []},
+            }
+        ]
+        result = self._run({'name': 'host - db', 'collection_id': 'c1'})
+        self.assertFalse(result['changed'])
+        self.assertEqual(_FakeBitwarden.edited, [])
+        self.assertIsNone(result['username'])
 
 
 if __name__ == '__main__':
