@@ -21,6 +21,7 @@
 - import_playbook: 'core_dumps.yml'
 - import_playbook: 'coturn.yml'
 - import_playbook: 'crypto_policy.yml'
+- import_playbook: 'curaline.yml'
 - import_playbook: 'dnf_makecache.yml'
 - import_playbook: 'dnf_versionlock.yml'
 - import_playbook: 'docker.yml'
