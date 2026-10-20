@@ -95,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
 * **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.
 * **role:postgresql_server**: The configuration is checked before PostgreSQL is restarted, so a broken setting in `postgresql.conf` or `pg_hba.conf` aborts the run with the error message instead of leaving PostgreSQL down after the restart.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
@@ -146,6 +147,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: A Nextcloud upgrade no longer logs an error from a repair step of the `dav` app and no longer rebuilds the calendar search index every time.
+* **role:nextcloud**: The admin section of the `support` app is hidden again.
 * **role:monitoring_plugins**: The package install works on SLE, where it failed with `No provider of 'linuxfabrik-monitoring-plugins-<version>*' found`.
 * **role:postgresql_server**: `postgresql-dump` also saves the roles and tablespaces (`globals.sql.gz`), without which a restored database fails on every object owner, no longer skips the `postgres` database and databases whose name starts with `template`, and uses the client tools of the installed PostgreSQL version.
 * **role:postgresql_server**: Clients connecting to `localhost` are accepted over IPv6 as well, where they were rejected with `no pg_hba.conf entry for host "::1"`.
