@@ -1,7 +1,40 @@
 # {{ ansible_managed }}
-# 2022111701
+# 2026091301
 
+{#
+PostgreSQL uses the first record that matches a connection. The role defaults are catch-all
+records, so the entries that do not replace a default are rendered first, otherwise a more
+specific entry from the inventory could never match. combine_lod keeps an entry at the position
+it was first seen, which is why the order cannot be left to the combined variable.
+#}
+{% set __local = namespace(defaults=[], own=[]) %}
+{% for item in postgresql_server__pg_hba_local_entries__combined_var if item['state'] | d('present') != 'absent' %}
+{%   if postgresql_server__pg_hba_local_entries__role_var
+        | selectattr('database', 'equalto', item['database'])
+        | selectattr('user', 'equalto', item['user'])
+        | list | length > 0 %}
+{%     set __local.defaults = __local.defaults + [item] %}
+{%   else %}
+{%     set __local.own = __local.own + [item] %}
+{%   endif %}
+{% endfor %}
+{% set __host = namespace(defaults=[], own=[]) %}
+{% for item in postgresql_server__pg_hba_host_entries__combined_var if item['state'] | d('present') != 'absent' %}
+{%   if postgresql_server__pg_hba_host_entries__role_var
+        | selectattr('type', 'equalto', item['type'])
+        | selectattr('database', 'equalto', item['database'])
+        | selectattr('user', 'equalto', item['user'])
+        | selectattr('address', 'equalto', item['address'])
+        | list | length > 0 %}
+{%     set __host.defaults = __host.defaults + [item] %}
+{%   else %}
+{%     set __host.own = __host.own + [item] %}
+{%   endif %}
+{% endfor %}
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
-{% for item in postgresql_server__pg_hba_entries %}
-{{ item['type'] }} {{ item['database'] }} {{ item['user'] }} {{ item['address'] | d('') }}  {{ item['auth_method'] | d('scram-sha-256') }} {{ item['auth_options'] | d('') }}
+{% for item in __local.own + __local.defaults %}
+local {{ item['database'] }} {{ item['user'] }} {{ item['auth_method'] | d('scram-sha-256') }} {{ item['auth_options'] | d('') }}
+{% endfor %}
+{% for item in __host.own + __host.defaults %}
+{{ item['type'] }} {{ item['database'] }} {{ item['user'] }} {{ item['address'] }} {{ item['auth_method'] | d('scram-sha-256') }} {{ item['auth_options'] | d('') }}
 {% endfor %}

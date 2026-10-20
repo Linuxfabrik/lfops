@@ -32,6 +32,7 @@ Which Ansible role is proven to run on which OS?
 | core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
+| curaline                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | x86_64 only                                  |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
@@ -124,7 +125,7 @@ Which Ansible role is proven to run on which OS?
 | podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | postfix                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
-| postgresql_server                     |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| postgresql_server                     |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | proxysql                              |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | python                                |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Windows                                      |
 | python_venv                           |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |

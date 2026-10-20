@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:postgresql_server**: Databases are created with the `C.UTF-8` locale instead of `en_US.UTF-8`, which failed on hosts with only the minimal glibc language pack. `C.UTF-8` sorts text by code point instead of by language rules. Existing databases are unaffected. To create new databases as before, set `lc_collate: 'en_US.UTF-8'` and `lc_ctype: 'en_US.UTF-8'` on their entries in `postgresql_server__databases__*_var`.
+* **role:postgresql_server, playbook:setup_mastodon**: `postgresql_server__version` is mandatory, and PostgreSQL is only installed from the PostgreSQL Yum Repository instead of optionally from the distribution packages. Set the major version in your inventory, for example `postgresql_server__version: '18'`. On a host that already runs PostgreSQL from the distribution packages, the run aborts before it installs anything; move the data to the PostgreSQL Yum Repository release first, as described in the role README.
+* **role:postgresql_server**: `postgresql_server__pg_hba_entries` is replaced by `postgresql_server__pg_hba_local_entries__host_var` / `__group_var` for `local` records and `postgresql_server__pg_hba_host_entries__host_var` / `__group_var` for all `host*` records. Both are merged with the role defaults instead of replacing them, and an entry with `state: 'absent'` removes a default. Move your `local` entries to the first variable without their `type` key, and all other entries to the second, where `address` is mandatory. Entries from the inventory are written before the role defaults. The run aborts as long as the old variable is set.
 * **role:apache_tomcat**: `--tags apache_tomcat:configure` no longer deploys `/etc/logrotate.d/tomcat`. Use `--tags apache_tomcat:logrotate` for it.
 * **role:apache_tomcat**: `/etc/tomcat/tomcat-users.xml` stores the passwords from `apache_tomcat__users__*_var` as salted PBKDF2 hashes instead of in clear text. Web applications that authenticate against it with HTTP DIGEST authentication no longer let anyone log in; switch them to BASIC or FORM authentication.
 * **role:repo_mydumper**: On the Red Hat family, mydumper comes from the official mydumper repository instead of `repo.linuxfabrik.ch`, and dnf checks the package signature. A `repo_mydumper__mirror_url` must therefore serve the signed packages of the official repository unchanged, otherwise the installation fails with a signature error.
@@ -47,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:curaline, playbook:curaline**: Add a role and playbook that install and configure the curaLINE Client of Swisscom, which exchanges files with the curaLINE Document Routing service.
+* **role:gitlab_ce**: Behind a reverse proxy, GitLab can show and log the real client IP address instead of the address of the proxy, for example under "Current sign-in IP". Set `gitlab_ce__rb_nginx_real_ip_trusted_addresses` to the address of the proxy.
 * **role:apache_tomcat**: With `lfops__remove_rpmnew_rpmsave`, the role also removes the `.rpmnew` and `.rpmsave` files next to the Tomcat configuration files it deploys.
 * **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10.
 * **role:mongodb**: Supports MongoDB 8.0 on Debian and Ubuntu, so MongoDB runs on Ubuntu 24.04, where upstream offers 8.0 only.
@@ -91,6 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
+* **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.
+* **role:postgresql_server**: The configuration is checked before PostgreSQL is restarted, so a broken setting in `postgresql.conf` or `pg_hba.conf` aborts the run with the error message instead of leaving PostgreSQL down after the restart.
 * **role:postfix**: The SMTP greeting banner no longer names Postfix or the OS (`<hostname> ESMTP LFOps`), which satisfies the Lynis check MAIL-8818.
 * **role:apache_tomcat**: The Tomcat 9.0 configuration follows the files shipped with the current RHEL 8 and 9 packages.
 * **role:apache_tomcat**: The role's inventory variables are type-checked when it starts, so a mistyped value fails the run right away instead of surfacing further in as a confusing error.
@@ -142,6 +149,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:nextcloud**: A Nextcloud upgrade no longer logs an error from a repair step of the `dav` app and no longer rebuilds the calendar search index every time.
 * **role:nextcloud**: The admin section of the `support` app is hidden again.
+* **role:monitoring_plugins**: The package install works on SLE, where it failed with `No provider of 'linuxfabrik-monitoring-plugins-<version>*' found`.
+* **role:postgresql_server**: `postgresql-dump` also saves the roles and tablespaces (`globals.sql.gz`), without which a restored database fails on every object owner, no longer skips the `postgres` database and databases whose name starts with `template`, and uses the client tools of the installed PostgreSQL version.
+* **role:postgresql_server**: Clients connecting to `localhost` are accepted over IPv6 as well, where they were rejected with `no pg_hba.conf entry for host "::1"`.
 * **module:bitwarden_item**: The module no longer edits the item and reports a change on every run when `collection_id` is set.
 * **plugin:bitwarden_item, module:bitwarden_item**: Items without a username work with Bitwarden CLI 2026.10.0, where the lookup and the module aborted with `KeyError: 'username'`.
 * **role:kernel_settings**: The role no longer prints the `Conditional result ... was of type 'int'` deprecation warning.
