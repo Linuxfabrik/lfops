@@ -263,6 +263,24 @@ gitlab_ce__rb_external_url: 'https://git.example.com'
 * Type: Number.
 * Default: `80`
 
+`gitlab_ce__rb_nginx_real_ip_header`
+
+* The request header from which the bundled NGINX takes the client IP address. Apache `mod_proxy` and HAProxy with `option forwardfor` send `X-Forwarded-For`. Only applies if `gitlab_ce__rb_nginx_real_ip_trusted_addresses` is set. [Docs](https://docs.gitlab.com/omnibus/settings/nginx/#configure-gitlab-trusted-proxies-and-nginx-real_ip-module)
+* Type: String.
+* Default: `'X-Forwarded-For'`
+
+`gitlab_ce__rb_nginx_real_ip_recursive`
+
+* Whether the bundled NGINX skips all trusted addresses in `gitlab_ce__rb_nginx_real_ip_header` and uses the last untrusted one as the client IP address. Needed if the request passes more than one trusted proxy, and makes no difference with a single one. Only applies if `gitlab_ce__rb_nginx_real_ip_trusted_addresses` is set.
+* Type: Bool.
+* Default: `true`
+
+`gitlab_ce__rb_nginx_real_ip_trusted_addresses`
+
+* IP addresses or CIDR ranges of the reverse proxies in front of GitLab. The bundled NGINX takes the client IP address from `gitlab_ce__rb_nginx_real_ip_header` only for requests from these addresses. GitLab also uses them as trusted proxies, so users do not appear signed in from the address of the proxy.
+* Type: List.
+* Default: unset
+
 `gitlab_ce__rb_nginx_ssl_certificate`
 
 * Path to the SSL certificate.
@@ -400,6 +418,10 @@ gitlab_ce__rb_letsencrypt_enable: false
 
 gitlab_ce__rb_nginx_listen_https: false
 gitlab_ce__rb_nginx_listen_port: '80'
+gitlab_ce__rb_nginx_real_ip_header: 'X-Forwarded-For'
+gitlab_ce__rb_nginx_real_ip_recursive: true
+gitlab_ce__rb_nginx_real_ip_trusted_addresses:
+  - '192.0.2.10'
 gitlab_ce__rb_nginx_ssl_certificate: '/etc/pki/tls/certs/git.example.com.crt'
 gitlab_ce__rb_nginx_ssl_certificate_key: '/etc/pki/tls/private/git.example.com.key'
 gitlab_ce__rb_registry_database_enabled: true

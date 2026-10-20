@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025092301
+# 2026102001
 
 ## GitLab configuration settings
 ##! This file is generated during initial installation and **is not** modified
@@ -1885,9 +1885,11 @@ nginx['listen_https'] = {{ gitlab_ce__rb_nginx_listen_https | string | lower }}
 # nginx['proxy_cache'] = 'gitlab'
 # nginx['proxy_custom_buffer_size'] = nil
 # nginx['http2_enabled'] = true
-# nginx['real_ip_trusted_addresses'] = []
-# nginx['real_ip_header'] = nil
-# nginx['real_ip_recursive'] = nil
+{% if gitlab_ce__rb_nginx_real_ip_trusted_addresses is defined and gitlab_ce__rb_nginx_real_ip_trusted_addresses | length %}
+nginx['real_ip_trusted_addresses'] = ['{{ gitlab_ce__rb_nginx_real_ip_trusted_addresses | join("', '") }}']
+nginx['real_ip_header'] = '{{ gitlab_ce__rb_nginx_real_ip_header }}'
+nginx['real_ip_recursive'] = '{{ "on" if gitlab_ce__rb_nginx_real_ip_recursive | bool else "off" }}'
+{% endif %}
 # nginx['custom_error_pages'] = {
 #   '404' => {
 #     'title' => 'Example title',
