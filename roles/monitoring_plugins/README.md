@@ -59,14 +59,14 @@ Manual steps:
 2. Remove the package, its version lock, the package repository and its signing key:
 
     ```bash
-    ansible-playbook --inventory=inventory linuxfabrik.lfops.monitoring_plugins \
-        --tags=monitoring_plugins:remove,repo_monitoring_plugins:remove --limit=myhost
+    ansible-playbook --inventory inventory linuxfabrik.lfops.monitoring_plugins \
+        --tags monitoring_plugins:remove,repo_monitoring_plugins:remove --limit myhost
     ```
 
 3. Deploy the source install:
 
     ```bash
-    ansible-playbook --inventory=inventory linuxfabrik.lfops.monitoring_plugins --limit=myhost
+    ansible-playbook --inventory inventory linuxfabrik.lfops.monitoring_plugins --limit myhost
     ```
 
 The playbooks only register the package repository for `monitoring_plugins__install_method: 'package'`, so a later run of `setup_basic` or `icinga2_agent` does not bring it back.
