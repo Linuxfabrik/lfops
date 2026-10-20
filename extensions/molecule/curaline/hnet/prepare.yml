@@ -1,9 +1,11 @@
-# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+# Wait for the systems under test and gather their facts, as every other scenario does.
 - name: 'Prepare VMs for Ansible'
   ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
 
 
-# Set the host up the way the Linuxfabrik installation guide of the H-Net SecureClient does, without the SecureClient itself: the role has to take over this account and these folders without changing them.
+# Set the host up the way the Linuxfabrik installation guide of the H-Net SecureClient
+# does, without the SecureClient itself: the role has to take over this account and these
+# folders without changing them.
 - name: 'Set up the account and the data folders of an H-Net SecureClient'
   hosts: 'systems_under_test'
 
@@ -33,7 +35,8 @@
         - '/data/xml/outbox-test'
         - '/var/hnet'
 
-    # an existing connector folder with a mode the role would not set, so verify.yml can see that the role leaves it alone.
+    # an existing connector folder with a mode the role would not set, so verify.yml can
+    # see that the role leaves it alone.
     - name: 'mkdir -m 0770 /data/xml/outbox-test/XMLDatenforum'
       ansible.builtin.file:
         path: '/data/xml/outbox-test/XMLDatenforum'

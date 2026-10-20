@@ -57,7 +57,8 @@
         path: '/proc/{{ __molecule__curaline_mainpid_result["stdout"] }}'
       register: '__molecule__curaline_proc_result'
 
-    # the hnet scenario imports this playbook and sets curaline__user, the install scenario relies on the role default.
+    # the hnet scenario imports this playbook and sets curaline__user, the install scenario
+    # relies on the role default.
     - name: 'Assert that the client runs as {{ curaline__user | d("swisscom-schweiz-ag-cdr-client") }}'
       ansible.builtin.assert:
         that: '__molecule__curaline_proc_result["stat"]["pw_name"] == curaline__user | d("swisscom-schweiz-ag-cdr-client")'

@@ -81,7 +81,7 @@ The role leaves the `hnet` account, `/home/hnet`, `/var/hnet` and the SELinux se
 
 `curaline:update`
 
-* Installs the client in the version of `curaline__version`, if it is not installed yet, and hands the installation directory to `curaline__user`.
+* Installs the client in the version of `curaline__version`, if a different version or none is installed, and hands the installation directory to `curaline__user`.
 * Sets the SELinux file context of the client (Red Hat family with SELinux).
 * Triggers: swisscom-schweiz-ag-cdr-client.service restart.
 
@@ -330,9 +330,13 @@ curaline__user: 'hnet'
 
 * A path in `ReadWritePaths=` of the unit does not exist, typically a folder of a connector that was removed by hand, or one on a network share that is not mounted. Run the role again to recreate missing folders, or mount the share before the service starts.
 
-**The run aborts with `curaline__version must look like "6.2.1", at least one connector must be present ...`**
+**The run aborts with `curaline__version must look like "6.2.1"`**
 
-* Set `curaline__version` to a release listed on the curaLINE download page, and give the host at least one connector in `curaline__connectors__host_var` or `curaline__connectors__group_var`.
+* Set `curaline__version` to a release listed on the curaLINE download page.
+
+**The run aborts with `At least one connector must be present ...` or `Connector ... must set content-type, source-folder and target-folder`**
+
+* Give the host at least one connector in `curaline__connectors__host_var` or `curaline__connectors__group_var`, with all mandatory subkeys set.
 
 
 ## License

@@ -1,9 +1,12 @@
-# The client has to work under the `hnet` account exactly as under its own one, so the checks of the install scenario run first.
+# The client has to work under the `hnet` account exactly as under its own one, so the
+# checks of the install scenario run first.
 - name: 'Verify curaline'
   ansible.builtin.import_playbook: '../install/verify.yml'
 
 
-# What the takeover must not change is the account and the folders of the H-Net SecureClient, and the client must not write into /home/hnet, which the SecureClient lives in.
+# What the takeover must not change is the account and the folders of the H-Net
+# SecureClient, and the client must not write into /home/hnet, which the SecureClient
+# lives in.
 - name: 'Verify that the H-Net SecureClient installation is untouched'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -33,7 +36,8 @@
           - '__molecule__curaline_outbox_result["stat"]["mode"] == "0770"'
           - '__molecule__curaline_outbox_result["stat"]["pw_name"] == "hnet"'
 
-    # the client gets its $HOME from the unit, so its `.cache` lands below /var/lib/swisscom-schweiz-ag/cdr-client instead.
+    # the client gets its $HOME from the unit, so its `.cache` lands below
+    # /var/lib/swisscom-schweiz-ag/cdr-client instead.
     - name: 'stat /home/hnet/.cache'
       ansible.builtin.stat:
         path: '/home/hnet/.cache'
@@ -53,7 +57,8 @@
           changed_when: false
           register: '__molecule__curaline_inbox_result'
 
-        # the role created this folder, the file context of the SecureClient setup has to apply to it as well.
+        # the role created this folder, the file context of the SecureClient setup has to
+        # apply to it as well.
         - name: 'Assert that the folders the role created get the user_home_t type'
           ansible.builtin.assert:
             that: '":user_home_t:" in __molecule__curaline_inbox_result["stdout"]'

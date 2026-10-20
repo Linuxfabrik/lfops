@@ -1,33 +1,33 @@
 # {{ ansible_managed }}
-# 2026101502
+# 2026102001
 version: "1.2"
 client:
   file-synchronization-enabled: {{ curaline__file_synchronization_enabled | bool | lower }}
-  local-folder: {{ curaline__local_folder }}
+  local-folder: {{ curaline__local_folder | to_json }}
   proxy-config:
     url:
     username:
     password:
   idp-credentials:
-    tenant-id: {{ curaline__tenant_id }}
+    tenant-id: {{ curaline__tenant_id | to_json }}
     client-id: {{ curaline__client_id | to_json }}
     client-secret: {{ curaline__client_secret | to_json }}
-    scope: {{ curaline__scope }}
+    scope: {{ curaline__scope | to_json }}
     renew-credential: {{ curaline__renew_credential | bool | lower }}
-    last-credential-renewal-time: {{ curaline__last_credential_renewal_time }}
-  idp-endpoint: {{ curaline__idp_endpoint }}
-  schedule-delay: {{ curaline__schedule_delay }}
-  file-busy-test-strategy: {{ curaline__file_busy_test_strategy }}
+    last-credential-renewal-time: {{ curaline__last_credential_renewal_time | to_json }}
+  idp-endpoint: {{ curaline__idp_endpoint | to_json }}
+  schedule-delay: {{ curaline__schedule_delay | to_json }}
+  file-busy-test-strategy: {{ curaline__file_busy_test_strategy | to_json }}
   cdr-api:
-    scheme: {{ curaline__cdr_api_scheme }}
-    host: {{ curaline__cdr_api_host }}
+    scheme: {{ curaline__cdr_api_scheme | to_json }}
+    host: {{ curaline__cdr_api_host | to_json }}
     port: {{ curaline__cdr_api_port }}
-    base-path: {{ curaline__cdr_api_base_path }}
+    base-path: {{ curaline__cdr_api_base_path | to_json }}
   credential-api:
-    scheme: {{ curaline__credential_api_scheme }}
+    scheme: {{ curaline__credential_api_scheme | to_json }}
     port: {{ curaline__credential_api_port }}
-    host: {{ curaline__credential_api_host }}
-    base-path: {{ curaline__credential_api_base_path }}
+    host: {{ curaline__credential_api_host | to_json }}
+    base-path: {{ curaline__credential_api_base_path | to_json }}
   customer:
 {% for connector in __curaline__connectors_present %}
 {% for key, value in connector.items() if key != 'state' %}
