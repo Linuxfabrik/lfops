@@ -5,10 +5,13 @@
       name: 'cloud-init'
       state: 'absent'
 
-  - name: 'rm /etc/NetworkManager/conf.d/99-cloud-init.conf # this prevents NetworkManager from managing /etc/resolv.conf'
+  # cloud-init's sysconfig renderer writes "dns = none" there, which keeps NetworkManager from
+  # managing /etc/resolv.conf. NetworkManager only notices the removal after a reload.
+  - name: 'rm /etc/NetworkManager/conf.d/99-cloud-init.conf'
     ansible.builtin.file:
       path: '/etc/NetworkManager/conf.d/99-cloud-init.conf'
       state: 'absent'
+    notify: 'cloud_init: systemctl try-reload-or-restart NetworkManager.service'
 
   - name: 'rm /etc/cloud/cloud.cfg.rpmsave'
     ansible.builtin.file:
