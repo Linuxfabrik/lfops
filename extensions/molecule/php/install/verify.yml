@@ -301,6 +301,7 @@
           @ini_set('memory_limit', '1024M');
           echo 'memory_limit_after=' . ini_get('memory_limit') . "\n";
           echo 'session_save_path=' . ini_get('session.save_path') . "\n";
+          echo 'session_upload_progress_enabled=' . (int) ini_get('session.upload_progress.enabled') . "\n";
         dest: '/var/www/html/molecule-probe-{{ item }}.php'
         owner: 'root'
         group: 'root'
@@ -309,6 +310,19 @@
       loop:
         - 'app1'
         - 'www'
+
+    # Session upload progress is a confirmed way into CVE-2026-109619 and the role switches it off.
+    # The directive is PERDIR, so the ini alone would not hold against a .user.ini that switches it
+    # back on; only the php_admin_flag in the pool does. This .user.ini is that attempt, and the
+    # probe below has to report the feature as off regardless.
+    - name: 'Deploy a .user.ini that tries to re-enable session upload progress'
+      ansible.builtin.copy:
+        content: "session.upload_progress.enabled = On\n"
+        dest: '/var/www/html/.user.ini'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: '{{ "httpd_sys_content_t" if ansible_facts["os_family"] == "RedHat" else omit }}'
 
     # The status page reports the live process manager, which differs per pool (www: the dynamic
     # default, app1: the static override). Both pools serve it on the same path, so a wrong answer
@@ -335,9 +349,12 @@
           - '__molecule__pool_status_result["results"][1]["stdout"] is search("process manager:\s+dynamic")'
         fail_msg: 'status pages: {{ __molecule__pool_status_result["results"] | map(attribute="stdout") | list }}'
 
+    # DOCUMENT_ROOT as a web server would send it: php-fpm only reads a .user.ini when it is set
+    # (sapi/fpm/fpm/fpm_main.c), so without it the .user.ini above would never be tried.
     - name: 'Run the probe script through each pool socket'
       ansible.builtin.command: 'cgi-fcgi -bind -connect {{ __molecule__runtime_path }}/{{ item }}.sock'
       environment:
+        DOCUMENT_ROOT: '/var/www/html'
         QUERY_STRING: ''
         REQUEST_METHOD: 'GET'
         SCRIPT_FILENAME: '/var/www/html/molecule-probe-{{ item }}.php'
@@ -359,10 +376,23 @@
           - '__molecule__app1 is search("session_save_path=" ~ __molecule__session_path ~ "/app1")'
           - '"memory_limit=256M" in __molecule__www'
           - '__molecule__www is search("session_save_path=" ~ __molecule__session_path ~ "/www")'
+          - '"session_upload_progress_enabled=0" in __molecule__app1'
+          - '"session_upload_progress_enabled=0" in __molecule__www'
         fail_msg: 'app1: {{ __molecule__app1 }} www: {{ __molecule__www }}'
       vars:
         __molecule__app1: '{{ __molecule__pool_probe_result["results"][0]["stdout"] }}'
         __molecule__www: '{{ __molecule__pool_probe_result["results"][1]["stdout"] }}'
+
+    # The CLI reads the ini only, without a pool, so this proves the z00-linuxfabrik.ini itself.
+    - name: 'Read session.upload_progress.enabled from the CLI'
+      ansible.builtin.command: 'php --run "echo (int) ini_get(''session.upload_progress.enabled'');"'
+      register: '__molecule__php_upload_progress_result'
+      changed_when: false
+
+    - name: 'Assert session upload progress is off for the CLI'
+      ansible.builtin.assert:
+        that: '__molecule__php_upload_progress_result["stdout"] == "0"'
+        fail_msg: 'session.upload_progress.enabled is {{ __molecule__php_upload_progress_result["stdout"] }}, expected 0'
 
     - name: 'stat the per-pool session and WSDL cache directories'
       ansible.builtin.stat:

@@ -316,6 +316,24 @@ argument_specs:
         default: ''
         description: 'The error reporting level. Host-level override.'
 
+      php__ini_fatal_error_backtraces__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether fatal errors include a backtrace (PHP 8.5+). Dependent-role injection.'
+
+      php__ini_fatal_error_backtraces__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether fatal errors include a backtrace (PHP 8.5+). Group-level override.'
+
+      php__ini_fatal_error_backtraces__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether fatal errors include a backtrace (PHP 8.5+). Host-level override.'
+
       php__ini_max_execution_time__dependent_var:
         type: 'raw'
         required: false
@@ -714,6 +732,24 @@ argument_specs:
         required: false
         default: ''
         description: 'HTML tags rewritten to include the session ID. Host-level override.'
+
+      php__ini_session_upload_progress_enabled__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether PHP tracks the upload progress of files in the session. Dependent-role injection.'
+
+      php__ini_session_upload_progress_enabled__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether PHP tracks the upload progress of files in the session. Group-level override.'
+
+      php__ini_session_upload_progress_enabled__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'Whether PHP tracks the upload progress of files in the session. Host-level override.'
 
       php__ini_smtp__dependent_var:
         type: 'str'
