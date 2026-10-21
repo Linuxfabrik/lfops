@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2026090801
+; 2026102101
 ; php 7.4
 
 [PHP]
@@ -46,3 +46,4 @@ session.cookie_secure = {{ php__ini_session_cookie_secure__combined_var }}
 session.gc_maxlifetime = {{ php__ini_session_gc_maxlifetime__combined_var }}
 session.sid_length = {{ php__ini_session_sid_length__combined_var }}
 session.trans_sid_tags = "{{ php__ini_session_trans_sid_tags__combined_var }}"
+session.upload_progress.enabled = {{ php__ini_session_upload_progress_enabled__combined_var }}

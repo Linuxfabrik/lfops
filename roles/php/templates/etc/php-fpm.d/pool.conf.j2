@@ -551,15 +551,12 @@ php_admin_value[upload_max_filesize] = {{ item['php_admin_value_upload_max_files
   ZEND_INI_SYSTEM (sapi/fpm/fpm/fpm_php.c), so neither a .user.ini nor ini_set() can change it.
   Verified with php-fpm 8.5.11 on Rocky 10: without the flags a .user.ini re-enables upload
   progress and ini_set() re-enables the backtraces, with them both stay off.
-  session.upload_progress.enabled is only set from PHP 8.2 on, where the role defines a value;
   fatal_error_backtraces only exists from PHP 8.5 on.
 #}
 {% if __php__installed_version is version('8.5', '>=') %}
 php_admin_flag[fatal_error_backtraces] = {{ php__ini_fatal_error_backtraces__combined_var }}
 {% endif %}
-{% if php__ini_session_upload_progress_enabled__combined_var | string | length > 0 %}
 php_admin_flag[session.upload_progress.enabled] = {{ php__ini_session_upload_progress_enabled__combined_var }}
-{% endif %}
 
 ; Set the following data paths to directories owned by the FPM process user.
 ;
