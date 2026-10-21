@@ -51,7 +51,8 @@
 
   - name: 'Get mongodb-org-server version'
     ansible.builtin.set_fact:
-      mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_replace("\.\d+$", "") }}' # strip the patch version
+      # keep major.minor only, also if a package version ever carries a Debian revision (`8.0.4-1`)
+      mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+") }}'
 
   # the template name carries the OS family, so the supported versions are per family too
   - name: 'Assert that a configuration template for the installed MongoDB version exists'

@@ -40,20 +40,22 @@
 
   - name: 'Get Graylog Data Node version'
     ansible.builtin.set_fact:
-      graylog_datanode__installed_version: '{{ ansible_facts["packages"]["graylog-datanode"][0]["version"] | regex_replace("\.\d+$", "") }}'
+      # keep major.minor only. the version is `7.2.1` on the Red Hat family, but carries the
+      # Debian revision on Debian and Ubuntu (`7.2.1-1`), and the minor version can have two digits
+      graylog_datanode__installed_version: '{{ ansible_facts["packages"]["graylog-datanode"][0]["version"] | regex_search("^\d+\.\d+") }}'
 
-  # the same slice the template src below uses, so the assert matches what is looked up
+  # the same value the template src below uses, so the assert matches what is looked up
   - name: 'Assert that a configuration template for the installed Graylog Data Node version exists'
     ansible.builtin.assert:
       that:
-        - 'graylog_datanode__installed_version[:3] in __graylog_datanode__supported_versions'
+        - 'graylog_datanode__installed_version in __graylog_datanode__supported_versions'
       quiet: true
-      fail_msg: 'Graylog Data Node {{ graylog_datanode__installed_version[:3] }} is not supported by this role. Supported versions: {{ __graylog_datanode__supported_versions | join(", ") }}.'
+      fail_msg: 'Graylog Data Node {{ graylog_datanode__installed_version }} is not supported by this role. Supported versions: {{ __graylog_datanode__supported_versions | join(", ") }}.'
 
-  - name: 'Deploy /etc/graylog/datanode/datanode.conf (version: {{ graylog_datanode__installed_version[:3] }})'
+  - name: 'Deploy /etc/graylog/datanode/datanode.conf (version: {{ graylog_datanode__installed_version }})'
     ansible.builtin.template:
       backup: true
-      src: 'etc/graylog/datanode/{{ graylog_datanode__installed_version[:3] }}-datanode.conf.j2'
+      src: 'etc/graylog/datanode/{{ graylog_datanode__installed_version }}-datanode.conf.j2'
       dest: '/etc/graylog/datanode/datanode.conf'
       owner: 'root'
       group: 'root'
