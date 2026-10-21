@@ -89,6 +89,7 @@ issues: 'https://github.com/linuxfabrik/lfops/issues'
 # and '.git' are always filtered
 build_ignore:
   - '.git*'
+  - '.claude'
   - 'build'
   - 'context'
   - 'tools'
