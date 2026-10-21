@@ -1,6 +1,7 @@
 # {{ ansible_managed }}
-# 2026100701
+# 2026102001
 # 7.1
+{# Based on graylog-server 7.1.11 #}
 ############################
 # GRAYLOG CONFIGURATION FILE
 ############################
@@ -310,6 +311,14 @@ elasticsearch_max_total_connections_per_route = {{ graylog_server__elasticsearch
 # The prefix for graylog system event indices.
 #
 #default_system_events_index_prefix = gl-system-events
+
+# The refresh interval for the Graylog events indices. This applies to both the events and the
+# system events index sets, and only takes effect on newly created or updated index templates.
+# Lower values make new events searchable sooner at the cost of indexing throughput. Some managed
+# OpenSearch offerings enforce a cluster-wide minimum refresh interval and will reject the index
+# template if this value is below it. Must be 1 second or longer.
+# Default: 1s
+#events_index_refresh_interval = 1s
 
 # Analyzer (tokenizer) to use for message and full_message field. The "standard" filter usually is a good idea.
 # All supported analyzers are: standard, simple, whitespace, stop, keyword, pattern, language, snowball, custom

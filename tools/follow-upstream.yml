@@ -1,0 +1,57 @@
+# Applications whose LFOps templates are copies of the packaged configuration file, one
+# template per release series. `tools/follow-upstream` reads this file to fetch the packaged
+# files and merge upstream changes into the templates. See
+# `.claude/skills/lfops-follow-upstream/SKILL.md` for the workflow around it.
+#
+# Per application:
+#
+# * `upstream`: project names as newreleases.io reports them, used to map a release
+#   notice to this entry.
+# * `series_parts`: how many version components form a release series that gets its own
+#   template (2: one template per `7.2`, 3: one per `26.04.5`).
+# * `deb_repo`: APT repository serving every release of a series, written like a
+#   sources.list line (`<url> <suite> <component>`), `{series}` is replaced.
+# * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
+# * `files`: the packaged files and the templates built from them, sorted by `path`.
+#   * `template`: `{series}` is replaced. A template without `{series}` serves every
+#     series and is merged in place.
+#   * `supported_versions`: the vars file and the list that has to contain every series
+#     a template exists for. Only for templates with `{series}`.
+#   * `deb_path`: where the DEB ships the file, if not at `path`.
+#   * `copies`: further templates that stay identical to `template`, e.g. the Debian
+#     counterpart of a file the RPM ships under another path. They get the merge result.
+# * `ignore`: packaged files below /etc that LFOps deliberately does not template.
+#   Every other file a release ships is reported, so a file upstream adds is noticed.
+
+graylog:
+  upstream:
+    - 'Graylog2/graylog2-server'
+  series_parts: 2
+  deb_repo: 'https://packages.graylog2.org/repo/debian/ stable {series}'
+  rpm_repo: 'https://downloads.graylog.org/repo/el/stable/{series}/x86_64/'
+  files:
+    - package: 'graylog-datanode'
+      path: '/etc/graylog/datanode/datanode.conf'
+      template: 'roles/graylog_datanode/templates/etc/graylog/datanode/{series}-datanode.conf.j2'
+      supported_versions: 'roles/graylog_datanode/vars/main.yml:__graylog_datanode__supported_versions'
+    - package: 'graylog-datanode'
+      path: '/etc/graylog/datanode/jvm.options'
+      template: 'roles/graylog_datanode/templates/etc/graylog/datanode/jvm.options.j2'
+    - package: 'graylog-server'
+      path: '/etc/graylog/server/server.conf'
+      template: 'roles/graylog_server/templates/etc/graylog/server/{series}-server.conf.j2'
+      supported_versions: 'roles/graylog_server/vars/main.yml:__graylog_server__supported_versions'
+    - package: 'graylog-server'
+      path: '/etc/sysconfig/graylog-server'
+      deb_path: '/etc/default/graylog-server'
+      template: 'roles/graylog_server/templates/etc/sysconfig/graylog-server.j2'
+      copies:
+        - 'roles/graylog_server/templates/etc/default/graylog-server.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/default/graylog-datanode'
+    - '/etc/graylog/datanode/log4j2.xml'
+    - '/etc/graylog/server/log4j2.xml'
+    - '/etc/logrotate.d/graylog-server'
+    - '/etc/needrestart/conf.d/500-graylog.conf'
+    - '/etc/sysconfig/graylog-datanode'

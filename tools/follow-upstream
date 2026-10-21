@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+"""Merges the configuration changes of an upstream release into the LFOps templates.
+
+Every template listed in tools/follow-upstream.yml is a copy of a packaged configuration
+file with LFOps changes on top, and names the package release it is based on in a Jinja
+comment in its header (`{# Based on graylog-server 7.2.1 #}`), which does not end up in
+the deployed file. For a new release, this tool extracts /etc from the RPM and the DEB
+of the release (streamed, in a podman container) and:
+
+1. Checks the packaging, on every run: files below /etc that are neither templated
+   nor ignored in tools/follow-upstream.yml, templated files the release no longer ships,
+   and files whose content differs between RPM and DEB.
+2. Merges the upstream changes into every template not based on this release yet:
+
+       git merge-file <template> <RPM file, base release> <RPM file, new release>
+
+   The upstream changes between the two releases land in the template, the LFOps
+   changes are kept. Where both touch the same lines, the template gets conflict
+   markers.
+
+   * Same release series (`7.2.0` -> `7.2.1`): the template is merged in place.
+   * New release series (`7.2.1` -> `7.3.0`): the template of the latest older series
+     is merged into a new template, and the series is added to the supported versions.
+   * No change between the packaged files: nothing is written.
+
+Exit code 0: nothing to review. 1: conflicts or packaging findings to review. 2: the
+run could not complete. Run this tool from the repository root directory. It never
+commits.
+"""
+
+import argparse
+import datetime
+import glob
+import os
+import re
+import subprocess  # nosec B404 - runs podman and git, see the calls below
+import sys
+
+import yaml
+
+__author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
+__version__ = '2026102102'
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
+CACHE_DIR = os.path.join(
+    os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache')),
+    'lfops-follow-upstream',
+)
+CONTAINER_IMAGE = 'quay.io/rockylinux/rockylinux:9'
+HEADER_LINES = 10  # the header comment block is searched within the first lines only
+
+BASED_ON_RE = re.compile(r'Based on (?P<package>\S+) (?P<version>\S+)')
+TIMESTAMP_RE = re.compile(r'^(?P<prefix>\W*)(?P<stamp>\d{10})(?P<suffix>\W*)$')
+
+# Both scripts extract /etc from one release without installing it. The package is
+# streamed, so even the 2 GB graylog-datanode package needs no disk space, and all of
+# /etc is kept, so further files of the same release need no second download.
+FETCH_RPM_SCRIPT = r"""
+set -o errexit -o nounset -o pipefail
+dnf install --assumeyes --quiet cpio >/dev/null
+url=$(dnf --quiet --repofrompath="app,${REPO}" --repo=app \
+    repoquery --latest-limit=1 --location "${PACKAGE}-${VERSION}")
+if [ -z "${url}" ]; then
+    echo "${PACKAGE} ${VERSION} not found in ${REPO}" >&2
+    exit 1
+fi
+mkdir --parents /out/root
+curl --fail --silent --show-error --location "${url}" \
+    | rpm2cpio - \
+    | (cd /out/root && cpio --extract --make-directories --quiet "./etc/*")
+echo "${url}" > /out/source
+"""
+
+# The Packages index can list several builds of a release (`7.2.0-1`, `7.2.0-11`);
+# the newest one wins, as with `dnf repoquery --latest-limit=1` above.
+FETCH_DEB_SCRIPT = r"""
+set -o errexit -o nounset -o pipefail
+dnf install --assumeyes --quiet bsdtar >/dev/null
+file=$(curl --fail --silent --show-error --location "${INDEX}" \
+    | gunzip \
+    | awk -v package="${PACKAGE}" -v version="${VERSION}" '
+        BEGIN { RS = ""; FS = "\n" }
+        {
+            name = ""; ver = ""; file = ""
+            for (i = 1; i <= NF; i++) {
+                if ($i ~ /^Package: /) name = substr($i, 10)
+                if ($i ~ /^Version: /) ver = substr($i, 10)
+                if ($i ~ /^Filename: /) file = substr($i, 11)
+            }
+            sub(/^[0-9]+:/, "", ver)
+            if (name == package && (ver == version || index(ver, version "-") == 1))
+                print ver, file
+        }' \
+    | sort --version-sort | tail --lines=1 | cut --delimiter=' ' --fields=2)
+if [ -z "${file}" ]; then
+    echo "${PACKAGE} ${VERSION} not found in ${INDEX}" >&2
+    exit 1
+fi
+mkdir --parents /out/root
+curl --fail --silent --show-error --location "${REPO}/${file}" \
+    | bsdtar --extract --to-stdout --file - 'data.tar*' \
+    | (cd /out/root && bsdtar --extract --file - --include './etc/*' --include 'etc/*')
+echo "${REPO}/${file}" > /out/source
+"""
+
+
+class FetchError(Exception):
+    pass
+
+
+def version_key(version):
+    return [
+        int(part) if part.isdigit() else part for part in re.split(r'[.-]', version)
+    ]
+
+
+def series_of(version, parts):
+    return '.'.join(version.split('.')[:parts])
+
+
+def find_app(manifest, name):
+    if name in manifest:
+        return name, manifest[name]
+    for app, config in manifest.items():
+        if name in config.get('upstream', []):
+            return app, config
+    sys.exit(f'{name}: not in {os.path.relpath(MANIFEST, REPO_ROOT)}')
+
+
+def fetch(config, fmt, package, version):
+    """Return the directory holding /etc of `package` `version`, cached in CACHE_DIR.
+
+    `fmt` is `rpm` or `deb`.
+    """
+    dest = os.path.join(CACHE_DIR, fmt, f'{package}-{version}')
+    if os.path.isfile(os.path.join(dest, 'source')):
+        return os.path.join(dest, 'root')
+    os.makedirs(dest, exist_ok=True)
+    series = series_of(version, config['series_parts'])
+    if fmt == 'rpm':
+        repo = config['rpm_repo'].format(series=series)
+        env = {'REPO': repo}
+        script = FETCH_RPM_SCRIPT
+    else:
+        # `deb_repo` is written like a sources.list line: `<url> <suite> <component>`
+        repo, suite, component = config['deb_repo'].format(series=series).split()
+        repo = repo.rstrip('/')
+        env = {
+            'INDEX': f'{repo}/dists/{suite}/{component}/binary-amd64/Packages.gz',
+            'REPO': repo,
+        }
+        script = FETCH_DEB_SCRIPT
+    env.update({'PACKAGE': package, 'VERSION': version})
+    print(f'Fetching {package} {version} ({fmt}) from {repo}', file=sys.stderr)
+    command = ['podman', 'run', '--rm']
+    for key, value in env.items():
+        command += ['--env', f'{key}={value}']
+    command += ['--volume', f'{dest}:/out:Z', CONTAINER_IMAGE, 'bash', '-c', script]
+    # nosec: fixed argument list, the inputs come from tools/follow-upstream.yml and the
+    # command line of the developer running the tool
+    result = subprocess.run(command, check=False)  # nosec B603 B607
+    if result.returncode != 0:
+        raise FetchError(f'fetching {package} {version} ({fmt}) failed')
+    return os.path.join(dest, 'root')
+
+
+def packaged_files(root):
+    """Return the paths of all files below `root`, as absolute paths on the host."""
+    files = set()
+    for dirpath, _, filenames in os.walk(root):
+        for name in filenames:
+            files.add('/' + os.path.relpath(os.path.join(dirpath, name), root))
+    return files
+
+
+def check_packaging(config, version):
+    """Compare what the RPM and the DEB of `version` ship with tools/follow-upstream.yml.
+
+    Returns the number of findings.
+    """
+    findings = 0
+    ignore = set(config.get('ignore', []))
+    for package in sorted({entry['package'] for entry in config['files']}):
+        entries = [entry for entry in config['files'] if entry['package'] == package]
+        roots = {fmt: fetch(config, fmt, package, version) for fmt in ('rpm', 'deb')}
+        files = {fmt: packaged_files(root) for fmt, root in roots.items()}
+        known = ignore.copy()
+        for entry in entries:
+            known.add(entry['path'])
+            known.add(entry.get('deb_path', entry['path']))
+
+        for fmt in ('rpm', 'deb'):
+            for path in sorted(files[fmt] - known):
+                print(
+                    f'packaging: {package} {version} ({fmt}) ships {path}, which is'
+                    ' neither templated nor ignored in tools/follow-upstream.yml'
+                )
+                findings += 1
+
+        for entry in entries:
+            rpm_path = entry['path']
+            deb_path = entry.get('deb_path', rpm_path)
+            missing = False
+            for fmt, path in (('rpm', rpm_path), ('deb', deb_path)):
+                if path not in files[fmt]:
+                    print(
+                        f'packaging: {package} {version} ({fmt}) no longer ships {path}'
+                    )
+                    findings += 1
+                    missing = True
+            if missing:
+                continue
+            rpm_file = os.path.join(roots['rpm'], rpm_path.lstrip('/'))
+            deb_file = os.path.join(roots['deb'], deb_path.lstrip('/'))
+            with open(rpm_file, 'rb') as f1, open(deb_file, 'rb') as f2:
+                if f1.read() != f2.read():
+                    print(
+                        f'packaging: {package} {version} ships different files in the'
+                        f' RPM and the DEB: diff {rpm_file} {deb_file}'
+                    )
+                    findings += 1
+    return findings
+
+
+def read_based_on(path):
+    with open(path, encoding='utf-8') as f:
+        lines = f.read().splitlines()
+    for line in lines[:HEADER_LINES]:
+        match = BASED_ON_RE.search(line)
+        if match:
+            return match.group('version')
+    return None
+
+
+def report_old_series(text, old_series):
+    """Print the lines of a new template that still mention the old series.
+
+    Catches version-specific references the merge cannot know about, e.g. the
+    `go2docs.graylog.org/7-1/` documentation link in a template copied for 7.2.
+    """
+    separators = re.escape(old_series).replace(r'\.', '[.\\-_]')
+    regex = re.compile(rf'(?<![\d.]){separators}(?![\d])')
+    for number, line in enumerate(text.splitlines(), start=1):
+        if regex.search(line):
+            print(f'  line {number} mentions {old_series}: {line.strip()}')
+
+
+def new_timestamp(old, new_file):
+    today = datetime.date.today().strftime('%Y%m%d')
+    if old.startswith(today) and not new_file:
+        return f'{int(old) + 1}'
+    return f'{today}01'
+
+
+def update_header(text, package, version, old_series, new_series):
+    """Set the timestamp, the series line and the `Based on` line of the header."""
+    lines = text.splitlines(keepends=True)
+    prefix = None
+    stamp_index = None
+    for i, line in enumerate(lines[:HEADER_LINES]):
+        match = TIMESTAMP_RE.match(line.rstrip('\n'))
+        if match:
+            prefix, stamp_index = match.group('prefix'), i
+            stamp = new_timestamp(match.group('stamp'), old_series != new_series)
+            lines[i] = f'{prefix}{stamp}{match.group("suffix")}\n'
+            break
+    if stamp_index is None:
+        sys.exit('No YYYYMMDDNN timestamp line found in the template header')
+
+    series_index = None
+    for i, line in enumerate(lines[:HEADER_LINES]):
+        if line.rstrip('\n') == f'{prefix}{old_series}':
+            lines[i] = f'{prefix}{new_series}\n'
+            series_index = i
+            break
+
+    based_on = f'{{# Based on {package} {version} #}}\n'
+    for i, line in enumerate(lines[:HEADER_LINES]):
+        if BASED_ON_RE.search(line):
+            lines[i] = based_on
+            break
+    else:
+        anchor = series_index if series_index is not None else stamp_index
+        lines.insert(anchor + 1, based_on)
+    return ''.join(lines)
+
+
+def add_supported_version(spec, series):
+    """Append `series` to the YAML list `file:variable`, keeping comments."""
+    path, variable = spec.split(':')
+    path = os.path.join(REPO_ROOT, path)
+    with open(path, encoding='utf-8') as f:
+        lines = f.read().splitlines(keepends=True)
+    start = next(i for i, line in enumerate(lines) if line.startswith(f'{variable}:'))
+    end = start + 1
+    while end < len(lines) and lines[end].startswith('  - '):
+        end += 1
+    if f"  - '{series}'\n" in lines[start + 1 : end]:
+        return
+    lines.insert(end, f"  - '{series}'\n")
+    with open(path, 'w', encoding='utf-8') as f:
+        f.writelines(lines)
+    print(f'  added {series} to {os.path.relpath(path, REPO_ROOT)}')
+
+
+def update_file(config, entry, version, dry_run):
+    parts = config['series_parts']
+    new_series = series_of(version, parts)
+    target = os.path.join(REPO_ROOT, entry['template'].format(series=new_series))
+    rel_target = os.path.relpath(target, REPO_ROOT)
+
+    if os.path.isfile(target):
+        source = target
+        old_series = new_series
+    else:
+        # A new release series starts from the template of the latest older series.
+        pattern = os.path.join(REPO_ROOT, entry['template'].format(series='*'))
+        regex = re.escape(entry['template']).replace(r'\{series\}', '(?P<series>.+)')
+        candidates = []
+        for path in glob.glob(pattern):
+            match = re.fullmatch(regex, os.path.relpath(path, REPO_ROOT))
+            if match and version_key(match['series']) < version_key(new_series):
+                candidates.append((version_key(match['series']), match['series'], path))
+        if not candidates:
+            print(f'{rel_target}: no older template to start from')
+            return 'error'
+        _, old_series, source = max(candidates)
+
+    base = read_based_on(source)
+    rel_source = os.path.relpath(source, REPO_ROOT)
+    if base is None:
+        print(f'{rel_source}: no "Based on <package> <version>" line in the header')
+        return 'error'
+    if version_key(base) >= version_key(version):
+        print(f'{rel_source}: based on {base}, already covers {version}')
+        return 'covered'
+
+    base_file = os.path.join(
+        fetch(config, 'rpm', entry['package'], base), entry['path'].lstrip('/')
+    )
+    new_file = os.path.join(
+        fetch(config, 'rpm', entry['package'], version), entry['path'].lstrip('/')
+    )
+    for path, release in ((base_file, base), (new_file, version)):
+        if not os.path.isfile(path):
+            print(f'{rel_source}: {entry["package"]} {release} has no {entry["path"]}')
+            return 'error'
+
+    with open(base_file, 'rb') as f1, open(new_file, 'rb') as f2:
+        upstream_changed = f1.read() != f2.read()
+    if not upstream_changed and source == target:
+        print(f'{rel_source}: {entry["path"]} is identical in {base} and {version}')
+        return 'unchanged'
+
+    merge = subprocess.run(  # nosec B603 B607 - fixed argument list, file paths only
+        [
+            'git',
+            'merge-file',
+            '--stdout',
+            '-L',
+            f'{rel_source} (LFOps)',
+            '-L',
+            f'{entry["package"]} {base}',
+            '-L',
+            f'{entry["package"]} {version}',
+            source,
+            base_file,
+            new_file,
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if merge.returncode < 0 or merge.returncode > 127:
+        sys.exit(f'git merge-file failed: {merge.stderr}')
+    conflicts = merge.returncode
+    merged = update_header(
+        merge.stdout, entry['package'], version, old_series, new_series
+    )
+
+    status = f'{conflicts} conflict(s)' if conflicts else 'merged cleanly'
+    print(f'{rel_target}: {base} -> {version} from {rel_source}, {status}')
+    print(f'  upstream diff: diff {base_file} {new_file}')
+    if dry_run:
+        return 'conflicts' if conflicts else 'merged'
+    for path in [target] + [
+        os.path.join(REPO_ROOT, c) for c in entry.get('copies', [])
+    ]:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(merged)
+    if source != target:
+        add_supported_version(entry['supported_versions'], new_series)
+        report_old_series(merged, old_series)
+    return 'conflicts' if conflicts else 'merged'
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__.split('\n\n')[0],
+        epilog=f'Applications: {MANIFEST}. Packaged files are cached in {CACHE_DIR}.',
+    )
+    parser.add_argument(
+        'app',
+        help='Application from tools/follow-upstream.yml, or its upstream project name '
+        '(`Graylog2/graylog2-server`).',
+    )
+    parser.add_argument('version', help='The new upstream release, e.g. `7.2.1`.')
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Fetch, check and merge, but do not write any file.',
+    )
+    args = parser.parse_args()
+
+    with open(MANIFEST, encoding='utf-8') as f:
+        manifest = yaml.safe_load(f)
+    _, config = find_app(manifest, args.app)
+
+    try:
+        findings = check_packaging(config, args.version)
+        results = [
+            update_file(config, entry, args.version, args.dry_run)
+            for entry in config['files']
+        ]
+    except FetchError as e:
+        print(f'{e}, see the output above', file=sys.stderr)
+        sys.exit(2)
+    if 'error' in results:
+        sys.exit(2)
+    if findings or 'conflicts' in results:
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
