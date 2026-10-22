@@ -14,6 +14,8 @@
 #   only the RPM is checked.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
 #   `tools/follow-upstream --check` looks for new releases here.
+# * `repo_series_parts`: optional, how many version components `{series}` has in the
+#   repository URLs, if not `series_parts` (2: one repository per `26.04`).
 #
 # A repository URL can reference an environment variable, e.g. a customer token:
 # `https://example.com/repo-${EXAMPLE_TOKEN}/`. An application whose variable is not set

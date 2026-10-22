@@ -168,6 +168,14 @@ def series_of(version, parts):
     return '.'.join(version.split('.')[:parts])
 
 
+def repo_series(config, version):
+    """The series in the repository URL, if it differs from the template series.
+
+    Collabora Enterprise has one template per `26.04.4`, but one repository per `26.04`.
+    """
+    return series_of(version, config.get('repo_series_parts', config['series_parts']))
+
+
 def find_app(manifest, name):
     if name in manifest:
         return name, manifest[name]
@@ -208,7 +216,7 @@ def fetch(app, config, fmt, package, version):
     if os.path.isfile(os.path.join(dest, 'source')):
         return os.path.join(dest, 'root')
     os.makedirs(dest, exist_ok=True)
-    series = series_of(version, config['series_parts'])
+    series = repo_series(config, version)
     if fmt == 'rpm':
         display = config['rpm_repo'].replace('{series}', series)
         env = {'REPO': expand(display)}
@@ -487,23 +495,45 @@ def tracked_templates(entry, parts):
     if '{series}' not in entry['template']:
         base = read_based_on(os.path.join(REPO_ROOT, entry['template']))
         return {series_of(base, parts): base} if base else {}
+    templates = {}
+    for series, path in template_series(entry).items():
+        base = read_based_on(path)
+        if base:
+            templates[series] = base
+    return templates
+
+
+def template_series(entry):
+    """Return {series: path} of the existing templates of an entry with `{series}`."""
     pattern = os.path.join(REPO_ROOT, entry['template'].format(series='*'))
     regex = re.escape(entry['template']).replace(r'\{series\}', '(?P<series>.+)')
     templates = {}
     for path in glob.glob(pattern):
         match = re.fullmatch(regex, os.path.relpath(path, REPO_ROOT))
-        base = read_based_on(path) if match else None
-        if base:
-            templates[match['series']] = base
+        if match:
+            templates[match['series']] = path
     return templates
 
 
+def repo_series_list(config, known):
+    """The repository series to query for the template series `known`, including the
+    series that can follow the newest one."""
+    if '{series}' not in config['rpm_repo']:
+        return ['-']
+    known = {repo_series(config, series) for series in known}
+    newest = max(known, key=version_key)
+    return sorted(known | set(next_series(newest)), key=version_key)
+
+
 def next_series(series):
-    """The series that can follow `series`: `7.2` -> `7.3` and `8.0`."""
+    """The series that can follow `series`: `7.2` -> `7.3`, `8.0`, and `8.2` for
+    versions named after the release month (`26.04` -> `27.04`). Probing a repository
+    that does not exist costs nothing."""
     parts = series.split('.')
     minor = [*parts[:-1], str(int(parts[-1]) + 1)]
     major = [str(int(parts[0]) + 1), *['0'] * (len(parts) - 1)]
-    return ['.'.join(minor), '.'.join(major)]
+    yearly = [str(int(parts[0]) + 1), *parts[1:]]
+    return sorted({'.'.join(minor), '.'.join(major), '.'.join(yearly)})
 
 
 def list_versions(config, packages, series_list):
@@ -530,8 +560,9 @@ def check_app(app, config):
     """Return the releases of `app` that need a run of this tool, oldest first.
 
     Per release series, the latest release counts if it is newer than the template's
-    `Based on` line. A series newer than every template is a new release series.
-    Series older than the newest template without a template of their own are ignored.
+    `Based on` line. A series newer than every template of its repository series is a
+    new release series (Collabora maintains `25.04.x` and `26.04.x` in parallel). Series
+    older than that without a template of their own are ignored.
     """
     parts = config['series_parts']
     entries = [(entry, tracked_templates(entry, parts)) for entry in config['files']]
@@ -539,11 +570,7 @@ def check_app(app, config):
     if not entries:
         return []
     known = {series for _, templates in entries for series in templates}
-    if '{series}' in config['rpm_repo']:
-        newest = max(known, key=version_key)
-        series_list = sorted(known | set(next_series(newest)), key=version_key)
-    else:
-        series_list = ['-']
+    series_list = repo_series_list(config, known)
     versions = list_versions(
         config, {entry['package'] for entry, _ in entries}, series_list
     )
@@ -552,7 +579,12 @@ def check_app(app, config):
     for entry, templates in entries:
         if not versions[entry['package']]:
             raise FetchError(f'no {entry["package"]} package found')
-        newest = max(templates, key=version_key)
+        newest = {}
+        for series in templates:
+            line = repo_series(config, series)
+            if line not in newest or version_key(series) > version_key(newest[line]):
+                newest[line] = series
+        overall = max(templates, key=version_key)
         latest = {}
         for version in versions[entry['package']]:
             series = series_of(version, parts)
@@ -567,8 +599,8 @@ def check_app(app, config):
             if series in templates:
                 if version_key(version) > version_key(templates[series]):
                     releases[version] = releases.get(version, False)
-            elif version_key(series) > version_key(newest) and (
-                '{series}' in entry['template']
+            elif '{series}' in entry['template'] and version_key(series) > version_key(
+                newest.get(repo_series(config, series), overall)
             ):
                 releases[version] = True
     return [
@@ -602,6 +634,26 @@ def check(manifest, apps, as_json):
         sys.exit(1)
 
 
+def list_releases(config):
+    """Print every release in the repositories of the existing templates, with or
+    without a `Based on` line. Used to bootstrap the `Based on` lines."""
+    known = set()
+    for entry in config['files']:
+        if '{series}' in entry['template']:
+            known |= set(template_series(entry))
+        else:
+            base = read_based_on(os.path.join(REPO_ROOT, entry['template']))
+            if base:
+                known.add(series_of(base, config['series_parts']))
+    if not known:
+        sys.exit('No template to derive the release series from')
+    packages = {entry['package'] for entry in config['files']}
+    versions = list_versions(config, packages, repo_series_list(config, known))
+    for package in sorted(versions):
+        for version in sorted(versions[package], key=version_key):
+            print(f'{package} {version}')
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__.split('\n\n')[0],
@@ -616,7 +668,8 @@ def main():
     parser.add_argument(
         'version',
         nargs='?',
-        help='The new upstream release, e.g. `7.2.1`. Not used with `--check`.',
+        help='The new upstream release, e.g. `7.2.1`. Not used with `--check` and '
+        '`--list`.',
     )
     parser.add_argument(
         '--check',
@@ -628,6 +681,12 @@ def main():
         '--dry-run',
         action='store_true',
         help='Fetch, check and merge, but do not write any file.',
+    )
+    parser.add_argument(
+        '--list',
+        action='store_true',
+        help='List every release of `app` in the repositories of its templates, e.g. to '
+        'find the release a template is based on.',
     )
     parser.add_argument(
         '--json',
@@ -644,6 +703,14 @@ def main():
             parser.error('--check takes no version')
         apps = [find_app(manifest, args.app)[0]] if args.app else sorted(manifest)
         check(manifest, apps, args.json)
+        return
+    if args.list:
+        if not args.app or args.version:
+            parser.error('--list takes an application and no version')
+        try:
+            list_releases(find_app(manifest, args.app)[1])
+        except (FetchError, MissingEnvError) as e:
+            sys.exit(str(e))
         return
     if not args.version:
         parser.error('the version is required')
