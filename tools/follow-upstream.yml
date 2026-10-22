@@ -9,9 +9,15 @@
 #   notice to this entry.
 # * `series_parts`: how many version components form a release series that gets its own
 #   template (2: one template per `7.2`, 3: one per `26.04.5`).
-# * `deb_repo`: APT repository serving every release of a series, written like a
-#   sources.list line (`<url> <suite> <component>`), `{series}` is replaced.
+# * `deb_repo`: optional, APT repository serving every release of a series, written like
+#   a sources.list line (`<url> <suite> <component>`), `{series}` is replaced. Without it,
+#   only the RPM is checked.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
+#   `tools/follow-upstream --check` looks for new releases here.
+#
+# A repository URL can reference an environment variable, e.g. a customer token:
+# `https://example.com/repo-${EXAMPLE_TOKEN}/`. An application whose variable is not set
+# is skipped by `--check`, so the token never has to be in the repository or the CI.
 # * `files`: the packaged files and the templates built from them, sorted by `path`.
 #   * `template`: `{series}` is replaced. A template without `{series}` serves every
 #     series and is merged in place.

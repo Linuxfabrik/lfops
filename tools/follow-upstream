@@ -28,16 +28,22 @@ of the release (streamed, in a podman container) and:
    * Same release series (`7.2.0` -> `7.2.1`): the template is merged in place.
    * New release series (`7.2.1` -> `7.3.0`): the template of the latest older series
      is merged into a new template, and the series is added to the supported versions.
-   * No change between the packaged files: nothing is written.
+   * No change between the packaged files: only the `Based on` line is updated, so the
+     template records that the release was checked.
 
-Exit code 0: nothing to review. 1: conflicts or packaging findings to review. 2: the
-run could not complete. Run this tool from the repository root directory. It never
-commits.
+With `--check`, the tool lists the releases in the RPM repositories that are newer than
+the templates' `Based on` lines, without fetching or writing anything. Applications whose
+repository URL needs an environment variable that is not set (`${TOKEN}`) are skipped.
+
+Exit code 0: nothing to review, or no new release. 1: conflicts or packaging findings to
+review, or new releases found. 2: the run could not complete. Run this tool from the
+repository root directory. It never commits.
 """
 
 import argparse
 import datetime
 import glob
+import json
 import os
 import re
 import subprocess  # nosec B404 - runs podman and git, see the calls below
@@ -46,7 +52,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102102'
+__version__ = '2026102201'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -59,6 +65,7 @@ HEADER_LINES = 10  # the header comment block is searched within the first lines
 
 BASED_ON_RE = re.compile(r'Based on (?P<package>\S+) (?P<version>\S+)')
 TIMESTAMP_RE = re.compile(r'^(?P<prefix>\W*)(?P<stamp>\d{10})(?P<suffix>\W*)$')
+ENV_RE = re.compile(r'\$\{(?P<name>\w+)\}')
 
 # Both scripts extract /etc from one release without installing it. The package is
 # streamed, so even the 2 GB graylog-datanode package needs no disk space, and all of
@@ -66,17 +73,18 @@ TIMESTAMP_RE = re.compile(r'^(?P<prefix>\W*)(?P<stamp>\d{10})(?P<suffix>\W*)$')
 FETCH_RPM_SCRIPT = r"""
 set -o errexit -o nounset -o pipefail
 dnf install --assumeyes --quiet cpio >/dev/null
+# a repository can serve several architectures and the source package
 url=$(dnf --quiet --repofrompath="app,${REPO}" --repo=app \
-    repoquery --latest-limit=1 --location "${PACKAGE}-${VERSION}")
+    repoquery --arch=noarch,x86_64 --latest-limit=1 --location "${PACKAGE}-${VERSION}")
 if [ -z "${url}" ]; then
-    echo "${PACKAGE} ${VERSION} not found in ${REPO}" >&2
+    echo "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}" >&2
     exit 1
 fi
 mkdir --parents /out/root
 curl --fail --silent --show-error --location "${url}" \
     | rpm2cpio - \
     | (cd /out/root && cpio --extract --make-directories --quiet "./etc/*")
-echo "${url}" > /out/source
+echo "${REPO_DISPLAY} ${url##*/}" > /out/source
 """
 
 # The Packages index can list several builds of a release (`7.2.0-1`, `7.2.0-11`);
@@ -101,19 +109,53 @@ file=$(curl --fail --silent --show-error --location "${INDEX}" \
         }' \
     | sort --version-sort | tail --lines=1 | cut --delimiter=' ' --fields=2)
 if [ -z "${file}" ]; then
-    echo "${PACKAGE} ${VERSION} not found in ${INDEX}" >&2
+    echo "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}" >&2
     exit 1
 fi
 mkdir --parents /out/root
 curl --fail --silent --show-error --location "${REPO}/${file}" \
     | bsdtar --extract --to-stdout --file - 'data.tar*' \
     | (cd /out/root && bsdtar --extract --file - --include './etc/*' --include 'etc/*')
-echo "${REPO}/${file}" > /out/source
+echo "${REPO_DISPLAY} ${file##*/}" > /out/source
+"""
+
+# Lists the name and version of every build of the packages in each repository. A
+# repository that does not exist (yet), e.g. the one of the next release series, yields
+# no line instead of an error.
+LIST_RPM_SCRIPT = r"""
+set -o errexit -o nounset -o pipefail
+i=0
+while read -r key repo; do
+    i=$((i + 1))
+    dnf --quiet --setopt=skip_if_unavailable=True \
+        --repofrompath="app${i},${repo}" --repo="app${i}" \
+        repoquery --arch=noarch,x86_64 --queryformat '%{name} %{version}' ${PACKAGES} \
+        | sed "s/^/${key} /"
+done <<< "${REPOS}"
 """
 
 
 class FetchError(Exception):
     pass
+
+
+class MissingEnvError(Exception):
+    pass
+
+
+def expand(value):
+    """Replace `${NAME}` by the environment variable, e.g. a repository token.
+
+    Messages show the unexpanded value, so a token never ends up in the output.
+    """
+
+    def lookup(match):
+        name = match.group('name')
+        if name not in os.environ:
+            raise MissingEnvError(f'{name} is not set')
+        return os.environ[name]
+
+    return ENV_RE.sub(lookup, value)
 
 
 def version_key(version):
@@ -135,38 +177,56 @@ def find_app(manifest, name):
     sys.exit(f'{name}: not in {os.path.relpath(MANIFEST, REPO_ROOT)}')
 
 
-def fetch(config, fmt, package, version):
+def run_container(script, env, volume=None):
+    # `--env NAME` without a value passes the variable from podman's environment, so a
+    # repository token does not show up in the process list
+    command = ['podman', 'run', '--rm']
+    for key in env:
+        command += ['--env', key]
+    if volume:
+        command += ['--volume', f'{volume}:/out:Z']
+    command += [CONTAINER_IMAGE, 'bash', '-c', script]
+    # nosec: fixed argument list, the inputs come from tools/follow-upstream.yml and the
+    # command line of the developer running the tool
+    return subprocess.run(  # nosec B603 B607
+        command,
+        env={**os.environ, **env},
+        stdout=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+
+
+def fetch(app, config, fmt, package, version):
     """Return the directory holding /etc of `package` `version`, cached in CACHE_DIR.
 
-    `fmt` is `rpm` or `deb`.
+    `fmt` is `rpm` or `deb`. The cache is per application, because two applications can
+    ship different packages under the same name and version (Collabora CODE and
+    Enterprise).
     """
-    dest = os.path.join(CACHE_DIR, fmt, f'{package}-{version}')
+    dest = os.path.join(CACHE_DIR, fmt, app, f'{package}-{version}')
     if os.path.isfile(os.path.join(dest, 'source')):
         return os.path.join(dest, 'root')
     os.makedirs(dest, exist_ok=True)
     series = series_of(version, config['series_parts'])
     if fmt == 'rpm':
-        repo = config['rpm_repo'].format(series=series)
-        env = {'REPO': repo}
+        display = config['rpm_repo'].replace('{series}', series)
+        env = {'REPO': expand(display)}
         script = FETCH_RPM_SCRIPT
     else:
         # `deb_repo` is written like a sources.list line: `<url> <suite> <component>`
-        repo, suite, component = config['deb_repo'].format(series=series).split()
-        repo = repo.rstrip('/')
+        display, suite, component = (
+            config['deb_repo'].replace('{series}', series).split()
+        )
+        repo = expand(display).rstrip('/')
         env = {
             'INDEX': f'{repo}/dists/{suite}/{component}/binary-amd64/Packages.gz',
             'REPO': repo,
         }
         script = FETCH_DEB_SCRIPT
-    env.update({'PACKAGE': package, 'VERSION': version})
-    print(f'Fetching {package} {version} ({fmt}) from {repo}', file=sys.stderr)
-    command = ['podman', 'run', '--rm']
-    for key, value in env.items():
-        command += ['--env', f'{key}={value}']
-    command += ['--volume', f'{dest}:/out:Z', CONTAINER_IMAGE, 'bash', '-c', script]
-    # nosec: fixed argument list, the inputs come from tools/follow-upstream.yml and the
-    # command line of the developer running the tool
-    result = subprocess.run(command, check=False)  # nosec B603 B607
+    env.update({'PACKAGE': package, 'REPO_DISPLAY': display, 'VERSION': version})
+    print(f'Fetching {package} {version} ({fmt}) from {display}', file=sys.stderr)
+    result = run_container(script, env, volume=dest)
     if result.returncode != 0:
         raise FetchError(f'fetching {package} {version} ({fmt}) failed')
     return os.path.join(dest, 'root')
@@ -181,23 +241,24 @@ def packaged_files(root):
     return files
 
 
-def check_packaging(config, version):
+def check_packaging(app, config, version):
     """Compare what the RPM and the DEB of `version` ship with tools/follow-upstream.yml.
 
-    Returns the number of findings.
+    Without a `deb_repo`, only the RPM is checked. Returns the number of findings.
     """
     findings = 0
     ignore = set(config.get('ignore', []))
+    fmts = ('rpm', 'deb') if 'deb_repo' in config else ('rpm',)
     for package in sorted({entry['package'] for entry in config['files']}):
         entries = [entry for entry in config['files'] if entry['package'] == package]
-        roots = {fmt: fetch(config, fmt, package, version) for fmt in ('rpm', 'deb')}
+        roots = {fmt: fetch(app, config, fmt, package, version) for fmt in fmts}
         files = {fmt: packaged_files(root) for fmt, root in roots.items()}
         known = ignore.copy()
         for entry in entries:
             known.add(entry['path'])
             known.add(entry.get('deb_path', entry['path']))
 
-        for fmt in ('rpm', 'deb'):
+        for fmt in fmts:
             for path in sorted(files[fmt] - known):
                 print(
                     f'packaging: {package} {version} ({fmt}) ships {path}, which is'
@@ -210,13 +271,13 @@ def check_packaging(config, version):
             deb_path = entry.get('deb_path', rpm_path)
             missing = False
             for fmt, path in (('rpm', rpm_path), ('deb', deb_path)):
-                if path not in files[fmt]:
+                if fmt in files and path not in files[fmt]:
                     print(
                         f'packaging: {package} {version} ({fmt}) no longer ships {path}'
                     )
                     findings += 1
                     missing = True
-            if missing:
+            if missing or 'deb' not in roots:
                 continue
             rpm_file = os.path.join(roots['rpm'], rpm_path.lstrip('/'))
             deb_file = os.path.join(roots['deb'], deb_path.lstrip('/'))
@@ -260,25 +321,32 @@ def new_timestamp(old, new_file):
     return f'{today}01'
 
 
-def update_header(text, package, version, old_series, new_series):
-    """Set the timestamp, the series line and the `Based on` line of the header."""
+def update_header(text, package, version, old_series, new_series, bump=True):
+    """Set the timestamp, the series line and the `Based on` line of the header.
+
+    Without `bump`, the timestamp is kept: only the Jinja comment changes, which does not
+    end up in the deployed file.
+    """
     lines = text.splitlines(keepends=True)
-    prefix = None
+    prefix = suffix = None
     stamp_index = None
     for i, line in enumerate(lines[:HEADER_LINES]):
         match = TIMESTAMP_RE.match(line.rstrip('\n'))
         if match:
-            prefix, stamp_index = match.group('prefix'), i
-            stamp = new_timestamp(match.group('stamp'), old_series != new_series)
-            lines[i] = f'{prefix}{stamp}{match.group("suffix")}\n'
+            prefix, suffix = match.group('prefix'), match.group('suffix')
+            stamp_index = i
+            if bump:
+                stamp = new_timestamp(match.group('stamp'), old_series != new_series)
+                lines[i] = f'{prefix}{stamp}{suffix}\n'
             break
     if stamp_index is None:
         sys.exit('No YYYYMMDDNN timestamp line found in the template header')
 
     series_index = None
     for i, line in enumerate(lines[:HEADER_LINES]):
-        if line.rstrip('\n') == f'{prefix}{old_series}':
-            lines[i] = f'{prefix}{new_series}\n'
+        # the series line is written like the timestamp line: `# 7.2`, `<!-- 26.04.5 -->`
+        if line.rstrip('\n') == f'{prefix}{old_series}{suffix}':
+            lines[i] = f'{prefix}{new_series}{suffix}\n'
             series_index = i
             break
 
@@ -311,7 +379,15 @@ def add_supported_version(spec, series):
     print(f'  added {series} to {os.path.relpath(path, REPO_ROOT)}')
 
 
-def update_file(config, entry, version, dry_run):
+def write_template(entry, target, text):
+    for path in [target] + [
+        os.path.join(REPO_ROOT, c) for c in entry.get('copies', [])
+    ]:
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(text)
+
+
+def update_file(app, config, entry, version, dry_run):
     parts = config['series_parts']
     new_series = series_of(version, parts)
     target = os.path.join(REPO_ROOT, entry['template'].format(series=new_series))
@@ -344,10 +420,10 @@ def update_file(config, entry, version, dry_run):
         return 'covered'
 
     base_file = os.path.join(
-        fetch(config, 'rpm', entry['package'], base), entry['path'].lstrip('/')
+        fetch(app, config, 'rpm', entry['package'], base), entry['path'].lstrip('/')
     )
     new_file = os.path.join(
-        fetch(config, 'rpm', entry['package'], version), entry['path'].lstrip('/')
+        fetch(app, config, 'rpm', entry['package'], version), entry['path'].lstrip('/')
     )
     for path, release in ((base_file, base), (new_file, version)):
         if not os.path.isfile(path):
@@ -358,6 +434,13 @@ def update_file(config, entry, version, dry_run):
         upstream_changed = f1.read() != f2.read()
     if not upstream_changed and source == target:
         print(f'{rel_source}: {entry["path"]} is identical in {base} and {version}')
+        if not dry_run:
+            with open(source, encoding='utf-8') as f:
+                text = f.read()
+            text = update_header(
+                text, entry['package'], version, old_series, new_series, bump=False
+            )
+            write_template(entry, target, text)
         return 'unchanged'
 
     merge = subprocess.run(  # nosec B603 B607 - fixed argument list, file paths only
@@ -391,15 +474,132 @@ def update_file(config, entry, version, dry_run):
     print(f'  upstream diff: diff {base_file} {new_file}')
     if dry_run:
         return 'conflicts' if conflicts else 'merged'
-    for path in [target] + [
-        os.path.join(REPO_ROOT, c) for c in entry.get('copies', [])
-    ]:
-        with open(path, 'w', encoding='utf-8') as f:
-            f.write(merged)
+    write_template(entry, target, merged)
     if source != target:
         add_supported_version(entry['supported_versions'], new_series)
         report_old_series(merged, old_series)
     return 'conflicts' if conflicts else 'merged'
+
+
+def tracked_templates(entry, parts):
+    """Return {series: based-on version} of the templates of `entry` with a `Based on`
+    line. A template without `{series}` is returned under the series of its base."""
+    if '{series}' not in entry['template']:
+        base = read_based_on(os.path.join(REPO_ROOT, entry['template']))
+        return {series_of(base, parts): base} if base else {}
+    pattern = os.path.join(REPO_ROOT, entry['template'].format(series='*'))
+    regex = re.escape(entry['template']).replace(r'\{series\}', '(?P<series>.+)')
+    templates = {}
+    for path in glob.glob(pattern):
+        match = re.fullmatch(regex, os.path.relpath(path, REPO_ROOT))
+        base = read_based_on(path) if match else None
+        if base:
+            templates[match['series']] = base
+    return templates
+
+
+def next_series(series):
+    """The series that can follow `series`: `7.2` -> `7.3` and `8.0`."""
+    parts = series.split('.')
+    minor = [*parts[:-1], str(int(parts[-1]) + 1)]
+    major = [str(int(parts[0]) + 1), *['0'] * (len(parts) - 1)]
+    return ['.'.join(minor), '.'.join(major)]
+
+
+def list_versions(config, packages, series_list):
+    """Return {package: {version, ...}} over the RPM repositories of `series_list`."""
+    repos = []
+    for series in series_list:
+        repos.append(
+            f'{series} {expand(config["rpm_repo"].replace("{series}", series))}'
+        )
+    result = run_container(
+        LIST_RPM_SCRIPT,
+        {'PACKAGES': ' '.join(sorted(packages)), 'REPOS': '\n'.join(repos)},
+    )
+    if result.returncode != 0:
+        raise FetchError('listing the packages failed')
+    versions = {package: set() for package in packages}
+    for line in result.stdout.splitlines():
+        _, package, version = line.split()
+        versions[package].add(version)
+    return versions
+
+
+def check_app(app, config):
+    """Return the releases of `app` that need a run of this tool, oldest first.
+
+    Per release series, the latest release counts if it is newer than the template's
+    `Based on` line. A series newer than every template is a new release series.
+    Series older than the newest template without a template of their own are ignored.
+    """
+    parts = config['series_parts']
+    entries = [(entry, tracked_templates(entry, parts)) for entry in config['files']]
+    entries = [(entry, templates) for entry, templates in entries if templates]
+    if not entries:
+        return []
+    known = {series for _, templates in entries for series in templates}
+    if '{series}' in config['rpm_repo']:
+        newest = max(known, key=version_key)
+        series_list = sorted(known | set(next_series(newest)), key=version_key)
+    else:
+        series_list = ['-']
+    versions = list_versions(
+        config, {entry['package'] for entry, _ in entries}, series_list
+    )
+
+    releases = {}
+    for entry, templates in entries:
+        if not versions[entry['package']]:
+            raise FetchError(f'no {entry["package"]} package found')
+        newest = max(templates, key=version_key)
+        latest = {}
+        for version in versions[entry['package']]:
+            series = series_of(version, parts)
+            if series in latest and version_key(latest[series]) > version_key(version):
+                continue
+            latest[series] = version
+        if '{series}' not in entry['template']:
+            # one template for every series: only the newest release counts
+            version = max(latest.values(), key=version_key)
+            latest = {series_of(version, parts): version}
+        for series, version in latest.items():
+            if series in templates:
+                if version_key(version) > version_key(templates[series]):
+                    releases[version] = releases.get(version, False)
+            elif version_key(series) > version_key(newest) and (
+                '{series}' in entry['template']
+            ):
+                releases[version] = True
+    return [
+        {'app': app, 'new_series': new_series, 'version': version}
+        for version, new_series in sorted(
+            releases.items(), key=lambda item: version_key(item[0])
+        )
+    ]
+
+
+def check(manifest, apps, as_json):
+    releases = []
+    failed = False
+    for app in apps:
+        try:
+            releases += check_app(app, manifest[app])
+        except MissingEnvError as e:
+            print(f'{app}: skipped, {e}', file=sys.stderr)
+        except FetchError as e:
+            print(f'{app}: {e}', file=sys.stderr)
+            failed = True
+    if as_json:
+        print(json.dumps(releases, indent=2))
+    else:
+        for release in releases:
+            kind = 'new release series' if release['new_series'] else 'release'
+            print(f'{release["app"]} {release["version"]}: {kind}')
+    if failed:
+        sys.exit(2)
+    if releases:
+        sys.exit(1)
 
 
 def main():
@@ -409,28 +609,53 @@ def main():
     )
     parser.add_argument(
         'app',
+        nargs='?',
         help='Application from tools/follow-upstream.yml, or its upstream project name '
-        '(`Graylog2/graylog2-server`).',
+        '(`Graylog2/graylog2-server`). Optional with `--check`.',
     )
-    parser.add_argument('version', help='The new upstream release, e.g. `7.2.1`.')
+    parser.add_argument(
+        'version',
+        nargs='?',
+        help='The new upstream release, e.g. `7.2.1`. Not used with `--check`.',
+    )
+    parser.add_argument(
+        '--check',
+        action='store_true',
+        help='List the releases that are newer than the templates, of every application '
+        'or of `app`, without fetching or writing anything.',
+    )
     parser.add_argument(
         '--dry-run',
         action='store_true',
         help='Fetch, check and merge, but do not write any file.',
     )
+    parser.add_argument(
+        '--json',
+        action='store_true',
+        help='With `--check`: print the releases as JSON.',
+    )
     args = parser.parse_args()
 
     with open(MANIFEST, encoding='utf-8') as f:
         manifest = yaml.safe_load(f)
-    _, config = find_app(manifest, args.app)
 
+    if args.check:
+        if args.version:
+            parser.error('--check takes no version')
+        apps = [find_app(manifest, args.app)[0]] if args.app else sorted(manifest)
+        check(manifest, apps, args.json)
+        return
+    if not args.version:
+        parser.error('the version is required')
+
+    app, config = find_app(manifest, args.app)
     try:
-        findings = check_packaging(config, args.version)
+        findings = check_packaging(app, config, args.version)
         results = [
-            update_file(config, entry, args.version, args.dry_run)
+            update_file(app, config, entry, args.version, args.dry_run)
             for entry in config['files']
         ]
-    except FetchError as e:
+    except (FetchError, MissingEnvError) as e:
         print(f'{e}, see the output above', file=sys.stderr)
         sys.exit(2)
     if 'error' in results:
