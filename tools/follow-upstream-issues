@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+"""Opens a GitHub issue for every upstream release LFOps does not cover yet.
+
+Runs `tools/follow-upstream --check` and opens one issue per release, labelled
+`follow-upstream`, unless an issue with the same title exists, open or closed. The pull
+request that brings LFOps up to date closes the issue, so a closed issue tells the team
+that LFOps is ready for the release.
+
+Runs in the `Linuxfabrik: Follow upstream` workflow and on the machine that holds the
+repository tokens of the applications the workflow skips (Collabora Enterprise). Needs
+`gh` with a token that may write issues. Exit code 0: done. 2: the check failed for
+at least one application, the issues of the others are opened anyway.
+"""
+
+import argparse
+import json
+import os
+import subprocess  # nosec B404 - runs tools/follow-upstream and gh, see the calls below
+import sys
+
+__author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
+__version__ = '2026102201'
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+LABEL = 'follow-upstream'
+
+BODY = """\
+`tools/follow-upstream --check` found a release that LFOps does not cover yet.
+
+* Application: `{app}`, see `tools/follow-upstream.yml`
+* Release: `{version}`{kind}
+
+Run the `lfops-follow-upstream` skill, or by hand:
+
+```bash
+tools/follow-upstream {app} {version}
+```
+
+The pull request that closes this issue makes LFOps ready for the release.
+"""
+
+
+def run(command, stderr=subprocess.PIPE, cwd=None):
+    # nosec: fixed argument lists, the inputs come from tools/follow-upstream.yml
+    return subprocess.run(  # nosec B603 B607
+        command,
+        stdout=subprocess.PIPE,
+        stderr=stderr,
+        text=True,
+        cwd=cwd,
+        check=False,
+    )
+
+
+def existing_titles():
+    result = run(
+        [
+            'gh',
+            'issue',
+            'list',
+            '--label',
+            LABEL,
+            '--state',
+            'all',
+            '--limit',
+            '1000',
+            '--json',
+            'title',
+        ]
+    )
+    if result.returncode != 0:
+        sys.exit(f'gh issue list failed: {result.stderr.strip()}')
+    return {issue['title'] for issue in json.loads(result.stdout)}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
+    parser.add_argument(
+        'apps',
+        nargs='*',
+        help='Applications from tools/follow-upstream.yml. Default: all.',
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Print the issues that would be opened, without opening them.',
+    )
+    args = parser.parse_args()
+
+    failed = False
+    releases = []
+    for app in args.apps or [None]:
+        command = [os.path.join(REPO_ROOT, 'tools', 'follow-upstream'), '--check']
+        command += ['--json'] + ([app] if app else [])
+        # stderr goes to the terminal: skipped applications and errors
+        result = run(command, stderr=None, cwd=REPO_ROOT)
+        if result.returncode == 2:
+            failed = True
+        elif result.returncode not in (0, 1):
+            sys.exit(f'tools/follow-upstream --check failed: {result.returncode}')
+        releases += json.loads(result.stdout or '[]')
+
+    titles = existing_titles() if releases else set()
+    if not args.dry_run and any(
+        f'follow-upstream: {r["app"]} {r["version"]}' not in titles for r in releases
+    ):
+        # creates the label on the first run, `--force` keeps later runs quiet
+        result = run(
+            [
+                'gh',
+                'label',
+                'create',
+                LABEL,
+                '--color',
+                'c5def5',
+                '--description',
+                'An upstream release LFOps does not cover yet',
+                '--force',
+            ]
+        )
+        if result.returncode != 0:
+            sys.exit(f'gh label create failed: {result.stderr.strip()}')
+    for release in releases:
+        title = f'follow-upstream: {release["app"]} {release["version"]}'
+        if title in titles:
+            print(f'{title}: issue exists')
+            continue
+        body = BODY.format(
+            app=release['app'],
+            version=release['version'],
+            kind=', a new release series' if release['new_series'] else '',
+        )
+        if args.dry_run:
+            print(f'{title}: would be opened')
+            continue
+        result = run(
+            [
+                'gh',
+                'issue',
+                'create',
+                '--title',
+                title,
+                '--label',
+                LABEL,
+                '--body',
+                body,
+            ]
+        )
+        if result.returncode != 0:
+            sys.exit(f'{title}: gh issue create failed: {result.stderr.strip()}')
+        print(f'{title}: {result.stdout.strip()}')
+    if failed:
+        sys.exit(2)
+
+
+if __name__ == '__main__':
+    main()
