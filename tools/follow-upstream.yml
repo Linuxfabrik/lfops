@@ -63,3 +63,36 @@ graylog:
     - '/etc/logrotate.d/graylog-server'
     - '/etc/needrestart/conf.d/500-graylog.conf'
     - '/etc/sysconfig/graylog-datanode'
+
+collabora_code:
+  series_parts: 3
+  rpm_repo: 'https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-rpm/'
+  files:
+    - package: 'coolwsd'
+      path: '/etc/coolwsd/coolwsd.xml'
+      template: 'roles/collabora/templates/etc/coolwsd/{series}-coolwsd-code.xml.j2'
+      supported_versions: 'roles/collabora/vars/main.yml:__collabora__supported_versions_code'
+  ignore:
+    # the packaged defaults are used, LFOps does not configure a reverse proxy here
+    - '/etc/apache2/conf-available/coolwsd.conf'
+    - '/etc/coolwsd/coolkitconfig.xcu'
+    - '/etc/httpd/conf/coolwsd.conf'
+    - '/etc/nginx/snippets/coolwsd.conf'
+    - '/etc/pam.d/coolwsd'
+
+collabora_enterprise:
+  series_parts: 3
+  repo_series_parts: 2
+  rpm_repo: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{series}/customer-rpm-${COLLABORA_CUSTOMER_TOKEN}/'
+  files:
+    - package: 'coolwsd'
+      path: '/etc/coolwsd/coolwsd.xml'
+      template: 'roles/collabora/templates/etc/coolwsd/{series}-coolwsd.xml.j2'
+      supported_versions: 'roles/collabora/vars/main.yml:__collabora__supported_versions_enterprise'
+  ignore:
+    # the packaged defaults are used, LFOps does not configure a reverse proxy here
+    - '/etc/apache2/conf-available/coolwsd.conf'
+    - '/etc/coolwsd/coolkitconfig.xcu'
+    - '/etc/httpd/conf/coolwsd.conf'
+    - '/etc/nginx/snippets/coolwsd.conf'
+    - '/etc/pam.d/coolwsd'
