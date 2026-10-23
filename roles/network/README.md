@@ -5,6 +5,7 @@ This role is a thin wrapper around the [`fedora.linux_system_roles.network` role
 Concretely, this role:
 
 * Calls `fedora.linux_system_roles.network` with whatever `network_connections` or `network_state` you pass in (host or group vars). With neither set, the upstream role is not called at all, so it neither installs nor starts NetworkManager.
+* If `network_state` declares `dns-resolver` servers, first clears the DNS servers that `dns-resolver` does not list from the connection profile that is active on each declared interface (for example `cloud-init eth0` or `System eth0`). nmstate carries the DNS servers stored in that profile over into the profile it writes, and aborts with `ipv6.dns: this property is not allowed for 'method=disabled'` when the profile stores IPv6 DNS servers and `network_state` disables IPv6. On an interface that does not hold the configured DNS servers, the stored ones would stay behind. The profile is only edited, not deleted or re-applied, so the active connection stays up, and a profile that stores only the declared servers is left alone.
 * On Red Hat-family hosts only: removes the `hc-utils` package (Hetzner Cloud utilities). They install legacy ifcfg scripts that fight with NetworkManager. The task tolerates the package not being installed (`ignore_errors: true`).
 * Prints a reminder that NetworkManager may need to be restarted by hand (`systemctl restart NetworkManager`) whenever the upstream role changed a connection profile. The upstream role applies connections via NetworkManager APIs, but a few changes (e.g. plugin reloads) require a service restart. The reminder is repeated in the block of manual steps that every LFOps playbook prints above the `PLAY RECAP`.
 
@@ -28,7 +29,7 @@ Manual steps:
 
 `network`
 
-* Configures the network and removes `hc-utils` (Hetzner) on Red Hat hosts.
+* Configures the network, clears stale DNS servers from the active connection profiles of `network_state` interfaces, and removes `hc-utils` (Hetzner) on Red Hat hosts.
 * Triggers: none.
 
 

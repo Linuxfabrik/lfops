@@ -148,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:network**: `network_state` applies on hosts whose active connection profile, such as `cloud-init eth0` or `System eth0`, still stores DNS servers, instead of aborting with `ipv6.dns: this property is not allowed for 'method=disabled'`. DNS servers that `dns-resolver` does not list are removed from that profile.
 * **role:nextcloud**: A Nextcloud upgrade no longer logs an error from a repair step of the `dav` app and no longer rebuilds the calendar search index every time.
 * **role:nextcloud**: The admin section of the `support` app is hidden again.
 * **role:monitoring_plugins**: The package install works on SLE, where it failed with `No provider of 'linuxfabrik-monitoring-plugins-<version>*' found`.
