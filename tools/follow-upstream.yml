@@ -12,6 +12,9 @@
 # * `deb_repo`: optional, APT repository serving every release of a series, written like
 #   a sources.list line (`<url> <suite> <component>`), `{series}` is replaced. Without it,
 #   only the RPM is checked.
+# * `gpg_key`: the key the packages (RPM) and the repository metadata (DEB) are signed
+#   with, the same one the `repo_*` role imports. `{series}` is replaced. A package that
+#   is not signed with it is not extracted.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
 #   `tools/follow-upstream --check` looks for new releases here.
 # * `repo_series_parts`: optional, how many version components `{series}` has in the
@@ -36,6 +39,7 @@ graylog:
     - 'Graylog2/graylog2-server'
   series_parts: 2
   deb_repo: 'https://packages.graylog2.org/repo/debian/ stable {series}'
+  gpg_key: 'https://packages.graylog2.org/repo/debian/pubkey.gpg'
   rpm_repo: 'https://downloads.graylog.org/repo/el/stable/{series}/x86_64/'
   files:
     - package: 'graylog-datanode'
@@ -66,6 +70,7 @@ graylog:
 
 collabora_code:
   series_parts: 3
+  gpg_key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-rpm/repodata/repomd.xml.key'
   rpm_repo: 'https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-rpm/'
   files:
     - package: 'coolwsd'
@@ -83,6 +88,7 @@ collabora_code:
 collabora_enterprise:
   series_parts: 3
   repo_series_parts: 2
+  gpg_key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{series}/customer-rpm-${COLLABORA_CUSTOMER_TOKEN}/repodata/repomd.xml.key'
   rpm_repo: 'https://www.collaboraoffice.com/repos/CollaboraOnline/{series}/customer-rpm-${COLLABORA_CUSTOMER_TOKEN}/'
   files:
     - package: 'coolwsd'
