@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **execution-environment**: Add the `telekom_mms.icinga_director` collection, so inventories using its Icinga Director inventory plugin work inside the EE.
 * **role:curaline, playbook:curaline**: Add a role and playbook that install and configure the curaLINE Client of Swisscom, which exchanges files with the curaLINE Document Routing service.
 * **role:gitlab_ce**: Behind a reverse proxy, GitLab can show and log the real client IP address instead of the address of the proxy, for example under "Current sign-in IP". Set `gitlab_ce__rb_nginx_real_ip_trusted_addresses` to the address of the proxy.
 * **role:apache_tomcat**: With `lfops__remove_rpmnew_rpmsave`, the role also removes the `.rpmnew` and `.rpmsave` files next to the Tomcat configuration files it deploys.
