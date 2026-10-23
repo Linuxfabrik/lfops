@@ -1,0 +1,2 @@
+# Molecule scenario marker for the 'duplicity' scenario, run with
+# `molecule test --scenario-name duplicity`.
