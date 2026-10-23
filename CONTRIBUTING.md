@@ -517,9 +517,21 @@ roles:
 * Mirror the target path below `templates/` (`templates/etc/httpd/sites-available/default.conf.j2`) and always use `.j2`.
 * Deploy self-written scripts to `/usr/local/sbin` (SELinux). Helpers run only by a systemd unit (not by an admin, not exec'd by a confined domain) MAY live in `/usr/local/libexec`: as `usr_t`, a root `oneshot` service in `init_t` runs them via `execute_no_trans` without AVC denial on RHEL 8, 9 and 10. Admin-invokable commands stay in `/usr/local/sbin`, and a script a confined domain must exec never goes to `/usr/local/libexec`.
 * Keep templates as close to the original file as possible, which eases rpmnew/rpmsave handling.
-* A template that is a copy of a packaged file names the package release it was taken from in a Jinja comment right below the version line, `{# Based on graylog-server 7.2.1 #}`, which does not end up on the host. List it in `tools/follow-upstream.yml`; `tools/follow-upstream` uses the line to merge the configuration changes of later releases into the template, see the `lfops-follow-upstream` skill.
+* A template that is a copy of a packaged file names the package release it was taken from in a Jinja comment right below the version line, `{# Based on graylog-server 7.2.1 #}`, which does not end up on the host. List it in `tools/follow-upstream.yml`, see "Following Upstream Releases".
 * If the role picks a file by the installed version (`<version>-<name>.conf.j2`, `vars/<version>.yml`), list the shipped versions in `vars/main.yml` and assert against them right after reading the version, as `roles/example` does (`__example__supported_versions`), so the admin gets the supported versions instead of a missing-file path. Document the abort under `## Troubleshooting` (pin a supported version, or add the file).
 * After deploying a file that may get rpmnew / rpmsave files (or Debian equivalents), include `shared` with `tasks_from: 'remove-rpmnew-rpmsave.yml'` and `shared__remove_rpmnew_rpmsave_config_file`, as in `roles/example`.
+
+
+#### Following Upstream Releases
+
+Templates that are copies of a packaged file (`<series>-coolwsd.xml.j2`, `<series>-server.conf.j2`, ...) have to follow the configuration changes of every upstream release. `tools/follow-upstream.yml` lists these applications: their package repositories, the templates built from each packaged file, and the `supported_versions` list a new series goes into. The format is described in its header.
+
+* The `Linuxfabrik: Follow upstream` workflow runs `tools/follow-upstream --check` every weekday. For each release newer than the `Based on` lines it opens an issue titled `follow-upstream: <app> <version>` with the label `follow-upstream`. Applications whose repository needs a customer token are checked outside the CI, where the token is available; their issues look the same.
+* The pull request that brings LFOps up to date lists one `Closes #<number>` per issue. A closed issue means LFOps is ready for that release.
+* `tools/follow-upstream <app> <version>` does the work: it fetches the RPM and the DEB of the release, checks their signatures, extracts `/etc`, compares the packaging (new or vanished files, RPM and DEB differing), and merges the upstream changes into every template with `git merge-file`, keeping the LFOps changes. A new release series gets a new template from the newest older one and is added to `supported_versions`. Conflicts are left as conflict markers. `--dry-run` writes nothing, `--list <app>` lists the releases in the repositories, `--check` lists what needs work. Packages are cached in `~/.cache/lfops-follow-upstream/`.
+* The `lfops-follow-upstream` skill covers what the tool cannot judge: resolving conflicts, upgrade notes of a new series, the CHANGELOG entry and the commit message.
+* A release whose packaged file did not change only updates the `Based on` line. Commit it anyway, without a CHANGELOG entry, so `--check` stops reporting the release and its issue gets closed.
+* A patch release inside an existing series needs no CHANGELOG entry, a new series goes under `### Added`.
 
 
 #### systemd Drop-ins and Service Ordering
