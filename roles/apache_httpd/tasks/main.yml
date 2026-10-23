@@ -172,6 +172,10 @@
 # certificate is issued. Only missing files are created, an existing certificate is never touched.
 - block:
 
+  - name: 'Combined placeholder Certificates'
+    ansible.builtin.debug:
+      var: 'apache_httpd__placeholder_certificates__combined_var'
+
   - name: 'Install openssl to create placeholder certificates'
     ansible.builtin.package:
       name: 'openssl'
