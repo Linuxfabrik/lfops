@@ -207,6 +207,15 @@ Variables for `php.ini` directives and their default values, defined and support
 * Type: String.
 * Default: `'E_ALL & ~E_NOTICE & ~E_DEPRECATED'`
 
+`php__ini_fatal_error_backtraces__group_var` / `php__ini_fatal_error_backtraces__host_var`
+
+* Whether fatal errors include a backtrace. Only deployed from PHP 8.5 on, since older versions do not know the directive. [php.net](https://www.php.net/manual/en/errorfunc.configuration.php)
+* The PHP-FPM pools also set it as `php_admin_flag[fatal_error_backtraces]`, so an application cannot switch it back on with `ini_set()`.
+* With mod_php the role only deploys the ini, and the handler restarts PHP-FPM only: restart Apache httpd yourself for the value to take effect. A `php_flag` or `php_value` in the Apache configuration or in a `.htaccess` file can switch it back on, since mod_php has no equivalent of the pool's `php_admin_flag` that this role could set.
+* Type: String.
+* Default: `'Off'`
+* Deviates from the upstream default `On`: on PHP 8.5 builds without the fix for the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)), the backtrace a fatal error stores is the confirmed way into it. Patched builds are not affected by this; the role keeps the backtraces off as defense in depth, since production hosts log fatal errors without them. Only updating PHP fixes the vulnerability.
+
 `php__ini_max_execution_time__group_var` / `php__ini_max_execution_time__host_var`
 
 * This sets the maximum time in seconds a script is allowed to run before it is terminated by the parser. This helps prevent poorly written scripts from tying up the server. The default setting is 30. When running PHP from the command line the default setting is 0. [php.net](https://www.php.net/manual/en/info.configuration.php)
@@ -354,6 +363,15 @@ Variables for `php.ini` directives and their default values, defined and support
 * Type: String.
 * Default: `'a=href,area=href,frame=src,input=src,form=fakeentry'`
 
+`php__ini_session_upload_progress_enabled__group_var` / `php__ini_session_upload_progress_enabled__host_var`
+
+* Whether PHP records the progress of file uploads in the session, for upload progress bars. [php.net](https://www.php.net/manual/en/session.configuration.php)
+* The PHP-FPM pools also set it as `php_admin_flag[session.upload_progress.enabled]`, so a `.user.ini` cannot switch it back on.
+* With mod_php the role only deploys the ini, and the handler restarts PHP-FPM only: restart Apache httpd yourself for the value to take effect. A `php_flag` or `php_value` in the Apache configuration or in a `.htaccess` file can switch it back on, since mod_php has no equivalent of the pool's `php_admin_flag` that this role could set.
+* Type: String.
+* Default: `'Off'`
+* Deviates from the upstream default `On`: the feature is a confirmed way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on mod_php and PHP-FPM. The advisory considers keeping it off prudent even on patched versions where the feature is not needed, since it is hardly used and hardly tested.
+
 `php__ini_smtp__group_var` / `php__ini_smtp__host_var`
 
 * Host used by the `mail()` function to send mail (Windows only; ignored on Unix, where the `sendmail_path` binary is used). [php.net](https://www.php.net/manual/en/mail.configuration.php)
@@ -377,6 +395,7 @@ php__ini_default_socket_timeout__host_var: 10
 php__ini_display_errors__host_var: 'Off'
 php__ini_display_startup_errors__host_var: 'Off'
 php__ini_error_reporting__host_var: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED'
+php__ini_fatal_error_backtraces__host_var: 'Off'
 php__ini_max_execution_time__host_var: 3600
 php__ini_max_file_uploads__host_var: 100
 php__ini_max_input_time__host_var: -1
@@ -399,6 +418,7 @@ php__ini_session_cookie_secure__host_var: 'On'
 php__ini_session_gc_maxlifetime__host_var: 1440
 php__ini_session_sid_length__host_var: 32
 php__ini_session_trans_sid_tags__host_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
+php__ini_session_upload_progress_enabled__host_var: 'Off'
 php__ini_smtp__host_var: 'localhost'
 php__ini_upload_max_filesize__host_var: '10000M'
 ```

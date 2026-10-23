@@ -181,6 +181,17 @@ php__ini_error_reporting__dependent_var: ''
 php__ini_error_reporting__group_var: ''
 php__ini_error_reporting__host_var: ''
 php__ini_error_reporting__role_var: ''
+php__ini_fatal_error_backtraces__combined_var: '{{
+    php__ini_fatal_error_backtraces__host_var if (php__ini_fatal_error_backtraces__host_var | string | length) else
+    php__ini_fatal_error_backtraces__group_var if (php__ini_fatal_error_backtraces__group_var | string | length) else
+    php__ini_fatal_error_backtraces__dependent_var if (php__ini_fatal_error_backtraces__dependent_var | string | length) else
+    php__ini_fatal_error_backtraces__role_var
+  }}'
+
+php__ini_fatal_error_backtraces__dependent_var: ''
+php__ini_fatal_error_backtraces__group_var: ''
+php__ini_fatal_error_backtraces__host_var: ''
+php__ini_fatal_error_backtraces__role_var: ''
 php__ini_max_execution_time__combined_var: '{{
     php__ini_max_execution_time__host_var if (php__ini_max_execution_time__host_var | string | length) else
     php__ini_max_execution_time__group_var if (php__ini_max_execution_time__group_var | string | length) else
@@ -423,6 +434,17 @@ php__ini_session_trans_sid_tags__dependent_var: ''
 php__ini_session_trans_sid_tags__group_var: ''
 php__ini_session_trans_sid_tags__host_var: ''
 php__ini_session_trans_sid_tags__role_var: ''
+php__ini_session_upload_progress_enabled__combined_var: '{{
+    php__ini_session_upload_progress_enabled__host_var if (php__ini_session_upload_progress_enabled__host_var | string | length) else
+    php__ini_session_upload_progress_enabled__group_var if (php__ini_session_upload_progress_enabled__group_var | string | length) else
+    php__ini_session_upload_progress_enabled__dependent_var if (php__ini_session_upload_progress_enabled__dependent_var | string | length) else
+    php__ini_session_upload_progress_enabled__role_var
+  }}'
+
+php__ini_session_upload_progress_enabled__dependent_var: ''
+php__ini_session_upload_progress_enabled__group_var: ''
+php__ini_session_upload_progress_enabled__host_var: ''
+php__ini_session_upload_progress_enabled__role_var: ''
 php__ini_smtp__combined_var: '{{
     php__ini_smtp__host_var if (php__ini_smtp__host_var | string | length) else
     php__ini_smtp__group_var if (php__ini_smtp__group_var | string | length) else

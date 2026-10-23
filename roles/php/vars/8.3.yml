@@ -26,5 +26,6 @@ php__ini_session_cookie_secure__role_var: 'On'  # upstream default: Off
 php__ini_session_gc_maxlifetime__role_var: 1440
 php__ini_session_sid_length__role_var: 32
 php__ini_session_trans_sid_tags__role_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
+php__ini_session_upload_progress_enabled__role_var: 'Off'  # upstream default: On
 php__ini_smtp__role_var: 'localhost'
 php__ini_upload_max_filesize__role_var: '2M'

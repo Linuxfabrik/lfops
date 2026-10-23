@@ -4,6 +4,7 @@ php__ini_default_socket_timeout__role_var: 10
 php__ini_display_errors__role_var: 'Off'
 php__ini_display_startup_errors__role_var: 'Off'
 php__ini_error_reporting__role_var: 'E_ALL & ~E_NOTICE & ~E_DEPRECATED'  # E_STRICT is unused and has been deprecated as of PHP 8.4.0.
+php__ini_fatal_error_backtraces__role_var: 'Off'  # upstream default: On
 php__ini_max_execution_time__role_var: 30
 php__ini_max_file_uploads__role_var: 50
 php__ini_max_input_time__role_var: -1
@@ -25,5 +26,6 @@ php__ini_session_cookie_samesite__role_var: 'Lax'  # upstream default: '' (no at
 php__ini_session_cookie_secure__role_var: 'On'  # upstream default: Off
 php__ini_session_gc_maxlifetime__role_var: 1440
 php__ini_session_trans_sid_tags__role_var: 'a=href,area=href,frame=src,input=src,form=fakeentry'
+php__ini_session_upload_progress_enabled__role_var: 'Off'  # upstream default: On
 php__ini_smtp__role_var: 'localhost'
 php__ini_upload_max_filesize__role_var: '2M'
