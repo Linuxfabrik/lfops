@@ -1,0 +1,50 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# Providers and installers leave DNS servers in the profile that is active on the interface. Store
+# an IPv6 and an IPv4 one (documentation addresses, RFC 3849 / RFC 5737) in it, so the network
+# role has something to clear. NetworkManager refuses ipv6.dns in a profile with IPv6 switched off
+# (the Rocky 9 image ships `method=ignore`), so IPv6 is set to auto first. Only the stored profile
+# changes, the connection is not re-activated and the VM stays reachable.
+- name: 'Store DNS servers in the active connection profile of the network_state interfaces'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'nmcli --get-values GENERAL.CONNECTION device show'
+      ansible.builtin.command:
+        argv:
+          - 'nmcli'
+          - '--escape'
+          - 'no'
+          - '--get-values'
+          - 'GENERAL.CONNECTION'
+          - 'device'
+          - 'show'
+          - '{{ item["name"] }}'
+      loop: '{{ network_state["interfaces"] }}'
+      loop_control:
+        label: '{{ item["name"] }}'
+      changed_when: false
+      register: '__molecule__active_profile_result'
+
+    - name: 'nmcli connection modify <profile> ipv4.dns 192.0.2.53 ipv6.method auto ipv6.dns 2001:db8::53'
+      ansible.builtin.command:
+        argv:
+          - 'nmcli'
+          - 'connection'
+          - 'modify'
+          - '{{ item["stdout"] | trim }}'
+          - 'ipv4.dns'
+          - '192.0.2.53'
+          - 'ipv6.method'
+          - 'auto'
+          - 'ipv6.dns'
+          - '2001:db8::53'
+      loop: '{{ __molecule__active_profile_result["results"] }}'
+      loop_control:
+        label: '{{ item["stdout"] | trim }}'
+      changed_when: true

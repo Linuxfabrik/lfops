@@ -1,0 +1,17 @@
+# The same stale DNS servers as on rocky10-vm (see prepare.yml), but without dns-resolver: the
+# network role has to clear the stored IPv6 server, which nmstate would otherwise reject because
+# IPv6 is disabled (https://github.com/nmstate/nmstate/issues/3251), and has to leave the stored
+# IPv4 server alone, since nmstate does not manage DNS here. The NIC is eth0 on Rocky 9, which boots
+# with net.ifnames=0, so it is the one that carries the default route.
+# The name belongs to fedora.linux_system_roles.network, hence the noqa.
+network_state: # noqa var-naming[pattern]
+  interfaces:
+    - name: '{{ ansible_facts["default_ipv4"]["interface"] }}'
+      profile-name: '{{ ansible_facts["default_ipv4"]["interface"] }}'
+      type: 'ethernet'
+      state: 'up'
+      ipv4:
+        enabled: true
+        dhcp: true
+      ipv6:
+        enabled: false

@@ -1,0 +1,68 @@
+- name: 'Verify the network role configured the network'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+    # prepare.yml stored DNS servers in the profile that was active on the interface; the converge
+    # only got through because the role cleared them.
+    - name: 'nmcli --get-values GENERAL.CONNECTION device show'
+      ansible.builtin.command:
+        argv:
+          - 'nmcli'
+          - '--escape'
+          - 'no'
+          - '--get-values'
+          - 'GENERAL.CONNECTION'
+          - 'device'
+          - 'show'
+          - '{{ network_state["interfaces"][0]["name"] }}'
+      changed_when: false
+      register: '__molecule__nmcli_active_profile_result'
+
+    - name: 'nmcli --get-values ipv4.dns,ipv6.dns,ipv6.method connection show'
+      ansible.builtin.command:
+        argv:
+          - 'nmcli'
+          - '--escape'
+          - 'no'
+          - '--get-values'
+          - 'ipv4.dns,ipv6.dns,ipv6.method'
+          - 'connection'
+          - 'show'
+          - '{{ __molecule__nmcli_active_profile_result["stdout"] | trim }}'
+      changed_when: false
+      register: '__molecule__nmcli_profile_dns_result'
+
+    - name: 'nmstatectl show --json'
+      ansible.builtin.command: 'nmstatectl show --json'
+      changed_when: false
+      register: '__molecule__nmstatectl_show_result'
+
+    - name: 'Assert that the profile is named after the interface, IPv6 is disabled and its DNS server is gone'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nmcli_active_profile_result["stdout"] | trim == network_state["interfaces"][0]["profile-name"]'
+          - '__molecule__nmcli_profile_dns_result["stdout_lines"][2] == "disabled"'
+          - '"2001:db8::53" not in __molecule__nmcli_profile_dns_result["stdout"]'
+        fail_msg: '{{ __molecule__nmcli_profile_dns_result["stdout_lines"] | to_json }}'
+
+    # With dns-resolver (rocky10-vm), nmstate manages the DNS servers: the one it does not list is
+    # gone and the configured one is in use.
+    - name: 'Assert that the stale IPv4 server is gone and the configured DNS server is in use'
+      ansible.builtin.assert:
+        that:
+          - '"192.0.2.53" not in __molecule__nmcli_profile_dns_result["stdout"]'
+          - 'network_state["dns-resolver"]["config"]["server"][0] in (__molecule__nmstatectl_show_result["stdout"] | from_json)["dns-resolver"]["running"]["server"]'
+          - '"192.0.2.53" not in (__molecule__nmstatectl_show_result["stdout"] | from_json)["dns-resolver"]["running"]["server"]'
+        fail_msg: '{{ __molecule__nmcli_profile_dns_result["stdout_lines"] | to_json }} {{ (__molecule__nmstatectl_show_result["stdout"] | from_json)["dns-resolver"] | to_json }}'
+      when:
+        - '"dns-resolver" in network_state'
+
+    # Without dns-resolver (rocky9-vm), nmstate does not manage DNS: the IPv4 server the host
+    # stores is its own and stays.
+    - name: 'Assert that the stored IPv4 server is left alone'
+      ansible.builtin.assert:
+        that:
+          - '"192.0.2.53" in __molecule__nmcli_profile_dns_result["stdout_lines"][0]'
+        fail_msg: '{{ __molecule__nmcli_profile_dns_result["stdout_lines"] | to_json }}'
+      when:
+        - '"dns-resolver" not in network_state'

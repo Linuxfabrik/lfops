@@ -149,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:network**: `network_state` applies on hosts whose active connection profile, such as `cloud-init eth0` or `System eth0`, still stores DNS servers, instead of aborting with `ipv6.dns: this property is not allowed for 'method=disabled'`. DNS servers that `dns-resolver` does not list are removed from that profile.
 * **role:postfix**: A changed `postfix__inet_protocols` takes effect, since the role restarts Postfix for it instead of only reloading it.
 * **role:cloud_init**: NetworkManager manages `/etc/resolv.conf` right after cloud-init's `99-cloud-init.conf` is removed, instead of only after the next reboot or NetworkManager restart.
 * **role:nextcloud**: A Nextcloud upgrade no longer logs an error from a repair step of the `dav` app and no longer rebuilds the calendar search index every time.
