@@ -35,3 +35,53 @@
       changed_when: true
       when:
         - '__molecule__grubenv_stat_result["stat"]["islnk"] | d(false) | bool'
+
+
+# Put back what cloud-init's sysconfig renderer leaves on a provider image that hands out DNS
+# servers (Rocky 8 and 9 on Hetzner, for example): "dns = none" in 99-cloud-init.conf, already
+# loaded by NetworkManager. The test images do not get DNS servers from cloud-init, so without
+# this the cloud_init role would have nothing to clean up and verify.yml would pass on a host that
+# was never in that state.
+- name: 'Leave the NetworkManager config of cloud-init behind'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Gather the service facts to see whether NetworkManager runs'
+      ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
+
+    - name: 'Create /etc/NetworkManager/conf.d/99-cloud-init.conf'
+      ansible.builtin.copy:
+        content: |
+          [main]
+          dns = none
+        dest: '/etc/NetworkManager/conf.d/99-cloud-init.conf'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      when:
+        - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
+
+    - name: 'systemctl reload NetworkManager.service'
+      ansible.builtin.service:
+        name: 'NetworkManager'
+        state: 'reloaded'
+      when:
+        - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
+
+    - name: 'busctl get-property ... DnsManager Mode'
+      ansible.builtin.command: >-
+        busctl get-property org.freedesktop.NetworkManager
+        /org/freedesktop/NetworkManager/DnsManager org.freedesktop.NetworkManager.DnsManager Mode
+      changed_when: false
+      register: '__molecule__nm_dns_mode_result'
+      when:
+        - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
+
+    - name: 'Assert that NetworkManager no longer manages /etc/resolv.conf'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nm_dns_mode_result["stdout"] == "s \"none\""'
+        fail_msg: '{{ __molecule__nm_dns_mode_result["stdout"] }}'
+      when:
+        - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'

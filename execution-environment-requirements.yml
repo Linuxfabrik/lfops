@@ -1,3 +1,4 @@
 collections:
   - name: 'linuxfabrik-lfops.tar.gz'
     type: 'file'
+  - name: 'telekom_mms.icinga_director' # not used by LFOps, for the Icinga Director inventory plugin
