@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe --generate-hashes --output-file=requirements.txt --strip-extras requirements.in
 #
-ansible-builder==3.1.1 \
-    --hash=sha256:9d88bc15acc7d31056d0c51914a6102dac8e5ad73f9f2d35ba98378c89714ed2 \
-    --hash=sha256:a8246022edb92ca27ea95e87c7af30bcb2752f108dcc75fbf96e77196dff1072
+ansible-builder==3.2.0 \
+    --hash=sha256:8cd8639011127aaa5046fd60e56ae753eb599061bf493eca2c6b75c54cfc6212 \
+    --hash=sha256:9cb948dbd221bdf6d0d48e80fa1575ca5f4336a569c05f510e2d406f01897673
     # via -r requirements.in
 attrs==26.1.0 \
     --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309 \
