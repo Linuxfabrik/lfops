@@ -11,7 +11,7 @@ This role installs and configures [postfix](https://www.postfix.org/).
 `postfix`
 
 * Installs and configures postfix.
-* Triggers: postfix.service reload.
+* Triggers: postfix.service reload, postfix.service restart if `inet_protocols` changed.
 
 `postfix:state`
 
@@ -85,9 +85,10 @@ postfix__relayhost: 'mail.example.com:587'
 
 `postfix__inet_protocols`
 
-* The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6.
+* The Internet protocols Postfix will attempt to use when making or accepting connections. Specify one or more of `ipv4` or `ipv6`, separated by whitespace or commas. The form `all` is equivalent to `ipv4, ipv6` or `ipv4`, depending on whether the operating system implements IPv6. A change restarts Postfix, since a reload does not apply it.
 * Type: String.
-* Default: `'all'`
+* Default: `'all'` on hosts with an IPv6 default route, `'ipv4'` on all others
+* Deviates from the upstream default `'all'`: a host whose kernel implements IPv6 but that has no IPv6 route tries the IPv6 address of the next hop for a part of the deliveries and logs `Network is unreachable` each time before it falls back to IPv4.
 
 `postfix__lookup_tables__host_var` / `postfix__lookup_tables__group_var`
 

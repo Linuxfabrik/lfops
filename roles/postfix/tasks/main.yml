@@ -27,6 +27,16 @@
 
 - block:
 
+  # A reload does not apply a changed `inet_protocols` (postconf(5): "you MUST stop and start
+  # Postfix after changing this parameter", verified against Postfix 3.5.8 on Rocky 8), so
+  # remember the value to compare against below.
+  - name: 'postconf -h inet_protocols (before deploying main.cf)'
+    ansible.builtin.command: 'postconf -h inet_protocols'
+    register: '__postfix__inet_protocols_before_result'
+    changed_when: false
+    check_mode: false
+    ignore_errors: "{{ ansible_check_mode }}" # ignore errors if `--check` is specified, as the package could not be installed yet
+
   - name: 'Deploy /etc/postfix/main.cf'
     ansible.builtin.template:
       backup: true
@@ -36,6 +46,15 @@
       group: 'root'
       mode: 0o644
     notify: 'postfix: reload postfix'
+
+  - name: 'postconf -h inet_protocols (after deploying main.cf)'
+    ansible.builtin.command: 'postconf -h inet_protocols'
+    register: '__postfix__inet_protocols_after_result'
+    changed_when: '__postfix__inet_protocols_after_result["stdout"]
+      != __postfix__inet_protocols_before_result["stdout"]'
+    check_mode: false
+    notify: 'postfix: restart postfix'
+    when: '__postfix__inet_protocols_before_result is succeeded'
 
   - name: 'Deploy /etc/postfix/master.cf'
     ansible.builtin.template:

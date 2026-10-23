@@ -1,0 +1,25 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# A host that already runs Postfix with the packaged `inet_protocols = all`, so that verify.yml
+# can tell whether the role restarted it for a changed value. On a fresh host only the role
+# starts Postfix, after main.cf is deployed, and a reload would pass the check as well.
+- name: 'Start Postfix with the packaged configuration'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Install postfix'
+      ansible.builtin.package:
+        name:
+          - 'postfix'
+        state: 'present'
+      retries: 3
+      delay: 10
+
+    - name: 'systemctl start postfix.service'
+      ansible.builtin.service:
+        name: 'postfix.service'
+        state: 'started'
