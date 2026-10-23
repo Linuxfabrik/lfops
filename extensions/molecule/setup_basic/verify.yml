@@ -2,6 +2,30 @@
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
+    # prepare.yml left cloud-init's "dns = none" behind on every host that runs NetworkManager. Once
+    # the cloud_init role removed it, NetworkManager has to be managing /etc/resolv.conf again
+    # without a restart in between. The DNS mode tells, the header of /etc/resolv.conf does not:
+    # NetworkManager leaves the file it wrote before untouched in mode "none".
+    - name: 'Gather the service facts to see whether NetworkManager runs'
+      ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
+
+    - name: 'busctl get-property ... DnsManager Mode'
+      ansible.builtin.command: >-
+        busctl get-property org.freedesktop.NetworkManager
+        /org/freedesktop/NetworkManager/DnsManager org.freedesktop.NetworkManager.DnsManager Mode
+      changed_when: false
+      register: '__molecule__nm_dns_mode_result'
+      when:
+        - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
+
+    - name: 'Assert that NetworkManager manages /etc/resolv.conf again'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nm_dns_mode_result["stdout"] != "s \"none\""'
+        fail_msg: '{{ __molecule__nm_dns_mode_result["stdout"] }}'
+      when:
+        - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
+
     # Running a plugin instead of stat-ing it proves the deployed payload executes and its bundled
     # runtime resolves, which a stat cannot tell you.
     - name: '/usr/lib64/nagios/plugins/about-me'

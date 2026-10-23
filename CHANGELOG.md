@@ -148,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:cloud_init**: NetworkManager manages `/etc/resolv.conf` right after cloud-init's `99-cloud-init.conf` is removed, instead of only after the next reboot or NetworkManager restart.
 * **role:nextcloud**: A Nextcloud upgrade no longer logs an error from a repair step of the `dav` app and no longer rebuilds the calendar search index every time.
 * **role:nextcloud**: The admin section of the `support` app is hidden again.
 * **role:monitoring_plugins**: The package install works on SLE, where it failed with `No provider of 'linuxfabrik-monitoring-plugins-<version>*' found`.

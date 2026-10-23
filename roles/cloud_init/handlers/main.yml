@@ -1,0 +1,11 @@
+# NetworkManager is not owned by this role. A reload re-reads conf.d and re-evaluates the DNS mode
+# without touching the connections (NetworkManager 1.56, src/core/dns/nm-dns-manager.c,
+# config_changed_cb), so lfops__skip_restart_handlers does not apply.
+# ansible.builtin.service with state 'reloaded' would start a stopped NetworkManager, while
+# try-reload-or-restart leaves it alone. NetworkManager has an ExecReload, so this never restarts.
+# rc 5 means the unit does not exist; a host without NetworkManager has nothing to reload.
+- name: 'cloud_init: systemctl try-reload-or-restart NetworkManager.service'
+  ansible.builtin.command: 'systemctl try-reload-or-restart NetworkManager.service' # noqa command-instead-of-module
+  register: '__cloud_init__networkmanager_reload_result'
+  changed_when: '__cloud_init__networkmanager_reload_result["rc"] == 0'
+  failed_when: '__cloud_init__networkmanager_reload_result["rc"] not in [0, 5]'
