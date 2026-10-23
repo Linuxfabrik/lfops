@@ -1,20 +1,21 @@
 ---
 name: lfops-follow-upstream
-description: Update LFOps after an upstream application release, e.g. a newreleases.io notice ("New Graylog2/graylog2-server releases"), a pasted release mail, or "Graylog 7.3.0 is out". Merges the packaged configuration changes into the versioned templates, adds templates for a new release series, and prepares the CHANGELOG entry and commit message. Use when a release notice or a new upstream version is mentioned.
+description: Update LFOps after an upstream application release, e.g. a `follow-upstream: <app> <version>` GitHub issue, a newreleases.io notice ("New Graylog2/graylog2-server releases"), a pasted release mail, or "Graylog 7.3.0 is out". Merges the packaged configuration changes into the versioned templates, adds templates for a new release series, and prepares the CHANGELOG entry and commit message. Use when a release notice or a new upstream version is mentioned.
 ---
 
 # LFOps follow upstream
 
-Brings the LFOps templates in line with a new upstream release. The deterministic part (fetching the packaged files, the three-way merge, header and supported-versions bookkeeping) is done by `tools/follow-upstream`; this skill covers what the tool cannot judge. Work from the repository root. Never commit: end with a report and a proposed commit message. The only exception is a headless run of the follow-upstream timer, whose prompt says what it may commit and push.
+Brings the LFOps templates in line with a new upstream release. The deterministic part (fetching the packaged files, the three-way merge, header and supported-versions bookkeeping) is done by `tools/follow-upstream`; this skill covers what the tool cannot judge. Work from the repository root. Never commit: end with a report and a proposed commit message. The only exception is a headless run of the follow-upstream timer, whose prompt says what it may commit.
 
 
 ## 1. Collect the releases
 
 Take the releases from whatever the user provides:
 
-* A pasted mail or text: extract upstream project and versions. A newreleases.io mail lists them as `Graylog2/graylog2-server on GitHub ...` followed by `- 7.2.1` lines. Matomo instances send "New Matomo 5.14.0 is available".
 * `<app> <version>` as arguments.
-* Nothing: if `NOTMUCH_PROFILE=newreleases notmuch count tag:lfops-todo` works, read the mails with `NOTMUCH_PROFILE=newreleases notmuch show --format=json tag:lfops-todo`. Otherwise ask what was released.
+* A GitHub issue titled `follow-upstream: <app> <version>`, opened by the `Linuxfabrik: Follow upstream` workflow. Use the title only, and remember the issue number for the pull request (step 6).
+* A pasted mail or text: extract upstream project and versions. A newreleases.io mail lists them as `Graylog2/graylog2-server on GitHub ...` followed by `- 7.2.1` lines. Matomo instances send "New Matomo 5.14.0 is available".
+* Nothing: list the open issues with `gh issue list --label follow-upstream --state open`. None: ask what was released.
 
 Ignore pre-releases (`alpha`, `beta`, `rc`, `-dev`).
 
@@ -25,11 +26,12 @@ The repository is the state, not the mail: a release already covered needs no wo
 
 * Find the application in `tools/follow-upstream.yml` by its `upstream` names.
 * Not listed: check whether a role deploys the application at all (`grep -ril <name> roles/*/README.md`). No role: report "not used by LFOps" and move on. A role exists: report it as a candidate for `tools/follow-upstream.yml` and ask before adding it (see "Adding an application").
-* Listed: run `tools/follow-upstream <app> <version>`, oldest release first. It fetches the RPM and the DEB of the release on every run, so expect a few GB of downloads for large packages. Exit code 0: nothing to review, 1: findings or conflicts, 2: the run aborted.
+* Listed: run `tools/follow-upstream <app> <version>`, oldest release first. It fetches the RPM and the DEB of the release, checks their signatures and caches them, so expect a few GB of downloads for large packages. Exit code 0: nothing to review, 1: findings or conflicts, 2: the run aborted.
 * `packaging:` lines come first. Each one means upstream changed how it packages the application: a file below /etc that is neither templated nor ignored, a templated file the release no longer ships, or a file that differs between RPM and DEB. Do not resolve these yourself, and do not accept the merge of that release: stop and report them, with the `diff` the tool prints. Whether the role needs a new template, a per-format template or an `ignore` entry is the user's decision.
 * A failed fetch (`not found in`) aborts the run. Upstream may have published one format before the other; report it and retry later rather than merging without the check.
 * Then one line per template:
-    * `already covers`, `is identical in`: nothing to do.
+    * `already covers`: nothing to do.
+    * `is identical in`: the packaged file did not change, the tool only updated the `Based on` line. Commit it anyway (step 6), so `tools/follow-upstream --check` stops reporting the release.
     * `merged cleanly` / `N conflict(s)`: continue with step 3.
     * `no "Based on <package> <version>" line`: see "Bootstrapping a template".
     * A new release series (template created from the latest older one): also step 4.
@@ -70,18 +72,20 @@ Follow CONTRIBUTING.md "Changelog" and "Changelog Sections", and the existing en
 * Patch release inside an existing series: no CHANGELOG entry (the deployed file only gains upstream comments). Commit: `chore(roles/<role>): sync the <series> <file> template with <App> <version>`, the body names what upstream changed.
 * New series: entry under `### Added` of `## [Unreleased]`, at the top: `* **role:<role>, role:<role>**: Add template for <App> <series>.` Commit: `feat(roles/<role>, roles/<role>): add template for <App> <series>`.
 * A change an administrator has to act on: `### Breaking Changes` or `### Changed`, as CONTRIBUTING.md describes.
+* Only the `Based on` line changed (`is identical in`): no CHANGELOG entry, the line does not end up on the host. Commit: `chore(roles/<role>): record that the <series> <file> template covers <App> <version>`.
+* Releases from a `follow-upstream` issue: the pull request body gets one `Closes #<number>` line per issue, so merging it into `main` closes them.
 
 
 ## 7. Report
 
-Per release: what was done or why nothing was, conflicts and how they were resolved, open questions, test result, proposed commit message(s). With the notmuch source, once the user has accepted the result, offer to retag the mails: `NOTMUCH_PROFILE=newreleases notmuch tag -lfops-todo +lfops-done -- id:<message-id>` (`+lfops-skip` for releases LFOps does not use).
+Per release: what was done or why nothing was, conflicts and how they were resolved, open questions, test result, proposed commit message(s). An issue whose release is already covered on `main` (`already covers`): say so, it can be closed by hand.
 
 
 ## Bootstrapping a template
 
 `tools/follow-upstream` needs `{# Based on <package> <version> #}` below the version line of the template header. The Jinja comment does not end up in the deployed file, so adding it changes nothing on the hosts and needs no timestamp bump. To find the version:
 
-1. Fetch the packaged file of the candidate releases of the series (the tool caches them under `~/.cache/lfops-follow-upstream/<package>-<version>/root/`). The upstream git tree under `~/git/other` is a good first filter, but packages may rewrite the file (Graylog sets absolute paths), so confirm against the package.
+1. Fetch the packaged file of the candidate releases of the series (the tool caches them under `~/.cache/lfops-follow-upstream/rpm/<app>/<package>-<version>/root/`). The upstream git tree under `~/git/other` is a good first filter, but packages may rewrite the file (Graylog sets absolute paths), so confirm against the package.
 2. Diff each against the template (skipping the header). The release with the fewest differing lines is the base. Where several releases ship an identical file, take the newest.
 3. Add the line and rerun the tool.
 
