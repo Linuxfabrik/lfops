@@ -8,6 +8,18 @@ repos:
         types: ['file', 'yaml']
         entry: 'yamllint'
 
+  - repo: 'https://github.com/gitleaks/gitleaks'
+    rev: 'v8.30.0'
+    hooks:
+      - id: 'gitleaks'
+
+  # Needs `shellcheck` on the PATH (the GitHub runners have it). It sees `*.sh` files and
+  # executables with a shell shebang, not the `.j2` script templates of the roles.
+  - repo: 'https://github.com/jumanjihouse/pre-commit-hooks'
+    rev: '3.0.0'
+    hooks:
+      - id: 'shellcheck'
+
   - repo: 'https://github.com/pre-commit/pre-commit-hooks'
     rev: 'v6.0.0'
     hooks:
@@ -58,8 +70,13 @@ repos:
   - repo: 'https://github.com/jendrikseipp/vulture'
     rev: 'v2.16'
     hooks:
+      # The upstream hook ships `pass_filenames: false` and reads its scope from
+      # `[tool.vulture] paths`, which only finds `*.py` files. The scripts in `tools/`
+      # have no extension, so the files are passed explicitly, together with the
+      # whitelist. min_confidence lives in pyproject.toml.
       - id: 'vulture'
-        args: ['--min-confidence=80']
+        args: ['.vulture_whitelist.py']
+        pass_filenames: true
         types_or: ['python']
 
   - repo: 'local'
