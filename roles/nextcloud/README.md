@@ -147,7 +147,7 @@ nextcloud__users:
 
     * `key`:
 
-        * Mandatory. The name of the config option to set.
+        * Mandatory. The app and the name of its config option, separated by a space, for example `password_policy minLength`.
         * Type: String.
 
     * `value`:
@@ -443,22 +443,22 @@ nextcloud__sysconfig__host_var:
     type: 'double'
     state: 'present'
   # reverse proxy config
-  - key: 'overwrite.cli.url '
+  - key: 'overwrite.cli.url'
     value: 'https://cloud.example.com'
     state: 'present'
-  - key: 'overwritecondaddr '
+  - key: 'overwritecondaddr'
     value: '^192\.0\.2\.7$' # IP of the reverse proxy
     state: 'present'
-  - key: 'overwritehost '
+  - key: 'overwritehost'
     value: 'cloud.example.com'
     state: 'present'
-  - key: 'overwriteprotocol '
+  - key: 'overwriteprotocol'
     value: 'https'
     state: 'present'
-  - key: 'overwritewebroot '
+  - key: 'overwritewebroot'
     value: '/'
     state: 'present'
-  - key: 'trusted_proxies 0 '
+  - key: 'trusted_proxies 0'
     value: '192.0.2.7' # IP of the reverse proxy
     state: 'present'
 
