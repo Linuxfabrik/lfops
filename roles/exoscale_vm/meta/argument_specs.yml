@@ -1,0 +1,91 @@
+argument_specs:
+  main:
+    options:
+
+      exoscale_vm__api_key:
+        type: 'str'
+        required: true
+        description: 'The Exoscale API key.'
+
+      exoscale_vm__api_secret:
+        type: 'str'
+        required: true
+        no_log: true
+        description: 'The Exoscale API secret corresponding to the API key.'
+
+      exoscale_vm__disk_size:
+        type: 'int'
+        required: false
+        default: 10
+        description: 'The size of the root disk in GiB.'
+
+      exoscale_vm__force:
+        type: 'bool'
+        required: false
+        default: false
+        description: 'Allow stopping a running instance to scale it or to grow its disk.'
+
+      exoscale_vm__name:
+        type: 'str'
+        required: false
+        description: 'The name of the instance.'
+
+      exoscale_vm__private_instance:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Create the instance without a public IP address.'
+
+      exoscale_vm__private_networks:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'The private networks the instance is attached to.'
+
+      exoscale_vm__security_group_rules:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        description: 'The rules of the security group of the instance.'
+
+      exoscale_vm__service_offering:
+        type: 'str'
+        required: true
+        description: 'The instance type, for example standard.tiny.'
+
+      exoscale_vm__ssh_key:
+        type: 'str'
+        required: false
+        description: 'The name of the SSH key registered at Exoscale.'
+
+      exoscale_vm__state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'absent'
+          - 'present'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'The desired state of the instance.'
+
+      exoscale_vm__template:
+        type: 'str'
+        required: true
+        description: 'The name or ID of the template for the instance.'
+
+      exoscale_vm__template_visibility:
+        type: 'str'
+        required: false
+        default: 'public'
+        choices:
+          - 'private'
+          - 'public'
+        description: 'The visibility of the template.'
+
+      exoscale_vm__zone:
+        type: 'str'
+        required: true
+        description: 'The Exoscale zone of the instance.'

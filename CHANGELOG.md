@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:exoscale_vm**: The role scales an existing instance and grows its disk when `exoscale_vm__service_offering` or `exoscale_vm__disk_size` differ from it, and aborts on a running instance instead of stopping it, unless `exoscale_vm__force: true` is set. Before running the role against existing instances, set both variables to their current values, or set `exoscale_vm__force: true` in a maintenance window. `exoscale_vm__state` only accepts `absent`, `present`, `restarted`, `started` and `stopped`.
 * **role:php**: PHP no longer tracks file uploads in the session (`session.upload_progress.enabled = Off`), a confirmed way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) that the advisory recommends closing even on patched PHP, and the PHP-FPM pools enforce this against `.user.ini` files. Upload progress bars that depend on it stop working. Set `php__ini_session_upload_progress_enabled__host_var: 'On'` to restore the feature.
 * **role:postgresql_server**: Databases are created with the `C.UTF-8` locale instead of `en_US.UTF-8`, which failed on hosts with only the minimal glibc language pack. `C.UTF-8` sorts text by code point instead of by language rules. Existing databases are unaffected. To create new databases as before, set `lc_collate: 'en_US.UTF-8'` and `lc_ctype: 'en_US.UTF-8'` on their entries in `postgresql_server__databases__*_var`.
 * **role:postgresql_server, playbook:setup_mastodon**: `postgresql_server__version` is mandatory, and PostgreSQL is only installed from the PostgreSQL Yum Repository instead of optionally from the distribution packages. Set the major version in your inventory, for example `postgresql_server__version: '18'`. On a host that already runs PostgreSQL from the distribution packages, the run aborts before it installs anything; move the data to the PostgreSQL Yum Repository release first, as described in the role README.
@@ -51,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.14.
 * **execution-environment**: Add the `telekom_mms.icinga_director` collection, so inventories using its Icinga Director inventory plugin work inside the EE.
 * **role:curaline, playbook:curaline**: Add a role and playbook that install and configure the curaLINE Client of Swisscom, which exchanges files with the curaLINE Document Routing service.
@@ -146,11 +148,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+* **collection, execution-environment**: Installing LFOps no longer pulls in the `ngine_io.cloudstack` collection, and the execution environment no longer ships it or the `cs` Python library, since no role uses them anymore.
 * **playbook:apache_tomcat**: The playbook no longer enables the EPEL and CRB repositories or installs `policycoreutils`, none of which Tomcat needs, and `apache_tomcat__skip_repo_baseos` has no effect.
 * **role:github_project_createrepo**: `github_project_createrepo__webserver_user` is gone, since the web server no longer gets an ACL entry; remove it from your inventory.
 
 ### Fixed
 
+* **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
 * **role:network**: `network_state` applies on hosts whose active connection profile, such as `cloud-init eth0` or `System eth0`, still stores DNS servers, instead of aborting with `ipv6.dns: this property is not allowed for 'method=disabled'`. DNS servers that `dns-resolver` does not list are removed from that profile.
 * **role:postfix**: A changed `postfix__inet_protocols` takes effect, since the role restarts Postfix for it instead of only reloading it.
 * **role:cloud_init**: NetworkManager manages `/etc/resolv.conf` right after cloud-init's `99-cloud-init.conf` is removed, instead of only after the next reboot or NetworkManager restart.

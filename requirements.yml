@@ -16,5 +16,4 @@ collections:
   - name: 'fedora.linux_system_roles'
   - name: 'freeipa.ansible_freeipa'
   - name: 'hetzner.hcloud'
-  - name: 'ngine_io.cloudstack'
   - name: 'openstack.cloud'

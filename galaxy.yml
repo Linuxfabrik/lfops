@@ -68,7 +68,6 @@ dependencies:
   'fedora.linux_system_roles': '*'
   'freeipa.ansible_freeipa': '*'
   'hetzner.hcloud': '*'
-  'ngine_io.cloudstack': '*'
   'openstack.cloud': '*'
 
 # The URL of the originating SCM repository
