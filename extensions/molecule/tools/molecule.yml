@@ -1,0 +1,2 @@
+# Molecule scenario marker for the 'tools' scenario, run with
+# `molecule test --scenario-name tools`.

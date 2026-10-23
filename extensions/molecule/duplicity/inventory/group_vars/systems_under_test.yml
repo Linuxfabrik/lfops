@@ -1,0 +1,38 @@
+# A throwaway master key generated for this scenario (public half only, its private key was
+# discarded). The role imports it and encrypts to it, so the key must be a valid one.
+duplicity__gpg_encrypt_master_key: 'B3FAC8CF52F7D8A3C3A44259401E05D68ADA9B3A'
+duplicity__gpg_encrypt_master_key_block: |-
+  -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+  mQINBGrbUV4BEADE2wcjBlxUZx/lkcZK+qVkVh7ZuDjqB2ahj3TVkGBqlhuiMLO0
+  PT/KePk3YoPnvaXMVU7CieIUVVtwZfc6u9HBEQDvfFLOy32UG3qGl8fZssyIZM/V
+  GM7CmN2PZDMevHRjaaAQq0XMDQKtdQGELZlFAV0T9mFIJnGaCP1d5+3Hh5E02Kp7
+  XEcFINhfwRKA13E/n1BrQemCes2pdsQPkG5CiVcH+1+cC+3TVaScQVbMuZuJ43Oa
+  GbbGlWVePUJytVFniFMeAnN015G1WM8smqZma6Yi5in2Bedk3/pNRJQG3Lt8qpUi
+  02t5zkpqaj7GwRSWffX9IinRdWQAuNAyYjgQW+poWvOCMm8GyZq86j7oxAs8eTN/
+  KWYuqe1IJKjDOQp0cGlPJ3JU6Fmy1KLfxNjOGLeCpLEqQ3631H3eZeDqm8gHMPwi
+  w6FtbMdYs3WP9XoTqX1/DeIL5I8MUMn6vpTqzY3UmzluDc4TKlb7KG/sSk1X0k8u
+  ZlNRm+KA3MKQ8mas3PwDNOlxROkCWrKn34n0RtWve3Nsk+cx90b7SK4jHjAKiKQ5
+  5Kf6d9bqUY8f1LzRg87mRXNFwOUYfdWfDYz15j5vDP0cHVZVLbQzVuZi9qDRwJ3E
+  tlZ7zQ/jQZO+i4Msx9W9bHoV2JebO2zchmju6rNO31Lvsca4Bspekt+ZNwARAQAB
+  tCtsaW51eGZhYnJpayBtb2xlY3VsZSA8bW9sZWN1bGVAZXhhbXBsZS5jb20+iQJR
+  BBMBCgA7FiEEs/rIz1L32KPDpEJZQB4F1oramzoFAmrbUV4CGwMFCwkIBwICIgIG
+  FQoJCAsCBBYCAwECHgcCF4AACgkQQB4F1oramzpJ2w/+PHk1eDi37kFWVCZetb1d
+  Jo4ByQRfFgP+ybIO51ggC5tG0vYa/QhSZ/uBbIDJfGOTqUmA6yRfnas8wW0frcMU
+  mxFjp6tTzouWLnaY6WRS0RBsbJOpv3ixsQzRermIkWdAJEQzdfgZczw5DzF9hv0L
+  SXuatOw3vGCTk7P+sNkaSqQ5HGpxA+w/M3bt8XmiyafMCMZ6dHdXEITrVPjbkn29
+  7oJHSAG2DTS1P55TJPEl+Q3ziiI7+PyzjZHsnWobABfVIFOvm53m41Lueb0IFZ/C
+  yVtTplSiNSJQJaIdnhYjbjrc/UnLtvASgZPoqRGzC0HrJikyhFUovh6eBBCe5LrQ
+  I6qBW2z4yfeYNIO8XHLil8DF/xr60c7TZvyT1Z2GKnhPBVzvsdrITSazkMmmF5WB
+  amhvDBTzDMVrvN/XBzD/HRuENuKu3w/84pxyVSpQAMfocPPjjzc8JTKYdWkR1CpZ
+  lcHelGbdvG66XaGxqETJW1B17fzNIp3xYrMqe4Yq1Gd3P7l52nKUn1cRYTUgcMKS
+  KELlGgx+o8SNAY98IQzgxgBRSsFHhBmB3f/dqFIQMwYU33r+IYSl0jsVPTXK8sK3
+  s02Yyrz1aN2gdycxKWAc9HeNF0F/5v6fg4AduTpZUvmxDPZ1BC9j1XvWsRlvfq6K
+  7HvxRC32kIuqI4xp7f57Vr8=
+  =MQxG
+  -----END PGP PUBLIC KEY BLOCK-----
+
+# Nothing listens on the Swift URL, the scenario never starts a backup.
+duplicity__swift_login:
+  username: 'linuxfabrik'
+  password: 'linuxfabrik'

@@ -1,0 +1,57 @@
+- name: 'Verify the duplicity role set up the backup'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    # The wrapper runs duplicity from the venv python_venv built, so a venv that lacks the Swift
+    # client would only fail at the first nightly backup. Import it with the venv's interpreter.
+    - name: '/opt/python-venv/duplicity/bin/python3 -c "import swiftclient"'
+      ansible.builtin.command: '/opt/python-venv/duplicity/bin/python3 -c "import swiftclient"'
+      changed_when: false
+
+    - name: 'duplicity --version'
+      ansible.builtin.command: '/opt/python-venv/duplicity/bin/duplicity --version'
+      changed_when: false
+
+    # duba maps argparse's SystemExit to its own exit code 221, so judge the output, not the rc.
+    - name: 'duba --help'
+      ansible.builtin.command: '/usr/local/bin/duba --help'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_help_result'
+
+    - name: 'Assert that duba starts'
+      ansible.builtin.assert:
+        that: '"usage: duba" in __molecule__duba_help_result["stdout"]'
+        fail_msg: '{{ __molecule__duba_help_result | to_json }}'
+
+    # Ask gpg whether the master key is imported and trusted ultimately ("u" in field 2 of the
+    # colon listing), since the role encrypts every backup to it.
+    - name: 'gpg --list-keys --with-colons {{ duplicity__gpg_encrypt_master_key }}'
+      ansible.builtin.command: 'gpg --list-keys --with-colons {{ duplicity__gpg_encrypt_master_key }}'
+      changed_when: false
+      register: '__molecule__gpg_master_key_result'
+
+    - name: 'Assert that the master key is imported and ultimately trusted'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__gpg_master_key_result["stdout_lines"] | select("match", "^pub:u:") | list | length == 1'
+        fail_msg: '{{ __molecule__gpg_master_key_result["stdout_lines"] }}'
+
+    # service_facts lists no timers, so ask systemd.
+    - name: 'systemctl is-active / is-enabled duba.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl {{ item }} duba.timer'
+      loop:
+        - 'is-active'
+        - 'is-enabled'
+      register: '__molecule__duba_timer_state_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that duba.timer is active and enabled'
+      ansible.builtin.assert:
+        that: 'item["stdout"] in ["active", "enabled"]'
+      loop: '{{ __molecule__duba_timer_state_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

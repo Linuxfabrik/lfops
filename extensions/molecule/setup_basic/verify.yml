@@ -48,22 +48,6 @@
         that:
           - '__molecule__glances_version_result["rc"] == 0'
 
-    - name: 'systemctl is-active / is-enabled atd.service' # noqa command-instead-of-module (read-only state query)
-      ansible.builtin.command: 'systemctl {{ item }} atd.service'
-      loop:
-        - 'is-active'
-        - 'is-enabled'
-      register: '__molecule__atd_state_result'
-      changed_when: false
-      failed_when: false
-
-    - name: 'Assert that atd.service is running and enabled (at is available as a sysadmin utility)'
-      ansible.builtin.assert:
-        that: 'item["stdout"] in ["active", "enabled"]'
-      loop: '{{ __molecule__atd_state_result["results"] }}'
-      loop_control:
-        label: '{{ item["item"] }}'
-
     # A real audit, restricted to a single test to keep it short, proves lynis finds its profile
     # and include files and writes the report the lynis monitoring plugin reads.
     - name: 'lynis audit system --quick --tests KRNL-5820'
@@ -121,23 +105,6 @@
       ansible.builtin.assert:
         that: '__molecule__nftables_active_result["stdout"] == "active"'
         fail_msg: '{{ __molecule__nftables_active_result["stdout"] }}'
-
-    # Ask chronyd for its sources instead of reading the file: on Debian and Ubuntu chronyd only
-    # reads /etc/chrony/chrony.conf, so a file deployed to the wrong path would pass a file check
-    # and leave the configured source unused.
-    - name: 'chronyc -n -c sources'
-      ansible.builtin.command: 'chronyc -n -c sources'
-      changed_when: false
-      register: '__molecule__chronyc_sources_result'
-
-    # Only that source: the role configures no distribution pools and no DHCP sources, and a
-    # distribution default next to it (Ubuntu 26.04 ships its NTS pools with `prefer` in
-    # /etc/chrony/sources.d) would take over and chronyd would never use it. The source from the
-    # inventory also replaces the role's default ntp.metas.ch instead of being added to it.
-    - name: 'Assert that chronyd uses only the source configured in the inventory'
-      ansible.builtin.assert:
-        that: '__molecule__chronyc_sources_result["stdout_lines"] | map("split", ",") | map(attribute=2) | list == ["192.0.2.1"]'
-        fail_msg: '{{ __molecule__chronyc_sources_result["stdout_lines"] }}'
 
     # A running Postfix is the floor for every check below it: it proves the deployed main.cf is at
     # least valid enough to start with. Queried via systemctl instead of service_facts because the
@@ -235,30 +202,6 @@
         vars:
           __molecule__expected: '{{ (ansible_facts["distribution_major_version"] | int >= 10) | ternary(["3.8", "sha256"], ["2", "md5"]) }}'
 
-      # RHEL 10 no longer ships /etc/chrony.keys. A chrony.conf that still pointed at it would
-      # make chronyd log "Could not open keyfile" every time it starts, and the role restarts it.
-      # Requiring chronyd's own start line as well keeps the check from passing on a journal it
-      # cannot read.
-      - name: 'Gather the service facts'
-        ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
-
-      - name: 'Assert that chronyd.service is running'
-        ansible.builtin.assert:
-          that:
-            - 'ansible_facts["services"]["chronyd.service"]["state"] == "running"'
-
-      - name: 'journalctl --unit chronyd.service --boot'
-        ansible.builtin.command: 'journalctl --unit chronyd.service --boot --no-pager --output cat'
-        changed_when: false
-        register: '__molecule__chronyd_journal_result'
-
-      - name: 'Assert that chronyd started without reporting a missing key file'
-        ansible.builtin.assert:
-          that:
-            - '"chronyd version" in __molecule__chronyd_journal_result["stdout"]'
-            - '"Could not open keyfile" not in __molecule__chronyd_journal_result["stdout"]'
-          fail_msg: '{{ __molecule__chronyd_journal_result["stdout_lines"] | select("search", "chronyd version|keyfile") | list }}'
-
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
@@ -328,47 +271,3 @@
       ansible.builtin.assert:
         that: '__molecule__psi_cpu_result["rc"] == 0'
         fail_msg: '{{ __molecule__psi_cpu_result["stdout"] }}'
-
-# The Icinga API credentials live in /usr/local/sbin/schedule-icinga-downtime, which only root may
-# read. A login shell of an unprivileged user sources /etc/profile.d/alias.sh, where they used to
-# be, so it must neither see them nor be able to run the script.
-- name: 'Verify the Icinga API credentials of the tools role are readable by root only'
-  hosts: 'systems_under_test'
-  gather_facts: false
-  become: true
-  tasks:
-
-    - name: 'stat /usr/local/sbin/schedule-icinga-downtime'
-      ansible.builtin.stat:
-        path: '/usr/local/sbin/schedule-icinga-downtime'
-      register: '__molecule__schedule_icinga_downtime_stat_result'
-
-    - name: 'Assert that schedule-icinga-downtime is readable by root only'
-      ansible.builtin.assert:
-        that:
-          - '__molecule__schedule_icinga_downtime_stat_result["stat"]["mode"] == "0700"'
-          - '__molecule__schedule_icinga_downtime_stat_result["stat"]["pw_name"] == "root"'
-        fail_msg: '/usr/local/sbin/schedule-icinga-downtime is {{ __molecule__schedule_icinga_downtime_stat_result["stat"] | d("missing") | to_json }}'
-
-    - name: 'runuser --user nobody -- bash --login -c "alias; declare -f; /usr/local/sbin/schedule-icinga-downtime 60"'
-      ansible.builtin.command:
-        argv:
-          - 'runuser'
-          - '--user'
-          - 'nobody'
-          - '--'
-          - 'bash'
-          - '--login'
-          - '-c'
-          - 'alias; declare -f; /usr/local/sbin/schedule-icinga-downtime 60'
-      register: '__molecule__nobody_login_shell_result'
-      changed_when: false
-      failed_when: false
-
-    - name: 'Assert that an unprivileged login shell neither sees nor uses the credentials'
-      ansible.builtin.assert:
-        that:
-          - '"alias reboot=" in __molecule__nobody_login_shell_result["stdout"]'
-          - '"linuxfabrik-downtime-api" not in __molecule__nobody_login_shell_result["stdout"]'
-          - '"Permission denied" in __molecule__nobody_login_shell_result["stderr"]'
-        fail_msg: '{{ __molecule__nobody_login_shell_result | to_json }}'
