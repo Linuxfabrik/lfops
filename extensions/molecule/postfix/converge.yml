@@ -1,0 +1,2 @@
+- name: 'Converge postfix playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.postfix'

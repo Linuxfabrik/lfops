@@ -13,7 +13,9 @@ postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
 postfix__compatibility_level: '{{ __postfix__compatibility_level }}'
 postfix__inet_interfaces: '127.0.0.1' # fails on machines without IPv6 if set to 'localhost', so set explicitely to the IPv4 localhost address
-postfix__inet_protocols: 'all'
+postfix__inet_protocols: '{{
+    (ansible_facts["default_ipv6"] | d({}) | length > 0) | ternary("all", "ipv4")
+  }}'  # upstream default: 'all'
 postfix__lookup_tables__combined_var: '{{ (
       postfix__lookup_tables__role_var +
       postfix__lookup_tables__dependent_var +
