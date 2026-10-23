@@ -53,7 +53,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102302'
+__version__ = '2026102303'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -62,6 +62,7 @@ CACHE_DIR = os.path.join(
     'lfops-follow-upstream',
 )
 CONTAINER_IMAGE = 'quay.io/rockylinux/rockylinux:9'
+CONTAINER_LABEL = 'lfops-follow-upstream'
 HEADER_LINES = 10  # the header comment block is searched within the first lines only
 
 # Versions and file names come from the vendor's repository and end up in templates, in
@@ -135,11 +136,31 @@ def container_script(name):
     return text
 
 
+def remove_leftover_containers():
+    """Remove stopped containers of an earlier run.
+
+    `--rm` does not happen when a run is killed, and the configuration of such a
+    container holds the repository URL, including a token.
+    """
+    subprocess.run(  # nosec B603 B607 - fixed argument list
+        [
+            'podman',
+            'container',
+            'prune',
+            '--force',
+            '--filter',
+            f'label={CONTAINER_LABEL}',
+        ],
+        stdout=subprocess.DEVNULL,
+        check=False,
+    )
+
+
 def run_container(script, env, volume=None):
     # `--env NAME` without a value passes the variable from podman's environment, so a
     # repository token does not show up in the process list (see common.sh for the
     # processes in the container)
-    command = ['podman', 'run', '--rm']
+    command = ['podman', 'run', '--rm', '--label', CONTAINER_LABEL]
     for key in env:
         command += ['--env', key]
     if volume:
@@ -344,7 +365,7 @@ def update_header(text, package, version, old_series, new_series, bump=True):
 
 
 def add_supported_version(spec, series):
-    """Append `series` to the YAML list `file:variable`, keeping comments."""
+    """Add `series` to the YAML list `file:variable` in version order, keeping comments."""
     path, variable = spec.split(':')
     path = os.path.join(REPO_ROOT, path)
     with open(path, encoding='utf-8') as f:
@@ -355,7 +376,16 @@ def add_supported_version(spec, series):
         end += 1
     if f"  - '{series}'\n" in lines[start + 1 : end]:
         return
-    lines.insert(end, f"  - '{series}'\n")
+    # before the first newer entry, so a series of an older line (25.04.14 after 26.04.4
+    # was released) does not end up at the bottom
+    position = end
+    for i in range(start + 1, end):
+        if version_key(lines[i].strip().removeprefix('- ').strip("'")) > version_key(
+            series
+        ):
+            position = i
+            break
+    lines.insert(position, f"  - '{series}'\n")
     with open(path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
     print(f'  added {series} to {os.path.relpath(path, REPO_ROOT)}')
@@ -681,6 +711,7 @@ def main():
 
     with open(MANIFEST, encoding='utf-8') as f:
         manifest = yaml.safe_load(f)
+    remove_leftover_containers()
 
     if args.check:
         if args.version:
