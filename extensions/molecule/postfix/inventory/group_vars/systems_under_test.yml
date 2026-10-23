@@ -1,0 +1,2 @@
+# Mandatory. Nothing is delivered during the test, so the host does not have to exist.
+postfix__relayhost: 'mail.example.com'

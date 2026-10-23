@@ -1,0 +1,62 @@
+- name: 'Verify postfix is installed and configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # A running Postfix is the floor for every check below it. Queried via systemctl instead of
+    # service_facts because the unit differs per family (Type=forking on RHEL, Type=oneshot with
+    # RemainAfterExit on Debian, where the daemon runs as postfix@-.service), which service_facts
+    # reports as running vs exited.
+    - name: 'systemctl is-active postfix.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active postfix.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__postfix_active_result'
+
+    - name: 'Assert that postfix.service is active'
+      ansible.builtin.assert:
+        that: '__molecule__postfix_active_result["stdout"] == "active"'
+        fail_msg: '{{ __molecule__postfix_active_result["stdout"] }}'
+
+    # inet_protocols follows the IPv6 default route of the host. The play does not gather facts,
+    # so the route is read here.
+    - name: 'Gather the IPv6 default route'
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+          - 'network'
+        filter:
+          - 'ansible_default_ipv6'
+
+    - name: 'postconf -h inet_protocols'
+      ansible.builtin.command: 'postconf -h inet_protocols'
+      changed_when: false
+      register: '__molecule__postfix_inet_protocols_result'
+
+    - name: 'Assert that inet_protocols follows the IPv6 default route'
+      ansible.builtin.assert:
+        that: >-
+          __molecule__postfix_inet_protocols_result["stdout"] ==
+          ((ansible_facts["default_ipv6"] | d({}) | length > 0) | ternary("all", "ipv4"))
+        fail_msg: '{{ __molecule__postfix_inet_protocols_result["stdout"] }}'
+
+
+    # A reload does not apply inet_protocols, only a restart does. prepare.yml started Postfix with
+    # the `all` the packages ship, so where the role changed it, the Postfix master has to be
+    # younger than main.cf.
+    - block:
+
+      - name: 'Seconds between the last change of main.cf and the start of the Postfix master'
+        ansible.builtin.shell:
+          cmd: 'set -o pipefail; echo $(( $(date +%s) - $(ps --format=etimes= -C master | head --lines=1) - $(stat --format=%Y /etc/postfix/main.cf) ))'
+          executable: '/bin/bash'
+        changed_when: false
+        register: '__molecule__postfix_master_age_result'
+
+      - name: 'Assert that the Postfix master was started after main.cf was deployed'
+        ansible.builtin.assert:
+          # one second of slack, since both clocks are read with a resolution of one second
+          that: '__molecule__postfix_master_age_result["stdout"] | int >= -1'
+          fail_msg: '{{ __molecule__postfix_master_age_result["stdout"] }}'
+
+      when: '__molecule__postfix_inet_protocols_result["stdout"] != "all"'

@@ -1,0 +1,8 @@
+# Molecule scenario marker for the 'postfix' scenario, run with
+# `molecule test --scenario-name postfix`.
+#
+# It overrides the prepare step (see prepare.yml), which starts Postfix with the packaged
+# configuration before the role takes it over.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'
