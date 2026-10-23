@@ -1,41 +1,21 @@
 - block:
 
   - name: 'Manage the security group for the VM'
-    ngine_io.cloudstack.cs_securitygroup:
+    linuxfabrik.lfops.exoscale_security_group:
       api_key: '{{ exoscale_vm__api_key }}'
       api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
+      zone: '{{ exoscale_vm__zone }}'
       name: '{{ exoscale_vm__name }}'
+      rules: '{{ exoscale_vm__security_group_rules }}'
       state: 'present'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state != "absent"'
 
-  - name: 'Manage the required security group rules for the VM'
-    ngine_io.cloudstack.cs_securitygroup_rule:
-      api_key: '{{ exoscale_vm__api_key }}'
-      api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      cidr: '{{ item["cidr"] | default(omit) }}'
-      protocol: '{{ item["protocol"] | default(omit) }}'
-      security_group: '{{ exoscale_vm__name }}'
-      start_port: '{{ item["start_port"] | default(omit) }}'
-      end_port: '{{ item["end_port"] | default(omit) }}'
-      state: '{{ item["state"] | d("present") }}'
-      type: '{{ item["type"] | default("ingress") }}'
-    loop: '{{ exoscale_vm__security_group_rules }}'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    when:
-      - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
-      - 'exoscale_vm__state != "absent"'
-
+  delegate_to: 'localhost'
+  become: false
+  vars:
+    ansible_become: false # noqa var-naming[pattern]
   tags:
     - 'exoscale_vm'
     - 'exoscale_vm:firewalls'
@@ -43,143 +23,82 @@
 
 - block:
 
-  # using the exo cli instead, as creating private instances is not supported by the v1 API which the cloudstack modules use
-  # - name: 'Manage the VM at Exoscale'
-  #   ngine_io.cloudstack.cs_instance:
-  #     api_key: '{{ exoscale_vm__api_key }}'
-  #     api_secret: '{{ exoscale_vm__api_secret }}'
-  #     api_url: 'https://api.exoscale.com/compute'
-  #     name: '{{ exoscale_vm__name }}'
-  #     service_offering: '{{ exoscale_vm__service_offering }}'
-  #     security_groups: '{{ (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) }}'
-  #     ssh_key: '{{ exoscale_vm__ssh_key }}'
-  #     state: '{{ exoscale_vm__state }}'
-  #     template: '{{ exoscale_vm__template }}'
-  #     zone: '{{ exoscale_vm__zone }}'
-  #     root_disk_size: '{{ exoscale_vm__disk_size }}'
-  #     force: true
-  #   delegate_to: 'localhost'
-
-  - name: 'List the VMs at Exoscale'
-    ansible.builtin.command: >
-      exo compute instance list
-      --use-account '{{ exoscale_vm__account }}'
-      --output-format json
-    register: 'exoscale_vm__instance_list_result'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    changed_when: false # just gathering information, no actual change happening here
-
-  - name: 'Create the VM at Exoscale'
-    ansible.builtin.command: >
-      exo compute instance create
-      --use-account '{{ exoscale_vm__account }}'
-      --output-format json
-      --instance-type '{{ exoscale_vm__service_offering }}'
-      {% for item in (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) | ternary(["default", exoscale_vm__name], ["default"]) %}
-      --security-group '{{ item }}'
-      {% endfor %}
-      --ssh-key '{{ exoscale_vm__ssh_key }}'
-      --template '{{ exoscale_vm__template }}'
-      --template-visibility '{{ exoscale_vm__template_visibility }}'
-      --zone '{{ exoscale_vm__zone }}'
-      --disk-size '{{ exoscale_vm__disk_size }}'
-      {% if exoscale_vm__private_instance %}
-      --private-instance
-      {% endif %}
-      '{{ exoscale_vm__name }}'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    changed_when: true
-    when:
-      - 'exoscale_vm__state != "absent"'
-      - 'exoscale_vm__name not in  exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
-
-  - name: 'Delete the VM at Exoscale'
-    ansible.builtin.command: >
-      exo compute instance delete
-      --use-account '{{ exoscale_vm__account }}'
-      --output-format json
-      --zone '{{ exoscale_vm__zone }}'
-      --force
-      '{{ exoscale_vm__name }}'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    changed_when: true
-    when:
-      - 'exoscale_vm__state == "absent"'
-      - 'exoscale_vm__name in exoscale_vm__instance_list_result["stdout"] | from_json | map(attribute="name")'
-
-  tags:
-    - 'exoscale_vm'
-
-
-- block:
-
-  - name: 'Create the networks required by the VM'
-    ngine_io.cloudstack.cs_network:
+  - name: 'Create the private networks required by the VM'
+    linuxfabrik.lfops.exoscale_private_network:
       api_key: '{{ exoscale_vm__api_key }}'
       api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      name: '{{ item["name"] }}'
       zone: '{{ exoscale_vm__zone }}'
-      start_ip: '{{ item["cidr"] | ansible.utils.ipaddr("2") | ansible.utils.ipaddr("address") }}'
-      end_ip: '{{ item["cidr"] | ansible.utils.ipaddr("-3") | ansible.utils.ipaddr("address") }}'
-      netmask: '{{ item["cidr"] | ansible.utils.ipaddr("netmask") }}'
+      name: '{{ item["name"] }}'
+      cidr: '{{ item["cidr"] }}'
       state: 'present' # never delete, as it could be used by other VMs as well
-      network_offering: 'Private Network'
     loop: '{{ exoscale_vm__private_networks }}'
     when:
       - 'exoscale_vm__state != "absent"'
       - 'item["cidr"] is defined'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
+      - 'item["state"] | d("present") != "absent"'
 
-  - name: "Manage the VM's networks"
-    ngine_io.cloudstack.cs_instance_nic:
-      api_key: '{{ exoscale_vm__api_key }}'
-      api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
-      name: '{{ exoscale_vm__name }}'
-      network: '{{ item["name"] }}'
-      ip_address: '{{ item["fixed_ip"] }}'
-      zone: '{{ exoscale_vm__zone }}'
-    loop: '{{ exoscale_vm__private_networks }}'
-    when: 'exoscale_vm__state != "absent"'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-
+  delegate_to: 'localhost'
+  become: false
+  vars:
+    ansible_become: false # noqa var-naming[pattern]
   tags:
     - 'exoscale_vm'
     - 'exoscale_vm:networks'
 
+
 - block:
 
-  # Cleanup
-  - name: 'Clean up the security group for the VM'
-    ngine_io.cloudstack.cs_securitygroup:
+  # the instance also carries the attachments to the security groups and the
+  # private networks, therefore it runs for those tags as well
+  - name: 'Manage the VM at Exoscale'
+    linuxfabrik.lfops.exoscale_instance:
       api_key: '{{ exoscale_vm__api_key }}'
       api_secret: '{{ exoscale_vm__api_secret }}'
-      api_url: 'https://api.exoscale.com/compute'
+      zone: '{{ exoscale_vm__zone }}'
+      name: '{{ exoscale_vm__name }}'
+      instance_type: '{{ exoscale_vm__service_offering }}'
+      template: '{{ exoscale_vm__template }}'
+      template_visibility: '{{ exoscale_vm__template_visibility }}'
+      disk_size: '{{ exoscale_vm__disk_size }}'
+      ssh_keys:
+        - '{{ exoscale_vm__ssh_key }}'
+      public_ip_assignment: '{{ (exoscale_vm__private_instance | bool) | ternary("none", "inet4") }}'
+      security_groups: '{{
+          ["default"]
+          + ([exoscale_vm__name] if (exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0) else [])
+        }}'
+      # `cidr` is only for creating the network, see above
+      private_networks: '{{ exoscale_vm__private_networks | ansible.utils.remove_keys(target=["cidr"]) }}'
+      force: '{{ exoscale_vm__force | bool }}'
+      state: '{{ exoscale_vm__state }}'
+
+  delegate_to: 'localhost'
+  become: false
+  vars:
+    ansible_become: false # noqa var-naming[pattern]
+  tags:
+    - 'exoscale_vm'
+    - 'exoscale_vm:firewalls'
+    - 'exoscale_vm:networks'
+
+
+- block:
+
+  - name: 'Delete the security group of the VM'
+    linuxfabrik.lfops.exoscale_security_group:
+      api_key: '{{ exoscale_vm__api_key }}'
+      api_secret: '{{ exoscale_vm__api_secret }}'
+      zone: '{{ exoscale_vm__zone }}'
       name: '{{ exoscale_vm__name }}'
       state: 'absent'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
     when:
       - 'exoscale_vm__security_group_rules is defined and exoscale_vm__security_group_rules | length > 0'
       - 'exoscale_vm__state == "absent"'
 
+  delegate_to: 'localhost'
+  become: false
+  vars:
+    ansible_become: false # noqa var-naming[pattern]
   tags:
     - 'exoscale_vm'
+    - 'exoscale_vm:firewalls'

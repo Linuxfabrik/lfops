@@ -147,7 +147,7 @@ Example:
 ansible_init__ansinv_path: '/home/linuxfabrik/ansinv/'
 ansible_init__ansible_collections:
   - name: 'community.mysql'
-  - name: 'ngine_io.cloudstack'
+  - name: 'hetzner.hcloud'
 ansible_init__inventories: []
 ansible_init__lfops_url: 'git@github.com:Linuxfabrik/lfops.git'
 ansible_init__roles: []

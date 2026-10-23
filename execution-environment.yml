@@ -25,7 +25,6 @@ dependencies:
 
   python:
     - 'ansible-lint'
-    - 'cs' # required for ngine_io.cloudstack
     - 'jmespath' # required for community.general.json_query
     - 'mitogen'
     - 'netaddr' # required for ansible.utils.ipaddr
