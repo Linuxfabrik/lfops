@@ -67,7 +67,7 @@
     ansible.builtin.systemd:
       daemon-reload: true
     when:
-      - '__logstash__z10_config_reload__result is changed'
+      - '__logstash__z10_config_reload__result is changed' # noqa no-handler (the unit file is reloaded right after it changed, not at the end of the play)
 
   tags:
     - 'logstash'

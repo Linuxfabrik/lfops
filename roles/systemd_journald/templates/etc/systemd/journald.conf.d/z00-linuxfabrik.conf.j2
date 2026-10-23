@@ -19,7 +19,7 @@
 
 {% set systemd_journald__conf_system_max_use = systemd_journald__conf_system_max_use | string %}
 {% if systemd_journald__conf_system_max_use.endswith('%') %}
-    {% set journal_mb = systemd_journald_var_log_journal_df_result.stdout_lines[1] | trim | replace('M','') | int %}
+    {% set journal_mb = __systemd_journald__var_log_journal_df_result.stdout_lines[1] | trim | replace('M','') | int %}
     {% set pct = systemd_journald__conf_system_max_use[:-1] | int %}
     {% set systemd_journald__conf_system_max_use = (
          (journal_mb * pct / 100)
@@ -30,7 +30,7 @@
 
 {% set systemd_journald__conf_system_keep_free = systemd_journald__conf_system_keep_free | string %}
 {% if systemd_journald__conf_system_keep_free.endswith('%') %}
-    {% set journal_mb = systemd_journald_var_log_journal_df_result.stdout_lines[1] | trim | replace('M','') | int %}
+    {% set journal_mb = __systemd_journald__var_log_journal_df_result.stdout_lines[1] | trim | replace('M','') | int %}
     {% set pct = systemd_journald__conf_system_keep_free[:-1] | int %}
     {% set systemd_journald__conf_system_keep_free = (
          (journal_mb * pct / 100)

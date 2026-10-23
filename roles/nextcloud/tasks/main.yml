@@ -22,6 +22,7 @@
     ansible.builtin.get_url:
       url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
       dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
 
@@ -212,6 +213,7 @@
       chdir: '/var/www/html/nextcloud/'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # always runs, there is no easy way to tell whether it changed anything
 
   when:
     - 'not nextcloud__skip_notify_push'
@@ -276,7 +278,7 @@
       chdir: '/var/www/html/nextcloud/'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
-    # changed_when: there is no easy way to check for changes
+    changed_when: true # there is no easy way to check for changes
 
   - name: 'Deploy /usr/local/bin/nextcloud-app-update'
     ansible.builtin.template:

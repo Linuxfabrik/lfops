@@ -62,7 +62,7 @@
     # The point of lingering: the user manager runs without anybody being logged in. This is also
     # what makes the account impossible to delete unless lingering is switched off first, which
     # the remove sub-scenario covers.
-    - name: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-linger"][1] }}.service'
+    - name: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-linger"][1] }}.service' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-linger"][1] }}.service'
       changed_when: false
       register: '__molecule__user_manager_result'
@@ -71,7 +71,7 @@
       ansible.builtin.assert:
         that: '__molecule__user_manager_result["stdout"] == "active"'
 
-    - name: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-plain"][1] }}.service'
+    - name: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-plain"][1] }}.service' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-active user@{{ ansible_facts["getent_passwd"]["molecule-plain"][1] }}.service'
       changed_when: false
       failed_when: false # `is-active` exits 3 for an inactive unit

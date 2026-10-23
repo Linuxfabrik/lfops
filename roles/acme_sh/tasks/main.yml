@@ -21,6 +21,7 @@
 
   - name: 'curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online ...'
     ansible.builtin.shell: |-
+      set -o pipefail
       curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online \
         --home /opt/acme.sh \
         --config-home /etc/acme.sh \

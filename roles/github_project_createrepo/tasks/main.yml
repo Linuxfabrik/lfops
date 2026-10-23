@@ -5,6 +5,7 @@
       repo: 'https://github.com/Linuxfabrik/github-project-createrepo.git'
       dest: '/opt/github-project-createrepo'
       force: false
+      version: 'main'
     retries: 3 # ride out a brief outage of the download source
     delay: 10
 
@@ -22,6 +23,7 @@
       src: '/opt/github-project-createrepo/systemd/github-project-createrepo.service'
       dest: '/etc/systemd/system/github-project-createrepo.service'
       remote_src: true
+      mode: 0o644
     notify: 'github_project_createrepo: systemctl daemon-reload'
 
   - name: 'cp /opt/github-project-createrepo/systemd/github-project-createrepo.timer /etc/systemd/system/github-project-createrepo.timer'
@@ -29,6 +31,7 @@
       src: '/opt/github-project-createrepo/systemd/github-project-createrepo.timer'
       dest: '/etc/systemd/system/github-project-createrepo.timer'
       remote_src: true
+      mode: 0o644
     notify: 'github_project_createrepo: systemctl daemon-reload'
 
   - name: 'systemctl {{ github_project_createrepo__timer_enabled | bool | ternary("enable", "disable") }} --now github-project-createrepo.timer'

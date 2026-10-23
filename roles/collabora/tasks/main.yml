@@ -98,15 +98,15 @@
 
   - name: 'install language packages'
     ansible.builtin.package:
-      name: '{{ (collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (collabora__language_packages__combined_var  | selectattr("state", "undefined") | map(attribute="name")) }}'
+      name: '{{ (collabora__language_packages__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+          + (collabora__language_packages__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
       state: 'present'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
   - name: 'remove language packages'
     ansible.builtin.package:
-      name: '{{ collabora__language_packages__combined_var  | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
+      name: '{{ collabora__language_packages__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") }}'
       state: 'absent'
 
   tags:

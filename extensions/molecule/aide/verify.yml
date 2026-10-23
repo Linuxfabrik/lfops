@@ -311,7 +311,7 @@
         group: 'root'
         mode: 0o644
 
-    - name: 'Change the content of /boot/efi/lfops-molecule'
+    - name: 'Change the content of /boot/efi/lfops-molecule' # noqa risky-file-permissions (vfat has no modes)
       ansible.builtin.copy:
         content: 'lfops-molecule-changed'
         dest: '/boot/efi/lfops-molecule'
@@ -415,7 +415,7 @@
         group: 'root'
         mode: 0o644
 
-    - name: 'Restore the content of /boot/efi/lfops-molecule'
+    - name: 'Restore the content of /boot/efi/lfops-molecule' # noqa risky-file-permissions (vfat has no modes)
       ansible.builtin.copy:
         content: 'lfops-molecule'
         dest: '/boot/efi/lfops-molecule'

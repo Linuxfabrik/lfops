@@ -98,6 +98,7 @@
           --insecure
           {% endif %}
           --force
+      changed_when: true
       when:
         - '__elastic_agent_fleet_server__inspect_result["rc"] != 0 or not (__elastic_agent_fleet_server__is_enrolled | default(false))'
 

@@ -28,6 +28,7 @@
     ansible.builtin.get_url:
       url: 'https://github.com/Icinga/icingaweb2-module-vspheredb/archive/refs/tags/{{ icingaweb2_module_vspheredb__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-vspheredb-{{ icingaweb2_module_vspheredb__version }}.tar.gz'
+      mode: 0o644
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -40,6 +41,7 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-vspheredb-{{ icingaweb2_module_vspheredb__version }}.tar.gz'
       dest: '/tmp/ansible.icingaweb2-module-vspheredb-{{ icingaweb2_module_vspheredb__version }}.tar.gz'
+      mode: 0o644
 
   - name: 'tar xfz --strip-components 1 -C /usr/share/icingaweb2/modules/vspheredb /tmp/ansible.icingaweb2-module-vspheredb-{{ icingaweb2_module_vspheredb__version }}.tar.gz'
     ansible.builtin.unarchive:
@@ -72,8 +74,15 @@
       group: 'root'
       mode: 0o644
 
+  # systemd-tmpfiles reports nothing at the default log level. At debug level, stderr has a
+  # 'Created' or 'Changing' line for every change. Verified against systemd 239, 252 and 257 on
+  # Rocky 8, 9 and 10 for `d` rules.
   - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/icinga-vspheredb.conf'
     ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/icinga-vspheredb.conf'
+    environment:
+      SYSTEMD_LOG_LEVEL: 'debug'
+    register: 'icingaweb2_module_vspheredb__tmpfiles_result'
+    changed_when: 'icingaweb2_module_vspheredb__tmpfiles_result["stderr"] is search("^(Created|Changing) ", multiline=True)'
 
   - name: 'restorecon -Fvr /var/run/icinga-vspheredb/'
     ansible.builtin.command: 'restorecon -Fvr /var/run/icinga-vspheredb/'
@@ -93,6 +102,7 @@
       src: '/usr/share/icingaweb2/modules/vspheredb/contrib/systemd/icinga-vspheredb.service'
       dest: '/etc/systemd/system/'
       remote_src: true
+      mode: 0o644
     notify: 'icingaweb2_module_vspheredb: systemctl daemon-reload'
 
   - name: 'Deploy /etc/icingaweb2/modules/vspheredb/config.ini'

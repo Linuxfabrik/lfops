@@ -28,7 +28,7 @@
     # `loginctl enable-linger` returns before logind has started the user manager. Without waiting
     # for it, converge would sometimes face an account whose processes are not up yet, and the
     # removal would succeed for the wrong reason.
-    - name: 'systemctl is-active user@{{ __molecule__user_result["uid"] }}.service'
+    - name: 'systemctl is-active user@{{ __molecule__user_result["uid"] }}.service' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-active user@{{ __molecule__user_result["uid"] }}.service'
       changed_when: false
       failed_when: false # `is-active` exits 3 while the unit is still starting

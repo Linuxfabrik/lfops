@@ -61,8 +61,15 @@
       mode: 0o644
     register: '__schedule_reboot__tmpfiles_result'
 
-  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/schedule-reboot.conf' # noqa no-handler no-changed-when (no easy way to detect changes)
+  # systemd-tmpfiles reports nothing at the default log level. At debug level, stderr has a
+  # 'Created' or 'Changing' line for every change. Verified against systemd 239, 252 and 257 on
+  # Rocky 8, 9 and 10 for `d` rules.
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/schedule-reboot.conf' # noqa no-handler
     ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/schedule-reboot.conf'
+    environment:
+      SYSTEMD_LOG_LEVEL: 'debug'
+    register: '__schedule_reboot__tmpfiles_create_result'
+    changed_when: '__schedule_reboot__tmpfiles_create_result["stderr"] is search("^(Created|Changing) ", multiline=True)'
     when:
       - '__schedule_reboot__tmpfiles_result is changed'
 

@@ -85,7 +85,7 @@
   - name: 'install grafana plugins'
     community.grafana.grafana_plugin:
       name: '{{ item["name"] }}'
-      state: '{{ item ["state"] | d("present") }}'
+      state: '{{ item["state"] | d("present") }}'
     loop: '{{ grafana__plugins__combined_var }}'
     notify: 'grafana: restart grafana-server'
 
@@ -178,12 +178,13 @@
   - name: 'wait 10 seconds for grafana to start'
     ansible.builtin.pause:
       seconds: 10
-    when: '__grafana__service_state_result["changed"] | bool'
+    when: '__grafana__service_state_result["changed"] | bool' # noqa no-handler (the wait has to happen before the API calls that follow)
 
   - name: 'set the password for admin'
     ansible.builtin.command: "grafana cli admin reset-admin-password '{{ grafana__admin_login[\"password\"] }}'"
     args:
       chdir: '/usr/share/grafana' # fixes: Grafana-server Init Failed: Could not find config defaults, make sure homepath command line parameter is set or working directory is homepath
+    changed_when: true # always sets the password
 
   tags:
     - 'grafana'

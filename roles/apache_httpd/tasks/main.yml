@@ -56,7 +56,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'mkdir -p {{ __apache_httpd__config_path}}/{conf,mods,sites}-{available,enabled}'
+  - name: 'mkdir -p {{ __apache_httpd__config_path }}/{conf,mods,sites}-{available,enabled}'
     ansible.builtin.file:
       path: '{{ item }}'
       state: 'directory'
@@ -71,9 +71,9 @@
       - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}sites-available'
       - '{{ __apache_httpd__config_path }}/{{ __apache_httpd__config_prefix }}sites-enabled'
 
-  - name: 'ln -s {{ __apache_httpd__config_path}}/logs {{ __apache_httpd__log_path }}'
+  - name: 'ln -s {{ __apache_httpd__config_path }}/logs {{ __apache_httpd__log_path }}'
     ansible.builtin.file:
-      dest: '{{ __apache_httpd__config_path}}/logs'
+      dest: '{{ __apache_httpd__config_path }}/logs'
       src: '{{ __apache_httpd__log_path }}'
       state: 'link'
 

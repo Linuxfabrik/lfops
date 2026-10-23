@@ -124,7 +124,7 @@
 
 - block:
 
-  - meta: 'flush_handlers' # we want a `systemctl daemon-reload` before managing unit states
+  - ansible.builtin.meta: 'flush_handlers' # we want a `systemctl daemon-reload` before managing unit states
 
   - name: 'systemctl {{ item["enabled"] | d(true) | bool | ternary("enable", "disable") }} {{ item["name"] }}.service'
     ansible.builtin.systemd:

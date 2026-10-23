@@ -144,7 +144,7 @@
   # to a unique temp file and atomically renames into place, so running it per host is
   # race-safe even when all hosts share the same `/tmp` dest; with the version-pinned dest
   # the first host downloads and the rest find the file already present.
-  - name: 'curl --output /tmp/ansible.example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz' # noqa risky-file-permissions (temporary file)
+  - name: 'curl --output /tmp/ansible.example-{{ example__version }}.tar.gz https://example.com/releases/example-{{ example__version }}.tar.gz'
     ansible.builtin.get_url:
       url: 'https://example.com/releases/example-{{ example__version }}.tar.gz'
       dest: '/tmp/ansible.example-{{ example__version }}.tar.gz'
@@ -160,10 +160,11 @@
 
   # the header lists copy as an anti-pattern, but that applies to CONFIG files (use template).
   # a downloaded binary artifact is the documented exception: templating a tarball makes no sense.
-  - name: 'Copy /tmp/ansible.example-{{ example__version }}.tar.gz to the target' # noqa risky-file-permissions (temporary file)
+  - name: 'Copy /tmp/ansible.example-{{ example__version }}.tar.gz to the target'
     ansible.builtin.copy:
       src: '/tmp/ansible.example-{{ example__version }}.tar.gz'
       dest: '/tmp/example-{{ example__version }}.tar.gz'
+      mode: 0o644
 
   - name: 'tar xzf /tmp/example-{{ example__version }}.tar.gz -C /opt/example'
     ansible.builtin.unarchive:
@@ -196,8 +197,9 @@
     changed_when: '"already configured" not in __example__setup_result["stdout"]'
     failed_when: '__example__setup_result["rc"] != 0 and "already configured" not in __example__setup_result["stdout"]'
 
-  - name: 'example --generate-cache' # noqa: no-changed-when - no easy way to detect changes
+  - name: 'example --generate-cache'
     ansible.builtin.command: 'example --generate-cache'
+    changed_when: true # always runs, there is no easy way to tell whether it changed anything
 
   tags:
     - 'example'
@@ -358,6 +360,28 @@
     ansible.builtin.systemd:
       daemon_reload: true
     when: '__example__z00_after_tuned_result is changed'
+
+  # runtime directories below /run are created by systemd-tmpfiles.
+  - name: 'Deploy /etc/tmpfiles.d/example.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/tmpfiles.d/example.conf.j2'
+      dest: '/etc/tmpfiles.d/example.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__example__tmpfiles_result'
+
+  # systemd-tmpfiles reports nothing at the default log level. At debug level, stderr has a
+  # 'Created' or 'Changing' line for every change. Verified against systemd 239, 252 and 257 on
+  # Rocky 8, 9 and 10 for `d` rules.
+  - name: 'systemd-tmpfiles --create /etc/tmpfiles.d/example.conf' # noqa no-handler (the directory is needed right away)
+    ansible.builtin.command: 'systemd-tmpfiles --create /etc/tmpfiles.d/example.conf'
+    environment:
+      SYSTEMD_LOG_LEVEL: 'debug'
+    register: '__example__tmpfiles_create_result'
+    changed_when: '__example__tmpfiles_create_result["stderr"] is search("^(Created|Changing) ", multiline=True)'
+    when: '__example__tmpfiles_result is changed'
 
   tags:
     - 'example'

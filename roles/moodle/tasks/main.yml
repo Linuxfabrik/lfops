@@ -60,6 +60,7 @@
     ansible.builtin.copy:
       src: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
       dest: '/tmp/moodle-{{ moodle__github_version }}.tar.gz'
+      mode: 0o644
 
   - name: 'cd {{ moodle__install_dir }} && tar xfz --strip-components 1 /tmp/moodle-{{ moodle__github_version }}.tar.gz'
     ansible.builtin.unarchive:
@@ -270,6 +271,7 @@
     become_user: 'apache'
     # if running on existing items, we get errors. in this case, go on.
     ignore_errors: true
+    changed_when: true
 
   tags:
     - 'moodle'
@@ -291,6 +293,7 @@
     become_user: 'apache'
     # if running on existing items, we get errors. in this case, go on.
     ignore_errors: true
+    changed_when: true
 
   tags:
     - 'never'

@@ -1,27 +1,27 @@
 - block:
 
-  - name: 'mkdir -p /var/log/journal'
+  - name: 'mkdir -p /var/log/journal' # noqa risky-file-permissions (they are managed by /usr/lib/tmpfiles.d/systemd.conf)
     ansible.builtin.file:
       path: '/var/log/journal'
       state: 'directory'
-      # not touching permissions, as they are managed by /usr/lib/tmpfiles.d/systemd.conf
 
   - name: 'Get size of /var/log/journal filesystem'
     ansible.builtin.shell:
       cmd: 'df --output=size --block-size=M /var/log/journal'
       executable: '/bin/bash'
-    register: 'systemd_journald_var_log_journal_df_result'
+    register: '__systemd_journald__var_log_journal_df_result'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # not an actual config change on the server
 
   - name: 'Debug'
     ansible.builtin.debug:
-      var: 'systemd_journald_var_log_journal_df_result'
+      var: '__systemd_journald__var_log_journal_df_result'
 
   - name: 'mkdir -p /etc/systemd/journald.conf.d'
     ansible.builtin.file:
       path: '/etc/systemd/journald.conf.d'
       state: 'directory'
+      mode: 0o755
 
   - name: 'Deploy /etc/systemd/journald.conf.d/'
     ansible.builtin.template:

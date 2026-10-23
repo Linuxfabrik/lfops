@@ -23,14 +23,14 @@ For Maxmind, depending on your needs, you normally run three playbooks in this p
     * Debian / Ubuntu: `apache2-dev`, `gcc`, `make`, `tar` (no `redhat-rpm-config`; that package is RH-only).
 
 * The Tarball is fetched on the Ansible controller (`delegate_to: 'localhost'`), then copied to the target. The controller therefore needs Internet access to GitHub; the target does not.
-* `./configure && make install` is executed in `~/mod_maxminddb-<version>/`. `make install` errors are ignored because `apxs`-based `LoadModule` activation often fails on a default Apache config; the compiled `.so` is what we care about.
+* `./configure && make` is executed in `~/mod_maxminddb-<version>/`, then `src/.libs/mod_maxminddb.so` is copied to the module path listed above. `make install` is deliberately not used: its `apxs -i -a` also edits the Apache config (a second `LoadModule` in `httpd.conf` on Red Hat-family, a rewritten `maxminddb.load` plus a `.bak~` file on Debian / Ubuntu).
 * The `LoadModule` directive is written to `mod_maxminddb__apache_conf_modules_d` (default is OS-specific, see variable below) and points to the OS-specific module path listed above.
 * On Debian / Ubuntu the role additionally runs the equivalent of `a2enmod maxminddb` (via `community.general.apache2_module`) so the freshly placed `.load` file gets symlinked into `/etc/apache2/mods-enabled/`. On Red Hat-family hosts the module is picked up automatically because it lives in `/etc/httpd/conf.modules.d/`.
 
 
 ## Requirements
 
-* Apache httpd must be installed, with at least one `LoadModule` directive already present (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)). Otherwise the compile step may fail with `apxs:Error: At least one 'LoadModule' directive already has to exist..`. See "How the Role Behaves" for why `make install` errors are ignored.
+* Apache httpd must be installed (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)), so that the module and `LoadModule` directories exist.
 
 
 ## Tags

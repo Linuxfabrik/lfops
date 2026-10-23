@@ -37,7 +37,7 @@
           - 'not __molecule__timer_unit["stat"]["exists"]'
           - 'not __molecule__service_unit["stat"]["exists"]'
 
-    - name: 'systemctl is-enabled the timer'
+    - name: 'systemctl is-enabled the timer' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-enabled matomo-import-logs-{{ __molecule__site }}.timer'
       register: '__molecule__timer_enabled'
       changed_when: false

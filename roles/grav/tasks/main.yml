@@ -94,6 +94,7 @@
       bin/gpm install admin --all-yes
     args:
       chdir: '{{ grav__install_dir | quote }}'
+    changed_when: true # always runs, there is no easy way to tell whether it changed anything
 
   - name: 'Create Grav User Accounts'
     ansible.builtin.command: >-
@@ -107,6 +108,7 @@
     args:
       chdir: '{{ grav__install_dir | quote }}'
     loop: '{{ grav__users }}'
+    changed_when: true # always runs, there is no easy way to tell whether it changed anything
 
   when:
     - 'not grav__skip_admin'

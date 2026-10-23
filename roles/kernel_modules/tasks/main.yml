@@ -35,7 +35,7 @@
       src: '/proc/modules'
     register: '__kernel_modules__proc_modules_result'
     when:
-      - '__kernel_modules__conf_result is changed'
+      - '__kernel_modules__conf_result is changed' # noqa no-handler (only needed in the run that changed the configuration)
 
   # Only the run that changes the configuration asks for the reboot. A later run finds the file
   # already correct and stays quiet, even while the modules are still loaded and the reboot is
