@@ -1,17 +1,18 @@
 - block:
 
   # network_state: nmstate carries the DNS servers stored in the profile that is active on a
-  # declared interface over into the profile it writes. NetworkManager rejects ipv6.dns for
+  # declared interface over into the profile it writes, see
+  # https://github.com/nmstate/nmstate/issues/3251. NetworkManager rejects ipv6.dns for
   # method=disabled and method=link-local, so the apply aborts with "ipv6.dns: this property is not
-  # allowed" if that profile stores an IPv6 server and network_state disables IPv6. On an
-  # interface that does not hold the configured DNS servers, the stored ones stay behind. Typical
-  # are the "cloud-init <interface>" profile that wins on boot with an autoconnect-priority of 120
-  # and the "System <interface>" profile of the installer. Only servers that dns-resolver does not
-  # list are cleared, so a rerun finds nothing to do. Nothing is deleted or re-applied, the active
-  # connection stays up.
+  # allowed" if that profile stores an IPv6 server and network_state disables IPv6 or leaves it at
+  # link-local, with or without dns-resolver. With dns-resolver declared, servers it does not list
+  # also stay behind on interfaces that do not hold the configured ones. Typical are the
+  # "cloud-init <interface>" profile that wins on boot with an autoconnect-priority of 120 and the
+  # "System <interface>" profile of the installer. A rerun finds nothing to do. Nothing is deleted
+  # or re-applied, the active connection stays up.
   # Verified against nmstate 2.2.60 on Rocky 10.2 (NetworkManager 1.56.0): `nmstatectl apply -vv`
-  # sends the stored ipv6.dns together with method Disabled. It is enough to change the stored
-  # profile, the active connection does not have to be re-activated.
+  # sends the stored ipv6.dns together with method Disabled. Only the active profile is affected,
+  # and it is enough to change the stored profile.
   - name: 'Gather the service facts to see whether NetworkManager runs'
     ansible.builtin.service_facts: # yamllint disable-line rule:empty-values
     when:
@@ -28,15 +29,16 @@
         - 'GENERAL.CONNECTION'
         - 'device'
         - 'show'
-        - '{{ item }}'
-    loop: '{{ network_state.get("interfaces", []) | map(attribute="name") | list }}'
+        - '{{ item["name"] }}'
+    loop: '{{ network_state.get("interfaces", []) }}'
+    loop_control:
+      label: '{{ item["name"] }}'
     register: '__network__active_profile_result'
     changed_when: false
     failed_when: '__network__active_profile_result["rc"] not in [0, 10]'
     check_mode: false
     when:
       - 'network_state | d({}) | length > 0'
-      - 'network_state.get("dns-resolver", {}).get("config", {}).get("server", []) | length > 0'
       - 'ansible_facts["services"]["NetworkManager.service"]["state"] | d("") == "running"'
 
   - name: 'nmcli --get-values ipv4.dns,ipv6.dns connection show # DNS servers stored in the active profiles'
@@ -57,7 +59,9 @@
     changed_when: false
     check_mode: false
 
-  - name: 'nmcli connection modify <profile> ipv4.dns "" ipv6.dns "" # drop the servers that dns-resolver does not list'
+  # only with dns-resolver: without it, nmstate does not manage the DNS servers and the stored
+  # ones are the host's own
+  - name: 'nmcli connection modify <profile> ipv4.dns "" # drop the servers that dns-resolver does not list'
     ansible.builtin.command:
       argv:
         - 'nmcli'
@@ -66,16 +70,52 @@
         - '{{ item["item"]["stdout"] | trim }}'
         - 'ipv4.dns'
         - ''
+    loop: '{{ __network__stored_dns_result["results"] | d([]) | selectattr("stdout_lines", "defined") | list }}'
+    loop_control:
+      label: '{{ item["item"]["stdout"] | trim }}'
+    changed_when: true
+    vars:
+      __network__declared_servers: '{{ network_state.get("dns-resolver", {}).get("config", {}).get("server", []) }}'
+    when:
+      - '__network__declared_servers | length > 0'
+      - >-
+        ((item["stdout_lines"] + ["", ""])[0].split(",") | select | list
+        | difference(__network__declared_servers)) | length > 0
+
+  # Also without dns-resolver: a profile with IPv6 switched off or link-local only cannot hold a
+  # DNS server, so any stored one has to go.
+  - name: 'nmcli connection modify <profile> ipv6.dns "" # drop the servers that the new IPv6 setting cannot hold'
+    ansible.builtin.command:
+      argv:
+        - 'nmcli'
+        - 'connection'
+        - 'modify'
+        - '{{ item["item"]["stdout"] | trim }}'
         - 'ipv6.dns'
         - ''
     loop: '{{ __network__stored_dns_result["results"] | d([]) | selectattr("stdout_lines", "defined") | list }}'
     loop_control:
       label: '{{ item["item"]["stdout"] | trim }}'
     changed_when: true
+    vars:
+      __network__declared_servers: '{{ network_state.get("dns-resolver", {}).get("config", {}).get("server", []) }}'
+      __network__ipv6: '{{ item["item"]["item"].get("ipv6", {}) }}'
+      __network__ipv6_stored: '{{ (item["stdout_lines"] + ["", ""])[1].split(",") | select | list }}'
+      __network__ipv6_without_dns: >-
+        {{
+          __network__ipv6 | length > 0 and (
+            not __network__ipv6.get("enabled", true)
+            or (not __network__ipv6.get("dhcp", false)
+              and not __network__ipv6.get("autoconf", false)
+              and __network__ipv6.get("address", []) | length == 0)
+          )
+        }}
     when:
+      - '__network__ipv6_stored | length > 0'
       - >-
-        (item["stdout_lines"] | join(",")).split(",") | select | list
-        | difference(network_state["dns-resolver"]["config"]["server"]) | length > 0
+        __network__ipv6_without_dns | bool
+        or (__network__declared_servers | length > 0
+          and (__network__ipv6_stored | difference(__network__declared_servers)) | length > 0)
 
   # Only when there is something to configure. The upstream module creates and destroys a
   # NetworkManager checkpoint even for an empty configuration, and it occasionally hangs for good
