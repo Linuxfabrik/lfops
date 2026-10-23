@@ -53,7 +53,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102301'
+__version__ = '2026102302'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -72,126 +72,8 @@ BASED_ON_RE = re.compile(r'Based on (?P<package>\S+) (?P<version>\d+(?:\.\d+)+)\
 TIMESTAMP_RE = re.compile(r'^(?P<prefix>\W*)(?P<stamp>\d{10})(?P<suffix>\W*)$')
 ENV_RE = re.compile(r'\$\{(?P<name>\w+)\}')
 
-# The scripts pass URLs to dnf and curl through a repository file and stdin, never as
-# arguments, so a repository token does not show up in the process list.
-GET_FUNCTION = r"""
-get() {
-    printf 'url = "%s"\n' "$1" | curl --fail --silent --show-error --location --config - "${@:2}"
-}
-"""
-
-# Both fetch scripts extract /etc from one release without installing it, and only after
-# the signature check. All of /etc is kept, so further files of the same release need no
-# second download. The package is downloaded into the container first, the 2 GB
-# graylog-datanode package needs that much free space below ~/.local/share/containers.
-FETCH_RPM_SCRIPT = (
-    r"""
-set -o errexit -o nounset -o pipefail
-"""
-    + GET_FUNCTION
-    + r"""
-dnf install --assumeyes --quiet cpio >/dev/null
-printf '[app]\nname=app\nbaseurl=%s\n' "${REPO}" > /etc/yum.repos.d/app.repo
-# a repository can serve several architectures and the source package
-url=$(dnf --quiet --repo=app \
-    repoquery --arch=noarch,x86_64 --latest-limit=1 --location "${PACKAGE}-${VERSION}")
-if [ -z "${url}" ]; then
-    echo "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}" >&2
-    exit 1
-fi
-get "${GPG_KEY}" --output /var/tmp/key
-rpmkeys --import /var/tmp/key
-get "${url}" --output /var/tmp/package.rpm
-# `rpmkeys --checksig` also succeeds for an unsigned package, it then prints `digests OK`
-# (verified against rpm 4.16 on Rocky 9)
-if ! rpmkeys --checksig /var/tmp/package.rpm | grep --quiet ': digests signatures OK$'; then
-    echo "${PACKAGE} ${VERSION}: the package is not signed with the gpg_key" >&2
-    exit 1
-fi
-mkdir --parents /out/root
-rpm2cpio /var/tmp/package.rpm \
-    | (cd /out/root && cpio --extract --make-directories --quiet "./etc/*")
-echo "${REPO_DISPLAY} ${url##*/}" > /out/source
-"""
-)
-
-# The chain apt checks: the signature of InRelease, the checksum of the Packages index
-# listed there, and the checksum of the package listed in the index. The index can list
-# several builds of a release (`7.2.0-1`, `7.2.0-11`); the newest one wins, as with
-# `dnf repoquery --latest-limit=1` above.
-FETCH_DEB_SCRIPT = (
-    r"""
-set -o errexit -o nounset -o pipefail
-"""
-    + GET_FUNCTION
-    + r"""
-fail() {
-    echo "${PACKAGE} ${VERSION}: $1" >&2
-    exit 1
-}
-dnf install --assumeyes --quiet bsdtar >/dev/null
-get "${GPG_KEY}" --output /var/tmp/key
-if grep --quiet 'BEGIN PGP' /var/tmp/key; then
-    gpg --batch --quiet --dearmor --output /var/tmp/key.gpg /var/tmp/key
-else
-    mv /var/tmp/key /var/tmp/key.gpg
-fi
-get "${REPO}/dists/${SUITE}/InRelease" --output /var/tmp/InRelease
-gpgv --keyring /var/tmp/key.gpg --output /var/tmp/Release /var/tmp/InRelease 2>/dev/null \
-    || fail "InRelease is not signed with the gpg_key"
-index="${COMPONENT}/binary-amd64/Packages.gz"
-sum=$(awk -v path="${index}" '
-    /^[^ ]/ { section = $1 }
-    section == "SHA256:" && $3 == path { print $1 }' /var/tmp/Release)
-get "${REPO}/dists/${SUITE}/${index}" --output /var/tmp/Packages.gz
-[ -n "${sum}" ] && echo "${sum}  /var/tmp/Packages.gz" | sha256sum --check --status \
-    || fail "the checksum of ${index} does not match InRelease"
-line=$(gunzip --stdout /var/tmp/Packages.gz \
-    | awk -v package="${PACKAGE}" -v version="${VERSION}" '
-        BEGIN { RS = ""; FS = "\n" }
-        {
-            name = ""; ver = ""; file = ""; sum = ""
-            for (i = 1; i <= NF; i++) {
-                if ($i ~ /^Package: /) name = substr($i, 10)
-                if ($i ~ /^Version: /) ver = substr($i, 10)
-                if ($i ~ /^Filename: /) file = substr($i, 11)
-                if ($i ~ /^SHA256: /) sum = substr($i, 9)
-            }
-            sub(/^[0-9]+:/, "", ver)
-            if (name == package && (ver == version || index(ver, version "-") == 1))
-                print ver, file, sum
-        }' \
-    | sort --version-sort | tail --lines=1)
-read -r _ file sum <<< "${line}"
-if [ -z "${file:-}" ]; then
-    echo "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}" >&2
-    exit 1
-fi
-get "${REPO}/${file}" --output /var/tmp/package.deb
-[ -n "${sum:-}" ] && echo "${sum}  /var/tmp/package.deb" | sha256sum --check --status \
-    || fail "the checksum of ${file##*/} does not match the Packages index"
-mkdir --parents /out/root
-bsdtar --extract --to-stdout --file /var/tmp/package.deb 'data.tar*' \
-    | (cd /out/root && bsdtar --extract --file - --include './etc/*' --include 'etc/*')
-echo "${REPO_DISPLAY} ${file##*/}" > /out/source
-"""
-)
-
-# Lists the name and version of every build of the packages in each repository. A
-# repository that does not exist (yet), e.g. the one of the next release series, yields
-# no line instead of an error.
-LIST_RPM_SCRIPT = r"""
-set -o errexit -o nounset -o pipefail
-i=0
-while read -r key repo; do
-    i=$((i + 1))
-    printf '[app%s]\nname=app\nbaseurl=%s\nskip_if_unavailable=1\n' "${i}" "${repo}" \
-        > "/etc/yum.repos.d/app${i}.repo"
-    dnf --quiet --repo="app${i}" \
-        repoquery --arch=noarch,x86_64 --queryformat '%{name} %{version}' ${PACKAGES} \
-        | sed "s/^/${key} /"
-done <<< "${REPOS}"
-"""
+# The bash scripts that run in the podman container, see the comments in the scripts.
+CONTAINER_SCRIPTS = os.path.join(REPO_ROOT, 'tools', 'follow-upstream-container')
 
 
 class FetchError(Exception):
@@ -244,9 +126,18 @@ def find_app(manifest, name):
     sys.exit(f'{name}: not in {os.path.relpath(MANIFEST, REPO_ROOT)}')
 
 
+def container_script(name):
+    """Return the script `name` of CONTAINER_SCRIPTS, with common.sh in front."""
+    text = ''
+    for filename in ('common.sh', name):
+        with open(os.path.join(CONTAINER_SCRIPTS, filename), encoding='utf-8') as f:
+            text += f.read()
+    return text
+
+
 def run_container(script, env, volume=None):
     # `--env NAME` without a value passes the variable from podman's environment, so a
-    # repository token does not show up in the process list (see GET_FUNCTION for the
+    # repository token does not show up in the process list (see common.sh for the
     # processes in the container)
     command = ['podman', 'run', '--rm']
     for key in env:
@@ -281,7 +172,7 @@ def fetch(app, config, fmt, package, version):
     if fmt == 'rpm':
         display = config['rpm_repo'].replace('{series}', series)
         env = {'REPO': expand(display)}
-        script = FETCH_RPM_SCRIPT
+        script = container_script('fetch-rpm.sh')
     else:
         # `deb_repo` is written like a sources.list line: `<url> <suite> <component>`
         display, suite, component = (
@@ -292,7 +183,7 @@ def fetch(app, config, fmt, package, version):
             'REPO': expand(display).rstrip('/'),
             'SUITE': suite,
         }
-        script = FETCH_DEB_SCRIPT
+        script = container_script('fetch-deb.sh')
     env.update(
         {
             'GPG_KEY': gpg_key,
@@ -627,7 +518,7 @@ def list_versions(config, packages, series_list):
             f'{series} {expand(config["rpm_repo"].replace("{series}", series))}'
         )
     result = run_container(
-        LIST_RPM_SCRIPT,
+        container_script('list-rpm.sh'),
         {'PACKAGES': ' '.join(sorted(packages)), 'REPOS': '\n'.join(repos)},
     )
     if result.returncode != 0:
@@ -749,7 +640,7 @@ def list_releases(config):
 
 def main():
     parser = argparse.ArgumentParser(
-        description=__doc__.split('\n\n')[0],
+        description=__doc__.split('\n\n', maxsplit=1)[0],
         epilog=f'Applications: {MANIFEST}. Packaged files are cached in {CACHE_DIR}.',
     )
     parser.add_argument(

@@ -26,7 +26,7 @@ import subprocess  # nosec B404 - runs tools/follow-upstream and gh, see the cal
 import sys
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102201'
+__version__ = '2026102301'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 LABEL = 'follow-upstream'
@@ -81,7 +81,7 @@ def existing_titles():
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
+    parser = argparse.ArgumentParser(description=__doc__.split('\n\n', maxsplit=1)[0])
     parser.add_argument(
         'apps',
         nargs='*',

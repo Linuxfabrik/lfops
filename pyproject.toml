@@ -48,10 +48,9 @@ quote-style = 'single'
 # in galaxy.yml. It exists only to point the linters at the right paths.
 
 [tool.vulture]
-# vulture's pre-commit hook runs with pass_filenames=false and reads its
-# target paths from here. Without this block it bails with
-# "Please pass at least one file or directory" the moment somebody touches
-# a Python file (i.e. our custom plugins).
+# The pre-commit hook passes the files explicitly (see .pre-commit-config.yaml), so
+# `paths` only applies to a plain `vulture` run by hand, which only finds `*.py` files
+# there and misses the extension-less scripts in `tools/`.
 #
 # The whitelist file lists pre-existing findings (tracked in
 # https://github.com/Linuxfabrik/lfops/issues/221) so unrelated commits

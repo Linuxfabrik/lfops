@@ -25,3 +25,11 @@ record
 # plugins/modules/ipauser.py:891
 # Real dead code — to be removed in a follow-up.
 ipa_user_id
+
+# tests/unit/plugins/modules/test_lvm_pv.py:193
+# False positive: the fake keeps the signature of `open()`, which it replaces.
+mode
+
+# tests/unit/plugins/modules/test_uptimerobot_*.py
+# False positive: the fake keeps the signature of the logging function it replaces.
+log_args
