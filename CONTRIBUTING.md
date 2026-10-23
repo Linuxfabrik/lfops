@@ -406,6 +406,7 @@ Such a role gets a `foreign_tags` Molecule sub-scenario running the playbook wit
 * Document all user-facing variables in the README, formatted as in `roles/example/README.md`.
 * No defaults for mandatory variables, and none for secrets (passwords, tokens etc.).
 * Software versions are always mandatory, never role defaults: a bumped default silently changes what an existing inventory deploys.
+* Add variables where needed, but treat renaming a documented variable, changing its default, or making a previously ignored one take effect as a breaking change, even though nothing fails: Ansible ignores unknown inventory variables without a warning, so an inventory still using the old name silently gets the default.
 * Naming: `<role name>__<optional: config file>_<setting name>`, e.g. `apache_httpd__server_admin`, reusing config file key names where possible (`redis__conf_maxmemory`).
 * Prefix role-internal variables with `__`, e.g. `__example__sysconfig_path`.
 * Put large static lists and "magic values" into `vars/main.yml`, not into the playbook.
@@ -420,6 +421,7 @@ Such a role gets a `foreign_tags` Molecule sub-scenario running the playbook wit
 Where a role default differs from what the software ships (as installed from the repository the role uses, which may differ from upstream docs), say so and why. Otherwise the next person either keeps a wrong value or "corrects" a deliberate one.
 
 * Where the value is defined (`defaults/main.yml`, `vars/<version>.yml`, `vars/<os>.yml`), add the value only: `example__conf_max_connections__role_var: 100  # upstream default: 151`.
+* A default in `defaults/main.yml` that takes its value from `vars/<os>.yml` keeps the comment on its own line and lists the upstream value per platform: `# upstream default: /run/valkey/valkey.sock on RHEL, off on Debian / Ubuntu` (see `roles/valkey/defaults/main.yml`).
 * In the README, add a last bullet below `Default:` with the reasoning in one sentence, for the administrator. Mention version- or platform-specific defaults there ("MariaDB 11.8 ships it on, older releases ship it off"). The reasoning lives in the README only.
 
     ```markdown
@@ -510,6 +512,7 @@ roles:
 * Always use `ansible.builtin.template`, never `copy`, even without variables: easier to extend, and it allows the header.
 * Always set `backup: true` (timestamped copy, e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`).
 * Start every template with `# {{ ansible_managed }}` and a `# YYYYMMDDNN` version line (e.g. `# 2021081601`), in the target's comment syntax.
+* Update the version line whenever the rendered file changes, and only then. A change that renders the same on every host (a variable renamed to one with the same value, a Jinja comment such as the `Based on` line) keeps it: the version line alone would make every host report a changed file.
 * Never use `{{ template_run_date }}`, it breaks idempotency.
 * Mirror the target path below `templates/` (`templates/etc/httpd/sites-available/default.conf.j2`) and always use `.j2`.
 * Deploy self-written scripts to `/usr/local/sbin` (SELinux). Helpers run only by a systemd unit (not by an admin, not exec'd by a confined domain) MAY live in `/usr/local/libexec`: as `usr_t`, a root `oneshot` service in `init_t` runs them via `execute_no_trans` without AVC denial on RHEL 8, 9 and 10. Admin-invokable commands stay in `/usr/local/sbin`, and a script a confined domain must exec never goes to `/usr/local/libexec`.
