@@ -48,3 +48,42 @@
               - '"chronyd version" in __molecule__chronyd_journal_result["stdout"]'
               - '"Could not open keyfile" not in __molecule__chronyd_journal_result["stdout"]'
             fail_msg: '{{ __molecule__chronyd_journal_result["stdout_lines"] | select("search", "chronyd version|keyfile") | list }}'
+
+    # A client that sends 30 requests in a row, each right after the answer to the previous one,
+    # exceeds a burst of 4 by far. chronyd has to answer the first of them, which proves that
+    # chrony__allow took effect, and drop most of the rest, which proves chrony__ratelimit did.
+    # The Python Ansible runs with, since RHEL 8 has no `python3` without the python3 package.
+    - name: 'Send 30 NTP requests to 127.0.0.1 in a row'
+      ansible.builtin.command:
+        argv:
+          - '{{ ansible_python_interpreter | d(ansible_facts["discovered_interpreter_python"]) }}'
+          - '-c'
+          - |
+            import socket
+            answered = 0
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.settimeout(0.2)
+                sock.connect(('127.0.0.1', 123))
+                for _ in range(30):
+                    sock.send(b'\x23' + bytes(47))
+                    try:
+                        sock.recv(1024)
+                        answered += 1
+                    except socket.timeout:
+                        pass
+            print(answered)
+      changed_when: false
+      register: '__molecule__ntp_burst_result'
+
+    - name: 'chronyc serverstats'
+      ansible.builtin.command: 'chronyc serverstats'
+      changed_when: false
+      register: '__molecule__chronyc_serverstats_result'
+
+    - name: 'Assert that chronyd answered the first requests and dropped most of the others'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__ntp_burst_result["stdout"] | int >= 4'
+          - '__molecule__ntp_burst_result["stdout"] | int < 30'
+          - '__molecule__chronyc_serverstats_result["stdout"] | regex_search("NTP packets dropped +: +([1-9][0-9]*)") is not none'
+        fail_msg: 'answered: {{ __molecule__ntp_burst_result["stdout"] }}, {{ __molecule__chronyc_serverstats_result["stdout_lines"] }}'

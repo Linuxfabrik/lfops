@@ -50,6 +50,12 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 * Type: String.
 * Default: unset
 
+`chrony__clientloglimit`
+
+* Memory in bytes that chronyd may use to track the clients it serves, which `chrony__ratelimit` needs. The chrony default of 524288 bytes covers 4096 addresses; a public NTP server sees far more, so give it at least 16777216 bytes (131072 addresses).
+* Type: Number.
+* Default: unset
+
 `chrony__ntp_pools`
 
 * A list of NTP server pools. Same as `chrony__ntp_servers`, except that it is used to specify a pool of NTP servers rather than a single NTP server. A pool name has to resolve to several addresses, of which chronyd uses up to four. Put a hostname with a single address into `chrony__ntp_servers`, since chronyd keeps resolving a pool name until it gets four sources from it.
@@ -62,6 +68,12 @@ This role installs and configures [chrony](https://chrony.tuxfamily.org/), a NTP
 * Type: List.
 * Default: `['ntp.metas.ch']` if `chrony__ntp_pools` is empty, else `[]`
 * Deviates from the distributions, which ship public pools: METAS, the Swiss Federal Institute of Metrology, keeps the official time of Switzerland and operates `ntp.metas.ch`.
+
+`chrony__ratelimit`
+
+* Options of the `ratelimit` directive, which limits the responses to clients that poll too often, for example `'interval 1 burst 16'` (at most one response every 2 seconds on average, bursts of up to 16). Only takes effect together with `chrony__allow`. The `kod` option, which asks a client to poll less often, needs chrony 4.6 or newer and is not available on RHEL 8.
+* Type: String.
+* Default: unset
 
 `chrony__service_enabled`
 
@@ -83,10 +95,12 @@ chrony__allow:
   - '198.51.100.8' # only this address
 chrony__bindaddress: '192.0.2.1'
 chrony__binddevice: 'eth0'
+chrony__clientloglimit: 16777216
 chrony__ntp_pools:
   - 'ch.pool.ntp.org'
 chrony__ntp_servers:
   - '192.0.2.2'
+chrony__ratelimit: 'interval 1 burst 16'
 chrony__service_enabled: true
 chrony__service_state: 'started'
 ```

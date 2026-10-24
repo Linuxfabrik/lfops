@@ -2,3 +2,9 @@
 # that chronyd reads the chrony.conf the role deployed.
 chrony__ntp_servers:
   - '192.0.2.1'
+# Serve time to the host itself with rate limiting, so verify.yml can check that chronyd answers
+# NTP clients and drops the requests of one that polls too often.
+chrony__allow:
+  - '127.0.0.1'
+chrony__clientloglimit: 16777216
+chrony__ratelimit: 'interval 1 burst 4'

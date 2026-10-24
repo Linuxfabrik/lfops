@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026092901
+# 2026102401
 
 # Include configuration files found in /etc/chrony/conf.d.
 confdir /etc/chrony/conf.d
@@ -22,6 +22,14 @@ server {{ item }} iburst
 {% for item in chrony__allow %}
 allow {{ item }}
 {% endfor %}
+
+{% if chrony__clientloglimit is defined %}
+clientloglimit {{ chrony__clientloglimit }}
+{% endif %}
+
+{% if chrony__ratelimit is defined %}
+ratelimit {{ chrony__ratelimit }}
+{% endif %}
 
 {% if chrony__bindaddress is defined %}
 bindaddress {{ chrony__bindaddress }}

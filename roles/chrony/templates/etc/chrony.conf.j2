@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026091001
+# 2026102401
 
 {% for item in chrony__ntp_pools %}
 pool {{ item }} iburst
@@ -12,6 +12,14 @@ server {{ item }} iburst
 {% for item in chrony__allow %}
 allow {{ item }}
 {% endfor %}
+
+{% if chrony__clientloglimit is defined %}
+clientloglimit {{ chrony__clientloglimit }}
+{% endif %}
+
+{% if chrony__ratelimit is defined %}
+ratelimit {{ chrony__ratelimit }}
+{% endif %}
 
 {% if chrony__bindaddress is defined %}
 bindaddress {{ chrony__bindaddress }}
