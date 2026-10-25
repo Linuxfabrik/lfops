@@ -581,7 +581,7 @@ The following subkeys control whether and where the vHost file is deployed. They
 
 `state`
 
-* Should the vhost definition file be created (`present`) or deleted (`absent`).
+* Should the vhost definition file be created (`present`) or deleted (`absent`). To delete a vHost, `conf_server_name`, `virtualhost_port` (or `filename`) and `state: 'absent'` are enough.
 * Type: String.
 * Default: `'present'`
 
