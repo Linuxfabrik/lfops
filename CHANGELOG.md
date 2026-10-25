@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_linuxfabrik, playbook:repo_linuxfabrik**: Add a role and playbook that deploy the Linuxfabrik package repository repo.linuxfabrik.ch on Debian, Fedora, the Red Hat family, SUSE and Ubuntu, with an optional testing channel.
 * **role:chrony**: chronyd can serve as a public NTP server, for example in the NTP Pool, with response rate limiting (`chrony__ratelimit`) and room for many clients (`chrony__clientloglimit`).
 * **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.14.

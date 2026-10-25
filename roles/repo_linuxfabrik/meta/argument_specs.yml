@@ -1,0 +1,30 @@
+argument_specs:
+  main:
+    options:
+
+      repo_linuxfabrik__basic_auth_login:
+        # 'raw' rather than 'dict', because the default in defaults/main.yml
+        # resolves to '' (empty string) when lfops__repo_basic_auth_login is
+        # not set; a strict 'dict' spec would reject the empty default.
+        type: 'raw'
+        required: false
+        description: >-
+          HTTP basic auth credentials for a mirror of the Linuxfabrik
+          repository. Expected as a dict with `username` and `password` keys.
+          Typically fed by `linuxfabrik.lfops.bitwarden_item`, which returns
+          the full Bitwarden item with additional keys.
+
+      repo_linuxfabrik__mirror_url:
+        type: 'str'
+        required: false
+        description: >-
+          URL of a custom mirror server providing the repository. Defaults
+          to `lfops__repo_mirror_url`; if that is also unset,
+          repo.linuxfabrik.ch is used.
+
+      repo_linuxfabrik__testing_repo_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Enable the testing channel in addition to the release channel.

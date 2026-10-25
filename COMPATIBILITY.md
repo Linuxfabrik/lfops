@@ -145,6 +145,7 @@ Which Ansible role is proven to run on which OS?
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_linuxfabrik                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 44, openSUSE Leap 15, SLES 15 and 16  |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |

@@ -971,6 +971,13 @@ Calls the following roles (in order):
 * [repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb)
 
 
+## repo_linuxfabrik.yml
+
+Calls the following roles (in order):
+
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik)
+
+
 ## repo_mariadb.yml
 
 Calls the following roles (in order):

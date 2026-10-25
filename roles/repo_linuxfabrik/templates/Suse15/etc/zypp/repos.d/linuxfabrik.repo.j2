@@ -1,0 +1,27 @@
+# {{ ansible_managed }}
+# 2026102502
+
+{# zypper takes the mirror credentials from the URL, as in repo_icinga #}
+{% if repo_linuxfabrik__mirror_url is defined and repo_linuxfabrik__mirror_url | length and repo_linuxfabrik__basic_auth_login is defined and repo_linuxfabrik__basic_auth_login | length %}
+{% set __repo_linuxfabrik__baseurl = repo_linuxfabrik__mirror_url.split('://')[0] ~ '://' ~ repo_linuxfabrik__basic_auth_login['username'] ~ ':' ~ repo_linuxfabrik__basic_auth_login['password'] ~ '@' ~ repo_linuxfabrik__mirror_url.split('://')[1] ~ '/linuxfabrik' %}
+{% elif repo_linuxfabrik__mirror_url is defined and repo_linuxfabrik__mirror_url | length %}
+{% set __repo_linuxfabrik__baseurl = repo_linuxfabrik__mirror_url ~ '/linuxfabrik' %}
+{% else %}
+{% set __repo_linuxfabrik__baseurl = 'https://repo.linuxfabrik.ch' %}
+{% endif %}
+[linuxfabrik]
+name=Linuxfabrik
+baseurl={{ __repo_linuxfabrik__baseurl }}/sle/15/$basearch/linuxfabrik/release/
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik
+
+# Packages wait here for 7 days before they move to the release channel.
+[linuxfabrik-testing]
+name=Linuxfabrik (testing)
+baseurl={{ __repo_linuxfabrik__baseurl }}/sle/15/$basearch/linuxfabrik/testing/
+enabled={{ 1 if repo_linuxfabrik__testing_repo_enabled | bool else 0 }}
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik
