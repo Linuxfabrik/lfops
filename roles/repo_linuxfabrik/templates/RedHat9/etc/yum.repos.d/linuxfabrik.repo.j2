@@ -1,11 +1,22 @@
 # {{ ansible_managed }}
-# 2026102502
+# 2026102701
 
 {% if repo_linuxfabrik__mirror_url is defined and repo_linuxfabrik__mirror_url | length %}
 {% set __repo_linuxfabrik__baseurl = repo_linuxfabrik__mirror_url ~ '/linuxfabrik' %}
 {% else %}
 {% set __repo_linuxfabrik__baseurl = 'https://repo.linuxfabrik.ch' %}
 {% endif %}
+# skip_if_unavailable: if repo.linuxfabrik.ch cannot be reached, dnf skips these
+# repositories with an error message instead of failing every run (EL defaults to
+# False). Verified with dnf 4.7, 4.14 and 4.20 on Rocky 8, 9 and 10. zypper
+# ignores the key (SLES 15 SP5, SLES 16.0).
+#
+# repo_gpgcheck=0, as EPEL and Fedora do: dnf 4 keeps a keyring per repository
+# for repomd.xml that `rpm --import` does not fill, so dnf without --assumeyes
+# (e.g. dnf-makecache.service) fails with "Bad GPG signature", or skips the
+# repository given skip_if_unavailable. The packages stay signed (gpgcheck=1),
+# and repomd.xml is signed for those who enable the check. Verified with dnf
+# 4.14 on Rocky 9 against repo.linuxfabrik.ch.
 [linuxfabrik]
 name=Linuxfabrik
 baseurl={{ __repo_linuxfabrik__baseurl }}/el/9/$basearch/linuxfabrik/release/
@@ -13,6 +24,7 @@ enabled=1
 gpgcheck=1
 repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik
+skip_if_unavailable=1
 {% if repo_linuxfabrik__mirror_url is defined and repo_linuxfabrik__mirror_url | length and repo_linuxfabrik__basic_auth_login is defined and repo_linuxfabrik__basic_auth_login | length %}
 username={{ repo_linuxfabrik__basic_auth_login["username"] }}
 password={{ repo_linuxfabrik__basic_auth_login["password"] }}
@@ -26,6 +38,7 @@ enabled={{ 1 if repo_linuxfabrik__testing_repo_enabled | bool else 0 }}
 gpgcheck=1
 repo_gpgcheck=0
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik
+skip_if_unavailable=1
 {% if repo_linuxfabrik__mirror_url is defined and repo_linuxfabrik__mirror_url | length and repo_linuxfabrik__basic_auth_login is defined and repo_linuxfabrik__basic_auth_login | length %}
 username={{ repo_linuxfabrik__basic_auth_login["username"] }}
 password={{ repo_linuxfabrik__basic_auth_login["password"] }}

@@ -12,7 +12,8 @@ This role deploys the [Linuxfabrik package repository](https://repo.linuxfabrik.
 * The signing key ships with the role, so the target does not fetch it from the Internet. It is deployed to `/etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik` on the Red Hat family and SUSE, and to `/usr/share/keyrings/linuxfabrik.gpg` on Debian and Ubuntu, where the package keeps it as well.
 * dnf and zypper check the signature of the packages, apt checks the signature of the repository metadata. On the Red Hat family and SUSE, the role imports the key into the RPM database, so dnf and zypper do not ask to import it.
 * On the Red Hat family, some packages from the repository, for example Glances, depend on EPEL and the CRB repository, which this role does not enable (roles: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel), [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)).
-* With a mirror URL, the role expects the repository below `<mirror URL>/linuxfabrik/`, in the same layout as on repo.linuxfabrik.ch, for example `<mirror URL>/linuxfabrik/el/9/x86_64/linuxfabrik/release/` or `<mirror URL>/linuxfabrik/debian/linuxfabrik`. The run fails if the mirror does not serve the repository.
+* With a mirror URL, the role expects the repository below `<mirror URL>/linuxfabrik/`, in the same layout as on repo.linuxfabrik.ch, for example `<mirror URL>/linuxfabrik/el/9/x86_64/linuxfabrik/release/` or `<mirror URL>/linuxfabrik/debian/linuxfabrik`.
+* If the repository cannot be reached, for example because a mirror does not serve it, dnf skips it with an error message (`skip_if_unavailable=1`, as in the package), zypper fails, and on Debian and Ubuntu the run of the role fails at `apt update`.
 
 
 ## Known Limitations
