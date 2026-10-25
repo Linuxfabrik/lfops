@@ -128,6 +128,12 @@ apache_httpd__vhosts__group_var:
       SSLCertificateFile    /etc/pki/tls/certs/h1.example.com.crt
       SSLCertificateKeyFile /etc/pki/tls/private/h1.example.com.key
 
+  # removing a vHost needs only its identity, no template. converge aborted on this entry with
+  # "'dict object' has no attribute 'template'" before.
+  - conf_server_name: 'gone.example.com'
+    state: 'absent'
+    virtualhost_port: 80
+
 # verify.yml sends its requests from the host itself and sets X-Forwarded-For, so trusting the
 # loopback address as the proxy shows whether Apache logs the forwarded client instead of the peer.
 apache_httpd__mod_remoteip_internal_proxy:
