@@ -15,6 +15,8 @@
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_repo_baseos | d(false) }}'
       - name: 'repo_epel'
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_repo_epel | d(false) }}'
+      - name: 'repo_linuxfabrik'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or ansible_facts["distribution"] == "Fedora" or ansible_facts["distribution_major_version"] not in ["8", "9", "10"] or setup_basic__skip_repo_linuxfabrik | d(false) }}'
       - name: 'hostname'
         skip: '{{ setup_basic__skip_hostname | d(false) }}'
       - name: 'mailx'
