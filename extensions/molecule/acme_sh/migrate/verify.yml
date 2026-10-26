@@ -42,7 +42,7 @@
     # csh and tcsh are not installed on the test VMs, so check their rc files directly
     - name: 'grep --fixed-strings /opt/acme.sh /root/.cshrc /root/.tcshrc'
       ansible.builtin.shell:
-        cmd: 'cat /root/.cshrc /root/.tcshrc 2>/dev/null | grep --count --fixed-strings /opt/acme.sh || true'
+        cmd: 'set -o pipefail; cat /root/.cshrc /root/.tcshrc 2>/dev/null | grep --count --fixed-strings /opt/acme.sh || true'
         executable: '/bin/bash'
       register: '__molecule__acme_sh_csh_result'
       changed_when: false

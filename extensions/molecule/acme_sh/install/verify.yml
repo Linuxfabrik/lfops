@@ -50,7 +50,7 @@
           - '__molecule__acme_sh_info_result["stdout"] is search("^CERT_HOME=./etc/acme.sh/certs.$", multiline=true)'
         fail_msg: '{{ __molecule__acme_sh_info_result["stdout"] }}'
 
-    - name: 'systemctl is-enabled acme-sh.timer; systemctl is-active acme-sh.timer'
+    - name: 'systemctl is-enabled acme-sh.timer; systemctl is-active acme-sh.timer' # noqa command-instead-of-module (the test asserts on the exit status of systemctl)
       ansible.builtin.command: 'systemctl {{ item }} acme-sh.timer'
       loop:
         - 'is-enabled'
@@ -59,11 +59,11 @@
 
     # the weekly renewal run, triggered now instead of on Sunday. Type=oneshot, so `systemctl
     # start` returns once the run has finished.
-    - name: 'systemctl start acme-sh.service'
+    - name: 'systemctl start acme-sh.service' # noqa command-instead-of-module (wait for the run to finish and read its Result)
       ansible.builtin.command: 'systemctl start acme-sh.service'
       changed_when: false
 
-    - name: 'systemctl show acme-sh.service --property=Result'
+    - name: 'systemctl show acme-sh.service --property=Result' # noqa command-instead-of-module (no module reads the Result of a unit)
       ansible.builtin.command: 'systemctl show acme-sh.service --property=Result'
       register: '__molecule__acme_sh_result_result'
       changed_when: false
