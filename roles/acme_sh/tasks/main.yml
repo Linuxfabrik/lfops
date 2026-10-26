@@ -8,35 +8,66 @@
 
 - block:
 
-  # curl downloads the installer, which needs openssl and tar
-  - name: 'Install curl, openssl and tar'
+  # the package comes from the Linuxfabrik repository and pulls in curl and openssl.
+  # everything that migrates away from the former /opt/acme.sh installation runs after this
+  # task, so an unreachable repository leaves that installation working.
+  - name: 'Install acme.sh'
     ansible.builtin.package:
-      name:
-        - 'curl'
-        - 'openssl'
-        - 'tar'
+      name: 'acme.sh'
       state: 'present'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online ...'
-    ansible.builtin.shell: |-
-      set -o pipefail
-      curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online \
-        --home /opt/acme.sh \
-        --config-home /etc/acme.sh \
-        --cert-home  /etc/acme.sh/certs \
-        --accountemail  "{{ acme_sh__account_email }}" \
-        --accountkey  /etc/acme.sh/account.key \
-        --accountconf /etc/acme.sh/account.conf \
+  # writes /etc/acme.sh/account.conf on a fresh host, with the same settings the former
+  # online installer wrote, so that both kinds of hosts share one layout. existing hosts
+  # already have the file and keep it. the packaged /usr/bin/acme.sh sets ACME_PACKAGED, so
+  # `--install` copies no script, and `--no-profile` keeps it from writing an alias into the
+  # rc files of root (that alias would bypass the wrapper and with it ACME_PACKAGED).
+  # `--home /etc/acme.sh` avoids an empty /root/.acme.sh. Verified against acme.sh 3.1.6.
+  - name: 'acme.sh --install --no-cron --no-profile --home /etc/acme.sh --config-home /etc/acme.sh ...'
+    ansible.builtin.command: >-
+      acme.sh --install
         --no-cron
+        --no-profile
+        --home /etc/acme.sh
+        --config-home /etc/acme.sh
+        --cert-home /etc/acme.sh/certs
+        --accountemail '{{ acme_sh__account_email }}'
+        --accountkey /etc/acme.sh/account.key
+        --accountconf /etc/acme.sh/account.conf
     args:
-      executable: '/bin/bash'
-      creates: '/opt/acme.sh/acme.sh'
-    register: 'acme_sh__install_result'
-    failed_when:
-      - '"Install success" not in acme_sh__install_result.stdout'
-      - '"skipped" not in acme_sh__install_result.stdout'
+      creates: '/etc/acme.sh/account.conf'
+
+  # the former online installer kept only code below /opt/acme.sh; certificates, account and
+  # state live in /etc/acme.sh, which stays untouched.
+  - name: 'rm -rf /opt/acme.sh'
+    ansible.builtin.file:
+      path: '/opt/acme.sh'
+      state: 'absent'
+
+  # the former online installer sourced /opt/acme.sh/acme.sh.env (bash) and
+  # /opt/acme.sh/acme.sh.csh (csh, tcsh) from the rc files of root. on the Red Hat family,
+  # .cshrc and .tcshrc belong to the rootfiles package, so remove the line, not the file.
+  - name: 'Remove the acme.sh lines of the former installation from the rc files of root'
+    ansible.builtin.lineinfile:
+      path: '{{ item }}'
+      regexp: '^.*"/opt/acme\.sh/acme\.sh\.(env|csh)"$'
+      state: 'absent'
+    loop:
+      - '/root/.bashrc'
+      - '/root/.cshrc'
+      - '/root/.tcshrc'
+
+  # replaces the alias of the former installation, so that a plain `acme.sh --list` works on
+  # /etc/acme.sh instead of ~/.acme.sh.
+  - name: 'Deploy /etc/profile.d/acme-sh.sh'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/profile.d/acme-sh.sh.j2'
+      dest: '/etc/profile.d/acme-sh.sh'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
 
   - name: 'Deploy /etc/systemd/system/acme-sh.service'
     ansible.builtin.template:
@@ -85,17 +116,8 @@
   - name: 'Flush handlers so that the web server serves the current config'
     ansible.builtin.meta: 'flush_handlers'
 
-  - name: 'acme.sh --config-home /etc/acme.sh --upgrade'
-    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --upgrade'
-    # acme.sh prints "Already up to date!" when there is nothing to upgrade (and additionally
-    # "Upgrade successful!" because of how its upgrade function exits), so key the change on the
-    # former: report changed only when an actual upgrade happened.
-    changed_when: '"Already up to date!" not in acme_sh__upgrade_result["stdout"]'
-    failed_when: '"Upgrade success" not in acme_sh__upgrade_result["stdout"]'
-    register: 'acme_sh__upgrade_result'
-
   - name: 'acme.sh --config-home /etc/acme.sh --list --listraw'
-    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list --listraw'
+    ansible.builtin.command: 'acme.sh --config-home /etc/acme.sh --list --listraw'
     changed_when: false # just gathering information
     check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_result'
@@ -155,9 +177,9 @@
       label: '{{ item["name"] }}'
     register: '__acme_sh__store_stat_result'
 
-  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert ...'
+  - name: 'acme.sh --config-home /etc/acme.sh --install-cert ...'
     ansible.builtin.command: |-
-      /opt/acme.sh/acme.sh --config-home /etc/acme.sh --install-cert \
+      acme.sh --config-home /etc/acme.sh --install-cert \
       {{ '--ecc' if (acme_sh__key_length | string) is match('^ec-') else '' }} \
       --domain '{{ item["name"] }}' \
       --ca-file '{{ __acme_sh__cert_path }}/{{ item["name"] }}-chain.crt' \
@@ -176,9 +198,9 @@
               != __acme_sh__store_stat_result["results"][__acme_sh__index]["stat"]["checksum"])
     changed_when: true
 
-  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy ...'
+  - name: 'acme.sh --config-home /etc/acme.sh --deploy ...'
     ansible.builtin.command: |-
-      /opt/acme.sh/acme.sh --config-home /etc/acme.sh --deploy \
+      acme.sh --config-home /etc/acme.sh --deploy \
       {{ '--ecc' if (acme_sh__key_length | string) is match('^ec-') else '' }} \
       --domain '{{ item["name"] }}' \
       --deploy-hook {{ acme_sh__deploy_to_host_hook }}
@@ -205,7 +227,7 @@
   # targets the RSA store; it only detaches the certificate from renewal and leaves the files
   # in place.
   - name: 'acme.sh --config-home /etc/acme.sh --list --listraw (after issuing)'
-    ansible.builtin.command: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --list --listraw'
+    ansible.builtin.command: 'acme.sh --config-home /etc/acme.sh --list --listraw'
     changed_when: false # just gathering information
     check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_after_result'
@@ -219,8 +241,8 @@
            | list }}
     when: '(acme_sh__key_length | string) is match("^ec-")'
 
-  - name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --remove (superseded RSA cert)'
-    ansible.builtin.command: "/opt/acme.sh/acme.sh --config-home /etc/acme.sh --remove --domain '{{ item['name'] }}'"
+  - name: 'acme.sh --config-home /etc/acme.sh --remove (superseded RSA cert)'
+    ansible.builtin.command: "acme.sh --config-home /etc/acme.sh --remove --domain '{{ item['name'] }}'"
     loop: '{{ acme_sh__certificates }}'
     when:
       - '(acme_sh__key_length | string) is match("^ec-")'

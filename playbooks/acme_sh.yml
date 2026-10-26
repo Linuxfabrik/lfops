@@ -19,6 +19,10 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.repo_linuxfabrik'
+      when:
+        - 'not acme_sh__skip_repo_linuxfabrik | d(false)'
+
     - role: 'linuxfabrik.lfops.acme_sh'
 
 
