@@ -169,6 +169,16 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_repo_epel | d(false)'
 
+    # RHEL 8 to 10 and their derivatives only. The role aborts on EL 7. On Debian and Ubuntu, a
+    # mirror URL from lfops__repo_mirror_url often points to a mirror without the repository, and
+    # a failing `apt update` would stop the play. Fedora has no lfops mirror.
+    - role: 'linuxfabrik.lfops.repo_linuxfabrik'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution"] != "Fedora"'
+        - 'ansible_facts["distribution_major_version"] in ["8", "9", "10"]'
+        - 'not setup_basic__skip_repo_linuxfabrik | d(false)'
+
     # === Identity ===
     # ahead of every role that renders the host's name into a configuration file.
     # ansible.builtin.hostname returns the new name as ansible_facts, so a role running after it
