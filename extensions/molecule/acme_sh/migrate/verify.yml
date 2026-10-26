@@ -1,0 +1,64 @@
+# The migrated host has to behave like a freshly installed one.
+- name: 'Verify acme_sh installs acme.sh from the package'
+  ansible.builtin.import_playbook: '../install/verify.yml'
+
+
+# On top of that, the former installation is gone, while its state is kept.
+- name: 'Verify acme_sh migrated the former /opt/acme.sh installation'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'stat /opt/acme.sh'
+      ansible.builtin.stat:
+        path: '/opt/acme.sh'
+      register: '__molecule__acme_sh_opt_result'
+
+    - name: 'Assert that /opt/acme.sh is gone'
+      ansible.builtin.assert:
+        that: 'not __molecule__acme_sh_opt_result["stat"]["exists"]'
+
+    # an interactive shell of root reads /root/.bashrc. With the line of the former installer
+    # still there, it would source the vanished /opt/acme.sh/acme.sh.env and keep its alias.
+    - name: 'bash --login -i -c "type acme.sh"'
+      ansible.builtin.command:
+        argv:
+          - 'bash'
+          - '--login'
+          - '-i'
+          - '-c'
+          - 'type acme.sh'
+      register: '__molecule__acme_sh_type_result'
+      changed_when: false
+
+    - name: 'Assert that acme.sh in an interactive shell of root is the packaged one'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__acme_sh_type_result["stdout"] is search("^acme.sh is /usr/bin/acme.sh$", multiline=true)'
+          - '__molecule__acme_sh_type_result["stderr"] is not search("/opt/acme.sh")'
+        fail_msg: '{{ __molecule__acme_sh_type_result["stdout"] }} {{ __molecule__acme_sh_type_result["stderr"] }}'
+
+    # csh and tcsh are not installed on the test VMs, so check their rc files directly
+    - name: 'grep --fixed-strings /opt/acme.sh /root/.cshrc /root/.tcshrc'
+      ansible.builtin.shell:
+        cmd: 'cat /root/.cshrc /root/.tcshrc 2>/dev/null | grep --count --fixed-strings /opt/acme.sh || true'
+        executable: '/bin/bash'
+      register: '__molecule__acme_sh_csh_result'
+      changed_when: false
+
+    - name: 'Assert that the csh and tcsh rc files of root no longer reference /opt/acme.sh'
+      ansible.builtin.assert:
+        that: '__molecule__acme_sh_csh_result["stdout"] == "0"'
+
+    # the online installer writes UPGRADE_HASH to account.conf, the package does not. Its presence
+    # proves that the account of the former installation is the one acme.sh still uses.
+    - name: 'acme.sh --config-home /etc/acme.sh --info'
+      ansible.builtin.command: 'acme.sh --config-home /etc/acme.sh --info'
+      register: '__molecule__acme_sh_info_result'
+      changed_when: false
+
+    - name: 'Assert that acme.sh still uses the account of the former installation'
+      ansible.builtin.assert:
+        that: '__molecule__acme_sh_info_result["stdout"] is search("^UPGRADE_HASH=", multiline=true)'
+        fail_msg: '{{ __molecule__acme_sh_info_result["stdout"] }}'
