@@ -311,6 +311,38 @@
       - 'mongodb__dump_user | length > 0'
       - 'mongodb__dump_user["state"] | d("present") == "present"'
 
+  # The file-based dump runs db.fsyncLock() and db.fsyncUnlock() as the dump user, which need the
+  # `fsync` and `unlock` actions on the cluster (verified against MongoDB 8.0 on Rocky 9: each
+  # call fails with "not authorized" without its action). The built-in `backup` role has neither, and the
+  # built-in roles that have them (`hostManager`, `clusterAdmin`) also allow e.g. `shutdown`, so
+  # the dump user gets a role with these two actions only. Dropping the role also revokes it
+  # from the user, so disabling the file-based dump takes the privileges away again.
+  - name: 'Create or drop the MongoDB role lfopsFsyncLock'
+    community.mongodb.mongodb_role:
+      login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
+      login_port: '{{ mongodb__conf_net_port }}'
+      login_user: '{{ mongodb__admin_user["username"] }}'
+      login_password: '{{ mongodb__admin_user["password"] }}'
+      login_database: 'admin'
+      name: 'lfopsFsyncLock'
+      database: 'admin'
+      privileges:
+        - resource:
+            cluster: true
+          actions:
+            - 'fsync'
+            - 'unlock'
+      state: '{{
+          (mongodb__dump_method_file_based | bool and mongodb__dump_user["state"] | d("present") == "present")
+          | ternary("present", "absent")
+        }}'
+    when:
+      - 'mongodb__conf_security_authorization | bool'
+      - 'mongodb__dump_user is defined'
+      - 'mongodb__dump_user | length > 0'
+    vars:
+      ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
+
   - name: 'Create MongoDB Dump user'
     community.mongodb.mongodb_user:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
@@ -321,7 +353,11 @@
       name: '{{ mongodb__dump_user["username"] }}'
       password: '{{ mongodb__dump_user["password"] }}'
       database: '{{ mongodb__dump_user["auth_database"] | d("admin") }}'
-      roles: 'backup' # https://www.mongodb.com/docs/manual/reference/built-in-roles/#mongodb-authrole-backup
+      # https://www.mongodb.com/docs/manual/reference/built-in-roles/#mongodb-authrole-backup
+      roles: '{{
+          ["backup"]
+          + ((mongodb__dump_method_file_based | bool) | ternary([{"role": "lfopsFsyncLock", "db": "admin"}], []))
+        }}'
       state: '{{ mongodb__dump_user["state"] | default("present") }}'
       # only set the password if the login with it failed, `always` would report a change on every run
       update_password: '{{ (__mongodb__dump_user_password_check_result["rc"] | d(0) == 3) | ternary("always", "on_create") }}'

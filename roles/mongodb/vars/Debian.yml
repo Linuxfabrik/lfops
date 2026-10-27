@@ -1,1 +1,3 @@
+# the dbPath of the packaged mongod.conf, which the file-based dump copies
+__mongodb__db_path: '/var/lib/mongodb'
 __mongodb__mongodb_user: 'mongodb'
