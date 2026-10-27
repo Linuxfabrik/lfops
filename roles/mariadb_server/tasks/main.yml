@@ -732,6 +732,15 @@
       group: 'root'
       mode: 0o600
 
+  - name: 'Deploy /etc/mariadb-dump-login.cnf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/mariadb-dump-login.cnf.j2'
+      dest: '/etc/mariadb-dump-login.cnf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600 # contains secrets
+
   - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost'
     ansible.mariadb.mariadb_user:
       login_user: '{{ mariadb_server__admin_user["username"] }}'

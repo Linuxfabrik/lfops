@@ -140,6 +140,25 @@ grafana:
     - '/etc/default/grafana-server'
     - '/etc/sysconfig/grafana-server'
 
+# Install scripts (icingadb 1.5.1, RPM and DEB): create the user and register the
+# systemd unit. The DEB postinst also sets the owner of /etc/icingadb and the mode 0640
+# of config.yml on every run, as the icingadb role does. None touch the file content.
+# Icinga's RHEL repository is for subscribers only, so the public Fedora repository
+# stands in for it. It has no version-independent path: before Fedora 44 drops out,
+# bump the release in `rpm_repo` to a newer Fedora whose repository already serves the
+# release of the `Based on` line.
+icingadb:
+  upstream:
+    - 'Icinga/icingadb'
+  series_parts: 2
+  deb_repo: 'https://packages.icinga.com/debian icinga-trixie main'
+  gpg_key: 'https://packages.icinga.com/icinga.key'
+  rpm_repo: 'https://packages.icinga.com/fedora/44/release/'
+  files:
+    - package: 'icingadb'
+      path: '/etc/icingadb/config.yml'
+      template: 'roles/icingadb/templates/etc/icingadb/config.yml.j2'
+
 # Install scripts (influxdb 1.13.1, RPM and DEB): only move an old /etc/opt/influxdb
 # to /etc/influxdb, keeping a backup of influxdb.conf. The repositories of all EL
 # versions serve the same build, so the EL 9 repository stands for all.
@@ -154,6 +173,26 @@ influxdb:
     - package: 'influxdb'
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
+
+# Install scripts (proxysql 3.0.11, RPM): create the user and apply the systemd preset to
+# proxysql.service on the first installation, never touch the templated file. One
+# template serves 2.7 and 3.0. The DEB is not checked: the role supports RHEL only, and
+# upstream's flat APT repository (`<url> ./`) is not supported by this tool.
+proxysql:
+  upstream:
+    - 'sysown/proxysql'
+  series_parts: 2
+  gpg_key: 'https://repo.proxysql.com/ProxySQL/proxysql-{series}.x/repo_pub_key'
+  rpm_repo: 'https://repo.proxysql.com/ProxySQL/proxysql-{series}.x/centos/9/'
+  files:
+    - package: 'proxysql'
+      path: '/etc/proxysql.cnf'
+      template: 'roles/proxysql/templates/etc/proxysql.cnf.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/logrotate.d/proxysql'
+    - '/etc/systemd/system/proxysql-initial.service'
+    - '/etc/systemd/system/proxysql.service'
 
 # Install scripts (telegraf 1.40.2, RPM): create the user and group, move an old
 # /etc/opt/telegraf to /etc/telegraf, keeping a backup of telegraf.conf, enable the

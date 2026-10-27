@@ -19,7 +19,8 @@ and:
 1. Checks the packaging, on every run: files below /etc that are neither templated
    nor ignored in tools/follow-upstream.yml, templated files the release no longer ships,
    files whose content differs between RPM and DEB, and install scripts that differ from
-   those of the base release (they may modify the file on the host).
+   those of the base release in more than the version (they may modify the file on the
+   host).
 2. Merges the upstream changes into every template not based on this release yet:
 
        git merge-file <template> <RPM file, base release> <RPM file, new release>
@@ -56,7 +57,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102701'
+__version__ = '2026102703'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -342,14 +343,28 @@ def check_scripts(app, config, version):
                 )
                 for release in (base, version)
             )
-            with open(old, 'rb') as f1, open(new, 'rb') as f2:
-                if f1.read() != f2.read():
-                    print(
-                        f'packaging: {package} {version} ({fmt}) has other install'
-                        f' scripts than {base}: diff {old} {new}'
-                    )
-                    findings += 1
+            if without_version(old, base) != without_version(new, version):
+                print(
+                    f'packaging: {package} {version} ({fmt}) has other install'
+                    f' scripts than {base}: diff {old} {new}'
+                )
+                findings += 1
     return findings
+
+
+def without_version(path, version):
+    """Return the content of the install scripts `path` of `version`, with the version
+    replaced by a placeholder.
+
+    Some packages embed their version in the scripts (Elasticsearch:
+    `RPM_PACKAGE_VERSION=9.5.5`, `# Built for packages-9.5.5 (rpm)`), which would make
+    every release a finding. A build suffix (`9.5.5-1`) is part of the version, a longer
+    version (`9.5.50`, `19.5.5`) is not.
+    """
+    with open(path, encoding='utf-8', errors='surrogateescape') as f:
+        text = f.read()
+    regex = rf'(?<![\d.]){re.escape(version)}(?:-\d+)?(?!\.?\d)'
+    return re.sub(regex, '<version>', text)
 
 
 def read_based_on(path):
@@ -672,9 +687,13 @@ def check_app(app, config):
                 continue
             latest[series] = version
         if '{series}' not in entry['template']:
-            # one template for every series: only the newest release counts
+            # one template for every series: only the newest release counts, also if it
+            # belongs to a later series than the template's `Based on` release
             version = max(latest.values(), key=version_key)
-            latest = {series_of(version, parts): version}
+            (base,) = templates.values()
+            if version_key(version) > version_key(base):
+                releases[version] = releases.get(version, False)
+            continue
         for series, version in latest.items():
             if series in templates:
                 if version_key(version) > version_key(templates[series]):

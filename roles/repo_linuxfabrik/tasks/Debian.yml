@@ -1,0 +1,39 @@
+# Same file and keyring path as the linuxfabrik-release package
+# (https://github.com/Linuxfabrik/packaging, packages/linuxfabrik-release), so the role and the
+# package manage the same repository instead of defining it twice. This is why the keyring goes
+# to /usr/share/keyrings/ instead of /etc/apt/keyrings/, and why it is the binary (dearmored) key.
+- block:
+
+  - name: 'Deploy /usr/share/keyrings/linuxfabrik.gpg'
+    ansible.builtin.copy:
+      src: 'usr/share/keyrings/linuxfabrik.gpg'
+      dest: '/usr/share/keyrings/linuxfabrik.gpg'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy /etc/apt/sources.list.d/linuxfabrik.sources (mirror: {{ repo_linuxfabrik__mirror_url }})'
+    ansible.builtin.template:
+      backup: true
+      src: '{{ __repo_linuxfabrik__template_dir }}/etc/apt/sources.list.d/linuxfabrik.sources.j2'
+      dest: '/etc/apt/sources.list.d/linuxfabrik.sources'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/apt/sources.list.d/linuxfabrik.sources'
+
+  - name: 'apt update # update the cache'
+    ansible.builtin.apt:
+      update_cache: true
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+    changed_when: false # refreshing the package cache is not a config change
+
+  tags:
+    - 'repo_linuxfabrik'

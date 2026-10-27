@@ -1,0 +1,14 @@
+# The platforms and architectures repo.linuxfabrik.ch serves, see https://repo.linuxfabrik.ch/.
+# Each platform has a vars/<platform>.yml and a templates/<platform>/ directory.
+__repo_linuxfabrik__supported_architectures:
+  - 'aarch64'
+  - 'x86_64'
+__repo_linuxfabrik__supported_platforms:
+  - 'Debian 12'
+  - 'Debian 13'
+  - 'Fedora 44'
+  - 'RHEL 8, 9 and 10 and their derivatives'
+  - 'SLES, SLED and openSUSE Leap 15 and 16'
+  - 'Ubuntu 22.04'
+  - 'Ubuntu 24.04'
+  - 'Ubuntu 26.04'
