@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud**: Nextcloud logs to `/var/log/nextcloud/nextcloud.log` instead of `nextcloud.log` in the data directory, since fail2ban cannot read the data directory under SELinux. Adjust log shippers and monitoring that read the old file, and remove it once it is no longer needed.
 * **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
 * **role:nextcloud**: `nextcloud__version` is mandatory, for example `'latest-35'`. It only picks the release that a new installation downloads.
 * **role:nextcloud**: Nextcloud reaches Redis or Valkey through its Unix socket instead of over TCP, and the web server user joins the `redis` or `valkey` group, which may use the socket. Run the complete `setup_nextcloud` playbook rather than the `nextcloud` role alone, so that Redis or Valkey open the socket first. Set `nextcloud__redis_unixsocket: ''` to stay with TCP.
@@ -57,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, where it bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes and never bans the reverse proxies listed in the Nextcloud setting `trusted_proxies`.
+* **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins or two-factor challenges, following the Nextcloud hardening guide.
 * **role:chrony**: chronyd can serve as a public NTP server, for example in the NTP Pool, with response rate limiting (`chrony__ratelimit`) and room for many clients (`chrony__clientloglimit`).
 * **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.14.

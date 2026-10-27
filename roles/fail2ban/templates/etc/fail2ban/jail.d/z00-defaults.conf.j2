@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
-# 2022070401
+# 2026092201
 
 [DEFAULT]
 action     = {{ fail2ban__jail_default_action | indent(width=13, first=false) }}
 banaction  = {{ fail2ban__jail_default_banaction }}
 chain      = INPUT
-ignoreip   = {{ fail2ban__jail_default_ignoreip | join(' ') }}
+ignoreip   = {{ (fail2ban__jail_default_ignoreip + fail2ban__jail_default_ignoreip__dependent_var) | unique | join(' ') }}
 protocol   = tcp
 rocketchat-hook = {{ fail2ban__jail_default_rocketchat_hook }}

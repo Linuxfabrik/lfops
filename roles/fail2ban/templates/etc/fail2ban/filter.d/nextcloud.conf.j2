@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# 2026092201
+
+# Matches failed logins in the JSON log of Nextcloud (nextcloud.log), taken unchanged from the
+# Nextcloud hardening guide: failed logins (web interface, WebDAV, OCS API, disabled accounts),
+# failed two-factor challenges, and requests for a host name missing from trusted_domains.
+# Nextcloud logs the first two as warnings; the trusted domain error is an info message and
+# only reaches the log with loglevel 1 or lower. Verified with fail2ban-regex 1.1.0 on Rocky 10
+# against the log of Nextcloud 35.0.0, IPv4 and IPv6 remote addresses included.
+
+# raw: the regular expressions contain a brace followed by a percent sign, which Jinja would
+# otherwise take for the start of a block tag.
+{% raw %}
+[Definition]
+_groupsre = (?:(?:,?\s*"\w+":(?:"[^"]+"|\w+))*)
+failregex = ^\{%(_groupsre)s,?\s*"remoteAddr":"<HOST>"%(_groupsre)s,?\s*"message":"Login failed:
+            ^\{%(_groupsre)s,?\s*"remoteAddr":"<HOST>"%(_groupsre)s,?\s*"message":"Two-factor challenge failed:
+            ^\{%(_groupsre)s,?\s*"remoteAddr":"<HOST>"%(_groupsre)s,?\s*"message":"Trusted domain error.
+datepattern = ,?\s*"time"\s*:\s*"%%Y-%%m-%%d[T ]%%H:%%M:%%S(%%z)?"
+{% endraw %}
