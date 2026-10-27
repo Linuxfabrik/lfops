@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
-# 2025101701
+# 2026102701
+{# Based on elasticsearch 9.5.5 #}
 
 ################################
 # Elasticsearch
@@ -16,7 +17,7 @@
 ES_PATH_CONF=/etc/elasticsearch
 
 # Elasticsearch PID directory
-#PID_DIR=/var/run/elasticsearch
+#PID_DIR=/run/elasticsearch
 
 # Additional Java OPTS
 # Linuxfabrik: Elasticsearch needs exec permissions on its temp-directory.

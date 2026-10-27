@@ -117,6 +117,66 @@ collabora_enterprise:
     - '/etc/nginx/snippets/coolwsd.conf'
     - '/etc/pam.d/coolwsd'
 
+# Elasticsearch, Kibana and Logstash are released in lockstep, one repository per major
+# version. The templates have no `{series}` and serve every major version the roles
+# support, but only the newest major version (9.x) is followed.
+#
+# Install scripts (elasticsearch, kibana and logstash 9.5.5, RPM and DEB):
+# * elasticsearch: on the first installation, `elasticsearch-cli auto-configure-node`
+#   appends a security block to elasticsearch.yml and creates certs/ and the keystore.
+#   The template carries its own version of that block. Upgrades leave the file alone.
+# * kibana: set root:kibana 0660 on kibana.yml, as the kibana role does.
+# * logstash: on every installation and upgrade, `sed` uncomments `# path.logs:` and
+#   `# path.data:` in logstash.yml (both set by the template) and sets
+#   /etc/default/logstash to 0600.
+elastic:
+  upstream:
+    - 'elastic/elasticsearch'
+    - 'elastic/kibana'
+    - 'elastic/logstash'
+  series_parts: 1
+  deb_repo: 'https://artifacts.elastic.co/packages/{series}.x/apt stable main'
+  gpg_key: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+  rpm_repo: 'https://artifacts.elastic.co/packages/{series}.x/yum/'
+  files:
+    - package: 'logstash'
+      path: '/etc/default/logstash'
+      template: 'roles/logstash/templates/etc/default/logstash.j2'
+    - package: 'elasticsearch'
+      path: '/etc/elasticsearch/elasticsearch.yml'
+      template: 'roles/elasticsearch/templates/etc/elasticsearch/elasticsearch.yml.j2'
+    - package: 'elasticsearch'
+      path: '/etc/elasticsearch/log4j2.properties'
+      template: 'roles/elasticsearch/templates/etc/elasticsearch/log4j2.properties.j2'
+    - package: 'kibana'
+      path: '/etc/kibana/kibana.yml'
+      template: 'roles/kibana/templates/etc/kibana/kibana.yml.j2'
+    - package: 'logstash'
+      path: '/etc/logstash/logstash.yml'
+      template: 'roles/logstash/templates/etc/logstash/logstash.yml.j2'
+    - package: 'logstash'
+      path: '/etc/logstash/pipelines.yml'
+      template: 'roles/logstash/templates/etc/logstash/pipelines.yml.j2'
+    - package: 'elasticsearch'
+      path: '/etc/sysconfig/elasticsearch'
+      deb_path: '/etc/default/elasticsearch'
+      template: 'roles/elasticsearch/templates/etc/sysconfig/elasticsearch.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/default/kibana'
+    - '/etc/elasticsearch/elasticsearch-plugins.example.yml'
+    - '/etc/elasticsearch/jvm.options'
+    - '/etc/elasticsearch/role_mapping.yml'
+    - '/etc/elasticsearch/roles.yml'
+    - '/etc/elasticsearch/users'
+    - '/etc/elasticsearch/users_roles'
+    - '/etc/kibana/node.options'
+    - '/etc/logstash/jvm.options'
+    - '/etc/logstash/log4j2.properties'
+    - '/etc/logstash/logstash-sample.conf'
+    - '/etc/logstash/startup.options'
+    - '/etc/sysconfig/kibana'
+
 # Install scripts (grafana 13.2.4, RPM and DEB): on the first installation, copy
 # sample.ini and ldap.toml unchanged to /etc/grafana, then set root:grafana 0640, as the
 # grafana role does.
