@@ -1,0 +1,47 @@
+# Same file, repository IDs and key path on SUSE as the linuxfabrik-release package
+# (https://github.com/Linuxfabrik/packaging, packages/linuxfabrik-release), so the role and the
+# package manage the same repository instead of defining it twice.
+- block:
+
+  # SUSE ships no /etc/pki/rpm-gpg, the linuxfabrik-release package creates it as well
+  - name: 'mkdir -p /etc/pki/rpm-gpg'
+    ansible.builtin.file:
+      path: '/etc/pki/rpm-gpg'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik'
+    ansible.builtin.copy:
+      src: 'etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik'
+      dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik'
+    ansible.builtin.rpm_key:
+      key: '/etc/pki/rpm-gpg/RPM-GPG-KEY-linuxfabrik'
+      fingerprint: '1017 377F DD93 5D36 9CCD 0C59 F279 88EC 39D1 7A78'
+      state: 'present'
+
+  - name: 'Deploy /etc/zypp/repos.d/linuxfabrik.repo (mirror: {{ repo_linuxfabrik__mirror_url }})'
+    ansible.builtin.template:
+      backup: true
+      src: '{{ __repo_linuxfabrik__template_dir }}/etc/zypp/repos.d/linuxfabrik.repo.j2'
+      dest: '/etc/zypp/repos.d/linuxfabrik.repo'
+      owner: 'root'
+      group: 'root'
+      # 0600 while the file carries the mirror credentials
+      mode: '{{ "0o600" if repo_linuxfabrik__basic_auth_login | default({}) | length > 0 else "0o644" }}'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/zypp/repos.d/linuxfabrik.repo'
+
+  tags:
+    - 'repo_linuxfabrik'

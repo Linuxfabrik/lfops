@@ -1,12 +1,25 @@
 # {{ ansible_managed }}
-# 2026052201
+# 2026102701
 
+{#
+  repo.proxysql.com has CentOS and AlmaLinux builds. Use the CentOS build where it
+  exists, the AlmaLinux build where it does not: 3.0 on EL 8, 2.4 and 2.5 on EL 9
+  (2.2 and 2.3 have no EL 9 build at all). EL 10 is only built for 3.0.
+  Verified 2026-10-27 with dnf on Rocky 8, 9 and 10.
+#}
+{% set __repo_proxysql__el_major = ansible_facts['distribution_major_version'] | int %}
+{% set __repo_proxysql__distro =
+    'almalinux' if
+      (__repo_proxysql__el_major == 8 and repo_proxysql__version__combined_var is ansible.builtin.version('3.0', '>='))
+      or (__repo_proxysql__el_major == 9 and repo_proxysql__version__combined_var is ansible.builtin.version('2.6', '<'))
+    else 'centos'
+%}
 [proxysql-{{ repo_proxysql__version__combined_var }}]
 name=ProxySQL {{ repo_proxysql__version__combined_var }}
 {% if repo_proxysql__mirror_url is defined and repo_proxysql__mirror_url | length %}
-baseurl={{ repo_proxysql__mirror_url }}/proxysql/releases/bundle/proxysql/{{ repo_proxysql__version__combined_var }}/yum
+baseurl={{ repo_proxysql__mirror_url }}/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/{{ __repo_proxysql__distro }}/$releasever
 {% else %}
-baseurl=https://repo.proxysql.com/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/centos/$releasever
+baseurl=https://repo.proxysql.com/ProxySQL/proxysql-{{ repo_proxysql__version__combined_var }}.x/{{ __repo_proxysql__distro }}/$releasever
 {% endif %}
 enabled=1
 gpgcheck=1

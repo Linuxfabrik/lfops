@@ -19,6 +19,21 @@
 
   roles:
 
+    # The ProxySQL 3.0 builds for EL 8 need openssl3-libs from EPEL. On Rocky 9+, EPEL
+    # needs CRB.
+    - role: 'linuxfabrik.lfops.repo_baseos'
+      repo_baseos__crb_repo_enabled__dependent_var: '{{
+          repo_epel__repo_baseos__crb_repo_enabled__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["distribution"] == "Rocky" and ansible_facts["distribution_major_version"] | int >= 9'
+        - 'not proxysql__skip_repo_baseos | d(false)'
+
+    - role: 'linuxfabrik.lfops.repo_epel'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
+        - 'not proxysql__skip_repo_epel | d(false)'
+
     - role: 'linuxfabrik.lfops.repo_proxysql'
       when:
         - 'not proxysql__skip_repo_proxysql | default(false)'

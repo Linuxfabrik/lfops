@@ -125,9 +125,11 @@
     ansible.builtin.template:
       src: 'etc/default/logstash.j2'
       dest: '/etc/default/logstash'
+      # the package postinst runs `chmod 600` on every install and upgrade; systemd
+      # reads the file as root, logstash itself never does
       owner: 'root'
-      group: 'logstash'
-      mode: 0o664
+      group: 'root'
+      mode: 0o600
       backup: true
     notify: 'logstash: restart logstash'
 

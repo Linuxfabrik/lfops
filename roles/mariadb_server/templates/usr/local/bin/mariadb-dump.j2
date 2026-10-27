@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2026101302
+# 2026102701
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -32,6 +32,9 @@ umask 027
 
 source /etc/mariadb-dump.conf
 
+# the login of the dump user, kept out of the command line (and the process list)
+login_file=/etc/mariadb-dump-login.cnf
+
 # mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead
 # so `mariadb` or `mysql`?
 MYSQL=$(which mariadb 2> /dev/null)
@@ -45,7 +48,7 @@ fi
 rm -rf "$BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
 
-$MYSQL --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
+$MYSQL --defaults-extra-file="$login_file" --host="$HOST" \
     --execute='SET GLOBAL innodb_buffer_pool_dump_now = ON;'
 mysql_table_lock_retc=$?
 
@@ -57,10 +60,17 @@ mysql_table_lock_retc=$?
 # strip the comma and the leading "v", so that version_ge() compares the same way for both.
 mydumper_version=$(mydumper --version | awk '{print $2}' | tr --delete ',' | sed 's/^v//')
 
+if version_ge "$mydumper_version" 0.14.5-1; then
+    # parameter available since mydumper v0.14.5-1
+    mydumper_login=(--defaults-extra-file="$login_file")
+else
+    # older versions (0.10.x in the Debian and Ubuntu repositories) only take the login on the
+    # command line. my_print_defaults returns it as `--user=...` and `--password=...`.
+    mapfile -t mydumper_login < <(my_print_defaults --defaults-file="$login_file" client)
+fi
+
 # build the cmdline parameters for mydumper
 mydumper_params="--host=$HOST "
-mydumper_params+="--user=$USERNAME "
-mydumper_params+="--password=$PASSWORD "
 mydumper_params+="--build-empty-files "
 if [ -n "$COMPRESS" ]; then
     mydumper_params+="--compress=$COMPRESS "
@@ -90,12 +100,12 @@ mydumper_params+="--verbose=3 "
 mydumper_params+="$RAW "
 
 # run mydumper
-mydumper $mydumper_params
+mydumper "${mydumper_login[@]}" $mydumper_params
 mydumper_retc=$?
 
 umask "$old_umask"
 
-$MYSQL --host="$HOST" --user="$USERNAME" --password="$PASSWORD" \
+$MYSQL --defaults-extra-file="$login_file" --host="$HOST" \
     --execute='SET GLOBAL innodb_buffer_pool_load_now = ON;'
 mysql_table_unlock_retc=$?
 

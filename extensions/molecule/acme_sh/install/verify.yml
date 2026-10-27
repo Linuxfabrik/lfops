@@ -1,0 +1,85 @@
+# verify.yml runs after converge and again after the idempotence step. Issuing is out of reach of
+# a test VM, so this checks what an administrator and the timer rely on: a plain `acme.sh` in a
+# login shell of root works on /etc/acme.sh, the account settings are in place, and the weekly
+# renewal run succeeds with the packaged acme.sh.
+- name: 'Verify acme_sh installs acme.sh from the package'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the acme.sh package is installed'
+      ansible.builtin.assert:
+        that: '"acme.sh" in ansible_facts["packages"]'
+
+    # Debian 13 and Ubuntu 26.04 ship an acme.sh of their own that predates ACME_PACKAGED and
+    # would still update itself from GitHub. Only the acme.sh from the Linuxfabrik repository
+    # leaves updates to the package manager and refuses to upgrade itself.
+    - name: 'acme.sh --upgrade'
+      ansible.builtin.command: 'acme.sh --config-home /etc/acme.sh --upgrade'
+      register: '__molecule__acme_sh_upgrade_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that acme.sh leaves updates to the package manager'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__acme_sh_upgrade_result["rc"] != 0'
+          - '(__molecule__acme_sh_upgrade_result["stdout"] ~ __molecule__acme_sh_upgrade_result["stderr"]) is search("ACME_PACKAGED is set")'
+        fail_msg: '{{ __molecule__acme_sh_upgrade_result["stdout"] }} {{ __molecule__acme_sh_upgrade_result["stderr"] }}'
+
+    # a login shell reads /etc/profile.d, as `sudo -i` or an SSH login of root do
+    - name: 'bash --login -c "acme.sh --info"'
+      ansible.builtin.command:
+        argv:
+          - 'bash'
+          - '--login'
+          - '-c'
+          - 'acme.sh --info'
+      register: '__molecule__acme_sh_info_result'
+      changed_when: false
+
+    - name: 'Assert that a plain acme.sh works on /etc/acme.sh with the account settings of the role'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__acme_sh_info_result["stdout"] is search("^LE_CONFIG_HOME=/etc/acme.sh$", multiline=true)'
+          - '__molecule__acme_sh_info_result["stdout"] is search("^ACCOUNT_EMAIL=.info@example.com.$", multiline=true)'
+          - '__molecule__acme_sh_info_result["stdout"] is search("^CERT_HOME=./etc/acme.sh/certs.$", multiline=true)'
+        fail_msg: '{{ __molecule__acme_sh_info_result["stdout"] }}'
+
+    - name: 'systemctl is-enabled acme-sh.timer; systemctl is-active acme-sh.timer' # noqa command-instead-of-module (the test asserts on the exit status of systemctl)
+      ansible.builtin.command: 'systemctl {{ item }} acme-sh.timer'
+      loop:
+        - 'is-enabled'
+        - 'is-active'
+      changed_when: false
+
+    # the weekly renewal run, triggered now instead of on Sunday. Type=oneshot, so `systemctl
+    # start` returns once the run has finished.
+    - name: 'systemctl start acme-sh.service' # noqa command-instead-of-module (wait for the run to finish and read its Result)
+      ansible.builtin.command: 'systemctl start acme-sh.service'
+      changed_when: false
+
+    - name: 'systemctl show acme-sh.service --property=Result' # noqa command-instead-of-module (no module reads the Result of a unit)
+      ansible.builtin.command: 'systemctl show acme-sh.service --property=Result'
+      register: '__molecule__acme_sh_result_result'
+      changed_when: false
+
+    - name: 'Assert that the renewal run succeeded'
+      ansible.builtin.assert:
+        that: '__molecule__acme_sh_result_result["stdout"] == "Result=success"'
+        fail_msg: '{{ __molecule__acme_sh_result_result["stdout"] }}'
+
+    # acme.sh defaults to ~/.acme.sh for everything not passed explicitly. Neither the role nor
+    # the renewal run may fall back to it.
+    - name: 'stat /root/.acme.sh'
+      ansible.builtin.stat:
+        path: '/root/.acme.sh'
+      register: '__molecule__acme_sh_home_result'
+
+    - name: 'Assert that /root/.acme.sh does not exist'
+      ansible.builtin.assert:
+        that: 'not __molecule__acme_sh_home_result["stat"]["exists"]'
