@@ -1,9 +1,11 @@
 # shellcheck shell=bash
-# Extracts /etc of `${PACKAGE}` `${VERSION}` from the APT repository `${REPO}` to
-# /out/root, see fetch-rpm.sh. Checks the chain apt checks: the signature of InRelease
-# against `${GPG_KEY}`, the checksum of the Packages index listed there, and the checksum
-# of the package listed in the index. The index can list several builds of a release
-# (`7.2.0-1`, `7.2.0-11`); the newest one wins, as with `dnf repoquery --latest-limit=1`.
+# Extracts /etc and the files of `${EXTRACT}` of `${PACKAGE}` `${VERSION}` from the APT
+# repository `${REPO}` to /out/root, see fetch-rpm.sh. Checks the chain apt checks: the
+# signature of InRelease against `${GPG_KEY}`, the checksum of the Packages index listed
+# there, and the checksum of the package listed in the index. The index can list several
+# builds of a release (`7.2.0-1`, `7.2.0-11`); the newest one wins, as with
+# `dnf repoquery --latest-limit=1`. The maintainer scripts and triggers go to
+# /out/scripts.
 
 dnf install --assumeyes --quiet bsdtar >/dev/null
 get "${GPG_KEY}" --output /var/tmp/key
@@ -52,6 +54,20 @@ if [ -z "${sum:-}" ] \
     fail "${PACKAGE} ${VERSION}: the checksum of ${file##*/} does not match the index"
 fi
 mkdir --parents /out/root
+# data.tar members are named `./etc/...` or `etc/...`, depending on the build tool
+includes=(--include './etc/*' --include 'etc/*')
+for path in ${EXTRACT}; do
+    includes+=(--include ".${path}" --include "${path#/}")
+done
 bsdtar --extract --to-stdout --file /var/tmp/package.deb 'data.tar*' \
-    | (cd /out/root && bsdtar --extract --file - --include './etc/*' --include 'etc/*')
+    | (cd /out/root && bsdtar --extract --file - "${includes[@]}")
+mkdir /var/tmp/control
+bsdtar --extract --to-stdout --file /var/tmp/package.deb 'control.tar*' \
+    | bsdtar --extract --file - --directory /var/tmp/control
+for name in config postinst postrm preinst prerm triggers; do
+    if [ -f "/var/tmp/control/${name}" ]; then
+        echo "==> ${name} <=="
+        cat "/var/tmp/control/${name}"
+    fi
+done > /out/scripts
 echo "${REPO_DISPLAY} ${file##*/}" > /out/source
