@@ -49,6 +49,12 @@
         - 'ansible_facts["distribution"] != "Fedora"'
         - 'not setup_nextcloud__skip_repo_epel | default(false)'
 
+    # serves the acme.sh package, so it only runs together with acme_sh
+    - role: 'linuxfabrik.lfops.repo_linuxfabrik'
+      when:
+        - 'not setup_nextcloud__skip_acme_sh | d(true)'
+        - 'not setup_nextcloud__skip_repo_linuxfabrik | d(false)'
+
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'

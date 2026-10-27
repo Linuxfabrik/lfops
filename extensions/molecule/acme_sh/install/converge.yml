@@ -1,0 +1,17 @@
+# The role hands the ACME challenge directory to the web server user, so it expects a web server
+# on the host, as every host running acme_sh has one.
+- name: 'Install the web server that serves the ACME challenge'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'Install httpd / apache2'
+      ansible.builtin.package:
+        name: '{{ "httpd" if ansible_facts["os_family"] == "RedHat" else "apache2" }}'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+
+- name: 'Converge acme_sh playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.acme_sh'

@@ -114,6 +114,7 @@
 - import_playbook: 'repo_graylog.yml'
 - import_playbook: 'repo_icinga.yml'
 - import_playbook: 'repo_influxdb.yml'
+- import_playbook: 'repo_linuxfabrik.yml'
 - import_playbook: 'repo_mariadb.yml'
 - import_playbook: 'repo_mongodb.yml'
 - import_playbook: 'repo_monitoring_plugins.yml'
