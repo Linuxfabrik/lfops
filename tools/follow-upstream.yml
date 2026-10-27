@@ -241,6 +241,65 @@ influxdb:
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
 
+# One template per major version (`3.x-opensearch.yml.j2`); sysconfig serves both and
+# follows the newest major only. The RPM ships the environment file as
+# /etc/sysconfig/opensearch. The DEB of 3.x ships it as /etc/default/opensearch, plus an
+# outdated copy as /etc/sysconfig/opensearch (2.x: the other way round). The systemd unit
+# reads both, /etc/sysconfig last, and the opensearch role deploys /etc/sysconfig on
+# every platform.
+#
+# Install scripts (opensearch 2.19.7 and 3.9.0, RPM and DEB): create the user, append
+# the Performance Analyzer settings to jvm.options once, chown /etc/opensearch to
+# opensearch, and on every installation and upgrade run the demo security configuration.
+# It appends a demo `plugins.security` block to opensearch.yml, but quits if the file
+# already sets a `plugins.security` key, which the template always does.
+opensearch:
+  upstream:
+    - 'opensearch-project/OpenSearch'
+  series_parts: 1
+  series_suffix: '.x'
+  deb_repo: 'https://artifacts.opensearch.org/releases/bundle/opensearch/{series}.x/apt stable main'
+  gpg_key: 'https://artifacts.opensearch.org/publickeys/opensearch-release.pgp'
+  series_gpg_key:
+    '2':
+      url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      sha1: true
+  rpm_repo: 'https://artifacts.opensearch.org/releases/bundle/opensearch/{series}.x/yum/'
+  files:
+    - package: 'opensearch'
+      path: '/etc/opensearch/opensearch.yml'
+      template: 'roles/opensearch/templates/etc/opensearch/{series}.x-opensearch.yml.j2'
+      supported_versions: 'roles/opensearch/vars/main.yml:__opensearch__supported_versions'
+    - package: 'opensearch'
+      path: '/etc/sysconfig/opensearch'
+      deb_path: '/etc/default/opensearch'
+      template: 'roles/opensearch/templates/etc/sysconfig/opensearch.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/init.d/opensearch'
+    - '/etc/opensearch/fips_java.security'
+    - '/etc/opensearch/jvm.options'
+    - '/etc/opensearch/log4j2.properties'
+    - '/etc/opensearch/opensearch-notifications-core/notifications-core.yml'
+    - '/etc/opensearch/opensearch-notifications/notifications.yml'
+    - '/etc/opensearch/opensearch-observability/observability.yml'
+    - '/etc/opensearch/opensearch-performance-analyzer/'  # 2.x only
+    - '/etc/opensearch/opensearch-reports-scheduler/reports-scheduler.yml'
+    - '/etc/opensearch/opensearch-security/action_groups.yml'
+    - '/etc/opensearch/opensearch-security/allowlist.yml'
+    - '/etc/opensearch/opensearch-security/audit.yml'
+    - '/etc/opensearch/opensearch-security/config.yml'
+    - '/etc/opensearch/opensearch-security/nodes_dn.yml'
+    - '/etc/opensearch/opensearch-security/opensearch.yml.example'
+    - '/etc/opensearch/opensearch-security/roles.yml'
+    - '/etc/opensearch/opensearch-security/roles_mapping.yml'
+    - '/etc/opensearch/opensearch-security/tenants.yml'
+    - '/etc/opensearch/opensearch-security/whitelist.yml'  # 2.x only
+    # Sigma detection rules of the Security Analytics plugin, about 2300 files
+    - '/etc/opensearch/opensearch-security-analytics/'
+    # the opensearch role writes it from scratch, it is no copy of the packaged file
+    - '/etc/opensearch/opensearch-security/internal_users.yml'
+
 # Install scripts (proxysql 3.0.11, RPM): create the user and apply the systemd preset to
 # proxysql.service on the first installation, never touch the templated file. One
 # template serves 2.7 and 3.0. The DEB is not checked: the role supports RHEL only, and
