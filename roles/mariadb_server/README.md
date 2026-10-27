@@ -28,6 +28,8 @@ By default, Ansible runs each task on all hosts affected by a play before starti
 ## How the Role Behaves
 
 * `mariadb-dump.service` runs with `Nice=19`, best-effort IO priority 7 and `CPUWeight=` / `IOWeight=` of `20` (systemd default: `100`), so the dump does not slow down the application on a busy host. The weights only take effect under contention. `IOWeight=` only has an effect on block devices that use the BFQ IO scheduler; with `none` or `mq-deadline`, as on a RHEL 9 VM with virtio disks, it is ignored. The IO class is deliberately not `idle`: `mydumper` holds a read lock on every non-InnoDB table (MyISAM, Aria, most of `mysql.*`) until it has dumped that table, and an idle dump could stretch that lock and keep writes waiting.
+* The dump reads the login of `mariadb_server__dump_user` from `/etc/mariadb-dump-login.cnf`, which only root can read, so the password does not show up in the process list. mydumper older than 0.14.5-1, as shipped by some distributions, still gets it on the command line.
+* The log rotation truncates the log files in place (`copytruncate`) and does not flush the logs afterwards, so it needs no MariaDB login.
 
 
 ## Dependent Roles
