@@ -1,3 +1,25 @@
+- block:
+
+  # The repository these variables configured is replaced by the Linuxfabrik repository, so a
+  # value set for it would be silently ignored, for example a mirror the host depends on.
+  - name: 'Assert that the variables of the former repository are not set'
+    ansible.builtin.assert:
+      that:
+        - 'repo_monitoring_plugins__basic_auth_login is not defined'
+        - 'repo_monitoring_plugins__mirror_url is not defined'
+        - 'repo_monitoring_plugins__testing is not defined'
+      fail_msg: >-
+        repo_monitoring_plugins: the Monitoring Plugins come from the Linuxfabrik repository.
+        Rename repo_monitoring_plugins__basic_auth_login and repo_monitoring_plugins__mirror_url
+        to repo_linuxfabrik__basic_auth_login and repo_linuxfabrik__mirror_url, and replace
+        repo_monitoring_plugins__testing with repo_linuxfabrik__testing_repo_enabled.
+      quiet: true
+
+  tags:
+    - 'repo_monitoring_plugins'
+    - 'repo_monitoring_plugins:remove'
+
+
 - name: 'Perform platform/version specific tasks'
   ansible.builtin.include_tasks: '{{ __task_file }}'
   when: '__task_file | length > 0'

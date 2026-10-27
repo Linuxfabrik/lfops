@@ -1,0 +1,105 @@
+- name: 'Look up the latest monitoring plugins release'
+  ansible.builtin.import_playbook: '../../playbooks/monitoring-plugins-latest.yml'
+
+
+# Reproduces what earlier versions of LFOps left on a host: the repository file and key of the
+# former repository, and the package installed from it and locked at its version. The play is
+# skipped once the Linuxfabrik repository is in place, so the idempotence step does not set the
+# former repository up again after the migration.
+- name: 'Install the monitoring plugins from the former repository'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'stat /etc/yum.repos.d/linuxfabrik.repo /etc/apt/sources.list.d/linuxfabrik.sources'
+      ansible.builtin.stat:
+        path: '{{ "/etc/yum.repos.d/linuxfabrik.repo" if ansible_facts["os_family"] == "RedHat" else "/etc/apt/sources.list.d/linuxfabrik.sources" }}'
+      register: '__molecule__repo_linuxfabrik_result'
+
+    - name: 'Red Hat family'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not __molecule__repo_linuxfabrik_result["stat"]["exists"]'
+      block:
+
+        - name: 'Deploy /etc/yum.repos.d/linuxfabrik-monitoring-plugins.repo'
+          ansible.builtin.copy:
+            content: |
+              [linuxfabrik-monitoring-plugins-release]
+              name=Linuxfabrik Monitoring Plugins (release)
+              baseurl=https://repo.linuxfabrik.ch/monitoring-plugins/rhel/$releasever/release/
+              enabled=1
+              gpgcheck=1
+              gpgkey=https://repo.linuxfabrik.ch/linuxfabrik.key
+            dest: '/etc/yum.repos.d/linuxfabrik-monitoring-plugins.repo'
+            owner: 'root'
+            group: 'root'
+            mode: 0o644
+
+        - name: 'rpm --import https://repo.linuxfabrik.ch/linuxfabrik.key'
+          ansible.builtin.rpm_key:
+            key: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
+            state: 'present'
+
+        - name: 'dnf install linuxfabrik-monitoring-plugins-{{ molecule__monitoring_plugins_former_version }}'
+          ansible.builtin.dnf:
+            name: 'linuxfabrik-monitoring-plugins-{{ molecule__monitoring_plugins_former_version }}'
+            state: 'present'
+          retries: 3 # ride out a brief outage of the package repository
+          delay: 10
+
+        - name: 'dnf install dnf-command(versionlock)'
+          ansible.builtin.dnf:
+            name: 'dnf-command(versionlock)'
+            state: 'present'
+
+        - name: 'dnf versionlock add linuxfabrik-monitoring-plugins*'
+          ansible.builtin.command: 'dnf versionlock add linuxfabrik-monitoring-plugins*'
+          changed_when: true
+
+    - name: 'Debian and Ubuntu'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+        - 'not __molecule__repo_linuxfabrik_result["stat"]["exists"]'
+      block:
+
+        - name: 'mkdir -p /etc/apt/keyrings'
+          ansible.builtin.file:
+            path: '/etc/apt/keyrings'
+            state: 'directory'
+            owner: 'root'
+            group: 'root'
+            mode: 0o755
+
+        - name: 'curl https://repo.linuxfabrik.ch/linuxfabrik.key --output /etc/apt/keyrings/linuxfabrik.asc'
+          ansible.builtin.get_url:
+            url: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
+            dest: '/etc/apt/keyrings/linuxfabrik.asc'
+            owner: 'root'
+            group: 'root'
+            mode: 0o644
+
+        - name: 'Deploy /etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
+          ansible.builtin.copy:
+            content: |
+              deb [signed-by=/etc/apt/keyrings/linuxfabrik.asc] https://repo.linuxfabrik.ch/monitoring-plugins/{{ ansible_facts["distribution"] | lower }}/ {{ ansible_facts["distribution_release"] }}-release main
+            dest: '/etc/apt/sources.list.d/linuxfabrik-monitoring-plugins.list'
+            owner: 'root'
+            group: 'root'
+            mode: 0o644
+
+        - name: 'apt install linuxfabrik-monitoring-plugins={{ molecule__monitoring_plugins_former_version }}*'
+          ansible.builtin.apt:
+            name: 'linuxfabrik-monitoring-plugins={{ molecule__monitoring_plugins_former_version }}*'
+            state: 'present'
+            update_cache: true
+          retries: 3 # ride out a brief outage of the package repository
+          delay: 10
+
+        - name: 'apt-mark hold linuxfabrik-monitoring-plugins'
+          ansible.builtin.command: 'apt-mark hold linuxfabrik-monitoring-plugins'
+          changed_when: true
+
+
+- name: 'Converge monitoring_plugins playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.monitoring_plugins'

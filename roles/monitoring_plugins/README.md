@@ -34,7 +34,7 @@ Notes:
 
 | Platform | Install | Implemented by | Mandatory Requirements |
 |----------|---------|----------------|--------------|
-| Linux    | Binaries from rpm/deb package (**default**) | `monitoring_plugins__install_method: 'package'` | Deploy the [Repository for the Monitoring Plugins](https://repo.linuxfabrik.ch/monitoring-plugins/). This can be done using the [linuxfabrik.lfops.repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins) role. If you use the [monitoring_plugins Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/monitoring_plugins.yml), this is automatically done for you.<br/><br/>By default, this role installs the latest available package from the repository. It enables version lock / version pinning for the installed package. This prevents automatic updates from causing inconsistencies between the installed plugins and the configuration of the monitoring system (e.g. outdated Icinga Director configuration). Updating plugins should be done in a controlled manner along with updating the monitoring server configuration. See `monitoring_plugins__skip_package_versionlock` for details. |
+| Linux    | Binaries from rpm/deb package (**default**) | `monitoring_plugins__install_method: 'package'` | Deploy the [Linuxfabrik package repository](https://repo.linuxfabrik.ch/). This can be done using the [linuxfabrik.lfops.repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik) role. If you use the [monitoring_plugins Playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/monitoring_plugins.yml), this is automatically done for you.<br/><br/>By default, this role installs the latest available package from the repository. It enables version lock / version pinning for the installed package. This prevents automatic updates from causing inconsistencies between the installed plugins and the configuration of the monitoring system (e.g. outdated Icinga Director configuration). Updating plugins should be done in a controlled manner along with updating the monitoring server configuration. See `monitoring_plugins__skip_package_versionlock` for details. |
 | Linux    | Binaries from zip | Currently not supported by this role | |
 | Linux    | Source Code | `monitoring_plugins__install_method: 'source'` | See "Requirements" below. The role provisions a suitable Python on the target itself (it installs Python 3.9 on RHEL 8, where the system Python is 3.6) and deploys the plugins into a self-contained virtual environment. See "How the Role Behaves" above. |
 | Windows  | Binaries from msi (**default**) | `monitoring_plugins__install_method: 'package'` | Icinga2 Agent is required. |
@@ -56,11 +56,11 @@ Manual steps:
 ## Switching from the Package to the Source Install
 
 1. Set `monitoring_plugins__install_method: 'source'` for the host.
-2. Remove the package, its version lock, the package repository and its signing key:
+2. Remove the package and its version lock. The Linuxfabrik package repository stays, as other packages may come from it:
 
     ```bash
     ansible-playbook --inventory inventory linuxfabrik.lfops.monitoring_plugins \
-        --tags monitoring_plugins:remove,repo_monitoring_plugins:remove --limit myhost
+        --tags monitoring_plugins:remove --limit myhost
     ```
 
 3. Deploy the source install:
@@ -68,8 +68,6 @@ Manual steps:
     ```bash
     ansible-playbook --inventory inventory linuxfabrik.lfops.monitoring_plugins --limit myhost
     ```
-
-The playbooks only register the package repository for `monitoring_plugins__install_method: 'package'`, so a later run of `setup_basic` or `icinga2_agent` does not bring it back.
 
 
 ## Tags

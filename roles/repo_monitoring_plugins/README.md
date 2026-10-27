@@ -1,53 +1,27 @@
 # Ansible Role linuxfabrik.lfops.repo_monitoring_plugins
 
-This role deploys the repository at repo.linuxfabrik.ch for the Linuxfabrik Monitoring Plugins.
+This role removes the former repository of the Linuxfabrik Monitoring Plugins at repo.linuxfabrik.ch/monitoring-plugins/ from a host. The Monitoring Plugins are served by the Linuxfabrik package repository, which the [linuxfabrik.lfops.repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik) role deploys.
+
+The role is deprecated and will be removed in a future LFOps release. The playbooks that deploy the Monitoring Plugins (`monitoring_plugins`, `icinga2_agent`, `setup_basic`, `setup_icinga2_master`) run it before `repo_linuxfabrik`, so hosts are cleaned up on their next run.
 
 
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The role removes every `linuxfabrik-monitoring-plugins*` file from `/etc/yum.repos.d` (Red Hat family), `/etc/zypp/repos.d` (SUSE) or `/etc/apt/sources.list.d` (Debian and Ubuntu), which also covers the timestamped backups of the repository file and the files that `tools/install-monitoring-plugins` of the Monitoring Plugins wrote.
+* On Debian and Ubuntu, it also removes `/etc/apt/keyrings/linuxfabrik.asc`, which only the former repository file referenced.
+* The Linuxfabrik signing key stays in the rpm database, since the Linuxfabrik repository is signed with the same key.
+* The run aborts as long as one of the former variables `repo_monitoring_plugins__basic_auth_login`, `repo_monitoring_plugins__mirror_url` or `repo_monitoring_plugins__testing` is set. Use `repo_linuxfabrik__basic_auth_login`, `repo_linuxfabrik__mirror_url` and `repo_linuxfabrik__testing_repo_enabled` instead. A mirror has to serve the Linuxfabrik repository below `<mirror URL>/linuxfabrik/`, see the README of `repo_linuxfabrik`.
+
+
 ## Tags
 
-`repo_monitoring_plugins`
+`repo_monitoring_plugins`, `repo_monitoring_plugins:remove`
 
-* Deploys the Monitoring Plugins repository.
+* Removes the former Monitoring Plugins repository.
 * Triggers: none.
-
-`repo_monitoring_plugins:remove`
-
-* Removes the Monitoring Plugins repository, including the backups of its file, and the Linuxfabrik (Packager) signing key. Not run by default, only with this tag. The playbooks that deploy the monitoring plugins along with this role (`monitoring_plugins`, `icinga2_agent`, `setup_basic`, `setup_icinga2_master`) only run it for `monitoring_plugins__install_method: 'package'`, or when this tag is given.
-* Triggers: none.
-
-
-## Optional Role Variables
-
-`repo_monitoring_plugins__basic_auth_login`
-
-* Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
-* Type: String.
-* Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
-
-`repo_monitoring_plugins__mirror_url`
-
-* Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used.
-* Type: String.
-* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
-
-`repo_monitoring_plugins__testing`
-
-* If `true`, switch to the `testing` channel: the `release` repository is disabled and the `testing` repository is enabled. On Debian/Ubuntu, the `-release` suffix in the apt sources file is replaced with `-testing`. By default, the `release` channel is used.
-* Type: Bool.
-* Default: `false`
-
-Example:
-```yaml
-# optional
-repo_monitoring_plugins__basic_auth_login:
-  username: 'my-username'
-  password: 'linuxfabrik'
-repo_monitoring_plugins__mirror_url: 'https://mirror.example.com'
-repo_monitoring_plugins__testing: true
-```
 
 
 ## License

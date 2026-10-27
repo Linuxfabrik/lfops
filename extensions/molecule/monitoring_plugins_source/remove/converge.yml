@@ -45,19 +45,19 @@
         mode: 0o755
 
 
-- name: 'Remove the package, its lock and its repository'
+- name: 'Remove the package and its lock'
   hosts: 'localhost'
   gather_facts: false
   become: false
   tasks:
 
-    - name: 'ansible-playbook linuxfabrik.lfops.monitoring_plugins --tags monitoring_plugins:remove,repo_monitoring_plugins:remove'
+    - name: 'ansible-playbook linuxfabrik.lfops.monitoring_plugins --tags monitoring_plugins:remove'
       ansible.builtin.command:
         argv: '{{
             ["ansible-playbook"]
             + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
             + ["--limit=" ~ ansible_limit | d("all"),
-               "--tags=monitoring_plugins:remove,repo_monitoring_plugins:remove",
+               "--tags=monitoring_plugins:remove",
                "linuxfabrik.lfops.monitoring_plugins"]
           }}'
       environment:

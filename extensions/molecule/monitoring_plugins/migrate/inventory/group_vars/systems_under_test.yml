@@ -1,3 +1,7 @@
 # The latest release, see playbooks/monitoring-plugins-latest.yml, which converge.yml imports.
 monitoring_plugins__version: '{{ lookup("ansible.builtin.file",
     lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/monitoring-plugins-version") }}'
+# The last release published to the former repository, which converge.yml installs first.
+molecule__monitoring_plugins_former_version: '8.0.0'
+# The scenario runs against repo.linuxfabrik.ch, not against a mirror.
+repo_linuxfabrik__mirror_url: ''

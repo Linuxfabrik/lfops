@@ -1,0 +1,7 @@
+# Molecule scenario marker for the 'migrate' sub-scenario, run with
+# `molecule test --scenario-name monitoring_plugins/migrate`.
+#
+# Covers a run of the monitoring_plugins playbook against a host on which an earlier version of
+# LFOps installed and locked the package from the former repository at
+# repo.linuxfabrik.ch/monitoring-plugins/. The 'install' sub-scenario covers a host without the
+# monitoring plugins.

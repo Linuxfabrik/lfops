@@ -1,7 +1,8 @@
-# After the switch the host must carry nothing of the package any more: a leftover package, lock
-# or repository blocks or undoes the source install, and a leftover plugin keeps running
-# unmaintained. What the admin placed next to the plugins has to survive.
-- name: 'Verify the monitoring plugins package and its repository are gone'
+# After the switch the host must carry nothing of the package any more: a leftover package or
+# lock blocks or undoes the source install, and a leftover plugin keeps running unmaintained.
+# The Linuxfabrik repository and its signing key stay, other packages may come from it. What the
+# admin placed next to the plugins has to survive.
+- name: 'Verify the monitoring plugins package is gone'
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
@@ -56,7 +57,7 @@
           - '"linuxfabrik" not in __molecule__locks["stdout"]'
         fail_msg: '{{ __molecule__locks["stdout"] }}'
 
-    - name: 'Find the repository files'
+    - name: 'Find the files of the former repository'
       ansible.builtin.find:
         paths:
           - '/etc/apt/sources.list.d'
@@ -69,14 +70,6 @@
         that:
           - '__molecule__repo_files["files"] | length == 0'
         fail_msg: '{{ __molecule__repo_files["files"] | map(attribute="path") | join(", ") }}'
-
-    # rpm lists every imported key as a gpg-pubkey package, versioned by its short key ID.
-    - name: 'Assert the Linuxfabrik signing key is gone from the rpm database'
-      ansible.builtin.assert:
-        that:
-          - '"39d17a78" not in ansible_facts["packages"]["gpg-pubkey"] | d([]) | map(attribute="version") | list'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
 
     - name: 'Stat what the package and the source install place'
       ansible.builtin.stat:

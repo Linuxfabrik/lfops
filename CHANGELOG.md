@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:repo_monitoring_plugins, playbook:icinga2_agent, playbook:monitoring_plugins, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins packages come from the Linuxfabrik package repository (role `repo_linuxfabrik`) instead of repo.linuxfabrik.ch/monitoring-plugins/, whose repository file the playbooks remove. Rename `repo_monitoring_plugins__basic_auth_login` and `repo_monitoring_plugins__mirror_url` to `repo_linuxfabrik__basic_auth_login` and `repo_linuxfabrik__mirror_url`, and replace `repo_monitoring_plugins__testing` with `repo_linuxfabrik__testing_repo_enabled`, which adds the testing channel instead of replacing the release channel. The run aborts as long as one of the former variables is set. A mirror has to serve the Linuxfabrik repository below `<mirror URL>/linuxfabrik/`.
 * **role:opensearch**: OpenSearch 1.x is no longer supported, and the run aborts on a host that runs it. Upgrade such hosts to OpenSearch 2.19 first, following the [OpenSearch upgrade documentation](https://docs.opensearch.org/latest/install-and-configure/upgrade-opensearch/index/). OpenSearch 2.x cannot be installed on RHEL 10 and Debian 13, whose crypto policy rejects the SHA-1 signature in the OpenSearch 2.x signing key; use OpenSearch 3.x there.
 * **role:mongodb**: MongoDB 4.2, 4.4, 5.0 and 6.0 are no longer supported, since they are end of life; the role aborts on a host that runs one of them. Upgrade such hosts to MongoDB 7.0 or 8.0 first, one major release at a time, as described in the MongoDB upgrade documentation, and set `repo_mongodb__version` accordingly.
 * **role:chrony**: Without `chrony__ntp_pools` or `chrony__ntp_servers` in the inventory, chronyd synchronises with `ntp.linuxfabrik.ch` instead of `ntp.metas.ch`. Allow outgoing NTP to `ntp.linuxfabrik.ch` (195.15.242.254) where a firewall only lets the METAS servers through, or set `chrony__ntp_servers: ['ntp.metas.ch']`.
@@ -156,6 +157,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:grafana**: The login cookie carries the `Secure` flag when `grafana__root_url` is an `https://` URL. `grafana__cookie_secure` overrides this.
 * **playbook:setup_basic**: The mail and reboot roles run before the security roles, so a first run against a fresh host files the reboot request that a changed crypto policy, SELinux state or kernel module blocklist needs. Until now the reboot mechanism was deployed further down the playbook and such a change could only be reported to the operator.
 * **role:network**: The reminder that NetworkManager may have to be restarted by hand is printed only when a connection profile actually changed, instead of on every run.
+
+### Deprecated
+
+* **role:repo_monitoring_plugins**: The role only removes the former Monitoring Plugins repository and will be removed in a future release.
 
 ### Removed
 

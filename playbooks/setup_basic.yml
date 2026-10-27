@@ -88,7 +88,7 @@
       - name: 'duplicity'
         skip: '{{ setup_basic__skip_duplicity | d(false) }}'
       - name: 'repo_monitoring_plugins'
-        skip: '{{ not (monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags) or setup_basic__skip_repo_monitoring_plugins | d(false) }}'
+        skip: '{{ setup_basic__skip_repo_monitoring_plugins | d(false) }}'
       - name: 'monitoring_plugins'
         skip: '{{ setup_basic__skip_monitoring_plugins | d(false) }}'
       - name: 'bootloader'
@@ -375,10 +375,9 @@
 
 
     # === Monitoring ===
+    # removes the former repository of the monitoring plugins, which repo_linuxfabrik replaces
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
-        # a source install needs no package repository, and re-registering it would undo its removal
-        - 'monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags'
         - 'not setup_basic__skip_repo_monitoring_plugins | d(false)'
 
     - role: 'linuxfabrik.lfops.monitoring_plugins'

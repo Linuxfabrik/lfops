@@ -1,47 +1,6 @@
-- block:
-
-  - name: 'curl https://repo.linuxfabrik.ch/linuxfabrik.key --output /tmp/ansible.linuxfabrik.key'
-    ansible.builtin.get_url:
-      url: 'https://repo.linuxfabrik.ch/linuxfabrik.key'
-      dest: '/tmp/ansible.linuxfabrik.key'
-      mode: 0o644
-    retries: 3 # ride out a brief outage of the download source
-    delay: 10
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    changed_when: false # not an actual config change on the server
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'Copy /tmp/ansible.linuxfabrik.key to the remote host'
-    ansible.builtin.copy:
-      src: '/tmp/ansible.linuxfabrik.key'
-      dest: '/tmp/ansible.linuxfabrik.key'
-      mode: 0o644
-    check_mode: false # run task even if `--check` is specified
-
-  - name: 'rpm --import /tmp/ansible.linuxfabrik.key'
-    ansible.builtin.rpm_key:
-      state: 'present'
-      key: '/tmp/ansible.linuxfabrik.key'
-
-  - name: 'Deploy /etc/zypp/repos.d/linuxfabrik-monitoring-plugins.repo'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/zypp/repos.d/linuxfabrik-monitoring-plugins.repo.j2'
-      dest: '/etc/zypp/repos.d/linuxfabrik-monitoring-plugins.repo'
-      owner: 'root'
-      group: 'root'
-      # 0600 while the file carries the mirror credentials
-      mode: '{{ "0o600" if repo_monitoring_plugins__basic_auth_login | default({}) | length > 0 else "0o644" }}'
-
-  tags:
-    - 'repo_monitoring_plugins'
-
-
-# `backup: true` above leaves timestamped copies next to the repo file, which zypper ignores, as
-# it only reads files ending in `.repo`. They are removed along with it.
+# The match also covers the timestamped backups an earlier version of this role left next to the
+# repo file, and the linuxfabrik-monitoring-plugins-release.repo of older installations. The
+# signing key stays in the rpm database: the Linuxfabrik repository is signed with the same key.
 - block:
 
   - name: 'Find /etc/zypp/repos.d/linuxfabrik-monitoring-plugins*'
@@ -58,11 +17,6 @@
     loop_control:
       label: '{{ item["path"] }}'
 
-  - name: 'rpm --erase gpg-pubkey-39d17a78 # Linuxfabrik (Packager)'
-    ansible.builtin.rpm_key:
-      key: '0xF27988EC39D17A78'
-      state: 'absent'
-
   tags:
-    - 'never'
+    - 'repo_monitoring_plugins'
     - 'repo_monitoring_plugins:remove'
