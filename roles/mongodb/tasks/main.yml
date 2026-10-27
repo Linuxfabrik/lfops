@@ -315,6 +315,19 @@
       group: 'root'
       mode: 0o600
 
+  - name: 'Deploy /etc/mongodb-dump-login.json'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/mongodb-dump-login.json.j2'
+      dest: '/etc/mongodb-dump-login.json'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600 # contains secrets
+    when:
+      - 'mongodb__conf_security_authorization | bool'
+      - 'mongodb__dump_user is defined'
+      - 'mongodb__dump_user | length > 0'
+
   - name: 'Deploy /usr/local/sbin/mongodb-dump'
     ansible.builtin.template:
       backup: true

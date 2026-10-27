@@ -1,0 +1,52 @@
+# The dump user logs in with the password from /etc/mongodb-dump-login.json, so a dump that
+# contains the test database proves that mongosh and mongodump both read it.
+- name: 'Verify MongoDB and its dump'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that mongod.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["mongod.service"]["state"] == "running"'
+
+    # service_facts does not list timers; without a state, the module only reports the status.
+    - name: 'systemctl show mongodb-dump.timer'
+      ansible.builtin.systemd:
+        name: 'mongodb-dump.timer'
+      register: '__molecule__mongodb_dump_timer_result'
+
+    - name: 'Assert that mongodb-dump.timer is active'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_dump_timer_result["status"]["ActiveState"] == "active"'
+
+    # Authorization is enabled, so this also proves that the admin user exists.
+    - name: 'mongosh --eval db.getSiblingDB("molecule").test.insertOne(...)'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=db.getSiblingDB("molecule").test.insertOne({source: "molecule"})'
+      changed_when: true # inserts a document on every run
+
+    # Run the real dump, as the timer would, and look at its result.
+    - name: 'systemctl start mongodb-dump.service'
+      ansible.builtin.systemd:
+        name: 'mongodb-dump.service'
+        state: 'started'
+
+    - name: 'tar --list --file /backup/mongodb-dump/mongodb-dump.tar.gz' # noqa command-instead-of-module (unarchive cannot list an archive without extracting it)
+      ansible.builtin.command: 'tar --list --file /backup/mongodb-dump/mongodb-dump.tar.gz'
+      register: '__molecule__mongodb_dump_list_result'
+      changed_when: false
+
+    - name: 'Assert that the dump contains the molecule database'
+      ansible.builtin.assert:
+        that: '"./molecule/test.bson" in __molecule__mongodb_dump_list_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__mongodb_dump_list_result["stdout_lines"] }}'

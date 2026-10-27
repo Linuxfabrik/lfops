@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2026060301
+# 2026102701
 
 HOST='127.0.0.1'
 PORT='{{ mongodb__conf_net_port }}'
 
 {% if mongodb__conf_security_authorization | bool and mongodb__dump_user is defined and mongodb__dump_user | length %}
+# the password is in /etc/mongodb-dump-login.json
 USERNAME='{{ mongodb__dump_user["username"] }}'
-PASSWORD='{{ mongodb__dump_user["password"] }}'
 AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] | default("admin") }}'
 {% endif %}
 

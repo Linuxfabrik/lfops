@@ -160,6 +160,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
+* **role:mongodb**: `mongodb-dump.service` fails when `mongodump` fails, instead of reporting success with an incomplete dump.
 * **role:logstash**: `/etc/default/logstash` is no longer world-readable and no longer reported as changed after every Logstash package update, which restarted Logstash. The first run after updating LFOps restarts Logstash once.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
@@ -300,6 +302,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.
 * **role:apache_tomcat**: The host-manager webapp only accepts the clients that `apache_tomcat__webapps_manager_context_xml_allow` allows, as documented, instead of those that `apache_tomcat__webapps_docs_context_xml_allow` allows.

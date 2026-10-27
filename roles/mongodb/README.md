@@ -16,6 +16,8 @@ This role is only compatible with the following MongoDB versions:
 ## How the Role Behaves
 
 * `mongodb-dump.service` runs with `Nice=19`, best-effort IO priority 7 and `CPUWeight=` / `IOWeight=` of `20` (systemd default: `100`), so the dump does not slow down the application on a busy host. The weights only take effect under contention. `IOWeight=` only has an effect on block devices that use the BFQ IO scheduler; with `none` or `mq-deadline`, as on a RHEL 9 VM with virtio disks, it is ignored. The IO class is deliberately not `idle`: the file-based method keeps the instance write-locked while it copies `/var/lib/mongo`, and an idle copy could stretch that lock.
+* The dump reads the password of `mongodb__dump_user` from `/etc/mongodb-dump-login.json`, which only root can read, so it does not show up in the process list.
+* `mongodb-dump.service` fails if `mongodump` fails, so a broken dump shows up as a failed unit.
 
 
 ## Known Limitations

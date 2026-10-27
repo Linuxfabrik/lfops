@@ -1,0 +1,2 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: mongod and the mongodb-dump timer and service run under systemd.
