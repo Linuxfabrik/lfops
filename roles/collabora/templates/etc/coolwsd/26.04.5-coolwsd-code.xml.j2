@@ -2,8 +2,8 @@
 <config>
     <!-- {{ ansible_managed }} -->
     <!-- 26.04.5 -->
-{# Based on coolwsd 26.04.5.1 #}
-    <!-- 2026100901 -->
+{# Based on coolwsd 26.04.5.2 #}
+    <!-- 2026102701 -->
 
     <!-- For more detailed documentation on typical configuration options please see:
          https://sdk.collaboraonline.com/docs/installation/Configuration.html -->
@@ -42,6 +42,12 @@
         <api_key desc="Default API key for the AI provider. May be left empty for self-hosted models that do not require authentication." type="string" default=""></api_key>
         <model desc="Default AI model name. For tool use (inspecting and editing the document) the model must support native function/tool calling - e.g. gpt-4o, llama3.1, qwen2.5. Models without it (e.g. base llama3, gemma) can still chat but cannot drive document tools." type="string" default=""></model>
         <image_api_url desc="Default AI image-generation provider base URL (e.g. https://api.openai.com). Leave empty to reuse the text-AI endpoint if the same provider is used. Must support the /v1/images/generations endpoint. While ai.enabled is true, AI requests reach this host without a net.lok_allow entry. Documents that fetch external data from the same host still need one." type="string" default=""></image_api_url>
+        <allowed_hosts desc="Hosts a user may name as their own AI provider, besides the hosts of api_url and image_api_url. Each entry is one host name, matched exactly and ignoring case. The entries shipped here are the built-in providers. Remove one to stop users choosing it, or add the host of another provider. An empty list leaves only api_url and image_api_url. net.lok_allow does not apply to AI requests.">
+            <host desc="The built-in OpenAI provider.">api.openai.com</host>
+            <host desc="The built-in Groq provider.">api.groq.com</host>
+            <host desc="The built-in Together provider.">api.together.xyz</host>
+            <host desc="The built-in Mistral provider.">api.mistral.ai</host>
+        </allowed_hosts>
         <image_api_key desc="Default API key for the image-generation provider. Leave empty to reuse the text-AI key if the same provider is used, or when a self-hosted model needs no authentication." type="string" default=""></image_api_key>
         <image_model desc="Default image-generation model name (e.g. dall-e-3, stable-diffusion-3, flux-schnell)." type="string" default=""></image_model>
         <image_size desc="Default generated image size in WxH pixels (e.g. 1024x1024). Provider-specific - leave empty to let the provider pick." type="string" default=""></image_size>
@@ -229,6 +235,7 @@
       <content_security_policy desc="Customize the CSP header by specifying one or more policy-directive, separated by semicolons. See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy">{{ collabora__coolwsd_content_security_policy | join('; ') }}</content_security_policy>
       <frame_ancestors desc="OBSOLETE: Use content_security_policy. Specify who is allowed to embed the Collabora Online iframe (coolwsd and WOPI host are always allowed). Separate multiple hosts by space."></frame_ancestors>
       <connection_timeout_secs desc="Specifies the connection, send, recv timeout in seconds for connections initiated by coolwsd (such as WOPI connections)." type="int" default="30">30</connection_timeout_secs>
+      <client_pong_timeout_secs desc="The number of seconds a document connection may go without answering a ping from coolwsd before it is closed. coolwsd sends a ping every 18 seconds, so keep this well above that. A browser that went away without closing its connection is dropped after this long, and its view goes with it. 0 disables the check." type="uint" default="60">60</client_pong_timeout_secs>
 
       <!-- this setting radically changes how online works, it should not be used in a production environment -->
       <proxy_prefix type="bool" default="false" desc="Enable a ProxyPrefix to be passed-in through which to redirect requests">false</proxy_prefix>
@@ -441,9 +448,9 @@
     <remote_links desc="Live links from open documents to documents open on this or another server">
       <enable desc="Enable remote links" type="bool" default="false">false</enable>
       <server_url desc="Base URL this server dials remote documents through, usually the public proxy in front of the cluster. Empty falls back to server_name, then to this server's own address." type="string" default=""></server_url>
-      <chain_secret desc="Secret a server proves a remote document connection of its own with, so that such a connection may name the documents already on its chain and the cycles between two servers are refused. Set the same value on every server of a cluster. Empty gets a secret for this process alone, which no other server holds." type="string" default=""></chain_secret>
-      <max_remote_docs desc="The maximum number of remote documents this server connects to" type="uint" default="16">16</max_remote_docs>
-      <max_links_per_document desc="The maximum number of remote documents one document may subscribe to" type="uint" default="4">4</max_links_per_document>
+      <chain_secret desc="The secret used by a server to prove it is allowed to perform remote document connection. Set the same value on every server of a cluster. Empty gets a random secret. No other server can connect then (allows only local connections)." type="string" default=""></chain_secret>
+      <max_remote_docs desc="The maximum number of remote documents this server connects to. 0 for unlimited." type="uint" default="0">0</max_remote_docs>
+      <max_links_per_document desc="The maximum number of remote documents one document may subscribe to. 0 for unlimited." type="uint" default="0">0</max_links_per_document>
       <max_chain_depth desc="The maximum length of a chain of documents linked to each other" type="uint" default="3">3</max_chain_depth>
       <reconnect_attempts desc="How many times a lost connection to a remote document is retried" type="uint" default="5">5</reconnect_attempts>
     </remote_links>
