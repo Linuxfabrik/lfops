@@ -160,6 +160,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_proxysql, playbook:proxysql**: ProxySQL 3.0 installs on RHEL 8, and ProxySQL 2.4 and 2.5 on RHEL 9, instead of failing with a 404 on the repository metadata. The `proxysql` playbook deploys EPEL (and CRB), which ProxySQL 3.0 on RHEL 8 needs.
+* **role:repo_proxysql**: With `repo_proxysql__mirror_url`, the repository is expected below the same path as on repo.proxysql.com (`/ProxySQL/proxysql-<version>.x/...`), instead of a path that never matched it.
 * **role:logstash**: `/etc/default/logstash` is no longer world-readable and no longer reported as changed after every Logstash package update, which restarted Logstash. The first run after updating LFOps restarts Logstash once.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
