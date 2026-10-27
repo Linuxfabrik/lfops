@@ -15,6 +15,12 @@ if [ -z "${url}" ]; then
     fail "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}"
 fi
 get "${GPG_KEY}" --output /var/tmp/key
+# a key bound with a SHA-1 signature (OpenSearch 2.x) fails to import under the default
+# crypto policy: "Hash algorithm SHA1 not available" (verified against rpm 4.16 on
+# Rocky 9). gpgv in fetch-deb.sh accepts it as is.
+if [ -n "${GPG_SHA1}" ]; then
+    update-crypto-policies --set DEFAULT:SHA1 >/dev/null
+fi
 rpmkeys --import /var/tmp/key
 get "${url}" --output /var/tmp/package.rpm
 # `rpmkeys --checksig` also succeeds for an unsigned package, it then prints `digests OK`

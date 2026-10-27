@@ -15,10 +15,16 @@
 # * `gpg_key`: the key the packages (RPM) and the repository metadata (DEB) are signed
 #   with, the same one the `repo_*` role imports. `{series}` is replaced. A package that
 #   is not signed with it is not extracted.
+# * `series_gpg_key`: optional, `{<series>: {url: <key>, sha1: <bool>}}` for a series
+#   signed with another key than `gpg_key`. `sha1: true` lets the RPM check accept a key
+#   bound with a SHA-1 signature, which the default crypto policy of Rocky 9 rejects.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
 #   `tools/follow-upstream --check` looks for new releases here.
 # * `repo_series_parts`: optional, how many version components `{series}` has in the
 #   repository URLs, if not `series_parts` (2: one repository per `26.04`).
+# * `series_suffix`: optional, appended to the series in the template header and in
+#   `supported_versions` (`.x`: series `3` is named `3.x` there). `{series}` in paths
+#   and URLs stays without it.
 #
 # A repository URL can reference an environment variable, e.g. a customer token:
 # `https://example.com/repo-${EXAMPLE_TOKEN}/`. An application whose variable is not set
@@ -34,7 +40,8 @@
 #   * `copies`: further templates that stay identical to `template`, e.g. the Debian
 #     counterpart of a file the RPM ships under another path. They get the merge result.
 # * `ignore`: packaged files below /etc that LFOps deliberately does not template.
-#   Every other file a release ships is reported, so a file upstream adds is noticed.
+#   Every other file a release ships is reported, so a file upstream adds is noticed. An
+#   entry ending in `/` ignores every file below that directory.
 #
 # The comment above each application records how its install scripts treat the templated
 # files, for the release that was checked. `tools/follow-upstream` reports later changes
