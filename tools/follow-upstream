@@ -56,7 +56,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102701'
+__version__ = '2026102702'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -672,9 +672,13 @@ def check_app(app, config):
                 continue
             latest[series] = version
         if '{series}' not in entry['template']:
-            # one template for every series: only the newest release counts
+            # one template for every series: only the newest release counts, also if it
+            # belongs to a later series than the template's `Based on` release
             version = max(latest.values(), key=version_key)
-            latest = {series_of(version, parts): version}
+            (base,) = templates.values()
+            if version_key(version) > version_key(base):
+                releases[version] = releases.get(version, False)
+            continue
         for series, version in latest.items():
             if series in templates:
                 if version_key(version) > version_key(templates[series]):
