@@ -152,7 +152,7 @@ Which Ansible role is proven to run on which OS?
 | repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
 | repo_openvpn                          |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | RHEL 10: ProxySQL 3.0 only                   |
 | repo_redis                            |   x    |   x    |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | repo_remi                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_rpmfusion                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
