@@ -205,6 +205,44 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
+
+    - block:
+
+      # Resolving a package from the Linuxfabrik repository proves that dnf reads it and accepts
+      # its key, without a terminal.
+      - name: 'dnf repoquery --repo=linuxfabrik exoscale-cli'
+        ansible.builtin.command:
+          cmd: 'dnf --quiet repoquery --repo=linuxfabrik exoscale-cli'
+          stdin: ''
+        register: '__molecule__repo_linuxfabrik_result'
+        changed_when: false
+
+      - name: 'Assert that the Linuxfabrik repository offers exoscale-cli'
+        ansible.builtin.assert:
+          that: '__molecule__repo_linuxfabrik_result["stdout"] is search("^exoscale-cli-", multiline=true)'
+          fail_msg: '{{ __molecule__repo_linuxfabrik_result["stdout"] }}'
+
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+
+    - block:
+
+      # Resolving a package from the Linuxfabrik repository proves that apt reads it and accepts
+      # its key.
+      - name: 'apt-cache policy acme.sh'
+        ansible.builtin.command: 'apt-cache policy acme.sh'
+        register: '__molecule__repo_linuxfabrik_result'
+        changed_when: false
+
+      - name: 'Assert that the Linuxfabrik repository offers acme.sh'
+        ansible.builtin.assert:
+          that: '__molecule__repo_linuxfabrik_result["stdout"] is search("repo.linuxfabrik.ch/" ~ ansible_facts["distribution"] | lower ~ "/linuxfabrik " ~ ansible_facts["distribution_release"] ~ "-release/main")'
+          fail_msg: '{{ __molecule__repo_linuxfabrik_result["stdout"] }}'
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
     # The inventory skips duplicity. Its venv must not be built anyway: python_venv used to get the
     # duplicity venv regardless of setup_basic__skip_duplicity, and its pip install can fail.
     - name: 'stat /opt/python-venv/duplicity'

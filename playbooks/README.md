@@ -971,6 +971,13 @@ Calls the following roles (in order):
 * [repo_influxdb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_influxdb)
 
 
+## repo_linuxfabrik.yml
+
+Calls the following roles (in order):
+
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik)
+
+
 ## repo_mariadb.yml
 
 Calls the following roles (in order):
@@ -1110,6 +1117,7 @@ Calls the following roles (in order):
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network): `setup_basic__skip_network`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_basic__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_basic__skip_repo_epel`
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_basic__skip_repo_linuxfabrik`
 * [hostname](https://github.com/Linuxfabrik/lfops/tree/main/roles/hostname): `setup_basic__skip_hostname`
 * [mailx](https://github.com/Linuxfabrik/lfops/tree/main/roles/mailx): `setup_basic__skip_mailx`
 * [postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix): `setup_basic__skip_postfix`
