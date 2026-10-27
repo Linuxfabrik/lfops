@@ -15,10 +15,16 @@
 # * `gpg_key`: the key the packages (RPM) and the repository metadata (DEB) are signed
 #   with, the same one the `repo_*` role imports. `{series}` is replaced. A package that
 #   is not signed with it is not extracted.
+# * `series_gpg_key`: optional, `{<series>: {url: <key>, sha1: <bool>}}` for a series
+#   signed with another key than `gpg_key`. `sha1: true` lets the RPM check accept a key
+#   bound with a SHA-1 signature, which the default crypto policy of Rocky 9 rejects.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
 #   `tools/follow-upstream --check` looks for new releases here.
 # * `repo_series_parts`: optional, how many version components `{series}` has in the
 #   repository URLs, if not `series_parts` (2: one repository per `26.04`).
+# * `series_suffix`: optional, appended to the series in the template header and in
+#   `supported_versions` (`.x`: series `3` is named `3.x` there). `{series}` in paths
+#   and URLs stays without it.
 #
 # A repository URL can reference an environment variable, e.g. a customer token:
 # `https://example.com/repo-${EXAMPLE_TOKEN}/`. An application whose variable is not set
@@ -34,7 +40,8 @@
 #   * `copies`: further templates that stay identical to `template`, e.g. the Debian
 #     counterpart of a file the RPM ships under another path. They get the merge result.
 # * `ignore`: packaged files below /etc that LFOps deliberately does not template.
-#   Every other file a release ships is reported, so a file upstream adds is noticed.
+#   Every other file a release ships is reported, so a file upstream adds is noticed. An
+#   entry ending in `/` ignores every file below that directory.
 #
 # The comment above each application records how its install scripts treat the templated
 # files, for the release that was checked. `tools/follow-upstream` reports later changes
@@ -233,6 +240,65 @@ influxdb:
     - package: 'influxdb'
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
+
+# One template per major version (`3.x-opensearch.yml.j2`); sysconfig serves both and
+# follows the newest major only. The RPM ships the environment file as
+# /etc/sysconfig/opensearch. The DEB of 3.x ships it as /etc/default/opensearch, plus an
+# outdated copy as /etc/sysconfig/opensearch (2.x: the other way round). The systemd unit
+# reads both, /etc/sysconfig last, and the opensearch role deploys /etc/sysconfig on
+# every platform.
+#
+# Install scripts (opensearch 2.19.7 and 3.9.0, RPM and DEB): create the user, append
+# the Performance Analyzer settings to jvm.options once, chown /etc/opensearch to
+# opensearch, and on every installation and upgrade run the demo security configuration.
+# It appends a demo `plugins.security` block to opensearch.yml, but quits if the file
+# already sets a `plugins.security` key, which the template always does.
+opensearch:
+  upstream:
+    - 'opensearch-project/OpenSearch'
+  series_parts: 1
+  series_suffix: '.x'
+  deb_repo: 'https://artifacts.opensearch.org/releases/bundle/opensearch/{series}.x/apt stable main'
+  gpg_key: 'https://artifacts.opensearch.org/publickeys/opensearch-release.pgp'
+  series_gpg_key:
+    '2':
+      url: 'https://artifacts.opensearch.org/publickeys/opensearch.pgp'
+      sha1: true
+  rpm_repo: 'https://artifacts.opensearch.org/releases/bundle/opensearch/{series}.x/yum/'
+  files:
+    - package: 'opensearch'
+      path: '/etc/opensearch/opensearch.yml'
+      template: 'roles/opensearch/templates/etc/opensearch/{series}.x-opensearch.yml.j2'
+      supported_versions: 'roles/opensearch/vars/main.yml:__opensearch__supported_versions'
+    - package: 'opensearch'
+      path: '/etc/sysconfig/opensearch'
+      deb_path: '/etc/default/opensearch'
+      template: 'roles/opensearch/templates/etc/sysconfig/opensearch.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/init.d/opensearch'
+    - '/etc/opensearch/fips_java.security'
+    - '/etc/opensearch/jvm.options'
+    - '/etc/opensearch/log4j2.properties'
+    - '/etc/opensearch/opensearch-notifications-core/notifications-core.yml'
+    - '/etc/opensearch/opensearch-notifications/notifications.yml'
+    - '/etc/opensearch/opensearch-observability/observability.yml'
+    - '/etc/opensearch/opensearch-performance-analyzer/'  # 2.x only
+    - '/etc/opensearch/opensearch-reports-scheduler/reports-scheduler.yml'
+    - '/etc/opensearch/opensearch-security/action_groups.yml'
+    - '/etc/opensearch/opensearch-security/allowlist.yml'
+    - '/etc/opensearch/opensearch-security/audit.yml'
+    - '/etc/opensearch/opensearch-security/config.yml'
+    - '/etc/opensearch/opensearch-security/nodes_dn.yml'
+    - '/etc/opensearch/opensearch-security/opensearch.yml.example'
+    - '/etc/opensearch/opensearch-security/roles.yml'
+    - '/etc/opensearch/opensearch-security/roles_mapping.yml'
+    - '/etc/opensearch/opensearch-security/tenants.yml'
+    - '/etc/opensearch/opensearch-security/whitelist.yml'  # 2.x only
+    # Sigma detection rules of the Security Analytics plugin, about 2300 files
+    - '/etc/opensearch/opensearch-security-analytics/'
+    # the opensearch role writes it from scratch, it is no copy of the packaged file
+    - '/etc/opensearch/opensearch-security/internal_users.yml'
 
 # Install scripts (proxysql 3.0.11, RPM): create the user and apply the systemd preset to
 # proxysql.service on the first installation, never touch the templated file. One

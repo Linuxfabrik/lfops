@@ -57,7 +57,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102703'
+__version__ = '2026102704'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -120,6 +120,11 @@ def repo_series(config, version):
     Collabora Enterprise has one template per `26.04.4`, but one repository per `26.04`.
     """
     return series_of(version, config.get('repo_series_parts', config['series_parts']))
+
+
+def series_name(config, series):
+    """The series as the templates and `supported_versions` name it: `3.x` for `3`."""
+    return series + config.get('series_suffix', '')
 
 
 def find_app(manifest, name):
@@ -212,7 +217,13 @@ def fetch(app, config, fmt, package, version):
     shutil.rmtree(dest, ignore_errors=True)
     os.makedirs(dest)
     series = repo_series(config, version)
-    gpg_key = expand(config['gpg_key'].replace('{series}', series))
+    gpg_key = config['gpg_key']
+    sha1 = False
+    # a series signed with another key than the current one (OpenSearch 2.x)
+    if series in config.get('series_gpg_key', {}):
+        gpg_key = config['series_gpg_key'][series]['url']
+        sha1 = config['series_gpg_key'][series].get('sha1', False)
+    gpg_key = expand(gpg_key.replace('{series}', series))
     if fmt == 'rpm':
         display = config['rpm_repo'].replace('{series}', series)
         env = {'REPO': expand(display)}
@@ -232,6 +243,7 @@ def fetch(app, config, fmt, package, version):
         {
             'EXTRACT': ' '.join(extra),
             'GPG_KEY': gpg_key,
+            'GPG_SHA1': '1' if sha1 else '',
             'PACKAGE': package,
             'REPO_DISPLAY': display,
             'VERSION': version,
@@ -273,6 +285,8 @@ def check_packaging(app, config, version):
     """
     findings = 0
     ignore = set(config.get('ignore', []))
+    # an entry ending in `/` ignores everything below that directory
+    ignore_dirs = tuple(path for path in ignore if path.endswith('/'))
     fmts = ('rpm', 'deb') if 'deb_repo' in config else ('rpm',)
     for package in sorted({entry['package'] for entry in config['files']}):
         entries = [entry for entry in config['files'] if entry['package'] == package]
@@ -285,6 +299,8 @@ def check_packaging(app, config, version):
 
         for fmt in fmts:
             for path in sorted(files[fmt] - known):
+                if path.startswith(ignore_dirs):
+                    continue
                 if not PATH_RE.fullmatch(path):
                     path = f'a file with an unusual name below {roots[fmt]}'
                 print(
@@ -294,6 +310,13 @@ def check_packaging(app, config, version):
                 findings += 1
 
         for entry in entries:
+            # a template based on a later release does not take this one, e.g. one
+            # without `{series}` that follows the newest series only (OpenSearch's
+            # sysconfig and a 2.x release)
+            source, _ = source_template(config, entry, version)
+            base = read_based_on(source) if source else None
+            if base and version_key(base) > version_key(version):
+                continue
             rpm_path = entry['path']
             deb_path = entry.get('deb_path', rpm_path)
             missing = False
@@ -531,7 +554,12 @@ def update_file(app, config, entry, version, dry_run):
             with open(source, encoding='utf-8') as f:
                 text = f.read()
             text = update_header(
-                text, entry['package'], version, old_series, new_series, bump=False
+                text,
+                entry['package'],
+                version,
+                series_name(config, old_series),
+                series_name(config, new_series),
+                bump=False,
             )
             write_template(entry, target, text)
         return 'unchanged'
@@ -559,7 +587,11 @@ def update_file(app, config, entry, version, dry_run):
         sys.exit(f'git merge-file failed: {merge.stderr}')
     conflicts = merge.returncode
     merged = update_header(
-        merge.stdout, entry['package'], version, old_series, new_series
+        merge.stdout,
+        entry['package'],
+        version,
+        series_name(config, old_series),
+        series_name(config, new_series),
     )
 
     status = f'{conflicts} conflict(s)' if conflicts else 'merged cleanly'
@@ -569,8 +601,10 @@ def update_file(app, config, entry, version, dry_run):
         return 'conflicts' if conflicts else 'merged'
     write_template(entry, target, merged)
     if source != target:
-        add_supported_version(entry['supported_versions'], new_series)
-        report_old_series(merged, old_series)
+        add_supported_version(
+            entry['supported_versions'], series_name(config, new_series)
+        )
+        report_old_series(merged, series_name(config, old_series))
     return 'conflicts' if conflicts else 'merged'
 
 
