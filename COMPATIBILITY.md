@@ -8,7 +8,7 @@ Which Ansible role is proven to run on which OS?
 
 | Role                                  | Deb 12 | Deb 13 | RHEL 8 | RHEL 9 | RHEL 10 | Ubu 22.04 | Ubu 24.04 | Ubu 26.04 | Other                                        |
 |---------------------------------------|:------:|:------:|:------:|:------:|:-------:|:---------:|:---------:|:---------:|----------------------------------------------|
-| acme_sh                               |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
+| acme_sh                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | aide                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | alternatives                          |   x    |   x    |   x    |   x    |   (x)   |     x     |     x     |    (x)    |                                              |
 | ansible_init                          |        |        |        |        |         |           |           |           | Fedora 35+                                   |
@@ -145,6 +145,7 @@ Which Ansible role is proven to run on which OS?
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
 | repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_linuxfabrik                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 44, openSUSE Leap 15, SLES 15 and 16  |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |

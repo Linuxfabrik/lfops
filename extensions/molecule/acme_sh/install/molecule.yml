@@ -1,0 +1,5 @@
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name acme_sh/install`.
+#
+# Covers a run of the acme_sh playbook against a host without acme.sh. The 'migrate' sub-scenario
+# covers a host on which an earlier version of the role installed acme.sh to /opt/acme.sh.

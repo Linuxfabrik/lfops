@@ -90,3 +90,31 @@
     - name: 'Assert that the dump contains the molecule schema'
       ansible.builtin.assert:
         that: '__molecule__mariadb_dump_result["matched"] == 1'
+
+    # The logrotate config has no postrotate flush, so MariaDB has to keep writing to the error
+    # log after `copytruncate`. A failed login is logged there with the default log_warnings.
+    # The role names the file `mysql` for MariaDB 10.6 only. The Debian cloud image ships without
+    # logrotate, and this playbook does not install it.
+    - name: 'Install logrotate'
+      ansible.builtin.package:
+        name: 'logrotate'
+        state: 'present'
+
+    # `dateext` refuses a second rotation on the same day, and the test sequence verifies twice.
+    - name: 'find /var/log/mariadb -name *.log-* -delete'
+      ansible.builtin.command: "find /var/log/mariadb -name '*.log-*' -delete"
+      changed_when: true # cleanup for the test only
+
+    - name: 'logrotate --force /etc/logrotate.d/mariadb'
+      ansible.builtin.command: 'logrotate --force /etc/logrotate.d/mariadb'
+      changed_when: true # the test rotates on purpose
+
+    - name: 'mariadb --user=molecule-logrotate --password=linuxfabrik'
+      ansible.builtin.command: 'mariadb --user=molecule-logrotate --password=linuxfabrik --execute="SELECT 1"'
+      register: '__molecule__mariadb_failed_login_result'
+      changed_when: false
+      failed_when: '__molecule__mariadb_failed_login_result["rc"] == 0'
+
+    - name: 'grep molecule-logrotate /var/log/mariadb/mariadb.log'
+      ansible.builtin.command: 'grep --fixed-strings molecule-logrotate /var/log/mariadb/mariadb.log'
+      changed_when: false

@@ -1,0 +1,7 @@
+# verify.yml checks that the account email ends up in /etc/acme.sh/account.conf.
+acme_sh__account_email: 'info@example.com'
+# Issuing needs a public name and a reachable CA, which a test VM does not have. The scenario
+# covers installation, the configuration home and the timer instead.
+acme_sh__certificates: []
+# The scenario runs against repo.linuxfabrik.ch, not against a mirror.
+repo_linuxfabrik__mirror_url: ''

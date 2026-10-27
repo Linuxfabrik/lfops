@@ -1,0 +1,86 @@
+# verify.yml runs after converge and again after the idempotence step. A deployed repository
+# file proves nothing on its own; the package manager has to accept both channels and offer a
+# package from them, whose signature (RPM) or repository metadata signature (DEB) matches the
+# key the role deployed. Every call runs without a terminal, like a timer or a script, so a key
+# that would need a confirmation fails the check.
+- name: 'Verify repo_linuxfabrik serves signed metadata and packages'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+
+    - block:
+
+        - name: 'dnf makecache --repo=linuxfabrik --repo=linuxfabrik-testing'
+          ansible.builtin.command:
+            cmd: 'dnf makecache --repo=linuxfabrik --repo=linuxfabrik-testing'
+            stdin: ''
+          changed_when: false
+
+        - name: 'dnf repolist --enabled'
+          ansible.builtin.command: 'dnf repolist --enabled --quiet'
+          register: '__molecule__repolist_result'
+          changed_when: false
+
+        - name: 'Assert that the release and the testing channel are enabled'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__repolist_result["stdout"] is search("^linuxfabrik ", multiline=true)'
+              - '__molecule__repolist_result["stdout"] is search("^linuxfabrik-testing ", multiline=true)'
+            fail_msg: 'enabled repositories: {{ __molecule__repolist_result["stdout"] }}'
+
+        - name: 'dnf download --repo=linuxfabrik --destdir=/tmp/molecule-repo-linuxfabrik linuxfabrik-release'
+          ansible.builtin.command: >-
+            dnf download --quiet --repo=linuxfabrik --destdir=/tmp/molecule-repo-linuxfabrik
+            linuxfabrik-release
+          changed_when: false
+
+        - name: 'rpm --checksig /tmp/molecule-repo-linuxfabrik/linuxfabrik-release-*.rpm' # noqa command-instead-of-module (no module verifies a package signature)
+          ansible.builtin.shell:
+            cmd: 'rpm --checksig /tmp/molecule-repo-linuxfabrik/linuxfabrik-release-*.rpm'
+            executable: '/bin/bash'
+          register: '__molecule__checksig_result'
+          changed_when: false
+
+        - name: 'Assert the package signature matches the deployed key'
+          ansible.builtin.assert:
+            that: '__molecule__checksig_result["stdout"] is search("signatures OK")'
+            fail_msg: '{{ __molecule__checksig_result["stdout"] }}'
+
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+
+    - block:
+
+        - name: 'apt-get update' # noqa command-instead-of-module (the module hides the W: and E: lines)
+          ansible.builtin.command: 'apt-get update'
+          register: '__molecule__apt_update_result'
+          changed_when: false
+
+        # apt reports a bad or missing signature as a W: or E: line and keeps going
+        - name: 'Assert apt fetched both suites without a warning'
+          ansible.builtin.assert:
+            that:
+              - '__molecule__apt_update_result["stdout"] is search(__molecule__release_suite)'
+              - '__molecule__apt_update_result["stdout"] is search(__molecule__testing_suite)'
+              - '__molecule__apt_update_result["stdout"] is not search("^(W|E):", multiline=true)'
+              - '__molecule__apt_update_result["stderr"] is not search("^(W|E):", multiline=true)'
+            fail_msg: '{{ __molecule__apt_update_result["stdout"] }} {{ __molecule__apt_update_result["stderr"] }}'
+          vars:
+            __molecule__release_suite: 'repo.linuxfabrik.ch/{{ ansible_facts["distribution"] | lower }}/linuxfabrik {{ ansible_facts["distribution_release"] }}-release InRelease'
+            __molecule__testing_suite: 'repo.linuxfabrik.ch/{{ ansible_facts["distribution"] | lower }}/linuxfabrik {{ ansible_facts["distribution_release"] }}-testing InRelease'
+
+        - name: 'apt-cache policy linuxfabrik-release'
+          ansible.builtin.command: 'apt-cache policy linuxfabrik-release'
+          register: '__molecule__policy_result'
+          changed_when: false
+
+        - name: 'Assert linuxfabrik-release is offered by repo.linuxfabrik.ch'
+          ansible.builtin.assert:
+            that: '__molecule__policy_result["stdout"] is search("repo.linuxfabrik.ch/" ~ ansible_facts["distribution"] | lower ~ "/linuxfabrik " ~ ansible_facts["distribution_release"] ~ "-release/main")'
+            fail_msg: '{{ __molecule__policy_result["stdout"] }}'
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'

@@ -1,6 +1,6 @@
 - block:
 
-  # https://www.mongodb.com/docs/v6.0/tutorial/install-mongodb-on-debian/
+  # https://www.mongodb.com/docs/v8.0/tutorial/install-mongodb-on-debian/
   - name: 'curl https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc --output /tmp/ansible.mongodb-server-{{ repo_mongodb__version }}.asc'
     ansible.builtin.get_url:
       url: 'https://www.mongodb.org/static/pgp/server-{{ repo_mongodb__version }}.asc'

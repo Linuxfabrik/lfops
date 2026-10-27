@@ -1,0 +1,4 @@
+# The scenario runs against repo.linuxfabrik.ch, not against a mirror.
+repo_linuxfabrik__mirror_url: ''
+# Enable the testing channel as well, so verify.yml proves the variable takes effect.
+repo_linuxfabrik__testing_repo_enabled: true

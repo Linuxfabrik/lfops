@@ -1,0 +1,49 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
+- block:
+
+  # every supported platform has a vars/<platform>.yml defining the template directory
+  - name: 'Assert that the platform is supported'
+    ansible.builtin.assert:
+      that:
+        - '__repo_linuxfabrik__template_dir is defined'
+        - 'ansible_facts["architecture"] in __repo_linuxfabrik__supported_architectures'
+      fail_msg: >-
+        repo_linuxfabrik: {{ ansible_facts["distribution"] }} {{ ansible_facts["distribution_version"] }}
+        ({{ ansible_facts["architecture"] }}) is not served by repo.linuxfabrik.ch.
+        Supported platforms: {{ __repo_linuxfabrik__supported_platforms | join(", ") }},
+        each on {{ __repo_linuxfabrik__supported_architectures | join(" and ") }}.
+      quiet: true
+
+  tags:
+    # use 'always' so the validation runs even when other roles reference these variables.
+    - 'always'
+
+
+- name: 'Perform platform/version specific tasks'
+  ansible.builtin.include_tasks: '{{ __task_file }}'
+  when: '__task_file | length > 0'
+  vars:
+    __task_file: '{{ lookup("ansible.builtin.first_found", __first_found_options) }}'
+    __first_found_options:
+      files:
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["distribution"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}{{ ansible_facts["distribution_major_version"] }}.yml'
+        - '{{ ansible_facts["os_family"] }}.yml'
+      paths:
+        - '{{ role_path }}/tasks'
+      skip: true
+  tags:
+    - 'always'
