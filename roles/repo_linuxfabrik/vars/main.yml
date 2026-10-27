@@ -4,6 +4,7 @@ __repo_linuxfabrik__supported_architectures:
   - 'aarch64'
   - 'x86_64'
 __repo_linuxfabrik__supported_platforms:
+  - 'Debian 11'
   - 'Debian 12'
   - 'Debian 13'
   - 'Fedora 44'

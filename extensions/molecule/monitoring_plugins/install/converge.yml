@@ -1,5 +1,5 @@
 - name: 'Look up the latest monitoring plugins release'
-  ansible.builtin.import_playbook: '../playbooks/monitoring-plugins-latest.yml'
+  ansible.builtin.import_playbook: '../../playbooks/monitoring-plugins-latest.yml'
 
 
 - name: 'Converge monitoring_plugins playbook'

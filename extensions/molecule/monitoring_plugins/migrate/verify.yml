@@ -1,0 +1,39 @@
+# The same checks as for a fresh install: the latest release runs, came from the Linuxfabrik
+# repository, and nothing of the former repository is left.
+- name: 'Verify the monitoring plugins'
+  ansible.builtin.import_playbook: '../install/verify.yml'
+
+
+- name: 'Verify the migration from the former repository'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    # The SELinux subpackage depends on the exact version of the base package, so a base package
+    # upgraded without it would have failed the transaction, and one left behind would keep the
+    # former version.
+    - name: 'Assert that the SELinux subpackage was upgraded along with the package'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik-monitoring-plugins-selinux" in ansible_facts["packages"]'
+          - 'ansible_facts["packages"]["linuxfabrik-monitoring-plugins-selinux"][0]["version"] == ansible_facts["packages"]["linuxfabrik-monitoring-plugins"][0]["version"]'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'dnf versionlock list / apt-mark showhold'
+      ansible.builtin.command: '{{ "dnf versionlock list" if ansible_facts["os_family"] == "RedHat" else "apt-mark showhold" }}'
+      register: '__molecule__locks_result'
+      changed_when: false
+
+    # The lock the earlier version of LFOps took has to be moved to the new version, otherwise
+    # the next system update would not touch the package, or the upgrade would have failed.
+    - name: 'Assert that the package is locked at the new version'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__locks_result["stdout"] is search("linuxfabrik-monitoring-plugins")'
+          - '__molecule__locks_result["stdout"] is not search("linuxfabrik-monitoring-plugins-0:" ~ (molecule__monitoring_plugins_former_version | regex_escape) ~ "-")'
+        fail_msg: '{{ __molecule__locks_result["stdout"] }}'

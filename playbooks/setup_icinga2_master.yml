@@ -70,8 +70,9 @@
     setup_icinga2_master__repo_grafana__skip_role__internal_var: '{{ setup_icinga2_master__repo_grafana__skip_role | d(false) }}'
     setup_icinga2_master__repo_icinga__skip_role__internal_var: '{{ setup_icinga2_master__repo_icinga__skip_role | d(false) }}'
     setup_icinga2_master__repo_influxdb__skip_role__internal_var: '{{ setup_icinga2_master__repo_influxdb__skip_role | d(false) }}'
-    # serves the acme.sh package, so it only runs together with acme_sh
-    setup_icinga2_master__repo_linuxfabrik__skip_role__internal_var: '{{ setup_icinga2_master__repo_linuxfabrik__skip_role | d(setup_icinga2_master__acme_sh__skip_role__internal_var) }}'
+    # serves the acme.sh and the monitoring plugins packages, so it only runs together with acme_sh
+    # or with the package install of the monitoring plugins
+    setup_icinga2_master__repo_linuxfabrik__skip_role__internal_var: '{{ setup_icinga2_master__repo_linuxfabrik__skip_role | d(setup_icinga2_master__acme_sh__skip_role__internal_var and (setup_icinga2_master__monitoring_plugins__skip_role__internal_var or monitoring_plugins__install_method | d("package") != "package")) }}'
     setup_icinga2_master__repo_mariadb__skip_role__internal_var: '{{ setup_icinga2_master__repo_mariadb__skip_role | d(false) }}'
     setup_icinga2_master__repo_monitoring_plugins__skip_role__internal_var: '{{ setup_icinga2_master__repo_monitoring_plugins__skip_role | d(false) }}'
     setup_icinga2_master__repo_mydumper__skip_role__internal_var: '{{ setup_icinga2_master__repo_mydumper__skip_role | d(false) }}'
@@ -115,7 +116,8 @@
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
         - 'not setup_icinga2_master__repo_epel__skip_role__internal_var'
 
-    # serves the acme.sh package, so it only runs together with acme_sh
+    # serves the acme.sh and the monitoring plugins packages, so it only runs together with acme_sh
+    # or with the package install of the monitoring plugins
     - role: 'linuxfabrik.lfops.repo_linuxfabrik'
       when:
         - 'not setup_icinga2_master__repo_linuxfabrik__skip_role__internal_var'
@@ -242,10 +244,9 @@
       when:
         - 'not setup_icinga2_master__icingaweb2__skip_role__internal_var'
 
+    # removes the former repository of the monitoring plugins, which repo_linuxfabrik replaces
     - role: 'linuxfabrik.lfops.repo_monitoring_plugins'
       when:
-        # a source install needs no package repository, and re-registering it would undo its removal
-        - 'monitoring_plugins__install_method | d("package") == "package" or "repo_monitoring_plugins:remove" in ansible_run_tags'
         - 'not setup_icinga2_master__repo_monitoring_plugins__skip_role__internal_var'
 
     # note: monitoring_plugins role needs to run after the icingaweb2 role to deploy the icons

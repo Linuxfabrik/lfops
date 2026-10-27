@@ -431,7 +431,8 @@ Calls the following roles (in order):
 * [repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga): `icinga2_agent__skip_repo_icinga`
 * [icinga2_agent](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_agent)
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `icinga2_agent__skip_repo_epel` (default: `true`)
-* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `icinga2_agent__skip_repo_monitoring_plugins`
+* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `icinga2_agent__skip_repo_monitoring_plugins`. Removes the former repository of the Monitoring Plugins.
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `icinga2_agent__skip_repo_linuxfabrik`. Only for `monitoring_plugins__install_method: 'package'`.
 * [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): `icinga2_agent__skip_monitoring_plugins`
 
 
@@ -700,7 +701,8 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `monitoring_plugins__skip_repo_monitoring_plugins`
+* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `monitoring_plugins__skip_repo_monitoring_plugins`. Removes the former repository of the Monitoring Plugins.
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `monitoring_plugins__skip_repo_linuxfabrik`. Only for `monitoring_plugins__install_method: 'package'`.
 * [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins)
 
 
@@ -1157,7 +1159,7 @@ Calls the following roles (in order):
 * [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update): `setup_basic__skip_system_update`
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `setup_basic__skip_python_venv`
 * [duplicity](https://github.com/Linuxfabrik/lfops/tree/main/roles/duplicity): `setup_basic__skip_duplicity`
-* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `setup_basic__skip_repo_monitoring_plugins`
+* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `setup_basic__skip_repo_monitoring_plugins`. Removes the former repository of the Monitoring Plugins.
 * [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): `setup_basic__skip_monitoring_plugins`
 * [bootloader](https://github.com/Linuxfabrik/lfops/tree/main/roles/bootloader): `setup_basic__skip_bootloader`. Red Hat family only. Puts `psi=1` on the kernel command line, which the psi-* monitoring plugins need, and requests a reboot at the maintenance window.
 * [repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga): `setup_basic__skip_repo_icinga`
@@ -1223,7 +1225,7 @@ Calls the following roles (in order):
 
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_icinga2_master__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_icinga2_master__repo_epel__skip_role`
-* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_icinga2_master__repo_linuxfabrik__skip_role` (default: same as `acme_sh`)
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_icinga2_master__repo_linuxfabrik__skip_role`. Only runs together with `acme_sh`, or with `monitoring_plugins` and `monitoring_plugins__install_method: 'package'`.
 * [repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb): `setup_icinga2_master__repo_mariadb__skip_role`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_icinga2_master__python__skip_role`
 * [repo_mydumper](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mydumper): `setup_icinga2_master__repo_mydumper__skip_role`
@@ -1239,7 +1241,7 @@ Calls the following roles (in order):
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `setup_icinga2_master__php__skip_role`
 * [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd): `setup_icinga2_master__apache_httpd__skip_role`
 * [icingaweb2](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2): `setup_icinga2_master__icingaweb2__skip_role`
-* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `setup_icinga2_master__repo_monitoring_plugins__skip_role`
+* [repo_monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_monitoring_plugins): `setup_icinga2_master__repo_monitoring_plugins__skip_role`. Removes the former repository of the Monitoring Plugins.
 * [monitoring_plugins](https://github.com/Linuxfabrik/lfops/tree/main/roles/monitoring_plugins): `setup_icinga2_master__monitoring_plugins__skip_role`
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_icinga2_master__selinux__skip_role`
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_icinga2_master__kernel_settings__skip_role`

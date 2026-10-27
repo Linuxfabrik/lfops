@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name monitoring_plugins/install`.
+#
+# Covers the package install on a host without the monitoring plugins. The 'migrate' sub-scenario
+# covers a host that got the package from the former repository at
+# repo.linuxfabrik.ch/monitoring-plugins/.
