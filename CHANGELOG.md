@@ -104,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:acme_sh, playbooks with acme_sh**: acme.sh comes as a package from the Linuxfabrik repository, which these playbooks now deploy, and is updated by the package manager instead of updating itself from GitHub on every renewal run; existing installations below `/opt/acme.sh` are migrated on the next run, certificates are kept.
 * **role:postfix**: On hosts without an IPv6 default route, Postfix uses IPv4 only, so it no longer logs `Network is unreachable` for the IPv6 address of the next hop on part of the deliveries.
 * **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
 * **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.

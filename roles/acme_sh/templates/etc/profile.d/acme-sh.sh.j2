@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# 2026102601
+
+# Let a plain `acme.sh` work on the certificates managed by LFOps, instead of ~/.acme.sh.
+export LE_CONFIG_HOME='/etc/acme.sh'

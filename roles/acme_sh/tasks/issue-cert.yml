@@ -15,9 +15,9 @@
     that: '"it works" in acme_sh__curl_result.content'
     fail_msg: 'could not reach http://{{ certificate["name"] }}/.well-known/acme-challenge/index.html. please make sure the url is reachable for acme.sh to work.'
 
-- name: '/opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue ...'
+- name: 'acme.sh --config-home /etc/acme.sh --issue ...'
   ansible.builtin.command: |-
-    /opt/acme.sh/acme.sh --config-home /etc/acme.sh --issue \
+    acme.sh --config-home /etc/acme.sh --issue \
     --domain '{{ certificate["name"] }}' \
     {% for item in certificate["alternative_names"] | d([]) %}
     --domain '{{ item }}' \

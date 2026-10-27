@@ -1,0 +1,51 @@
+# The role hands the ACME challenge directory to the web server user, so it expects a web server
+# on the host, as every host running acme_sh has one.
+- name: 'Install the web server that serves the ACME challenge'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'Install httpd / apache2'
+      ansible.builtin.package:
+        name: '{{ "httpd" if ansible_facts["os_family"] == "RedHat" else "apache2" }}'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+
+# Reproduces what earlier versions of the role left on a host, with the very command they ran:
+# the code in /opt/acme.sh, the state in /etc/acme.sh and the alias lines in the rc files of
+# root. `creates` keeps the idempotence step from installing it again after the migration.
+- name: 'Install acme.sh the way earlier versions of the role did'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'Install curl, openssl and tar'
+      ansible.builtin.package:
+        name:
+          - 'curl'
+          - 'openssl'
+          - 'tar'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+    - name: 'curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online ...'
+      ansible.builtin.shell: |-
+        set -o pipefail
+        curl https://raw.githubusercontent.com/acmesh-official/acme.sh/master/acme.sh | sh -s -- --install-online \
+          --home /opt/acme.sh \
+          --config-home /etc/acme.sh \
+          --cert-home  /etc/acme.sh/certs \
+          --accountemail  "{{ acme_sh__account_email }}" \
+          --accountkey  /etc/acme.sh/account.key \
+          --accountconf /etc/acme.sh/account.conf \
+          --no-cron
+      args:
+        executable: '/bin/bash'
+        creates: '/etc/acme.sh/account.conf'
+
+
+- name: 'Converge acme_sh playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.acme_sh'
