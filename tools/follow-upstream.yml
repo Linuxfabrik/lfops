@@ -116,3 +116,26 @@ collabora_enterprise:
     - '/etc/httpd/conf/coolwsd.conf'
     - '/etc/nginx/snippets/coolwsd.conf'
     - '/etc/pam.d/coolwsd'
+
+# Install scripts (grafana 13.2.4, RPM and DEB): on the first installation, copy
+# sample.ini and ldap.toml unchanged to /etc/grafana, then set root:grafana 0640, as the
+# grafana role does.
+grafana:
+  upstream:
+    - 'grafana/grafana'
+  series_parts: 2
+  deb_repo: 'https://apt.grafana.com stable main'
+  gpg_key: 'https://rpm.grafana.com/gpg.key'
+  rpm_repo: 'https://rpm.grafana.com/'
+  files:
+    # the package copies these samples to /etc/grafana on installation
+    - package: 'grafana'
+      path: '/usr/share/grafana/conf/ldap.toml'
+      template: 'roles/grafana/templates/etc/grafana/ldap.toml.j2'
+    - package: 'grafana'
+      path: '/usr/share/grafana/conf/sample.ini'
+      template: 'roles/grafana/templates/etc/grafana/grafana.ini.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/default/grafana-server'
+    - '/etc/sysconfig/grafana-server'
