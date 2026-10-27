@@ -523,6 +523,10 @@ def generate_mkdocs_yml(roles, plugin_pages):
     # block needs so the inline `![…](…)` shields.io image links render as
     # actual badges instead of raw text.
     lines.append('  - md_in_html')
+    # pymdownx.superfences renders fenced code blocks that are indented under
+    # a list item; python-markdown's fenced_code only finds top-level fences
+    # and turns nested ones into inline code.
+    lines.append('  - pymdownx.superfences')
     lines.append('  - tables')
     lines.append('  - toc:')
     lines.append('      permalink: true')
