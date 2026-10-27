@@ -6,9 +6,6 @@ Important: When setting up a replica set across members, make sure that there is
 
 This role is only compatible with the following MongoDB versions:
 
-* 4.2 (only tested on RHEL 8)
-* 4.4 (only tested on RHEL 8)
-* 6.0
 * 7.0
 * 8.0
 

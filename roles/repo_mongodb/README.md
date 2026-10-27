@@ -24,7 +24,7 @@ This role deploys the package repository for [MongoDB](https://www.mongodb.com/)
 Example:
 ```yaml
 # mandatory
-repo_mongodb__version: '6.0'
+repo_mongodb__version: '8.0'
 ```
 
 
