@@ -18,7 +18,7 @@ This role deploys the [Linuxfabrik package repository](https://repo.linuxfabrik.
 
 ## Known Limitations
 
-* Supports Debian 12 and 13, Fedora 44, RHEL 8, 9 and 10 and their derivatives, SLES, SLED and openSUSE Leap 15 and 16, and Ubuntu 22.04, 24.04 and 26.04, each on `x86_64` and `aarch64`. The role aborts on other platforms.
+* Supports Debian 11, 12 and 13, Fedora 44, RHEL 8, 9 and 10 and their derivatives, SLES, SLED and openSUSE Leap 15 and 16, and Ubuntu 22.04, 24.04 and 26.04, each on `x86_64` and `aarch64`. The role aborts on other platforms.
 * HTTP basic auth for a mirror is supported on the Red Hat family and SUSE only.
 
 

@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+# 20261027
+
+{% if repo_linuxfabrik__mirror_url is defined and repo_linuxfabrik__mirror_url | length %}
+{% set __repo_linuxfabrik__uri = repo_linuxfabrik__mirror_url ~ '/linuxfabrik/debian/linuxfabrik' %}
+{% else %}
+{% set __repo_linuxfabrik__uri = 'https://repo.linuxfabrik.ch/debian/linuxfabrik' %}
+{% endif %}
+Types: deb
+URIs: {{ __repo_linuxfabrik__uri }}
+Suites: bullseye-release
+Components: main
+Signed-By: /usr/share/keyrings/linuxfabrik.gpg
+
+# Packages wait here for 7 days before they move to the release channel.
+Types: deb
+URIs: {{ __repo_linuxfabrik__uri }}
+Suites: bullseye-testing
+Components: main
+Signed-By: /usr/share/keyrings/linuxfabrik.gpg
+Enabled: {{ 'yes' if repo_linuxfabrik__testing_repo_enabled | bool else 'no' }}
