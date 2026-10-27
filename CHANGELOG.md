@@ -160,6 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
 * **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
 * **role:mongodb**: `mongodb-dump.service` fails when `mongodump` fails, instead of reporting success with an incomplete dump.
 * **role:logstash**: `/etc/default/logstash` is no longer world-readable and no longer reported as changed after every Logstash package update, which restarted Logstash. The first run after updating LFOps restarts Logstash once.

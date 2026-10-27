@@ -10,5 +10,12 @@ mongodb__dump_user:
   username: 'mongodb-dump'
   password: 'linux"fab\rik #''x:@/%'
 
+# A regular user, so that the idempotence step also covers the user loop.
+mongodb__users__group_var:
+  - username: 'molecule-app'
+    password: 'linuxfabrik'
+    database: 'molecule'
+    roles: 'readWrite'
+
 # Ubuntu 24.04 only gets 8.0.
 repo_mongodb__version: '8.0'
