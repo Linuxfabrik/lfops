@@ -139,3 +139,18 @@ grafana:
     # the packaged defaults are used
     - '/etc/default/grafana-server'
     - '/etc/sysconfig/grafana-server'
+
+# Install scripts (influxdb 1.13.1, RPM and DEB): only move an old /etc/opt/influxdb
+# to /etc/influxdb, keeping a backup of influxdb.conf. The repositories of all EL
+# versions serve the same build, so the EL 9 repository stands for all.
+influxdb:
+  upstream:
+    - 'influxdata/influxdb'
+  series_parts: 2
+  deb_repo: 'https://repos.influxdata.com/debian stable main'
+  gpg_key: 'https://repos.influxdata.com/influxdata-archive.key'
+  rpm_repo: 'https://repos.influxdata.com/rhel/9/x86_64/stable/'
+  files:
+    - package: 'influxdb'
+      path: '/etc/influxdb/influxdb.conf'
+      template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
