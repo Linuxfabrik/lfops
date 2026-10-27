@@ -173,3 +173,23 @@ influxdb:
     - package: 'influxdb'
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
+
+# Install scripts (proxysql 3.0.11, RPM): create the user and apply the systemd preset to
+# proxysql.service on the first installation, never touch the templated file. One
+# template serves 2.7 and 3.0. The DEB is not checked: the role supports RHEL only, and
+# upstream's flat APT repository (`<url> ./`) is not supported by this tool.
+proxysql:
+  upstream:
+    - 'sysown/proxysql'
+  series_parts: 2
+  gpg_key: 'https://repo.proxysql.com/ProxySQL/proxysql-{series}.x/repo_pub_key'
+  rpm_repo: 'https://repo.proxysql.com/ProxySQL/proxysql-{series}.x/centos/9/'
+  files:
+    - package: 'proxysql'
+      path: '/etc/proxysql.cnf'
+      template: 'roles/proxysql/templates/etc/proxysql.cnf.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/logrotate.d/proxysql'
+    - '/etc/systemd/system/proxysql-initial.service'
+    - '/etc/systemd/system/proxysql.service'
