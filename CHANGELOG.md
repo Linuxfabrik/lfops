@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **playbook:setup_basic**: Deploys the Linuxfabrik package repository on RHEL 8 to 10 and their derivatives, right after EPEL; dnf skips it with a warning on hosts whose mirror does not serve it (`setup_basic__skip_repo_linuxfabrik`).
+* **playbook:setup_basic**: Deploys the Linuxfabrik package repository on Debian, Ubuntu and RHEL 8 to 10 and their derivatives, right after EPEL; on hosts whose mirror does not serve it, dnf skips it with an error message and apt stops the run (`setup_basic__skip_repo_linuxfabrik`).
 * **role:repo_linuxfabrik, playbook:repo_linuxfabrik**: Add a role and playbook that deploy the Linuxfabrik package repository repo.linuxfabrik.ch on Debian, Fedora, the Red Hat family, SUSE and Ubuntu, with an optional testing channel.
 * **role:chrony**: chronyd can serve as a public NTP server, for example in the NTP Pool, with response rate limiting (`chrony__ratelimit`) and room for many clients (`chrony__clientloglimit`).
 * **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.

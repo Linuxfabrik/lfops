@@ -208,8 +208,8 @@
 
     - block:
 
-      # setup_basic deploys the Linuxfabrik repository on RHEL 8 to 10 only. Resolving a package
-      # from it proves that dnf reads the repository and accepts its key, without a terminal.
+      # Resolving a package from the Linuxfabrik repository proves that dnf reads it and accepts
+      # its key, without a terminal.
       - name: 'dnf repoquery --repo=linuxfabrik exoscale-cli'
         ansible.builtin.command:
           cmd: 'dnf --quiet repoquery --repo=linuxfabrik exoscale-cli'
@@ -225,16 +225,21 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
 
-    - name: 'stat /etc/apt/sources.list.d/linuxfabrik.sources'
-      ansible.builtin.stat:
-        path: '/etc/apt/sources.list.d/linuxfabrik.sources'
-      register: '__molecule__linuxfabrik_sources_stat_result'
-      when:
-        - 'ansible_facts["os_family"] == "Debian"'
 
-    - name: 'Assert that setup_basic leaves the Linuxfabrik repository out on Debian and Ubuntu'
-      ansible.builtin.assert:
-        that: 'not __molecule__linuxfabrik_sources_stat_result["stat"]["exists"]'
+    - block:
+
+      # Resolving a package from the Linuxfabrik repository proves that apt reads it and accepts
+      # its key.
+      - name: 'apt-cache policy acme.sh'
+        ansible.builtin.command: 'apt-cache policy acme.sh'
+        register: '__molecule__repo_linuxfabrik_result'
+        changed_when: false
+
+      - name: 'Assert that the Linuxfabrik repository offers acme.sh'
+        ansible.builtin.assert:
+          that: '__molecule__repo_linuxfabrik_result["stdout"] is search("repo.linuxfabrik.ch/" ~ ansible_facts["distribution"] | lower ~ "/linuxfabrik " ~ ansible_facts["distribution_release"] ~ "-release/main")'
+          fail_msg: '{{ __molecule__repo_linuxfabrik_result["stdout"] }}'
+
       when:
         - 'ansible_facts["os_family"] == "Debian"'
 
