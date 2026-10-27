@@ -149,7 +149,7 @@ Which Ansible role is proven to run on which OS?
 | repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | repo_monitoring_plugins               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | SLES 15, SLES 16                             |
 | repo_mydumper                         |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
-| repo_opensearch                       |   x    |   x    |   x    |  (x)   |   (x)   |     x     |     x     |    (x)    |                                              |
+| repo_opensearch                       |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | OpenSearch 2.x not on Deb 13 and RHEL 10     |
 | repo_openvpn                          |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | repo_postgresql                       |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
