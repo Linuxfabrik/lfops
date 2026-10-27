@@ -102,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:telegraf**: `telegraf.conf` follows the file that current Telegraf packages ship. The effective settings stay the same, but deploying the file restarts Telegraf once.
 * **role:postfix**: On hosts without an IPv6 default route, Postfix uses IPv4 only, so it no longer logs `Network is unreachable` for the IPv6 address of the next hop on part of the deliveries.
 * **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
 * **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.

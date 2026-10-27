@@ -154,3 +154,26 @@ influxdb:
     - package: 'influxdb'
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
+
+# Install scripts (telegraf 1.40.2, RPM): create the user and group, move an old
+# /etc/opt/telegraf to /etc/telegraf, keeping a backup of telegraf.conf, enable the
+# service and try-restart it on upgrade. Their copy of telegraf.conf.sample to a missing
+# telegraf.conf never runs, the RPM ships no sample but telegraf.conf itself. They never
+# modify an existing telegraf.conf. Only the RPM is followed, the telegraf role supports
+# the RHEL family only. The repositories of all EL versions serve the same build, so the
+# EL 9 repository stands for all.
+telegraf:
+  upstream:
+    - 'influxdata/telegraf'
+  series_parts: 2
+  gpg_key: 'https://repos.influxdata.com/influxdata-archive.key'
+  rpm_repo: 'https://repos.influxdata.com/rhel/9/x86_64/stable/'
+  files:
+    - package: 'telegraf'
+      path: '/etc/telegraf/telegraf.conf'
+      template: 'roles/telegraf/templates/etc/telegraf/telegraf.conf.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/logrotate.d/telegraf'
+    # placeholder that keeps the drop-in directory in the package
+    - '/etc/telegraf/telegraf.d/.ignore'
