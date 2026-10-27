@@ -3,3 +3,7 @@ __nextcloud__required_packages:
   - 'jq'
   - 'openldap-clients'
   - 'samba-client'
+
+__nextcloud__mysql_login_unix_socket: '/var/lib/mysql/mysql.sock'
+__nextcloud__redis_group: 'redis'
+__nextcloud__redis_unixsocket: '/run/redis/redis.sock'

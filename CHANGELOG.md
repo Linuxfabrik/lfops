@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
+* **role:nextcloud**: `nextcloud__version` is mandatory, for example `'latest-35'`. It only picks the release that a new installation downloads.
+* **role:nextcloud**: Nextcloud reaches Redis or Valkey through its Unix socket instead of over TCP, and the web server user joins the `redis` or `valkey` group, which may use the socket. Run the complete `setup_nextcloud` playbook rather than the `nextcloud` role alone, so that Redis or Valkey open the socket first. Set `nextcloud__redis_unixsocket: ''` to stay with TCP.
+* **role:nextcloud**: The role aborts before it changes anything when the installed PHP or MariaDB does not fit the installed Nextcloud major version, or when it does not know that major version (30 to 35 are known). For example, Nextcloud 35 needs PHP 8.3 to 8.5 and MariaDB 10.11 or newer. Upgrade PHP or MariaDB, as the error message says, before running the role again.
+* **role:nextcloud**: Nextcloud verifies the certificate of the SMTP server, where the role had switched the check off. If your mail server presents a self-signed certificate, make Nextcloud trust it, or set `mail_smtpstreamoptions ssl allow_self_signed` to `true` and `mail_smtpstreamoptions ssl verify_peer` and `mail_smtpstreamoptions ssl verify_peer_name` to `false` in `nextcloud__sysconfig__host_var` to keep the previous behaviour.
 * **role:exoscale_vm**: The role scales an existing instance and grows its disk when `exoscale_vm__service_offering` or `exoscale_vm__disk_size` differ from it, and aborts on a running instance instead of stopping it, unless `exoscale_vm__force: true` is set. Before running the role against existing instances, set both variables to their current values, or set `exoscale_vm__force: true` in a maintenance window. `exoscale_vm__state` only accepts `absent`, `present`, `restarted`, `started` and `stopped`.
 * **role:php**: PHP no longer tracks file uploads in the session (`session.upload_progress.enabled = Off`), a confirmed way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) that the advisory recommends closing even on patched PHP, and the PHP-FPM pools enforce this against `.user.ini` files. Upload progress bars that depend on it stop working. Set `php__ini_session_upload_progress_enabled__host_var: 'On'` to restore the feature.
 * **role:postgresql_server**: Databases are created with the `C.UTF-8` locale instead of `en_US.UTF-8`, which failed on hosts with only the minimal glibc language pack. `C.UTF-8` sorts text by code point instead of by language rules. Existing databases are unaffected. To create new databases as before, set `lc_collate: 'en_US.UTF-8'` and `lc_ctype: 'en_US.UTF-8'` on their entries in `postgresql_server__databases__*_var`.
@@ -101,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The role removes the PHP extensions APCu, bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: all caches live in Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:postfix**: On hosts without an IPv6 default route, Postfix uses IPv4 only, so it no longer logs `Network is unreachable` for the IPv6 address of the next hop on part of the deliveries.
 * **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
 * **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.
@@ -155,6 +161,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: A run after a failed installation installs Nextcloud, where it skipped the installer because the failed attempt had left a `config.php` behind.
+* **role:nextcloud**: A run against an unchanged host no longer restarts PHP-FPM and reports no change at all.
+* **role:nextcloud**: `nextcloud-update` adds missing primary keys and runs the pending mimetype migrations after an update, which Nextcloud leaves to the administrator.
+* **role:nextcloud**: A `nextcloud__datadir` other than `/data` gets the ownership and the SELinux label Nextcloud needs, which the role only ever set on `/data`.
+* **role:nextcloud**: The monthly LDAP remnants report runs, where its timer started the app update instead.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
 * **role:network**: `network_state` applies on hosts whose active connection profile, such as `cloud-init eth0` or `System eth0`, still stores DNS servers, instead of aborting with `ipv6.dns: this property is not allowed for 'method=disabled'`. DNS servers that `dns-resolver` does not list are removed from that profile.
@@ -294,6 +305,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
+* **role:nextcloud**: `/usr/local/bin/nextcloud-update`, which holds the credentials of the Icinga API user, is readable by root only.
+* **role:nextcloud**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.
 * **role:apache_tomcat**: The host-manager webapp only accepts the clients that `apache_tomcat__webapps_manager_context_xml_allow` allows, as documented, instead of those that `apache_tomcat__webapps_docs_context_xml_allow` allows.
 * **role:borg_local, role:schedule_reboot, role:tools**: Neither the password of the Icinga API user nor the Rocket.Chat webhook of `schedule_reboot` shows up in the process list or in a file that every local user can read, which moves `schedule-icinga-downtime` from a shell function in `/etc/profile.d/alias.sh` to a command in `/usr/local/sbin` that only root may run.
