@@ -832,6 +832,8 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `proxysql__skip_repo_baseos`
+* [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `proxysql__skip_repo_epel`
 * [repo_proxysql](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_proxysql): `proxysql__skip_repo_proxysql`
 * [proxysql](https://github.com/Linuxfabrik/lfops/tree/main/roles/proxysql)
 

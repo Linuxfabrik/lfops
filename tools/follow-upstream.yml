@@ -117,6 +117,66 @@ collabora_enterprise:
     - '/etc/nginx/snippets/coolwsd.conf'
     - '/etc/pam.d/coolwsd'
 
+# Elasticsearch, Kibana and Logstash are released in lockstep, one repository per major
+# version. The templates have no `{series}` and serve every major version the roles
+# support, but only the newest major version (9.x) is followed.
+#
+# Install scripts (elasticsearch, kibana and logstash 9.5.5, RPM and DEB):
+# * elasticsearch: on the first installation, `elasticsearch-cli auto-configure-node`
+#   appends a security block to elasticsearch.yml and creates certs/ and the keystore.
+#   The template carries its own version of that block. Upgrades leave the file alone.
+# * kibana: set root:kibana 0660 on kibana.yml, as the kibana role does.
+# * logstash: on every installation and upgrade, `sed` uncomments `# path.logs:` and
+#   `# path.data:` in logstash.yml (both set by the template) and sets
+#   /etc/default/logstash to 0600.
+elastic:
+  upstream:
+    - 'elastic/elasticsearch'
+    - 'elastic/kibana'
+    - 'elastic/logstash'
+  series_parts: 1
+  deb_repo: 'https://artifacts.elastic.co/packages/{series}.x/apt stable main'
+  gpg_key: 'https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+  rpm_repo: 'https://artifacts.elastic.co/packages/{series}.x/yum/'
+  files:
+    - package: 'logstash'
+      path: '/etc/default/logstash'
+      template: 'roles/logstash/templates/etc/default/logstash.j2'
+    - package: 'elasticsearch'
+      path: '/etc/elasticsearch/elasticsearch.yml'
+      template: 'roles/elasticsearch/templates/etc/elasticsearch/elasticsearch.yml.j2'
+    - package: 'elasticsearch'
+      path: '/etc/elasticsearch/log4j2.properties'
+      template: 'roles/elasticsearch/templates/etc/elasticsearch/log4j2.properties.j2'
+    - package: 'kibana'
+      path: '/etc/kibana/kibana.yml'
+      template: 'roles/kibana/templates/etc/kibana/kibana.yml.j2'
+    - package: 'logstash'
+      path: '/etc/logstash/logstash.yml'
+      template: 'roles/logstash/templates/etc/logstash/logstash.yml.j2'
+    - package: 'logstash'
+      path: '/etc/logstash/pipelines.yml'
+      template: 'roles/logstash/templates/etc/logstash/pipelines.yml.j2'
+    - package: 'elasticsearch'
+      path: '/etc/sysconfig/elasticsearch'
+      deb_path: '/etc/default/elasticsearch'
+      template: 'roles/elasticsearch/templates/etc/sysconfig/elasticsearch.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/default/kibana'
+    - '/etc/elasticsearch/elasticsearch-plugins.example.yml'
+    - '/etc/elasticsearch/jvm.options'
+    - '/etc/elasticsearch/role_mapping.yml'
+    - '/etc/elasticsearch/roles.yml'
+    - '/etc/elasticsearch/users'
+    - '/etc/elasticsearch/users_roles'
+    - '/etc/kibana/node.options'
+    - '/etc/logstash/jvm.options'
+    - '/etc/logstash/log4j2.properties'
+    - '/etc/logstash/logstash-sample.conf'
+    - '/etc/logstash/startup.options'
+    - '/etc/sysconfig/kibana'
+
 # Install scripts (grafana 13.2.4, RPM and DEB): on the first installation, copy
 # sample.ini and ldap.toml unchanged to /etc/grafana, then set root:grafana 0640, as the
 # grafana role does.
@@ -173,3 +233,46 @@ influxdb:
     - package: 'influxdb'
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
+
+# Install scripts (proxysql 3.0.11, RPM): create the user and apply the systemd preset to
+# proxysql.service on the first installation, never touch the templated file. One
+# template serves 2.7 and 3.0. The DEB is not checked: the role supports RHEL only, and
+# upstream's flat APT repository (`<url> ./`) is not supported by this tool.
+proxysql:
+  upstream:
+    - 'sysown/proxysql'
+  series_parts: 2
+  gpg_key: 'https://repo.proxysql.com/ProxySQL/proxysql-{series}.x/repo_pub_key'
+  rpm_repo: 'https://repo.proxysql.com/ProxySQL/proxysql-{series}.x/centos/9/'
+  files:
+    - package: 'proxysql'
+      path: '/etc/proxysql.cnf'
+      template: 'roles/proxysql/templates/etc/proxysql.cnf.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/logrotate.d/proxysql'
+    - '/etc/systemd/system/proxysql-initial.service'
+    - '/etc/systemd/system/proxysql.service'
+
+# Install scripts (telegraf 1.40.2, RPM): create the user and group, move an old
+# /etc/opt/telegraf to /etc/telegraf, keeping a backup of telegraf.conf, enable the
+# service and try-restart it on upgrade. Their copy of telegraf.conf.sample to a missing
+# telegraf.conf never runs, the RPM ships no sample but telegraf.conf itself. They never
+# modify an existing telegraf.conf. Only the RPM is followed, the telegraf role supports
+# the RHEL family only. The repositories of all EL versions serve the same build, so the
+# EL 9 repository stands for all.
+telegraf:
+  upstream:
+    - 'influxdata/telegraf'
+  series_parts: 2
+  gpg_key: 'https://repos.influxdata.com/influxdata-archive.key'
+  rpm_repo: 'https://repos.influxdata.com/rhel/9/x86_64/stable/'
+  files:
+    - package: 'telegraf'
+      path: '/etc/telegraf/telegraf.conf'
+      template: 'roles/telegraf/templates/etc/telegraf/telegraf.conf.j2'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/logrotate.d/telegraf'
+    # placeholder that keeps the drop-in directory in the package
+    - '/etc/telegraf/telegraf.d/.ignore'

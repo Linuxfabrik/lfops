@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
-# 2024110601
+# 2026102701
+{# Based on opensearch 3.9.0 #}
 
 ################################
 # OpenSearch
@@ -7,9 +8,6 @@
 
 # OpenSearch home directory
 OPENSEARCH_HOME=/usr/share/opensearch
-
-# k-NN Lib Path
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/share/opensearch/plugins/opensearch-knn/lib
 
 # OpenSearch Java path
 #OPENSEARCH_JAVA_HOME=/usr/lib/jvm/java-11-amazon-corretto
@@ -57,3 +55,10 @@ OPENSEARCH_SD_NOTIFY=true
 # When using Systemd, this setting is ignored and the 'vm.max_map_count'
 # property is set at boot time in /usr/lib/sysctl.d/opensearch.conf
 #MAX_MAP_COUNT=262144
+
+################################
+# Plugin properties
+################################
+
+# k-NN / Neural Sparse Native Lib Path
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/share/opensearch/plugins/opensearch-knn/lib:/usr/share/opensearch/plugins/opensearch-neural-search/lib

@@ -1,6 +1,7 @@
 # {{ ansible_managed }}
-# 2026070801
+# 2026102701
 # 2.x
+{# Based on opensearch 2.19.7 #}
 # ======================== OpenSearch Configuration =========================
 #
 # NOTE: OpenSearch comes with reasonable defaults for most settings.
@@ -140,6 +141,14 @@ cluster.initial_cluster_manager_nodes: {{ opensearch__cluster_initial_cluster_ma
 # Once there is no observed impact on performance, this feature flag can be removed.
 #
 #opensearch.experimental.optimization.datetime_formatter_caching.enabled: false
+#
+# Gates the functionality of enabling Opensearch to use pluggable caches with respective store names via setting.
+#
+#opensearch.experimental.feature.pluggable.caching.enabled: false
+#
+# Gates the functionality of star tree index, which improves the performance of search aggregations.
+#
+#opensearch.experimental.feature.composite_index.star_tree.enabled: false
 action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | default(true) | string | lower }}
 plugins.security.disabled: {{ opensearch__plugins_security_disabled | default(true) | string | lower }}
 
@@ -159,6 +168,6 @@ plugins.security.ssl.http.pemkey_filepath: 'node-http.key'
 plugins.security.ssl.http.pemtrustedcas_filepath: 'root-ca.pem'
 plugins.security.ssl.transport.enforce_hostname_verification: {{ opensearch__plugins_security_transport_enforce_hostname_verification | d(false) | string | lower }}
 plugins.security.ssl.transport.pemcert_filepath: 'node-transport.pem'
-plugins.security.ssl.transport.pemkey_filepath: 'node-http.key'
+plugins.security.ssl.transport.pemkey_filepath: 'node-transport.key'
 plugins.security.ssl.transport.pemtrustedcas_filepath: 'root-ca.pem'
 plugins.security.ssl.transport.resolve_hostname: {{ opensearch__plugins_security_transport_resolve_hostname | d(true) | string | lower }}

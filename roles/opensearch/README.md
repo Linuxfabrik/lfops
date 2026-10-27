@@ -6,8 +6,10 @@ Note that this role does NOT let you specify a particular OpenSearch version. It
 
 Supported versions:
 
-* 1.x
 * 2.x
+* 3.x
+
+OpenSearch 2.x cannot be installed on RHEL 10 and Debian 13, see the Known Limitations of [linuxfabrik.lfops.repo_opensearch](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_opensearch).
 
 Hints for configuring TLS:
 
@@ -27,7 +29,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Single-Node Setup
 
-For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, OpenSearch 2.x automatically runs in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running and set the default replica count to 0, otherwise the cluster health stays `yellow` (see Post-Installation Steps below).
+For a single-node setup, no special configuration is needed beyond the mandatory variables. When `opensearch__discovery_seed_hosts` is not set, the role configures OpenSearch in single-node mode (`discovery.type: single-node`). After installation, verify that OpenSearch is running and set the default replica count to 0, otherwise the cluster health stays `yellow` (see Post-Installation Steps below).
 
 
 ## Cluster Setup
@@ -190,6 +192,17 @@ ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --limit new-
 ```bash
 ansible-playbook --inventory inventory linuxfabrik.lfops.opensearch --tags opensearch:configure
 ```
+
+
+## Upgrading from OpenSearch 2.x to 3.x
+
+The role installs OpenSearch, but does not upgrade an installed one to the next major version. Upgrade a cluster one node at a time:
+
+1. Upgrade the node to the latest OpenSearch 2.19 release first. OpenSearch 3.x only joins a cluster with 2.19 nodes and cannot read indices created by OpenSearch 1.x; reindex those before the upgrade.
+2. Set `repo_opensearch__version__host_var: '3.x'` (or the `__group_var`) and adjust `opensearch__version__host_var` / `opensearch__version__group_var` if set, then deploy the repository with `--tags repo_opensearch`.
+3. Upgrade the package, for example with `dnf upgrade opensearch`.
+4. Replace `/etc/opensearch/jvm.options` with the file shipped by the package: `mv /etc/opensearch/jvm.options.rpmnew /etc/opensearch/jvm.options`. The 2.x file enables the Java Security Manager, which the JDK of OpenSearch 3.x refuses (see Troubleshooting).
+5. Run the playbook, which deploys the 3.x configuration and starts OpenSearch.
 
 
 ## Post-Installation Steps
@@ -379,7 +392,7 @@ Only optional if `opensearch__plugins_security_disabled` is `true`.
 
 `opensearch__plugins_security_disabled`
 
-* Enables or disables the OpenSearch [security plugin](https://opensearch.org/docs/1.3/security-plugin/index/), which offers encryption, authentication, access control as well as audit logging and compliance.
+* Enables or disables the OpenSearch [security plugin](https://docs.opensearch.org/latest/security/), which offers encryption, authentication, access control as well as audit logging and compliance.
 * Type: Bool.
 * Default: `false`
 
@@ -588,6 +601,11 @@ opensearch__generate_certs_nodes:
 **The run aborts with `OpenSearch X.x is not supported by this role`**
 
 * The enabled repositories offer an OpenSearch major version this role has no configuration template for. Either pin the host to a supported version, or add the matching `roles/opensearch/templates/etc/opensearch/<major>.x-opensearch.yml.j2` template and list the major in `roles/opensearch/vars/main.yml`.
+* On a host that still runs OpenSearch 1.x, upgrade to OpenSearch 2.19 by hand first, see the [OpenSearch upgrade documentation](https://docs.opensearch.org/latest/install-and-configure/upgrade-opensearch/index/).
+
+**OpenSearch fails to start after an upgrade to 3.x with `A command line option has attempted to allow or enable the Security Manager`**
+
+* `/etc/opensearch/jvm.options` is still the file of OpenSearch 2.x. Replace it with the one of the package, see "Upgrading from OpenSearch 2.x to 3.x".
 
 
 ## License

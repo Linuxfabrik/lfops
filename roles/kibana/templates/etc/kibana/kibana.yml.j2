@@ -1,5 +1,6 @@
 # {{ ansible_managed }}
-# 2026091101
+# 2026102701
+{# Based on kibana 9.5.5 #}
 
 # For more configuration options see the configuration guide for Kibana in
 # https://www.elastic.co/guide/index.html
@@ -38,6 +39,9 @@ server.publicBaseUrl: '{{ kibana__server_public_base_url }}'
 # The Kibana server's name. This is used for display purposes.
 server.name: '{{ kibana__server_name }}'
 
+# Block requests to specific routes (exact path match, evaluated before auth).
+# server.excludeRoutes: ["/api/status"]
+
 # =================== System: Kibana Server (Optional) ===================
 # Enables SSL and paths to the PEM-format SSL certificate and SSL key files, respectively.
 # These settings enable SSL for outgoing requests from the Kibana server to the browser.
@@ -66,10 +70,6 @@ elasticsearch.hosts: {{ kibana__elasticsearch_hosts | ansible.builtin.to_yaml }}
 # Service account tokens are Bearer style tokens that replace the traditional username/password based configuration.
 # Use this token instead of a username/password.
 elasticsearch.serviceAccountToken: '{{ kibana__elasticsearch_service_account_token }}'
-
-# Time in milliseconds to wait for Elasticsearch to respond to pings. Defaults to the value of
-# the elasticsearch.requestTimeout setting.
-#elasticsearch.pingTimeout: 1500
 
 # Time in milliseconds to wait for responses from the back end or Elasticsearch. This value
 # must be a positive integer.
@@ -148,9 +148,13 @@ pid.file: /run/kibana/kibana.pid
 # metrics. Minimum is 100ms. Defaults to 5000ms.
 #ops.interval: 5000
 
-# Specifies locale to be used for all localizable strings, dates and number formats.
-# Supported languages are the following: English (default) "en", Chinese "zh-CN", Japanese "ja-JP", French "fr-FR", German "de-DE".
-#i18n.locale: "en"
+# Specifies the available locales in the user profile settings.
+#i18n.locales: ["en", "fr-FR", "ja-JP", "zh-CN", "de-DE"]
+
+# Specifies the default locale to be used for all localizable strings, dates and number formats.
+# User profile settings allow users to customize their display language. This setting determines the default locale when no user settings are specified.
+# Supported languages are the following: English "en" (default), Chinese "zh-CN", Japanese "ja-JP", French "fr-FR", German "de-DE".
+#i18n.defaultLocale: "en"
 
 # =================== Frequently used (Optional)===================
 
@@ -176,7 +180,7 @@ pid.file: /run/kibana/kibana.pid
 # =================== Search Autocomplete ===================
 # Time in milliseconds to wait for autocomplete suggestions from Elasticsearch.
 # This value must be a whole number greater than zero. Defaults to 1000ms
-#unifiedSearch.autocomplete.valueSuggestions.timeout: 1000
+# unifiedSearch.autocomplete.valueSuggestions.timeout: 1000
 
 # Maximum number of documents loaded by each shard to generate autocomplete suggestions.
 # This value must be a whole number greater than zero. Defaults to 100_000

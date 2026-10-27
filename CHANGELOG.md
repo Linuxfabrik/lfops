@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:opensearch**: OpenSearch 1.x is no longer supported, and the run aborts on a host that runs it. Upgrade such hosts to OpenSearch 2.19 first, following the [OpenSearch upgrade documentation](https://docs.opensearch.org/latest/install-and-configure/upgrade-opensearch/index/). OpenSearch 2.x cannot be installed on RHEL 10 and Debian 13, whose crypto policy rejects the SHA-1 signature in the OpenSearch 2.x signing key; use OpenSearch 3.x there.
 * **role:mongodb**: MongoDB 4.2, 4.4, 5.0 and 6.0 are no longer supported, since they are end of life; the role aborts on a host that runs one of them. Upgrade such hosts to MongoDB 7.0 or 8.0 first, one major release at a time, as described in the MongoDB upgrade documentation, and set `repo_mongodb__version` accordingly.
 * **role:chrony**: Without `chrony__ntp_pools` or `chrony__ntp_servers` in the inventory, chronyd synchronises with `ntp.linuxfabrik.ch` instead of `ntp.metas.ch`. Allow outgoing NTP to `ntp.linuxfabrik.ch` (195.15.242.254) where a firewall only lets the METAS servers through, or set `chrony__ntp_servers: ['ntp.metas.ch']`.
 * **role:exoscale_vm**: The role scales an existing instance and grows its disk when `exoscale_vm__service_offering` or `exoscale_vm__disk_size` differ from it, and aborts on a running instance instead of stopping it, unless `exoscale_vm__force: true` is set. Before running the role against existing instances, set both variables to their current values, or set `exoscale_vm__force: true` in a maintenance window. `exoscale_vm__state` only accepts `absent`, `present`, `restarted`, `started` and `stopped`.
@@ -54,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:opensearch**: Supports OpenSearch 3.x. The role README describes the upgrade from 2.x.
 * **playbook:setup_basic**: Deploys the Linuxfabrik package repository on Debian, Ubuntu and RHEL 8 to 10 and their derivatives, right after EPEL; on hosts whose mirror does not serve it, dnf skips it with an error message and apt stops the run (`setup_basic__skip_repo_linuxfabrik`).
 * **role:repo_linuxfabrik, playbook:repo_linuxfabrik**: Add a role and playbook that deploy the Linuxfabrik package repository repo.linuxfabrik.ch on Debian, Fedora, the Red Hat family, SUSE and Ubuntu, with an optional testing channel.
 * **role:chrony**: chronyd can serve as a public NTP server, for example in the NTP Pool, with response rate limiting (`chrony__ratelimit`) and room for many clients (`chrony__clientloglimit`).
@@ -105,6 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:elasticsearch**: The query log of Elasticsearch 9.5 (`*_querylog.json`) is deleted after `elasticsearch__log4j2_retention_days`, like the other logs.
+* **role:telegraf**: `telegraf.conf` follows the file that current Telegraf packages ship. The effective settings stay the same, but deploying the file restarts Telegraf once.
+* **role:opensearch**: `/etc/sysconfig/opensearch` adds the native library path of the Neural Search plugin, as the OpenSearch package does.
 * **role:acme_sh, playbooks with acme_sh**: acme.sh comes as a package from the Linuxfabrik repository, which these playbooks now deploy, and is updated by the package manager instead of updating itself from GitHub on every renewal run; existing installations below `/opt/acme.sh` are migrated on the next run, certificates are kept.
 * **role:postfix**: On hosts without an IPv6 default route, Postfix uses IPv4 only, so it no longer logs `Network is unreachable` for the IPv6 address of the next hop on part of the deliveries.
 * **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
@@ -163,6 +168,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
 * **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
 * **role:mongodb**: `mongodb-dump.service` fails when `mongodump` fails, instead of reporting success with an incomplete dump.
+* **role:repo_opensearch**: A host switched from OpenSearch 2.x to 3.x gets the signing key of 3.x, instead of the key the controller downloaded first, which made `dnf` fail with `repomd.xml GPG signature verification error: Bad GPG signature`.
+* **role:repo_opensearch**: The repository works on Ubuntu 26.04, where `apt` ignored the signing key because of its file name.
+* **role:opensearch**: The transport layer uses the key of the transport certificate (`node-transport.key`) instead of the one of the HTTP certificate, so cluster nodes whose two certificates have different keys can talk to each other.
+* **role:repo_proxysql, playbook:proxysql**: ProxySQL 3.0 installs on RHEL 8, and ProxySQL 2.4 and 2.5 on RHEL 9, instead of failing with a 404 on the repository metadata. The `proxysql` playbook deploys EPEL (and CRB), which ProxySQL 3.0 on RHEL 8 needs.
+* **role:repo_proxysql**: With `repo_proxysql__mirror_url`, the repository is expected below the same path as on repo.proxysql.com (`/ProxySQL/proxysql-<version>.x/...`), instead of a path that never matched it.
 * **role:logstash**: `/etc/default/logstash` is no longer world-readable and no longer reported as changed after every Logstash package update, which restarted Logstash. The first run after updating LFOps restarts Logstash once.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
