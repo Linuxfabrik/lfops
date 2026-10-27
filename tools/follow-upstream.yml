@@ -24,6 +24,8 @@
 # `https://example.com/repo-${EXAMPLE_TOKEN}/`. An application whose variable is not set
 # is skipped by `--check`, so the token never has to be in the repository or the CI.
 # * `files`: the packaged files and the templates built from them, sorted by `path`.
+#   * `path`: the packaged file. Usually below /etc, but it can also be a sample the
+#     package copies to /etc on installation (`/usr/share/grafana/conf/sample.ini`).
 #   * `template`: `{series}` is replaced. A template without `{series}` serves every
 #     series and is merged in place.
 #   * `supported_versions`: the vars file and the list that has to contain every series
@@ -33,7 +35,13 @@
 #     counterpart of a file the RPM ships under another path. They get the merge result.
 # * `ignore`: packaged files below /etc that LFOps deliberately does not template.
 #   Every other file a release ships is reported, so a file upstream adds is noticed.
+#
+# The comment above each application records how its install scripts treat the templated
+# files, for the release that was checked. `tools/follow-upstream` reports later changes
+# to the scripts.
 
+# Install scripts (graylog-server and graylog-datanode 7.2.1, RPM and DEB): create the
+# user, the directories and node-id, never touch the templated files.
 graylog:
   upstream:
     - 'Graylog2/graylog2-server'
@@ -68,6 +76,10 @@ graylog:
     - '/etc/needrestart/conf.d/500-graylog.conf'
     - '/etc/sysconfig/graylog-datanode'
 
+# Install scripts (coolwsd 26.04.5.1, RPM): coolwsd.xml is only rewritten by
+# `coolconfig migrateconfig --write`, which runs if a /etc/loolwsd/loolwsd.xml of
+# Collabora Online 6.4 or older exists. `coolconfig generate-proof-key` writes the
+# separate /etc/coolwsd/proof_key.
 collabora_code:
   series_parts: 3
   gpg_key: 'https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-rpm/repodata/repomd.xml.key'
@@ -85,6 +97,8 @@ collabora_code:
     - '/etc/nginx/snippets/coolwsd.conf'
     - '/etc/pam.d/coolwsd'
 
+# Install scripts: not checked, the repository needs the customer token. Probably the
+# same as collabora_code.
 collabora_enterprise:
   series_parts: 3
   repo_series_parts: 2

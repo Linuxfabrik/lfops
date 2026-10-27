@@ -13,11 +13,13 @@ file with LFOps changes on top, and names the package release it is based on in 
 comment in its header (`{# Based on graylog-server 7.2.1 #}`), which does not end up in
 the deployed file. For a new release, this tool extracts /etc from the RPM and the DEB
 of the release (in a podman container, after checking the package signature against the
-application's `gpg_key`) and:
+application's `gpg_key`), plus the templated files the package ships outside of /etc,
+and:
 
 1. Checks the packaging, on every run: files below /etc that are neither templated
    nor ignored in tools/follow-upstream.yml, templated files the release no longer ships,
-   and files whose content differs between RPM and DEB.
+   files whose content differs between RPM and DEB, and install scripts that differ from
+   those of the base release (they may modify the file on the host).
 2. Merges the upstream changes into every template not based on this release yet:
 
        git merge-file <template> <RPM file, base release> <RPM file, new release>
@@ -47,13 +49,14 @@ import glob
 import json
 import os
 import re
+import shutil
 import subprocess  # nosec B404 - runs podman and git, see the calls below
 import sys
 
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102303'
+__version__ = '2026102701'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -178,16 +181,35 @@ def run_container(script, env, volume=None):
 
 
 def fetch(app, config, fmt, package, version):
-    """Return the directory holding /etc of `package` `version`, cached in CACHE_DIR.
+    """Return the directory holding /etc and the packaged files of `config` outside of
+    /etc of `package` `version`, cached in CACHE_DIR. The install scripts of the package
+    are saved next to it, see install_scripts().
 
     `fmt` is `rpm` or `deb`. The cache is per application, because two applications can
     ship different packages under the same name and version (Collabora CODE and
     Enterprise).
     """
     dest = os.path.join(CACHE_DIR, fmt, app, f'{package}-{version}')
-    if os.path.isfile(os.path.join(dest, 'source')):
-        return os.path.join(dest, 'root')
-    os.makedirs(dest, exist_ok=True)
+    # a packaged file outside of /etc, e.g. a sample the package copies to /etc on
+    # installation (Grafana's sample.ini), is extracted in addition to /etc
+    extra = set()
+    for entry in config['files']:
+        path = entry.get('deb_path', entry['path']) if fmt == 'deb' else entry['path']
+        if entry['package'] == package and not path.startswith('/etc/'):
+            extra.add(path)
+    extra = sorted(extra)
+    root = os.path.join(dest, 'root')
+    cached = all(
+        os.path.isfile(os.path.join(dest, name)) for name in ('scripts', 'source')
+    )
+    if cached and all(
+        os.path.exists(os.path.join(root, path.lstrip('/'))) for path in extra
+    ):
+        return root
+    # an incomplete entry (killed run, an entry of an older version of this tool) is
+    # fetched from scratch, cpio does not overwrite the files already there
+    shutil.rmtree(dest, ignore_errors=True)
+    os.makedirs(dest)
     series = repo_series(config, version)
     gpg_key = expand(config['gpg_key'].replace('{series}', series))
     if fmt == 'rpm':
@@ -207,6 +229,7 @@ def fetch(app, config, fmt, package, version):
         script = container_script('fetch-deb.sh')
     env.update(
         {
+            'EXTRACT': ' '.join(extra),
             'GPG_KEY': gpg_key,
             'PACKAGE': package,
             'REPO_DISPLAY': display,
@@ -217,7 +240,7 @@ def fetch(app, config, fmt, package, version):
     result = run_container(script, env, volume=dest)
     if result.returncode != 0:
         raise FetchError(f'fetching {package} {version} ({fmt}) failed')
-    return os.path.join(dest, 'root')
+    return root
 
 
 def package_file(root, path):
@@ -289,6 +312,41 @@ def check_packaging(app, config, version):
                     print(
                         f'packaging: {package} {version} ships different files in the'
                         f' RPM and the DEB: diff {rpm_file} {deb_file}'
+                    )
+                    findings += 1
+    return findings
+
+
+def check_scripts(app, config, version):
+    """Compare the install scripts of `version` with those of the releases the templates
+    are based on. Returns the number of findings.
+
+    A template is a copy of the packaged file. If an install script starts to modify the
+    file on the host (`sed` on the copied sample, a generated secret), the template does
+    not get that change, and deploying it would revert it.
+    """
+    fmts = ('rpm', 'deb') if 'deb_repo' in config else ('rpm',)
+    bases = set()
+    for entry in config['files']:
+        source, _ = source_template(config, entry, version)
+        base = read_based_on(source) if source else None
+        if base and version_key(base) < version_key(version):
+            bases.add((entry['package'], base))
+    findings = 0
+    for package, base in sorted(bases):
+        for fmt in fmts:
+            old, new = (
+                os.path.join(
+                    os.path.dirname(fetch(app, config, fmt, package, release)),
+                    'scripts',
+                )
+                for release in (base, version)
+            )
+            with open(old, 'rb') as f1, open(new, 'rb') as f2:
+                if f1.read() != f2.read():
+                    print(
+                        f'packaging: {package} {version} ({fmt}) has other install'
+                        f' scripts than {base}: diff {old} {new}'
                     )
                     findings += 1
     return findings
@@ -399,28 +457,36 @@ def write_template(entry, target, text):
             f.write(text)
 
 
+def source_template(config, entry, version):
+    """Return (path, series) of the template that `version` is merged from: the template
+    of its series, or for a new release series the template of the latest older series.
+    (None, None) if there is none."""
+    new_series = series_of(version, config['series_parts'])
+    target = os.path.join(REPO_ROOT, entry['template'].format(series=new_series))
+    if os.path.isfile(target):
+        return target, new_series
+    pattern = os.path.join(REPO_ROOT, entry['template'].format(series='*'))
+    regex = re.escape(entry['template']).replace(r'\{series\}', '(?P<series>.+)')
+    candidates = []
+    for path in glob.glob(pattern):
+        match = re.fullmatch(regex, os.path.relpath(path, REPO_ROOT))
+        if match and version_key(match['series']) < version_key(new_series):
+            candidates.append((version_key(match['series']), match['series'], path))
+    if not candidates:
+        return None, None
+    _, old_series, source = max(candidates)
+    return source, old_series
+
+
 def update_file(app, config, entry, version, dry_run):
-    parts = config['series_parts']
-    new_series = series_of(version, parts)
+    new_series = series_of(version, config['series_parts'])
     target = os.path.join(REPO_ROOT, entry['template'].format(series=new_series))
     rel_target = os.path.relpath(target, REPO_ROOT)
 
-    if os.path.isfile(target):
-        source = target
-        old_series = new_series
-    else:
-        # A new release series starts from the template of the latest older series.
-        pattern = os.path.join(REPO_ROOT, entry['template'].format(series='*'))
-        regex = re.escape(entry['template']).replace(r'\{series\}', '(?P<series>.+)')
-        candidates = []
-        for path in glob.glob(pattern):
-            match = re.fullmatch(regex, os.path.relpath(path, REPO_ROOT))
-            if match and version_key(match['series']) < version_key(new_series):
-                candidates.append((version_key(match['series']), match['series'], path))
-        if not candidates:
-            print(f'{rel_target}: no older template to start from')
-            return 'error'
-        _, old_series, source = max(candidates)
+    source, old_series = source_template(config, entry, version)
+    if source is None:
+        print(f'{rel_target}: no older template to start from')
+        return 'error'
 
     base = read_based_on(source)
     rel_source = os.path.relpath(source, REPO_ROOT)
@@ -659,7 +725,8 @@ def list_releases(config):
             base = read_based_on(os.path.join(REPO_ROOT, entry['template']))
             if base:
                 known.add(series_of(base, config['series_parts']))
-    if not known:
+    # a repository without `{series}` serves every release, nothing to derive
+    if not known and '{series}' in config['rpm_repo']:
         sys.exit('No template to derive the release series from')
     packages = {entry['package'] for entry in config['files']}
     versions = list_versions(config, packages, repo_series_list(config, known))
@@ -735,6 +802,7 @@ def main():
     app, config = find_app(manifest, args.app)
     try:
         findings = check_packaging(app, config, args.version)
+        findings += check_scripts(app, config, args.version)
         results = [
             update_file(app, config, entry, args.version, args.dry_run)
             for entry in config['files']
