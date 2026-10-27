@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:opensearch**: OpenSearch 1.x is no longer supported, and the run aborts on a host that runs it. Upgrade such hosts to OpenSearch 2.19 first, following the [OpenSearch upgrade documentation](https://docs.opensearch.org/latest/install-and-configure/upgrade-opensearch/index/). OpenSearch 2.x cannot be installed on RHEL 10 and Debian 13, whose crypto policy rejects the SHA-1 signature in the OpenSearch 2.x signing key; use OpenSearch 3.x there.
 * **role:chrony**: Without `chrony__ntp_pools` or `chrony__ntp_servers` in the inventory, chronyd synchronises with `ntp.linuxfabrik.ch` instead of `ntp.metas.ch`. Allow outgoing NTP to `ntp.linuxfabrik.ch` (195.15.242.254) where a firewall only lets the METAS servers through, or set `chrony__ntp_servers: ['ntp.metas.ch']`.
 * **role:exoscale_vm**: The role scales an existing instance and grows its disk when `exoscale_vm__service_offering` or `exoscale_vm__disk_size` differ from it, and aborts on a running instance instead of stopping it, unless `exoscale_vm__force: true` is set. Before running the role against existing instances, set both variables to their current values, or set `exoscale_vm__force: true` in a maintenance window. `exoscale_vm__state` only accepts `absent`, `present`, `restarted`, `started` and `stopped`.
 * **role:php**: PHP no longer tracks file uploads in the session (`session.upload_progress.enabled = Off`), a confirmed way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) that the advisory recommends closing even on patched PHP, and the PHP-FPM pools enforce this against `.user.ini` files. Upload progress bars that depend on it stop working. Set `php__ini_session_upload_progress_enabled__host_var: 'On'` to restore the feature.
@@ -53,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:opensearch**: Supports OpenSearch 3.x. The role README describes the upgrade from 2.x.
 * **role:chrony**: chronyd can serve as a public NTP server, for example in the NTP Pool, with response rate limiting (`chrony__ratelimit`) and room for many clients (`chrony__clientloglimit`).
 * **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.14.
@@ -102,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:opensearch**: `/etc/sysconfig/opensearch` adds the native library path of the Neural Search plugin, as the OpenSearch package does.
 * **role:postfix**: On hosts without an IPv6 default route, Postfix uses IPv4 only, so it no longer logs `Network is unreachable` for the IPv6 address of the next hop on part of the deliveries.
 * **role:nextcloud**: The `support` app is enabled by default, as Nextcloud ships it, so an Enterprise instance keeps its subscription record current.
 * **role:postgresql_server**: A changed `pg_hba.conf` or `postgresql_server__conf_password_encryption` reloads PostgreSQL instead of restarting it, so open connections are kept; the first run after the update still restarts it once.
@@ -158,6 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:repo_opensearch**: A host switched from OpenSearch 2.x to 3.x gets the signing key of 3.x, instead of the key the controller downloaded first, which made `dnf` fail with `repomd.xml GPG signature verification error: Bad GPG signature`.
 * **role:repo_opensearch**: The repository works on Ubuntu 26.04, where `apt` ignored the signing key because of its file name.
+* **role:opensearch**: The transport layer uses the key of the transport certificate (`node-transport.key`) instead of the one of the HTTP certificate, so cluster nodes whose two certificates have different keys can talk to each other.
 * **role:apache_httpd**: A vHost with `state: 'absent'` can be removed without a `template`, instead of aborting with `'dict object' has no attribute 'template'`.
 * **role:exoscale_vm**: The role works again after Exoscale switched off its CloudStack API, and no longer needs the `exo` CLI, the `cs` Python library or `exoscale_vm__account` on the Ansible controller.
 * **role:network**: `network_state` applies on hosts whose active connection profile, such as `cloud-init eth0` or `System eth0`, still stores DNS servers, instead of aborting with `ipv6.dns: this property is not allowed for 'method=disabled'`. DNS servers that `dns-resolver` does not list are removed from that profile.
