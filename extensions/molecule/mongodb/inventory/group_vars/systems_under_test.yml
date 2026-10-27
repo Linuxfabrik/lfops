@@ -1,0 +1,21 @@
+mongodb__admin_user:
+  username: 'mongodb-admin'
+  password: 'linuxfabrik'
+
+mongodb__conf_security_authorization: true
+
+# The special characters check that the login file escapes the password correctly for both
+# mongodump and mongosh.
+mongodb__dump_user:
+  username: 'mongodb-dump'
+  password: 'linux"fab\rik #''x:@/%'
+
+# A regular user, so that the idempotence step also covers the user loop.
+mongodb__users__group_var:
+  - username: 'molecule-app'
+    password: 'linuxfabrik'
+    database: 'molecule'
+    roles: 'readWrite'
+
+# Ubuntu 24.04 only gets 8.0.
+repo_mongodb__version: '8.0'

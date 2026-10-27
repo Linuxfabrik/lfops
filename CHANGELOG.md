@@ -165,6 +165,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
+* **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
+* **role:mongodb**: `mongodb-dump.service` fails when `mongodump` fails, instead of reporting success with an incomplete dump.
 * **role:repo_opensearch**: A host switched from OpenSearch 2.x to 3.x gets the signing key of 3.x, instead of the key the controller downloaded first, which made `dnf` fail with `repomd.xml GPG signature verification error: Bad GPG signature`.
 * **role:repo_opensearch**: The repository works on Ubuntu 26.04, where `apt` ignored the signing key because of its file name.
 * **role:opensearch**: The transport layer uses the key of the transport certificate (`node-transport.key`) instead of the one of the HTTP certificate, so cluster nodes whose two certificates have different keys can talk to each other.
@@ -310,6 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.
 * **role:apache_tomcat**: The host-manager webapp only accepts the clients that `apache_tomcat__webapps_manager_context_xml_allow` allows, as documented, instead of those that `apache_tomcat__webapps_docs_context_xml_allow` allows.

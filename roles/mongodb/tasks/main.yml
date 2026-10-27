@@ -239,6 +239,26 @@
     ansible.builtin.debug:
       var: 'mongodb__users__combined_var'
 
+  # see __mongodb__password_check_script for why the password is checked first
+  - name: 'Check the passwords of the MongoDB users'
+    ansible.builtin.command:
+      argv:
+        - '/opt/python-venv/pymongo/bin/python3'
+        - '-c'
+        - '{{ __mongodb__password_check_script }}'
+      stdin: '{{ {"host": mongodb__conf_net_bind_ip[0], "port": mongodb__conf_net_port, "username": item["username"], "password": item["password"], "auth_source": item["database"]} | to_json }}'
+    loop: '{{ mongodb__users__combined_var }}'
+    loop_control:
+      label: '{{ item["username"] }}'
+    register: '__mongodb__users_password_check_result'
+    changed_when: false # read-only login
+    failed_when: '__mongodb__users_password_check_result["rc"] not in [0, 3]'
+    check_mode: false # run task even if `--check` is specified
+    no_log: true # the stdin carries the password
+    when:
+      - 'mongodb__conf_security_authorization | bool'
+      - 'item["state"] | d("present") == "present"'
+
   - name: 'Create, update or delete MongoDB users'
     community.mongodb.mongodb_user:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
@@ -251,8 +271,12 @@
       database: '{{ item["database"] }}'
       roles: '{{ item["roles"] | default(omit) }}'
       state: '{{ item["state"] | default("present") }}'
-      update_password: 'always' # note: sadly 'always' is not idempotent
+      # only set the password if the login with it failed, `always` would report a change on every run
+      update_password: '{{ (__mongodb__users_password_check_result["results"][index]["rc"] | d(0) == 3) | ternary("always", "on_create") }}'
     loop: '{{ mongodb__users__combined_var }}'
+    loop_control:
+      index_var: 'index'
+      label: '{{ item["username"] }}'
     when:
       - 'mongodb__conf_security_authorization | bool'
       - 'item["state"] | d("present") != "skip"'
@@ -268,6 +292,25 @@
 
 - block:
 
+  # see __mongodb__password_check_script for why the password is checked first
+  - name: 'Check the password of the MongoDB Dump user'
+    ansible.builtin.command:
+      argv:
+        - '/opt/python-venv/pymongo/bin/python3'
+        - '-c'
+        - '{{ __mongodb__password_check_script }}'
+      stdin: '{{ {"host": mongodb__conf_net_bind_ip[0], "port": mongodb__conf_net_port, "username": mongodb__dump_user["username"], "password": mongodb__dump_user["password"], "auth_source": mongodb__dump_user["auth_database"] | d("admin")} | to_json }}'
+    register: '__mongodb__dump_user_password_check_result'
+    changed_when: false # read-only login
+    failed_when: '__mongodb__dump_user_password_check_result["rc"] not in [0, 3]'
+    check_mode: false # run task even if `--check` is specified
+    no_log: true # the stdin carries the password
+    when:
+      - 'mongodb__conf_security_authorization | bool'
+      - 'mongodb__dump_user is defined'
+      - 'mongodb__dump_user | length > 0'
+      - 'mongodb__dump_user["state"] | d("present") == "present"'
+
   - name: 'Create MongoDB Dump user'
     community.mongodb.mongodb_user:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
@@ -280,7 +323,8 @@
       database: '{{ mongodb__dump_user["auth_database"] | d("admin") }}'
       roles: 'backup' # https://www.mongodb.com/docs/manual/reference/built-in-roles/#mongodb-authrole-backup
       state: '{{ mongodb__dump_user["state"] | default("present") }}'
-      update_password: 'always' # note: sadly 'always' is not idempotent
+      # only set the password if the login with it failed, `always` would report a change on every run
+      update_password: '{{ (__mongodb__dump_user_password_check_result["rc"] | d(0) == 3) | ternary("always", "on_create") }}'
     when:
       - 'mongodb__conf_security_authorization | bool'
       - 'mongodb__dump_user is defined'
@@ -314,6 +358,19 @@
       owner: 'root'
       group: 'root'
       mode: 0o600
+
+  - name: 'Deploy /etc/mongodb-dump-login.json'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/mongodb-dump-login.json.j2'
+      dest: '/etc/mongodb-dump-login.json'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600 # contains secrets
+    when:
+      - 'mongodb__conf_security_authorization | bool'
+      - 'mongodb__dump_user is defined'
+      - 'mongodb__dump_user | length > 0'
 
   - name: 'Deploy /usr/local/sbin/mongodb-dump'
     ansible.builtin.template:

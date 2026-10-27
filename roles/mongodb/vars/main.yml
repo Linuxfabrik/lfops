@@ -14,6 +14,35 @@ __mongodb__supported_versions: '{{
     | linuxfabrik.lfops.platform_select(ansible_facts)
   }}'
 
+# Checks whether a user can log in with the password from the inventory. community.mongodb's
+# mongodb_user only knows `update_password: always`, which reports a change on every run, and
+# `on_create`, which never applies a changed password, so the role probes first and only sets the
+# password when the login fails. The login comes as JSON on stdin, so the password stays off the
+# command line. Exit code 3 means authentication failed (also for a user that does not exist yet).
+__mongodb__password_check_script: |-
+  import json
+  import sys
+
+  import pymongo
+  from pymongo.errors import OperationFailure
+
+  login = json.load(sys.stdin)
+  client = pymongo.MongoClient(
+      host=login['host'],
+      port=int(login['port']),
+      username=login['username'],
+      password=login['password'],
+      authSource=login['auth_source'],
+      directConnection=True,
+      serverSelectionTimeoutMS=10000,
+  )
+  try:
+      client.admin.command('ping')
+  except OperationFailure as e:
+      if e.code == 18:  # AuthenticationFailed
+          sys.exit(3)
+      raise
+
 # Collected in __shared__end_of_play_messages and printed once at the end of the play, see
 # roles/shared/tasks/print-messages.yml. Kept in one place because the role both prints it inline
 # and appends it there.
