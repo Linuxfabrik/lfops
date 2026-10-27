@@ -4,6 +4,9 @@ mongodb__admin_user:
 
 mongodb__conf_security_authorization: true
 
+# Locks the instance as the dump user, so this checks the privileges the role grants it.
+mongodb__dump_method_file_based: true
+
 # The special characters check that the login file escapes the password correctly for both
 # mongodump and mongosh.
 mongodb__dump_user:

@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026102701
+# 2026102702
 
 HOST='127.0.0.1'
 PORT='{{ mongodb__conf_net_port }}'
@@ -10,5 +10,6 @@ USERNAME='{{ mongodb__dump_user["username"] }}'
 AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] | default("admin") }}'
 {% endif %}
 
+DB_PATH='{{ __mongodb__db_path }}'
 DUMP_BACKUP_DIR='{{ mongodb__dump_method_mongodump_backup_dir }}'
 FILE_BACKUP_DIR='{{ mongodb__dump_method_file_based_backup_dir }}'

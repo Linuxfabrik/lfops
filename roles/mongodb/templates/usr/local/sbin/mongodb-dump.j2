@@ -2,7 +2,7 @@
 #!/usr/bin/env bash
 
 # {{ ansible_managed }}
-# 2026102701
+# 2026102702
 
 set -e
 
@@ -85,23 +85,32 @@ umask "$old_umask"
 
 {% if mongodb__dump_method_file_based %}
 #
-# File based backup (copies /var/lib/mongo to the backup directory)
+# File based backup (copies the data directory to the backup directory)
 #
+
+function unlock_instance() {
+    if ! mongosh_eval 'db.fsyncUnlock()' > /dev/null; then
+        echo 'failed to unlock the instance' >&2
+        exit 3
+    fi
+}
 
 # remove old backups
 rm -rf "$FILE_BACKUP_DIR"
 mkdir -p "$FILE_BACKUP_DIR"
 
-# lock the instance
-if ! mongosh_eval 'db.fsyncLock()' &>/dev/null; then
-    echo 'failed to lock the instance. the backup will still be created, but might not be consistent.' >&2
+# lock the instance. Abort if that fails: a copy of the data files of a running instance may not
+# be restorable, and a failed unit is noticed, while a warning in the journal is not.
+if ! mongosh_eval 'db.fsyncLock()' > /dev/null; then
+    echo 'failed to lock the instance, no file based backup created' >&2
+    exit 2
 fi
 
-cp --archive --recursive /var/lib/mongo $FILE_BACKUP_DIR
+# unlock also if the copy fails, otherwise `set -e` would leave the instance write-locked
+trap unlock_instance EXIT
 
-# unlock the instance
-if ! mongosh_eval 'db.fsyncUnlock()' &>/dev/null; then
-    echo 'failed to unlock the instance' >&2
-    exit 3
-fi
+cp --archive --recursive "$DB_PATH" "$FILE_BACKUP_DIR"
+
+trap - EXIT
+unlock_instance
 {% endif %}

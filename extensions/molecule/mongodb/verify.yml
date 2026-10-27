@@ -1,5 +1,6 @@
 # The dump user logs in with the password from /etc/mongodb-dump-login.json, so a dump that
-# contains the test database proves that mongosh and mongodump both read it.
+# contains the test database proves that mongosh and mongodump both read it. The file-based
+# method locks the instance as the dump user, which proves the privileges the role grants it.
 - name: 'Verify MongoDB and its dump'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -35,11 +36,73 @@
           - '--eval=db.getSiblingDB("molecule").test.insertOne({source: "molecule"})'
       changed_when: true # inserts a document on every run
 
-    # Run the real dump, as the timer would, and look at its result.
+    # mongod logs id 20462 when it is write-locked and id 20466 when it is unlocked again.
+    - name: 'grep --count "id":2046[26], /var/log/mongodb/mongod.log (before the dump)'
+      ansible.builtin.command:
+        argv:
+          - 'grep'
+          - '--count'
+          - '--extended-regexp'
+          - '"id":2046[26],'
+          - '/var/log/mongodb/mongod.log'
+      register: '__molecule__mongodb_lock_count_before_result'
+      changed_when: false
+      failed_when: '__molecule__mongodb_lock_count_before_result["rc"] > 1'
+
+    # Run the real dump, as the timer would, and look at its result. The unit is a oneshot, so
+    # this fails if the script exits non-zero, e.g. because it could not lock the instance.
     - name: 'systemctl start mongodb-dump.service'
       ansible.builtin.systemd:
         name: 'mongodb-dump.service'
         state: 'started'
+
+    - name: 'grep "id":2046[26], /var/log/mongodb/mongod.log (after the dump)'
+      ansible.builtin.command:
+        argv:
+          - 'grep'
+          - '--extended-regexp'
+          - '--only-matching'
+          - '"id":2046[26],'
+          - '/var/log/mongodb/mongod.log'
+      register: '__molecule__mongodb_lock_after_result'
+      changed_when: false
+      failed_when: '__molecule__mongodb_lock_after_result["rc"] > 1'
+
+    # The last two entries are the lock and unlock of this dump.
+    - name: 'Assert that the dump locked and unlocked the instance'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__mongodb_lock_after_result["stdout_lines"] | length >= (__molecule__mongodb_lock_count_before_result["stdout"] | int) + 2'
+          - '__molecule__mongodb_lock_after_result["stdout_lines"][-2:] == ["\"id\":20462,", "\"id\":20466,"]'
+        fail_msg: '{{ __molecule__mongodb_lock_after_result["stdout_lines"][-4:] }}'
+
+    - name: 'mongosh --eval print(db.currentOp().fsyncLock === true)'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=print(db.currentOp().fsyncLock === true)'
+      register: '__molecule__mongodb_fsync_lock_result'
+      changed_when: false
+
+    - name: 'Assert that the instance is no longer locked'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_fsync_lock_result["stdout"] == "false"'
+
+    - name: 'find /backup/var-lib-mongo -type d -name molecule'
+      ansible.builtin.find:
+        paths: '/backup/var-lib-mongo'
+        patterns: 'molecule'
+        file_type: 'directory'
+        recurse: true
+      register: '__molecule__mongodb_file_backup_result'
+
+    - name: 'Assert that the file-based backup contains the molecule database'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_file_backup_result["matched"] == 1'
 
     - name: 'tar --list --file /backup/mongodb-dump/mongodb-dump.tar.gz' # noqa command-instead-of-module (unarchive cannot list an archive without extracting it)
       ansible.builtin.command: 'tar --list --file /backup/mongodb-dump/mongodb-dump.tar.gz'
