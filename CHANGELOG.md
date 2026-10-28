@@ -170,6 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: On Debian and Ubuntu, the weekly update removes kernels apt no longer needs before installing new ones, the way unattended-upgrades does, so old kernels no longer fill up `/boot`. The running kernel, the newest one and held packages are kept.
 * **role:mongodb**: The file-based dump (`mongodb__dump_method_file_based`) locks the instance also with authorization enabled and works on Debian and Ubuntu, and a dump that cannot lock the instance fails instead of copying the data files of the running instance.
 * **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
 * **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.

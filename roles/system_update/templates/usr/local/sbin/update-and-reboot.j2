@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026093001
+# 2026102801
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -67,6 +67,74 @@ last_txn_id () {
     # yields an empty id on both sides, which compares equal and is correct.
     # Verified against dnf 4.7 (Rocky 8), 4.14 (Rocky 9) and 4.20 (Rocky 10).
     yum history list 2> /dev/null | awk '$1 ~ /^[0-9]+$/ { print $1; exit }'
+}
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+remove_unused_kernels () {
+    # apt-get upgrade installs every new kernel ABI package but never removes one, so on
+    # its own the old kernels pile up until a small /boot runs full and the initramfs of
+    # the next kernel no longer fits. This does what unattended-upgrades does with
+    # Remove-Unused-Kernel-Packages (on by default there), and also does it before the
+    # upgrade, so the new kernel finds the space it needs:
+    # * which kernels may go is apt's decision: only packages it lists as auto-removable.
+    #   apt protects the running kernel and the newest one, and installs that were not
+    #   pulled in as a dependency are never auto-removable.
+    # * of those, only the versioned kernel packages (APT::VersionedKernelPackages followed
+    #   by an ABI version), never one of the running kernel. Other orphans stay installed,
+    #   like with unattended-upgrades' default Remove-Unused-Dependencies "false".
+    # * held packages stay installed (the blacklist of unattended-upgrades). apt does not
+    #   list them as auto-removable anyway, so this only guards against that changing.
+    # * the removal is refused as a whole if apt would remove anything beyond the
+    #   auto-removable packages, or install anything.
+    # Packages are removed, not purged, again like unattended-upgrades. Sets
+    # KERNELS_REMOVED to the removed packages; returns non-zero if apt failed.
+    # Ported from unattended-upgrades (unattended-upgrade, git c5001e7).
+    # Verified against apt 3.0 on Debian 13.
+    local autoremovable candidates held patterns pkg running running_noflavor simulated
+    KERNELS_REMOVED=''
+    : > /tmp/kernel-removal-output
+
+    patterns=$(apt-config dump --no-empty --format '%v%n' APT::VersionedKernelPackages | paste --serial --delimiters='|')
+    [ -z "$patterns" ] && return 0
+    running=$(uname -r)
+    running_noflavor=''
+    [[ $running =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]+-[0-9]+ ]] && running_noflavor=${BASH_REMATCH[0]}
+
+    autoremovable=$(apt-get --simulate autoremove 2> /tmp/system-update-stderr) || return 1
+    autoremovable=$(printf '%s\n' "$autoremovable" | awk '$1 == "Remv" { print $2 }')
+    held=$(apt-mark showhold)
+
+    candidates=''
+    for pkg in $autoremovable; do
+        [[ $pkg =~ ^($patterns)-[1-9][0-9]*\.[0-9]+\.[0-9]+-[0-9]+(-.+)?$ ]] || continue
+        [[ $pkg == *"-$running" ]] && continue
+        [ -n "$running_noflavor" ] && [[ $pkg == *"-$running_noflavor" ]] && continue
+        printf '%s\n' "$held" | grep --quiet --line-regexp --fixed-strings "$pkg" && continue
+        candidates="$candidates $pkg"
+    done
+    [ -z "$candidates" ] && return 0
+
+    # the change set of the real removal, checked before anything is touched
+    # shellcheck disable=SC2086 # word splitting is intended, one argument per package
+    simulated=$(apt-get --simulate remove $candidates 2> /tmp/system-update-stderr) || return 1
+    if printf '%s\n' "$simulated" | grep --quiet '^Inst '; then
+        log "Keeping unused kernel packages, removing them would install other packages:$candidates"
+        return 0
+    fi
+    for pkg in $(printf '%s\n' "$simulated" | awk '$1 == "Remv" { print $2 }'); do
+        if ! printf '%s\n' "$autoremovable" | grep --quiet --line-regexp --fixed-strings "$pkg" \
+                || [[ $pkg == *"-$running" ]] \
+                || { [ -n "$running_noflavor" ] && [[ $pkg == *"-$running_noflavor" ]]; }; then
+            log "Keeping unused kernel packages, removing them would also remove $pkg:$candidates"
+            return 0
+        fi
+    done
+
+    log "Removing unused kernel packages:$candidates"
+    # shellcheck disable=SC2086 # word splitting is intended, one argument per package
+    apt-get -y remove $candidates > /tmp/kernel-removal-output 2> /tmp/system-update-stderr || return 1
+    KERNELS_REMOVED=${candidates# }
 }
 {% endif %}
 
@@ -180,6 +248,13 @@ fi
 [ -s /tmp/system-update-stderr ] && log "$(</tmp/system-update-stderr)"
 
 export DEBIAN_FRONTEND=noninteractive
+
+if ! remove_unused_kernels; then
+    log "Removing unused kernel packages failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/kernel-removal-output 2> /dev/null)"
+    exit 1
+fi
+
 # the exit status of the pipeline is apt-get's own; `yes` only feeds it. A failing
 # maintainer script surfaces here as exit 100, with the detail split over both streams:
 # the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
@@ -200,6 +275,12 @@ if grep --quiet '^0 upgraded, 0 newly installed, 0 to remove ' /tmp/update_outpu
     log "No packages were changed in this run"
 else
     UPDATED=1
+fi
+# the removal is a change of its own, and the mails below are built from /tmp/update_output
+if [ -n "$KERNELS_REMOVED" ]; then
+    UPDATED=1
+    { printf 'Removed unused kernel packages: %s\n\n' "$KERNELS_REMOVED"; cat /tmp/update_output; } > /tmp/update_output.new
+    \mv /tmp/update_output.new /tmp/update_output
 fi
 {% endif %}
 
