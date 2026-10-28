@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102801
+# 2026102802
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -259,7 +259,10 @@ fi
 # maintainer script surfaces here as exit 100, with the detail split over both streams:
 # the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
 # Verified against apt 2.6 on Debian 12.
-if ! yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
+# systemd starts services with SIGPIPE ignored (IgnoreSIGPIPE=yes), so `yes` outlives
+# apt-get and reports the closed pipe as "yes: standard output: Broken pipe" in the
+# journal; that is expected and silenced here.
+if ! yes '' 2> /dev/null | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/update_output)"
     exit 1

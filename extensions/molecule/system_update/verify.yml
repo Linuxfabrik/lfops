@@ -553,6 +553,7 @@
           - '__molecule__update_and_reboot_result["stdout"] == "success"'
           - '"No packages were changed in this run" in __molecule__update_and_reboot_journal_result["stdout"]'
           - '"Nothing to report" in __molecule__update_and_reboot_journal_result["stdout"]'
+          - '"Broken pipe" not in __molecule__update_and_reboot_journal_result["stdout"]'
           - 'not __molecule__update_request_stat_result["stat"]["exists"]'
 
     # The config-file stub notification may still mail about the *.rpmnew / *.dpkg-dist
