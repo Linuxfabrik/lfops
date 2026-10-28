@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026102801
+
+# Login of the dump user, stored as the systemd credential `mariadb-dump-login.cnf`
+# (encrypted in /etc/credstore.encrypted/ with systemd 251 and newer, else in
+# /etc/credstore/). mariadb-dump.service reads it with `--defaults-extra-file`, so that the
+# password does not show up in the process list. Inside double quotes, the option file parser
+# unescapes `\\` and `\"`.
+
+[client]
+user = "{{ mariadb_server__dump_user['username'] | replace('\\', '\\\\') | replace('"', '\\"') }}"
+password = "{{ mariadb_server__dump_user['password'] | replace('\\', '\\\\') | replace('"', '\\"') }}"
