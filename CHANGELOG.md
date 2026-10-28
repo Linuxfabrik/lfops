@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
 * **role:opensearch**: Supports OpenSearch 3.x. The role README describes the upgrade from 2.x.
 * **playbook:setup_basic**: Deploys the Linuxfabrik package repository on Debian, Ubuntu and RHEL 8 to 10 and their derivatives, right after EPEL; on hosts whose mirror does not serve it, dnf skips it with an error message and apt stops the run (`setup_basic__skip_repo_linuxfabrik`).
 * **role:repo_linuxfabrik, playbook:repo_linuxfabrik**: Add a role and playbook that deploy the Linuxfabrik package repository repo.linuxfabrik.ch on Debian, Fedora, the Red Hat family, SUSE and Ubuntu, with an optional testing channel.
