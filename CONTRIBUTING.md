@@ -544,6 +544,21 @@ Templates that are copies of a packaged file (`<series>-coolwsd.xml.j2`, `<serie
 * `roles/example` implements the chain (`example__kernel_settings__sysctl__dependent_var`, fed into `kernel_settings` by `playbooks/example.yml`, plus the drop-in). `roles/icinga2_agent` shows a non-TuneD case (`z00-after-sssd.conf`).
 
 
+#### Secrets for systemd Services
+
+A secret that a systemd service reads from a file (a daemon, or a script run by a timer) is stored as a systemd credential, not in a config file below `/etc`. Backups of `/etc` then hold no plaintext password, since the host key in `/var/lib/systemd/` is not backed up.
+
+* Store it with `linuxfabrik.lfops.systemd_credential` and register the result. The module encrypts the credential into `/etc/credstore.encrypted/` with systemd 251 and newer, and otherwise writes it in plain text to `/etc/credstore/` (`0700` directory, `0600` file, root).
+* In the unit, add `LoadCredentialEncrypted=<name>` only when the registered result is `encrypted`, so the unit loads the credential from the store the module chose.
+* The service reads `${CREDENTIALS_DIRECTORY:-/etc/credstore}/<name>`. A script aborts with a hint to run the unit if the file is not readable: started by hand, outside the unit, it cannot decrypt the credential.
+* Use a template rendered through `lookup('ansible.builtin.template', ...)` as `content`, below `templates/etc/credstore/`. It keeps the header and version line, but is never deployed itself, so there is no `backup: true` copy of the secret.
+* When moving an existing secret file to a credential, delete the old file and its `backup: true` copies.
+* Name the credential after the file it replaces, e.g. `mariadb-dump-login.cnf`.
+* Document in the role README where the secret ends up per platform, that a script has to run via `systemctl start <unit>`, and the TPM2 caveat: with a TPM2 chip, the credential is bound to the Secure Boot state, so after a firmware or Secure Boot change the unit cannot read it until the role runs again.
+* If the service only takes the secret inline in its config, the pattern does not apply without a wrapper that renders the config at start; keep the config file `0600` and owned by the service user.
+* `roles/mariadb_server` (`mariadb-dump`) implements this pattern.
+
+
 #### OS-specific Variables
 
 Put values differing by platform (packages, paths, services) into `vars/` files, overriding from least to most specific: `os_family` (`RedHat`), `distribution` (`CentOS`), `distribution_major_version` (`CentOS7`), `distribution_version` (`CentOS7.9`).
@@ -668,6 +683,7 @@ Before adding an `allow` rule, work out what it buys an attacker **on top of** t
 #### Other
 
 * `apache_solr`: OpenJDK package per platform and Solr major version via `vars/<platform>.yml` (RHEL 10 and Debian 13 ship no Java 17), asserted per platform; `security.json` hashes computed on the controller with a host- and user-derived salt, so the file only changes with a password; `solr.in.sh` and `log4j2.xml` per Solr major (`9-`, `10-`), since Solr 10 renamed their variables.
+* `mariadb_server`: the dump login is a systemd credential, see "Secrets for systemd Services".
 * `mongodb`: `state: skip` in `mongodb__databases` / `mongodb__users` leaves an entry untouched.
 * `moodle`: patch tag discovered via `api.github.com/repos/moodle/moodle/tags`, first match of `^v<configured-version>`.
 * `nextcloud`: a state file skips install-only tasks after the initial installation; concise "Tags" README section.
