@@ -35,8 +35,13 @@
 #   * `template`: `{series}` is replaced. A template without `{series}` serves every
 #     series and is merged in place.
 #   * `supported_versions`: the vars file and the list that has to contain every series
-#     a template exists for. Only for templates with `{series}`.
+#     a template exists for. Only for templates with `{series}`. `<file>:<var>.<key>`
+#     names the list below a key of a dictionary, e.g. one list per OS family.
 #   * `deb_path`: where the DEB ships the file, if not at `path`.
+#   * `format`: optional, `deb` builds the template from the DEB file instead of the RPM
+#     file, for a Debian family template whose packaged file differs from the RPM one.
+#     The file then needs one entry per format, and RPM and DEB are not compared.
+#     `--check` still looks for new releases in the RPM repository only.
 #   * `copies`: further templates that stay identical to `template`, e.g. the Debian
 #     counterpart of a file the RPM ships under another path. They get the merge result.
 # * `ignore`: packaged files below /etc that LFOps deliberately does not template.
