@@ -1,8 +1,24 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026092201
+# 2026102901
 
 # no `set -e` because we want to finish writing the log file even if a borg command fails
+
+{% if borg_local__icinga2_api_user_login is defined and borg_local__icinga2_api_user_login | length %}
+# Prints the systemd credential that the borg_local role stored. The units deliberately do not
+# load it with LoadCredentialEncrypted=: if systemd cannot decrypt a credential there (with a
+# TPM2 chip, after a Secure Boot change), it does not start the unit at all, and a missing
+# downtime must not cost the backup.
+read_credential () {
+    local name="$1"
+    if [[ -e "/etc/credstore.encrypted/$name" ]]; then
+        systemd-creds decrypt --name="$name" "/etc/credstore.encrypted/$name" -
+    else
+        cat "/etc/credstore/$name"
+    fi
+}
+
+{% endif %}
 function exit_with_first_failed_retc() {
     for retc in "$@"; do
         if [ "$retc" -ne 0 ]; then
@@ -17,9 +33,10 @@ if [[ $? -eq 0 ]]; then
     # needed for Icinga to set clamd@scan service downtime (max. 90 minutes downtime)
     START_TIME=$(date +%s)
     END_TIME=$(( START_TIME + 5400 ))
-    # The credentials reach curl as a header read from a pipe that the printf builtin fills, so
-    # they never show up in the process list the way `curl --user` would put them there.
-    curl --connect-timeout 5 --insecure --silent --header @<(printf 'Authorization: Basic %s\n' '{{ (borg_local__icinga2_api_user_login["username"] ~ ":" ~ borg_local__icinga2_api_user_login["password"]) | b64encode }}') --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+    # The login reaches curl through a pipe that the printf builtin fills, so it never shows up
+    # in the process list the way `curl --user` would put it there.
+    if icinga2_login=$(read_credential 'borg-backup-icinga2-login.curlrc'); then
+        curl --connect-timeout 5 --insecure --silent --config <(printf '%s\n' "$icinga2_login") --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
     {
         "type": "Service",
         "filter": "match(\"{{ borg_local__icinga2_hostname }}\", host.name) && match(\"*Systemd Unit - clamd@scan*\", service.name)",
@@ -29,6 +46,10 @@ if [[ $? -eq 0 ]]; then
         "comment": "Disabling clamd@scan during borg backup."
     }
 EOF
+    else
+        icinga2_login=''
+        echo 'Cannot read the Icinga2 API login, skipping the clamd@scan downtime.' >&2
+    fi
 {% endif %}
     systemctl stop clamd@scan.service
     start_clamd=1
@@ -92,7 +113,9 @@ if [[ $start_clamd -eq 1 ]]; then
 
     # remove Icinga downtime
     DATA="{ \"type\": \"Service\", \"filter\": \"match(\\\"*{{ borg_local__icinga2_hostname }}*\\\", host.name) && match(\\\"*Systemd Unit - clamd@scan*\\\", service.name)\" }"
-    curl --insecure --silent --header @<(printf 'Authorization: Basic %s\n' '{{ (borg_local__icinga2_api_user_login["username"] ~ ":" ~ borg_local__icinga2_api_user_login["password"]) | b64encode }}') --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+    if [[ -n "$icinga2_login" ]]; then
+        curl --insecure --silent --config <(printf '%s\n' "$icinga2_login") --header 'Accept: application/json' --request POST '{{ borg_local__icinga2_api_url }}/v1/actions/remove-downtime' --data "$DATA" 1> /dev/null
+    fi
 {% endif %}
 fi
 

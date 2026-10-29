@@ -1,0 +1,303 @@
+- name: 'Verify the borg_local role backs up with the passphrase from the systemd credential'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    # A stand-in for the Icinga2 API on the host itself, listening where the inventory points
+    # (icinga2_agent__icinga2_master_cn: 'localhost'). borg-backup POSTs to it around the
+    # backup, and the stand-in writes each request to disk.
+    - name: 'mkdir -p /var/tmp/molecule-icinga2-api'
+      ansible.builtin.file:
+        path: '/var/tmp/molecule-icinga2-api'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o700
+
+    # a record left over from an earlier run must not satisfy the asserts below
+    - name: 'rm -f /var/tmp/molecule-icinga2-api/requests.log'
+      ansible.builtin.file:
+        path: '/var/tmp/molecule-icinga2-api/requests.log'
+        state: 'absent'
+
+    - name: 'openssl req -x509 -newkey rsa:2048 -nodes -subj /CN=localhost'
+      ansible.builtin.command: >
+        openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj /CN=localhost
+        -keyout /var/tmp/molecule-icinga2-api/key.pem
+        -out /var/tmp/molecule-icinga2-api/cert.pem
+      args:
+        creates: '/var/tmp/molecule-icinga2-api/cert.pem'
+
+    - name: 'Deploy /var/tmp/molecule-icinga2-api/server.py'
+      ansible.builtin.copy:
+        content: |
+          import http.server
+          import ssl
+
+          BASE = '/var/tmp/molecule-icinga2-api'
+
+
+          class Handler(http.server.BaseHTTPRequestHandler):
+              def do_POST(self):
+                  body = self.rfile.read(int(self.headers.get('Content-Length', 0)))
+                  auth = self.headers.get('Authorization', '').encode()
+                  with open(BASE + '/requests.log', 'ab') as f:
+                      f.write(self.path.encode() + b'\n' + auth + b'\n' + body + b'\n')
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'application/json')
+                  self.end_headers()
+                  self.wfile.write(b'{"results": []}')
+
+
+          context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+          context.load_cert_chain(BASE + '/cert.pem', BASE + '/key.pem')
+          server = http.server.HTTPServer(('127.0.0.1', 5665), Handler)
+          server.socket = context.wrap_socket(server.socket, server_side=True)
+          server.serve_forever()
+        dest: '/var/tmp/molecule-icinga2-api/server.py'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+
+    # the second verify (after idempotence) finds the unit of the first one still running
+    - name: 'systemctl stop molecule-icinga2-api.service' # noqa command-instead-of-module (the transient unit may not exist)
+      ansible.builtin.command: 'systemctl stop molecule-icinga2-api.service'
+      changed_when: false
+      failed_when: false
+
+    # the interpreter Ansible itself uses on the host; RHEL 8 has no python3 by default
+    - name: 'systemd-run --unit=molecule-icinga2-api python3 /var/tmp/molecule-icinga2-api/server.py'
+      ansible.builtin.command: >
+        systemd-run --unit=molecule-icinga2-api
+        {{ ansible_facts["discovered_interpreter_python"] | d("/usr/bin/python3") }}
+        /var/tmp/molecule-icinga2-api/server.py
+      changed_when: false
+
+    - name: 'Wait for the stand-in on 127.0.0.1:5665'
+      ansible.builtin.wait_for:
+        host: '127.0.0.1'
+        port: 5665
+        timeout: 30
+
+    # borg-backup sets the downtime only while ClamAV runs, so stand in for it, too.
+    - name: 'Deploy /etc/systemd/system/clamd@.service'
+      ansible.builtin.copy:
+        content: |
+          [Service]
+          ExecStart=/bin/sleep infinity
+        dest: '/etc/systemd/system/clamd@.service'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+
+    - name: 'systemctl start clamd@scan.service'
+      ansible.builtin.systemd:
+        name: 'clamd@scan.service'
+        state: 'started'
+        daemon_reload: true
+
+    - name: 'systemctl --version' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl --version'
+      changed_when: false
+      register: '__molecule__systemctl_version_result'
+
+    # With systemd 251 and newer the passphrase is encrypted, so it must not show up in plain
+    # text below /etc or /usr/local/bin, the old files and their backup copies included. Older
+    # systemd keeps it in /etc/credstore.
+    - name: 'grep --recursive --files-with-matches --fixed-strings <passphrase> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ borg_local__passphrase }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__passphrase_grep_result'
+
+    - name: 'Assert that the passphrase is only in the credential store'
+      ansible.builtin.assert:
+        that: '__molecule__passphrase_grep_result["stdout_lines"] == (__molecule__systemd_version | int >= 251) | ternary([], ["/etc/credstore/borg-passphrase"])'
+        fail_msg: '{{ __molecule__passphrase_grep_result["stdout_lines"] }}'
+      vars:
+        __molecule__systemd_version: '{{ __molecule__systemctl_version_result["stdout_lines"][0].split()[1] }}'
+
+    # the Icinga2 password in plain text was only in the backup copy prepare.yml left; the
+    # credential holds it base64-encoded, as part of the Authorization header
+    - name: 'grep --recursive --files-with-matches --fixed-strings <Icinga2 password> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ icinga2_master__downtime_api_user["password"] }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__icinga2_password_grep_result'
+
+    - name: 'grep --recursive --files-with-matches --fixed-strings <Icinga2 login, base64> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ __molecule__expected_credentials | ansible.builtin.b64encode }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__icinga2_login_grep_result'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+
+    - name: 'Assert that the Icinga2 API login is only in the credential store'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icinga2_password_grep_result["stdout_lines"] == []'
+          - '__molecule__icinga2_login_grep_result["stdout_lines"] == (__molecule__systemd_version | int >= 251) | ternary([], ["/etc/credstore/borg-backup-icinga2-login.curlrc"])'
+        fail_msg: '{{ __molecule__icinga2_password_grep_result["stdout_lines"] + __molecule__icinga2_login_grep_result["stdout_lines"] }}'
+      vars:
+        __molecule__systemd_version: '{{ __molecule__systemctl_version_result["stdout_lines"][0].split()[1] }}'
+
+    - name: 'stat the credentials in /etc/credstore.encrypted and /etc/credstore'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/etc/credstore.encrypted/borg-backup-icinga2-login.curlrc'
+        - '/etc/credstore.encrypted/borg-passphrase'
+        - '/etc/credstore/borg-backup-icinga2-login.curlrc'
+        - '/etc/credstore/borg-passphrase'
+      register: '__molecule__credential_stat_result'
+
+    - name: 'Assert that both credentials are in the store matching the systemd version'
+      ansible.builtin.assert:
+        that: '__molecule__credentials == [__molecule__store ~ "/borg-backup-icinga2-login.curlrc", __molecule__store ~ "/borg-passphrase"]'
+        fail_msg: '{{ __molecule__credentials }}'
+      vars:
+        __molecule__credentials: '{{ __molecule__credential_stat_result["results"] | selectattr("stat.exists") | map(attribute="item") | list }}'
+        __molecule__store: '{{ (__molecule__systemctl_version_result["stdout_lines"][0].split()[1] | int >= 251) | ternary("/etc/credstore.encrypted", "/etc/credstore") }}'
+
+    # the daily archive is named after the date, so a second run on the same day (the second
+    # verify after idempotence, or the run with the broken credential below) needs it gone
+    - name: 'borg delete /backup/daily::<today> (if present)'
+      ansible.builtin.shell: |-
+        source /etc/borg/borg.conf
+        archive="$(date +%Y%m%d)"
+        if borg list --short "$BACKUP_DIR/daily" | grep --quiet --line-regexp "$archive"; then
+            borg delete "$BACKUP_DIR/daily::$archive"
+            echo deleted
+        fi
+      args:
+        executable: '/bin/bash'
+      register: '__molecule__borg_delete_result'
+      changed_when: '"deleted" in __molecule__borg_delete_result["stdout"]'
+
+    - name: 'systemctl start borg-backup-daily.service'
+      ansible.builtin.systemd:
+        name: 'borg-backup-daily.service'
+        state: 'started'
+
+    # As an admin restores: as root, with the environment of borg.conf. borg gets the
+    # passphrase from BORG_PASSCOMMAND, not from the environment.
+    - name: 'source /etc/borg/borg.conf; borg extract --stdout /backup/daily::<today> etc/hostname'
+      ansible.builtin.shell: |-
+        source /etc/borg/borg.conf
+        echo "BORG_PASSPHRASE=${BORG_PASSPHRASE-unset}"
+        borg extract --stdout "$BACKUP_DIR/daily::$(date +%Y%m%d)" etc/hostname
+      args:
+        executable: '/bin/bash'
+      changed_when: false
+      register: '__molecule__borg_extract_result'
+
+    - name: 'slurp /etc/hostname'
+      ansible.builtin.slurp:
+        src: '/etc/hostname'
+      register: '__molecule__hostname_result'
+
+    - name: 'Assert that the backup holds /etc/hostname and the passphrase is not in the environment'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__borg_extract_result["stdout_lines"][0] == "BORG_PASSPHRASE=unset"'
+          - '__molecule__borg_extract_result["stdout_lines"][1:] == (__molecule__hostname_result["content"] | ansible.builtin.b64decode).splitlines()'
+        fail_msg: '{{ __molecule__borg_extract_result["stdout_lines"] }}'
+
+    - name: 'slurp /var/tmp/molecule-icinga2-api/requests.log'
+      ansible.builtin.slurp:
+        src: '/var/tmp/molecule-icinga2-api/requests.log'
+      register: '__molecule__icinga2_api_requests_result'
+
+    - name: 'Assert that borg-backup set and removed the downtime with the login from the credential'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icinga2_api_requests | select("eq", "/v1/actions/schedule-downtime") | list | length == 1'
+          - '__molecule__icinga2_api_requests | select("eq", "/v1/actions/remove-downtime") | list | length == 1'
+          - '__molecule__icinga2_api_requests | select("eq", "Basic " ~ (__molecule__expected_credentials | ansible.builtin.b64encode)) | list | length == 2'
+        fail_msg: '{{ __molecule__icinga2_api_requests }}'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+        __molecule__icinga2_api_requests: '{{ (__molecule__icinga2_api_requests_result["content"] | ansible.builtin.b64decode).splitlines() }}'
+
+    - name: 'systemctl is-active clamd@scan.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active clamd@scan.service'
+      changed_when: false
+
+    # A credential borg-backup cannot read (with a TPM2 chip, after a Secure Boot change) must
+    # cost the downtime, not the backup. Garbage in the encrypted store fails `systemd-creds
+    # decrypt`, a missing file in the plain store fails `cat`. Keep the intact one aside, so
+    # that the idempotence run that follows finds the credential unchanged.
+    - name: 'cp -a <Icinga2 login credential> /var/tmp/molecule-icinga2-api/'
+      ansible.builtin.copy:
+        src: '{{ __molecule__icinga2_login_credential }}'
+        dest: '/var/tmp/molecule-icinga2-api/borg-backup-icinga2-login.curlrc'
+        remote_src: true
+        mode: 'preserve'
+      vars:
+        __molecule__icinga2_login_credential: '{{ __molecule__credential_stat_result["results"] | selectattr("stat.exists") | map(attribute="item") | select("search", "/borg-backup-icinga2-login.curlrc$") | first }}'
+
+    - name: 'Break the credential borg-backup-icinga2-login.curlrc'
+      ansible.builtin.copy:
+        content: 'molecule'
+        dest: '/etc/credstore.encrypted/borg-backup-icinga2-login.curlrc'
+        mode: 0o600
+      when: '"/etc/credstore.encrypted/borg-backup-icinga2-login.curlrc" in __molecule__credentials'
+      vars:
+        __molecule__credentials: '{{ __molecule__credential_stat_result["results"] | selectattr("stat.exists") | map(attribute="item") | list }}'
+
+    - name: 'rm -f /etc/credstore/borg-backup-icinga2-login.curlrc'
+      ansible.builtin.file:
+        path: '/etc/credstore/borg-backup-icinga2-login.curlrc'
+        state: 'absent'
+
+    - name: 'borg delete /backup/daily::<today>'
+      ansible.builtin.shell: |-
+        source /etc/borg/borg.conf
+        borg delete "$BACKUP_DIR/daily::$(date +%Y%m%d)"
+      args:
+        executable: '/bin/bash'
+      changed_when: true
+
+    - name: 'systemctl start borg-backup-daily.service (unreadable Icinga2 API login)'
+      ansible.builtin.systemd:
+        name: 'borg-backup-daily.service'
+        state: 'started'
+
+    # fails if the archive of today is missing
+    - name: 'source /etc/borg/borg.conf; borg list --short /backup/daily | grep <today>'
+      ansible.builtin.shell: |-
+        set -o pipefail
+        source /etc/borg/borg.conf
+        borg list --short "$BACKUP_DIR/daily" | grep --line-regexp "$(date +%Y%m%d)"
+      args:
+        executable: '/bin/bash'
+      changed_when: false
+
+    - name: 'slurp /var/tmp/molecule-icinga2-api/requests.log (after the second backup)'
+      ansible.builtin.slurp:
+        src: '/var/tmp/molecule-icinga2-api/requests.log'
+      register: '__molecule__icinga2_api_requests_second_result'
+
+    - name: 'Assert that the second backup set no downtime'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icinga2_api_requests | select("eq", "/v1/actions/schedule-downtime") | list | length == 1'
+          - '__molecule__icinga2_api_requests | select("eq", "/v1/actions/remove-downtime") | list | length == 1'
+        fail_msg: '{{ __molecule__icinga2_api_requests }}'
+      vars:
+        __molecule__icinga2_api_requests: '{{ (__molecule__icinga2_api_requests_second_result["content"] | ansible.builtin.b64decode).splitlines() }}'
+
+    - name: 'cp -a /var/tmp/molecule-icinga2-api/borg-backup-icinga2-login.curlrc <credential store>'
+      ansible.builtin.copy:
+        src: '/var/tmp/molecule-icinga2-api/borg-backup-icinga2-login.curlrc'
+        dest: '{{ __molecule__icinga2_login_credential }}'
+        remote_src: true
+        mode: 'preserve'
+      vars:
+        __molecule__icinga2_login_credential: '{{ __molecule__credential_stat_result["results"] | selectattr("stat.exists") | map(attribute="item") | select("search", "/borg-backup-icinga2-login.curlrc$") | first }}'
+
+    - name: 'systemctl stop molecule-icinga2-api.service clamd@scan.service' # noqa command-instead-of-module (transient unit)
+      ansible.builtin.command: 'systemctl stop molecule-icinga2-api.service clamd@scan.service'
+      changed_when: false

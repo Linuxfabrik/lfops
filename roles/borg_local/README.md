@@ -4,7 +4,9 @@ This role installs and configures [borg](https://www.borgbackup.org/) and sets u
 
 Note that if ClamAV (`clamd@scan.service`) is found on the host, it will be temporarily disabled during the backup.
 
-To restore from a backup:
+The passphrase of the repositories and the login of the Icinga2 API user are stored as the systemd credentials `borg-passphrase` and `borg-backup-icinga2-login.curlrc`. With systemd 251 and newer (RHEL 9 and newer, Debian 12 and newer, Ubuntu 24.04 and newer), they are encrypted in `/etc/credstore.encrypted/` with the host key `/var/lib/systemd/credential.secret`, which the backup does not include. On RHEL 8 and Ubuntu 22.04, they stay in plain text in `/etc/credstore/`, readable by root only. `/etc/borg/borg.conf` hands borg a command (`BORG_PASSCOMMAND`) that decrypts the passphrase, so borg, `borg-backup` and the restore below have to run as root. With a TPM2 chip, the credentials are bound to the Secure Boot state: after a firmware or Secure Boot change, the backup fails until the role runs again. To read the passphrase, for example to restore the repositories on another host, run `systemd-creds decrypt --name=borg-passphrase /etc/credstore.encrypted/borg-passphrase -` (or `cat /etc/credstore/borg-passphrase`), or take it from the inventory.
+
+To restore from a backup (as root):
 ```bash
 mkdir -p /mnt/borg
 

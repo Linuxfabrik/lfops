@@ -1,0 +1,10 @@
+# Unique, so that verify.yml can search for it.
+borg_local__passphrase: 'molecule-borg-passphrase-marker'
+
+# Only the central variables of the icinga2_agent and icinga2_master roles, neither of which
+# this playbook runs: the downtime request must reach the Icinga2 API, with these credentials,
+# all the same. verify.yml runs a stand-in for the API on the host itself, hence localhost.
+icinga2_agent__icinga2_master_cn: 'localhost'
+icinga2_master__downtime_api_user:
+  username: 'molecule'
+  password: 'molecule-icinga2-password-marker'
