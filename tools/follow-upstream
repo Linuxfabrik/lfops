@@ -62,7 +62,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102903'
+__version__ = '2026102904'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -385,6 +385,7 @@ def check_scripts(app, config, version):
         if base and version_key(base) < version_key(version):
             bases.add((entry['package'], base))
     findings = 0
+    ignore = [re.compile(regex) for regex in config.get('scripts_ignore', [])]
     for package, base in sorted(bases):
         for fmt in fmts:
             old, new = (
@@ -394,7 +395,9 @@ def check_scripts(app, config, version):
                 )
                 for release in (base, version)
             )
-            if without_version(old, base) != without_version(new, version):
+            if without_version(old, base, ignore) != without_version(
+                new, version, ignore
+            ):
                 print(
                     f'packaging: {package} {version} ({fmt}) has other install'
                     f' scripts than {base}: diff {old} {new}'
@@ -403,17 +406,21 @@ def check_scripts(app, config, version):
     return findings
 
 
-def without_version(path, version):
+def without_version(path, version, ignore=()):
     """Return the content of the install scripts `path` of `version`, with the version
-    replaced by a placeholder.
+    replaced by a placeholder and the lines matching a regex of `ignore` removed.
 
     Some packages embed their version in the scripts (Elasticsearch:
     `RPM_PACKAGE_VERSION=9.5.5`, `# Built for packages-9.5.5 (rpm)`), which would make
     every release a finding. A build suffix (`9.5.5-1`) is part of the version, a longer
-    version (`9.5.50`, `19.5.5`) is not.
+    version (`9.5.50`, `19.5.5`) is not. `ignore` covers other values that change with
+    every release series, e.g. the minimum version of an upgrade check (GitLab).
     """
     with open(path, encoding='utf-8', errors='surrogateescape') as f:
-        text = f.read()
+        lines = f.read().splitlines(keepends=True)
+    text = ''.join(
+        line for line in lines if not any(regex.search(line) for regex in ignore)
+    )
     regex = rf'(?<![\d.]){re.escape(version)}(?:-\d+)?(?!\.?\d)'
     return re.sub(regex, '<version>', text)
 

@@ -44,6 +44,9 @@
 #     `--check` still looks for new releases in the RPM repository only.
 #   * `copies`: further templates that stay identical to `template`, e.g. the Debian
 #     counterpart of a file the RPM ships under another path. They get the merge result.
+# * `scripts_ignore`: optional, regexes for install script lines that change with every
+#   release series and are left out of the install script check, e.g. the version
+#   numbers of an upgrade check.
 # * `ignore`: packaged files below /etc that LFOps deliberately does not template.
 #   Every other file a release ships is reported, so a file upstream adds is noticed. An
 #   entry ending in `/` ignores every file below that directory.
