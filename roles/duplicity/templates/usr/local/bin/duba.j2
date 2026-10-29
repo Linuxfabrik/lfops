@@ -15,11 +15,12 @@ import os  # pylint: disable=C0413
 import re  # pylint: disable=C0413
 import subprocess  # pylint: disable=C0413
 import sys  # pylint: disable=C0413
+import tempfile  # pylint: disable=C0413
 import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102901'
+__version__ = '2026102903'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -31,12 +32,24 @@ EPILOG = """commands:
           duba-login.json). If the config file sets an archive dir, it is passed as the
           first argument, so duplicity uses the cache of the backup instead of building
           another one in ~/.cache/duplicity. A later --archive-dir overrides it.
+  restore PATH
+          Restore PATH, a file or directory as it was on this host, into the --target
+          directory, never over the live data. duba finds the backup that holds PATH
+          from the backup sources in the config file. For the options duba does not
+          offer, use `duba exec -- restore`.
 
 examples:
   duba
   duba exec -- collection-status swift://container/etc
-  duba exec -- restore --path-to-restore=hosts swift://container/etc /tmp/restore/hosts
+  duba restore /etc/hosts
+  duba restore --time=3D --dry-run /var/www/html/nextcloud/config/config.php
 """
+
+COMMANDS = ['backup', 'exec', 'restore']
+
+# The size of a backup volume in MB. A restore downloads one or two of them into the temp dir
+# at a time.
+VOLSIZE_MB = 200
 
 # The secret environment variables (SWIFT_PASSWORD, FTP_PASSWORD) are not in the config file,
 # but in this systemd credential, see load_credential().
@@ -65,30 +78,60 @@ def parse_args(argv):
         default='/etc/duba/duba.json',
     )
 
+    # COMMAND and PATH share one positional, so that `--command=restore PATH` works as well
     parser.add_argument(
-        'COMMAND',
-        help='Command to run, see below. Default: backup',
-        nargs='?',
-        choices=[
-            'backup',
-            'exec',
-        ],
+        'POSITIONALS',
+        help='The command to run (see below; default: backup), and the PATH for restore.',
+        metavar='COMMAND [PATH]',
+        nargs='*',
     )
 
     parser.add_argument(
         '--command',
         help='Same as COMMAND.',
         dest='COMMAND_OPTION',
-        choices=[
-            'backup',
-            'exec',
-        ],
+        choices=COMMANDS,
     )
 
-    args = parser.parse_args(argv)
+    parser.add_argument(
+        '--dry-run',
+        help='restore: Only show which backup holds PATH and the duplicity command.',
+        dest='DRY_RUN',
+        action='store_true',
+        default=False,
+    )
+
+    parser.add_argument(
+        '--target',
+        help='restore: Directory to restore into, PATH is recreated below it.'
+             ' Default: a new directory /var/tmp/duba-restore-<random>',
+        dest='TARGET',
+    )
+
+    parser.add_argument(
+        '--time',
+        help='restore: Restore the state as of this time, in the time format of duplicity'
+             ' (e.g. 3D, 2026-10-01, 2026-10-01T12:00:00). Default: the latest backup',
+        dest='TIME',
+    )
+
+    # intermixed, so that PATH may follow the options
+    args = parser.parse_intermixed_args(argv)
+    positionals = list(args.POSITIONALS)
+    args.COMMAND = positionals.pop(0) if positionals and positionals[0] in COMMANDS else None
     if args.COMMAND and args.COMMAND_OPTION and args.COMMAND != args.COMMAND_OPTION:
         parser.error(f'COMMAND {args.COMMAND} conflicts with --command={args.COMMAND_OPTION}')
     args.COMMAND = args.COMMAND or args.COMMAND_OPTION or 'backup'
+
+    args.PATH = None
+    if args.COMMAND == 'restore':
+        if len(positionals) != 1:
+            parser.error('restore needs exactly one PATH')
+        args.PATH = positionals[0]
+    elif positionals:
+        parser.error(f'unknown command or extra argument: {" ".join(positionals)}')
+    elif args.DRY_RUN or args.TARGET or args.TIME:
+        parser.error('--dry-run, --target and --time are only allowed with restore')
     return args
 
 class Duba:
@@ -248,7 +291,7 @@ class Duba:
         cmd += ['--log-timestamp']
         cmd += ['--num-retries', '5']
         cmd += ['--verbosity', f"{self.config.get('loglevel', 'notice')}"]
-        cmd += ['--volsize', '200']
+        cmd += ['--volsize', f'{VOLSIZE_MB}']
 
         cmd += [f"{backup_path}"]
         cmd += [f"{self.config.get('backup_dest')}{backup_path}"]
@@ -445,6 +488,129 @@ class Duba:
             sys.exit(205)
 
 
+    def find_backup(self, path):
+        """Return the source, the backup path (the local path duba passed to duplicity, which
+           is also appended to the backup URL) and the path to restore inside that backup.
+        """
+        # the most specific source wins, e.g. /var/www/html/nextcloud/data over /var/www/html
+        source = None
+        for src in self.config.get('backup_sources', []):
+            src_path = os.path.normpath(src.get('path'))
+            if path != src_path and not path.startswith(src_path.rstrip('/') + '/'):
+                continue
+            if source is None or len(src_path) > len(os.path.normpath(source.get('path'))):
+                source = src
+        if source is None:
+            self.logger.error(
+                f'{path} is in none of the backup sources: '
+                f"{', '.join(src.get('path') for src in self.config.get('backup_sources', []))}"
+            )
+            sys.exit(211)
+
+        src_path = os.path.normpath(source.get('path'))
+        rel_path = os.path.relpath(path, src_path) if path != src_path else ''
+        if not source.get('divide', False):
+            # build_duplicity_backup_command() appends the configured path as it is
+            return source, source.get('path'), rel_path
+        # a divided source has one backup per entry on its first level, see do_backup()
+        if not rel_path:
+            self.logger.error(
+                f'{path} is divided into one backup per entry, restore the entries one by one'
+            )
+            sys.exit(212)
+        entry, _, rest = rel_path.partition('/')
+        return source, os.path.join(source.get('path'), entry), rest
+
+
+    def warn_on_low_space(self, path, target):
+        # Only warnings: the restore goes into its own directory, so running out of space
+        # does not harm the live data. The local copy, if there still is one, is the only size
+        # estimate there is, since the duplicity metadata does not hold the file sizes.
+        if os.path.lexists(path):
+            size = 0
+            if os.path.isdir(path) and not os.path.islink(path):
+                for root, _, files in os.walk(path):
+                    for name in files:
+                        try:
+                            size += os.lstat(os.path.join(root, name)).st_size
+                        except OSError:
+                            pass
+            else:
+                size = os.lstat(path).st_size
+            stat = os.statvfs(target)
+            free = stat.f_bavail * stat.f_frsize
+            if free < size:
+                self.logger.warning(
+                    f'{target} has {free // 2**20} MB free, the local copy of {path} has'
+                    f' {size // 2**20} MB'
+                )
+        # duplicity uses the same temp dir (TMPDIR, else /tmp)
+        tempdir = tempfile.gettempdir()
+        stat = os.statvfs(tempdir)
+        free = stat.f_bavail * stat.f_frsize
+        if free < 2 * VOLSIZE_MB * 2**20:
+            self.logger.warning(
+                f'{tempdir} has {free // 2**20} MB free, duplicity needs about'
+                f' {2 * VOLSIZE_MB} MB there for the downloaded volumes (set TMPDIR to change it)'
+            )
+
+
+    def do_restore(self, path, target=None, restore_time=None, dry_run=False):
+        """Restore `path` from the backup that holds it into `target`, below which `path` is
+           recreated. duplicity refuses to restore into a directory that is not empty.
+        """
+        path = os.path.abspath(path)
+        source, backup_path, path_to_restore = self.find_backup(path)
+        # The restored files keep their owner and mode, but not the protection of the
+        # parent directories they had on the host (e.g. /root), so the directories duba
+        # creates are for root only. The default target gets a random name, any local
+        # user could create a predictable one below /var/tmp in advance.
+        os.umask(0o077)
+        if not target:
+            if dry_run:
+                target = '/var/tmp/duba-restore-<random>'
+            else:
+                target = tempfile.mkdtemp(prefix='duba-restore-', dir='/var/tmp')
+        restore_path = os.path.join(os.path.abspath(target), path.lstrip('/'))
+
+        cmd = ['duplicity', 'restore']
+        cmd += self.archive_dir_options()
+        cmd += ['--backend-retry-delay', '60']
+        cmd += ['--num-retries', '5']
+        if path_to_restore:
+            # renamed in duplicity 2.0.0
+            if self.duplicity_version >= (2, 0, 0):
+                cmd += ['--path-to-restore', path_to_restore]
+            else:
+                cmd += ['--file-to-restore', path_to_restore]
+        if restore_time:
+            cmd += ['--restore-time', restore_time]
+        cmd += ['--verbosity', f"{self.config.get('loglevel', 'notice')}"]
+        cmd += [f"{self.config.get('backup_dest')}{backup_path}"]
+        cmd += [restore_path]
+
+        if dry_run:
+            print(f"Source:          {source.get('path')}")
+            print(f"Backup URL:      {self.config.get('backup_dest')}{backup_path}")
+            print(f'Path to restore: {path_to_restore or "(the whole backup)"}')
+            print(f'Restore to:      {restore_path}')
+            print(f"Command:         {' '.join(cmd)}")
+            sys.exit(0)
+
+        os.makedirs(os.path.dirname(restore_path), exist_ok=True)
+        self.warn_on_low_space(path, os.path.dirname(restore_path))
+        self.logger.info(f"Running: {' '.join(cmd)}")
+        env = self.set_env(self.config.get('env', {}))
+        try:
+            retc = subprocess.run(cmd, env=env).returncode
+        except OSError as e:
+            self.logger.error(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd[0]}"')
+            sys.exit(205)
+        if retc == 0:
+            self.logger.info(f'Restored {path} to {restore_path}')
+        sys.exit(retc)
+
+
 def main():
     """The main function. Hier spielt die Musik.
     """
@@ -471,6 +637,8 @@ def main():
         duba.do_backup()
     elif args.COMMAND == 'exec':
         duba.do_exec(duplicity_args)
+    elif args.COMMAND == 'restore':
+        duba.do_restore(args.PATH, args.TARGET, args.TIME, args.DRY_RUN)
 
 
 if __name__ == '__main__':
