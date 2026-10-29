@@ -24,8 +24,19 @@ This role deploys the [Icinga Package Repository](https://packages.icinga.com/).
 `repo_icinga__basic_auth_login`
 
 * Use HTTP basic auth to login to the repository. Use this if you have an [Icinga Subscription](https://icinga.com/subscription/). Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
-* Type: String.
+* Type: Dictionary.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
 
 `repo_icinga__mirror_url`
 

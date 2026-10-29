@@ -8,10 +8,10 @@ mariadb_server__databases__group_var:
   - name: 'molecule'
     state: 'present'
 
-# The special characters check that the login file escapes the password correctly for both the
-# mariadb client and mydumper.
+# The special characters check that the login escapes the password correctly for both the
+# mariadb client and mydumper. verify.yml searches /etc for the marker `MoleculeDumpPw`.
 mariadb_server__dump_user:
   username: 'mariadb-dump'
-  password: 'linux"fab\rik #''x'
+  password: 'MoleculeDumpPw"fab\rik #''x'
 
 repo_mariadb__version: '11.8'

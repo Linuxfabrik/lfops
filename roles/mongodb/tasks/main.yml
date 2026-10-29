@@ -395,27 +395,69 @@
       group: 'root'
       mode: 0o600
 
-  - name: 'Deploy /etc/mongodb-dump-login.json'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/mongodb-dump-login.json.j2'
-      dest: '/etc/mongodb-dump-login.json'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600 # contains secrets
+  # encrypted with systemd 251 and newer, see the systemd_credential module. The service loads
+  # credentials on every start, so a changed one needs no restart. Read by `mongodump --config`,
+  # which rejects any key besides `password`, `uri` and `sslPEMKeyPassword`, and by mongosh.
+  # Built inline instead of from a template: ansible-core before 2.19 turns a rendered string
+  # that looks like a dict into one, which the module would then store as its Python repr; an
+  # expression ending in `to_json` is exempt.
+  - name: 'Store the dump login as the systemd credential mongodb-dump-login.json'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'mongodb-dump-login.json'
+      content: '{{ {"password": mongodb__dump_user["password"]} | to_json }}'
+    register: '__mongodb__dump_login_credential_result'
     when:
       - 'mongodb__conf_security_authorization | bool'
       - 'mongodb__dump_user is defined'
       - 'mongodb__dump_user | length > 0'
 
-  - name: 'Deploy /usr/local/sbin/mongodb-dump'
-    ansible.builtin.template:
-      backup: true
-      src: 'usr/local/sbin/mongodb-dump.j2'
-      dest: '/usr/local/sbin/mongodb-dump'
+  # without a dump user, the dump logs in without a password
+  - name: 'Remove the systemd credential mongodb-dump-login.json'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'mongodb-dump-login.json'
+      state: 'absent'
+    when: 'not (mongodb__conf_security_authorization | bool) or mongodb__dump_user is not defined or mongodb__dump_user | length == 0'
+
+  # the plain-text predecessor of the credential, including the copies `backup: true` left
+  - name: 'find /etc -maxdepth 1 -name mongodb-dump-login.json*'
+    ansible.builtin.find:
+      paths: '/etc'
+      patterns: 'mongodb-dump-login.json*'
+      hidden: true
+    register: '__mongodb__dump_login_plain_result'
+
+  - name: 'rm -f /etc/mongodb-dump-login.json*'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __mongodb__dump_login_plain_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  # /usr/local/libexec is missing on Debian before trixie and Ubuntu before 26.04, see
+  # roles/schedule_reboot.
+  - name: 'Ensure /usr/local/libexec exists'
+    ansible.builtin.file:
+      path: '/usr/local/libexec'
+      state: 'directory'
       owner: 'root'
       group: 'root'
       mode: 0o755
+
+  # Only mongodb-dump.service can run the script, since only the unit gets the decrypted login.
+  - name: 'Deploy /usr/local/libexec/mongodb-dump'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/libexec/mongodb-dump.j2'
+      dest: '/usr/local/libexec/mongodb-dump'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'rm -f /usr/local/sbin/mongodb-dump'
+    ansible.builtin.file:
+      path: '/usr/local/sbin/mongodb-dump'
+      state: 'absent'
 
   - name: 'Deploy /etc/systemd/system/mongodb-dump.service'
     ansible.builtin.template:

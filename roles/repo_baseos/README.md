@@ -19,8 +19,19 @@ This role deploys the BaseOS repositories, which can be used to set a custom mir
 `repo_baseos__basic_auth_login`
 
 * Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
-* Type: String.
+* Type: Dictionary.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
 
 `repo_baseos__crb_repo_enabled__host_var` / `repo_baseos__crb_repo_enabled__group_var`
 
