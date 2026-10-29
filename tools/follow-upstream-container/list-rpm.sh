@@ -7,8 +7,9 @@
 i=0
 while read -r key repo; do
     i=$((i + 1))
-    printf '[app%s]\nname=app\nbaseurl=%s\nskip_if_unavailable=1\n' "${i}" "${repo}" \
-        > "/etc/yum.repos.d/app${i}.repo"
+    # see fetch-rpm.sh for module_hotfixes
+    printf '[app%s]\nname=app\nbaseurl=%s\nskip_if_unavailable=1\nmodule_hotfixes=1\n' \
+        "${i}" "${repo}" > "/etc/yum.repos.d/app${i}.repo"
     # PACKAGES is a space-separated list of package names, split on purpose
     # shellcheck disable=SC2086
     dnf --quiet --repo="app${i}" \
