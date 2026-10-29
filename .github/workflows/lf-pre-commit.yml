@@ -9,6 +9,12 @@ on:
 permissions:
   contents: 'read'
 
+# A newer push to the same pull request makes the running hooks obsolete.
+# Pushes to main are left to finish.
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: "${{ github.event_name == 'pull_request' }}"
+
 jobs:
   pre-commit:
     name: 'Pre-commit'
@@ -31,11 +37,23 @@ jobs:
         with:
           python-version: '3.13'
 
+      # Building the hook environments takes most of the run, gitleaks alone
+      # half a minute. They only change with the config or the interpreter.
+      - name: 'Cache the hook environments'
+        uses: 'actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9' # v6.1.0
+        with:
+          path: '~/.cache/pre-commit'
+          key: "pre-commit-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}"
+
       - name: 'Install pre-commit'
         run: 'pip install --require-hashes --requirement .github/pre-commit/requirements.txt'
 
       # --all-files, because the hooks otherwise only see what a commit
       # happens to touch, and nothing guarantees a contributor ran
-      # `pre-commit install` at all.
+      # `pre-commit install` at all.  pytest-unit is skipped, since
+      # lf-unit-tests.yml runs the same tests across the full Python and
+      # ansible-core matrix whenever they are affected.
       - name: 'Run the hooks over the whole tree'
+        env:
+          SKIP: 'pytest-unit'
         run: 'pre-commit run --all-files --show-diff-on-failure'
