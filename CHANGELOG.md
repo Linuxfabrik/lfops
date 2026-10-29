@@ -177,6 +177,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: `nextcloud-ldap-show-remnants.timer` reports the LDAP remnants once a month; until now it started the app update instead.
+* **role:nextcloud**: CalDAV and CardDAV clients find their endpoints through `/.well-known/caldav` and `/.well-known/carddav` without a reverse proxy that redirects them, and `/remote/`, `/ocm-provider/` and the other `.well-known` URLs reach Nextcloud again.
+* **role:nextcloud**: httpd starts when `mod_dav` is loaded; the vHost turned WebDAV off outside a directory context, which httpd rejects.
 * **role:system_update**: On Debian and Ubuntu, the update check before the update window waits for a busy package manager and reports a failed refresh of the package lists, instead of silently announcing updates from stale lists.
 * **role:system_update**: On Debian and Ubuntu, the weekly update waits up to 10 minutes for the apt and dpkg locks instead of failing when, for example, an Ansible run holds them.
 * **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
@@ -332,6 +335,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: The vHost blocks `3rdparty/`, `lib/`, `config/`, `data/`, `occ` and `console.php` as Nextcloud's `.htaccess` intends; until now its rules never matched, so anyone could read the versions of all bundled libraries and call internal PHP files directly.
 * **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
