@@ -109,6 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:system_update**: On Debian and Ubuntu, the reboot notification lists the packages and services that asked for the reboot.
+* **role:system_update**: On Debian and Ubuntu, the weekly update removes the packages it left unused itself, typically replaced libraries, like unattended-upgrades does. Packages that were unused before stay installed.
 * **role:elasticsearch**: The query log of Elasticsearch 9.5 (`*_querylog.json`) is deleted after `elasticsearch__log4j2_retention_days`, like the other logs.
 * **role:telegraf**: `telegraf.conf` follows the file that current Telegraf packages ship. The effective settings stay the same, but deploying the file restarts Telegraf once.
 * **role:opensearch**: `/etc/sysconfig/opensearch` adds the native library path of the Neural Search plugin, as the OpenSearch package does.
@@ -171,6 +173,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: On Debian and Ubuntu, the update check before the update window waits for a busy package manager and reports a failed refresh of the package lists, instead of silently announcing updates from stale lists.
+* **role:system_update**: On Debian and Ubuntu, the weekly update waits up to 10 minutes for the apt and dpkg locks instead of failing when, for example, an Ansible run holds them.
+* **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
+* **role:system_update**: On Debian and Ubuntu, the journal of the weekly update no longer shows `yes: standard output: Broken pipe`.
+* **role:system_update**: On Debian and Ubuntu, the weekly update removes kernels apt no longer needs before installing new ones, the way unattended-upgrades does, so old kernels no longer fill up `/boot`. The running kernel, the newest one and held packages are kept.
 * **role:mariadb_server**: The dump script is installed as `/usr/local/libexec/mariadb-dump`, so it no longer shadows MariaDB's own `mariadb-dump` client for users with `/usr/local/bin` in their `PATH`.
 * **role:mongodb**: The file-based dump (`mongodb__dump_method_file_based`) locks the instance also with authorization enabled and works on Debian and Ubuntu, and a dump that cannot lock the instance fails instead of copying the data files of the running instance.
 * **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.

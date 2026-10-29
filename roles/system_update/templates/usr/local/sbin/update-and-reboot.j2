@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026093001
+# 2026102808
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -67,6 +67,109 @@ last_txn_id () {
     # yields an empty id on both sides, which compares equal and is correct.
     # Verified against dnf 4.7 (Rocky 8), 4.14 (Rocky 9) and 4.20 (Rocky 10).
     yum history list 2> /dev/null | awk '$1 ~ /^[0-9]+$/ { print $1; exit }'
+}
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+run_waiting_for_lock () {
+    # apt-get update (the lock of /var/lib/apt/lists) and dpkg give up at once when another
+    # process holds their lock, with or without DPkg::Lock::Timeout, which only makes the
+    # installing apt-get calls wait. The usual holders are an Ansible run, an admin in apt or
+    # notify-and-schedule, and losing the update over them would cost a whole week. So retry
+    # for as long as DPkg::Lock::Timeout lets the other calls wait, but only on a lock error.
+    # $1 is where the command's stdout goes; a redirection on the call would swallow the
+    # log lines of this function as well. Writes stderr to /tmp/system-update-stderr.
+    # Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13).
+    local attempt out="$1" rc
+    shift
+    for attempt in 1 2 3 4 5 6 7 8 9 10; do
+        "$@" > "$out" 2> /tmp/system-update-stderr && return 0
+        rc=$?
+        grep --quiet --extended-regexp 'Could not get lock|(is|was) locked by' /tmp/system-update-stderr || return "$rc"
+        [ "$attempt" -lt 10 ] && { log "Waiting for the package manager lock (attempt $attempt of 10)"; sleep 60; }
+    done
+    return "$rc"
+}
+
+list_autoremovable () {
+    # the packages apt considers no longer needed, one per line
+    apt-get --simulate autoremove 2> /tmp/system-update-stderr | awk '$1 == "Remv" { print $2 }'
+    return "${PIPESTATUS[0]}"
+}
+
+is_running_kernel_pkg () {
+    # a package of the running kernel, with and without its flavor, e.g.
+    # linux-image-6.12.48+deb13-amd64 or linux-headers-6.12.48+deb13-common
+    local pkg="$1" running
+    running=$(uname -r)
+    [[ $pkg == *"-$running" ]] && return 0
+    [[ $running =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]+-[0-9]+ ]] && [[ $pkg == *"-${BASH_REMATCH[0]}" ]]
+}
+
+autoremove_checked () {
+    # remove the given auto-removable packages the way unattended-upgrades does
+    # (do_auto_remove() and is_autoremove_valid()):
+    # * held packages stay installed (the blacklist of unattended-upgrades). apt does not
+    #   list them as auto-removable anyway, so this only guards against that changing.
+    # * the removal is refused as a whole if apt would remove anything beyond the
+    #   auto-removable packages or of the running kernel, or install anything.
+    # * packages are removed, not purged.
+    # $1 describes the packages for the log and the mail. Appends a line to REMOVED_REPORT
+    # on success; returns non-zero only if apt failed.
+    # Ported from unattended-upgrades (unattended-upgrade, git c5001e7).
+    local what="$1" autoremovable candidates held pkg simulated
+    shift
+    held=$(apt-mark showhold)
+    candidates=''
+    for pkg in "$@"; do
+        printf '%s\n' "$held" | grep --quiet --line-regexp --fixed-strings "$pkg" && continue
+        candidates="$candidates $pkg"
+    done
+    [ -z "$candidates" ] && return 0
+
+    autoremovable=$(list_autoremovable) || return 1
+    # shellcheck disable=SC2086 # word splitting is intended, one argument per package
+    simulated=$(apt-get --simulate remove $candidates 2> /tmp/system-update-stderr) || return 1
+    if printf '%s\n' "$simulated" | grep --quiet '^Inst '; then
+        log "Keeping $what, removing them would install other packages:$candidates"
+        return 0
+    fi
+    for pkg in $(printf '%s\n' "$simulated" | awk '$1 == "Remv" { print $2 }'); do
+        if ! printf '%s\n' "$autoremovable" | grep --quiet --line-regexp --fixed-strings "$pkg" \
+                || is_running_kernel_pkg "$pkg"; then
+            log "Keeping $what, removing them would also remove $pkg:$candidates"
+            return 0
+        fi
+    done
+
+    log "Removing $what:$candidates"
+    # shellcheck disable=SC2086 # word splitting is intended, one argument per package
+    apt-get -y -o DPkg::Lock::Timeout=600 remove $candidates > /tmp/autoremove-output 2> /tmp/system-update-stderr || return 1
+    REMOVED_REPORT="${REMOVED_REPORT}Removed ${what}:${candidates}"$'\n'
+}
+
+remove_unused_kernels () {
+    # apt-get upgrade installs every new kernel ABI package but never removes one, so on
+    # its own the old kernels pile up until a small /boot runs full and the initramfs of
+    # the next kernel no longer fits. This does what unattended-upgrades does with
+    # Remove-Unused-Kernel-Packages (on by default there), and also does it before the
+    # upgrade, so the new kernel finds the space it needs. Which kernels may go is apt's
+    # decision: only packages it lists as auto-removable. apt protects the running kernel
+    # and the newest one, and installs that were not pulled in as a dependency are never
+    # auto-removable. Of those, only the versioned kernel packages (APT::VersionedKernelPackages
+    # followed by an ABI version), never one of the running kernel.
+    # Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04.
+    local autoremovable candidates patterns pkg
+    patterns=$(apt-config dump --no-empty --format '%v%n' APT::VersionedKernelPackages | paste --serial --delimiters='|')
+    [ -z "$patterns" ] && return 0
+    autoremovable=$(list_autoremovable) || return 1
+    candidates=()
+    for pkg in $autoremovable; do
+        [[ $pkg =~ ^($patterns)-[1-9][0-9]*\.[0-9]+\.[0-9]+-[0-9]+(-.+)?$ ]] || continue
+        is_running_kernel_pkg "$pkg" && continue
+        candidates+=("$pkg")
+    done
+    autoremove_checked 'unused kernel packages' "${candidates[@]}"
 }
 {% endif %}
 
@@ -166,12 +269,33 @@ fi
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'Debian' %}
+export DEBIAN_FRONTEND=noninteractive
+# set by autoremove_checked, one line per removal; leads the update mail
+REMOVED_REPORT=''
+
+# a dpkg run that was cut short (crash, OOM kill, a reboot from outside) leaves its journal
+# in /var/lib/dpkg/updates/, and from then on every apt-get upgrade stops with "dpkg was
+# interrupted, you must manually run 'dpkg --configure -a'". Without this the host would
+# miss every update until someone fixes it by hand. unattended-upgrades does the same
+# (AutoFixInterruptedDpkg, on by default), with the same check for the journal files.
+# Verified against dpkg 1.22 on Debian 13.
+if compgen -G '/var/lib/dpkg/updates/[0-9]*' > /dev/null; then
+    log "dpkg was interrupted; running dpkg --configure -a"
+    if ! run_waiting_for_lock /tmp/dpkg-configure-output dpkg --force-confdef --force-confold --configure -a; then
+        log "dpkg --configure -a failed; see /tmp/system-update-stderr"
+        send_msg "$SUBJECT_PREFIX - System update failed" "dpkg was interrupted earlier, and dpkg --configure -a could not repair it:
+
+$(cat /tmp/system-update-stderr /tmp/dpkg-configure-output)"
+        exit 1
+    fi
+fi
+
 # apt-get update exits 0 when a mirror merely fails to answer, printing a `W: Failed to
 # fetch` warning and carrying on with the old lists; it only reports a non-zero status
 # for hard errors such as an unreadable sources list. So this catches a broken
 # configuration, not a mirror outage, unlike the retry loop of the RedHat lane.
 # Verified against apt 2.6 on Debian 12.
-if ! apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
+if ! run_waiting_for_lock /dev/null apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }}; then
     log "Metadata refresh failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
     exit 1
@@ -179,14 +303,61 @@ fi
 # keep those warnings in the journal, since they are the only trace of a mirror outage.
 [ -s /tmp/system-update-stderr ] && log "$(</tmp/system-update-stderr)"
 
-export DEBIAN_FRONTEND=noninteractive
-# the exit status of the pipeline is apt-get's own; `yes` only feeds it. A failing
-# maintainer script surfaces here as exit 100, with the detail split over both streams:
-# the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
-# Verified against apt 2.6 on Debian 12.
-if ! yes '' | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
+if ! remove_unused_kernels; then
+    log "Removing unused kernel packages failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/autoremove-output 2> /dev/null)"
+    exit 1
+fi
+
+# what was already unused before the upgrade stays installed, see below
+if ! AUTOREMOVABLE_BEFORE=$(list_autoremovable); then
+    log "Listing the unused packages failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
+    exit 1
+fi
+
+# The upgrade, unattended. What answers which question:
+# * -y: apt-get's own confirmation.
+# * DEBIAN_FRONTEND=noninteractive (exported above): every debconf question takes its
+#   default without reading stdin. Required: without it debconf may fall back to a
+#   frontend that reads stdin.
+# * --force-confdef --force-confold: a dpkg conffile changed locally is kept, with the
+#   package's version next to it as *.dpkg-dist; an unchanged one is replaced.
+# * ucf-managed files (outside dpkg's conffiles) behave the same, kept as *.ucf-dist if
+#   changed locally: ucf asks through debconf, and the noninteractive default is
+#   keep_current. The force options above do not reach ucf: dpkg passes them to the
+#   maintainer scripts as DPKG_FORCE, always in the order "confold,confdef", and on
+#   confdef ucf drops the confold it has just set. Do not set UCF_FORCE_CONFFOLD
+#   either: ucf then keeps unchanged files as well, so they never get updated.
+# * < /dev/null: nothing above reads stdin. A maintainer script that does anyway (none
+#   of a typical server install does under noninteractive) gets EOF and usually fails,
+#   which surfaces in the failure mail below, instead of silently being fed empty
+#   answers or looping forever on a prompt that rejects them.
+# * DPkg::Lock::Timeout: wait for the dpkg lock instead of failing at once.
+# A failing maintainer script surfaces as exit 100, with the detail split over both
+# streams: the package names on stdout, `E: Sub-process ... returned an error code` on
+# stderr.
+# Verified against apt 2.0, dpkg 1.19, ucf 3.0038 (Ubuntu 20.04), apt 2.6 (Debian 12),
+# and apt 3.0, dpkg 1.22, ucf 3.0052 (Debian 13).
+if ! apt-get -y -o DPkg::Lock::Timeout=600 -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade < /dev/null > /tmp/update_output 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/update_output)"
+    exit 1
+fi
+
+# packages the upgrade left unused, typically libraries replaced by a renamed package (a
+# new soname). Only those: packages that were unused before may have been kept on purpose,
+# which is why unattended-upgrades also removes only these by default
+# (Remove-New-Unused-Dependencies), and the full autoremove only on request.
+if ! AUTOREMOVABLE_AFTER=$(list_autoremovable); then
+    log "Listing the unused packages failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
+    exit 1
+fi
+mapfile -t NEW_AUTOREMOVABLE < <(comm -13 <(printf '%s\n' "$AUTOREMOVABLE_BEFORE" | sort) <(printf '%s\n' "$AUTOREMOVABLE_AFTER" | sort) | grep .)
+if ! autoremove_checked 'packages no longer needed after the upgrade' "${NEW_AUTOREMOVABLE[@]}"; then
+    log "Removing the packages no longer needed failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/autoremove-output 2> /dev/null)"
     exit 1
 fi
 
@@ -195,11 +366,16 @@ fi
 # as a no-op when packages are held back ("... and N not upgraded"). apt 3.0 reworked
 # the output of `apt` but left this `apt-get` line untouched.
 # Verified against apt 2.6 (Debian 12), 3.0 (Debian 13) and 2.7 (Ubuntu 24.04).
-if grep --quiet '^0 upgraded, 0 newly installed, 0 to remove ' /tmp/update_output; then
+if grep --quiet '^0 upgraded, 0 newly installed, 0 to remove ' /tmp/update_output && [ -z "$REMOVED_REPORT" ]; then
     UPDATED=0
     log "No packages were changed in this run"
 else
     UPDATED=1
+fi
+# the removals are changes of their own, and the mails below are built from /tmp/update_output
+if [ -n "$REMOVED_REPORT" ]; then
+    { printf '%s\n' "$REMOVED_REPORT"; cat /tmp/update_output; } > /tmp/update_output.new
+    \mv /tmp/update_output.new /tmp/update_output
 fi
 {% endif %}
 
@@ -274,9 +450,21 @@ fi
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 # we call needrestart with the -p option so it behaves like a nagios plugin. any exit code != 0 means a reboot is required
-if [ -f /var/run/reboot-required ] || ! needrestart -p 1> /dev/null; then
+NEEDRESTART=$(needrestart -p 2>&1)
+NEEDRESTART_RC=$?
+if [ -f /var/run/reboot-required ] || [ "$NEEDRESTART_RC" -ne 0 ]; then
     log "Reboot required; requesting reboot via the spool"
-    MSGBODY=$(cat /tmp/update_output)
+    # keep the reason, like the RedHat lane: it is the only explanation the admin gets
+    # when the reboot is carried over from an earlier window and this run changed nothing.
+    # The packages asking for it are listed by their postinst in reboot-required.pkgs, the
+    # running services and kernel that need it by needrestart.
+    MSGBODY=$(
+        if [ -s /var/run/reboot-required.pkgs ]; then
+            printf 'Packages requiring the reboot:\n%s\n\n' "$(sort --unique /var/run/reboot-required.pkgs)"
+        fi
+        printf 'needrestart: %s\n\n' "$NEEDRESTART"
+        cat /tmp/update_output
+    )
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}
