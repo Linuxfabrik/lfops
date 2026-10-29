@@ -11,7 +11,11 @@
 # dnf 4.14 on Rocky 9).
 
 dnf install --assumeyes --quiet cpio >/dev/null
-printf '[app]\nname=app\nbaseurl=%s\n' "${REPO}" > /etc/yum.repos.d/app.repo
+# dnf hides the packages of a modular repository whose module stream is not enabled, and
+# repoquery finds nothing in Remi's modular repository without `module_hotfixes` (verified
+# against dnf 4.14 on Rocky 9). Repositories without modules are not affected.
+printf '[app]\nname=app\nbaseurl=%s\nmodule_hotfixes=1\n' "${REPO}" \
+    > /etc/yum.repos.d/app.repo
 # a repository can serve several architectures and the source package
 releases=$(dnf --quiet --repo=app \
     repoquery --arch=noarch,x86_64 --queryformat '%{release}' "${PACKAGE}-${VERSION}" \
