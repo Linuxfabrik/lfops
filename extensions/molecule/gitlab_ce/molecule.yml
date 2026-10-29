@@ -1,0 +1,2 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: GitLab runs its services under runit, started by systemd.

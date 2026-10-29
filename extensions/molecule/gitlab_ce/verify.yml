@@ -1,0 +1,71 @@
+# Checks that GitLab runs and that its bundled NGINX uses the settings of gitlab.rb: the
+# listen port, the registry and the real IP of a request from a trusted proxy.
+- name: 'Verify GitLab CE'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that gitlab-runsvdir.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["gitlab-runsvdir.service"]["state"] == "running"'
+
+    # service_facts does not list timers; without a state, the module only reports the status.
+    - name: 'systemctl show gitlab-dump.timer'
+      ansible.builtin.systemd:
+        name: 'gitlab-dump.timer'
+      register: '__molecule__gitlab_dump_timer_result'
+
+    - name: 'Assert that gitlab-dump.timer is active'
+      ansible.builtin.assert:
+        that: '__molecule__gitlab_dump_timer_result["status"]["ActiveState"] == "active"'
+
+    # Puma needs a while after a restart; the sign-in page answers once Rails is up.
+    - name: 'curl http://127.0.0.1:8090/users/sign_in'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8090/users/sign_in'
+        status_code: 200
+      register: '__molecule__gitlab_sign_in_result'
+      until: '__molecule__gitlab_sign_in_result is not failed'
+      retries: 30
+      delay: 10
+
+    # exits non-zero if one of the GitLab services is down
+    - name: 'gitlab-ctl status'
+      ansible.builtin.command:
+        argv:
+          - 'gitlab-ctl'
+          - 'status'
+      changed_when: false
+
+    # The registry answers an unauthenticated request with 401, behind the registry NGINX.
+    - name: 'curl http://127.0.0.1:5050/v2/'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:5050/v2/'
+        status_code: 401
+
+    # The request comes from 127.0.0.1, a trusted address, so NGINX and Rails take the
+    # client IP from X-Forwarded-For. The query string marks the request in the log.
+    - name: 'curl --header "X-Forwarded-For: 198.51.100.7" http://127.0.0.1:8090/users/sign_in?molecule-real-ip'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8090/users/sign_in?molecule-real-ip'
+        headers:
+          X-Forwarded-For: '198.51.100.7'
+        status_code: 200
+
+    - name: 'grep for the real IP in /var/log/gitlab/gitlab-rails/production_json.log'
+      ansible.builtin.command:
+        argv:
+          - 'grep'
+          - '--quiet'
+          - '--extended-regexp'
+          - 'molecule-real-ip.*"meta.remote_ip":"198\.51\.100\.7"|"meta.remote_ip":"198\.51\.100\.7".*molecule-real-ip'
+          - '/var/log/gitlab/gitlab-rails/production_json.log'
+      register: '__molecule__gitlab_real_ip_result'
+      until: '__molecule__gitlab_real_ip_result["rc"] == 0'
+      retries: 5
+      delay: 2
+      changed_when: false

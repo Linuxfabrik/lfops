@@ -1,0 +1,14 @@
+# Not GitLab's placeholder http://gitlab.example.com: with it, the package skips the
+# initial `gitlab-ctl reconfigure`, which creates the git user the role needs.
+gitlab_ce__rb_external_url: 'http://git.example.com'
+
+# Not the default port 80, so verify.yml proves that NGINX uses the configured one. Not 8080
+# either, Puma listens there.
+gitlab_ce__rb_nginx_listen_port: 8090
+
+# verify.yml sends requests with X-Forwarded-For from the VM itself.
+gitlab_ce__rb_nginx_real_ip_trusted_addresses:
+  - '127.0.0.1'
+
+gitlab_ce__rb_registry_external_url: 'http://git.example.com:5050'
+gitlab_ce__rb_registry_nginx_enable: true

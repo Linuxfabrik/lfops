@@ -14,6 +14,11 @@ This role installs and configures [GitLab CE](https://about.gitlab.com/), includ
 * `gitlab-dump.service` runs with `Nice=19`, best-effort IO priority 7 and `CPUWeight=` / `IOWeight=` of `20` (systemd default: `100`), so the dump does not slow down the application on a busy host. The weights only take effect under contention. `IOWeight=` only has an effect on block devices that use the BFQ IO scheduler; with `none` or `mq-deadline`, as on a RHEL 9 VM with virtio disks, it is ignored.
 
 
+## Known Limitations
+
+* The role supports GitLab 19.2 and newer only, since `gitlab.rb` uses the `gitlab_rails['nginx']` and `registry['nginx']` settings introduced in 19.2. It aborts on a host that runs an older version, or when `gitlab_ce__version` names one. To restore a backup of an older version, restore it with that version by hand and upgrade along the GitLab upgrade path first.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -343,7 +348,7 @@ gitlab_ce__rb_external_url: 'https://git.example.com'
 
 `gitlab_ce__version`
 
-* The GitLab version to install. This is useful when restoring from a backup. When unset, the latest available version is used.
+* The GitLab version to install. This is useful when restoring from a backup. When unset, the latest available version is used. The role supports GitLab 19.2 and newer, and aborts on an older version.
 * Type: String.
 * Default: unset
 

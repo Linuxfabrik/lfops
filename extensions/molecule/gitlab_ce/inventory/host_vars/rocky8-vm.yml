@@ -1,0 +1,2 @@
+# GitLab needs more than the 4 GB of the shared inventory.
+kvm_vm__memory: 8192

@@ -48,7 +48,7 @@ Which Ansible role is proven to run on which OS?
 | freeipa_client                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | freeipa_server                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | github_project_createrepo             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| gitlab_ce                             |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| gitlab_ce                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | glances                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | glpi_agent                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | grafana                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -139,7 +139,7 @@ Which Ansible role is proven to run on which OS?
 | repo_docker                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_elasticsearch                    |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | repo_epel                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| repo_gitlab_ce                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| repo_gitlab_ce                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_gitlab_runner                    |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_grafana                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
