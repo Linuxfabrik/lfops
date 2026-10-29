@@ -1,39 +1,84 @@
 # A throwaway master key generated for this scenario (public half only, its private key was
-# discarded). The role imports it and encrypts to it, so the key must be a valid one.
-duplicity__gpg_encrypt_master_key: 'B3FAC8CF52F7D8A3C3A44259401E05D68ADA9B3A'
+# discarded). The role imports it and every backup is encrypted to it, so it needs an encryption
+# subkey.
+duplicity__gpg_encrypt_master_key: '3A81E0A2B3F9BCF9F7399ECF2D7C79014EDAF736'  # gitleaks:allow (public key fingerprint)
 duplicity__gpg_encrypt_master_key_block: |-
   -----BEGIN PGP PUBLIC KEY BLOCK-----
 
-  mQINBGrbUV4BEADE2wcjBlxUZx/lkcZK+qVkVh7ZuDjqB2ahj3TVkGBqlhuiMLO0
-  PT/KePk3YoPnvaXMVU7CieIUVVtwZfc6u9HBEQDvfFLOy32UG3qGl8fZssyIZM/V
-  GM7CmN2PZDMevHRjaaAQq0XMDQKtdQGELZlFAV0T9mFIJnGaCP1d5+3Hh5E02Kp7
-  XEcFINhfwRKA13E/n1BrQemCes2pdsQPkG5CiVcH+1+cC+3TVaScQVbMuZuJ43Oa
-  GbbGlWVePUJytVFniFMeAnN015G1WM8smqZma6Yi5in2Bedk3/pNRJQG3Lt8qpUi
-  02t5zkpqaj7GwRSWffX9IinRdWQAuNAyYjgQW+poWvOCMm8GyZq86j7oxAs8eTN/
-  KWYuqe1IJKjDOQp0cGlPJ3JU6Fmy1KLfxNjOGLeCpLEqQ3631H3eZeDqm8gHMPwi
-  w6FtbMdYs3WP9XoTqX1/DeIL5I8MUMn6vpTqzY3UmzluDc4TKlb7KG/sSk1X0k8u
-  ZlNRm+KA3MKQ8mas3PwDNOlxROkCWrKn34n0RtWve3Nsk+cx90b7SK4jHjAKiKQ5
-  5Kf6d9bqUY8f1LzRg87mRXNFwOUYfdWfDYz15j5vDP0cHVZVLbQzVuZi9qDRwJ3E
-  tlZ7zQ/jQZO+i4Msx9W9bHoV2JebO2zchmju6rNO31Lvsca4Bspekt+ZNwARAQAB
+  mQINBGrjSCcBEAC0CwNt4S8LrStMLqTuiKunWK+WtRjwLDs2O43YC4aBUIGbyW8p
+  aoaLGQKz8gkGiburwbvAUceUSIOqaCzgqgQlFz37DswfI0lizREPmDjDDmVa2bMX
+  NpmZEcenknDqkPbIm/yJPvdvd42N+zFtQqzpq3AU0fkASr+QmKwAZK1FODIr7Uka
+  j8/sksWBgSd7BnuiTza7nMfNQaVPAEVCqumTf+P2OS92oYB40ny9WeoP9iPnFiJS
+  Tc6ihYJ3byRhByH5pMlxsel2pDGXko1oEYKc1nXWLjs60nremlqB9Kv2bYRRFhuv
+  xR7cQkmsMDgF1A11x3+wOMVkvig+o7i/ewa/MqFvjvaJPyATCCuBWHyMcKhzuqIL
+  UI85qyXha2/ZsXyPwwk5tRE9mwj4z7afwv3/CbzNSm9IOKvnLHH8L9nlvAMxZlG/
+  Majv8d/bj+43OU+KXbS6gZPowb8FgiO4HQE5Jaqebi00oB10pvzs2w4oj82xCZfH
+  1XOAOGcqTJw0azAu9Z+R+FC+71Qefn6PDpS+UYKm3eNOYCDNTc8WeZppKYQjqgFh
+  njZMW35hnqetuZ+EHxjefqytpdw4sWZch9djpY1TODUDplcEP74LGLhHaYldBKNk
+  fj+b+LpjSdBYha4bfxdtKCwe0ld4E2W14SYznxFd+xfgAR2gu/wNSBzyOwARAQAB
   tCtsaW51eGZhYnJpayBtb2xlY3VsZSA8bW9sZWN1bGVAZXhhbXBsZS5jb20+iQJR
-  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
-  7HvxRC32kIuqI4xp7f57Vr8=
-  =MQxG
+  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
+  Yg1uRmqSf9nw+Q==
+  =mynP
   -----END PGP PUBLIC KEY BLOCK-----
 
 # verify.yml passes it to `duba exec`, a stub of duplicity checks that it arrives.
 duplicity__archive_dir: '/var/cache/duba-molecule'
+
+# verify.yml runs real backups to a local directory and restores from them. The large default
+# sources are left out to keep the backups fast; the test data is in /srv/duba-molecule.
+duplicity__backup_dest: 'file:///var/backups/duba-molecule'
+duplicity__backup_sources__group_var:
+  - path: '/etc'
+    state: 'absent'
+  - path: '/home'
+    state: 'absent'
+  - path: '/opt'
+    state: 'absent'
+  - path: '/root'
+    state: 'absent'
+  - path: '/srv'
+    state: 'absent'
+  - path: '/srv/duba-molecule/divided'
+    divide: true
+    state: 'present'
+  - path: '/srv/duba-molecule/plain'
+    divide: false
+    state: 'present'
 
 # Nothing listens on the Swift URL, the scenario never starts a backup. The password is unique,
 # so that verify.yml can search for it.

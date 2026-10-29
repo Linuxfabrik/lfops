@@ -147,3 +147,166 @@
           - '__molecule__duba_exec_unit_result["stdout_lines"] | select("match", "^CREDENTIALS_DIRECTORY=") | list | length == 1'
         fail_msg: '{{ __molecule__duba_exec_unit_result["stdout_lines"] }}'
       when: '__molecule__systemctl_version_result["stdout_lines"][0].split()[1] | int >= 251'
+
+    # A real backup and restore to the file:// backend. The first backup holds v1 of plain/file.txt,
+    # the second one v2, so a restore as of a time between them has to bring back v1. Everything
+    # is reset first, so that the play also passes the second verify run.
+    - name: 'rm -rf /var/tmp/molecule-restore-*'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/var/tmp/molecule-restore-divided'
+        - '/var/tmp/molecule-restore-latest'
+        - '/var/tmp/molecule-restore-old'
+
+    - name: 'mkdir /srv/duba-molecule/plain /srv/duba-molecule/divided/alice/files'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        mode: 0o755
+      loop:
+        - '/srv/duba-molecule/divided/alice/files'
+        - '/srv/duba-molecule/plain'
+
+    - name: 'Create the test data, plain/file.txt in v1'
+      ansible.builtin.copy:
+        dest: '{{ item["dest"] }}'
+        content: '{{ item["content"] }}'
+        mode: 0o644
+      loop:
+        - dest: '/srv/duba-molecule/divided/alice/files/x.txt'
+          content: 'alice v1'
+        - dest: '/srv/duba-molecule/plain/file.txt'
+          content: 'plain v1'
+      loop_control:
+        label: '{{ item["dest"] }}'
+
+    - name: 'systemctl start duba.service # first backup' # noqa command-instead-of-module (a oneshot run, not a state)
+      ansible.builtin.command: 'systemctl start duba.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_service_result'
+
+    - name: 'journalctl --unit=duba.service --lines=60'
+      ansible.builtin.command: 'journalctl --unit=duba.service --no-pager --lines=60'
+      changed_when: false
+      register: '__molecule__duba_journal_result'
+      when: '__molecule__duba_service_result["rc"] != 0'
+
+    - name: 'Assert that the first backup succeeded'
+      ansible.builtin.assert:
+        that: '__molecule__duba_service_result["rc"] == 0'
+        fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] | d([]) }}'
+
+    # duplicity stores the backup time in seconds, so make sure that the next one is later
+    - name: 'sleep 2'
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: 'date +%s'
+      ansible.builtin.command: 'date +%s'
+      changed_when: false
+      register: '__molecule__between_backups_result'
+
+    - name: 'sleep 2'
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: 'Change plain/file.txt to v2'
+      ansible.builtin.copy:
+        dest: '/srv/duba-molecule/plain/file.txt'
+        content: 'plain v2'
+        mode: 0o644
+
+    - name: 'systemctl start duba.service # second backup' # noqa command-instead-of-module (a oneshot run, not a state)
+      ansible.builtin.command: 'systemctl start duba.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_service_result'
+
+    - name: 'journalctl --unit=duba.service --lines=60'
+      ansible.builtin.command: 'journalctl --unit=duba.service --no-pager --lines=60'
+      changed_when: false
+      register: '__molecule__duba_journal_result'
+      when: '__molecule__duba_service_result["rc"] != 0'
+
+    - name: 'Assert that the second backup succeeded'
+      ansible.builtin.assert:
+        that: '__molecule__duba_service_result["rc"] == 0'
+        fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] | d([]) }}'
+
+    - name: 'duba restore --target=/var/tmp/molecule-restore-latest /srv/duba-molecule/plain/file.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --target=/var/tmp/molecule-restore-latest /srv/duba-molecule/plain/file.txt'
+      changed_when: false
+
+    - name: 'duba restore --time=<between the backups> --target=/var/tmp/molecule-restore-old /srv/duba-molecule/plain/file.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --time={{ __molecule__between_backups_result["stdout"] }} --target=/var/tmp/molecule-restore-old /srv/duba-molecule/plain/file.txt'
+      changed_when: false
+
+    - name: 'duba restore --target=/var/tmp/molecule-restore-divided /srv/duba-molecule/divided/alice/files/x.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --target=/var/tmp/molecule-restore-divided /srv/duba-molecule/divided/alice/files/x.txt'
+      changed_when: false
+
+    - name: 'cat the restored files'
+      ansible.builtin.slurp:
+        src: '{{ item }}'
+      loop:
+        - '/var/tmp/molecule-restore-divided/srv/duba-molecule/divided/alice/files/x.txt'
+        - '/var/tmp/molecule-restore-latest/srv/duba-molecule/plain/file.txt'
+        - '/var/tmp/molecule-restore-old/srv/duba-molecule/plain/file.txt'
+      register: '__molecule__restored_files_result'
+
+    - name: 'Assert that the restores brought back the right versions'
+      ansible.builtin.assert:
+        that: '__molecule__restored_files_result["results"] | map(attribute="content") | map("b64decode") | list == ["alice v1", "plain v2", "plain v1"]'
+        fail_msg: '{{ __molecule__restored_files_result["results"] | map(attribute="content") | map("b64decode") | list }}'
+
+    - name: 'duba restore --dry-run /srv/duba-molecule/divided/alice/files/x.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --dry-run /srv/duba-molecule/divided/alice/files/x.txt'
+      changed_when: false
+      register: '__molecule__duba_restore_dry_run_result'
+
+    - name: 'Assert that a path in a divided source maps to the backup of its first-level entry'
+      ansible.builtin.assert:
+        that:
+          - '"Backup URL:      file:///var/backups/duba-molecule/srv/duba-molecule/divided/alice" in __molecule__duba_restore_dry_run_result["stdout_lines"]'
+          - '"Path to restore: files/x.txt" in __molecule__duba_restore_dry_run_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__duba_restore_dry_run_result["stdout_lines"] }}'
+
+    # Without --target, duba restores into a new directory with a random name, and the directories
+    # it creates there are for root only. The restored file keeps its own mode.
+    - name: 'duba restore /srv/duba-molecule/plain/file.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore /srv/duba-molecule/plain/file.txt'
+      changed_when: false
+      register: '__molecule__duba_restore_default_result'
+
+    - name: 'stat the default restore target'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '{{ __molecule__default_target }}'
+        - '{{ __molecule__default_target }}/srv/duba-molecule/plain'
+        - '{{ __molecule__default_target }}/srv/duba-molecule/plain/file.txt'
+      vars:
+        __molecule__default_target: '{{ __molecule__duba_restore_default_result["stderr"] | regex_search("/var/tmp/duba-restore-[^/]+") }}'
+      register: '__molecule__default_target_stat_result'
+
+    - name: 'Assert that the default restore target is for root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__default_target_stat_result["results"] | map(attribute="stat.mode") | list == ["0700", "0700", "0644"]'
+          - '__molecule__default_target_stat_result["results"] | map(attribute="stat.pw_name") | unique | list == ["root"]'
+        fail_msg: '{{ __molecule__default_target_stat_result["results"] | map(attribute="stat") | map("dict2items") | map("selectattr", "key", "in", ["path", "mode", "pw_name"]) | map("items2dict") | list | to_json }}'
+
+    - name: 'rm -rf <the default restore target>'
+      ansible.builtin.file:
+        path: '{{ __molecule__default_target_stat_result["results"][0]["stat"]["path"] }}'
+        state: 'absent'
+
+    # a divided source is one backup per entry, duba refuses to restore it as a whole (212)
+    - name: 'duba restore /srv/duba-molecule/divided'
+      ansible.builtin.command: '/usr/local/bin/duba restore /srv/duba-molecule/divided'
+      changed_when: false
+      register: '__molecule__duba_restore_divided_result'
+      failed_when: '__molecule__duba_restore_divided_result["rc"] != 212'
