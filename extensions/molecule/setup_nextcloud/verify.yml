@@ -38,6 +38,48 @@
           - '(__molecule__nextcloud_statusphp_result["content"] | from_json)["installed"] | bool'
         fail_msg: 'status.php did not report installed. response: {{ __molecule__nextcloud_statusphp_result["content"] | d("") }}'
 
+    # The vHost carries the rules of Nextcloud's .htaccess, as AllowOverride is off. In a vHost
+    # the patterns see the URL path with its leading slash, so a rule copied verbatim from the
+    # .htaccess never matches: internal files are served or executed, and the .well-known
+    # redirects for CalDAV and CardDAV clients are missing.
+    - name: 'GET internal paths and .well-known URLs through Apache (Host: {{ nextcloud__fqdn }})'
+      ansible.builtin.uri:
+        url: 'http://localhost{{ item["path"] }}'
+        headers:
+          Host: '{{ nextcloud__fqdn }}'
+        follow_redirects: 'none'
+        status_code: '{{ item["status"] }}'
+      loop:
+        - path: '/.well-known/caldav'
+          status: 301
+        - path: '/.well-known/carddav'
+          status: 301
+        - path: '/3rdparty/composer/installed.json'
+          status: 404
+        - path: '/config/config.php'
+          status: 404
+        - path: '/console.php'
+          status: 404
+        - path: '/data/'
+          status: 404
+        - path: '/lib/base.php'
+          status: 404
+        - path: '/occ'
+          status: 404
+        - path: '/remote/webdav'
+          status: 200 # reaches remote.php, which answers a plain GET with its notice page
+
+    - name: 'systemctl show nextcloud-ldap-show-remnants.timer --property=Triggers' # noqa command-instead-of-module (the test asserts on the property as systemd reports it)
+      ansible.builtin.command: 'systemctl show nextcloud-ldap-show-remnants.timer --property=Triggers'
+      register: '__molecule__nextcloud_ldap_timer_result'
+      changed_when: false
+
+    - name: 'Assert the LDAP remnants timer starts its own service'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_ldap_timer_result["stdout"] | trim == "Triggers=nextcloud-ldap-show-remnants.service"'
+        fail_msg: 'nextcloud-ldap-show-remnants.timer triggers "{{ __molecule__nextcloud_ldap_timer_result["stdout"] }}" instead of nextcloud-ldap-show-remnants.service.'
+
     # The support app keeps the subscription record of an Enterprise instance current. Its admin
     # section stays hidden only while `hide-app` holds the literal string `yes`, a boolean `1`
     # shows it again.
