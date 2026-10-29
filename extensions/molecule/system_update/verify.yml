@@ -25,12 +25,21 @@
       - '/var/tmp/molecule-system_update-post-update-code'
       - '/var/tmp/molecule-system_update-pre-update-code'
 
-    # Debian family: the fixtures of the removal of unused kernels in the regular lane
-    __molecule__kernel_test_packages:
-      - 'lfops-test-orphan'
-      - 'linux-image-6.0.0-1-lfops-test'
-      - 'linux-image-6.0.0-2-lfops-test'
-      - 'linux-image-6.0.0-3-lfops-test'
+    # Debian family: the fixture packages of the regular lane, see the comment above the
+    # block that builds them. `auto` ones are installed as automatically installed.
+    __molecule__debian_test_packages:
+      - name: 'lfops-test-orphan'
+        version: '1.0'
+        auto: true
+      - name: 'linux-image-6.0.0-1-lfops-test'
+        version: '6.0.0-1'
+        auto: true
+      - name: 'linux-image-6.0.0-2-lfops-test'
+        version: '6.0.0-2'
+        auto: true
+      - name: 'linux-image-6.0.0-3-lfops-test'
+        version: '6.0.0-3'
+        auto: true
 
   tasks:
 
@@ -355,56 +364,59 @@
       ansible.builtin.assert:
         that: '__molecule__sendmail_stat_result["stat"]["exists"]'
 
-    # Dummy kernel packages for the removal of unused kernels on the Debian family, which the
-    # first run of the regular lane below performs before its upgrade. All are installed as
-    # automatic, so apt lists them as auto-removable, except the ones it protects:
-    # * linux-image-6.0.0-1-lfops-test is the oldest kernel on the host and has to go.
-    # * linux-image-6.0.0-2-lfops-test is held and has to stay.
-    # * linux-image-6.0.0-3-lfops-test is kept by apt as the second kernel next to the real
-    #   one of the cloud image, which is running and newer than all of them.
-    # * lfops-test-orphan is auto-removable but no kernel and has to stay.
-    # apt orders the kernels by package version, not by the ABI in the name, so the version
-    # of each dummy has to match its name: with all of them at 1.0, apt protects every one.
-    # Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04, in
-    # containers.
+    # The Debian-family steps of the regular lane, all set up for its first run below:
+    # * Unused kernels, removed before the upgrade. The dummy kernels are installed as
+    #   automatic, so apt lists them as auto-removable, except the ones it protects:
+    #   linux-image-6.0.0-1-lfops-test is the oldest kernel on the host and has to go,
+    #   linux-image-6.0.0-2-lfops-test is held and has to stay, and
+    #   linux-image-6.0.0-3-lfops-test is kept by apt as the second kernel next to the real
+    #   one of the cloud image, which is running and newer than all of them. apt orders the
+    #   kernels by package version, not by the ABI in the name, so the version of each dummy
+    #   has to match its name: with all of them at 1.0, apt protects every one.
+    #   lfops-test-orphan is auto-removable but no kernel and has to stay.
+    #   Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04, in
+    #   containers.
     - block:
 
-      - name: 'mkdir -p /root/lfops-kernel-test/<package>/DEBIAN'
+      - name: 'mkdir -p /var/tmp/lfops-debian-test/<package>/DEBIAN'
         ansible.builtin.file:
-          path: '/root/lfops-kernel-test/{{ item }}/DEBIAN'
+          path: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}/DEBIAN'
           state: 'directory'
           owner: 'root'
           group: 'root'
           mode: 0o755
-        loop: '{{ __molecule__kernel_test_packages }}'
+        loop: '{{ __molecule__debian_test_packages }}'
 
-      - name: 'Deploy /root/lfops-kernel-test/<package>/DEBIAN/control'
+      - name: 'Deploy /var/tmp/lfops-debian-test/<package>/DEBIAN/control'
         ansible.builtin.copy:
           content: |
-            Package: {{ item }}
-            Version: {{ item | ansible.builtin.regex_search('[0-9]+[.][0-9]+[.][0-9]+-[0-9]+') | default('1.0', true) }}
+            Package: {{ item["name"] }}
+            Version: {{ item["version"] }}
             Architecture: all
             Maintainer: Linuxfabrik GmbH <info@linuxfabrik.ch>
-            Description: LFOps fixture for the removal of unused kernels
-          dest: '/root/lfops-kernel-test/{{ item }}/DEBIAN/control'
+            Description: LFOps fixture for the system_update regular lane
+          dest: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}/DEBIAN/control'
           owner: 'root'
           group: 'root'
           mode: 0o644
-        loop: '{{ __molecule__kernel_test_packages }}'
+        loop: '{{ __molecule__debian_test_packages }}'
 
       - name: 'dpkg-deb --build <package>'
-        ansible.builtin.command: 'dpkg-deb --build /root/lfops-kernel-test/{{ item }} /root/lfops-kernel-test/{{ item }}.deb'
+        ansible.builtin.command: >-
+          dpkg-deb --build
+          /var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}
+          /var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb
         args:
-          creates: '/root/lfops-kernel-test/{{ item }}.deb'
-        loop: '{{ __molecule__kernel_test_packages }}'
+          creates: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb'
+        loop: '{{ __molecule__debian_test_packages }}'
 
-      - name: 'apt install the dummy kernel packages'
+      - name: 'apt install the installed fixture packages'
         ansible.builtin.apt:
-          deb: '/root/lfops-kernel-test/{{ item }}.deb'
-        loop: '{{ __molecule__kernel_test_packages }}'
+          deb: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb'
+        loop: '{{ __molecule__debian_test_packages }}'
 
-      - name: 'apt-mark auto the dummy kernel packages'
-        ansible.builtin.command: 'apt-mark auto {{ __molecule__kernel_test_packages | join(" ") }}'
+      - name: 'apt-mark auto the automatic fixture packages'
+        ansible.builtin.command: 'apt-mark auto {{ __molecule__debian_test_packages | selectattr("auto", "defined") | map(attribute="name") | join(" ") }}'
         changed_when: false
 
       - name: 'apt-mark hold linux-image-6.0.0-2-lfops-test'
@@ -483,15 +495,17 @@
           name: 'linux-image-6.0.0-2-lfops-test'
           selection: 'install'
 
-      - name: 'apt remove the dummy kernel packages'
+      - name: 'apt remove the fixture packages'
         ansible.builtin.apt:
-          name: '{{ __molecule__kernel_test_packages }}'
+          name: '{{ __molecule__debian_test_packages | map(attribute="name") | unique }}'
           state: 'absent'
 
-      - name: 'rm -rf /root/lfops-kernel-test'
+      - name: 'rm -f the fixture working files'
         ansible.builtin.file:
-          path: '/root/lfops-kernel-test'
+          path: '{{ item }}'
           state: 'absent'
+        loop:
+          - '/var/tmp/lfops-debian-test'
 
       when:
         - 'ansible_facts["os_family"] == "Debian"'
