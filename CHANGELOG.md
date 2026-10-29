@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:exoscale_vm**: Security group rules support every protocol Exoscale offers, ICMP with `icmp_type` and `icmp_code`, private networks can be detached with `state: 'absent'`, and an existing instance is attached to a security group added later.
 * **role:collabora**: Add support for Collabora Online Enterprise 25.04.14.
 * **execution-environment**: Add the `telekom_mms.icinga_director` collection, so inventories using its Icinga Director inventory plugin work inside the EE.
-* **role:curaline, playbook:curaline**: Add a role and playbook that install and configure the curaLINE Client of Swisscom, which exchanges files with the curaLINE Document Routing service.
+* **role:curaline, playbook:curaline**: Add a role and playbook that install the curaLINE Client of Swisscom from the Linuxfabrik repository and configure its connectors and folders; the client exchanges files with the curaLINE Document Routing service.
 * **role:gitlab_ce**: Behind a reverse proxy, GitLab can show and log the real client IP address instead of the address of the proxy, for example under "Current sign-in IP". Set `gitlab_ce__rb_nginx_real_ip_trusted_addresses` to the address of the proxy.
 * **role:apache_tomcat**: With `lfops__remove_rpmnew_rpmsave`, the role also removes the `.rpmnew` and `.rpmsave` files next to the Tomcat configuration files it deploys.
 * **role:apache_tomcat**: Add support for Tomcat 10.1 on RHEL 10.

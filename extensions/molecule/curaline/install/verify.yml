@@ -1,7 +1,8 @@
-# What only the running system can confirm is that the client starts from the unpacked
-# download under the configured account, that SELinux lets systemd execute it, and that it reads the
-# configuration the role wrote: the client is asked for its health and its version, and it
-# reports the values it parsed in its log. The configuration files themselves are not checked.
+# What only the running system can confirm is that the client starts from the package under
+# its account, that SELinux lets systemd execute it, that the drop-in lets it write to the
+# folders of its connectors, and that it reads the configuration the role wrote: the client is
+# asked for its health and its version, and it reports the values it parsed in its log. The
+# configuration files themselves are not checked.
 - name: 'Verify curaline'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -43,9 +44,12 @@
         return_content: true
       register: '__molecule__curaline_info_result'
 
-    - name: 'Assert that the client is the installed version'
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the client is the version of the installed package'
       ansible.builtin.assert:
-        that: '__molecule__curaline_info_result["json"]["build"]["version"] == curaline__version'
+        that: '__molecule__curaline_info_result["json"]["build"]["version"] == ansible_facts["packages"]["swisscom-schweiz-ag-cdr-client"][0]["version"]'
 
     - name: 'systemctl show swisscom-schweiz-ag-cdr-client.service --property=MainPID --value' # noqa command-instead-of-module (read-only property query)
       ansible.builtin.command: 'systemctl show swisscom-schweiz-ag-cdr-client.service --property=MainPID --value'
@@ -57,11 +61,9 @@
         path: '/proc/{{ __molecule__curaline_mainpid_result["stdout"] }}'
       register: '__molecule__curaline_proc_result'
 
-    # the hnet scenario imports this playbook and sets curaline__user, the install scenario
-    # relies on the role default.
-    - name: 'Assert that the client runs as {{ curaline__user | d("swisscom-schweiz-ag-cdr-client") }}'
+    - name: 'Assert that the client runs as swisscom-schweiz-ag-cdr-client'
       ansible.builtin.assert:
-        that: '__molecule__curaline_proc_result["stat"]["pw_name"] == curaline__user | d("swisscom-schweiz-ag-cdr-client")'
+        that: '__molecule__curaline_proc_result["stat"]["pw_name"] == "swisscom-schweiz-ag-cdr-client"'
 
     # the client logs the schedule delay and the folders it watches after it has parsed them.
     - name: 'Wait for the client to log the polling of the source folder'
@@ -87,9 +89,33 @@
       ansible.builtin.assert:
         that: 'not __molecule__curaline_absent_result["stat"]["exists"]'
 
-    # without the bin_t file context systemd cannot execute the client from /usr/lib, and the
-    # service would not run at all. a host that happens to run permissive would pass that
-    # assertion without proving anything, so the mode is asserted too.
+    # the sandbox of the packaged unit only lets the client write to the folders of the
+    # drop-in, so the folders of the connector must be in it, created for the group of the
+    # account.
+    - name: 'systemctl show swisscom-schweiz-ag-cdr-client.service --property=ReadWritePaths --value' # noqa command-instead-of-module (read-only property query)
+      ansible.builtin.command: 'systemctl show swisscom-schweiz-ag-cdr-client.service --property=ReadWritePaths --value'
+      changed_when: false
+      register: '__molecule__curaline_readwritepaths_result'
+
+    - name: 'stat /data/xml/outbox-test/XMLDatenforum'
+      ansible.builtin.stat:
+        path: '/data/xml/outbox-test/XMLDatenforum'
+      register: '__molecule__curaline_outbox_result'
+
+    - name: 'Assert that the client may write to the folders of its connector'
+      ansible.builtin.assert:
+        that:
+          - '"/data/xml/archive-test" in __molecule__curaline_readwritepaths_result["stdout"]'
+          - '"/data/xml/inbox-test/XMLDatenforum" in __molecule__curaline_readwritepaths_result["stdout"]'
+          - '"/data/xml/outbox-test/XMLDatenforum" in __molecule__curaline_readwritepaths_result["stdout"]'
+          - '__molecule__curaline_outbox_result["stat"]["pw_name"] == "swisscom-schweiz-ag-cdr-client"'
+          - '__molecule__curaline_outbox_result["stat"]["mode"] == "2770"'
+
+    # the packaged unit starts the client through /usr/bin/env (bin_t), so that systemd
+    # transitions to unconfined_service_t; the client itself below /usr/lib is lib_t, which
+    # systemd could not execute directly, and the service would not run at all. a host that
+    # happens to run permissive would pass that assertion without proving anything, so the
+    # mode is asserted too.
     - name: 'Verify the SELinux context of the client'
       when:
         - 'inventory_hostname is match("rocky")'
