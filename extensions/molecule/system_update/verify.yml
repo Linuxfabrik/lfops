@@ -376,6 +376,9 @@
     #   lfops-test-orphan is auto-removable but no kernel and has to stay.
     #   Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04, in
     #   containers.
+    # * A held lock: the lists lock is held when the run starts, so its apt-get update has to
+    #   wait for it instead of failing.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
     - block:
 
       - name: 'mkdir -p /var/tmp/lfops-debian-test/<package>/DEBIAN'
@@ -423,6 +426,24 @@
         ansible.builtin.dpkg_selections:
           name: 'linux-image-6.0.0-2-lfops-test'
           selection: 'hold'
+
+      # apt locks with fcntl(), as does lockf() of Python. 90 seconds outlast the first attempt
+      # of the run and the 60 seconds it then waits, so the run has to wait at least once.
+      - name: 'Hold the apt lists lock in the background'
+        ansible.builtin.command: >-
+          python3 -c "import fcntl, pathlib, time;
+          f = open('/var/lib/apt/lists/lock', 'a');
+          fcntl.lockf(f, fcntl.LOCK_EX);
+          pathlib.Path('/run/lfops-debian-test-lock-held').touch();
+          time.sleep(90)"
+        async: 120
+        poll: 0
+        changed_when: false
+
+      - name: 'Wait until the apt lists lock is held'
+        ansible.builtin.wait_for:
+          path: '/run/lfops-debian-test-lock-held'
+          timeout: 30
 
       when:
         - 'ansible_facts["os_family"] == "Debian"'
@@ -480,12 +501,13 @@
         register: '__molecule__update_first_journal_result'
         changed_when: false
 
-      - name: 'Assert the first run removed the unused kernel only, and said so'
+      - name: 'Assert the first run waited for the lock and removed the unused kernel only'
         ansible.builtin.assert:
           that:
             - '"linux-image-6.0.0-1-lfops-test" not in ansible_facts["packages"]'
             - '"linux-image-6.0.0-2-lfops-test" in ansible_facts["packages"]'
             - '"lfops-test-orphan" in ansible_facts["packages"]'
+            - '__molecule__update_first_journal_result["stdout"] is search("Waiting for the package manager lock")'
             - '__molecule__update_first_journal_result["stdout"] is search("Removing unused kernel packages:.* linux-image-6.0.0-1-lfops-test")'
 
       always:
@@ -505,6 +527,7 @@
           path: '{{ item }}'
           state: 'absent'
         loop:
+          - '/run/lfops-debian-test-lock-held'
           - '/var/tmp/lfops-debian-test'
 
       when:

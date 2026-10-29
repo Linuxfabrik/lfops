@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102803
+# 2026102804
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -71,6 +71,26 @@ last_txn_id () {
 {% endif %}
 
 {% if ansible_facts['os_family'] == 'Debian' %}
+run_waiting_for_lock () {
+    # apt-get update (the lock of /var/lib/apt/lists) and dpkg give up at once when another
+    # process holds their lock, with or without DPkg::Lock::Timeout, which only makes the
+    # installing apt-get calls wait. The usual holders are an Ansible run, an admin in apt or
+    # notify-and-schedule, and losing the update over them would cost a whole week. So retry
+    # for as long as DPkg::Lock::Timeout lets the other calls wait, but only on a lock error.
+    # $1 is where the command's stdout goes; a redirection on the call would swallow the
+    # log lines of this function as well. Writes stderr to /tmp/system-update-stderr.
+    # Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13).
+    local attempt out="$1" rc
+    shift
+    for attempt in 1 2 3 4 5 6 7 8 9 10; do
+        "$@" > "$out" 2> /tmp/system-update-stderr && return 0
+        rc=$?
+        grep --quiet --extended-regexp 'Could not get lock|(is|was) locked by' /tmp/system-update-stderr || return "$rc"
+        [ "$attempt" -lt 10 ] && { log "Waiting for the package manager lock (attempt $attempt of 10)"; sleep 60; }
+    done
+    return "$rc"
+}
+
 list_autoremovable () {
     # the packages apt considers no longer needed, one per line
     apt-get --simulate autoremove 2> /tmp/system-update-stderr | awk '$1 == "Remv" { print $2 }'
@@ -124,7 +144,7 @@ autoremove_checked () {
 
     log "Removing $what:$candidates"
     # shellcheck disable=SC2086 # word splitting is intended, one argument per package
-    apt-get -y remove $candidates > /tmp/autoremove-output 2> /tmp/system-update-stderr || return 1
+    apt-get -y -o DPkg::Lock::Timeout=600 remove $candidates > /tmp/autoremove-output 2> /tmp/system-update-stderr || return 1
     REMOVED_REPORT="${REMOVED_REPORT}Removed ${what}:${candidates}"$'\n'
 }
 
@@ -258,7 +278,7 @@ REMOVED_REPORT=''
 # for hard errors such as an unreadable sources list. So this catches a broken
 # configuration, not a mirror outage, unlike the retry loop of the RedHat lane.
 # Verified against apt 2.6 on Debian 12.
-if ! apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }} 1> /dev/null 2> /tmp/system-update-stderr; then
+if ! run_waiting_for_lock /dev/null apt-get update {{ system_update__cache_only | bool | ternary("--no-download", "") }}; then
     log "Metadata refresh failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
     exit 1
@@ -275,11 +295,12 @@ fi
 # the exit status of the pipeline is apt-get's own; `yes` only feeds it. A failing
 # maintainer script surfaces here as exit 100, with the detail split over both streams:
 # the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
-# Verified against apt 2.6 on Debian 12.
+# DPkg::Lock::Timeout lets apt-get wait for the dpkg lock instead of failing at once.
+# Verified against apt 2.0 (Ubuntu 20.04), 2.6 (Debian 12) and 3.0 (Debian 13).
 # systemd starts services with SIGPIPE ignored (IgnoreSIGPIPE=yes), so `yes` outlives
 # apt-get and reports the closed pipe as "yes: standard output: Broken pipe" in the
 # journal; that is expected and silenced here.
-if ! yes '' 2> /dev/null | apt-get -y -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
+if ! yes '' 2> /dev/null | apt-get -y -o DPkg::Lock::Timeout=600 -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/update_output)"
     exit 1
