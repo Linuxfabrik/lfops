@@ -17,7 +17,7 @@ Take the releases from whatever the user provides:
 * A pasted mail or text: extract upstream project and versions. A newreleases.io mail lists them as `Graylog2/graylog2-server on GitHub ...` followed by `- 7.2.1` lines. Matomo instances send "New Matomo 5.14.0 is available".
 * Nothing: list the open issues with `gh issue list --label follow-upstream --state open`. None: ask what was released.
 
-Ignore pre-releases (`alpha`, `beta`, `rc`, `-dev`).
+Ignore pre-releases (`alpha`, `beta`, `rc`, `-dev`). A plain version number is no proof of a final release: some vendors keep the marker in the package release only (Graylog ships 7.3.0-alpha.1 as `graylog-server-7.3.0-1.alpha.1`).
 
 
 ## 2. Triage every release
@@ -29,6 +29,7 @@ The repository is the state, not the mail: a release already covered needs no wo
 * Listed: run `tools/follow-upstream <app> <version>`, oldest release first. It fetches the RPM and the DEB of the release, checks their signatures and caches them, so expect a few GB of downloads for large packages. Exit code 0: nothing to review, 1: findings or conflicts, 2: the run aborted.
 * `packaging:` lines come first. Each one means upstream changed how it packages the application: a file below /etc that is neither templated nor ignored, a templated file the release no longer ships, a file that differs between RPM and DEB, or install scripts that differ from those of the base release in more than the version (an install script that modifies the packaged file on the host would be reverted by the template). Do not resolve these yourself, and do not accept the merge of that release: stop and report them, with the `diff` the tool prints. Whether the role needs a new template, a per-format template or an `ignore` entry is the user's decision.
 * A failed fetch (`not found in`) aborts the run. Upstream may have published one format before the other; report it and retry later rather than merging without the check.
+* `only pre-release builds` aborts the run as well: the release is not final yet. Stop and report it, do not rerun with `--allow-prerelease`, that is the user's decision. The same applies if the GitHub project of the application has only pre-release tags for the version (`7.3.0-alpha.1`, but no `7.3.0`), even if the run succeeded. No commit in either case.
 * Then one line per template:
     * `already covers`: nothing to do.
     * `is identical in`: the packaged file did not change, the tool only updated the `Based on` line. Commit it anyway (step 6), so `tools/follow-upstream --check` stops reporting the release.
