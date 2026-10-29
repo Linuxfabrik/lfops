@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102806
+# 2026102807
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -435,9 +435,21 @@ fi
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 # we call needrestart with the -p option so it behaves like a nagios plugin. any exit code != 0 means a reboot is required
-if [ -f /var/run/reboot-required ] || ! needrestart -p 1> /dev/null; then
+NEEDRESTART=$(needrestart -p 2>&1)
+NEEDRESTART_RC=$?
+if [ -f /var/run/reboot-required ] || [ "$NEEDRESTART_RC" -ne 0 ]; then
     log "Reboot required; requesting reboot via the spool"
-    MSGBODY=$(cat /tmp/update_output)
+    # keep the reason, like the RedHat lane: it is the only explanation the admin gets
+    # when the reboot is carried over from an earlier window and this run changed nothing.
+    # The packages asking for it are listed by their postinst in reboot-required.pkgs, the
+    # running services and kernel that need it by needrestart.
+    MSGBODY=$(
+        if [ -s /var/run/reboot-required.pkgs ]; then
+            printf 'Packages requiring the reboot:\n%s\n\n' "$(sort --unique /var/run/reboot-required.pkgs)"
+        fi
+        printf 'needrestart: %s\n\n' "$NEEDRESTART"
+        cat /tmp/update_output
+    )
 {% if system_update__post_update_code is defined and system_update__post_update_code | length %}
     post_update_code
 {% endif %}

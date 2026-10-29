@@ -108,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:system_update**: On Debian and Ubuntu, the reboot notification lists the packages and services that asked for the reboot.
 * **role:system_update**: On Debian and Ubuntu, the weekly update removes the packages it left unused itself, typically replaced libraries, like unattended-upgrades does. Packages that were unused before stay installed.
 * **role:elasticsearch**: The query log of Elasticsearch 9.5 (`*_querylog.json`) is deleted after `elasticsearch__log4j2_retention_days`, like the other logs.
 * **role:telegraf**: `telegraf.conf` follows the file that current Telegraf packages ship. The effective settings stay the same, but deploying the file restarts Telegraf once.

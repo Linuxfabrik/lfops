@@ -395,6 +395,9 @@
     # * A held lock: the lists lock is held when the run starts, so its apt-get update has to
     #   wait for it instead of failing.
     #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
+    # * The reason of a reboot request: /run/reboot-required.pkgs, as a package's postinst
+    #   writes it, has to show up in the spool file.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
     - block:
 
       - name: 'apt install apt-utils (apt-ftparchive for the fixture repository)'
@@ -484,6 +487,19 @@
           group: 'root'
           mode: 0o644
 
+      - name: 'Deploy /run/reboot-required and /run/reboot-required.pkgs'
+        ansible.builtin.copy:
+          content: '{{ item["content"] }}'
+          dest: '{{ item["dest"] }}'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+        loop:
+          - dest: '/run/reboot-required'
+            content: "*** System restart required ***\n"
+          - dest: '/run/reboot-required.pkgs'
+            content: "lfops-test-app\n"
+
       # apt locks with fcntl(), as does lockf() of Python. 90 seconds outlast the first attempt
       # of the run and the 60 seconds it then waits, so the run has to wait at least once.
       - name: 'Hold the apt lists lock in the background'
@@ -563,7 +579,12 @@
           path: '/var/lib/dpkg/updates/0001'
         register: '__molecule__dpkg_journal_stat_result'
 
-      - name: 'Assert the first run repaired dpkg, waited for the lock and removed only what it should'
+      - name: 'slurp /run/schedule-reboot/system_update'
+        ansible.builtin.slurp:
+          src: '/run/schedule-reboot/system_update'
+        register: '__molecule__update_first_request_result'
+
+      - name: 'Assert the first run repaired dpkg, waited for the lock, removed only what it should and gave the reboot reason'
         ansible.builtin.assert:
           that:
             - '"linux-image-6.0.0-1-lfops-test" not in ansible_facts["packages"]'
@@ -576,6 +597,10 @@
             - '__molecule__update_first_journal_result["stdout"] is search("Waiting for the package manager lock")'
             - '__molecule__update_first_journal_result["stdout"] is search("Removing unused kernel packages:.* linux-image-6.0.0-1-lfops-test")'
             - '__molecule__update_first_journal_result["stdout"] is search("Removing packages no longer needed after the upgrade:.* lfops-test-dep")'
+            - '__molecule__update_first_request is search("Packages requiring the reboot:\nlfops-test-app\n")'
+            - '__molecule__update_first_request is search("needrestart: ")'
+        vars:
+          __molecule__update_first_request: '{{ __molecule__update_first_request_result["content"] | ansible.builtin.b64decode }}'
 
       always:
 
