@@ -7,11 +7,11 @@ mongodb__conf_security_authorization: true
 # Locks the instance as the dump user, so this checks the privileges the role grants it.
 mongodb__dump_method_file_based: true
 
-# The special characters check that the login file escapes the password correctly for both
-# mongodump and mongosh.
+# The special characters check that the login escapes the password correctly for both
+# mongodump and mongosh. verify.yml searches /etc for the marker `MoleculeDumpPw`.
 mongodb__dump_user:
   username: 'mongodb-dump'
-  password: 'linux"fab\rik #''x:@/%'
+  password: 'MoleculeDumpPw"fab\rik #''x:@/%'
 
 # A regular user, so that the idempotence step also covers the user loop.
 mongodb__users__group_var:

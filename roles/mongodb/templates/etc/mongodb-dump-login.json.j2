@@ -1,2 +1,0 @@
-{#- 2026102701. JSON has no comments, so this file carries no ansible_managed header. It is read by `mongodump --config`, which rejects any key besides `password`, `uri` and `sslPEMKeyPassword`, and by mongosh in /usr/local/sbin/mongodb-dump. -#}
-{"password": {{ mongodb__dump_user['password'] | to_json }}}

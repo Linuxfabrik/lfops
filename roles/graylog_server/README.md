@@ -241,6 +241,12 @@ graylog_server__root_user:
 * Type: Number.
 * Default: `2000`
 
+`graylog_server__stream_aware_field_types`
+
+* Whether Graylog periodically checks which fields are used in which streams, so that the field list only shows the fields of the selected streams. This can decrease performance on systems with many streams and fields. Takes effect on Graylog 7.3 and later.
+* Type: Bool.
+* Default: `true`
+
 `graylog_server__system_default_index_set`
 
 * Creates a default index set. Used with the `graylog_server:configure_defaults` tag.
@@ -418,6 +424,7 @@ graylog_server__ring_size: 65536
 graylog_server__service_enabled: false
 graylog_server__service_state: 'stopped'
 graylog_server__stale_leader_timeout_ms: 10000
+graylog_server__stream_aware_field_types: false
 graylog_server__system_default_index_set:
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'

@@ -13,9 +13,55 @@ on:
 permissions:
   contents: 'read'
 
+# A newer push to the same pull request makes the running analysis obsolete.
+# Pushes to main are left to finish.
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: "${{ github.event_name == 'pull_request' }}"
+
 jobs:
+  # A pull request is only analysed for the languages it touches. Pushes to
+  # main and the weekly run analyse everything.
+  changes:
+    name: 'Detect relevant changes'
+    runs-on: 'ubuntu-latest'
+    permissions:
+      pull-requests: 'read'
+    outputs:
+      languages: '${{ steps.filter.outputs.languages }}'
+    steps:
+      - name: 'Harden Runner'
+        uses: 'step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2' # v2.22.2
+        with:
+          egress-policy: 'audit'
+
+      # The files API returns at most 3000 files, so a pull request that
+      # large analyses everything.
+      - name: 'Determine the languages to analyse'
+        id: 'filter'
+        env:
+          EVENT_NAME: '${{ github.event_name }}'
+          GH_TOKEN: '${{ github.token }}'
+          PR_NUMBER: '${{ github.event.pull_request.number }}'
+        run: |
+          languages='["actions","python"]'
+          if [[ "$EVENT_NAME" == 'pull_request' ]]; then
+            files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename')"
+            if [[ "$(wc --lines <<< "$files")" -lt 3000 ]]; then
+              languages="$(jq --compact-output --null-input --raw-input '
+                [inputs] as $files
+                | [
+                    if any($files[]; test("^\\.github/(actions|workflows)/")) then "actions" else empty end,
+                    if any($files[]; test("\\.py$|^\\.github/workflows/codeql\\.yml$")) then "python" else empty end
+                  ]' <<< "$files")"
+            fi
+          fi
+          echo "languages=${languages}" | tee --append "$GITHUB_OUTPUT"
+
   analyze:
     name: 'Analyze'
+    needs: 'changes'
+    if: "needs.changes.outputs.languages != '[]'"
     runs-on: 'ubuntu-latest'
     permissions:
       actions: 'read'
@@ -25,9 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language:
-          - 'actions'
-          - 'python'
+        language: '${{ fromJSON(needs.changes.outputs.languages) }}'
 
     steps:
       - name: 'Harden Runner'
@@ -50,3 +94,25 @@ jobs:
         uses: 'github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee' # v4.39.0
         with:
           category: '/language:${{ matrix.language }}'
+
+  # The only check the branch ruleset requires from this workflow. A job
+  # skipped above never reports its matrix names, so requiring those would
+  # block every pull request that skips them. Skipped counts as passed here.
+  result:
+    name: 'CodeQL'
+    if: 'always()'
+    needs:
+      - 'analyze'
+      - 'changes'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Harden Runner'
+        uses: 'step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2' # v2.22.2
+        with:
+          egress-policy: 'audit'
+
+      - name: 'Fail unless every job passed or was skipped'
+        env:
+          NEEDS: '${{ toJSON(needs) }}'
+        run: |
+          jq --exit-status 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS"

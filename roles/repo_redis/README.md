@@ -19,8 +19,19 @@ This role deploys the package repository for [Redis](https://redis.io/) (an in-m
 `repo_redis__basic_auth_login`
 
 * Use HTTP basic auth to login to the repository. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
-* Type: String.
+* Type: Dictionary.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
 
 `repo_redis__mirror_url`
 

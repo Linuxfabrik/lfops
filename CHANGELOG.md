@@ -56,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:graylog_server**: Add `graylog_server__stream_aware_field_types` to switch stream-aware field types on or off on Graylog 7.3 and later.
+* **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.3.
 * **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
 * **role:opensearch**: Supports OpenSearch 3.x. The role README describes the upgrade from 2.x.
 * **playbook:setup_basic**: Deploys the Linuxfabrik package repository on Debian, Ubuntu and RHEL 8 to 10 and their derivatives, right after EPEL; on hosts whose mirror does not serve it, dnf skips it with an error message and apt stops the run (`setup_basic__skip_repo_linuxfabrik`).
@@ -109,6 +111,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:graylog_server**: Hosts running Graylog 7.3 get stream-aware field types, the upstream default from 7.3 on, which can decrease performance on systems with many streams and fields.
+* **role:mongodb**: The dump script is installed as `/usr/local/libexec/mongodb-dump`, since it only works when started by `mongodb-dump.service`.
+* **role:system_update**: On Debian and Ubuntu, the reboot notification lists the packages and services that asked for the reboot.
+* **role:system_update**: On Debian and Ubuntu, the weekly update removes the packages it left unused itself, typically replaced libraries, like unattended-upgrades does. Packages that were unused before stay installed.
 * **role:elasticsearch**: The query log of Elasticsearch 9.5 (`*_querylog.json`) is deleted after `elasticsearch__log4j2_retention_days`, like the other logs.
 * **role:telegraf**: `telegraf.conf` follows the file that current Telegraf packages ship. The effective settings stay the same, but deploying the file restarts Telegraf once.
 * **role:opensearch**: `/etc/sysconfig/opensearch` adds the native library path of the Neural Search plugin, as the OpenSearch package does.
@@ -174,6 +180,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:nextcloud**: `nextcloud-ldap-show-remnants.timer` reports the LDAP remnants once a month; until now it started the app update instead.
 * **role:nextcloud**: CalDAV and CardDAV clients find their endpoints through `/.well-known/caldav` and `/.well-known/carddav` without a reverse proxy that redirects them, and `/remote/`, `/ocm-provider/` and the other `.well-known` URLs reach Nextcloud again.
 * **role:nextcloud**: httpd starts when `mod_dav` is loaded; the vHost turned WebDAV off outside a directory context, which httpd rejects.
+* **role:system_update**: On Debian and Ubuntu, the update check before the update window waits for a busy package manager and reports a failed refresh of the package lists, instead of silently announcing updates from stale lists.
+* **role:system_update**: On Debian and Ubuntu, the weekly update waits up to 10 minutes for the apt and dpkg locks instead of failing when, for example, an Ansible run holds them.
+* **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
+* **role:system_update**: On Debian and Ubuntu, the journal of the weekly update no longer shows `yes: standard output: Broken pipe`.
+* **role:system_update**: On Debian and Ubuntu, the weekly update removes kernels apt no longer needs before installing new ones, the way unattended-upgrades does, so old kernels no longer fill up `/boot`. The running kernel, the newest one and held packages are kept.
+* **role:mariadb_server**: The dump script is installed as `/usr/local/libexec/mariadb-dump`, so it no longer shadows MariaDB's own `mariadb-dump` client for users with `/usr/local/bin` in their `PATH`.
 * **role:mongodb**: The file-based dump (`mongodb__dump_method_file_based`) locks the instance also with authorization enabled and works on Debian and Ubuntu, and a dump that cannot lock the instance fails instead of copying the data files of the running instance.
 * **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
 * **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
@@ -324,6 +336,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 * **role:nextcloud**: The vHost blocks `3rdparty/`, `lib/`, `config/`, `data/`, `occ` and `console.php` as Nextcloud's `.htaccess` intends; until now its rules never matched, so anyone could read the versions of all bundled libraries and call internal PHP files directly.
+* **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
+* **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.

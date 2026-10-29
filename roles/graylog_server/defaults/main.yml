@@ -17,6 +17,7 @@ graylog_server__ring_size: 65536
 graylog_server__service_enabled: true
 graylog_server__service_state: '{{ graylog_server__service_enabled | bool | ternary("started", "stopped") }}'
 graylog_server__stale_leader_timeout_ms: 2000
+graylog_server__stream_aware_field_types: true
 graylog_server__system_default_index_set:
   creation_date: '{{ ansible_date_time.iso8601 }}'
   description: 'One index per day; 365 indices max'

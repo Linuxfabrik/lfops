@@ -2,7 +2,7 @@
 #!/usr/bin/env bash
 
 # {{ ansible_managed }}
-# 2026102702
+# 2026102901
 
 set -e
 
@@ -13,28 +13,35 @@ umask 027
 source /etc/mongodb-dump.conf
 
 # the password of the dump user, kept out of the command line (and the process list). mongodump
-# reads it with `--config`, mongosh in mongosh_eval().
-login_file=/etc/mongodb-dump-login.json
+# reads it with `--config`, mongosh in mongosh_eval(). With systemd 251 and newer,
+# mongodb-dump.service decrypts it to $CREDENTIALS_DIRECTORY, older systemd keeps it in plain
+# text in /etc/credstore.
+login_file="${CREDENTIALS_DIRECTORY:-/etc/credstore}/mongodb-dump-login.json"
 
 auth_params=()
 if [[ -n "${USERNAME:-}" ]]; then
+    if [ ! -r "$login_file" ]; then
+        echo "Cannot read $login_file. Run the dump with 'systemctl start mongodb-dump.service'." >&2
+        exit 1
+    fi
     auth_params=(--authenticationDatabase "$AUTH_DATABASE" --username "$USERNAME")
 fi
 
 # run the JavaScript in $1 as the dump user. mongosh prompts for a password given without a
-# value, so it logs in from the script; the user name comes through the environment instead of
-# being quoted into the JavaScript.
+# value, so it logs in from the script; the user name and the login file come through the
+# environment instead of being quoted into the JavaScript.
 function mongosh_eval() {
     local login_js=''
     if [[ -n "${USERNAME:-}" ]]; then
         login_js="
-            const login = JSON.parse(require('fs').readFileSync('$login_file', 'utf8'));
+            const login = JSON.parse(require('fs').readFileSync(process.env.MONGODB_DUMP_LOGIN_FILE, 'utf8'));
             if (!db.getSiblingDB(process.env.MONGODB_DUMP_AUTH_DATABASE).auth(process.env.MONGODB_DUMP_USERNAME, login.password).ok) {
                 throw new Error('authentication failed');
             }
         "
     fi
-    MONGODB_DUMP_AUTH_DATABASE="${AUTH_DATABASE:-}" MONGODB_DUMP_USERNAME="${USERNAME:-}" \
+    MONGODB_DUMP_AUTH_DATABASE="${AUTH_DATABASE:-}" MONGODB_DUMP_LOGIN_FILE="$login_file" \
+        MONGODB_DUMP_USERNAME="${USERNAME:-}" \
         mongosh --quiet --host "$HOST" --port "$PORT" --eval "$login_js $1"
 }
 

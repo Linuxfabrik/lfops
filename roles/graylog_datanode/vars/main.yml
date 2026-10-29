@@ -8,3 +8,4 @@ __graylog_datanode__supported_versions:
   - '7.0'
   - '7.1'
   - '7.2'
+  - '7.3'

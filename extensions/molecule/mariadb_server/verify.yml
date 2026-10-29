@@ -91,6 +91,30 @@
       ansible.builtin.assert:
         that: '__molecule__mariadb_dump_result["matched"] == 1'
 
+    # The dump above read the login from the systemd credential. With systemd 251 and newer it is
+    # encrypted, so the password must not be anywhere in /etc in plain text; older systemd keeps
+    # it in /etc/credstore only.
+    - name: 'systemctl show --property=Version --value'
+      ansible.builtin.command: 'systemctl show --property=Version --value'
+      register: '__molecule__systemd_version_result'
+      changed_when: false
+
+    - name: 'grep --recursive --files-with-matches MoleculeDumpPw /etc'
+      ansible.builtin.command: 'grep --recursive --fixed-strings --files-with-matches MoleculeDumpPw /etc'
+      register: '__molecule__dump_password_files_result'
+      changed_when: false
+      failed_when: '__molecule__dump_password_files_result["rc"] > 1'
+
+    - name: 'Assert that the dump password is only stored where expected'
+      ansible.builtin.assert:
+        that: '__molecule__dump_password_files_result["stdout_lines"] == __molecule__expected_files'
+        fail_msg: 'Found in: {{ __molecule__dump_password_files_result["stdout_lines"] }}'
+      vars:
+        __molecule__expected_files: '{{
+            [] if (__molecule__systemd_version_result["stdout"] | regex_search("^\d+") | int) >= 251
+            else ["/etc/credstore/mariadb-dump-login.cnf"]
+          }}'
+
     # The logrotate config has no postrotate flush, so MariaDB has to keep writing to the error
     # log after `copytruncate`. A failed login is logged there with the default log_warnings.
     # The role names the file `mysql` for MariaDB 10.6 only. The Debian cloud image ships without

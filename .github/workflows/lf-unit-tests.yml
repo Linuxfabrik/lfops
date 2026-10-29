@@ -9,9 +9,54 @@ on:
 permissions:
   contents: 'read'
 
+# A newer push to the same pull request makes the running tests obsolete.
+# Pushes to main are left to finish.
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: "${{ github.event_name == 'pull_request' }}"
+
 jobs:
+  # Most pull requests only touch roles and playbooks, which these tests do
+  # not cover. Skipping them there keeps the org's shared runner slots free.
+  # Pushes to main always run the full set.
+  changes:
+    name: 'Detect relevant changes'
+    runs-on: 'ubuntu-latest'
+    permissions:
+      pull-requests: 'read'
+    outputs:
+      relevant: '${{ steps.filter.outputs.relevant }}'
+    steps:
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2' # v2.22.2
+        with:
+          egress-policy: 'audit'
+
+      # The files API returns at most 3000 files, so a pull request that
+      # large runs everything.
+      - name: 'Check whether the plugins or their tests changed'
+        id: 'filter'
+        env:
+          EVENT_NAME: '${{ github.event_name }}'
+          GH_TOKEN: '${{ github.token }}'
+          PR_NUMBER: '${{ github.event.pull_request.number }}'
+        run: |
+          relevant='true'
+          if [[ "$EVENT_NAME" == 'pull_request' ]]; then
+            files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename')"
+            if [[ "$(wc --lines <<< "$files")" -lt 3000 ]] \
+              && ! grep --quiet --extended-regexp \
+                '^(\.github/(tox|unit-tests-py36|unit-tests-py36-ansible-core)/|\.github/workflows/lf-unit-tests\.yml$|plugins/|pyproject\.toml$|tests/|tox\.ini$)' \
+                <<< "$files"; then
+              relevant='false'
+            fi
+          fi
+          echo "relevant=${relevant}" | tee --append "$GITHUB_OUTPUT"
+
   controller-plugins:
     name: 'Controller plugins (Python ${{ matrix.python-version }})'
+    needs: 'changes'
+    if: "needs.changes.outputs.relevant == 'true'"
     runs-on: 'ubuntu-latest'
     strategy:
       fail-fast: false
@@ -62,6 +107,8 @@ jobs:
 
   managed-node-plugins:
     name: 'Managed-node plugins (RHEL 8, Python 3.6)'
+    needs: 'changes'
+    if: "needs.changes.outputs.relevant == 'true'"
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Harden the runner (Audit all outbound calls)'
@@ -106,3 +153,26 @@ jobs:
               /tmp/venv/bin/pip install --require-hashes --requirement .github/unit-tests-py36/requirements.txt
               /tmp/venv/bin/pytest tests/unit/plugins/modules tests/unit/plugins/module_utils
             '
+
+  # The only check the branch ruleset requires from this workflow. A job
+  # skipped above never reports its matrix names, so requiring those would
+  # block every pull request that skips them. Skipped counts as passed here.
+  result:
+    name: 'Unit tests'
+    if: 'always()'
+    needs:
+      - 'changes'
+      - 'controller-plugins'
+      - 'managed-node-plugins'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Harden the runner (Audit all outbound calls)'
+        uses: 'step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2' # v2.22.2
+        with:
+          egress-policy: 'audit'
+
+      - name: 'Fail unless every job passed or was skipped'
+        env:
+          NEEDS: '${{ toJSON(needs) }}'
+        run: |
+          jq --exit-status 'all(.[]; .result == "success" or .result == "skipped")' <<< "$NEEDS"
