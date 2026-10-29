@@ -20,7 +20,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102903'
+__version__ = '2026102904'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -322,7 +322,7 @@ class Duba:
         return cmd
 
 
-    def run_cmd_in_background(self, cmd, env, running_procs, max_procs):
+    def run_cmd_in_background(self, cmd, env, running_procs, max_procs, failed_retcs):
         # start duplicity in the background
         # * start n processes: start up to (cpu-cores + 1) nice processes to backup as
         #   much as possible
@@ -343,49 +343,34 @@ class Duba:
             sys.exit(207)
 
         # don't start more than max cpu processes
-        # https://stackoverflow.com/questions/16807603/python-non-blocking-non-defunct-process
-        # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.poll
-        retc = 0
         while True:
             time.sleep(0.5)
-            for proc in running_procs:
-                retc = proc.poll()
-                if retc is not None:
-                    # there is a retc, so process has finished
-                    proc.terminate()
-                    try:
-                        proc.communicate(timeout=30)
-                    except subprocess.TimeoutExpired:
-                        proc.kill()
-                        proc.communicate()
-                    running_procs.remove(proc)
-                    self.logger.debug('Process terminated')
+            self.reap_finished_procs(running_procs, failed_retcs)
             if len(running_procs) <= max_procs:
                 # allow launching of another process
                 break
-        return retc
 
 
-    def wait_for_running_procs(self, running_procs):
-        retc = 0
-        while True:
+    def wait_for_running_procs(self, running_procs, failed_retcs):
+        while running_procs:
             time.sleep(0.5)
-            for proc in running_procs:
-                retc = proc.poll()
-                if retc is not None:
-                    # there is a retc, so process has finished
-                    proc.terminate()
-                    try:
-                        proc.communicate(timeout=30)
-                    except subprocess.TimeoutExpired:
-                        proc.kill()
-                        proc.communicate()
-                    running_procs.remove(proc)
-                    self.logger.debug('Process terminated')
-            if not running_procs:
-                # all processes finished, exit loop
-                break
-        return retc
+            self.reap_finished_procs(running_procs, failed_retcs)
+
+
+    def reap_finished_procs(self, running_procs, failed_retcs):
+        # Collect the exit code of every finished process, not just of the last one
+        # polled, so that one failed source fails the whole run. Iterates over a copy,
+        # since finished processes are removed from the list.
+        for proc in list(running_procs):
+            retc = proc.poll()
+            if retc is None:
+                continue
+            running_procs.remove(proc)
+            self.logger.debug('Process terminated')
+            # just ignore missing directories (backup_dir_doesnt_exist = 13)
+            if retc not in (0, 13):
+                self.logger.error(f"Exit code {retc}: {' '.join(proc.args)}")
+                failed_retcs.append(retc)
 
 
     def divide_source_dir(self, src_path):
@@ -409,7 +394,8 @@ class Duba:
         # count the number of logical processors to limit number of processes (code taken from psutil)
         cpu_count = min(os.sysconf('SC_NPROCESSORS_ONLN'), 6)
         env = self.set_env(self.config.get('env', {}))
-        global_retc = 0
+        backup_failed_retcs = []
+        cleanup_failed_retcs = []
 
         # iterate over backup dirs and spawn processes
         running_procs = []
@@ -430,17 +416,13 @@ class Duba:
                 cmd = self.build_duplicity_backup_command(f, src)
                 self.logger.info(f"Running: {' '.join(cmd)}")
 
-                retc = self.run_cmd_in_background(cmd, env, running_procs, cpu_count)
-                if retc not in (0, 13):
-                    # just ignore missing directories (backup_dir_doesnt_exist = 13)
-                    global_retc = retc
+                self.run_cmd_in_background(
+                    cmd, env, running_procs, cpu_count, backup_failed_retcs
+                )
 
         # wait here for all processes to finish
         self.logger.debug('All duplicity processes started, waiting for them to finish.')
-        retc = self.wait_for_running_procs(running_procs)
-        if retc not in (0, 13):
-            # just ignore missing directories (backup_dir_doesnt_exist = 13)
-            global_retc = retc
+        self.wait_for_running_procs(running_procs, backup_failed_retcs)
 
         self.logger.info('Backup done.')
         self.logger.info('Starting cleanup...')
@@ -460,15 +442,18 @@ class Duba:
                 cmd = self.build_duplicity_cleanup_command(f)
                 self.logger.info(f"Running: {' '.join(cmd)}")
 
-                self.run_cmd_in_background(cmd, env, running_procs, cpu_count)
+                self.run_cmd_in_background(
+                    cmd, env, running_procs, cpu_count, cleanup_failed_retcs
+                )
 
 
         # wait here for all processes to finish
         self.logger.debug('All duplicity processes started, waiting for them to finish.')
-        self.wait_for_running_procs(running_procs)
+        self.wait_for_running_procs(running_procs, cleanup_failed_retcs)
 
         self.logger.info('Cleanup done.')
-        sys.exit(global_retc)
+        # a failed backup takes precedence over a failed cleanup
+        sys.exit((backup_failed_retcs + cleanup_failed_retcs + [0])[0])
 
 
     def do_exec(self, duplicity_args):

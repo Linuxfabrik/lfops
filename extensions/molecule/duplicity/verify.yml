@@ -310,3 +310,44 @@
       changed_when: false
       register: '__molecule__duba_restore_divided_result'
       failed_when: '__molecule__duba_restore_divided_result["rc"] != 212'
+
+    # One failed source has to fail the whole run, also if the other sources finish after it.
+    # A regular file in place of the backup directory of the divided entry "broken" breaks its
+    # backup, the other sources still back up fine.
+    - name: 'mkdir /srv/duba-molecule/divided/broken'
+      ansible.builtin.file:
+        path: '/srv/duba-molecule/divided/broken'
+        state: 'directory'
+        mode: 0o755
+
+    - name: 'touch /var/backups/duba-molecule/srv/duba-molecule/divided/broken'
+      ansible.builtin.copy:
+        dest: '/var/backups/duba-molecule/srv/duba-molecule/divided/broken'
+        content: ''
+        mode: 0o644
+
+    - name: 'systemctl start duba.service # with a broken source' # noqa command-instead-of-module (a oneshot run, not a state)
+      ansible.builtin.command: 'systemctl start duba.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_service_result'
+
+    - name: 'journalctl --unit=duba.service --lines=200'
+      ansible.builtin.command: 'journalctl --unit=duba.service --no-pager --lines=200'
+      changed_when: false
+      register: '__molecule__duba_journal_result'
+
+    - name: 'Assert that the broken source failed the run, and duba names it'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_service_result["rc"] != 0'
+          - '__molecule__duba_journal_result["stdout_lines"] | select("search", "ERROR: duba - Exit code [0-9]+: .* file:///var/backups/duba-molecule/srv/duba-molecule/divided/broken$") | list | length > 0'
+        fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] }}'
+
+    - name: 'rm -rf /srv/duba-molecule/divided/broken /var/backups/duba-molecule/srv/duba-molecule/divided/broken'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/srv/duba-molecule/divided/broken'
+        - '/var/backups/duba-molecule/srv/duba-molecule/divided/broken'

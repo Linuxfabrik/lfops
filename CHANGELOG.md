@@ -181,6 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:duplicity**: `duba.service` fails if the backup or the cleanup of any single source fails. Until now it usually reported success, so a failed backup of one source went unnoticed. The journal names the failed duplicity command.
 * **plugin:gpg_key, plugin:nextcloud_occ_app, plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config**: The modules no longer fail with `env: 'python3': No such file or directory` on RHEL 8 hosts that have no `python3` installed, for example when a run skips the role that installs it, and without Mitogen. All in-house modules use the Python found by interpreter discovery or set in `ansible_python_interpreter`, like the modules of ansible-core.
 * **role:repo_mongodb**: The repository for MongoDB 8.2 and 8.3 can be installed, the role fetched a signing key that does not exist.
 * **role:librenms**: Renaming an API token or changing its expiry in the web interface works again, as do the API v0 calls that update devices, device groups, locations, ports and services. Apache rejected their `PATCH` requests.
