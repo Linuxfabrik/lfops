@@ -57,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:duplicity**: `duba exec -- <duplicity arguments>` runs any duplicity command (for example `collection-status` or `restore`) with the settings and the password of the backup, without exporting the password into the shell.
+* **role:mongodb, role:repo_mongodb**: Support MongoDB 9.0, also on Debian 13 and Ubuntu 26.04, where upstream offers 9.0 only. MongoDB upgrades to 9.0 from 8.0 only, so upgrade a 7.0 host to 8.0 first.
 * **role:graylog_server**: Add `graylog_server__stream_aware_field_types` to switch stream-aware field types on or off on Graylog 7.3 and later.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.3.
 * **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
@@ -178,6 +179,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:gpg_key, plugin:nextcloud_occ_app, plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config**: The modules no longer fail with `env: 'python3': No such file or directory` on RHEL 8 hosts that have no `python3` installed, for example when a run skips the role that installs it, and without Mitogen. All in-house modules use the Python found by interpreter discovery or set in `ansible_python_interpreter`, like the modules of ansible-core.
+* **role:repo_mongodb**: The repository for MongoDB 8.2 and 8.3 can be installed, the role fetched a signing key that does not exist.
+* **role:librenms**: Renaming an API token or changing its expiry in the web interface works again, as do the API v0 calls that update devices, device groups, locations, ports and services. Apache rejected their `PATCH` requests.
+* **role:nextcloud**: `nextcloud-ldap-show-remnants.timer` reports the LDAP remnants once a month; until now it started the app update instead.
+* **role:nextcloud**: CalDAV and CardDAV clients find their endpoints through `/.well-known/caldav` and `/.well-known/carddav` without a reverse proxy that redirects them, and `/remote/`, `/ocm-provider/` and the other `.well-known` URLs reach Nextcloud again.
+* **role:nextcloud**: httpd starts when `mod_dav` is loaded; the vHost turned WebDAV off outside a directory context, which httpd rejects.
 * **role:system_update**: On Debian and Ubuntu, the update check before the update window waits for a busy package manager and reports a failed refresh of the package lists, instead of silently announcing updates from stale lists.
 * **role:system_update**: On Debian and Ubuntu, the weekly update waits up to 10 minutes for the apt and dpkg locks instead of failing when, for example, an Ansible run holds them.
 * **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
@@ -334,6 +341,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 * **role:duplicity**: The Swift or SFTP password is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/duba/duba.json`, so it is no longer readable in a backup of `/etc`. The old copies of `duba.json` are deleted. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`. Restores that read the password from `duba.json` have to switch to `duba exec`.
+* **role:nextcloud**: The vHost blocks `3rdparty/`, `lib/`, `config/`, `data/`, `occ` and `console.php` as Nextcloud's `.htaccess` intends; until now its rules never matched, so anyone could read the versions of all bundled libraries and call internal PHP files directly.
 * **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.

@@ -344,8 +344,11 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     raw: !unsafe |-
       # keeping the IfModule as the instruction only matters if mod_dav would be active
       <IfModule mod_dav.c>
-          # prevent Apache from answering WebDAV, that is Nextcloud's job
-          Dav off
+          # prevent Apache from answering WebDAV, that is Nextcloud's job. Dav is
+          # only allowed in a directory context, httpd refuses to start otherwise.
+          <Directory /var/www/html/nextcloud>
+              Dav off
+          </Directory>
       </IfModule>
 
       #### Start of Nextcloud's .htaccess ####
@@ -430,17 +433,21 @@ nextcloud__apache_httpd__vhosts__dependent_var:
         ModPagespeed Off
       </IfModule>
 
+      # In the vHost, unlike in the .htaccess, the patterns see the URL path with
+      # its leading slash, and an internal rewrite needs PT to be mapped to a file
+      # below the DocumentRoot. Without both, none of these rules ever matched.
+      # data/ is denied as well: its own .htaccess is ignored with AllowOverride None.
       RewriteEngine on
       RewriteCond %{HTTP_USER_AGENT} DavClnt
-      RewriteRule ^$ /remote.php/webdav/ [L,R=302]
+      RewriteRule ^/$ /remote.php/webdav/ [L,R=302]
       RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-      RewriteRule ^\.well-known/carddav /remote.php/dav/ [R=301,L]
-      RewriteRule ^\.well-known/caldav /remote.php/dav/ [R=301,L]
-      RewriteRule ^remote/(.*) remote.php [QSA,L]
-      RewriteRule ^(?:build|tests|config|lib|3rdparty|templates)/.* - [R=404,L]
-      RewriteRule ^\.well-known/(?!acme-challenge|pki-validation) /index.php [QSA,L]
-      RewriteRule ^ocm-provider/?$ index.php [QSA,L]
-      RewriteRule ^(?:\.(?!well-known)|autotest|occ|issue|indie|db_|console).* - [R=404,L]
+      RewriteRule ^/\.well-known/carddav /remote.php/dav/ [R=301,L]
+      RewriteRule ^/\.well-known/caldav /remote.php/dav/ [R=301,L]
+      RewriteRule ^/remote/(.*) /remote.php [QSA,L,PT]
+      RewriteRule ^/(?:build|tests|config|data|lib|3rdparty|templates)/.* - [R=404,L]
+      RewriteRule ^/\.well-known/(?!acme-challenge|pki-validation) /index.php [QSA,L,PT]
+      RewriteRule ^/ocm-provider/?$ /index.php [QSA,L,PT]
+      RewriteRule ^/(?:\.(?!well-known)|autotest|occ|issue|indie|db_|console).* - [R=404,L]
 
       # Clients like xDavv5 on Android, or Cyberduck, use chunked requests.
       # When FastCGI or FPM is used with apache, requests arrive to Nextcloud without any content.

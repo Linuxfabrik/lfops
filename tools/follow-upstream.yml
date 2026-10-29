@@ -35,8 +35,13 @@
 #   * `template`: `{series}` is replaced. A template without `{series}` serves every
 #     series and is merged in place.
 #   * `supported_versions`: the vars file and the list that has to contain every series
-#     a template exists for. Only for templates with `{series}`.
+#     a template exists for. Only for templates with `{series}`. `<file>:<var>.<key>`
+#     names the list below a key of a dictionary, e.g. one list per OS family.
 #   * `deb_path`: where the DEB ships the file, if not at `path`.
+#   * `format`: optional, `deb` builds the template from the DEB file instead of the RPM
+#     file, for a Debian family template whose packaged file differs from the RPM one.
+#     The file then needs one entry per format, and RPM and DEB are not compared.
+#     `--check` still looks for new releases in the RPM repository only.
 #   * `copies`: further templates that stay identical to `template`, e.g. the Debian
 #     counterpart of a file the RPM ships under another path. They get the merge result.
 # * `ignore`: packaged files below /etc that LFOps deliberately does not template.
@@ -240,6 +245,35 @@ influxdb:
     - package: 'influxdb'
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
+
+# RPM and DEB ship different files (/var/lib/mongo and /var/lib/mongodb, other order of
+# the sections), so the Debian family templates are merged from the DEB. Debian 12 stands
+# for Debian and Ubuntu: Ubuntu 24.04 ships the same mongod.conf (8.0.34).
+#
+# 9.0 is signed with a key per major version, `server-9.asc`.
+#
+# Install scripts (mongodb-org-server 7.0.45 and 8.0.34, RPM and DEB): create the user,
+# the data and log directories, and enable the service, never touch mongod.conf.
+mongodb:
+  upstream:
+    - 'mongodb/mongo'
+  series_parts: 2
+  deb_repo: 'https://repo.mongodb.org/apt/debian bookworm/mongodb-org/{series} main'
+  gpg_key: 'https://www.mongodb.org/static/pgp/server-{series}.asc'
+  series_gpg_key:
+    '9.0':
+      url: 'https://www.mongodb.org/static/pgp/server-9.asc'
+  rpm_repo: 'https://repo.mongodb.org/yum/redhat/9/mongodb-org/{series}/x86_64/'
+  files:
+    - package: 'mongodb-org-server'
+      path: '/etc/mongod.conf'
+      format: 'deb'
+      template: 'roles/mongodb/templates/etc/Debian-{series}-mongod.conf.j2'
+      supported_versions: 'roles/mongodb/vars/main.yml:__mongodb__supported_versions_per_os_family.Debian'
+    - package: 'mongodb-org-server'
+      path: '/etc/mongod.conf'
+      template: 'roles/mongodb/templates/etc/RedHat-{series}-mongod.conf.j2'
+      supported_versions: 'roles/mongodb/vars/main.yml:__mongodb__supported_versions_per_os_family.RedHat'
 
 # One template per major version (`3.x-opensearch.yml.j2`); sysconfig serves both and
 # follows the newest major only. The RPM ships the environment file as

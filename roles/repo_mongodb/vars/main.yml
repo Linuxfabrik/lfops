@@ -1,0 +1,10 @@
+# MongoDB signs the series up to 8.x with the key of the major release (`server-8.0.asc`,
+# also for 8.2 and 8.3), and from 9 on with a key named after the major version only
+# (`server-9.asc`).
+__repo_mongodb__major_version: '{{ (repo_mongodb__version | string).split(".")[0] }}'
+__repo_mongodb__gpg_key_url: '{{
+    "https://www.mongodb.org/static/pgp/server-"
+    ~ __repo_mongodb__major_version
+    ~ ((__repo_mongodb__major_version | int < 9) | ternary(".0", ""))
+    ~ ".asc"
+  }}'
