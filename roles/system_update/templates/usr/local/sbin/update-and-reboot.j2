@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102807
+# 2026102808
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -316,15 +316,30 @@ if ! AUTOREMOVABLE_BEFORE=$(list_autoremovable); then
     exit 1
 fi
 
-# the exit status of the pipeline is apt-get's own; `yes` only feeds it. A failing
-# maintainer script surfaces here as exit 100, with the detail split over both streams:
-# the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
-# DPkg::Lock::Timeout lets apt-get wait for the dpkg lock instead of failing at once.
-# Verified against apt 2.0 (Ubuntu 20.04), 2.6 (Debian 12) and 3.0 (Debian 13).
-# systemd starts services with SIGPIPE ignored (IgnoreSIGPIPE=yes), so `yes` outlives
-# apt-get and reports the closed pipe as "yes: standard output: Broken pipe" in the
-# journal; that is expected and silenced here.
-if ! yes '' 2> /dev/null | apt-get -y -o DPkg::Lock::Timeout=600 -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
+# The upgrade, unattended. What answers which question:
+# * -y: apt-get's own confirmation.
+# * DEBIAN_FRONTEND=noninteractive (exported above): every debconf question takes its
+#   default without reading stdin. Required: without it debconf may fall back to a
+#   frontend that reads stdin.
+# * --force-confdef --force-confold: a dpkg conffile changed locally is kept, with the
+#   package's version next to it as *.dpkg-dist; an unchanged one is replaced.
+# * ucf-managed files (outside dpkg's conffiles) behave the same, kept as *.ucf-dist if
+#   changed locally: ucf asks through debconf, and the noninteractive default is
+#   keep_current. The force options above do not reach ucf: dpkg passes them to the
+#   maintainer scripts as DPKG_FORCE, always in the order "confold,confdef", and on
+#   confdef ucf drops the confold it has just set. Do not set UCF_FORCE_CONFFOLD
+#   either: ucf then keeps unchanged files as well, so they never get updated.
+# * < /dev/null: nothing above reads stdin. A maintainer script that does anyway (none
+#   of a typical server install does under noninteractive) gets EOF and usually fails,
+#   which surfaces in the failure mail below, instead of silently being fed empty
+#   answers or looping forever on a prompt that rejects them.
+# * DPkg::Lock::Timeout: wait for the dpkg lock instead of failing at once.
+# A failing maintainer script surfaces as exit 100, with the detail split over both
+# streams: the package names on stdout, `E: Sub-process ... returned an error code` on
+# stderr.
+# Verified against apt 2.0, dpkg 1.19, ucf 3.0038 (Ubuntu 20.04), apt 2.6 (Debian 12),
+# and apt 3.0, dpkg 1.22, ucf 3.0052 (Debian 13).
+if ! apt-get -y -o DPkg::Lock::Timeout=600 -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade < /dev/null > /tmp/update_output 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/update_output)"
     exit 1
