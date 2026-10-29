@@ -6,9 +6,11 @@ __mongodb__supported_versions_per_os_family:
   Debian:
     - '7.0'
     - '8.0'
+    - '9.0'
   RedHat:
     - '7.0'
     - '8.0'
+    - '9.0'
 __mongodb__supported_versions: '{{
     __mongodb__supported_versions_per_os_family
     | linuxfabrik.lfops.platform_select(ansible_facts)
