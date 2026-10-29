@@ -246,6 +246,30 @@ influxdb:
       path: '/etc/influxdb/influxdb.conf'
       template: 'roles/influxdb/templates/etc/influxdb/influxdb.conf.j2'
 
+# RPM and DEB ship different files (/var/lib/mongo and /var/lib/mongodb, other order of
+# the sections), so the Debian family templates are merged from the DEB. Debian 12 stands
+# for Debian and Ubuntu: Ubuntu 24.04 ships the same mongod.conf (8.0.34).
+#
+# Install scripts (mongodb-org-server 7.0.45 and 8.0.34, RPM and DEB): create the user,
+# the data and log directories, and enable the service, never touch mongod.conf.
+mongodb:
+  upstream:
+    - 'mongodb/mongo'
+  series_parts: 2
+  deb_repo: 'https://repo.mongodb.org/apt/debian bookworm/mongodb-org/{series} main'
+  gpg_key: 'https://www.mongodb.org/static/pgp/server-{series}.asc'
+  rpm_repo: 'https://repo.mongodb.org/yum/redhat/9/mongodb-org/{series}/x86_64/'
+  files:
+    - package: 'mongodb-org-server'
+      path: '/etc/mongod.conf'
+      format: 'deb'
+      template: 'roles/mongodb/templates/etc/Debian-{series}-mongod.conf.j2'
+      supported_versions: 'roles/mongodb/vars/main.yml:__mongodb__supported_versions_per_os_family.Debian'
+    - package: 'mongodb-org-server'
+      path: '/etc/mongod.conf'
+      template: 'roles/mongodb/templates/etc/RedHat-{series}-mongod.conf.j2'
+      supported_versions: 'roles/mongodb/vars/main.yml:__mongodb__supported_versions_per_os_family.RedHat'
+
 # One template per major version (`3.x-opensearch.yml.j2`); sysconfig serves both and
 # follows the newest major only. The RPM ships the environment file as
 # /etc/sysconfig/opensearch. The DEB of 3.x ships it as /etc/default/opensearch, plus an
