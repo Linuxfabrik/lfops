@@ -81,6 +81,17 @@ repos:
 
   - repo: 'local'
     hooks:
+      # ansible-core runs `#!/usr/bin/env python3` as it is, without interpreter
+      # discovery or `ansible_python_interpreter` (only an interpreter named
+      # `python` gets them), so such a module fails on RHEL 8 hosts without
+      # python3. Same rule as ansible-test sanity's `shebang` test.
+      - id: 'module-shebang'
+        name: 'modules use #!/usr/bin/python'
+        entry: '\A#!(?!/usr/bin/python\n)'
+        language: 'pygrep'
+        args: ['--multiline']
+        files: '^plugins/modules/.*\.py$'
+
       - id: 'pytest-unit'
         name: 'pytest (plugin unit tests)'
         # Fast single-interpreter run of the controller-plugin unit tests on
