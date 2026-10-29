@@ -177,6 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:librenms**: Renaming an API token or changing its expiry in the web interface works again, as do the API v0 calls that update devices, device groups, locations, ports and services. Apache rejected their `PATCH` requests.
 * **role:nextcloud**: `nextcloud-ldap-show-remnants.timer` reports the LDAP remnants once a month; until now it started the app update instead.
 * **role:nextcloud**: CalDAV and CardDAV clients find their endpoints through `/.well-known/caldav` and `/.well-known/carddav` without a reverse proxy that redirects them, and `/remote/`, `/ocm-provider/` and the other `.well-known` URLs reach Nextcloud again.
 * **role:nextcloud**: httpd starts when `mod_dav` is loaded; the vHost turned WebDAV off outside a directory context, which httpd rejects.
