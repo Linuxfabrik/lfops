@@ -1,0 +1,2 @@
+- name: 'Converge gitlab_ce playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.gitlab_ce'
