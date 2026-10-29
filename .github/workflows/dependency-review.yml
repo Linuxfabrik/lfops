@@ -6,6 +6,11 @@ on:
 permissions:
   contents: 'read'
 
+# A newer push to the same pull request makes the running review obsolete.
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: true
+
 jobs:
   dependency-review:
     runs-on: 'ubuntu-latest'
