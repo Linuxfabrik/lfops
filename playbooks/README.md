@@ -215,6 +215,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `curaline__skip_repo_linuxfabrik`
 * [curaline](https://github.com/Linuxfabrik/lfops/tree/main/roles/curaline)
 
 
