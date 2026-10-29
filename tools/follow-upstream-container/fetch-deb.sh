@@ -4,8 +4,9 @@
 # signature of InRelease against `${GPG_KEY}`, the checksum of the Packages index listed
 # there, and the checksum of the package listed in the index. The index can list several
 # builds of a release (`7.2.0-1`, `7.2.0-11`); the newest one wins, as with
-# `dnf repoquery --latest-limit=1`. The maintainer scripts and triggers go to
-# /out/scripts.
+# `dnf repoquery --latest-limit=1`. Builds whose Debian revision matches
+# `${PRERELEASE_RE}` (`7.3.0-1.alpha.1`) are skipped, with `${ALLOW_PRERELEASE}` only if
+# a final build exists. The maintainer scripts and triggers go to /out/scripts.
 
 dnf install --assumeyes --quiet bsdtar >/dev/null
 get "${GPG_KEY}" --output /var/tmp/key
@@ -28,7 +29,7 @@ if [ -z "${sum}" ] \
     || ! echo "${sum}  /var/tmp/Packages.gz" | sha256sum --check --status; then
     fail "${PACKAGE} ${VERSION}: the checksum of ${index} does not match InRelease"
 fi
-line=$(gunzip --stdout /var/tmp/Packages.gz \
+builds=$(gunzip --stdout /var/tmp/Packages.gz \
     | awk -v package="${PACKAGE}" -v version="${VERSION}" '
         BEGIN { RS = ""; FS = "\n" }
         {
@@ -42,12 +43,22 @@ line=$(gunzip --stdout /var/tmp/Packages.gz \
             sub(/^[0-9]+:/, "", ver)
             if (name == package && (ver == version || index(ver, version "-") == 1))
                 print ver, file, sum
-        }' \
-    | sort --version-sort | tail --lines=1)
-read -r _ file sum <<< "${line}"
-if [ -z "${file:-}" ]; then
+        }')
+if [ -z "${builds}" ]; then
     fail "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}"
 fi
+# the marker is searched in the Debian revision only, `${VERSION}` has none
+final=$(awk -v version="${VERSION}" -v pattern="${PRERELEASE_RE}" '
+    tolower(substr($1, length(version) + 1)) !~ pattern' <<< "${builds}")
+if [ -n "${final}" ]; then
+    builds=${final}
+elif [ -z "${ALLOW_PRERELEASE}" ]; then
+    versions=$(cut --delimiter=' ' --fields=1 <<< "${builds}" \
+        | paste --serial --delimiters=' ')
+    fail "${PACKAGE} ${VERSION}: only pre-release builds (${versions})\
+ in ${REPO_DISPLAY}, see --allow-prerelease"
+fi
+read -r _ file sum <<< "$(sort --version-sort <<< "${builds}" | tail --lines=1)"
 get "${REPO}/${file}" --output /var/tmp/package.deb
 if [ -z "${sum:-}" ] \
     || ! echo "${sum}  /var/tmp/package.deb" | sha256sum --check --status; then

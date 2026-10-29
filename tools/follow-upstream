@@ -40,6 +40,10 @@ With `--check`, the tool lists the releases in the RPM repositories that are new
 the templates' `Based on` lines, without fetching or writing anything. Applications whose
 repository URL needs an environment variable that is not set (`${TOKEN}`) are skipped.
 
+Pre-release builds (`7.3.0-1.alpha.1`) are ignored by `--check` and refused by a run,
+unless `--allow-prerelease` is given. Some vendors keep the marker in the package
+release only, so the package version alone (`7.3.0`) looks like a final release.
+
 Exit code 0: nothing to review, or no new release. 1: conflicts or packaging findings to
 review, or new releases found. 2: the run could not complete. Run this tool from the
 repository root directory. It never commits.
@@ -58,7 +62,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102901'
+__version__ = '2026102903'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -77,6 +81,10 @@ PATH_RE = re.compile(r'[\w.+@:~/-]+', re.ASCII)
 BASED_ON_RE = re.compile(r'Based on (?P<package>\S+) (?P<version>\d+(?:\.\d+)+)\b')
 TIMESTAMP_RE = re.compile(r'^(?P<prefix>\W*)(?P<stamp>\d{10})(?P<suffix>\W*)$')
 ENV_RE = re.compile(r'\$\{(?P<name>\w+)\}')
+# A pre-release marker in the package version or release, matched case-insensitively.
+# Also passed to the container scripts, so it has to be a valid POSIX ERE.
+PRERELEASE_RE = r'(^|[^a-z])(alpha|beta|dev|pre|preview|rc|snapshot)([^a-z]|$)'
+ALLOW_PRERELEASE = False  # set by `--allow-prerelease`
 
 # The bash scripts that run in the podman container, see the comments in the scripts.
 CONTAINER_SCRIPTS = os.path.join(REPO_ROOT, 'tools', 'follow-upstream-container')
@@ -187,6 +195,10 @@ def run_container(script, env, volume=None):
     )
 
 
+def is_prerelease(text):
+    return re.search(PRERELEASE_RE, text, re.IGNORECASE) is not None
+
+
 def fetch(app, config, fmt, package, version):
     """Return the directory holding /etc and the packaged files of `config` outside of
     /etc of `package` `version`, cached in CACHE_DIR. The install scripts of the package
@@ -209,6 +221,11 @@ def fetch(app, config, fmt, package, version):
     cached = all(
         os.path.isfile(os.path.join(dest, name)) for name in ('scripts', 'source')
     )
+    if cached:
+        with open(os.path.join(dest, 'source'), encoding='utf-8') as f:
+            # `<repository> <package file>`, see the container scripts. A pre-release
+            # build cached by an older version of this tool is fetched again.
+            cached = ALLOW_PRERELEASE or not is_prerelease(f.read().split()[-1])
     if cached and all(
         os.path.exists(os.path.join(root, path.lstrip('/'))) for path in extra
     ):
@@ -242,10 +259,12 @@ def fetch(app, config, fmt, package, version):
         script = container_script('fetch-deb.sh')
     env.update(
         {
+            'ALLOW_PRERELEASE': '1' if ALLOW_PRERELEASE else '',
             'EXTRACT': ' '.join(extra),
             'GPG_KEY': gpg_key,
             'GPG_SHA1': '1' if sha1 else '',
             'PACKAGE': package,
+            'PRERELEASE_RE': PRERELEASE_RE,
             'REPO_DISPLAY': display,
             'VERSION': version,
         }
@@ -692,18 +711,25 @@ def list_versions(config, packages, series_list):
         raise FetchError('listing the packages failed')
     versions = {package: set() for package in packages}
     unusual = 0
+    prereleases = 0
     for line in result.stdout.splitlines():
         fields = line.split()
         if (
-            len(fields) != 3
+            len(fields) != 4
             or fields[1] not in versions
             or not VERSION_RE.fullmatch(fields[2])
         ):
             unusual += 1
             continue
+        # Graylog ships 7.3.0-alpha.1 as version `7.3.0`, release `1.alpha.1`
+        if is_prerelease(fields[3]):
+            prereleases += 1
+            continue
         versions[fields[1]].add(fields[2])
     if unusual:
         print(f'{unusual} unusual package version(s) ignored', file=sys.stderr)
+    if prereleases:
+        print(f'{prereleases} pre-release build(s) ignored', file=sys.stderr)
     return versions
 
 
@@ -828,6 +854,12 @@ def main():
         '`--list`.',
     )
     parser.add_argument(
+        '--allow-prerelease',
+        action='store_true',
+        help='Fetch and merge a pre-release build (`7.3.0-1.alpha.1`) if the release '
+        'has no final build.',
+    )
+    parser.add_argument(
         '--check',
         action='store_true',
         help='List the releases that are newer than the templates, of every application '
@@ -874,6 +906,8 @@ def main():
     if not VERSION_RE.fullmatch(args.version):
         parser.error('the version consists of numbers and dots, e.g. `7.2.1`')
 
+    global ALLOW_PRERELEASE  # read by fetch()
+    ALLOW_PRERELEASE = args.allow_prerelease
     app, config = find_app(manifest, args.app)
     try:
         findings = check_packaging(app, config, args.version)
