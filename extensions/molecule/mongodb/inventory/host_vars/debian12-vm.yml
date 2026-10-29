@@ -1,0 +1,2 @@
+# Keeps the 8.0 templates covered, the other hosts run 9.0.
+repo_mongodb__version: '8.0'

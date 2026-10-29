@@ -8,6 +8,7 @@ This role is only compatible with the following MongoDB versions:
 
 * 7.0
 * 8.0
+* 9.0
 
 
 *Available since LFOps `2.0.0`.*
@@ -25,8 +26,9 @@ This role is only compatible with the following MongoDB versions:
 
 ## Known Limitations
 
-* MongoDB publishes no server packages for Debian 13 and Ubuntu 26.04, so the role cannot install MongoDB there.
-* On Ubuntu 24.04, MongoDB offers 8.0 only.
+* On Debian 13 and Ubuntu 26.04, MongoDB offers 9.0 only.
+* On Ubuntu 24.04, MongoDB offers 8.0 and 9.0 only.
+* The role does not upgrade an existing installation to another series. MongoDB upgrades one major release at a time: 9.0 only from 8.0, 7.0 has to go to 8.0 first.
 
 
 ## Dependent Roles
