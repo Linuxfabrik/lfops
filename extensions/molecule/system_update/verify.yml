@@ -26,8 +26,18 @@
       - '/var/tmp/molecule-system_update-pre-update-code'
 
     # Debian family: the fixture packages of the regular lane, see the comment above the
-    # block that builds them. `auto` ones are installed as automatically installed.
+    # block that builds them. `repo` ones are offered by a local repository, the others are
+    # installed, and `auto` ones as automatically installed.
     __molecule__debian_test_packages:
+      - name: 'lfops-test-app'
+        version: '1.0'
+        depends: 'lfops-test-dep'
+      - name: 'lfops-test-app'
+        version: '2.0'
+        repo: true
+      - name: 'lfops-test-dep'
+        version: '1.0'
+        auto: true
       - name: 'lfops-test-orphan'
         version: '1.0'
         auto: true
@@ -373,9 +383,12 @@
     #   one of the cloud image, which is running and newer than all of them. apt orders the
     #   kernels by package version, not by the ABI in the name, so the version of each dummy
     #   has to match its name: with all of them at 1.0, apt protects every one.
-    #   lfops-test-orphan is auto-removable but no kernel and has to stay.
     #   Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04, in
     #   containers.
+    # * Packages the upgrade leaves unused, removed after it. lfops-test-app 1.0 needs
+    #   lfops-test-dep, the 2.0 of the local repository does not, so lfops-test-dep has to go.
+    #   lfops-test-orphan was unused before the upgrade already and has to stay.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
     # * An interrupted dpkg: a journal file in /var/lib/dpkg/updates/ has to be repaired with
     #   dpkg --configure -a instead of failing the upgrade.
     #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
@@ -384,6 +397,11 @@
     #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
     - block:
 
+      - name: 'apt install apt-utils (apt-ftparchive for the fixture repository)'
+        ansible.builtin.apt:
+          name: 'apt-utils'
+
+      # under /var/tmp, since apt reads a file: repository as the unprivileged _apt user
       - name: 'mkdir -p /var/tmp/lfops-debian-test/<package>/DEBIAN'
         ansible.builtin.file:
           path: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}/DEBIAN'
@@ -393,6 +411,14 @@
           mode: 0o755
         loop: '{{ __molecule__debian_test_packages }}'
 
+      - name: 'mkdir -p /var/tmp/lfops-debian-test/repo'
+        ansible.builtin.file:
+          path: '/var/tmp/lfops-debian-test/repo'
+          state: 'directory'
+          owner: 'root'
+          group: 'root'
+          mode: 0o755
+
       - name: 'Deploy /var/tmp/lfops-debian-test/<package>/DEBIAN/control'
         ansible.builtin.copy:
           content: |
@@ -400,6 +426,9 @@
             Version: {{ item["version"] }}
             Architecture: all
             Maintainer: Linuxfabrik GmbH <info@linuxfabrik.ch>
+            {% if item["depends"] is defined %}
+            Depends: {{ item["depends"] }}
+            {% endif %}
             Description: LFOps fixture for the system_update regular lane
           dest: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}/DEBIAN/control'
           owner: 'root'
@@ -411,15 +440,23 @@
         ansible.builtin.command: >-
           dpkg-deb --build
           /var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}
-          /var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb
+          /var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | default(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb
         args:
-          creates: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb'
+          creates: '/var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | default(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb'
         loop: '{{ __molecule__debian_test_packages }}'
 
+      - name: 'apt-ftparchive packages /var/tmp/lfops-debian-test/repo'
+        ansible.builtin.shell: 'apt-ftparchive packages . > Packages'
+        args:
+          chdir: '/var/tmp/lfops-debian-test/repo'
+          creates: '/var/tmp/lfops-debian-test/repo/Packages'
+
+      # one .deb per call, so the ones without a dependency go first
       - name: 'apt install the installed fixture packages'
         ansible.builtin.apt:
           deb: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb'
-        loop: '{{ __molecule__debian_test_packages }}'
+        loop: '{{ (__molecule__debian_test_packages | rejectattr("repo", "defined") | rejectattr("depends", "defined"))
+          + (__molecule__debian_test_packages | rejectattr("repo", "defined") | selectattr("depends", "defined")) }}'
 
       - name: 'apt-mark auto the automatic fixture packages'
         ansible.builtin.command: 'apt-mark auto {{ __molecule__debian_test_packages | selectattr("auto", "defined") | map(attribute="name") | join(" ") }}'
@@ -429,6 +466,15 @@
         ansible.builtin.dpkg_selections:
           name: 'linux-image-6.0.0-2-lfops-test'
           selection: 'hold'
+
+      - name: 'Deploy /etc/apt/sources.list.d/lfops-debian-test.list'
+        ansible.builtin.copy:
+          content: |
+            deb [trusted=yes] file:/var/tmp/lfops-debian-test/repo ./
+          dest: '/etc/apt/sources.list.d/lfops-debian-test.list'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
 
       - name: 'touch /var/lib/dpkg/updates/0001 (an interrupted dpkg)'
         ansible.builtin.file:
@@ -517,16 +563,19 @@
           path: '/var/lib/dpkg/updates/0001'
         register: '__molecule__dpkg_journal_stat_result'
 
-      - name: 'Assert the first run repaired dpkg, waited for the lock and removed the unused kernel only'
+      - name: 'Assert the first run repaired dpkg, waited for the lock and removed only what it should'
         ansible.builtin.assert:
           that:
             - '"linux-image-6.0.0-1-lfops-test" not in ansible_facts["packages"]'
             - '"linux-image-6.0.0-2-lfops-test" in ansible_facts["packages"]'
+            - '"lfops-test-dep" not in ansible_facts["packages"]'
             - '"lfops-test-orphan" in ansible_facts["packages"]'
+            - 'ansible_facts["packages"]["lfops-test-app"][0]["version"] == "2.0"'
             - 'not __molecule__dpkg_journal_stat_result["stat"]["exists"]'
             - '__molecule__update_first_journal_result["stdout"] is search("dpkg was interrupted; running dpkg --configure -a")'
             - '__molecule__update_first_journal_result["stdout"] is search("Waiting for the package manager lock")'
             - '__molecule__update_first_journal_result["stdout"] is search("Removing unused kernel packages:.* linux-image-6.0.0-1-lfops-test")'
+            - '__molecule__update_first_journal_result["stdout"] is search("Removing packages no longer needed after the upgrade:.* lfops-test-dep")'
 
       always:
 
@@ -540,11 +589,12 @@
           name: '{{ __molecule__debian_test_packages | map(attribute="name") | unique }}'
           state: 'absent'
 
-      - name: 'rm -f the fixture working files'
+      - name: 'rm -f the fixture repository and its working files'
         ansible.builtin.file:
           path: '{{ item }}'
           state: 'absent'
         loop:
+          - '/etc/apt/sources.list.d/lfops-debian-test.list'
           - '/run/lfops-debian-test-lock-held'
           - '/var/tmp/lfops-debian-test'
 

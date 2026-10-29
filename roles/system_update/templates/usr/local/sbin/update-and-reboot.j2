@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102805
+# 2026102806
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -309,6 +309,13 @@ if ! remove_unused_kernels; then
     exit 1
 fi
 
+# what was already unused before the upgrade stays installed, see below
+if ! AUTOREMOVABLE_BEFORE=$(list_autoremovable); then
+    log "Listing the unused packages failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
+    exit 1
+fi
+
 # the exit status of the pipeline is apt-get's own; `yes` only feeds it. A failing
 # maintainer script surfaces here as exit 100, with the detail split over both streams:
 # the package names on stdout, `E: Sub-process ... returned an error code` on stderr.
@@ -320,6 +327,22 @@ fi
 if ! yes '' 2> /dev/null | apt-get -y -o DPkg::Lock::Timeout=600 -o DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" --with-new-pkgs upgrade > /tmp/update_output 2> /tmp/system-update-stderr; then
     log "System update failed; see /tmp/system-update-stderr"
     send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/update_output)"
+    exit 1
+fi
+
+# packages the upgrade left unused, typically libraries replaced by a renamed package (a
+# new soname). Only those: packages that were unused before may have been kept on purpose,
+# which is why unattended-upgrades also removes only these by default
+# (Remove-New-Unused-Dependencies), and the full autoremove only on request.
+if ! AUTOREMOVABLE_AFTER=$(list_autoremovable); then
+    log "Listing the unused packages failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(</tmp/system-update-stderr)"
+    exit 1
+fi
+mapfile -t NEW_AUTOREMOVABLE < <(comm -13 <(printf '%s\n' "$AUTOREMOVABLE_BEFORE" | sort) <(printf '%s\n' "$AUTOREMOVABLE_AFTER" | sort) | grep .)
+if ! autoremove_checked 'packages no longer needed after the upgrade' "${NEW_AUTOREMOVABLE[@]}"; then
+    log "Removing the packages no longer needed failed; see /tmp/system-update-stderr"
+    send_msg "$SUBJECT_PREFIX - System update failed" "$(cat /tmp/system-update-stderr /tmp/autoremove-output 2> /dev/null)"
     exit 1
 fi
 
