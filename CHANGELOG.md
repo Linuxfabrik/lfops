@@ -59,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:duplicity**: `duba exec -- <duplicity arguments>` runs any duplicity command (for example `collection-status` or `restore`) with the settings and the password of the backup, without exporting the password into the shell.
 * **role:mongodb, role:repo_mongodb**: Support MongoDB 9.0, also on Debian 13 and Ubuntu 26.04, where upstream offers 9.0 only. MongoDB upgrades to 9.0 from 8.0 only, so upgrade a 7.0 host to 8.0 first.
 * **role:graylog_server**: Add `graylog_server__stream_aware_field_types` to switch stream-aware field types on or off on Graylog 7.3 and later.
-* **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.3.
+* **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.3. It is based on the pre-release 7.3.0-alpha.1 and will be updated for the final 7.3.0 release.
 * **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
 * **role:opensearch**: Supports OpenSearch 3.x. The role README describes the upgrade from 2.x.
 * **playbook:setup_basic**: Deploys the Linuxfabrik package repository on Debian, Ubuntu and RHEL 8 to 10 and their derivatives, right after EPEL; on hosts whose mirror does not serve it, dnf skips it with an error message and apt stops the run (`setup_basic__skip_repo_linuxfabrik`).
