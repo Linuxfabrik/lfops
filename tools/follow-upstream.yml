@@ -192,6 +192,33 @@ elastic:
     - '/etc/logstash/startup.options'
     - '/etc/sysconfig/kibana'
 
+# One template for every release, it follows the newest one. Only the RPM is followed,
+# the gitlab_ce role supports the RHEL family only. The packages are signed with the key
+# of 2025 (`CB947AD886C8E8FD`), the older one (`3D645A26AB9FBD22`) expired in 2025.
+#
+# Install scripts (gitlab-ce 18.4.0 and 19.5.3, RPM): on the first installation, copy
+# gitlab.rb.template to /etc/gitlab/gitlab.rb with the URL of `EXTERNAL_URL`. Later,
+# rewrite `external_url` in gitlab.rb only if `EXTERNAL_URL` differs from it (the
+# gitlab_ce role passes the same URL). Before an upgrade, check the upgrade path and the
+# PostgreSQL version and back up the database and /etc/gitlab; after every installation,
+# run `gitlab-ctl upgrade`. None of them modify the rest of gitlab.rb.
+gitlab_ce:
+  upstream:
+    - 'gitlabhq/gitlabhq'
+  series_parts: 2
+  gpg_key: 'https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey/gitlab-gitlab-ce-CB947AD886C8E8FD.pub.gpg'
+  rpm_repo: 'https://packages.gitlab.com/gitlab/gitlab-ce/el/9/x86_64/'
+  scripts_ignore:
+    # the release series and the oldest one the upgrade check accepts
+    - '^NEW_MAJOR_VERSION='
+    - '^NEW_MINOR_VERSION='
+    - '^\s*MIN_VERSION='
+  files:
+    # the package copies the template to /etc/gitlab/gitlab.rb on the first installation
+    - package: 'gitlab-ce'
+      path: '/opt/gitlab/etc/gitlab.rb.template'
+      template: 'roles/gitlab_ce/templates/etc/gitlab/gitlab.rb.j2'
+
 # Install scripts (grafana 13.2.4, RPM and DEB): on the first installation, copy
 # sample.ini and ldap.toml unchanged to /etc/grafana, then set root:grafana 0640, as the
 # grafana role does.

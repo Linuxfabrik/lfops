@@ -1,5 +1,19 @@
 - block:
 
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  # gitlab.rb uses the gitlab_rails['nginx'] and registry['nginx'] keys, which GitLab only
+  # knows since 19.2; older versions would silently ignore them
+  - name: 'Assert that GitLab is 19.2 or newer'
+    ansible.builtin.assert:
+      that:
+        - 'gitlab_ce__version | default("") | length == 0 or gitlab_ce__version is version("19.2", ">=")'
+        - '"gitlab-ce" not in ansible_facts["packages"] or ansible_facts["packages"]["gitlab-ce"][0]["version"] is version("19.2", ">=")'
+      quiet: true
+      fail_msg: 'This role needs GitLab 19.2 or newer (installed: {{ ansible_facts["packages"]["gitlab-ce"][0]["version"] | default("none") }}, gitlab_ce__version: {{ gitlab_ce__version | default("unset") }}). Upgrade GitLab first, following the GitLab upgrade path.'
+
   - name: 'install gitlab-ce'
     ansible.builtin.package:
       name: 'gitlab-ce'
