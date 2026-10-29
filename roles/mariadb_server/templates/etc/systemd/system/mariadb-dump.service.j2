@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2026102801
+# 2026102802
 
 [Unit]
 Description=mariadbdump Service
 
 [Service]
-ExecStart=/usr/local/bin/mariadb-dump
+ExecStart=/usr/local/libexec/mariadb-dump
 Type=oneshot
 User=root
 {% if __mariadb_server__dump_login_credential_result['encrypted'] | d(false) %}

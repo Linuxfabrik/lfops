@@ -716,12 +716,30 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'Deploy /usr/local/bin/mariadb-dump'
+  # /usr/local/libexec is missing on Debian before trixie and Ubuntu before 26.04, see
+  # roles/schedule_reboot.
+  - name: 'Ensure /usr/local/libexec exists'
+    ansible.builtin.file:
+      path: '/usr/local/libexec'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Only mariadb-dump.service can run the script, since only the unit gets the decrypted login.
+  - name: 'Deploy /usr/local/libexec/mariadb-dump'
     ansible.builtin.template:
       backup: true
-      src: 'usr/local/bin/mariadb-dump.j2'
-      dest: '/usr/local/bin/mariadb-dump'
+      src: 'usr/local/libexec/mariadb-dump.j2'
+      dest: '/usr/local/libexec/mariadb-dump'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
+
+  - name: 'rm -f /usr/local/bin/mariadb-dump'
+    ansible.builtin.file:
+      path: '/usr/local/bin/mariadb-dump'
+      state: 'absent'
 
   - name: 'Deploy /etc/mariadb-dump.conf'
     ansible.builtin.template:
