@@ -85,7 +85,7 @@ Per release: what was done or why nothing was, conflicts and how they were resol
 
 `tools/follow-upstream` needs `{# Based on <package> <version> #}` below the version line of the template header. The Jinja comment does not end up in the deployed file, so adding it changes nothing on the hosts and needs no timestamp bump. To find the version:
 
-1. Fetch the packaged file of the candidate releases of the series (the tool caches them under `~/.cache/lfops-follow-upstream/rpm/<app>/<package>-<version>/root/`). The upstream git tree under `~/git/other` is a good first filter, but packages may rewrite the file (Graylog sets absolute paths), so confirm against the package.
+1. Fetch the packaged file of the candidate releases of the series (the tool caches them under `~/.cache/lfops-follow-upstream/rpm/<app>/<package>-<version>/root/`, `deb/` for an entry with `format: 'deb'`). The upstream git tree under `~/git/other` is a good first filter, but packages may rewrite the file (Graylog sets absolute paths), so confirm against the package.
 2. Diff each against the template (skipping the header). The release with the fewest differing lines is the base. Where several releases ship an identical file, take the newest.
 3. Add the line and rerun the tool.
 

@@ -27,7 +27,8 @@ and:
 
    The upstream changes between the two releases land in the template, the LFOps
    changes are kept. Where both touch the same lines, the template gets conflict
-   markers.
+   markers. A Debian family template whose packaged file differs from the RPM one is
+   merged from the DEB file instead (MongoDB's mongod.conf).
 
    * Same release series (`7.2.0` -> `7.2.1`): the template is merged in place.
    * New release series (`7.2.1` -> `7.3.0`): the template of the latest older series
@@ -57,7 +58,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102704'
+__version__ = '2026102901'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -296,6 +297,9 @@ def check_packaging(app, config, version):
         for entry in entries:
             known.add(entry['path'])
             known.add(entry.get('deb_path', entry['path']))
+        # files the DEB ships with other content than the RPM on purpose, so they have
+        # a template of their own (MongoDB's mongod.conf)
+        separate = {entry['path'] for entry in entries if entry.get('format') == 'deb'}
 
         for fmt in fmts:
             for path in sorted(files[fmt] - known):
@@ -319,15 +323,20 @@ def check_packaging(app, config, version):
                 continue
             rpm_path = entry['path']
             deb_path = entry.get('deb_path', rpm_path)
+            paths = {'rpm': rpm_path, 'deb': deb_path}
+            if entry.get('format') == 'deb':
+                del paths['rpm']
+            elif rpm_path in separate:
+                del paths['deb']
             missing = False
-            for fmt, path in (('rpm', rpm_path), ('deb', deb_path)):
+            for fmt, path in paths.items():
                 if fmt in files and path not in files[fmt]:
                     print(
                         f'packaging: {package} {version} ({fmt}) no longer ships {path}'
                     )
                     findings += 1
                     missing = True
-            if missing or 'deb' not in roots:
+            if missing or len(paths) < 2 or 'deb' not in roots:
                 continue
             rpm_file = package_file(roots['rpm'], rpm_path)
             deb_file = package_file(roots['deb'], deb_path)
@@ -461,16 +470,28 @@ def update_header(text, package, version, old_series, new_series, bump=True):
 
 
 def add_supported_version(spec, series):
-    """Add `series` to the YAML list `file:variable` in version order, keeping comments."""
+    """Add `series` to the YAML list `file:variable` in version order, keeping comments.
+
+    `file:variable.key` addresses the list below the key `key` of the dictionary
+    `variable`, e.g. one list per OS family.
+    """
     path, variable = spec.split(':')
     path = os.path.join(REPO_ROOT, path)
     with open(path, encoding='utf-8') as f:
         lines = f.read().splitlines(keepends=True)
-    start = next(i for i, line in enumerate(lines) if line.startswith(f'{variable}:'))
+    keys = variable.split('.')
+    start = -1
+    for depth, key in enumerate(keys):
+        start = next(
+            i
+            for i, line in enumerate(lines)
+            if i > start and line.startswith(f'{"  " * depth}{key}:')
+        )
+    item = '  ' * len(keys) + '- '
     end = start + 1
-    while end < len(lines) and lines[end].startswith('  - '):
+    while end < len(lines) and lines[end].startswith(item):
         end += 1
-    if f"  - '{series}'\n" in lines[start + 1 : end]:
+    if f"{item}'{series}'\n" in lines[start + 1 : end]:
         return
     # before the first newer entry, so a series of an older line (25.04.14 after 26.04.4
     # was released) does not end up at the bottom
@@ -481,7 +502,7 @@ def add_supported_version(spec, series):
         ):
             position = i
             break
-    lines.insert(position, f"  - '{series}'\n")
+    lines.insert(position, f"{item}'{series}'\n")
     with open(path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
     print(f'  added {series} to {os.path.relpath(path, REPO_ROOT)}')
@@ -535,21 +556,22 @@ def update_file(app, config, entry, version, dry_run):
         print(f'{rel_source}: based on {base}, already covers {version}')
         return 'covered'
 
-    base_file = package_file(
-        fetch(app, config, 'rpm', entry['package'], base), entry['path']
-    )
+    # the template is a copy of the RPM file, unless the entry names the DEB
+    fmt = entry.get('format', 'rpm')
+    packaged = entry.get('deb_path', entry['path']) if fmt == 'deb' else entry['path']
+    base_file = package_file(fetch(app, config, fmt, entry['package'], base), packaged)
     new_file = package_file(
-        fetch(app, config, 'rpm', entry['package'], version), entry['path']
+        fetch(app, config, fmt, entry['package'], version), packaged
     )
     for path, release in ((base_file, base), (new_file, version)):
         if not os.path.isfile(path):
-            print(f'{rel_source}: {entry["package"]} {release} has no {entry["path"]}')
+            print(f'{rel_source}: {entry["package"]} {release} has no {packaged}')
             return 'error'
 
     with open(base_file, 'rb') as f1, open(new_file, 'rb') as f2:
         upstream_changed = f1.read() != f2.read()
     if not upstream_changed and source == target:
-        print(f'{rel_source}: {entry["path"]} is identical in {base} and {version}')
+        print(f'{rel_source}: {packaged} is identical in {base} and {version}')
         if not dry_run:
             with open(source, encoding='utf-8') as f:
                 text = f.read()
