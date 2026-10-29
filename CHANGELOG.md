@@ -172,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: On Debian and Ubuntu, the update check before the update window waits for a busy package manager and reports a failed refresh of the package lists, instead of silently announcing updates from stale lists.
 * **role:system_update**: On Debian and Ubuntu, the weekly update waits up to 10 minutes for the apt and dpkg locks instead of failing when, for example, an Ansible run holds them.
 * **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
 * **role:system_update**: On Debian and Ubuntu, the journal of the weekly update no longer shows `yes: standard output: Broken pipe`.

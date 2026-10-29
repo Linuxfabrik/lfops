@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026082501
+# 2026102901
 
 # Check for available updates and notify the administrators. This is informational
 # only: the update is applied later by update-and-reboot.service at the maintenance
@@ -50,6 +50,28 @@ makecache_with_retry () {
         [ "$attempt" -lt 3 ] && { log "Metadata refresh attempt $attempt failed; retrying in 60s"; sleep 60; }
     done
     return 1
+}
+{% endif %}
+
+{% if ansible_facts['os_family'] == 'Debian' %}
+run_waiting_for_lock () {
+    # apt-get update gives up at once when another process holds the lock of
+    # /var/lib/apt/lists, with or without DPkg::Lock::Timeout. This check runs on a weekday
+    # morning, when an Ansible run or an admin in apt is likely, and a lost refresh would
+    # report from stale package lists. So retry for up to 10 minutes, but only on a lock
+    # error, like update-and-reboot does.
+    # $1 is where the command's stdout goes; a redirection on the call would swallow the
+    # log lines of this function as well. Writes stderr to /tmp/system-update-check-stderr.
+    # Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13).
+    local attempt out="$1" rc
+    shift
+    for attempt in 1 2 3 4 5 6 7 8 9 10; do
+        "$@" > "$out" 2> /tmp/system-update-check-stderr && return 0
+        rc=$?
+        grep --quiet --extended-regexp 'Could not get lock|(is|was) locked by' /tmp/system-update-check-stderr || return "$rc"
+        [ "$attempt" -lt 10 ] && { log "Waiting for the package manager lock (attempt $attempt of 10)"; sleep 60; }
+    done
+    return "$rc"
 }
 {% endif %}
 
@@ -109,8 +131,15 @@ fi
 
 {% if ansible_facts['os_family'] == 'Debian' %}
 {% if not system_update__cache_only | bool %}
-apt clean 1> /dev/null 2>&1
-apt update 1> /dev/null 2>&1
+apt-get clean 1> /dev/null 2>&1
+# apt-get update exits 0 when a mirror merely fails to answer, and non-zero on hard errors
+# such as an unreadable sources list or a lock held for longer than the retries wait.
+# Verified against apt 2.6 on Debian 12.
+if ! run_waiting_for_lock /dev/null apt-get update; then
+    log "Metadata refresh failed; see /tmp/system-update-check-stderr"
+    send_msg "$SUBJECT_PREFIX - System update check failed" "$(</tmp/system-update-check-stderr)"
+    exit 1
+fi
 {% endif %}
 apt list --upgradable >> /tmp/check-update
 

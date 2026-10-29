@@ -86,6 +86,89 @@
       ansible.builtin.assert:
         that: '__molecule__notify_and_schedule_result["stdout"] == "success"'
 
+    # Debian family: the metadata refresh of the check lane has to wait for a held apt lists
+    # lock, and has to fail with a mail instead of reporting from stale lists when the
+    # sources cannot be read (apt-get update exits 100 on a malformed entry). Verified
+    # against apt 3.0 on Debian 13 and 2.4 on Ubuntu 22.04.
+    - block:
+
+      - name: 'date +%s (start of the check-lane runs)'
+        ansible.builtin.command: 'date +%s'
+        register: '__molecule__notify_since_result'
+        changed_when: false
+
+      # apt locks with fcntl(), as does lockf() of Python. 90 seconds outlast the first attempt
+      # of the run and the 60 seconds it then waits, so the run has to wait at least once.
+      - name: 'Hold the apt lists lock in the background'
+        ansible.builtin.command: >-
+          python3 -c "import fcntl, pathlib, time;
+          f = open('/var/lib/apt/lists/lock', 'a');
+          fcntl.lockf(f, fcntl.LOCK_EX);
+          pathlib.Path('/run/lfops-notify-test-lock-held').touch();
+          time.sleep(90)"
+        async: 120
+        poll: 0
+        changed_when: false
+
+      - name: 'Wait until the apt lists lock is held'
+        ansible.builtin.wait_for:
+          path: '/run/lfops-notify-test-lock-held'
+          timeout: 30
+
+      - name: 'systemctl start notify-and-schedule.service (apt lists lock held)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+        ansible.builtin.command: 'systemctl start notify-and-schedule.service'
+        changed_when: false
+
+      - name: 'systemctl show --property=Result notify-and-schedule.service (apt lists lock held)' # noqa command-instead-of-module (no module reads a oneshot Result)
+        ansible.builtin.command: 'systemctl show --property=Result --value notify-and-schedule.service'
+        register: '__molecule__notify_locked_result'
+        changed_when: false
+
+      - name: 'Deploy /etc/apt/sources.list.d/lfops-notify-test.list (malformed)'
+        ansible.builtin.copy:
+          content: |
+            deb http://deb.example.com
+          dest: '/etc/apt/sources.list.d/lfops-notify-test.list'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'systemctl start notify-and-schedule.service (malformed sources)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+        ansible.builtin.command: 'systemctl start notify-and-schedule.service'
+        register: '__molecule__notify_broken_start_result'
+        changed_when: false
+        failed_when: '__molecule__notify_broken_start_result["rc"] == 0'
+
+      - name: 'journalctl --unit=notify-and-schedule.service (check-lane runs of this block)' # noqa command-instead-of-module (no module reads the journal)
+        ansible.builtin.command: 'journalctl --unit=notify-and-schedule.service --since=@{{ __molecule__notify_since_result["stdout"] }} --output=cat --no-pager'
+        register: '__molecule__notify_journal_result'
+        changed_when: false
+
+      - name: 'Assert the check lane waited for the lock, and failed on unreadable sources'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__notify_locked_result["stdout"] == "success"'
+            - '__molecule__notify_journal_result["stdout"] is search("Waiting for the package manager lock")'
+            - '__molecule__notify_journal_result["stdout"] is search("Metadata refresh failed")'
+
+      always:
+
+      - name: 'rm -f the check-lane fixtures'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop:
+          - '/etc/apt/sources.list.d/lfops-notify-test.list'
+          - '/run/lfops-notify-test-lock-held'
+
+      - name: 'systemctl reset-failed notify-and-schedule.service' # noqa command-instead-of-module (no module resets a failed unit)
+        ansible.builtin.command: 'systemctl reset-failed notify-and-schedule.service'
+        changed_when: false
+        failed_when: false
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
     - name: 'systemctl is-active security-update.timer (Rocky only)' # noqa command-instead-of-module (read-only state query)
       ansible.builtin.command: 'systemctl is-active security-update.timer'
       register: '__molecule__security_timer_active_result'
