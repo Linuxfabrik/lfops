@@ -340,6 +340,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:schedule_reboot**: The Icinga2 API login and the Rocket.Chat webhook URL are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/usr/local/libexec/do-reboot`. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. If the credentials cannot be decrypted, the host still reboots, without the downtime and the chat message.
 * **role:duplicity**: The Swift or SFTP password is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/duba/duba.json`, so it is no longer readable in a backup of `/etc`. The old copies of `duba.json` are deleted. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`. Restores that read the password from `duba.json` have to switch to `duba exec`.
 * **role:nextcloud**: The vHost blocks `3rdparty/`, `lib/`, `config/`, `data/`, `occ` and `console.php` as Nextcloud's `.htaccess` intends; until now its rules never matched, so anyone could read the versions of all bundled libraries and call internal PHP files directly.
 * **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.

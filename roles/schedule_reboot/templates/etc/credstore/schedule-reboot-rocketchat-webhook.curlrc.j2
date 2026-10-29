@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026102901
+
+# The Rocket.Chat webhook URL, which carries its token, stored as the systemd credential
+# `schedule-reboot-rocketchat-webhook.curlrc` (encrypted in /etc/credstore.encrypted/ with
+# systemd 251 and newer, else in /etc/credstore/). do-reboot passes it to `curl --config`
+# through a pipe, so that the token does not show up in the process list. Inside double
+# quotes, curl unescapes `\\` and `\"`.
+
+url = "{{ schedule_reboot__rocketchat_url | replace('\\', '\\\\') | replace('"', '\\"') }}"

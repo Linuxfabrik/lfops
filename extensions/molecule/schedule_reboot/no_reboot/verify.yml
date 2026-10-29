@@ -37,8 +37,7 @@
           - '__molecule__spool_stat_result["stat"]["isdir"]'
           - '__molecule__spool_stat_result["stat"]["mode"] == "0755"'
 
-    # do-reboot carries the credentials of the Icinga API user and the Rocket.Chat webhook, and
-    # only schedule-reboot.service runs it.
+    # only schedule-reboot.service runs do-reboot
     - name: 'stat /usr/local/libexec/do-reboot'
       ansible.builtin.stat:
         path: '/usr/local/libexec/do-reboot'

@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# 2026102901
+
+# Login of the Icinga2 downtime API user, stored as the systemd credential
+# `schedule-reboot-icinga2-login.curlrc` (encrypted in /etc/credstore.encrypted/ with systemd
+# 251 and newer, else in /etc/credstore/). do-reboot passes it to `curl --config` through a
+# pipe, so that the login does not show up in the process list.
+
+header = "Authorization: Basic {{ (schedule_reboot__icinga2_api_user_login['username'] ~ ':' ~ schedule_reboot__icinga2_api_user_login['password']) | b64encode }}"

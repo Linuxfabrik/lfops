@@ -1,17 +1,21 @@
 # Destructive verify: actually reboot the host through the CLI and confirm it
 # came back (boot_id changed) with an empty spool (tmpfs cleared on reboot), that
 # the notification do-reboot sent on the way down is a well-formed message, and
-# that its downtime request reached the Icinga2 API.
+# that its downtime request and chat message reached their stand-ins. A second
+# reboot with an unreadable Rocket.Chat credential proves that do-reboot still
+# reboots without it.
 - name: 'Verify schedule_reboot performs a real reboot'
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
 
     # A stand-in for the Icinga2 API on the host itself, listening where the inventory
-    # points (icinga2_agent__icinga2_master_cn: 'localhost'). do-reboot POSTs the
-    # downtime to it on the way down, and the stand-in writes the request to disk before
-    # answering, so it can be read back after the reboot. It has to answer: do-reboot
-    # only limits curl's connect time, so a silent endpoint would stall the reboot.
+    # points (icinga2_agent__icinga2_master_cn: 'localhost'), and for the Rocket.Chat
+    # webhook (plain HTTP on port 3000, since that curl call verifies certificates).
+    # do-reboot POSTs to both on the way down, and the stand-in writes each request to
+    # disk before answering, so it can be read back after the reboot. It has to answer:
+    # do-reboot only limits curl's connect time, so a silent endpoint would stall the
+    # reboot.
     - name: 'mkdir -p /var/tmp/molecule-icinga2-api'
       ansible.builtin.file:
         path: '/var/tmp/molecule-icinga2-api'
@@ -40,6 +44,7 @@
           import http.server
           import os
           import ssl
+          import threading
 
           BASE = '/var/tmp/molecule-icinga2-api'
 
@@ -57,6 +62,9 @@
                   self.end_headers()
                   self.wfile.write(b'{"results": []}')
 
+
+          chat = http.server.HTTPServer(('127.0.0.1', 3000), Handler)
+          threading.Thread(target=chat.serve_forever, daemon=True).start()
 
           context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
           context.load_cert_chain(BASE + '/cert.pem', BASE + '/key.pem')
@@ -76,11 +84,50 @@
         /var/tmp/molecule-icinga2-api/server.py
       changed_when: false
 
-    - name: 'Wait for the Icinga2 API stand-in on 127.0.0.1:5665'
+    - name: 'Wait for the stand-ins on 127.0.0.1:5665 and 127.0.0.1:3000'
       ansible.builtin.wait_for:
         host: '127.0.0.1'
-        port: 5665
+        port: '{{ item }}'
         timeout: 30
+      loop:
+        - 5665
+        - 3000
+
+    # The secrets live in systemd credentials, not in the script, so a --diff or a copy
+    # of the script reveals neither.
+    - name: 'slurp /usr/local/libexec/do-reboot'
+      ansible.builtin.slurp:
+        src: '/usr/local/libexec/do-reboot'
+      register: '__molecule__do_reboot_script_result'
+
+    - name: 'Assert that do-reboot contains neither the Icinga2 login nor the webhook URL'
+      ansible.builtin.assert:
+        that:
+          - '(__molecule__expected_credentials | ansible.builtin.b64encode) not in __molecule__do_reboot_script'
+          - 'schedule_reboot__rocketchat_url not in __molecule__do_reboot_script'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+        __molecule__do_reboot_script: '{{ __molecule__do_reboot_script_result["content"] | ansible.builtin.b64decode }}'
+
+    # encrypted with systemd 251 and newer, plain text in /etc/credstore before
+    - name: 'stat the credentials in /etc/credstore.encrypted and /etc/credstore'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/etc/credstore.encrypted/schedule-reboot-icinga2-login.curlrc'
+        - '/etc/credstore.encrypted/schedule-reboot-rocketchat-webhook.curlrc'
+        - '/etc/credstore/schedule-reboot-icinga2-login.curlrc'
+        - '/etc/credstore/schedule-reboot-rocketchat-webhook.curlrc'
+      register: '__molecule__credential_stat_result'
+
+    - name: 'Assert that both credentials are in one of the stores'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__credentials | select("search", "/schedule-reboot-icinga2-login.curlrc$") | list | length == 1'
+          - '__molecule__credentials | select("search", "/schedule-reboot-rocketchat-webhook.curlrc$") | list | length == 1'
+        fail_msg: '{{ __molecule__credentials }}'
+      vars:
+        __molecule__credentials: '{{ __molecule__credential_stat_result["results"] | selectattr("stat.exists") | map(attribute="item") | list }}'
 
     - name: 'slurp /proc/sys/kernel/random/boot_id (before)'
       ansible.builtin.slurp:
@@ -149,18 +196,93 @@
     # The stand-in is gone with the reboot, its record is not. A request that arrived
     # proves the whole chain: the API URL derived from icinga2_agent__icinga2_master_cn
     # and the credentials from icinga2_master__downtime_api_user, both without their
-    # roles in the play, the rendered do-reboot, and curl reaching the endpoint from
-    # schedule-reboot.service. A missing file means that nothing arrived.
+    # roles in the play, the credential do-reboot decrypted, and curl reaching the
+    # endpoint from schedule-reboot.service. A missing file means that nothing arrived.
     - name: 'slurp /var/tmp/molecule-icinga2-api/requests.log'
       ansible.builtin.slurp:
         src: '/var/tmp/molecule-icinga2-api/requests.log'
       register: '__molecule__icinga2_api_requests_result'
 
-    - name: 'Assert that do-reboot requested the downtime with the downtime API user'
+    - name: 'Assert that do-reboot requested the downtime and sent the chat message'
       ansible.builtin.assert:
         that:
           - '"/v1/actions/schedule-downtime" in __molecule__icinga2_api_requests'
           - '("Basic " ~ (__molecule__expected_credentials | ansible.builtin.b64encode)) in __molecule__icinga2_api_requests'
+          - '"/hooks/molecule/linuxfabrik" in __molecule__icinga2_api_requests'
+        fail_msg: '{{ __molecule__icinga2_api_requests }}'
       vars:
         __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
         __molecule__icinga2_api_requests: '{{ (__molecule__icinga2_api_requests_result["content"] | ansible.builtin.b64decode).splitlines() }}'
+
+    # Second reboot: a credential do-reboot cannot read (with a TPM2 chip, after a Secure
+    # Boot change) must cost the chat message, not the reboot. Garbage in the encrypted
+    # store fails `systemd-creds decrypt`, a missing file in the plain store fails `cat`.
+    - name: 'systemd-run --unit=molecule-icinga2-api python3 /var/tmp/molecule-icinga2-api/server.py (again)'
+      ansible.builtin.command: >
+        systemd-run --unit=molecule-icinga2-api
+        {{ ansible_facts["discovered_interpreter_python"] | d("/usr/bin/python3") }}
+        /var/tmp/molecule-icinga2-api/server.py
+      changed_when: false
+
+    - name: 'Wait for the stand-ins on 127.0.0.1:5665 and 127.0.0.1:3000 (again)'
+      ansible.builtin.wait_for:
+        host: '127.0.0.1'
+        port: '{{ item }}'
+        timeout: 30
+      loop:
+        - 5665
+        - 3000
+
+    - name: 'Break the credential schedule-reboot-rocketchat-webhook.curlrc'
+      ansible.builtin.copy:
+        content: 'molecule'
+        dest: '/etc/credstore.encrypted/schedule-reboot-rocketchat-webhook.curlrc'
+        mode: 0o600
+      when: '"/etc/credstore.encrypted/schedule-reboot-rocketchat-webhook.curlrc" in __molecule__credentials'
+      vars:
+        __molecule__credentials: '{{ __molecule__credential_stat_result["results"] | selectattr("stat.exists") | map(attribute="item") | list }}'
+
+    - name: 'rm -f /etc/credstore/schedule-reboot-rocketchat-webhook.curlrc'
+      ansible.builtin.file:
+        path: '/etc/credstore/schedule-reboot-rocketchat-webhook.curlrc'
+        state: 'absent'
+
+    - name: 'slurp /proc/sys/kernel/random/boot_id (before the second reboot)'
+      ansible.builtin.slurp:
+        src: '/proc/sys/kernel/random/boot_id'
+      register: '__molecule__boot_id_before_second_result'
+
+    - name: 'schedule-reboot --now ci-reboot molecule-reboot-test (unreadable webhook)'
+      ansible.builtin.command: 'schedule-reboot --now ci-reboot molecule-reboot-test'
+      async: 1
+      poll: 0 # fire and forget: the reboot drops the connection, do not wait on it
+      changed_when: false
+
+    - name: 'Wait for the host to come back after the second reboot'
+      ansible.builtin.wait_for_connection:
+        delay: 15
+        sleep: 5
+        timeout: 300
+
+    - name: 'slurp /proc/sys/kernel/random/boot_id (after the second reboot)'
+      ansible.builtin.slurp:
+        src: '/proc/sys/kernel/random/boot_id'
+      register: '__molecule__boot_id_after_second_result'
+
+    - name: 'Assert the boot_id changed, proving do-reboot rebooted without the webhook'
+      ansible.builtin.assert:
+        that: '__molecule__boot_id_after_second_result["content"] != __molecule__boot_id_before_second_result["content"]'
+
+    - name: 'slurp /var/tmp/molecule-icinga2-api/requests.log (after the second reboot)'
+      ansible.builtin.slurp:
+        src: '/var/tmp/molecule-icinga2-api/requests.log'
+      register: '__molecule__icinga2_api_requests_second_result'
+
+    - name: 'Assert that the second reboot requested the downtime but sent no chat message'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icinga2_api_requests | select("eq", "/v1/actions/schedule-downtime") | list | length == 2'
+          - '__molecule__icinga2_api_requests | select("eq", "/hooks/molecule/linuxfabrik") | list | length == 1'
+        fail_msg: '{{ __molecule__icinga2_api_requests }}'
+      vars:
+        __molecule__icinga2_api_requests: '{{ (__molecule__icinga2_api_requests_second_result["content"] | ansible.builtin.b64decode).splitlines() }}'
