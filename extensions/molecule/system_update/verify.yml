@@ -376,6 +376,9 @@
     #   lfops-test-orphan is auto-removable but no kernel and has to stay.
     #   Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04, in
     #   containers.
+    # * An interrupted dpkg: a journal file in /var/lib/dpkg/updates/ has to be repaired with
+    #   dpkg --configure -a instead of failing the upgrade.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
     # * A held lock: the lists lock is held when the run starts, so its apt-get update has to
     #   wait for it instead of failing.
     #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
@@ -426,6 +429,14 @@
         ansible.builtin.dpkg_selections:
           name: 'linux-image-6.0.0-2-lfops-test'
           selection: 'hold'
+
+      - name: 'touch /var/lib/dpkg/updates/0001 (an interrupted dpkg)'
+        ansible.builtin.file:
+          path: '/var/lib/dpkg/updates/0001'
+          state: 'touch'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
 
       # apt locks with fcntl(), as does lockf() of Python. 90 seconds outlast the first attempt
       # of the run and the 60 seconds it then waits, so the run has to wait at least once.
@@ -501,12 +512,19 @@
         register: '__molecule__update_first_journal_result'
         changed_when: false
 
-      - name: 'Assert the first run waited for the lock and removed the unused kernel only'
+      - name: 'stat /var/lib/dpkg/updates/0001'
+        ansible.builtin.stat:
+          path: '/var/lib/dpkg/updates/0001'
+        register: '__molecule__dpkg_journal_stat_result'
+
+      - name: 'Assert the first run repaired dpkg, waited for the lock and removed the unused kernel only'
         ansible.builtin.assert:
           that:
             - '"linux-image-6.0.0-1-lfops-test" not in ansible_facts["packages"]'
             - '"linux-image-6.0.0-2-lfops-test" in ansible_facts["packages"]'
             - '"lfops-test-orphan" in ansible_facts["packages"]'
+            - 'not __molecule__dpkg_journal_stat_result["stat"]["exists"]'
+            - '__molecule__update_first_journal_result["stdout"] is search("dpkg was interrupted; running dpkg --configure -a")'
             - '__molecule__update_first_journal_result["stdout"] is search("Waiting for the package manager lock")'
             - '__molecule__update_first_journal_result["stdout"] is search("Removing unused kernel packages:.* linux-image-6.0.0-1-lfops-test")'
 

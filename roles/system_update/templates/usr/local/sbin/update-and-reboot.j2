@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102804
+# 2026102805
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -272,6 +272,23 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 # set by autoremove_checked, one line per removal; leads the update mail
 REMOVED_REPORT=''
+
+# a dpkg run that was cut short (crash, OOM kill, a reboot from outside) leaves its journal
+# in /var/lib/dpkg/updates/, and from then on every apt-get upgrade stops with "dpkg was
+# interrupted, you must manually run 'dpkg --configure -a'". Without this the host would
+# miss every update until someone fixes it by hand. unattended-upgrades does the same
+# (AutoFixInterruptedDpkg, on by default), with the same check for the journal files.
+# Verified against dpkg 1.22 on Debian 13.
+if compgen -G '/var/lib/dpkg/updates/[0-9]*' > /dev/null; then
+    log "dpkg was interrupted; running dpkg --configure -a"
+    if ! run_waiting_for_lock /tmp/dpkg-configure-output dpkg --force-confdef --force-confold --configure -a; then
+        log "dpkg --configure -a failed; see /tmp/system-update-stderr"
+        send_msg "$SUBJECT_PREFIX - System update failed" "dpkg was interrupted earlier, and dpkg --configure -a could not repair it:
+
+$(cat /tmp/system-update-stderr /tmp/dpkg-configure-output)"
+        exit 1
+    fi
+fi
 
 # apt-get update exits 0 when a mirror merely fails to answer, printing a `W: Failed to
 # fetch` warning and carrying on with the old lists; it only reports a non-zero status

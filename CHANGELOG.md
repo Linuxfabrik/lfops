@@ -171,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **role:system_update**: On Debian and Ubuntu, the weekly update waits up to 10 minutes for the apt and dpkg locks instead of failing when, for example, an Ansible run holds them.
+* **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
 * **role:system_update**: On Debian and Ubuntu, the journal of the weekly update no longer shows `yes: standard output: Broken pipe`.
 * **role:system_update**: On Debian and Ubuntu, the weekly update removes kernels apt no longer needs before installing new ones, the way unattended-upgrades does, so old kernels no longer fill up `/boot`. The running kernel, the newest one and held packages are kept.
 * **role:mongodb**: The file-based dump (`mongodb__dump_method_file_based`) locks the instance also with authorization enabled and works on Debian and Ubuntu, and a dump that cannot lock the instance fails instead of copying the data files of the running instance.
