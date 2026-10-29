@@ -1,13 +1,17 @@
 # {{ ansible_managed }}
-# 2026101301
+# 2026102901
 
 [Unit]
 Description=MongoDB Dump Service
 
 [Service]
-ExecStart=/usr/local/sbin/mongodb-dump
+ExecStart=/usr/local/libexec/mongodb-dump
 Type=oneshot
 User=root
+{% if __mongodb__dump_login_credential_result['encrypted'] | d(false) %}
+# decrypted to $CREDENTIALS_DIRECTORY on every start
+LoadCredentialEncrypted=mongodb-dump-login.json
+{% endif %}
 # the dump must not slow down mongod and the applications behind it. Nice= and the CPU / IO
 # weights (default 100) only matter under contention, so an idle host dumps at full speed.
 # best-effort instead of idle: with `mongodb__dump_method_file_based` the instance stays

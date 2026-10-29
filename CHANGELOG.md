@@ -109,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mongodb**: The dump script is installed as `/usr/local/libexec/mongodb-dump`, since it only works when started by `mongodb-dump.service`.
 * **role:elasticsearch**: The query log of Elasticsearch 9.5 (`*_querylog.json`) is deleted after `elasticsearch__log4j2_retention_days`, like the other logs.
 * **role:telegraf**: `telegraf.conf` follows the file that current Telegraf packages ship. The effective settings stay the same, but deploying the file restarts Telegraf once.
 * **role:opensearch**: `/etc/sysconfig/opensearch` adds the native library path of the Neural Search plugin, as the OpenSearch package does.
@@ -321,6 +322,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
