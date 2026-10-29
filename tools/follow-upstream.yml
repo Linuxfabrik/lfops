@@ -384,6 +384,32 @@ proxysql:
     - '/etc/systemd/system/proxysql-initial.service'
     - '/etc/systemd/system/proxysql.service'
 
+# The templates are copies of Remi's RPM (modular repository, one `redis:remi-<series>`
+# stream per series), and the redis role deploys them on Debian and Ubuntu as well. The
+# DEB of packages.redis.io ships a different redis.conf (`loadmodule` lines, other
+# comments), so it is not followed. Remi builds no 7.4, so the 7.4 template has no
+# `Based on` line and is not followed. Remi keeps the two latest builds per stream only:
+# a template whose base release is no longer in the repository cannot be merged.
+#
+# Install scripts (redis 7.0.15, 7.2.17, 8.0.6, 8.2.11 and 8.8.4, RPM): create the user,
+# register the units, and move a /etc/redis.conf of old packages to /etc/redis/; they
+# never modify an existing /etc/redis/redis.conf.
+redis:
+  upstream:
+    - 'redis/redis'
+  series_parts: 2
+  gpg_key: 'https://rpms.remirepo.net/enterprise/9/RPM-GPG-KEY-remi'
+  rpm_repo: 'https://rpms.remirepo.net/enterprise/9/modular/x86_64/'
+  files:
+    - package: 'redis'
+      path: '/etc/redis/redis.conf'
+      template: 'roles/redis/templates/etc/redis/{series}-redis.conf.j2'
+      supported_versions: 'roles/redis/vars/main.yml:__redis__supported_versions'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/logrotate.d/redis'
+    - '/etc/redis/sentinel.conf'
+
 # Install scripts (telegraf 1.40.2, RPM): create the user and group, move an old
 # /etc/opt/telegraf to /etc/telegraf, keeping a backup of telegraf.conf, enable the
 # service and try-restart it on upgrade. Their copy of telegraf.conf.sample to a missing
