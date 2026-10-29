@@ -20,5 +20,5 @@ mongodb__users__group_var:
     database: 'molecule'
     roles: 'readWrite'
 
-# Ubuntu 24.04 only gets 8.0.
-repo_mongodb__version: '8.0'
+# The newest series; host_vars/ keeps 8.0 on one host per OS family.
+repo_mongodb__version: '9.0'

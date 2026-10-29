@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mongodb, role:repo_mongodb**: Support MongoDB 9.0, also on Debian 13 and Ubuntu 26.04, where upstream offers 9.0 only. MongoDB upgrades to 9.0 from 8.0 only, so upgrade a 7.0 host to 8.0 first.
 * **role:graylog_server**: Add `graylog_server__stream_aware_field_types` to switch stream-aware field types on or off on Graylog 7.3 and later.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.3.
 * **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
@@ -178,6 +179,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **plugin:gpg_key, plugin:nextcloud_occ_app, plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config**: The modules no longer fail with `env: 'python3': No such file or directory` on RHEL 8 hosts that have no `python3` installed, for example when a run skips the role that installs it, and without Mitogen. All in-house modules use the Python found by interpreter discovery or set in `ansible_python_interpreter`, like the modules of ansible-core.
+* **role:repo_mongodb**: The repository for MongoDB 8.2 and 8.3 can be installed, the role fetched a signing key that does not exist.
 * **role:librenms**: Renaming an API token or changing its expiry in the web interface works again, as do the API v0 calls that update devices, device groups, locations, ports and services. Apache rejected their `PATCH` requests.
 * **role:nextcloud**: `nextcloud-ldap-show-remnants.timer` reports the LDAP remnants once a month; until now it started the app update instead.
 * **role:nextcloud**: CalDAV and CardDAV clients find their endpoints through `/.well-known/caldav` and `/.well-known/carddav` without a reverse proxy that redirects them, and `/remote/`, `/ocm-provider/` and the other `.well-known` URLs reach Nextcloud again.
