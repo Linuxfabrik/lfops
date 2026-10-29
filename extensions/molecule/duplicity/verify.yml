@@ -304,6 +304,43 @@
         path: '{{ __molecule__default_target_stat_result["results"][0]["stat"]["path"] }}'
         state: 'absent'
 
+    # duplicity aborts a restore with exit code 35 if the temp dir is too small, duba warns
+    # beforehand. 100 MB is below what any duplicity version requires.
+    - name: 'mkdir /mnt/duba-molecule-tmp'
+      ansible.builtin.file:
+        path: '/mnt/duba-molecule-tmp'
+        state: 'directory'
+        mode: 0o700
+
+    - name: 'mount -t tmpfs -o size=100M tmpfs /mnt/duba-molecule-tmp'
+      ansible.builtin.command: 'mount -t tmpfs -o size=100M tmpfs /mnt/duba-molecule-tmp'
+      changed_when: false
+
+    - name: 'TMPDIR=/mnt/duba-molecule-tmp duba restore --target=/var/tmp/molecule-restore-small-tmp /srv/duba-molecule/plain/file.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --target=/var/tmp/molecule-restore-small-tmp /srv/duba-molecule/plain/file.txt'
+      environment:
+        TMPDIR: '/mnt/duba-molecule-tmp'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_restore_small_tmp_result'
+
+    - name: 'umount /mnt/duba-molecule-tmp'
+      ansible.builtin.command: 'umount /mnt/duba-molecule-tmp'
+      changed_when: false
+
+    - name: 'rm -rf /var/tmp/molecule-restore-small-tmp'
+      ansible.builtin.file:
+        path: '/var/tmp/molecule-restore-small-tmp'
+        state: 'absent'
+
+    - name: 'Assert that duba warned about the small temp dir, and duplicity aborted with 35'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_restore_small_tmp_result["rc"] == 35'
+          - '"/mnt/duba-molecule-tmp has" in __molecule__duba_restore_small_tmp_result["stderr"]'
+          - '"will abort with exit code 35" in __molecule__duba_restore_small_tmp_result["stderr"]'
+        fail_msg: '{{ __molecule__duba_restore_small_tmp_result | to_json }}'
+
     # a divided source is one backup per entry, duba refuses to restore it as a whole (212)
     - name: 'duba restore /srv/duba-molecule/divided'
       ansible.builtin.command: '/usr/local/bin/duba restore /srv/duba-molecule/divided'

@@ -20,7 +20,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102904'
+__version__ = '2026102905'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -47,8 +47,8 @@ examples:
 
 COMMANDS = ['backup', 'exec', 'restore']
 
-# The size of a backup volume in MB. A restore downloads one or two of them into the temp dir
-# at a time.
+# The size of a backup volume in MB. It is also the default of duplicity, which a restore
+# uses for its check of the temp dir, see warn_on_low_space().
 VOLSIZE_MB = 200
 
 # The secret environment variables (SWIFT_PASSWORD, FTP_PASSWORD) are not in the config file,
@@ -529,14 +529,19 @@ class Duba:
                     f'{target} has {free // 2**20} MB free, the local copy of {path} has'
                     f' {size // 2**20} MB'
                 )
-        # duplicity uses the same temp dir (TMPDIR, else /tmp)
+        # duplicity uses the same temp dir (TMPDIR, else /tmp). On start, it aborts with exit
+        # code 35 if the temp dir has less than (concurrency + 2) volumes plus 30% of one
+        # free, (concurrency + 1) before duplicity 3.0.1. A restore runs without concurrency.
+        # Verified against the duplicity source, rel.0.8.23 to rel.3.2.1 (check_resources()).
+        volumes = 2 if self.duplicity_version >= (3, 0, 1) else 1
+        need_mb = int((volumes + 0.3) * VOLSIZE_MB)
         tempdir = tempfile.gettempdir()
         stat = os.statvfs(tempdir)
         free = stat.f_bavail * stat.f_frsize
-        if free < 2 * VOLSIZE_MB * 2**20:
+        if free < need_mb * 2**20:
             self.logger.warning(
-                f'{tempdir} has {free // 2**20} MB free, duplicity needs about'
-                f' {2 * VOLSIZE_MB} MB there for the downloaded volumes (set TMPDIR to change it)'
+                f'{tempdir} has {free // 2**20} MB free, duplicity needs {need_mb} MB there'
+                f' and will abort with exit code 35 (set TMPDIR to use another dir)'
             )
 
 
