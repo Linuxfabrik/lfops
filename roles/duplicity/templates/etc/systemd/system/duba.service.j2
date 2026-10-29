@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2022032901
+# 2026102901
 
 [Unit]
 Description=duba (Duplicity Backup) service
@@ -8,3 +8,7 @@ Description=duba (Duplicity Backup) service
 ExecStart=/usr/local/bin/duba
 Type=oneshot
 User=root
+{% if __duplicity__login_credential_result['encrypted'] | d(false) %}
+# decrypted to $CREDENTIALS_DIRECTORY on every start
+LoadCredentialEncrypted=duba-login.json
+{% endif %}
