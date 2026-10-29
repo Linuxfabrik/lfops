@@ -1,4 +1,4 @@
-# The dump user logs in with the password from /etc/mongodb-dump-login.json, so a dump that
+# The dump user logs in with the password from the systemd credential, so a dump that
 # contains the test database proves that mongosh and mongodump both read it. The file-based
 # method locks the instance as the dump user, which proves the privileges the role grants it.
 - name: 'Verify MongoDB and its dump'
@@ -113,3 +113,27 @@
       ansible.builtin.assert:
         that: '"./molecule/test.bson" in __molecule__mongodb_dump_list_result["stdout_lines"]'
         fail_msg: '{{ __molecule__mongodb_dump_list_result["stdout_lines"] }}'
+
+    # The dump above read the password from the systemd credential. With systemd 251 and newer it
+    # is encrypted, so the password must not be anywhere in /etc in plain text; older systemd
+    # keeps it in /etc/credstore only.
+    - name: 'systemctl show --property=Version --value'
+      ansible.builtin.command: 'systemctl show --property=Version --value'
+      register: '__molecule__systemd_version_result'
+      changed_when: false
+
+    - name: 'grep --recursive --files-with-matches MoleculeDumpPw /etc'
+      ansible.builtin.command: 'grep --recursive --fixed-strings --files-with-matches MoleculeDumpPw /etc'
+      register: '__molecule__dump_password_files_result'
+      changed_when: false
+      failed_when: '__molecule__dump_password_files_result["rc"] > 1'
+
+    - name: 'Assert that the dump password is only stored where expected'
+      ansible.builtin.assert:
+        that: '__molecule__dump_password_files_result["stdout_lines"] == __molecule__expected_files'
+        fail_msg: 'Found in: {{ __molecule__dump_password_files_result["stdout_lines"] }}'
+      vars:
+        __molecule__expected_files: '{{
+            [] if (__molecule__systemd_version_result["stdout"] | regex_search("^\d+") | int) >= 251
+            else ["/etc/credstore/mongodb-dump-login.json"]
+          }}'

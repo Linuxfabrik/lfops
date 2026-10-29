@@ -109,6 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:mongodb**: The dump script is installed as `/usr/local/libexec/mongodb-dump`, since it only works when started by `mongodb-dump.service`.
 * **role:system_update**: On Debian and Ubuntu, the reboot notification lists the packages and services that asked for the reboot.
 * **role:system_update**: On Debian and Ubuntu, the weekly update removes the packages it left unused itself, typically replaced libraries, like unattended-upgrades does. Packages that were unused before stay installed.
 * **role:elasticsearch**: The query log of Elasticsearch 9.5 (`*_querylog.json`) is deleted after `elasticsearch__log4j2_retention_days`, like the other logs.
@@ -328,6 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
