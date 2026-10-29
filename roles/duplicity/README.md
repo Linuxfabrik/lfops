@@ -12,6 +12,9 @@ Note that this role does not support running with `--check`, as it first creates
 
 * The role ships `duba`, a Linuxfabrik Python wrapper for duplicity. It runs a massively parallel backup to a Swift storage backend, using `min(processor count, 6) + 1` duplicity processes. Its configuration file is `/etc/duba/duba.json`.
 * To start a backup, call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). See `duba --help` for details.
+* The password of the backend (`duplicity__swift_login["password"]` or `duplicity__sftp_password`) is not in `/etc/duba/duba.json`, but stored as the systemd credential `duba-login.json`. With systemd 251 and newer (RHEL 9 and newer, Debian 12 and newer, Ubuntu 24.04 and newer), it is encrypted in `/etc/credstore.encrypted/` with the host key `/var/lib/systemd/credential.secret`, which the default backup does not include, and `duba.service` decrypts it to `/run/credentials/duba.service/` while it runs. On RHEL 8 and Ubuntu 22.04, it stays in plain text in `/etc/credstore/`, readable by root only. Started by hand, `duba` decrypts the credential itself, so it has to run as root. The password does not show up in the process list.
+* On a host with a TPM2 chip, the encrypted password is also bound to the Secure Boot state. After a firmware or Secure Boot update, `duba` fails until the role runs again.
+* To run any other duplicity command (`collection-status`, `list-current-files`, `verify`, `restore`, ...), use `duba exec -- <duplicity arguments>`. It runs duplicity with the environment of the backup, including the password, without putting it into your shell. If `duplicity__archive_dir` is set, `duba exec` passes it to duplicity, so duplicity uses the local cache of the backup instead of downloading all manifests into a new one in `/root/.cache/duplicity`. Example: `duba exec -- restore --path-to-restore=hosts swift://<container>/etc /tmp/restore/hosts`.
 
 
 ## Dependent Roles

@@ -37,10 +37,22 @@ librenms__apache_httpd__vhosts__dependent_var:
     #   - 'txt'
     #   - 'woff2?'
 
+    # Collected from the Route::* definitions in routes/web.php and routes/api.php (including
+    # the PUT/PATCH/DELETE routes Route::resource() generates) and from the methods the
+    # frontend sends (fetch(), $.ajax() in resources/ and includes/html/). Verified against
+    # LibreNMS 26.10.0.
+    # * DELETE, GET, POST, PUT: web UI and API v0
+    # * OPTIONS: not used by LibreNMS, harmless
+    # * PATCH: sent as a real method (no _method spoofing) by the API token page in the web
+    #   UI and by the API v0 update endpoints (devices, device groups, locations, ports,
+    #   services)
+    # * HEAD: left out. Laravel answers it on every GET route, but neither the web UI nor
+    #   the API v0 needs it
     allowed_http_methods:
       - 'DELETE'
       - 'GET'
       - 'OPTIONS'
+      - 'PATCH'
       - 'POST'
       - 'PUT'
 

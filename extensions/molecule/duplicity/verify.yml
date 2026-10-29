@@ -55,3 +55,95 @@
       loop: '{{ __molecule__duba_timer_state_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    - name: 'systemctl --version' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl --version'
+      changed_when: false
+      register: '__molecule__systemctl_version_result'
+
+    # With systemd 251 and newer the password is encrypted, so it must not show up in plain text
+    # anywhere below /etc (duba.json and its backup copies included). Older systemd keeps it in
+    # /etc/credstore.
+    - name: 'grep --recursive --files-with-matches --fixed-strings <password> /etc'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ duplicity__swift_login["password"] }} /etc'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__password_grep_result'
+
+    - name: 'Assert that the password is only in the credential store'
+      ansible.builtin.assert:
+        that: '__molecule__password_grep_result["stdout_lines"] == (__molecule__systemd_version | int >= 251) | ternary([], ["/etc/credstore/duba-login.json"])'
+        fail_msg: '{{ __molecule__password_grep_result["stdout_lines"] }}'
+      vars:
+        __molecule__systemd_version: '{{ __molecule__systemctl_version_result["stdout_lines"][0].split()[1] }}'
+
+    - name: 'grep LoadCredentialEncrypted= /etc/systemd/system/duba.service'
+      ansible.builtin.command: 'grep --count --line-regexp LoadCredentialEncrypted=duba-login.json /etc/systemd/system/duba.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_service_grep_result'
+
+    - name: 'Assert that duba.service loads the encrypted credential (systemd 251 and newer only)'
+      ansible.builtin.assert:
+        that: '__molecule__duba_service_grep_result["stdout"] == (__molecule__systemd_version | int >= 251) | ternary("1", "0")'
+        fail_msg: '{{ __molecule__duba_service_grep_result | to_json }}'
+      vars:
+        __molecule__systemd_version: '{{ __molecule__systemctl_version_result["stdout_lines"][0].split()[1] }}'
+
+    # A stub of duplicity, found first in PATH, prints its arguments and environment, so that
+    # verify can see what `duba exec` hands over without contacting a backend. duba asks for the
+    # version first.
+    - name: 'mkdir /tmp/molecule-duba-stub'
+      ansible.builtin.file:
+        path: '/tmp/molecule-duba-stub'
+        state: 'directory'
+        mode: 0o755
+
+    - name: 'Deploy /tmp/molecule-duba-stub/duplicity'
+      ansible.builtin.copy:
+        dest: '/tmp/molecule-duba-stub/duplicity'
+        content: |
+          #!/bin/sh
+          if [ "$1" = '--version' ]; then
+              echo 'duplicity 3.0.0'
+              exit 0
+          fi
+          echo "args: $*"
+          env
+        mode: 0o755
+
+    # started by hand: no $CREDENTIALS_DIRECTORY, duba decrypts the credential itself
+    - name: 'PATH=/tmp/molecule-duba-stub:$PATH duba exec -- collection-status <url>'
+      ansible.builtin.command: '/usr/local/bin/duba exec -- collection-status swift://molecule/etc'
+      environment:
+        PATH: '/tmp/molecule-duba-stub:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+      changed_when: false
+      register: '__molecule__duba_exec_result'
+
+    - name: 'Assert that duba exec passes the archive dir, the arguments and the password'
+      ansible.builtin.assert:
+        that:
+          - '"args: --archive-dir /var/cache/duba-molecule collection-status swift://molecule/etc" in __molecule__duba_exec_result["stdout_lines"]'
+          - '"SWIFT_PASSWORD=" ~ duplicity__swift_login["password"] in __molecule__duba_exec_result["stdout_lines"]'
+          - '"SWIFT_USERNAME=linuxfabrik" in __molecule__duba_exec_result["stdout_lines"]'
+          - '__molecule__duba_exec_result["stdout_lines"] | select("match", "^CREDENTIALS_DIRECTORY=") | list | length == 0'
+        fail_msg: '{{ __molecule__duba_exec_result["stdout_lines"] }}'
+
+    # started by a unit: duba reads the credential systemd decrypted to $CREDENTIALS_DIRECTORY
+    - name: 'systemd-run --pipe --wait --property=LoadCredentialEncrypted=duba-login.json duba exec -- collection-status <url>'
+      ansible.builtin.command: >-
+        systemd-run --pipe --wait --quiet
+        --property=LoadCredentialEncrypted=duba-login.json
+        --setenv=PATH=/tmp/molecule-duba-stub:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        /usr/local/bin/duba exec -- collection-status swift://molecule/etc
+      changed_when: false
+      register: '__molecule__duba_exec_unit_result'
+      when: '__molecule__systemctl_version_result["stdout_lines"][0].split()[1] | int >= 251'
+
+    - name: 'Assert that duba exec reads the credential from $CREDENTIALS_DIRECTORY in a unit'
+      ansible.builtin.assert:
+        that:
+          - '"SWIFT_PASSWORD=" ~ duplicity__swift_login["password"] in __molecule__duba_exec_unit_result["stdout_lines"]'
+          - '__molecule__duba_exec_unit_result["stdout_lines"] | select("match", "^CREDENTIALS_DIRECTORY=") | list | length == 1'
+        fail_msg: '{{ __molecule__duba_exec_unit_result["stdout_lines"] }}'
+      when: '__molecule__systemctl_version_result["stdout_lines"][0].split()[1] | int >= 251'

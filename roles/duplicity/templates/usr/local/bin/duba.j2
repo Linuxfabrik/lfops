@@ -19,15 +19,38 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026101401'
+__version__ = '2026102901'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
+EPILOG = """commands:
+  backup  Back up all sources, then remove the backups older than the retention time.
+          This is the default.
+  exec    Run duplicity with the arguments after `--`, in the environment of the backup
+          (the settings from the config file and the login from the systemd credential
+          duba-login.json). If the config file sets an archive dir, it is passed as the
+          first argument, so duplicity uses the cache of the backup instead of building
+          another one in ~/.cache/duplicity. A later --archive-dir overrides it.
 
-def parse_args():
+examples:
+  duba
+  duba exec -- collection-status swift://container/etc
+  duba exec -- restore --path-to-restore=hosts swift://container/etc /tmp/restore/hosts
+"""
+
+# The secret environment variables (SWIFT_PASSWORD, FTP_PASSWORD) are not in the config file,
+# but in this systemd credential, see load_credential().
+CREDENTIAL_NAME = 'duba-login.json'
+
+
+def parse_args(argv):
     """Parse command line arguments using argparse.
     """
-    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser = argparse.ArgumentParser(
+        description=DESCRIPTION,
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
     parser.add_argument(
         '-V', '--version',
@@ -43,16 +66,30 @@ def parse_args():
     )
 
     parser.add_argument(
-        '--command',
-        help='Command to run. Default: %(default)s',
-        dest='COMMAND',
-        default='backup',
+        'COMMAND',
+        help='Command to run, see below. Default: backup',
+        nargs='?',
         choices=[
             'backup',
-        ]
+            'exec',
+        ],
     )
 
-    return parser.parse_args()
+    parser.add_argument(
+        '--command',
+        help='Same as COMMAND.',
+        dest='COMMAND_OPTION',
+        choices=[
+            'backup',
+            'exec',
+        ],
+    )
+
+    args = parser.parse_args(argv)
+    if args.COMMAND and args.COMMAND_OPTION and args.COMMAND != args.COMMAND_OPTION:
+        parser.error(f'COMMAND {args.COMMAND} conflicts with --command={args.COMMAND_OPTION}')
+    args.COMMAND = args.COMMAND or args.COMMAND_OPTION or 'backup'
+    return args
 
 class Duba:
 
@@ -119,10 +156,51 @@ class Duba:
             sys.exit(250)
 
 
+    def load_credential(self):
+        # duba.service decrypts the credential to $CREDENTIALS_DIRECTORY. systemd before 251
+        # keeps it in plain text in /etc/credstore. Started by hand, duba decrypts it itself,
+        # which needs root, since the host key is readable by root only. Without a credential,
+        # the backend needs no secret (e.g. sftp with key authentication).
+        for directory in (os.environ.get('CREDENTIALS_DIRECTORY'), '/etc/credstore'):
+            if not directory:
+                continue
+            path = os.path.join(directory, CREDENTIAL_NAME)
+            if not os.path.isfile(path):
+                continue
+            try:
+                with open(path, 'r') as f:
+                    return json.load(f)
+            except (OSError, ValueError) as e:
+                self.logger.error(f'Error reading {path}: {e}')
+                sys.exit(208)
+
+        path = os.path.join('/etc/credstore.encrypted', CREDENTIAL_NAME)
+        if not os.path.isfile(path):
+            return {}
+        # the secret goes to stdout, never to the command line
+        p = subprocess.run(
+            ['systemd-creds', 'decrypt', f'--name={CREDENTIAL_NAME}', path, '-'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if p.returncode != 0:
+            self.logger.error(
+                f'Error decrypting {path} (run duba as root, or the role again after a firmware'
+                f' or Secure Boot change): {p.stderr.decode("utf-8", "replace").strip()}'
+            )
+            sys.exit(209)
+        try:
+            return json.loads(p.stdout)
+        except ValueError as e:
+            self.logger.error(f'Error reading {path}: {e}')
+            sys.exit(208)
+
+
     def set_env(self, env_config, env=os.environ.copy()):
         # enrich the environment variables
         env['LC_ALL'] = 'C' # set cmd output to English, no matter what the user has choosen
         env.update(env_config)
+        env.update(self.load_credential())
         return env
 
 
@@ -350,19 +428,49 @@ class Duba:
         sys.exit(global_retc)
 
 
+    def do_exec(self, duplicity_args):
+        """Replace duba with duplicity, called with `duplicity_args` in the environment of the
+           backup, so that the secrets never show up in the shell of the admin.
+        """
+        if not duplicity_args:
+            self.logger.error('Nothing to run. Usage: duba exec -- <duplicity arguments>')
+            sys.exit(210)
+        # duplicity accepts options in front of the action
+        cmd = ['duplicity'] + self.archive_dir_options() + duplicity_args
+        env = self.set_env(self.config.get('env', {}))
+        try:
+            os.execvpe(cmd[0], cmd, env)
+        except OSError as e:
+            self.logger.error(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd[0]}"')
+            sys.exit(205)
+
+
 def main():
     """The main function. Hier spielt die Musik.
     """
 
+    # everything after the first `--` belongs to duplicity
+    argv = sys.argv[1:]
+    duplicity_args = []
+    if '--' in argv:
+        duplicity_args = argv[argv.index('--') + 1:]
+        argv = argv[:argv.index('--')]
+
     # parse the command line, exit if it fails
     try:
-        args = parse_args()
+        args = parse_args(argv)
     except SystemExit:
+        sys.exit(221)
+
+    if duplicity_args and args.COMMAND != 'exec':
+        print('duba: arguments after `--` are only allowed with `exec`', file=sys.stderr)
         sys.exit(221)
 
     duba = Duba(args.CONFIG_FILE)
     if args.COMMAND == 'backup':
         duba.do_backup()
+    elif args.COMMAND == 'exec':
+        duba.do_exec(duplicity_args)
 
 
 if __name__ == '__main__':

@@ -86,14 +86,47 @@
     register: 'duplicity__gpg_import_ownertrust_result'
     changed_when: '"ownertrust" in duplicity__gpg_import_ownertrust_result.stderr'
 
+  # encrypted with systemd 251 and newer, see the systemd_credential module. duba merges it into
+  # the environment of duplicity, over the `env` of duba.json. sftp with key authentication needs
+  # no password, so there is no credential then.
+  # Built inline instead of from a template: ansible-core before 2.19 turns a rendered string
+  # that looks like a dict into one, which the module would then store as its Python repr; an
+  # expression ending in `to_json` is exempt.
+  - name: 'Store the backend password as the systemd credential duba-login.json'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'duba-login.json'
+      content: '{{ __duplicity__login_env | to_json }}'
+      state: '{{ (__duplicity__login_env.values() | first | length > 0) | ternary("present", "absent") }}'
+    vars:
+      __duplicity__login_env: '{{
+          {"SWIFT_PASSWORD": duplicity__swift_login["password"] | d("")}
+          if duplicity__backup_backend == "swift" else
+          {"FTP_PASSWORD": duplicity__sftp_password | d("")}
+        }}'
+    register: '__duplicity__login_credential_result'
+
   - name: 'Deploy /etc/duba/duba.json'
     ansible.builtin.template:
-      backup: true
       src: 'etc/duba/duba.json.j2'
       dest: '/etc/duba/duba.json'
       owner: 'root'
       group: 'root'
-      mode: 0o600 # file contains secrets
+      mode: 0o600
+
+  # the copies `backup: true` left still contain the password, which is now in the credential
+  - name: 'find /etc/duba -maxdepth 1 -name duba.json.*~'
+    ansible.builtin.find:
+      paths: '/etc/duba'
+      patterns: 'duba.json.*~'
+    register: '__duplicity__duba_json_backup_result'
+
+  - name: 'rm -f /etc/duba/duba.json.*~'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __duplicity__duba_json_backup_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   - name: 'Deploy /etc/systemd/system/duba.service'
     ansible.builtin.template:

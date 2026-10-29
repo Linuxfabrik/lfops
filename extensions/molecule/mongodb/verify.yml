@@ -24,6 +24,23 @@
       ansible.builtin.assert:
         that: '__molecule__mongodb_dump_timer_result["status"]["ActiveState"] == "active"'
 
+    # The host runs either 8.0 or 9.0, see the inventory.
+    - name: 'mongosh --eval db.version()'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=db.version()'
+      register: '__molecule__mongodb_version_result'
+      changed_when: false
+
+    - name: 'Assert that mongod runs the series of repo_mongodb__version'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_version_result["stdout"].startswith(repo_mongodb__version ~ ".")'
+
     # Authorization is enabled, so this also proves that the admin user exists.
     - name: 'mongosh --eval db.getSiblingDB("molecule").test.insertOne(...)'
       ansible.builtin.command:

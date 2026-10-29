@@ -363,3 +363,42 @@
           - '__molecule__scheduler_timer_result["status"]["ActiveState"] == "active"'
           - '__molecule__scheduler_timer_result["status"]["UnitFileState"] == "enabled"'
         fail_msg: 'The LibreNMS scheduler timer is {{ __molecule__scheduler_timer_result["status"]["ActiveState"] }} and {{ __molecule__scheduler_timer_result["status"]["UnitFileState"] }}.'
+
+
+# The vHost rejects every HTTP method that is not in allowed_http_methods with a 405, before
+# LibreNMS sees the request. The API token page of the web interface and the update endpoints of
+# API v0 send a real PATCH, so a missing entry breaks them while every GET and POST still works.
+# Without a token LibreNMS refuses the request itself, which is enough to prove it got through.
+- name: 'Verify Apache passes all HTTP methods LibreNMS uses'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: '{{ item }} /api/v0/devices/localhost (Host: {{ librenms__url | urlsplit("hostname") }})'
+      ansible.builtin.uri:
+        url: 'http://localhost/api/v0/devices/localhost'
+        method: '{{ item }}'
+        headers:
+          Accept: 'application/json'
+          Host: '{{ librenms__url | urlsplit("hostname") }}'
+        follow_redirects: 'none'
+      register: '__molecule__http_method_result'
+      # any answer from LibreNMS will do, the assert below only rules out the 405 of the vHost
+      failed_when: false
+      loop:
+        - 'DELETE'
+        - 'GET'
+        - 'PATCH'
+        - 'POST'
+        - 'PUT'
+
+    - name: 'Assert Apache did not reject the method'
+      ansible.builtin.assert:
+        that:
+          - 'item["status"] not in [-1, 405]'
+        fail_msg: '{{ item["item"] }} did not reach LibreNMS: {{ item["status"] }} {{ item["msg"] | d("") }}'
+        quiet: true
+      loop: '{{ __molecule__http_method_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }} -> {{ item["status"] }}'
