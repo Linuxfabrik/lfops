@@ -19,8 +19,19 @@ This role deploys the package repository for [Docker CE](https://www.docker.com/
 `repo_docker__basic_auth_login`
 
 * Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
-* Type: String.
+* Type: Dictionary.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
 
 `repo_docker__mirror_url`
 

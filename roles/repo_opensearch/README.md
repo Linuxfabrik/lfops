@@ -39,8 +39,19 @@ repo_opensearch__version__host_var: '2.x'
 `repo_opensearch__basic_auth_login`
 
 * Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
-* Type: String.
+* Type: Dictionary.
 * Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Subkeys:
+
+    * `password`:
+
+        * Mandatory. Password.
+        * Type: String.
+
+    * `username`:
+
+        * Mandatory. Username.
+        * Type: String.
 
 `repo_opensearch__mirror_url`
 
