@@ -25,6 +25,32 @@
       - '/var/tmp/molecule-system_update-post-update-code'
       - '/var/tmp/molecule-system_update-pre-update-code'
 
+    # Debian family: the fixture packages of the regular lane, see the comment above the
+    # block that builds them. `repo` ones are offered by a local repository, the others are
+    # installed, and `auto` ones as automatically installed.
+    __molecule__debian_test_packages:
+      - name: 'lfops-test-app'
+        version: '1.0'
+        depends: 'lfops-test-dep'
+      - name: 'lfops-test-app'
+        version: '2.0'
+        repo: true
+      - name: 'lfops-test-dep'
+        version: '1.0'
+        auto: true
+      - name: 'lfops-test-orphan'
+        version: '1.0'
+        auto: true
+      - name: 'linux-image-6.0.0-1-lfops-test'
+        version: '6.0.0-1'
+        auto: true
+      - name: 'linux-image-6.0.0-2-lfops-test'
+        version: '6.0.0-2'
+        auto: true
+      - name: 'linux-image-6.0.0-3-lfops-test'
+        version: '6.0.0-3'
+        auto: true
+
   tasks:
 
     - name: 'systemctl is-enabled the regular-lane and reboot timers' # noqa command-instead-of-module (read-only state query)
@@ -59,6 +85,89 @@
     - name: 'Assert the regular check lane (incl. the metadata refresh) ran clean'
       ansible.builtin.assert:
         that: '__molecule__notify_and_schedule_result["stdout"] == "success"'
+
+    # Debian family: the metadata refresh of the check lane has to wait for a held apt lists
+    # lock, and has to fail with a mail instead of reporting from stale lists when the
+    # sources cannot be read (apt-get update exits 100 on a malformed entry). Verified
+    # against apt 3.0 on Debian 13 and 2.4 on Ubuntu 22.04.
+    - block:
+
+      - name: 'date +%s (start of the check-lane runs)'
+        ansible.builtin.command: 'date +%s'
+        register: '__molecule__notify_since_result'
+        changed_when: false
+
+      # apt locks with fcntl(), as does lockf() of Python. 90 seconds outlast the first attempt
+      # of the run and the 60 seconds it then waits, so the run has to wait at least once.
+      - name: 'Hold the apt lists lock in the background'
+        ansible.builtin.command: >-
+          python3 -c "import fcntl, pathlib, time;
+          f = open('/var/lib/apt/lists/lock', 'a');
+          fcntl.lockf(f, fcntl.LOCK_EX);
+          pathlib.Path('/run/lfops-notify-test-lock-held').touch();
+          time.sleep(90)"
+        async: 120
+        poll: 0
+        changed_when: false
+
+      - name: 'Wait until the apt lists lock is held'
+        ansible.builtin.wait_for:
+          path: '/run/lfops-notify-test-lock-held'
+          timeout: 30
+
+      - name: 'systemctl start notify-and-schedule.service (apt lists lock held)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+        ansible.builtin.command: 'systemctl start notify-and-schedule.service'
+        changed_when: false
+
+      - name: 'systemctl show --property=Result notify-and-schedule.service (apt lists lock held)' # noqa command-instead-of-module (no module reads a oneshot Result)
+        ansible.builtin.command: 'systemctl show --property=Result --value notify-and-schedule.service'
+        register: '__molecule__notify_locked_result'
+        changed_when: false
+
+      - name: 'Deploy /etc/apt/sources.list.d/lfops-notify-test.list (malformed)'
+        ansible.builtin.copy:
+          content: |
+            deb http://deb.example.com
+          dest: '/etc/apt/sources.list.d/lfops-notify-test.list'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'systemctl start notify-and-schedule.service (malformed sources)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+        ansible.builtin.command: 'systemctl start notify-and-schedule.service'
+        register: '__molecule__notify_broken_start_result'
+        changed_when: false
+        failed_when: '__molecule__notify_broken_start_result["rc"] == 0'
+
+      - name: 'journalctl --unit=notify-and-schedule.service (check-lane runs of this block)' # noqa command-instead-of-module (no module reads the journal)
+        ansible.builtin.command: 'journalctl --unit=notify-and-schedule.service --since=@{{ __molecule__notify_since_result["stdout"] }} --output=cat --no-pager'
+        register: '__molecule__notify_journal_result'
+        changed_when: false
+
+      - name: 'Assert the check lane waited for the lock, and failed on unreadable sources'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__notify_locked_result["stdout"] == "success"'
+            - '__molecule__notify_journal_result["stdout"] is search("Waiting for the package manager lock")'
+            - '__molecule__notify_journal_result["stdout"] is search("Metadata refresh failed")'
+
+      always:
+
+      - name: 'rm -f the check-lane fixtures'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop:
+          - '/etc/apt/sources.list.d/lfops-notify-test.list'
+          - '/run/lfops-notify-test-lock-held'
+
+      - name: 'systemctl reset-failed notify-and-schedule.service' # noqa command-instead-of-module (no module resets a failed unit)
+        ansible.builtin.command: 'systemctl reset-failed notify-and-schedule.service'
+        changed_when: false
+        failed_when: false
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
 
     - name: 'systemctl is-active security-update.timer (Rocky only)' # noqa command-instead-of-module (read-only state query)
       ansible.builtin.command: 'systemctl is-active security-update.timer'
@@ -348,6 +457,153 @@
       ansible.builtin.assert:
         that: '__molecule__sendmail_stat_result["stat"]["exists"]'
 
+    # The Debian-family steps of the regular lane, all set up for its first run below:
+    # * Unused kernels, removed before the upgrade. The dummy kernels are installed as
+    #   automatic, so apt lists them as auto-removable, except the ones it protects:
+    #   linux-image-6.0.0-1-lfops-test is the oldest kernel on the host and has to go,
+    #   linux-image-6.0.0-2-lfops-test is held and has to stay, and
+    #   linux-image-6.0.0-3-lfops-test is kept by apt as the second kernel next to the real
+    #   one of the cloud image, which is running and newer than all of them. apt orders the
+    #   kernels by package version, not by the ABI in the name, so the version of each dummy
+    #   has to match its name: with all of them at 1.0, apt protects every one.
+    #   Verified against apt 2.0 to 3.0 on Debian 11 to 13 and Ubuntu 20.04 to 24.04, in
+    #   containers.
+    # * Packages the upgrade leaves unused, removed after it. lfops-test-app 1.0 needs
+    #   lfops-test-dep, the 2.0 of the local repository does not, so lfops-test-dep has to go.
+    #   lfops-test-orphan was unused before the upgrade already and has to stay.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
+    # * An interrupted dpkg: a journal file in /var/lib/dpkg/updates/ has to be repaired with
+    #   dpkg --configure -a instead of failing the upgrade.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
+    # * A held lock: the lists lock is held when the run starts, so its apt-get update has to
+    #   wait for it instead of failing.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
+    # * The reason of a reboot request: /run/reboot-required.pkgs, as a package's postinst
+    #   writes it, has to show up in the spool file.
+    #   Verified against apt 2.0 (Ubuntu 20.04) and 3.0 (Debian 13), in containers.
+    - block:
+
+      - name: 'apt install apt-utils (apt-ftparchive for the fixture repository)'
+        ansible.builtin.apt:
+          name: 'apt-utils'
+
+      # under /var/tmp, since apt reads a file: repository as the unprivileged _apt user
+      - name: 'mkdir -p /var/tmp/lfops-debian-test/<package>/DEBIAN'
+        ansible.builtin.file:
+          path: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}/DEBIAN'
+          state: 'directory'
+          owner: 'root'
+          group: 'root'
+          mode: 0o755
+        loop: '{{ __molecule__debian_test_packages }}'
+
+      - name: 'mkdir -p /var/tmp/lfops-debian-test/repo'
+        ansible.builtin.file:
+          path: '/var/tmp/lfops-debian-test/repo'
+          state: 'directory'
+          owner: 'root'
+          group: 'root'
+          mode: 0o755
+
+      - name: 'Deploy /var/tmp/lfops-debian-test/<package>/DEBIAN/control'
+        ansible.builtin.copy:
+          content: |
+            Package: {{ item["name"] }}
+            Version: {{ item["version"] }}
+            Architecture: all
+            Maintainer: Linuxfabrik GmbH <info@linuxfabrik.ch>
+            {% if item["depends"] is defined %}
+            Depends: {{ item["depends"] }}
+            {% endif %}
+            Description: LFOps fixture for the system_update regular lane
+          dest: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}/DEBIAN/control'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+        loop: '{{ __molecule__debian_test_packages }}'
+
+      - name: 'dpkg-deb --build <package>'
+        ansible.builtin.command: >-
+          dpkg-deb --build
+          /var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}
+          /var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | default(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb
+        args:
+          creates: '/var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | default(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb'
+        loop: '{{ __molecule__debian_test_packages }}'
+
+      - name: 'apt-ftparchive packages /var/tmp/lfops-debian-test/repo'
+        ansible.builtin.shell: 'apt-ftparchive packages . > Packages'
+        args:
+          chdir: '/var/tmp/lfops-debian-test/repo'
+          creates: '/var/tmp/lfops-debian-test/repo/Packages'
+
+      # one .deb per call, so the ones without a dependency go first
+      - name: 'apt install the installed fixture packages'
+        ansible.builtin.apt:
+          deb: '/var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}.deb'
+        loop: '{{ (__molecule__debian_test_packages | rejectattr("repo", "defined") | rejectattr("depends", "defined"))
+          + (__molecule__debian_test_packages | rejectattr("repo", "defined") | selectattr("depends", "defined")) }}'
+
+      - name: 'apt-mark auto the automatic fixture packages'
+        ansible.builtin.command: 'apt-mark auto {{ __molecule__debian_test_packages | selectattr("auto", "defined") | map(attribute="name") | join(" ") }}'
+        changed_when: false
+
+      - name: 'apt-mark hold linux-image-6.0.0-2-lfops-test'
+        ansible.builtin.dpkg_selections:
+          name: 'linux-image-6.0.0-2-lfops-test'
+          selection: 'hold'
+
+      - name: 'Deploy /etc/apt/sources.list.d/lfops-debian-test.list'
+        ansible.builtin.copy:
+          content: |
+            deb [trusted=yes] file:/var/tmp/lfops-debian-test/repo ./
+          dest: '/etc/apt/sources.list.d/lfops-debian-test.list'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'touch /var/lib/dpkg/updates/0001 (an interrupted dpkg)'
+        ansible.builtin.file:
+          path: '/var/lib/dpkg/updates/0001'
+          state: 'touch'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+
+      - name: 'Deploy /run/reboot-required and /run/reboot-required.pkgs'
+        ansible.builtin.copy:
+          content: '{{ item["content"] }}'
+          dest: '{{ item["dest"] }}'
+          owner: 'root'
+          group: 'root'
+          mode: 0o644
+        loop:
+          - dest: '/run/reboot-required'
+            content: "*** System restart required ***\n"
+          - dest: '/run/reboot-required.pkgs'
+            content: "lfops-test-app\n"
+
+      # apt locks with fcntl(), as does lockf() of Python. 90 seconds outlast the first attempt
+      # of the run and the 60 seconds it then waits, so the run has to wait at least once.
+      - name: 'Hold the apt lists lock in the background'
+        ansible.builtin.command: >-
+          python3 -c "import fcntl, pathlib, time;
+          f = open('/var/lib/apt/lists/lock', 'a');
+          fcntl.lockf(f, fcntl.LOCK_EX);
+          pathlib.Path('/run/lfops-debian-test-lock-held').touch();
+          time.sleep(90)"
+        async: 120
+        poll: 0
+        changed_when: false
+
+      - name: 'Wait until the apt lists lock is held'
+        ansible.builtin.wait_for:
+          path: '/run/lfops-debian-test-lock-held'
+          timeout: 30
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
+
     # The regular update lane, end to end and twice. The first run applies whatever the
     # cloud image has pending, the reboot clears the pending-reboot state that run may
     # have created, and the second run then finds nothing left to do. That second run is
@@ -390,6 +646,68 @@
     - name: 'Assert the first run completed successfully'
       ansible.builtin.assert:
         that: '__molecule__update_first_result["stdout"] == "success"'
+
+    - block:
+
+      - name: 'Gather the package facts'
+        ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+      - name: 'journalctl --unit=update-and-reboot.service --boot (first run)' # noqa command-instead-of-module (no module reads the journal)
+        ansible.builtin.command: 'journalctl --unit=update-and-reboot.service --boot --output=cat --no-pager'
+        register: '__molecule__update_first_journal_result'
+        changed_when: false
+
+      - name: 'stat /var/lib/dpkg/updates/0001'
+        ansible.builtin.stat:
+          path: '/var/lib/dpkg/updates/0001'
+        register: '__molecule__dpkg_journal_stat_result'
+
+      - name: 'slurp /run/schedule-reboot/system_update'
+        ansible.builtin.slurp:
+          src: '/run/schedule-reboot/system_update'
+        register: '__molecule__update_first_request_result'
+
+      - name: 'Assert the first run repaired dpkg, waited for the lock, removed only what it should and gave the reboot reason'
+        ansible.builtin.assert:
+          that:
+            - '"linux-image-6.0.0-1-lfops-test" not in ansible_facts["packages"]'
+            - '"linux-image-6.0.0-2-lfops-test" in ansible_facts["packages"]'
+            - '"lfops-test-dep" not in ansible_facts["packages"]'
+            - '"lfops-test-orphan" in ansible_facts["packages"]'
+            - 'ansible_facts["packages"]["lfops-test-app"][0]["version"] == "2.0"'
+            - 'not __molecule__dpkg_journal_stat_result["stat"]["exists"]'
+            - '__molecule__update_first_journal_result["stdout"] is search("dpkg was interrupted; running dpkg --configure -a")'
+            - '__molecule__update_first_journal_result["stdout"] is search("Waiting for the package manager lock")'
+            - '__molecule__update_first_journal_result["stdout"] is search("Removing unused kernel packages:.* linux-image-6.0.0-1-lfops-test")'
+            - '__molecule__update_first_journal_result["stdout"] is search("Removing packages no longer needed after the upgrade:.* lfops-test-dep")'
+            - '__molecule__update_first_request is search("Packages requiring the reboot:\nlfops-test-app\n")'
+            - '__molecule__update_first_request is search("needrestart: ")'
+        vars:
+          __molecule__update_first_request: '{{ __molecule__update_first_request_result["content"] | ansible.builtin.b64decode }}'
+
+      always:
+
+      - name: 'apt-mark unhold linux-image-6.0.0-2-lfops-test'
+        ansible.builtin.dpkg_selections:
+          name: 'linux-image-6.0.0-2-lfops-test'
+          selection: 'install'
+
+      - name: 'apt remove the fixture packages'
+        ansible.builtin.apt:
+          name: '{{ __molecule__debian_test_packages | map(attribute="name") | unique }}'
+          state: 'absent'
+
+      - name: 'rm -f the fixture repository and its working files'
+        ansible.builtin.file:
+          path: '{{ item }}'
+          state: 'absent'
+        loop:
+          - '/etc/apt/sources.list.d/lfops-debian-test.list'
+          - '/run/lfops-debian-test-lock-held'
+          - '/var/tmp/lfops-debian-test'
+
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
 
     # The regular lane runs both hooks on every run, whether or not it had anything to
     # apply, so this holds for the second run further down as well.
@@ -448,6 +766,7 @@
           - '__molecule__update_and_reboot_result["stdout"] == "success"'
           - '"No packages were changed in this run" in __molecule__update_and_reboot_journal_result["stdout"]'
           - '"Nothing to report" in __molecule__update_and_reboot_journal_result["stdout"]'
+          - '"Broken pipe" not in __molecule__update_and_reboot_journal_result["stdout"]'
           - 'not __molecule__update_request_stat_result["stat"]["exists"]'
 
     # The config-file stub notification may still mail about the *.rpmnew / *.dpkg-dist
