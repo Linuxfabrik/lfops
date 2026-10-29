@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
 * **role:opensearch**: Supports OpenSearch 3.x. The role README describes the upgrade from 2.x.
 * **playbook:setup_basic**: Deploys the Linuxfabrik package repository on Debian, Ubuntu and RHEL 8 to 10 and their derivatives, right after EPEL; on hosts whose mirror does not serve it, dnf skips it with an error message and apt stops the run (`setup_basic__skip_repo_linuxfabrik`).
 * **role:repo_linuxfabrik, playbook:repo_linuxfabrik**: Add a role and playbook that deploy the Linuxfabrik package repository repo.linuxfabrik.ch on Debian, Fedora, the Red Hat family, SUSE and Ubuntu, with an optional testing channel.
@@ -177,6 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:system_update**: On Debian and Ubuntu, the weekly update repairs a dpkg run that was cut short (`dpkg --configure -a`) instead of failing every week until someone repairs the host by hand.
 * **role:system_update**: On Debian and Ubuntu, the journal of the weekly update no longer shows `yes: standard output: Broken pipe`.
 * **role:system_update**: On Debian and Ubuntu, the weekly update removes kernels apt no longer needs before installing new ones, the way unattended-upgrades does, so old kernels no longer fill up `/boot`. The running kernel, the newest one and held packages are kept.
+* **role:mariadb_server**: The dump script is installed as `/usr/local/libexec/mariadb-dump`, so it no longer shadows MariaDB's own `mariadb-dump` client for users with `/usr/local/bin` in their `PATH`.
 * **role:mongodb**: The file-based dump (`mongodb__dump_method_file_based`) locks the instance also with authorization enabled and works on Debian and Ubuntu, and a dump that cannot lock the instance fails instead of copying the data files of the running instance.
 * **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
 * **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
@@ -326,6 +328,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.

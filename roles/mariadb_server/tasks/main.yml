@@ -716,12 +716,30 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'Deploy /usr/local/bin/mariadb-dump'
+  # /usr/local/libexec is missing on Debian before trixie and Ubuntu before 26.04, see
+  # roles/schedule_reboot.
+  - name: 'Ensure /usr/local/libexec exists'
+    ansible.builtin.file:
+      path: '/usr/local/libexec'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Only mariadb-dump.service can run the script, since only the unit gets the decrypted login.
+  - name: 'Deploy /usr/local/libexec/mariadb-dump'
     ansible.builtin.template:
       backup: true
-      src: 'usr/local/bin/mariadb-dump.j2'
-      dest: '/usr/local/bin/mariadb-dump'
+      src: 'usr/local/libexec/mariadb-dump.j2'
+      dest: '/usr/local/libexec/mariadb-dump'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
+
+  - name: 'rm -f /usr/local/bin/mariadb-dump'
+    ansible.builtin.file:
+      path: '/usr/local/bin/mariadb-dump'
+      state: 'absent'
 
   - name: 'Deploy /etc/mariadb-dump.conf'
     ansible.builtin.template:
@@ -732,14 +750,29 @@
       group: 'root'
       mode: 0o600
 
-  - name: 'Deploy /etc/mariadb-dump-login.cnf'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/mariadb-dump-login.cnf.j2'
-      dest: '/etc/mariadb-dump-login.cnf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600 # contains secrets
+  # encrypted with systemd 251 and newer, see the systemd_credential module. The service loads
+  # credentials on every start, so a changed one needs no restart.
+  - name: 'Store the dump login as the systemd credential mariadb-dump-login.cnf'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'mariadb-dump-login.cnf'
+      content: '{{ lookup("ansible.builtin.template", "etc/credstore/mariadb-dump-login.cnf.j2") }}'
+    register: '__mariadb_server__dump_login_credential_result'
+
+  # the plain-text predecessor of the credential, including the copies `backup: true` left
+  - name: 'find /etc -maxdepth 1 -name mariadb-dump-login.cnf*'
+    ansible.builtin.find:
+      paths: '/etc'
+      patterns: 'mariadb-dump-login.cnf*'
+      hidden: true
+    register: '__mariadb_server__dump_login_plain_result'
+
+  - name: 'rm -f /etc/mariadb-dump-login.cnf*'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __mariadb_server__dump_login_plain_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   - name: 'Grant backup privileges on dbs.tables to {{ mariadb_server__dump_user["username"] }}@localhost'
     ansible.mariadb.mariadb_user:

@@ -1,13 +1,17 @@
 # {{ ansible_managed }}
-# 2026101301
+# 2026102802
 
 [Unit]
 Description=mariadbdump Service
 
 [Service]
-ExecStart=/usr/local/bin/mariadb-dump
+ExecStart=/usr/local/libexec/mariadb-dump
 Type=oneshot
 User=root
+{% if __mariadb_server__dump_login_credential_result['encrypted'] | d(false) %}
+# decrypted to $CREDENTIALS_DIRECTORY on every start
+LoadCredentialEncrypted=mariadb-dump-login.cnf
+{% endif %}
 # the dump must not slow down MariaDB and the applications behind it. Nice= and the CPU / IO
 # weights (default 100) only matter under contention, so an idle host dumps at full speed.
 # best-effort instead of idle: mydumper holds `LOCK TABLES ... READ LOCAL` on every non-InnoDB
