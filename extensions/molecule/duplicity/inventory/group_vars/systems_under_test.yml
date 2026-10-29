@@ -32,7 +32,11 @@ duplicity__gpg_encrypt_master_key_block: |-
   =MQxG
   -----END PGP PUBLIC KEY BLOCK-----
 
-# Nothing listens on the Swift URL, the scenario never starts a backup.
+# verify.yml passes it to `duba exec`, a stub of duplicity checks that it arrives.
+duplicity__archive_dir: '/var/cache/duba-molecule'
+
+# Nothing listens on the Swift URL, the scenario never starts a backup. The password is unique,
+# so that verify.yml can search for it.
 duplicity__swift_login:
   username: 'linuxfabrik'
-  password: 'linuxfabrik'
+  password: 'molecule-duba-password-marker'

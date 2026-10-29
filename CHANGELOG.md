@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:duplicity**: `duba exec -- <duplicity arguments>` runs any duplicity command (for example `collection-status` or `restore`) with the settings and the password of the backup, without exporting the password into the shell.
 * **role:graylog_server**: Add `graylog_server__stream_aware_field_types` to switch stream-aware field types on or off on Graylog 7.3 and later.
 * **role:graylog_datanode, role:graylog_server**: Add template for Graylog 7.3.
 * **module:systemd_credential**: Stores a secret as a systemd credential, encrypted with `systemd-creds` on systemd 251 and newer and as a root-only file in `/etc/credstore` on older systems, so that services can load it with `LoadCredentialEncrypted=` instead of reading it from a plain configuration file.
@@ -332,6 +333,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:duplicity**: The Swift or SFTP password is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/duba/duba.json`, so it is no longer readable in a backup of `/etc`. The old copies of `duba.json` are deleted. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`. Restores that read the password from `duba.json` have to switch to `duba exec`.
 * **role:mongodb**: The password of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mongodb-dump-login.json`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
