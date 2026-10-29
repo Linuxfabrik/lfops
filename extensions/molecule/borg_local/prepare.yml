@@ -1,0 +1,39 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# What an earlier version of the role left behind: the passphrase in plain text, with a copy
+# from `backup: true`, and a copy of borg-backup that carried the Icinga2 API login. The role
+# has to delete all of them.
+- name: 'Deploy the plain-text secrets of an earlier version of the role'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'mkdir -p /etc/borg'
+      ansible.builtin.file:
+        path: '/etc/borg'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+    - name: 'Deploy /etc/borg/borg-passphrase and a backup copy of it'
+      ansible.builtin.copy:
+        content: "{{ borg_local__passphrase }}\n"
+        dest: '{{ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+      loop:
+        - '/etc/borg/borg-passphrase'
+        - '/etc/borg/borg-passphrase.1234.2026-01-01@00:00:00~'
+
+    - name: 'Deploy a backup copy of /usr/local/bin/borg-backup'
+      ansible.builtin.copy:
+        content: "#!/usr/bin/env bash\n# {{ icinga2_master__downtime_api_user['password'] }}\n"
+        dest: '/usr/local/bin/borg-backup.1234.2026-01-01@00:00:00~'
+        owner: 'root'
+        group: 'root'
+        mode: 0o700

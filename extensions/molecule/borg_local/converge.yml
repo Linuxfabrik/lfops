@@ -1,0 +1,2 @@
+- name: 'Converge borg_local playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.borg_local'

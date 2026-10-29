@@ -1,0 +1,8 @@
+# Molecule scenario marker for the 'borg_local' scenario, run with
+# `molecule test --scenario-name borg_local`.
+#
+# It overrides the prepare step (see prepare.yml), which leaves the plain-text secrets of an
+# earlier version of the role behind, so that verify.yml can check that they are gone.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

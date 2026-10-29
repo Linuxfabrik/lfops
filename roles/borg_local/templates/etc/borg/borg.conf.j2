@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2024080803
+# 2026102901
 
 FILES_INCLUDE=(
 {% for item in borg_local__include_files__combined_var if item['state'] | d('present') != 'absent' %}
@@ -26,4 +26,11 @@ BACKUP_OPTS=(
 
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=yes
 export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=no
-export BORG_PASSPHRASE="$(cat /etc/borg/borg-passphrase)"
+# borg runs this command to get the passphrase (split like a shell would, but without a
+# shell), so the passphrase never sits in an environment variable. It is the systemd
+# credential borg-passphrase, which only root can read or decrypt.
+{% if __borg_local__passphrase_credential_result['encrypted'] | d(false) %}
+export BORG_PASSCOMMAND='systemd-creds decrypt --name=borg-passphrase /etc/credstore.encrypted/borg-passphrase -'
+{% else %}
+export BORG_PASSCOMMAND='cat /etc/credstore/borg-passphrase'
+{% endif %}

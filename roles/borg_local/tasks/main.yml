@@ -35,14 +35,45 @@
 
 - block:
 
-  - name: 'Deploy /etc/borg/borg-passphrase'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/borg/borg-passphrase.j2'
-      dest: '/etc/borg/borg-passphrase'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600
+  # encrypted with systemd 251 and newer, see the systemd_credential module. borg reads it
+  # through BORG_PASSCOMMAND from borg.conf, so it never sits in an environment variable.
+  # Inline instead of from a template, since a header would become part of the passphrase.
+  - name: 'Store the passphrase as the systemd credential borg-passphrase'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'borg-passphrase'
+      content: '{{ borg_local__passphrase | string }}'
+    register: '__borg_local__passphrase_credential_result'
+
+  # the plain-text predecessor of the credential, including the copies `backup: true` left
+  - name: 'find /etc/borg -maxdepth 1 -name borg-passphrase*'
+    ansible.builtin.find:
+      paths: '/etc/borg'
+      patterns: 'borg-passphrase*'
+    register: '__borg_local__passphrase_file_result'
+
+  - name: 'rm -f /etc/borg/borg-passphrase*'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __borg_local__passphrase_file_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  # encrypted with systemd 251 and newer, see the systemd_credential module. borg-backup
+  # decrypts it on every run, so a changed one needs no restart.
+  - name: 'Store the Icinga2 API login as the systemd credential borg-backup-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'borg-backup-icinga2-login.curlrc'
+      content: '{{ lookup("ansible.builtin.template", "etc/credstore/borg-backup-icinga2-login.curlrc.j2") }}'
+    when:
+      - 'borg_local__icinga2_api_user_login is defined'
+      - 'borg_local__icinga2_api_user_login | length > 0'
+
+  - name: 'Remove the systemd credential borg-backup-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'borg-backup-icinga2-login.curlrc'
+      state: 'absent'
+    when: 'borg_local__icinga2_api_user_login is not defined or borg_local__icinga2_api_user_login | length == 0'
 
   - name: 'Deploy /etc/borg/borg.conf'
     ansible.builtin.template:
@@ -55,12 +86,27 @@
 
   - name: 'Deploy the borg backup wrapper script'
     ansible.builtin.template:
-      backup: true
       src: 'usr/local/bin/borg-backup.j2'
       dest: '/usr/local/bin/borg-backup'
       owner: 'root'
       group: 'root'
-      mode: 0o700 # carries the credentials of the Icinga API user
+      mode: 0o700
+
+  # the copies `backup: true` left still contain the Icinga2 API login, which is now in the
+  # credential
+  - name: 'find /usr/local/bin -maxdepth 1 -name borg-backup.*~'
+    ansible.builtin.find:
+      paths: '/usr/local/bin'
+      patterns: 'borg-backup.*~'
+    register: '__borg_local__borg_backup_backup_result'
+
+  - name: 'rm -f /usr/local/bin/borg-backup.*~'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __borg_local__borg_backup_backup_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   tags:
     - 'borg_local'
