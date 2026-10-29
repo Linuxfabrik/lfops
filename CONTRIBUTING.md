@@ -555,6 +555,7 @@ A secret that a systemd service reads from a file (a daemon, or a script run by 
 * When moving an existing secret file to a credential, delete the old file and its `backup: true` copies.
 * Name the credential after the file it replaces, e.g. `mariadb-dump-login.cnf`.
 * Document in the role README where the secret ends up per platform, that a script has to run via `systemctl start <unit>`, and the TPM2 caveat: with a TPM2 chip, the credential is bound to the Secure Boot state, so after a firmware or Secure Boot change the unit cannot read it until the role runs again.
+* If the service must keep working without the secret, leave `LoadCredentialEncrypted=` out of the unit: when systemd cannot decrypt a credential listed there, the unit does not start at all. The script then decrypts it itself (`systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -`, else reads `/etc/credstore/<name>`) and goes on without it on failure. `roles/schedule_reboot` (`do-reboot`) does this, so that a credential the TPM2 no longer releases costs the Icinga downtime, not the reboot.
 * If the service only takes the secret inline in its config, the pattern does not apply without a wrapper that renders the config at start; keep the config file `0600` and owned by the service user.
 * `roles/mariadb_server` (`mariadb-dump`) and `roles/mongodb` (`mongodb-dump`) implement this pattern.
 

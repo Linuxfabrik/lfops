@@ -24,3 +24,7 @@ icinga2_agent__icinga2_master_cn: 'localhost'
 icinga2_master__downtime_api_user:
   username: 'molecule'
   password: 'linuxfabrik'
+
+# A stand-in for the webhook that verify.yml runs on the host itself. The last path
+# component plays the token, which must not end up in do-reboot.
+schedule_reboot__rocketchat_url: 'http://127.0.0.1:3000/hooks/molecule/linuxfabrik'

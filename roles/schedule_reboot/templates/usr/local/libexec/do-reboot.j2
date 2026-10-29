@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026092201
+# 2026102901
 
 # The single reboot actor. Run by schedule-reboot.service (a timer at the reboot
 # window, ordered After= the update lanes) and by `schedule-reboot --now`. Reboots
@@ -12,6 +12,20 @@ export LC_ALL=C
 
 SPOOL_DIR='/run/schedule-reboot'
 REBOOT=$(which reboot)
+
+# Prints the systemd credential that the schedule_reboot role stored. schedule-reboot.service
+# deliberately does not load it with LoadCredentialEncrypted=: if systemd cannot decrypt a
+# credential there (with a TPM2 chip, after a Secure Boot change), it does not start the unit
+# at all (EXIT_CREDENTIALS, verified against systemd 252 and 262 source), and no pending
+# reboot would ever happen. Decrypting it here lets the actor warn and reboot without it.
+read_credential () {
+    local name="$1"
+    if [[ -e "/etc/credstore.encrypted/$name" ]]; then
+        systemd-creds decrypt --name="$name" "/etc/credstore.encrypted/$name" -
+    else
+        cat "/etc/credstore/$name"
+    fi
+}
 
 send_msg () {
     local subject="$1" body="$2"
@@ -28,13 +42,17 @@ send_msg () {
 {% if schedule_reboot__rocketchat_url is defined and schedule_reboot__rocketchat_url | length %}
     # The webhook URL carries its token, so it reaches curl through a pipe rather than the command
     # line, which every local user can read in the process list.
-    /usr/bin/curl --silent --output /dev/null --data-urlencode \
-        "text=${subject}
+    if rocketchat_webhook=$(read_credential 'schedule-reboot-rocketchat-webhook.curlrc'); then
+        /usr/bin/curl --silent --output /dev/null --data-urlencode \
+            "text=${subject}
 
         ${body}
         {{ schedule_reboot__rocketchat_msg_suffix }}" \
-        --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
-        --config <(printf 'url = "%s"\n' '{{ schedule_reboot__rocketchat_url }}')
+            --data-urlencode "parse_mode=HTML" --data-urlencode "disable_web_page_preview=true" \
+            --config <(printf '%s\n' "$rocketchat_webhook")
+    else
+        echo 'Cannot read the Rocket.Chat webhook, skipping the chat message.' >&2
+    fi
 {% endif %}
 }
 
@@ -69,9 +87,10 @@ send_msg "$SUBJECT_PREFIX - Automatic reboot due to ${reasons%, }" "$MSGBODY"
 # needed for Icinga to set downtime (max. 5 minutes downtime)
 START_TIME=$(date +%s)
 END_TIME=$(( START_TIME + 300 ))
-# The credentials reach curl as a header read from a pipe that the printf builtin fills, so they
+# The credentials reach curl as a config read from a pipe that the printf builtin fills, so they
 # never show up in the process list the way `curl --user` would put them there.
-curl --connect-timeout 5 --insecure --silent --header @<(printf 'Authorization: Basic %s\n' '{{ (schedule_reboot__icinga2_api_user_login["username"] ~ ":" ~ schedule_reboot__icinga2_api_user_login["password"]) | b64encode }}') --header 'Accept: application/json' --request POST '{{ schedule_reboot__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
+if icinga2_login=$(read_credential 'schedule-reboot-icinga2-login.curlrc'); then
+    curl --connect-timeout 5 --insecure --silent --config <(printf '%s\n' "$icinga2_login") --header 'Accept: application/json' --request POST '{{ schedule_reboot__icinga2_api_url }}/v1/actions/schedule-downtime' --data-binary @- 1> /dev/null << EOF
 {
     "type": "Host",
     "filter": "match(\"{{ schedule_reboot__icinga2_hostname }}\", host.name)",
@@ -82,6 +101,9 @@ curl --connect-timeout 5 --insecure --silent --header @<(printf 'Authorization: 
     "all_services": true
 }
 EOF
+else
+    echo 'Cannot read the Icinga2 API login, rebooting without a downtime.' >&2
+fi
 {% endif %}
 
 # give the notification mail time to leave the local postfix queue before we go

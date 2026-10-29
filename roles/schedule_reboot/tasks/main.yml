@@ -13,14 +13,58 @@
       group: 'root'
       mode: 0o755
 
+  # encrypted with systemd 251 and newer, see the systemd_credential module. do-reboot decrypts
+  # it on every run, so a changed one needs no restart.
+  - name: 'Store the Icinga2 API login as the systemd credential schedule-reboot-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'schedule-reboot-icinga2-login.curlrc'
+      content: '{{ lookup("ansible.builtin.template", "etc/credstore/schedule-reboot-icinga2-login.curlrc.j2") }}'
+    when:
+      - 'schedule_reboot__icinga2_api_user_login is defined'
+      - 'schedule_reboot__icinga2_api_user_login | length > 0'
+
+  - name: 'Remove the systemd credential schedule-reboot-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'schedule-reboot-icinga2-login.curlrc'
+      state: 'absent'
+    when: 'schedule_reboot__icinga2_api_user_login is not defined or schedule_reboot__icinga2_api_user_login | length == 0'
+
+  - name: 'Store the Rocket.Chat webhook as the systemd credential schedule-reboot-rocketchat-webhook.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'schedule-reboot-rocketchat-webhook.curlrc'
+      content: '{{ lookup("ansible.builtin.template", "etc/credstore/schedule-reboot-rocketchat-webhook.curlrc.j2") }}'
+    when:
+      - 'schedule_reboot__rocketchat_url is defined'
+      - 'schedule_reboot__rocketchat_url | length > 0'
+
+  - name: 'Remove the systemd credential schedule-reboot-rocketchat-webhook.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'schedule-reboot-rocketchat-webhook.curlrc'
+      state: 'absent'
+    when: 'schedule_reboot__rocketchat_url is not defined or schedule_reboot__rocketchat_url | length == 0'
+
   - name: 'Deploy /usr/local/libexec/do-reboot'
     ansible.builtin.template:
-      backup: true
       src: 'usr/local/libexec/do-reboot.j2'
       dest: '/usr/local/libexec/do-reboot'
       owner: 'root'
       group: 'root'
-      mode: 0o700 # carries the credentials of the Icinga API user and the Rocket.Chat webhook
+      mode: 0o700 # only schedule-reboot.service runs it
+
+  # the copies `backup: true` left of earlier versions of do-reboot carry the credentials
+  - name: 'find /usr/local/libexec -maxdepth 1 -name do-reboot.*~'
+    ansible.builtin.find:
+      paths: '/usr/local/libexec'
+      patterns: 'do-reboot.*~'
+    register: '__schedule_reboot__do_reboot_backups_result'
+
+  - name: 'rm -f /usr/local/libexec/do-reboot.*~'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __schedule_reboot__do_reboot_backups_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   - name: 'Deploy /usr/local/sbin/schedule-reboot'
     ansible.builtin.template:
