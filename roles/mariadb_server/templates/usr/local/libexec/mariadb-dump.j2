@@ -6,7 +6,7 @@
 # License: The Unlicense, see LICENSE file.
 
 # {{ ansible_managed }}
-# 2026102701
+# 2026102801
 
 
 # no `set -e` because we change some things at the beginning of the script
@@ -32,8 +32,14 @@ umask 027
 
 source /etc/mariadb-dump.conf
 
-# the login of the dump user, kept out of the command line (and the process list)
-login_file=/etc/mariadb-dump-login.cnf
+# the login of the dump user, kept out of the command line (and the process list). With systemd
+# 251 and newer, mariadb-dump.service decrypts it to $CREDENTIALS_DIRECTORY, older systemd keeps it
+# in plain text in /etc/credstore.
+login_file="${CREDENTIALS_DIRECTORY:-/etc/credstore}/mariadb-dump-login.cnf"
+if [ ! -r "$login_file" ]; then
+    echo "Cannot read $login_file. Run the dump with 'systemctl start mariadb-dump.service'." >&2
+    exit 1
+fi
 
 # mysql: Deprecated program name. It will be removed in a future release, use '/usr/bin/mariadb' instead
 # so `mariadb` or `mysql`?

@@ -171,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: The dump script is installed as `/usr/local/libexec/mariadb-dump`, so it no longer shadows MariaDB's own `mariadb-dump` client for users with `/usr/local/bin` in their `PATH`.
 * **role:mongodb**: The file-based dump (`mongodb__dump_method_file_based`) locks the instance also with authorization enabled and works on Debian and Ubuntu, and a dump that cannot lock the instance fails instead of copying the data files of the running instance.
 * **role:mongodb**: A run against an unchanged host no longer reports the dump user and the users from `mongodb__users__*_var` as changed; a password changed in the inventory is still applied.
 * **role:mongodb**: `mongodb__dump_only_if_hidden: true` dumps only hidden members of a replica set, as documented; until now it dumped every member.
@@ -320,6 +321,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:mariadb_server**: The login of the dump user is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/mariadb-dump-login.cnf`, so it is no longer readable in a backup of `/etc`. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`.
 * **role:mongodb**: The daily dump no longer passes the password of the dump user on the command line, where every local user could read it in the process list.
 * **role:mariadb_server**: The daily dump and the log rotation no longer pass MariaDB passwords on the command line, where every local user could read them in the process list.
 * **role:php**: PHP 8.5 logs fatal errors without a backtrace (`fatal_error_backtraces = Off`), which closes the main way into the remote code execution CVE-2026-109619 ([GHSA-6wmf-4rv5-p3rp](https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp)) on unpatched builds. The role settings only narrow the attack paths: update PHP to 8.2.35, 8.3.36, 8.4.27, 8.5.12 or your distribution's fixed package to close the vulnerability.
