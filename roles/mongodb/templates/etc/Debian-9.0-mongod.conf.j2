@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026102901
+# 2026103001
 {# Based on mongodb-org-server 9.0.4 #}
 
 # mongod.conf
@@ -23,6 +23,7 @@ storage:
 systemLog:
   destination: file
   logAppend: true
+  logRotate: reopen
   path: /var/log/mongodb/mongod.log
 
 # network interfaces
