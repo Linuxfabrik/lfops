@@ -293,7 +293,7 @@ gitlab_ce:
       path: '/opt/gitlab/etc/gitlab.rb.template'
       template: 'roles/gitlab_ce/templates/etc/gitlab/gitlab.rb.j2'
 
-# Install scripts (grafana 13.2.4, RPM and DEB): on the first installation, copy
+# Install scripts (grafana 13.3.0, RPM and DEB): on the first installation, copy
 # sample.ini and ldap.toml unchanged to /etc/grafana, then set root:grafana 0640, as the
 # grafana role does.
 grafana:
