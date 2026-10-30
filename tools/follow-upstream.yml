@@ -20,6 +20,13 @@
 #   bound with a SHA-1 signature, which the default crypto policy of Rocky 9 rejects.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
 #   `tools/follow-upstream --check` looks for new releases here.
+# * `series_rpm_repo`: optional, `{<series>: <url>}` for a series served by another RPM
+#   repository than `rpm_repo`, e.g. one distribution release per series. Only the builds
+#   of that series in that repository count.
+# * `follow_release`: optional, `true` makes the package release part of the version
+#   (`Based on tomcat 9.0.120-2.el9_8`), so a new build of the same version is followed
+#   too. For distribution packages, which change a package without changing its version.
+#   RPM only.
 # * `repo_series_parts`: optional, how many version components `{series}` has in the
 #   repository URLs, if not `series_parts` (2: one repository per `26.04`).
 # * `series_suffix`: optional, appended to the series in the template header and in
