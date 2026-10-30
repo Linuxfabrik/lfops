@@ -181,6 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:logstash**: `.rpmnew` files of `/etc/default/logstash` and `/etc/logstash/pipelines.yml` are removed after a package upgrade ([#515](https://github.com/Linuxfabrik/lfops/issues/515)).
 * **role:mongodb**: mongod keeps logging to `/var/log/mongodb/mongod.log` after the log rotation on RHEL; until now its log was lost until the next restart. The next run restarts mongod once ([#531](https://github.com/Linuxfabrik/lfops/issues/531)).
 * **role:mongodb**: `mongodb__conf_replication_oplog_size_mb` can be set as a number on Debian and Ubuntu; the run aborted with `object of type 'int' has no len()` ([#532](https://github.com/Linuxfabrik/lfops/issues/532)).
 * **plugin:gpg_key, plugin:nextcloud_occ_app, plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config**: The modules no longer fail with `env: 'python3': No such file or directory` on RHEL 8 hosts that have no `python3` installed, for example when a run skips the role that installs it, and without Mitogen. All in-house modules use the Python found by interpreter discovery or set in `ansible_python_interpreter`, like the modules of ansible-core.
