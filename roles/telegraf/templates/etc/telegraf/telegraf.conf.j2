@@ -1,6 +1,6 @@
 #jinja2:variable_start_string:'[%', variable_end_string:'%]'
 # [% ansible_managed %]
-# 2026102701
+# 2026103001
 {# Based on telegraf 1.40.2 #}
 
 # Telegraf Configuration
@@ -29,7 +29,7 @@
 # Configuration for telegraf agent
 [agent]
   ## Default data collection interval for all inputs
-  interval = "[% telegraf__agent_interval | default('10s') %]"
+  interval = "[% telegraf__agent_interval %]"
   ## Rounds collection interval to 'interval'
   ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
   round_interval = true
@@ -1733,7 +1733,7 @@
 
   ## The target database for metrics; will be created as needed.
   ## For UDP url endpoint database needs to be configured on server side.
-  database = "[% telegraf__outputs_influxdb_database | d('telegraf') %]"
+  database = "[% telegraf__outputs_influxdb_database %]"
 
   ## The value of this tag will be used to determine the database.  If this
   ## tag is not set the 'database' option is used as the default.
@@ -1745,7 +1745,7 @@
   ## If true, no CREATE DATABASE queries will be sent.  Set to true when using
   ## Telegraf with a user without permissions to create databases or when the
   ## database already exists.
-  skip_database_creation = [% telegraf__outputs_influxdb_skip_database_creation | default(false) | string | lower %]
+  skip_database_creation = [% telegraf__outputs_influxdb_skip_database_creation | string | lower %]
 
   ## Name of existing retention policy to write to.  Empty string writes to
   ## the default retention policy.  Only takes effect when using HTTP.

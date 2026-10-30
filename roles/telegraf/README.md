@@ -157,7 +157,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The target database for metrics; will be created as needed. For UDP url endpoint database needs to be configured on server side.
 * Type: String.
-* Default: `''`
+* Default: `'telegraf'`
 
 `telegraf__outputs_influxdb_password`
 
@@ -170,6 +170,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Skip database creation (we assume the InfluxDB role creates the database).
 * Type: Bool.
 * Default: `true`
+* Deviates from the upstream default `false`: the `influxdb` role creates the databases, which leaves the administrator in control of them.
 
 `telegraf__outputs_influxdb_urls`
 
