@@ -7,14 +7,15 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  # the configuration holds credentials; telegraf runs as the user `telegraf`
   - name: 'Deploy /etc/telegraf/telegraf.conf'
     ansible.builtin.template:
       backup: true
       src: 'etc/telegraf/telegraf.conf.j2'
       dest: '/etc/telegraf/telegraf.conf'
       owner: 'root'
-      group: 'root'
-      mode: 0o644
+      group: 'telegraf'
+      mode: 0o640
     notify: 'telegraf: systemctl restart telegraf.service'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
@@ -30,8 +31,8 @@
       src: 'etc/telegraf/telegraf.d/{{ item["template"] }}.conf.j2'
       dest: '/etc/telegraf/telegraf.d/{{ item["filename"] }}.conf'
       owner: 'root'
-      group: 'root'
-      mode: 0o644
+      group: 'telegraf'
+      mode: 0o640
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ telegraf__conf__combined_var }}'
@@ -45,6 +46,25 @@
       - 'item["state"] | d("present") == "absent"'
     loop: '{{ telegraf__conf__combined_var }}'
     notify: 'telegraf: systemctl restart telegraf.service'
+
+  # `backup: true` keeps the mode of the replaced file, so backups of the formerly
+  # world-readable files would still expose the credentials
+  - name: 'find /etc/telegraf -name *~'
+    ansible.builtin.find:
+      paths: '/etc/telegraf'
+      patterns: '*~'
+      recurse: true
+    register: '__telegraf__backups_result'
+
+  - name: 'chmod 0640 /etc/telegraf/**/*~'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      owner: 'root'
+      group: 'telegraf'
+      mode: 0o640
+    loop: '{{ __telegraf__backups_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   tags:
     - 'telegraf'

@@ -181,6 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:telegraf**: A `"` or `\` in a username or password no longer breaks the configuration.
 * **role:logstash**: `.rpmnew` files of `/etc/default/logstash` and `/etc/logstash/pipelines.yml` are removed after a package upgrade ([#515](https://github.com/Linuxfabrik/lfops/issues/515)).
 * **role:mongodb**: mongod keeps logging to `/var/log/mongodb/mongod.log` after the log rotation on RHEL; until now its log was lost until the next restart. The next run restarts mongod once ([#531](https://github.com/Linuxfabrik/lfops/issues/531)).
 * **role:mongodb**: `mongodb__conf_replication_oplog_size_mb` can be set as a number on Debian and Ubuntu; the run aborted with `object of type 'int' has no len()` ([#532](https://github.com/Linuxfabrik/lfops/issues/532)).
@@ -345,6 +346,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:telegraf**: The configuration, which contains credentials, and its backups are no longer world-readable (`0640 root:telegraf`).
 * **role:borg_local**: The repository passphrase and the Icinga2 API login are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/borg/borg-passphrase` and `/usr/local/bin/borg-backup`, so the passphrase is no longer readable in the backup it protects. The old files and their copies are deleted. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. `source /etc/borg/borg.conf` followed by `borg` still works for restores, as root.
 * **role:schedule_reboot**: The Icinga2 API login and the Rocket.Chat webhook URL are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/usr/local/libexec/do-reboot`. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. If the credentials cannot be decrypted, the host still reboots, without the downtime and the chat message.
 * **role:duplicity**: The Swift or SFTP password is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/duba/duba.json`, so it is no longer readable in a backup of `/etc`. The old copies of `duba.json` are deleted. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`. Restores that read the password from `duba.json` have to switch to `duba exec`.

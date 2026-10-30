@@ -137,7 +137,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `telegraf__inputs_vsphere_password`
 
-* Password for vSphere authentication.
+* Password for vSphere authentication. telegraf expands `$VAR` in the value and turns `$$` into `$`.
 * Type: String.
 * Default: `''`
 
@@ -161,7 +161,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `telegraf__outputs_influxdb_password`
 
-* Password for HTTP Basic Auth to InfluxDB.
+* Password for HTTP Basic Auth to InfluxDB. telegraf expands `$VAR` in the value and turns `$$` into `$`.
 * Type: String.
 * Default: `''`
 

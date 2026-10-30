@@ -1,0 +1,2 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: telegraf.service runs under systemd.

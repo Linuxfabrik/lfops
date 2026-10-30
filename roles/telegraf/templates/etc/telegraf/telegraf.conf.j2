@@ -1769,10 +1769,10 @@
   # username = "telegraf"
   # password = "metricsmetricsmetricsmetrics"
   {% if telegraf__outputs_influxdb_username is defined and telegraf__outputs_influxdb_username %}
-  username = "[% telegraf__outputs_influxdb_username %]"
+  username = [% telegraf__outputs_influxdb_username | string | to_json %]
   {% endif %}
   {% if telegraf__outputs_influxdb_password is defined and telegraf__outputs_influxdb_password %}
-  password = "[% telegraf__outputs_influxdb_password %]"
+  password = [% telegraf__outputs_influxdb_password | string | to_json %]
   {% endif %}
 
   ## HTTP User-Agent
@@ -15047,8 +15047,8 @@
     "[% item %]",
   {% endfor %}
   ]
-  username = "[% telegraf__inputs_vsphere_username %]"
-  password = "[% telegraf__inputs_vsphere_password %]"
+  username = [% telegraf__inputs_vsphere_username | string | to_json %]
+  password = [% telegraf__inputs_vsphere_password | string | to_json %]
 
   ## VMs
   ## Typical VM metrics (if omitted or empty, all metrics are collected)
