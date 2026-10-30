@@ -20,6 +20,13 @@
 #   bound with a SHA-1 signature, which the default crypto policy of Rocky 9 rejects.
 # * `rpm_repo`: Yum repository serving every release of a series, `{series}` is replaced.
 #   `tools/follow-upstream --check` looks for new releases here.
+# * `series_rpm_repo`: optional, `{<series>: <url>}` for a series served by another RPM
+#   repository than `rpm_repo`, e.g. one distribution release per series. Only the builds
+#   of that series in that repository count.
+# * `follow_release`: optional, `true` makes the package release part of the version
+#   (`Based on tomcat 9.0.120-2.el9_8`), so a new build of the same version is followed
+#   too. For distribution packages, which change a package without changing its version.
+#   RPM only.
 # * `repo_series_parts`: optional, how many version components `{series}` has in the
 #   repository URLs, if not `series_parts` (2: one repository per `26.04`).
 # * `series_suffix`: optional, appended to the series in the template header and in
@@ -90,6 +97,73 @@ graylog:
     - '/etc/logrotate.d/graylog-server'
     - '/etc/needrestart/conf.d/500-graylog.conf'
     - '/etc/sysconfig/graylog-datanode'
+
+# Red Hat's packages, from Rocky Linux: each series comes from the distribution release
+# that ships it, 9.0 from EL 9 (EL 8 ships the same files) and 10.1 from EL 10. Red Hat
+# backports changes into a version, so the package release is followed as well. The
+# templates of the webapps' context.xml serve both series and follow 10.1.
+#
+# Install scripts (tomcat, tomcat-admin-webapps and tomcat-docs-webapp 9.0.120-2.el9_8 and
+# 10.1.49-4.el10_2): create the user and register the unit, never touch the templated
+# files.
+apache_tomcat:
+  series_parts: 2
+  follow_release: true
+  gpg_key: 'https://dl.rockylinux.org/pub/rocky/RPM-GPG-KEY-Rocky-10'
+  series_gpg_key:
+    '9.0':
+      url: 'https://dl.rockylinux.org/pub/rocky/RPM-GPG-KEY-Rocky-9'
+  rpm_repo: 'https://dl.rockylinux.org/pub/rocky/10/AppStream/x86_64/os/'
+  series_rpm_repo:
+    '9.0': 'https://dl.rockylinux.org/pub/rocky/9/AppStream/x86_64/os/'
+  files:
+    - package: 'tomcat'
+      path: '/etc/sysconfig/tomcat'
+      template: 'roles/apache_tomcat/templates/etc/sysconfig/{series}-tomcat.j2'
+      supported_versions: 'roles/apache_tomcat/vars/main.yml:__apache_tomcat__supported_versions'
+    - package: 'tomcat'
+      path: '/etc/tomcat/context.xml'
+      template: 'roles/apache_tomcat/templates/etc/tomcat/{series}-context.xml.j2'
+      supported_versions: 'roles/apache_tomcat/vars/main.yml:__apache_tomcat__supported_versions'
+    - package: 'tomcat'
+      path: '/etc/tomcat/logging.properties'
+      template: 'roles/apache_tomcat/templates/etc/tomcat/{series}-logging.properties.j2'
+      supported_versions: 'roles/apache_tomcat/vars/main.yml:__apache_tomcat__supported_versions'
+    - package: 'tomcat'
+      path: '/etc/tomcat/server.xml'
+      template: 'roles/apache_tomcat/templates/etc/tomcat/{series}-server.xml.j2'
+      supported_versions: 'roles/apache_tomcat/vars/main.yml:__apache_tomcat__supported_versions'
+    - package: 'tomcat'
+      path: '/etc/tomcat/tomcat-users.xml'
+      template: 'roles/apache_tomcat/templates/etc/tomcat/{series}-tomcat-users.xml.j2'
+      supported_versions: 'roles/apache_tomcat/vars/main.yml:__apache_tomcat__supported_versions'
+    - package: 'tomcat-docs-webapp'
+      path: '/var/lib/tomcat/webapps/docs/META-INF/context.xml'
+      template: 'roles/apache_tomcat/templates/var/lib/tomcat/webapps/docs/META-INF/context.xml.j2'
+    - package: 'tomcat-admin-webapps'
+      path: '/var/lib/tomcat/webapps/host-manager/META-INF/context.xml'
+      template: 'roles/apache_tomcat/templates/var/lib/tomcat/webapps/host-manager/META-INF/context.xml.j2'
+    - package: 'tomcat-admin-webapps'
+      path: '/var/lib/tomcat/webapps/manager/META-INF/context.xml'
+      template: 'roles/apache_tomcat/templates/var/lib/tomcat/webapps/manager/META-INF/context.xml.j2'
+    - package: 'tomcat-admin-webapps'
+      path: '/var/lib/tomcat/webapps/manager/WEB-INF/web.xml'
+      template: 'roles/apache_tomcat/templates/var/lib/tomcat/webapps/manager/WEB-INF/{series}-web.xml.j2'
+      supported_versions: 'roles/apache_tomcat/vars/main.yml:__apache_tomcat__supported_versions'
+  ignore:
+    # the packaged defaults are used
+    - '/etc/tomcat/catalina.policy'
+    - '/etc/tomcat/catalina.properties'
+    - '/etc/tomcat/conf.d/README'
+    - '/etc/tomcat/conf.d/java-9-start-up-parameters.conf'  # 9.0 only
+    - '/etc/tomcat/conf.d/module-start-up-parameters.conf'  # 10.1 only
+    - '/etc/tomcat/jaspic-providers.xml'
+    - '/etc/tomcat/jaspic-providers.xsd'
+    - '/etc/tomcat/tomcat-users.xsd'
+    - '/etc/tomcat/tomcat.conf'
+    - '/etc/tomcat/web.xml'
+    # a disabled example; the apache_tomcat role writes /etc/logrotate.d/tomcat itself
+    - '/etc/logrotate.d/tomcat.disabled'
 
 # Install scripts (coolwsd 26.04.5.1, RPM): coolwsd.xml is only rewritten by
 # `coolconfig migrateconfig --write`, which runs if a /etc/loolwsd/loolwsd.xml of

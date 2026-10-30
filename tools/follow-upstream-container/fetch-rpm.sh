@@ -5,6 +5,7 @@
 # the same release need no second download. The package is downloaded into the
 # container first, the 2 GB graylog-datanode package needs that much free space below
 # ~/.local/share/containers. The install scripts and triggers go to /out/scripts.
+# With `${RELEASE}`, only that build is taken (`follow_release`), otherwise the newest.
 # Builds whose release matches `${PRERELEASE_RE}` (`1.alpha.1`) are skipped, with
 # `${ALLOW_PRERELEASE}` only if a final build exists: rpm sorts `7.3.0-1.alpha.1` after
 # `7.3.0-1`, so `--latest-limit=1` alone would pick the pre-release (verified against
@@ -22,6 +23,13 @@ releases=$(dnf --quiet --repo=app \
     | sort --unique)
 if [ -z "${releases}" ]; then
     fail "${PACKAGE} ${VERSION} not found in ${REPO_DISPLAY}"
+fi
+# `${RELEASE}` (`follow_release`) asks for exactly this build
+if [ -n "${RELEASE}" ]; then
+    if ! grep --quiet --line-regexp --fixed-strings "${RELEASE}" <<< "${releases}"; then
+        fail "${PACKAGE} ${VERSION}-${RELEASE} not found in ${REPO_DISPLAY}"
+    fi
+    releases=${RELEASE}
 fi
 final=$(awk -v pattern="${PRERELEASE_RE}" 'tolower($0) !~ pattern' <<< "${releases}")
 if [ -n "${final}" ]; then
