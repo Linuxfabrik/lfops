@@ -7,6 +7,12 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  tags:
+    - 'telegraf'
+
+
+- block:
+
   # the configuration holds credentials; telegraf runs as the user `telegraf`
   - name: 'Deploy /etc/telegraf/telegraf.conf'
     ansible.builtin.template:
@@ -68,17 +74,18 @@
 
   tags:
     - 'telegraf'
+    - 'telegraf:configure'
 
 
 - block:
 
   - name: 'systemctl {{ telegraf__service_enabled | bool | ternary("enable", "disable") }} telegraf.service'
-    ansible.builtin.systemd:
+    ansible.builtin.service:
       name: 'telegraf.service'
-      enabled: '{{ telegraf__service_enabled }}'
+      enabled: '{{ telegraf__service_enabled | bool }}'
 
   - name: 'systemctl {{ telegraf__service_state | regex_replace("p?ed$", "") }} telegraf.service'
-    ansible.builtin.systemd:
+    ansible.builtin.service:
       name: 'telegraf.service'
       state: '{{ telegraf__service_state }}'
     register: '__telegraf__service_state_result'

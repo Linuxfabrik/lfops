@@ -20,6 +20,11 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Installs and configures telegraf server.
 * Triggers: telegraf.service restart.
 
+`telegraf:configure`
+
+* Deploys the configuration to `/etc/telegraf/`.
+* Triggers: telegraf.service restart.
+
 `telegraf:state`
 
 * Manages the state of the telegraf server.
@@ -222,12 +227,12 @@ telegraf__inputs_processes_enable: false
 telegraf__inputs_swap_enable: false
 telegraf__inputs_system_enable: false
 telegraf__inputs_vsphere_enable: true
-telegraf__inputs_vsphere_password: 'password'
+telegraf__inputs_vsphere_password: 'linuxfabrik'
 telegraf__inputs_vsphere_username: 'username'
 telegraf__inputs_vsphere_vcenters:
   - 'https://vsphere/sdk'
 telegraf__outputs_influxdb_database: 'telegraf'
-telegraf__outputs_influxdb_password: 'password'
+telegraf__outputs_influxdb_password: 'linuxfabrik'
 telegraf__outputs_influxdb_skip_database_creation: true
 telegraf__outputs_influxdb_urls:
   - 'http://127.0.0.1:8086'
