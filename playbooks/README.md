@@ -1188,6 +1188,8 @@ Calls the following roles (in order):
 
 ## setup_graylog_datanode.yml
 
+Before the first role changes the host, the playbook checks that the disk space the `graylog_datanode` role asks for is free. Too little space aborts the run there.
+
 Calls the following roles (in order):
 
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_graylog_datanode__skip_policycoreutils`
@@ -1203,6 +1205,8 @@ Calls the following roles (in order):
 
 
 ## setup_graylog_server.yml
+
+Before the first role changes the host, the playbook checks that the disk space the `graylog_datanode` and `graylog_server` roles ask for is free. Too little space aborts the run there.
 
 Calls the following roles (in order):
 
@@ -1220,6 +1224,8 @@ Calls the following roles (in order):
 
 
 ## setup_icinga2_master.yml
+
+Before the first role changes the host, the playbook adds up the disk space of the roles that are not installed yet and checks that it is free, unless the run is limited with `--tags`. Too little space aborts the run there.
 
 Calls the following roles (in order):
 
