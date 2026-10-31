@@ -29,6 +29,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
     * `/`: at least 4 GB free disk space (create a 8+ GB partition).
     * `/var`: at least 15 GB free disk space (create a 20+ GB partition).
 
+    The run aborts on a host without Graylog that has less, adding up both values if `/` and `/var` are the same filesystem. Set `lfops__skip_disk_space_check: true` to skip this check.
+
 Manual steps:
 
 * If you're not using a versioned MongoDB repository, protect MongoDB from being updated with newer minor and major versions by running the [dnf_versionlock](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/dnf_versionlock.yml) playbook (role: [linuxfabrik.lfops.dnf_versionlock](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf_versionlock)).

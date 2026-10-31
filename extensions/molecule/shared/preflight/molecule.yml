@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'preflight' sub-scenario, run with
+# `molecule test --scenario-name shared/preflight`.
+#
+# The check is a task file of the `shared` role, which has no playbook of its own, so the scenario
+# calls it directly instead of the setup playbooks that use it: these need far more disk space
+# and external repositories than this check is about.

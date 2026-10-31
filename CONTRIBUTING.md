@@ -355,6 +355,8 @@ A playbook that runs many roles, such as `setup_basic`, aborts on a missing prer
 * includes `shared/tasks/validate-role-arguments.yml`, tagged `always`, with the roles it runs. It lists them in `<playbook>__roles__internal_var`, each with the condition under which the play skips it; `tests/unit/test_playbooks.py` keeps the list in sync with the play.
 * includes the `preflight.yml` of each role that has one, with `tasks_from`, gated on the role's skip variable and tagged like the role.
 
+Disk space needs go through `shared/tasks/preflight.yml`, never into a README alone. A role with a fixed need calls it in its `preflight.yml` (reference: `roles/graylog_server`). A playbook whose roles only fill up the disk together passes all of them at once, since the task adds them up per filesystem (reference: `playbooks/setup_icinga2_master.yml`). Measure the numbers on a real installation, and give every requirement a `creates`, so that an installed host with a full disk can still be re-configured.
+
 
 #### Reporting a Manual Step to the Operator
 

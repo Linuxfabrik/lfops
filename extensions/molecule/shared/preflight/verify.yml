@@ -1,0 +1,39 @@
+- name: 'Verify that the check adds up the requirements of a filesystem and aborts'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'df --block-size=1M --output=avail /usr'
+      ansible.builtin.command: 'df --block-size=1M --output=avail /usr'
+      register: '__molecule__df_result'
+      changed_when: false
+
+
+    - block:
+
+      # each of the two fits on its own, only their sum does not
+      - name: 'Run the check with two requirements on the same filesystem'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.shared'
+          tasks_from: 'preflight.yml'
+        vars:
+          __molecule__three_quarters_mib: '{{ __molecule__df_result["stdout_lines"][-1] | int * 3 // 4 }}'
+          shared__disk_space_requirements:
+            - name: 'first'
+              path: '/usr'
+              required_mib: '{{ __molecule__three_quarters_mib }}'
+            - name: 'second'
+              path: '/usr/bin'
+              required_mib: '{{ __molecule__three_quarters_mib }}'
+
+      - name: 'Fail, since the check let the run continue'
+        ansible.builtin.fail:
+          msg: 'The check did not abort.'
+
+      rescue:
+
+      - name: 'Assert that the check aborted and named both requirements'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_result["results"] | d([]) | selectattr("failed") | map(attribute="msg") | join is search("but first, second need")'
+          quiet: true

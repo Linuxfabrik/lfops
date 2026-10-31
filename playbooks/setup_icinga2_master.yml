@@ -10,6 +10,45 @@
     setup_icinga2_master__apache_httpd__skip_injections__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_injections | d(setup_icinga2_master__apache_httpd__skip_role__internal_var) }}'
     setup_icinga2_master__apache_httpd__skip_role__internal_var: '{{ setup_icinga2_master__apache_httpd__skip_role | d(false) }}'
     setup_icinga2_master__chromium_headless__skip_role__internal_var: '{{ setup_icinga2_master__chromium_headless__skip_role | d(setup_icinga2_master__icingaweb2_module_pdfexport__skip_role__internal_var) }}'
+    # Installed size on the filesystem of /usr, including dependencies and some headroom. Measured
+    # with `rpm --query --all --queryformat` on a monitoring server with Rocky 10.1. The monitoring
+    # plugins (24 MiB), redis or valkey (5 MiB) and apache_httpd (7 MiB) do not matter here.
+    setup_icinga2_master__disk_space__internal_var:
+      - name: 'grafana'
+        creates: '/usr/share/grafana'
+        path: '/usr'
+        required_mib: 1500
+        skip: '{{ setup_icinga2_master__grafana__skip_role__internal_var }}'
+      - name: 'icinga2_master'
+        creates: '/usr/sbin/icinga2'
+        path: '/usr'
+        required_mib: 100
+        skip: '{{ setup_icinga2_master__icinga2_master__skip_role__internal_var }}'
+      - name: 'icingadb'
+        creates: '/usr/sbin/icingadb'
+        path: '/usr'
+        required_mib: 50
+        skip: '{{ setup_icinga2_master__icingadb__skip_role__internal_var }}'
+      - name: 'icingaweb2'
+        creates: '/usr/share/icingaweb2'
+        path: '/usr'
+        required_mib: 150
+        skip: '{{ setup_icinga2_master__icingaweb2__skip_role__internal_var }}'
+      - name: 'influxdb'
+        creates: '/usr/bin/influxd'
+        path: '/usr'
+        required_mib: 200
+        skip: '{{ setup_icinga2_master__influxdb__skip_role__internal_var }}'
+      - name: 'mariadb_server'
+        creates: '/usr/sbin/mariadbd'
+        path: '/usr'
+        required_mib: 300
+        skip: '{{ setup_icinga2_master__mariadb_server__skip_role__internal_var }}'
+      - name: 'php'
+        creates: '/usr/bin/php'
+        path: '/usr'
+        required_mib: 100
+        skip: '{{ setup_icinga2_master__php__skip_role__internal_var }}'
     setup_icinga2_master__grafana__skip_injections__internal_var: '{{ setup_icinga2_master__grafana__skip_injections | d(setup_icinga2_master__grafana__skip_role__internal_var) }}'
     setup_icinga2_master__grafana__skip_role__internal_var: '{{ setup_icinga2_master__grafana__skip_role | d(false) }}'
     setup_icinga2_master__grafana_grizzly__skip_injections__internal_var: '{{ setup_icinga2_master__grafana_grizzly__skip_injections | d(setup_icinga2_master__grafana_grizzly__skip_role__internal_var) }}'
@@ -97,6 +136,14 @@
         tasks_from: 'global-variables.yml'
       tags:
         - 'always'
+
+    # untagged on purpose: a run limited with `--tags` does not install all of these roles
+    - name: 'Check that there is enough disk space for all roles'
+      ansible.builtin.include_role:
+        name: 'shared'
+        tasks_from: 'preflight.yml'
+      vars:
+        shared__disk_space_requirements: '{{ setup_icinga2_master__disk_space__internal_var | rejectattr("skip") | list }}'
 
 
   roles:
