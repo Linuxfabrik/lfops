@@ -115,6 +115,7 @@ This role is compatible with the following aide versions:
     * The RHEL 9 / 10 list is used on every platform, extended by the Debian and Ubuntu counterparts of its paths. On Debian and Ubuntu the rules of `aide-common` are not used.
     * `!/root/\.ansible/tmp` is added, since Ansible creates and deletes a directory there for every task it runs as root.
     * `!/root/\.cache` is added. It holds disposable caches only and gains pip cache entries on every run of the python_venv role.
+    * `!/opt/cool/child-roots` is added. Collabora creates a jail per process there, under a new name on every start.
     * `!/usr/lib/sysimage/rpm` is added. The RPM database lives there on RHEL 10, and every rpm or dnf query rewrites it.
     * The audit tool rules of the CIS benchmarks are added.
     * `/etc/ld.so.cache` and `/etc/udev/hwdb.bin` are checked without their inode (`DATAONLY`), since systemd rebuilds both on the first boot after an update.

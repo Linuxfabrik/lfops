@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **playbook:setup_icinga2_master**: PDF export runs on the IcingaWeb2 PDF Export Module with headless Chromium by default, since the fallback fails on current versions. Set `icingaweb2_module_pdfexport__version` in the inventory (`v0.13.0` works with `icinga-php-thirdparty` 1.1.0), or set `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role: true`.
 * **role:graylog_datanode, role:graylog_server, playbook:setup_graylog_datanode, playbook:setup_graylog_server, playbook:setup_icinga2_master**: On a host where the software is not installed yet, the run aborts before it installs anything if the disk space is too small, instead of failing halfway through: Graylog needs the 4 GB on `/` and 15 GB on `/var` its README asks for, and `setup_icinga2_master` up to 2.4 GB on the filesystem of `/usr`. Grow the filesystem, or set `lfops__skip_disk_space_check: true` if you know that the space suffices.
 * **role:gitlab_ce**: The role needs GitLab 19.2 or newer and aborts on a host that runs an older version, or when `gitlab_ce__version` names one. `gitlab.rb` follows GitLab 19.5 and uses the NGINX settings introduced in 19.2, so `gitlab-ctl reconfigure` no longer warns about deprecated settings. Upgrade older hosts along the GitLab upgrade path first.
 * **role:repo_monitoring_plugins, playbook:icinga2_agent, playbook:monitoring_plugins, playbook:setup_basic, playbook:setup_icinga2_master**: The Monitoring Plugins packages come from the Linuxfabrik package repository (role `repo_linuxfabrik`) instead of repo.linuxfabrik.ch/monitoring-plugins/, whose repository file the playbooks remove. Rename `repo_monitoring_plugins__basic_auth_login` and `repo_monitoring_plugins__mirror_url` to `repo_linuxfabrik__basic_auth_login` and `repo_linuxfabrik__mirror_url`, and replace `repo_monitoring_plugins__testing` with `repo_linuxfabrik__testing_repo_enabled`, which adds the testing channel instead of replacing the release channel. The run aborts as long as one of the former variables is set. A mirror has to serve the Linuxfabrik repository below `<mirror URL>/linuxfabrik/`.
@@ -118,6 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.
+* **role:icingaweb2, playbook:setup_icinga2_master**: IcingaWeb2 accepts selections of up to 500 objects and has 5 minutes for long requests such as PDF exports. A reverse proxy in front of it needs `apache_httpd__conf_limit_request_field_size` and `apache_httpd__conf_limit_request_line` set to `131072` as well.
 * **role:nextcloud, playbook:setup_nextcloud**: MariaDB listens on localhost only, which needs MariaDB 10.11 or newer, and Redis and Valkey evict old keys instead of failing writes when they are full.
 * **role:nextcloud, playbook:setup_nextcloud**: Nextcloud gets 256 MB OPcache for 16229 files, 2048 px previews at JPEG quality 60 and no web updater, and `admin_audit` logs to `audit.log`. A fresh installation keeps deleted files and versions for at least 30 days.
 * **role:nextcloud**: The `app_api` app is disabled by default and `serverid` is set, which removes the corresponding setup warnings. Set `app_api` to `state: 'enabled'` to use External Apps.
@@ -187,6 +190,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:aide**: The Collabora jails below `/opt/cool/child-roots` are no longer reported as added and removed files after every restart of `coolwsd`.
+* **role:apache_httpd**: The 502 error page shows its separators correctly instead of a stray `Â`.
 * **playbook:setup_basic**: A fresh VM whose image brings a dead nameserver no longer aborts at the reachability check of the Icinga2 master, since the network is configured ahead of that check.
 * **role:duplicity**: `duba.service` fails if the backup or the cleanup of any single source fails. Until now it usually reported success, so a failed backup of one source went unnoticed. The journal names the failed duplicity command.
 * **plugin:gpg_key, plugin:nextcloud_occ_app, plugin:nextcloud_occ_app_config, plugin:nextcloud_occ_system_config**: The modules no longer fail with `env: 'python3': No such file or directory` on RHEL 8 hosts that have no `python3` installed, for example when a run skips the role that installs it, and without Mitogen. All in-house modules use the Python found by interpreter discovery or set in `ansible_python_interpreter`, like the modules of ansible-core.

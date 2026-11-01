@@ -22,6 +22,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 Manual steps:
 
 * Deploy a web server (for example Apache httpd) with a virtual host for IcingaWeb2 by running the [apache_httpd](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/apache_httpd.yml) playbook (role: [linuxfabrik.lfops.apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd)).
+* Behind an Apache httpd reverse proxy, allow what this role allows on the host itself: a selection of up to 500 objects travels in a single URL, and a PDF export takes minutes. On the proxy, set `apache_httpd__conf_limit_request_field_size` and `apache_httpd__conf_limit_request_line` to `131072`, and `conf_proxy_timeout` and `conf_timeout` of the Icinga vHost to `330`. The two limits only work server-wide, since Apache reads them before it knows the vHost.
 
 
 ## Tags

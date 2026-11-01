@@ -728,7 +728,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 * See [ProxyTimeout](https://httpd.apache.org/docs/2.4/mod/mod_proxy.html#proxytimeout).
 * Applies to: proxy.
 * Type: Number.
-* Default: `5`
+* Default: `30`
 
 `conf_request_read_timeout`
 
