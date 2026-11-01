@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026052001
+# 2026110101
 
 set -euo pipefail
 
@@ -136,6 +136,16 @@ if ! grep -q "app_done" "${STATE_FILE}"; then
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:mode --off
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" app:update --all --no-interaction
     echo "app_done" >> "${STATE_FILE}"
+else
+    echo 'skipping.'
+fi
+
+echo
+echo 'occ maintenance:repair --include-expensive'
+echo '------------------------------------------'
+if ! grep -q "repair_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" maintenance:repair --include-expensive
+    echo "repair_done" >> "${STATE_FILE}"
 else
     echo 'skipping.'
 fi

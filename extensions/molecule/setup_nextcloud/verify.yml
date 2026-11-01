@@ -195,3 +195,38 @@
     - name: 'systemctl start mariadb-dump.service' # noqa command-instead-of-module (starts the oneshot dump and waits for it to finish)
       ansible.builtin.command: 'systemctl start mariadb-dump.service'
       changed_when: false
+
+    - name: 'php occ twofactorauth:enforce'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ twofactorauth:enforce'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_twofactor_result'
+      changed_when: false
+
+    - name: 'php occ config:list --private --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:list --private --output=json'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_config_result'
+      changed_when: false
+
+    - name: 'php occ app:list --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ app:list --output=json'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_apps_result'
+      changed_when: false
+
+    - name: 'Assert the setup warnings the role takes care of are gone'
+      ansible.builtin.assert:
+        that:
+          - '"is enforced" in __molecule__nextcloud_twofactor_result["stdout"]'
+          - '__molecule__nextcloud_config["system"]["mail_domain"] == "example.com"'
+          - '__molecule__nextcloud_config["system"]["mail_smtphost"] == "mail.example.com"'
+          - '__molecule__nextcloud_config["system"]["mail_smtpport"] | int == 587'
+          - '__molecule__nextcloud_config["system"]["serverid"] | int == 0'
+          - '"mimetype_version" in __molecule__nextcloud_config["apps"]["files"]'
+          - '"app_api" not in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+          - '"twofactor_totp" in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+      vars:
+        __molecule__nextcloud_config: '{{ __molecule__nextcloud_config_result["stdout"] | from_json }}'

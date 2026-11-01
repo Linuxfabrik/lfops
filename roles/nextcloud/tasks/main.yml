@@ -91,6 +91,33 @@
       creates: '/var/www/html/nextcloud/config/config.php'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
+    register: '__nextcloud__install_result'
+
+  # Only on a fresh installation: enforcing it later would make every existing user set up a
+  # second factor at the next login.
+  - name: 'php occ twofactorauth:enforce --on'
+    ansible.builtin.command: 'php occ twofactorauth:enforce --on'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # only runs right after the installation
+    when:
+      - '__nextcloud__install_result is changed'
+      - 'nextcloud__twofactor_enforced | bool'
+
+  # A new instance has no mimetype_version yet, so Nextcloud reports the migrations since
+  # 29.0.0.10 as pending. They are part of the expensive repair steps only, and take no time on
+  # the empty database. Verified against Nextcloud 35.0.2.
+  - name: 'php occ maintenance:repair --include-expensive'
+    ansible.builtin.command: 'php occ maintenance:repair --include-expensive'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # only runs right after the installation
+    when:
+      - '__nextcloud__install_result is changed'
 
   - name: 'Convert some database columns to big int'
     ansible.builtin.command: |
@@ -127,6 +154,43 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__sysconfig__combined_var }}'
+
+  # Leaves a mail server alone that was configured by hand. Nextcloud treats a set mail_domain
+  # without a test mail as verified, see EmailTestSuccessful.php.
+  - name: 'Set the Nextcloud mail server'
+    linuxfabrik.lfops.nextcloud_occ_system_config:
+      name: '{{ item["key"] }}'
+      value: '{{ item["value"] }}'
+      type: '{{ item["type"] | d("string") }}'
+      state: 'present'
+      installed_config_json: '{{ __nextcloud__config_list_result["stdout"] | from_json }}'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    loop:
+      - key: 'mail_domain'
+        value: '{{ nextcloud__mail_from.split("@")[-1] }}'
+      - key: 'mail_from_address'
+        value: '{{ nextcloud__mail_from.split("@")[0] }}'
+      - key: 'mail_smtpauth'
+        value: '{{ (nextcloud__mail_smtp_password | length > 0) | string | lower }}'
+        type: 'boolean'
+      - key: 'mail_smtphost'
+        value: '{{ nextcloud__mail_smtp_host }}'
+      - key: 'mail_smtpmode'
+        value: 'smtp'
+      - key: 'mail_smtpname'
+        value: '{{ nextcloud__mail_smtp_username }}'
+      - key: 'mail_smtppassword'
+        value: '{{ nextcloud__mail_smtp_password }}'
+      - key: 'mail_smtpport'
+        value: '{{ nextcloud__mail_smtp_port }}'
+        type: 'integer'
+    loop_control:
+      label: '{{ item["key"] }}'
+    when:
+      - 'nextcloud__mail_smtp_host | length > 0'
+      - '"@" in nextcloud__mail_from'
+      - '"mail_domain" not in (__nextcloud__config_list_result["stdout"] | from_json)["system"]'
 
   # do this straight after the installation to get NC up and running
   # otherwise subsequent occ commands might fail

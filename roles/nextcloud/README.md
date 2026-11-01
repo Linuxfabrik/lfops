@@ -15,6 +15,8 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 ## How the Role Behaves
 
 * App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
+* A fresh installation enforces two-factor authentication for all users (TOTP is enabled by default) and runs the Nextcloud mimetype migrations. An existing installation keeps its enforcement state. `/usr/local/bin/nextcloud-update` runs the mimetype migrations after each update.
+* The mail server is taken from `nextcloud__mail_smtp_*`, which default to the relay host of the `postfix` role, and is only set while Nextcloud has no `mail_domain`, so a mail server configured by hand stays untouched. The SMTP password ends up in `config.php`.
 * This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
 
 
@@ -252,6 +254,30 @@ nextcloud__users:
 * Type: List.
 * Default: `'{{ mailto_root__to | d([]) }}'`
 
+`nextcloud__mail_smtp_host`
+
+* SMTP server Nextcloud sends its mails through. Without a value, the role does not configure a mail server.
+* Type: String.
+* Default: The host part of `postfix__relayhost`
+
+`nextcloud__mail_smtp_password`
+
+* Password for the SMTP server. Without a value, Nextcloud does not authenticate.
+* Type: String.
+* Default: `'{{ postfix__relayhost_password | d("") }}'`
+
+`nextcloud__mail_smtp_port`
+
+* Port of the SMTP server.
+* Type: Number.
+* Default: The port part of `postfix__relayhost`, otherwise `25`
+
+`nextcloud__mail_smtp_username`
+
+* Username for the SMTP server.
+* Type: String.
+* Default: `'{{ postfix__relayhost_username | d(nextcloud__mail_from) }}'`
+
 `nextcloud__mariadb_login`
 
 * The user account for the database administrator. The Nextcloud setup will create its own database account.
@@ -353,6 +379,12 @@ nextcloud__users:
 * Type: Bool.
 * Default: `true`
 
+`nextcloud__twofactor_enforced`
+
+* Enforce two-factor authentication for all users on a fresh installation. Has no effect on an existing installation; use `twofactor_enforced` with the value `'true'` in `nextcloud__sysconfig__host_var` there.
+* Type: Bool.
+* Default: `true`
+
 `nextcloud__version`
 
 * Which version to install. One of `'latest'`, `'latest-XX'` or `'nextcloud-XX.X.XX'`. Have a look at https://download.nextcloud.com/server/releases/ for a list of available releases.
@@ -397,7 +429,7 @@ nextcloud__icinga2_api_user_login:
   password: 'linuxfabrik'
 nextcloud__icinga2_hostname: 'myhost.example.com'
 nextcloud__jobs_timeout_start_sec: '10m'
-nextcloud__mail_from: '{{ mailto_root__from }}'
+nextcloud__mail_from: '{{ mailto_root__from | d("") }}'
 nextcloud__mail_recipients:
   - 'info@example.com'
 nextcloud__mariadb_login: '{{ mariadb_server__admin_user }}'
@@ -466,6 +498,7 @@ nextcloud__timer_app_update_enabled: true
 nextcloud__timer_jobs_enabled: true
 nextcloud__timer_ldap_show_remnants_enabled: true
 nextcloud__timer_scan_files_enabled: true
+nextcloud__twofactor_enforced: true
 nextcloud__version: 'latest'
 nextcloud__vhost_virtualhost_ip: '127.0.0.1'
 nextcloud__vhost_virtualhost_port: '81'
