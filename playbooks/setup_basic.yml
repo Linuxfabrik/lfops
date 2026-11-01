@@ -135,6 +135,19 @@
         - 'firewall'
         - 'firewall:deploy_fwb_sh'
 
+    # we need correct network settings for the rest to work, starting with the preflight checks
+    # below: the image of a fresh VM can bring a dead nameserver, and the Icinga2 master is reached
+    # by name. So this is the one role that changes the host ahead of a preflight check.
+    # fedora.linux_system_roles.network supports Fedora and EL only. Without a running
+    # NetworkManager, as on Debian and Ubuntu, it falls back to its initscripts provider and
+    # installs the Red Hat package network-scripts, which aborts the play there.
+    - name: 'Configure the network'
+      ansible.builtin.import_role:
+        name: 'linuxfabrik.lfops.network'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_basic__skip_network | d(false)'
+
     - name: 'Run the preflight checks of the icinga2_agent role'
       ansible.builtin.include_role:
         name: 'linuxfabrik.lfops.icinga2_agent'
@@ -147,15 +160,6 @@
 
 
   roles:
-
-    # we need correct network settings for the rest to work.
-    # fedora.linux_system_roles.network supports Fedora and EL only. Without a running
-    # NetworkManager, as on Debian and Ubuntu, it falls back to its initscripts provider and
-    # installs the Red Hat package network-scripts, which aborts the play there.
-    - role: 'linuxfabrik.lfops.network'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_basic__skip_network | d(false)'
 
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
