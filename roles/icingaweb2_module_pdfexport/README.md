@@ -5,6 +5,7 @@ This role installs and enables the [IcingaWeb2 PDF Export Module](https://github
 This role is tested with the following IcingaWeb2 PDF Export Module versions:
 
 * 0.11.0
+* 0.13.0
 
 
 *Available since LFOps `4.0.0`.*
@@ -61,7 +62,7 @@ Example:
 
 ```yaml
 # mandatory
-icingaweb2_module_pdfexport__version: 'v0.11.0'
+icingaweb2_module_pdfexport__version: 'v0.13.0'
 ```
 
 

@@ -501,6 +501,10 @@ aide__rules__role_var:
   # =/lost\+found    DIR
   # =/home           DIR
 
+  # Not in the shipped list. Collabora creates a jail per process here, under a new name on every
+  # start.
+  - path: '/opt/cool/child-roots'
+    type: 'negative'
   # Ditto /var/log/sa reason...
   - path: '/var/log/httpd'
     type: 'negative'
