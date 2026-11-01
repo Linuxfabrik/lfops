@@ -28,6 +28,10 @@ nextcloud__users:
     password: 'linuxfabrik'
     group: 'admin'
 
+postfix__relayhost: 'mail.example.com:587'
+postfix__relayhost_password: 'linuxfabrik'
+postfix__relayhost_username: 'noreply@example.com'
+
 repo_mariadb__version: '11.4'
 
 repo_remi__enabled_php_version: '8.5'

@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:nextcloud**: A fresh installation enforces two-factor authentication, has TOTP enabled and no mimetype migrations pending. `nextcloud-update` runs the mimetype migrations after each update. Existing installations keep their enforcement state.
+* **role:nextcloud**: Nextcloud sends mail through the relay host of the `postfix` role by default, unless a mail server is already configured.
 * **role:duplicity**: `duba restore <path>` restores a file or directory by its path on the host, optionally as of an older `--time`, into a separate directory. It finds the right backup on its own, also for sources with `divide: true`, and warns about low disk space.
 * **role:duplicity**: `duba exec -- <duplicity arguments>` runs any duplicity command (for example `collection-status` or `restore`) with the settings and the password of the backup, without exporting the password into the shell.
 * **role:mongodb, role:repo_mongodb**: Support MongoDB 9.0, also on Debian 13 and Ubuntu 26.04, where upstream offers 9.0 only. MongoDB upgrades to 9.0 from 8.0 only, so upgrade a 7.0 host to 8.0 first.
@@ -116,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The `app_api` app is disabled by default and `serverid` is set, which removes the corresponding setup warnings. Set `app_api` to `state: 'enabled'` to use External Apps.
 * **role:graylog_server**: Hosts running Graylog 7.3 get stream-aware field types, the upstream default from 7.3 on, which can decrease performance on systems with many streams and fields.
 * **role:mongodb**: The dump script is installed as `/usr/local/libexec/mongodb-dump`, since it only works when started by `mongodb-dump.service`.
 * **role:system_update**: On Debian and Ubuntu, the reboot notification lists the packages and services that asked for the reboot.
