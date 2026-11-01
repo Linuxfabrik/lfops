@@ -114,6 +114,8 @@
       php__ini_max_file_uploads__dependent_var: '{{ nextcloud__php__ini_max_file_uploads__dependent_var }}'
       php__ini_memory_limit__dependent_var: '{{ nextcloud__php__ini_memory_limit__dependent_var }}'
       php__ini_opcache_interned_strings_buffer__dependent_var: '{{ nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var }}'
+      php__ini_opcache_max_accelerated_files__dependent_var: '{{ nextcloud__php__ini_opcache_max_accelerated_files__dependent_var }}'
+      php__ini_opcache_memory_consumption__dependent_var: '{{ nextcloud__php__ini_opcache_memory_consumption__dependent_var }}'
       php__ini_post_max_size__dependent_var: '{{ nextcloud__php__ini_post_max_size__dependent_var }}'
       php__ini_upload_max_filesize__dependent_var: '{{ nextcloud__php__ini_upload_max_filesize__dependent_var }}'
       php__modules__dependent_var: '{{ nextcloud__php__modules__dependent_var }}'
@@ -134,16 +136,19 @@
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__cnf_bind_address__dependent_var: '{{ nextcloud__mariadb_server__cnf_bind_address__dependent_var }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
 
       # === Redis / Valkey
     - role: 'linuxfabrik.lfops.redis'
+      redis__conf_maxmemory_policy: '{{ nextcloud__redis__conf_maxmemory_policy }}'
       when:
         - 'not setup_nextcloud__skip_redis__internal_var'
 
     - role: 'linuxfabrik.lfops.valkey'
+      valkey__conf_maxmemory_policy: '{{ nextcloud__valkey__conf_maxmemory_policy }}'
       when:
         - 'not setup_nextcloud__skip_valkey__internal_var'
 

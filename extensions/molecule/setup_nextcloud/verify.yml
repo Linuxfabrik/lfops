@@ -228,5 +228,20 @@
           - '"mimetype_version" in __molecule__nextcloud_config["apps"]["files"]'
           - '"app_api" not in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
           - '"twofactor_totp" in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+          - '"admin_audit" in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+          - '__molecule__nextcloud_config["system"]["trashbin_retention_obligation"] == "auto, 30"'
+          - '__molecule__nextcloud_config["system"]["upgrade.disable-web"] | bool'
       vars:
         __molecule__nextcloud_config: '{{ __molecule__nextcloud_config_result["stdout"] | from_json }}'
+
+    - name: 'ss --listening --numeric --tcp'
+      ansible.builtin.command: 'ss --listening --numeric --tcp'
+      register: '__molecule__ss_result'
+      changed_when: false
+
+    - name: 'Assert that MariaDB listens on localhost only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__ss_result["stdout"] is search("127\\.0\\.0\\.1:3306")'
+          - '__molecule__ss_result["stdout"] is not search("(0\\.0\\.0\\.0|\\*):3306")'
+        fail_msg: '{{ __molecule__ss_result["stdout"] }}'
