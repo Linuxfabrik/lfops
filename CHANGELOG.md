@@ -118,6 +118,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud, playbook:setup_nextcloud**: MariaDB listens on localhost only, which needs MariaDB 10.11 or newer, and Redis and Valkey evict old keys instead of failing writes when they are full.
+* **role:nextcloud, playbook:setup_nextcloud**: Nextcloud gets 256 MB OPcache for 16229 files, 2048 px previews at JPEG quality 60 and no web updater, and `admin_audit` logs to `audit.log`. A fresh installation keeps deleted files and versions for at least 30 days.
 * **role:nextcloud**: The `app_api` app is disabled by default and `serverid` is set, which removes the corresponding setup warnings. Set `app_api` to `state: 'enabled'` to use External Apps.
 * **role:graylog_server**: Hosts running Graylog 7.3 get stream-aware field types, the upstream default from 7.3 on, which can decrease performance on systems with many streams and fields.
 * **role:mongodb**: The dump script is installed as `/usr/local/libexec/mongodb-dump`, since it only works when started by `mongodb-dump.service`.

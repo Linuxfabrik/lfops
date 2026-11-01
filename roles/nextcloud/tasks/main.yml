@@ -106,6 +106,21 @@
       - '__nextcloud__install_result is changed'
       - 'nextcloud__twofactor_enforced | bool'
 
+  # Only on a fresh installation: on an existing one this would delete deleted files and old
+  # versions earlier than its users expect.
+  - name: 'php occ config:system:set {{ item }} --value="auto, 30"'
+    ansible.builtin.command: 'php occ config:system:set {{ item }} --value="auto, 30"'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # only runs right after the installation
+    loop:
+      - 'trashbin_retention_obligation'
+      - 'versions_retention_obligation'
+    when:
+      - '__nextcloud__install_result is changed'
+
   # A new instance has no mimetype_version yet, so Nextcloud reports the migrations since
   # 29.0.0.10 as pending. They are part of the expensive repair steps only, and take no time on
   # the empty database. Verified against Nextcloud 35.0.2.

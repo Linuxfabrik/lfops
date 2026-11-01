@@ -33,6 +33,9 @@ nextcloud__app_configs__role_var:
     value: 12
     type: 'integer'
     state: 'present'
+  - key: 'preview jpeg_quality'
+    value: '60'
+    state: 'present'
   - key: 'privacy readableLocation'
     value: 'ch'
     state: 'present'
@@ -77,6 +80,8 @@ nextcloud__apps__role_var:
     state: 'disabled'
   - name: 'activity'
     state: 'disabled'
+  - name: 'admin_audit'
+    state: 'enabled'
   - name: 'app_api'
     state: 'disabled'
   - name: 'bruteforcesettings'
@@ -253,6 +258,10 @@ nextcloud__sysconfig__role_var:
   - key: 'forbidden_filename_characters 9'
     value: '|'
     state: 'present'
+  # admin_audit logs below the loglevel, so its events would not reach audit.log otherwise
+  - key: 'log.condition apps 0'
+    value: 'admin_audit'
+    state: 'present'
   - key: 'log_rotate_size'
     value: '10485760'
     type: 'integer'
@@ -274,9 +283,22 @@ nextcloud__sysconfig__role_var:
   - key: 'trusted_domains 2'
     value: '{{ nextcloud__fqdn }}'
     state: 'present'
+  # nextcloud-update does the updates, the web updater would bypass it
+  - key: 'upgrade.disable-web'
+    value: 'true'
+    type: 'boolean'
+    state: 'present'
   - key: 'updatechecker'
     value: 'true'
     type: 'boolean'
+    state: 'present'
+  - key: 'preview_max_x'
+    value: '2048'
+    type: 'integer'
+    state: 'present'
+  - key: 'preview_max_y'
+    value: '2048'
+    type: 'integer'
     state: 'present'
   - key: 'serverid'
     value: '0'
@@ -498,9 +520,17 @@ nextcloud__php__fpm_pool_conf_request_terminate_timeout__dependent_var: '3900s'
 nextcloud__php__ini_max_execution_time__dependent_var: 3600
 nextcloud__php__ini_max_file_uploads__dependent_var: 100
 nextcloud__php__ini_memory_limit__dependent_var: '1024M'
-nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '20'
+nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '32'
+# PHP rounds this up to the next prime of its hash table sizes (ext/opcache/zend_accelerator_hash.c),
+# 16229 is one of them. Nextcloud 35 with the apps of this role loads about 12000 files.
+nextcloud__php__ini_opcache_max_accelerated_files__dependent_var: 16229
+nextcloud__php__ini_opcache_memory_consumption__dependent_var: 256
 nextcloud__php__ini_post_max_size__dependent_var: '16M'
 nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
+# Listening on localhost is enough, Nextcloud is the only client. Multiple addresses need MariaDB
+# 10.11 or newer.
+nextcloud__mariadb_server__cnf_bind_address__dependent_var: '127.0.0.1,::1'
+nextcloud__redis__conf_maxmemory_policy: 'allkeys-lru'  # see nextcloud__valkey__conf_maxmemory_policy
 nextcloud__selinux__booleans__dependent_var:
   - key: 'httpd_can_network_connect'
     value: 'on'
@@ -529,6 +559,9 @@ nextcloud__selinux__fcontexts__dependent_var:
   - setype: 'httpd_sys_rw_content_t'
     target: '/var/www/html/nextcloud/data(/.*)?'
     state: 'present'
+
+# Nextcloud uses the server as a cache: evict the oldest keys instead of failing writes when full.
+nextcloud__valkey__conf_maxmemory_policy: 'allkeys-lru'
 
 nextcloud__systemd_unit__services__dependent_var:
   - name: 'notify_push'
