@@ -192,6 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:duplicity**: Swift backups work again on fresh installations, since the role installs `python-keystoneclient` into the virtual environment.
 * **role:aide**: The check no longer reports the rotation of the audit logs or a new directory below `/var/log`.
 * **role:aide**: The Collabora jails below `/opt/cool/child-roots` are no longer reported as added and removed files after every restart of `coolwsd`.
 * **role:apache_httpd**: The 502 error page shows its separators correctly instead of a stray `Â`.

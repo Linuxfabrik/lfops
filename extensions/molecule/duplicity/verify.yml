@@ -6,8 +6,8 @@
 
     # The wrapper runs duplicity from the venv python_venv built, so a venv that lacks the Swift
     # client would only fail at the first nightly backup. Import it with the venv's interpreter.
-    - name: '/opt/python-venv/duplicity/bin/python3 -c "import swiftclient"'
-      ansible.builtin.command: '/opt/python-venv/duplicity/bin/python3 -c "import swiftclient"'
+    - name: '/opt/python-venv/duplicity/bin/python3 -c "import keystoneclient, swiftclient"'
+      ansible.builtin.command: '/opt/python-venv/duplicity/bin/python3 -c "import keystoneclient, swiftclient"'
       changed_when: false
 
     - name: 'duplicity --version'
