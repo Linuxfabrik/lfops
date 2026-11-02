@@ -117,6 +117,7 @@
       php__ini_opcache_max_accelerated_files__dependent_var: '{{ nextcloud__php__ini_opcache_max_accelerated_files__dependent_var }}'
       php__ini_opcache_memory_consumption__dependent_var: '{{ nextcloud__php__ini_opcache_memory_consumption__dependent_var }}'
       php__ini_post_max_size__dependent_var: '{{ nextcloud__php__ini_post_max_size__dependent_var }}'
+      php__ini_session_gc_maxlifetime__dependent_var: '{{ nextcloud__php__ini_session_gc_maxlifetime__dependent_var }}'
       php__ini_upload_max_filesize__dependent_var: '{{ nextcloud__php__ini_upload_max_filesize__dependent_var }}'
       php__modules__dependent_var: '{{ nextcloud__php__modules__dependent_var }}'
       when:

@@ -18,20 +18,87 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
-    ansible.builtin.get_url:
-      url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
-      dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
-      mode: 0o644
-    retries: 3 # ride out a brief outage of the download source
-    delay: 10
+  - name: 'stat /var/www/html/nextcloud/config'
+    ansible.builtin.stat:
+      path: '/var/www/html/nextcloud/config'
+    register: '__nextcloud__config_dir_stat_result'
 
-  - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/'
-    ansible.builtin.unarchive:
-      src: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
-      dest: '/var/www/html/'
-      remote_src: true
-      creates: '/var/www/html/nextcloud/config'
+
+  - block:
+
+    # force: a rerun after a failed installation must not check a new signature against an old
+    # `latest` archive
+    - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
+      ansible.builtin.get_url:
+        url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
+        dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+        force: true
+        mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
+
+    - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2.asc'
+      ansible.builtin.get_url:
+        url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2.asc'
+        dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc'
+        force: true
+        mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
+
+    - name: 'wget https://nextcloud.com/nextcloud.asc'
+      ansible.builtin.get_url:
+        url: 'https://nextcloud.com/nextcloud.asc'
+        dest: '/tmp/nextcloud.asc'
+        force: true
+        mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
+
+    - name: 'mktemp --directory'
+      ansible.builtin.tempfile:
+        state: 'directory'
+        prefix: 'nextcloud-gnupg.'
+      register: '__nextcloud__gnupg_home_result'
+
+    - name: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --import /tmp/nextcloud.asc'
+      ansible.builtin.command: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --import /tmp/nextcloud.asc'
+      changed_when: false # only touches the temporary keyring
+
+    # gpg exits non-zero on a bad signature. Verified against gnupg 2.2 on Rocky 8 and gnupg 2.4 on
+    # Rocky 10, with the archive of Nextcloud 35.
+    - name: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --status-fd 1 --verify /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+      ansible.builtin.command: >-
+        gpg --batch
+          --homedir {{ __nextcloud__gnupg_home_result["path"] }}
+          --status-fd 1
+          --verify /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2
+      register: '__nextcloud__gpg_verify_result'
+      changed_when: false # read-only command, never changes anything
+
+    # the last field of VALIDSIG is the fingerprint of the primary key
+    - name: 'Assert that Nextcloud signed the archive'
+      ansible.builtin.assert:
+        that:
+          - '__nextcloud__gpg_verify_result["stdout"] is search("^\\[GNUPG:\\] VALIDSIG .* " ~ __nextcloud__gpg_key_fingerprint ~ "$", multiline=True)'
+        quiet: true
+        fail_msg: 'The signature of nextcloud-{{ nextcloud__version }}.tar.bz2 is not from the key {{ __nextcloud__gpg_key_fingerprint }}.'
+
+    - name: 'rm -rf {{ __nextcloud__gnupg_home_result["path"] }}'
+      ansible.builtin.file:
+        path: '{{ __nextcloud__gnupg_home_result["path"] }}'
+        state: 'absent'
+
+    - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/'
+      ansible.builtin.unarchive:
+        src: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+        dest: '/var/www/html/'
+        remote_src: true
+        creates: '/var/www/html/nextcloud/config'
+
+    when:
+      - 'not __nextcloud__config_dir_stat_result["stat"]["exists"]'
+
 
   - name: 'Deploy /var/www/html/nextcloud/config/objectstore.config.php (storage backend)'
     ansible.builtin.template:
