@@ -9,7 +9,7 @@
 # the Swift backend. Pinning modern oslo.* avoids netifaces entirely and fixes the crash.
 #
 # python-keystoneclient is listed because the Swift backend needs it for auth version 3, and
-# duplicity 3.2 no longer brings it along. pbr and pyrax are constrained because newer pyrax
+# duplicity 3.2.2 does not depend on it. pbr and pyrax are constrained because newer pyrax
 # releases pull in a python-novaclient that demands pbr<1, which contradicts python-keystoneclient:
 # pip then falls back to ancient sdists that no longer build. Installing python-keystoneclient in a
 # second step instead does not hold, the next `pip install duplicity` downgrades pbr again.

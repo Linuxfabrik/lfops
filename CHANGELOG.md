@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:duplicity, playbook:duplicity, playbook:setup_basic**: On a host where `duba` is not installed yet, the run aborts unless `/tmp` has 1024 MiB free, since smaller filesystems fail the backup. Grow `/tmp` with `lvm__lvs__host_var`, or set `lfops__skip_disk_space_check` to skip the check.
 * **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off. A reverse proxy in front of Nextcloud needs `conf_timeout` and `conf_proxy_timeout` set to `3600` and `conf_request_read_timeout` set to `header=20-40,MinRate=500 body=0`. To keep the previous values, set `nextcloud__apache_httpd__vhosts__dependent_var`.
 * **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime. To keep the previous value, set `nextcloud__php__ini_session_gc_maxlifetime__dependent_var` to `1440`.
 * **role:nextcloud**: The installation downloads the release archive on the Ansible controller instead of the target, so the controller needs outbound access to `download.nextcloud.com` and `nextcloud.com`.
