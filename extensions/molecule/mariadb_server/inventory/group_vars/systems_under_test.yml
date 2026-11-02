@@ -1,3 +1,5 @@
+mariadb_server__cnf_innodb_linux_aio__group_var: 'aio'
+
 # The dump user enables the daily mariadb-dump, which needs mydumper from the mydumper repository.
 mariadb_server__admin_user:
   username: 'mariadb-admin'

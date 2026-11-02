@@ -138,6 +138,7 @@
 
     - role: 'linuxfabrik.lfops.mariadb_server'
       mariadb_server__cnf_bind_address__dependent_var: '{{ nextcloud__mariadb_server__cnf_bind_address__dependent_var }}'
+      mariadb_server__cnf_skip_name_resolve__dependent_var: '{{ nextcloud__mariadb_server__cnf_skip_name_resolve__dependent_var }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 

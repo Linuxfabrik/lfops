@@ -72,7 +72,7 @@ mariadb_server__cnf_sql_mode__role_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_
 mariadb_server__cnf_ssl_ca__role_var: ''
 mariadb_server__cnf_ssl_cert__role_var: ''
 mariadb_server__cnf_ssl_key__role_var: ''
-mariadb_server__cnf_table_definition_cache__role_var: 400
+mariadb_server__cnf_table_definition_cache__role_var: 600  # upstream default: 400
 mariadb_server__cnf_table_open_cache__role_var: '2000'
 mariadb_server__cnf_tls_version__role_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__role_var: '16M'

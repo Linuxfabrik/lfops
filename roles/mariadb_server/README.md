@@ -657,6 +657,12 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: Number.
 * Default: `200`
 
+`mariadb_server__cnf_innodb_linux_aio__group_var` / `mariadb_server__cnf_innodb_linux_aio__host_var`
+
+* [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_linux_aio). Needs MariaDB 10.11 or newer. Set it to `'aio'` where `kernel.io_uring_disabled` keeps `auto` from using io_uring, otherwise MariaDB logs a warning on every start before it falls back to libaio.
+* Type: String. One of `auto`, `aio`, `io_uring`.
+* Default: `'auto'`
+
 `mariadb_server__cnf_innodb_log_buffer_size__group_var` / `mariadb_server__cnf_innodb_log_buffer_size__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_log_buffer_size)
@@ -918,7 +924,8 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 * [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#table_definition_cache)
 * Type: Number.
-* Default: `400`
+* Default: `600`
+* Deviates from the upstream default `400`: the schemas of `sys` and `mysql` alone hold 133 tables, so Nextcloud (463 tables in total) or Icinga Director with IcingaDB (503) exceed 400, and every cached definition costs memory, so it stays close to that.
 
 `mariadb_server__cnf_table_open_cache__group_var` / `mariadb_server__cnf_table_open_cache__host_var`
 

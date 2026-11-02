@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **playbook:setup_icinga2_master, playbook:setup_nextcloud**: MariaDB runs with `skip_name_resolve = ON`, so accounts bound to a host name no longer log in. Move them to an IP address, or set `mariadb_server__cnf_skip_name_resolve__host_var`.
+* **role:mariadb_server**: `table_definition_cache` defaults to 600 instead of 400, which needs a restart of MariaDB.
 * **role:duplicity, playbook:duplicity, playbook:setup_basic**: On a host where `duba` is not installed yet, the run aborts unless `/tmp` has 1024 MiB free, since smaller filesystems fail the backup. Grow `/tmp` with `lvm__lvs__host_var`, or set `lfops__skip_disk_space_check` to skip the check.
 * **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off. A reverse proxy in front of Nextcloud needs `conf_timeout` and `conf_proxy_timeout` set to `3600` and `conf_request_read_timeout` set to `header=20-40,MinRate=500 body=0`. To keep the previous values, set `nextcloud__apache_httpd__vhosts__dependent_var`.
 * **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime. To keep the previous value, set `nextcloud__php__ini_session_gc_maxlifetime__dependent_var` to `1440`.
@@ -67,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mariadb_server**: `mariadb_server__cnf_innodb_linux_aio` selects the Linux AIO implementation, for hosts where the kernel blocks io_uring.
 * **role:nextcloud**: A fresh installation enforces two-factor authentication, has TOTP enabled and no mimetype migrations pending. `nextcloud-update` runs the mimetype migrations after each update. Existing installations keep their enforcement state.
 * **role:nextcloud**: Nextcloud sends mail through the relay host of the `postfix` role by default, unless a mail server is already configured.
 * **role:duplicity**: `duba restore <path>` restores a file or directory by its path on the host, optionally as of an older `--time`, into a separate directory. It finds the right backup on its own, also for sources with `divide: true`, and warns about low disk space.

@@ -142,3 +142,14 @@
     - name: 'grep molecule-logrotate /var/log/mariadb/mariadb.log'
       ansible.builtin.command: 'grep --fixed-strings molecule-logrotate /var/log/mariadb/mariadb.log'
       changed_when: false
+
+    # ask the running server, the cnf file alone proves nothing
+    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio"'
+      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio"'
+      register: '__molecule__mariadb_variables_result'
+      changed_when: false
+
+    - name: 'Assert that the server uses the configured values'
+      ansible.builtin.assert:
+        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", "aio"]'
+        fail_msg: '{{ __molecule__mariadb_variables_result["stdout"] }}'
