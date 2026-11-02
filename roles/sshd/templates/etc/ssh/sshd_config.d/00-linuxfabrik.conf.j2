@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# 2026110201
+
+# sshd uses the first value it reads, and the Include at the top of sshd_config pulls in the
+# drop-ins before the rest of that file. The 50-redhat.conf of the openssh-server package sets
+# X11Forwarding yes, so the value has to come from a drop-in that sorts in front of it.
+X11Forwarding {{ sshd__x11_forwarding | bool | ternary("yes", "no") }}

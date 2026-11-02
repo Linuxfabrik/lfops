@@ -203,6 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:sshd**: `sshd__x11_forwarding` takes effect on RHEL 9 and newer, where the `50-redhat.conf` of the package kept X11 forwarding on.
 * **role:duplicity**: Swift backups work again on fresh installations, since the role installs `python-keystoneclient` into the virtual environment.
 * **role:aide**: The check no longer reports the rotation of the audit logs or a new directory below `/var/log`.
 * **role:aide**: The Collabora jails below `/opt/cool/child-roots` are no longer reported as added and removed files after every restart of `coolwsd`.
