@@ -15,6 +15,7 @@ This role is compatible with the following aide versions:
 
 ## How the Role Behaves
 
+* Every aide run of the role, of the check unit, of `system_update` and of the dpkg hook has the lowest CPU and I/O priority (`Nice=19`, idle I/O class, CPU and I/O weight of 1), so that it yields to everything else on the host. A run still shows up in `/proc/pressure/io`, since on an idle host the one task with work to do is the one waiting for the disk.
 * Before it deploys `/etc/aide.conf`, the role has aide check the new file (`aide --config-check`) and aborts the run if aide does not accept it, for example because of a typo in a rule or in `aide__conf_raw`. The file on the host stays as it was.
 * `/etc/aide.conf` is fully templated, with the same path, database (`/var/lib/aide/aide.db.gz`) and rules on every platform. The options and the attribute groups (`NORMAL`, `CONTENT`, `PERMS`, ...) follow the installed aide version. All groups use sha512 as their only checksum. The rules come from `aide__rules__*_var`, whose default is the rule list RHEL 9 and 10 ship, extended by the Debian and Ubuntu counterparts of its paths and by the audit tool rules the CIS benchmarks ask for. A path a host does not have is skipped.
 * Rules from the inventory with a path of their own are placed above the default rules, so that a rule such as `/root/\.bashrc$` takes effect instead of the default `/root/\..*` rule. A default rule changed from the inventory keeps its place.

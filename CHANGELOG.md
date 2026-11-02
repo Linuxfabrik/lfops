@@ -129,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:aide, role:system_update**: AIDE always runs with the lowest CPU and I/O priority, also where the role and the update scripts call it directly, so it yields to everything else on the host.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.
 * **role:icingaweb2, playbook:setup_icinga2_master**: IcingaWeb2 accepts selections of up to 500 objects and has 5 minutes for long requests such as PDF exports. A reverse proxy in front of it needs `apache_httpd__conf_limit_request_field_size` and `apache_httpd__conf_limit_request_line` set to `131072` as well.
 * **role:nextcloud, playbook:setup_nextcloud**: MariaDB listens on localhost only, which needs MariaDB 10.11 or newer, and Redis and Valkey evict old keys instead of failing writes when they are full.

@@ -22,8 +22,8 @@
 # exits with the bitmask of what it found (1 added, 2 removed, 4 changed), its errors start at
 # 14 (include/errorcodes.h), so `>= 8` catches the errors of both. Verified with util-linux
 # 2.37.4 and aide 0.19.2 on Rocky 9.
-- name: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
-  ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --update'
+- name: 'nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config=/etc/aide.conf --update'
+  ansible.builtin.command: 'nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config=/etc/aide.conf --update'
   register: '__aide__update_db_result'
   changed_when: true
   failed_when: '__aide__update_db_result["rc"] >= 8'

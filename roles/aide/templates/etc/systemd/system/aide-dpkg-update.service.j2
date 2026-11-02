@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026100101
+# 2026110201
 
 [Unit]
 Description=Update the AIDE database after unattended-upgrades
@@ -12,5 +12,7 @@ After=apt-daily-upgrade.service
 [Service]
 Type=oneshot
 ExecStart=/usr/local/sbin/aide-dpkg-hook update
+CPUWeight=1
 IOSchedulingClass=idle
+IOWeight=1
 Nice=19

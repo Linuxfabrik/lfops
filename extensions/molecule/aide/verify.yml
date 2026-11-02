@@ -47,6 +47,21 @@
           - '__molecule__aide_timer_enabled_result["stdout"] == "enabled"'
           - '__molecule__aide_timer_active_result["stdout"] == "active"'
 
+    # the check reads the whole system, so it has to yield to everything else on the host
+    - name: 'systemctl show --property CPUWeight,IOSchedulingClass,IOWeight,Nice aidecheck.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show --property CPUWeight,IOSchedulingClass,IOWeight,Nice aidecheck.service'
+      changed_when: false
+      register: '__molecule__aide_priority_result'
+
+    - name: 'Assert that aidecheck.service runs with the lowest priority'
+      ansible.builtin.assert:
+        that:
+          - '"CPUWeight=1" in __molecule__aide_priority_result["stdout_lines"]'
+          - '"IOSchedulingClass=3" in __molecule__aide_priority_result["stdout_lines"]'
+          - '"IOWeight=1" in __molecule__aide_priority_result["stdout_lines"]'
+          - '"Nice=19" in __molecule__aide_priority_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__aide_priority_result["stdout"] }}'
+
     # the package, not its timer: aide-common on Ubuntu 22.04 runs its check from
     # /etc/cron.daily/aide and has no timer at all.
     - name: 'dpkg-query --show aide-common'
