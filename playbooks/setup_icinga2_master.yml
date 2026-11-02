@@ -192,6 +192,8 @@
         - 'not setup_icinga2_master__policycoreutils__skip_role__internal_var'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      # all accounts of the Icinga stack are bound to localhost or 127.0.0.1
+      mariadb_server__cnf_skip_name_resolve__dependent_var: 'ON'  # upstream default: 'OFF'
       mariadb_server__databases__dependent_var: '{{
           (not setup_icinga2_master__icingaweb2_module_vspheredb__skip_injections__internal_var) | ternary(icingaweb2_module_vspheredb__mariadb_server__databases__dependent_var, []) +
           (not setup_icinga2_master__icingaweb2_module_x509__skip_injections__internal_var) | ternary(icingaweb2_module_x509__mariadb_server__databases__dependent_var, []) +
