@@ -374,8 +374,8 @@ nextcloud__apache_httpd__vhosts__dependent_var:
     conf_error_log: 'logs/nextcloud-error.log'
     conf_server_admin: 'webmaster@linuxfabrik.ch'
     conf_server_name: '{{ nextcloud__fqdn }}'
-    conf_request_read_timeout: 'header=20-40,MinRate=500 body=0'
-    conf_timeout: 3600
+    conf_request_read_timeout: 'header=20-40,MinRate=500 body=0'  # upstream default: header=20-40,MinRate=500 body=20,MinRate=500
+    conf_timeout: 3600  # upstream default: 60
     skip_allowed_file_extensions: true
     skip_allowed_http_methods: true
     raw: !unsafe |-
@@ -527,7 +527,6 @@ nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var: '32'
 nextcloud__php__ini_opcache_max_accelerated_files__dependent_var: 16229
 nextcloud__php__ini_opcache_memory_consumption__dependent_var: 256
 nextcloud__php__ini_post_max_size__dependent_var: '16M'
-# Nextcloud caps its session_lifetime of 24 hours at this value (JSConfigHelper.php).
 nextcloud__php__ini_session_gc_maxlifetime__dependent_var: 86400  # upstream default: 1440
 nextcloud__php__ini_upload_max_filesize__dependent_var: '10000M'
 # Listening on localhost is enough, Nextcloud is the only client. Multiple addresses need MariaDB

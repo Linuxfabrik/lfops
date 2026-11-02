@@ -28,66 +28,110 @@
 
     # force: a rerun after a failed installation must not check a new signature against an old
     # `latest` archive
-    - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
+    - name: 'curl --output /tmp/ansible.nextcloud-{{ nextcloud__version }}.tar.bz2 https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
       ansible.builtin.get_url:
         url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2'
-        dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+        dest: '/tmp/ansible.nextcloud-{{ nextcloud__version }}.tar.bz2'
         force: true
         mode: 0o644
       retries: 3 # ride out a brief outage of the download source
       delay: 10
+      delegate_to: 'localhost'
+      become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
+      changed_when: false # not an actual config change on the target
+      check_mode: false # the signature is verified in check mode as well
 
-    - name: 'wget https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2.asc'
+    - name: 'curl --output /tmp/ansible.nextcloud-{{ nextcloud__version }}.tar.bz2.asc https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2.asc'
       ansible.builtin.get_url:
         url: 'https://download.nextcloud.com/server/releases/{{ nextcloud__version }}.tar.bz2.asc'
-        dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc'
+        dest: '/tmp/ansible.nextcloud-{{ nextcloud__version }}.tar.bz2.asc'
         force: true
         mode: 0o644
       retries: 3 # ride out a brief outage of the download source
       delay: 10
+      delegate_to: 'localhost'
+      become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
+      changed_when: false # not an actual config change on the target
+      check_mode: false # the signature is verified in check mode as well
 
-    - name: 'wget https://nextcloud.com/nextcloud.asc'
+    - name: 'curl --output /tmp/ansible.nextcloud.asc https://nextcloud.com/nextcloud.asc'
       ansible.builtin.get_url:
         url: 'https://nextcloud.com/nextcloud.asc'
-        dest: '/tmp/nextcloud.asc'
+        dest: '/tmp/ansible.nextcloud.asc'
         force: true
         mode: 0o644
       retries: 3 # ride out a brief outage of the download source
       delay: 10
+      delegate_to: 'localhost'
+      become: false
+      vars:
+        ansible_become: false # noqa var-naming[pattern]
+      changed_when: false # not an actual config change on the target
+      check_mode: false # the signature is verified in check mode as well
 
-    - name: 'mktemp --directory'
-      ansible.builtin.tempfile:
-        state: 'directory'
-        prefix: 'nextcloud-gnupg.'
-      register: '__nextcloud__gnupg_home_result'
+    - name: 'Copy the release archive, its signature and the key to the target'
+      ansible.builtin.copy:
+        src: '{{ item["src"] }}'
+        dest: '{{ item["dest"] }}'
+        mode: 0o644
+      loop:
+        - src: '/tmp/ansible.nextcloud-{{ nextcloud__version }}.tar.bz2'
+          dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+        - src: '/tmp/ansible.nextcloud-{{ nextcloud__version }}.tar.bz2.asc'
+          dest: '/tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc'
+        - src: '/tmp/ansible.nextcloud.asc'
+          dest: '/tmp/nextcloud.asc'
 
-    - name: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --import /tmp/nextcloud.asc'
-      ansible.builtin.command: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --import /tmp/nextcloud.asc'
-      changed_when: false # only touches the temporary keyring
 
-    # gpg exits non-zero on a bad signature. Verified against gnupg 2.2 on Rocky 8 and gnupg 2.4 on
-    # Rocky 10, with the archive of Nextcloud 35.
-    - name: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --status-fd 1 --verify /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
-      ansible.builtin.command: >-
-        gpg --batch
-          --homedir {{ __nextcloud__gnupg_home_result["path"] }}
-          --status-fd 1
-          --verify /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2
-      register: '__nextcloud__gpg_verify_result'
-      changed_when: false # read-only command, never changes anything
+    # tempfile does not support check mode, so nothing is there to verify under --check.
+    - block:
 
-    # the last field of VALIDSIG is the fingerprint of the primary key
-    - name: 'Assert that Nextcloud signed the archive'
-      ansible.builtin.assert:
-        that:
-          - '__nextcloud__gpg_verify_result["stdout"] is search("^\\[GNUPG:\\] VALIDSIG .* " ~ __nextcloud__gpg_key_fingerprint ~ "$", multiline=True)'
-        quiet: true
-        fail_msg: 'The signature of nextcloud-{{ nextcloud__version }}.tar.bz2 is not from the key {{ __nextcloud__gpg_key_fingerprint }}.'
+      - name: 'mktemp --directory'
+        ansible.builtin.tempfile:
+          state: 'directory'
+          prefix: 'nextcloud-gnupg.'
+        register: '__nextcloud__gnupg_home_result'
 
-    - name: 'rm -rf {{ __nextcloud__gnupg_home_result["path"] }}'
-      ansible.builtin.file:
-        path: '{{ __nextcloud__gnupg_home_result["path"] }}'
-        state: 'absent'
+
+      - block:
+
+        - name: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --import /tmp/nextcloud.asc'
+          ansible.builtin.command: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --import /tmp/nextcloud.asc'
+          changed_when: false # only touches the temporary keyring
+
+        # gpg exits non-zero on a bad signature. Verified against gnupg 2.2 on Rocky 8 and gnupg 2.4
+        # on Rocky 10, with the archive of Nextcloud 35.
+        - name: 'gpg --batch --homedir {{ __nextcloud__gnupg_home_result["path"] }} --status-fd 1 --verify /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2'
+          ansible.builtin.command: >-
+            gpg --batch
+              --homedir {{ __nextcloud__gnupg_home_result["path"] }}
+              --status-fd 1
+              --verify /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2.asc /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2
+          register: '__nextcloud__gpg_verify_result'
+          changed_when: false # read-only command, never changes anything
+
+        # the last field of VALIDSIG is the fingerprint of the primary key
+        - name: 'Assert that Nextcloud signed the archive'
+          ansible.builtin.assert:
+            that:
+              - '__nextcloud__gpg_verify_result["stdout"] is search("^\\[GNUPG:\\] VALIDSIG .* " ~ __nextcloud__gpg_key_fingerprint ~ "$", multiline=True)'
+            quiet: true
+            fail_msg: 'The signature of nextcloud-{{ nextcloud__version }}.tar.bz2 is not from the key {{ __nextcloud__gpg_key_fingerprint }}.'
+
+        always:
+
+        - name: 'rm -rf {{ __nextcloud__gnupg_home_result["path"] }}'
+          ansible.builtin.file:
+            path: '{{ __nextcloud__gnupg_home_result["path"] }}'
+            state: 'absent'
+
+      when:
+        - 'not ansible_check_mode'
+
 
     - name: 'bunzip /tmp/nextcloud-{{ nextcloud__version }}.tar.bz2 /var/www/html/'
       ansible.builtin.unarchive:
