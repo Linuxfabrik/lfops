@@ -293,6 +293,23 @@
         - '/srv/lfops-molecule/probe'
         - '/srv/lfops-molecule/raw-ignored/probe'
 
+    # what auditd and a package do to /var/log on their own, see the rules in the role defaults
+    - name: 'mkdir -p /var/log/audit /var/log/lfops-molecule' # noqa risky-file-permissions (keeps the mode auditd set)
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+      loop:
+        - '/var/log/audit'
+        - '/var/log/lfops-molecule'
+
+    - name: 'Rotate an audit log'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/var/log/audit/audit.log.99'
+        owner: 'root'
+        group: 'root'
+        mode: 0o400
+
     - name: 'Change the content of /root/.lfops-molecule'
       ansible.builtin.copy:
         content: 'lfops-molecule-changed'
@@ -346,6 +363,9 @@
           - '"/srv/lfops-molecule/raw-ignored" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/opt/lfops-molecule-probe" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/etc/cron.d/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/var/log/audit/audit.log.99" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/var/log/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
+          - '__molecule__aide_changed_log_result["stdout"] is not search("/var/log\\s*(:|$)", multiline=True)'
         fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
 
     - name: 'Assert that the check reports the changed content of /boot/efi/lfops-molecule'
