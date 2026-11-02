@@ -2,7 +2,7 @@
 
   - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}"'
     ansible.mariadb.mariadb_user:
-      check_implicit_admin: true
+      check_implicit_admin: '{{ "version" not in __mariadb_server__admin_login_result }}'
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}' # required instead of localhost
@@ -21,7 +21,7 @@
 
   - name: 'Create DBA "{{ mariadb_server__admin_user["username"] }}" (with old_password)'
     ansible.mariadb.mariadb_user:
-      check_implicit_admin: true
+      check_implicit_admin: '{{ "version" not in __mariadb_server__admin_login_result }}'
       login_user: '{{ mariadb_server__admin_user["username"] }}'
       login_password: '{{ mariadb_server__admin_user["old_password"] }}'
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}' # required instead of localhost

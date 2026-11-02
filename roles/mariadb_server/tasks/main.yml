@@ -577,6 +577,20 @@
 
 - block:
 
+  # check_implicit_admin tries root without a password first, which a fresh installation needs,
+  # but which logs an "Access denied" on every run once root is gone. So only allow it while the
+  # DBA cannot log in, which also covers a changed password (old_password).
+  - name: 'Check if the DBA "{{ mariadb_server__admin_user["username"] }}" can log in'
+    ansible.mariadb.mariadb_info:
+      login_user: '{{ mariadb_server__admin_user["username"] }}'
+      login_password: '{{ mariadb_server__admin_user["password"] }}'
+      login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
+      filter:
+        - 'version'
+    register: '__mariadb_server__admin_login_result'
+    failed_when: false
+    check_mode: false # read-only, and the tasks below need the result
+
   - ansible.builtin.include_tasks: 'create-dba.yml'
     loop: '{{ mariadb_server__admin_user["host"] | d(["localhost", "127.0.0.1", "::1"]) }}'
 
@@ -633,7 +647,7 @@
         from
         `mysql`.`proxies_priv`
         where
-        (`host` = '{{ ansible_facts["nodename"] }}')
+        (`host` not in ('localhost', '127.0.0.1', '::1', '%'))
         and (`user` = 'mysql')
         and (`proxied_host` = '')
         and (`proxied_user` = '');
