@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026102808
+# 2026110201
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -222,7 +222,7 @@ AIDE_UNIT='aidecheck'
 # Verified against aide 0.16 on Rocky 8, 0.19.2 on Rocky 9 and 10, and 0.19.2 on Ubuntu 26.04.
 AIDE_WAS_CLEAN=0
 if systemctl is-active --quiet "${AIDE_UNIT}.timer"; then
-    AIDE_CHECK_STDERR=$(flock /run/aide.lock aide --config="$AIDE_CONFIG" --check 2>&1 1> /dev/null)
+    AIDE_CHECK_STDERR=$(nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config="$AIDE_CONFIG" --check 2>&1 1> /dev/null)
     AIDE_CHECK_RC=$?
     if [ "$AIDE_CHECK_RC" -eq 0 ]; then
         AIDE_WAS_CLEAN=1
@@ -386,7 +386,7 @@ fi
 # would silently accept whatever drifted since the last run, an intrusion included.
 if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
     # /run/aide.lock serialises all aide runs of LFOps (aidecheck.service of the aide role)
-    flock /run/aide.lock aide --config="$AIDE_CONFIG" --update 1> /dev/null
+    nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config="$AIDE_CONFIG" --update 1> /dev/null
     \mv "$AIDE_DB_NEW" "$AIDE_DB"
     # --no-block: aidecheck.service is ordered after this script's service (After=), so a
     # blocking restart would wait for this script to end, which waits for the restart. The

@@ -289,8 +289,8 @@
   # runs after everything else the role writes to monitored paths (/etc/aide.conf, the units
   # and the timer's enable symlink under /etc/systemd), so the first check does not report the
   # role's own files as added. aide --init writes database_out, not database_in, hence the mv.
-  - name: 'flock /run/aide.lock aide --config=/etc/aide.conf --init'
-    ansible.builtin.command: 'flock /run/aide.lock aide --config=/etc/aide.conf --init'
+  - name: 'nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config=/etc/aide.conf --init'
+    ansible.builtin.command: 'nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config=/etc/aide.conf --init'
     args:
       creates: '/var/lib/aide/aide.db.gz'
     register: '__aide__init_result'
