@@ -5,7 +5,7 @@
 # PHP-FPM -> Nextcloud request path works end to end, not just that the FPM unit is running.
 - name: 'Verify Nextcloud is installed and serving'
   hosts: 'systems_under_test'
-  gather_facts: false
+  gather_facts: true
   become: true
   tasks:
 
@@ -68,6 +68,51 @@
           status: 404
         - path: '/remote/webdav'
           status: 200 # reaches remote.php, which answers a plain GET with its notice page
+
+    - name: 'php --run "echo ini_get(session.gc_maxlifetime);"'
+      ansible.builtin.command:
+        argv:
+          - 'php'
+          - '--run'
+          - 'echo ini_get("session.gc_maxlifetime");'
+      register: '__molecule__nextcloud_gc_maxlifetime_result'
+      changed_when: false
+
+    - name: 'Assert PHP keeps sessions as long as Nextcloud does'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_gc_maxlifetime_result["stdout"] | trim == "86400"'
+        fail_msg: 'session.gc_maxlifetime is "{{ __molecule__nextcloud_gc_maxlifetime_result["stdout"] }}", which caps the Nextcloud session lifetime.'
+
+    # With a body limit, mod_reqtimeout answers a stalled body with 408 after 20 seconds. Apache
+    # has to keep the connection open past that, so the client gets to send the rest. httpd 2.4.37
+    # on RHEL 8 only reads the setting from the default vHost, see the README of the role.
+    - name: 'Send half a request body to Apache and wait 25 seconds for an answer'
+      ansible.builtin.command:
+        argv:
+          - 'python3'
+          - '-c'
+          - |-
+            import socket
+            sock = socket.create_connection(('127.0.0.1', 80))
+            sock.settimeout(25)
+            sock.sendall(b'PUT /remote.php/dav/ HTTP/1.1\r\nHost: {{ nextcloud__fqdn }}\r\nContent-Length: 10\r\n\r\n12345')
+            try:
+                print(sock.recv(64))
+            except socket.timeout:
+                print('still waiting')
+      register: '__molecule__nextcloud_slow_body_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] != "RedHat" or ansible_facts["distribution_major_version"] | int >= 9'
+
+    - name: 'Assert Apache keeps waiting for a slow request body'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_slow_body_result["stdout"] | trim == "still waiting"'
+        fail_msg: 'Apache gave up on a slow request body: {{ __molecule__nextcloud_slow_body_result["stdout"] }}'
+      when:
+        - '__molecule__nextcloud_slow_body_result is not skipped'
 
     - name: 'systemctl show nextcloud-ldap-show-remnants.timer --property=Triggers' # noqa command-instead-of-module (the test asserts on the property as systemd reports it)
       ansible.builtin.command: 'systemctl show nextcloud-ldap-show-remnants.timer --property=Triggers'

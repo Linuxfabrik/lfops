@@ -119,6 +119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off.
+* **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.
 * **role:icingaweb2, playbook:setup_icinga2_master**: IcingaWeb2 accepts selections of up to 500 objects and has 5 minutes for long requests such as PDF exports. A reverse proxy in front of it needs `apache_httpd__conf_limit_request_field_size` and `apache_httpd__conf_limit_request_line` set to `131072` as well.
 * **role:nextcloud, playbook:setup_nextcloud**: MariaDB listens on localhost only, which needs MariaDB 10.11 or newer, and Redis and Valkey evict old keys instead of failing writes when they are full.
@@ -190,6 +192,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:duplicity**: Swift backups work again on fresh installations, since the role installs `python-keystoneclient` into the virtual environment.
+* **role:aide**: The check no longer reports the rotation of the audit logs or a new directory below `/var/log`.
 * **role:aide**: The Collabora jails below `/opt/cool/child-roots` are no longer reported as added and removed files after every restart of `coolwsd`.
 * **role:apache_httpd**: The 502 error page shows its separators correctly instead of a stray `Â`.
 * **playbook:setup_basic**: A fresh VM whose image brings a dead nameserver no longer aborts at the reachability check of the Icinga2 master, since the network is configured ahead of that check.
@@ -355,6 +359,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: The installation aborts unless Nextcloud signed the downloaded release archive.
 * **role:borg_local**: The repository passphrase and the Icinga2 API login are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/borg/borg-passphrase` and `/usr/local/bin/borg-backup`, so the passphrase is no longer readable in the backup it protects. The old files and their copies are deleted. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. `source /etc/borg/borg.conf` followed by `borg` still works for restores, as root.
 * **role:schedule_reboot**: The Icinga2 API login and the Rocket.Chat webhook URL are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/usr/local/libexec/do-reboot`. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. If the credentials cannot be decrypted, the host still reboots, without the downtime and the chat message.
 * **role:duplicity**: The Swift or SFTP password is stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/duba/duba.json`, so it is no longer readable in a backup of `/etc`. The old copies of `duba.json` are deleted. On RHEL 8 and Ubuntu 22.04 it stays in plain text, in `/etc/credstore/`. Restores that read the password from `duba.json` have to switch to `duba exec`.

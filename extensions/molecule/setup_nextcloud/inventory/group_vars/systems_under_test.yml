@@ -12,6 +12,8 @@ icinga2_master__downtime_api_user:
   username: 'molecule'
   password: 'linuxfabrik'
 
+mailto_root__from: 'noreply@example.com'
+
 mariadb_server__admin_user:
   username: 'mariadb-admin'
   password: 'linuxfabrik'

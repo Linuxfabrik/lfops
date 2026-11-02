@@ -123,6 +123,8 @@ This role is compatible with the following aide versions:
     * `/etc/aliases.db` is checked for permissions only (`PERMS`), since postfix on the Red Hat family rebuilds it on its start.
     * `/etc/resolv.conf` is checked for permissions only (`PERMS`), since DHCP clients and NetworkManager rewrite it at runtime.
     * `/etc/fwupd/fwupd.conf` is checked without its mode, since fwupd sets the file to 0640 whenever its daemon starts.
+    * `/var/log` itself is checked without its link count, which follows its subdirectories.
+    * `/var/log/audit` allows added and removed files, since auditd rotates its logs itself.
 
 * Subkeys:
 

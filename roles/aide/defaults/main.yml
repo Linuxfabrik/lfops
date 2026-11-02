@@ -221,8 +221,10 @@ aide__rules__role_var:
 
   # auditing
   # AIDE produces an audit record, so this becomes perpetual motion.
+  # Deviates from the shipped PERMS: auditd rotates audit.log itself (max_log_file_action = ROTATE)
+  # and adds and removes files here, as the rule for /var/log allows.
   - path: '/var/log/audit'
-    attributes: 'PERMS'
+    attributes: 'PERMS+ANF+ARF'
   - path: '/etc/audit'
     attributes: 'NORMAL'
   - path: '/etc/libaudit.conf$'
@@ -272,6 +274,10 @@ aide__rules__role_var:
     attributes: 'NORMAL'
 
   # Log directory
+  # Not in the shipped list. The link count of a directory follows its subdirectories, so a package
+  # that adds one below /var/log would be reported, although ANF allows the addition itself.
+  - path: '/var/log$'
+    attributes: 'LOG-n'
   - path: '/var/log'
     attributes: 'LOG'
   # Journal files - exclude xattrs and link count due to systemd journal's user.crtime_usec extended attribute changes and new directory creation
