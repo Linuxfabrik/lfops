@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:duplicity, playbook:duplicity, playbook:setup_basic**: On a host where `duba` is not installed yet, the run aborts unless `/tmp` has 1024 MiB free, since smaller filesystems fail the backup. Grow `/tmp` with `lvm__lvs__host_var`, or set `lfops__skip_disk_space_check` to skip the check.
+* **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off. A reverse proxy in front of Nextcloud needs `conf_timeout` and `conf_proxy_timeout` set to `3600` and `conf_request_read_timeout` set to `header=20-40,MinRate=500 body=0`. To keep the previous values, set `nextcloud__apache_httpd__vhosts__dependent_var`.
+* **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime. To keep the previous value, set `nextcloud__php__ini_session_gc_maxlifetime__dependent_var` to `1440`.
+* **role:nextcloud**: The installation downloads the release archive on the Ansible controller instead of the target, so the controller needs outbound access to `download.nextcloud.com` and `nextcloud.com`.
 * **playbook:setup_icinga2_master**: PDF export runs on the IcingaWeb2 PDF Export Module with headless Chromium by default, since the fallback fails on current versions. Set `icingaweb2_module_pdfexport__version` in the inventory (`v0.13.0` works with `icinga-php-thirdparty` 1.1.0), or set `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role: true`.
 * **role:graylog_datanode, role:graylog_server, playbook:setup_graylog_datanode, playbook:setup_graylog_server, playbook:setup_icinga2_master**: On a host where the software is not installed yet, the run aborts before it installs anything if the disk space is too small, instead of failing halfway through: Graylog needs the 4 GB on `/` and 15 GB on `/var` its README asks for, and `setup_icinga2_master` up to 2.4 GB on the filesystem of `/usr`. Grow the filesystem, or set `lfops__skip_disk_space_check: true` if you know that the space suffices.
 * **role:gitlab_ce**: The role needs GitLab 19.2 or newer and aborts on a host that runs an older version, or when `gitlab_ce__version` names one. `gitlab.rb` follows GitLab 19.5 and uses the NGINX settings introduced in 19.2, so `gitlab-ctl reconfigure` no longer warns about deprecated settings. Upgrade older hosts along the GitLab upgrade path first.
@@ -119,8 +123,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off.
-* **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.
 * **role:icingaweb2, playbook:setup_icinga2_master**: IcingaWeb2 accepts selections of up to 500 objects and has 5 minutes for long requests such as PDF exports. A reverse proxy in front of it needs `apache_httpd__conf_limit_request_field_size` and `apache_httpd__conf_limit_request_line` set to `131072` as well.
 * **role:nextcloud, playbook:setup_nextcloud**: MariaDB listens on localhost only, which needs MariaDB 10.11 or newer, and Redis and Valkey evict old keys instead of failing writes when they are full.

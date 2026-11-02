@@ -32,6 +32,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 ## Requirements
 
+* At least 1024 MiB free in `/tmp`, for the backup volumes duplicity builds there. A host where `duba` is not installed yet aborts otherwise.
+
 Manual steps:
 
 * Either configure journald to persist your logs and do the rotating, or use logrotated.
