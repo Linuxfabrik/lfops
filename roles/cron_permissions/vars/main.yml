@@ -1,0 +1,27 @@
+# The cron configuration that only root needs to read, with the mode the CIS Benchmarks ask for
+# (CIS Red Hat Enterprise Linux 10 Benchmark v1.0.1, 2.4.1.2 to 2.4.1.9; the CIS Debian Linux 12
+# Benchmark v1.0.1 asks for the same). Lynis (FILE-7524) asks for the same modes. The cron
+# daemons read these paths as root. crontab(1), which reads /etc/cron.deny, is setuid root on
+# the Red Hat family; Debian and Ubuntu ship no /etc/cron.deny.
+# Not every platform ships every path (no /etc/cron.yearly on the Red Hat family and Ubuntu
+# 22.04, no /etc/cron.deny on Debian and Ubuntu), and a host may have no cron at all, so the role
+# only changes the ones that exist.
+# Verified with cronie on Rocky 8, 9 and 10 and cron on Debian 12 and 13 and Ubuntu 22.04,
+# 24.04 and 26.04.
+__cron_permissions__paths:
+  - path: '/etc/cron.d'
+    mode: 0o700  # upstream default: 0o755
+  - path: '/etc/cron.daily'
+    mode: 0o700  # upstream default: 0o755
+  - path: '/etc/cron.deny'
+    mode: 0o600  # upstream default: 0o644
+  - path: '/etc/cron.hourly'
+    mode: 0o700  # upstream default: 0o755
+  - path: '/etc/cron.monthly'
+    mode: 0o700  # upstream default: 0o755
+  - path: '/etc/cron.weekly'
+    mode: 0o700  # upstream default: 0o755
+  - path: '/etc/cron.yearly'
+    mode: 0o700  # upstream default: 0o755
+  - path: '/etc/crontab'
+    mode: 0o600  # upstream default: 0o644

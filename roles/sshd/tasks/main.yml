@@ -6,6 +6,10 @@
     - 'always'
 
 
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
+
+
 - block:
 
   - name: 'Deploy /etc/ssh/sshd_config'
@@ -29,6 +33,20 @@
         paths:
           - '{{ role_path }}/templates'
     notify: 'sshd: sshd -t; reload sshd'
+
+  # Verified with openssh 9.9 on Rocky 10, where `sshd -T` reported the value of 50-redhat.conf.
+  - name: 'Deploy /etc/ssh/sshd_config.d/00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/ssh/sshd_config.d/00-linuxfabrik.conf.j2'
+      dest: '/etc/ssh/sshd_config.d/00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+    notify: 'sshd: sshd -t; reload sshd'
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["distribution_major_version"] | int >= 9'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

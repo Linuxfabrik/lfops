@@ -1,0 +1,36 @@
+# Checks that need nothing changed on the host and abort before the role deploys sshd_config.
+# Imported at the top of tasks/main.yml, and included by playbooks that run many roles (e.g.
+# setup_basic) in their pre_tasks, so a missing prerequisite aborts the run before any role
+# changes the host.
+#
+# Ansible itself may log in as root, typically on the first run against a fresh cloud VM. With
+# `PermitRootLogin no` the reload at the end of this run would lock it out: every following
+# connection, including the next playbook run, fails with "Permission denied". `id` without
+# become reports the user the SSH connection logged in as. Only SSH connections are checked,
+# since sshd_config has no effect on a local or container connection.
+- block:
+
+  - name: 'id --user --name'
+    ansible.builtin.command: 'id --user --name'
+    register: '__sshd__login_user_result'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+    changed_when: false # read-only command, never changes anything
+    check_mode: false # also run in check mode
+
+  - name: 'Assert that sshd_config still admits the user Ansible logs in as'
+    ansible.builtin.assert:
+      that:
+        - '__sshd__login_user_result["stdout"] != "root" or sshd__permit_root_login in ["prohibit-password", "without-password", "yes"]'
+      quiet: true
+      fail_msg: >-
+        Ansible logs in to this host as root, but sshd__permit_root_login is
+        '{{ sshd__permit_root_login }}', which would lock Ansible out once sshd reloads. Log in as
+        an unprivileged user with sudo instead (ansible_user, see the login role), or set
+        sshd__permit_root_login to 'prohibit-password' for this host.
+
+  when:
+    - 'ansible_connection | d("ssh") is search("ssh|paramiko|smart")'
+  tags:
+    - 'sshd'

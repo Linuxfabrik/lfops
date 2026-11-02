@@ -18,6 +18,22 @@
         - 'Combined transparent_hugepages: {{ kernel_settings__transparent_hugepages__combined_var }}'
         - 'Combined transparent_hugepages_defrag: {{ kernel_settings__transparent_hugepages_defrag__combined_var }}'
 
+  # fedora.linux_system_roles.kernel_settings merges the given sysctls into the profile it wrote
+  # before (kernel_settings_purge is false), so the profile keeps the settings of earlier runs of
+  # other playbooks, e.g. the sunrpc.* setting of mariadb_server, and `tuned-adm verify` checks
+  # them in every run. Verified with fedora.linux_system_roles 1.121.0
+  # (roles/kernel_settings/tasks/main.yml). Depending on the TuneD release, that role writes the
+  # profile below /etc/tuned or /etc/tuned/profiles. grep exits with 2 for the path that does not
+  # exist, so only its output counts.
+  - name: 'grep sunrpc.* in the TuneD profile of fedora.linux_system_roles.kernel_settings'
+    ansible.builtin.command: >-
+      grep --no-filename --no-messages --only-matching --extended-regexp '^sunrpc\.[^ =]+'
+      /etc/tuned/kernel_settings/tuned.conf /etc/tuned/profiles/kernel_settings/tuned.conf
+    register: '__kernel_settings__profile_sunrpc_result'
+    changed_when: false # read-only command, never changes anything
+    failed_when: false # see above
+    check_mode: false # also run in check mode
+
   # prevent errors like "Failed to read sysctl parameter 'sunrpc.tcp_slot_table_entries', the parameter does not exist" on RHEL.
   # persistent, because nothing else loads sunrpc on a host without NFS: after a reboot, TuneD could
   # not apply the setting and `tuned-adm verify` failed until the next run of this role.
@@ -27,7 +43,29 @@
       name: 'sunrpc'
       persistent: 'present'
       state: 'present'
-    when: 'kernel_settings__sysctl__combined_var | selectattr("name", "match", "^sunrpc\.") | list | length > 0'  # if there is at least one key starting with "sunrpc."
+    register: '__kernel_settings__modprobe_sunrpc_result'
+    when: '__kernel_settings__sunrpc_names | length > 0'
+    vars:
+      # the sunrpc.* keys the profile will hold after this run: those of this run and those the
+      # profile already has, minus the ones this run removes
+      __kernel_settings__sunrpc_names: '{{
+          (kernel_settings__sysctl__combined_var | selectattr("name", "match", "^sunrpc\.") | map(attribute="name") | list
+            + __kernel_settings__profile_sunrpc_result["stdout_lines"])
+          | unique
+          | difference(kernel_settings__sysctl__combined_var | selectattr("state", "defined") | selectattr("state", "eq", "absent") | map(attribute="name") | list)
+        }}'
+
+  # The sunrpc.* setting is already in the profile, but the module was missing, so TuneD could
+  # not apply it. fedora.linux_system_roles.kernel_settings only applies the profile when the
+  # profile changes, which it does not here, so `tuned-adm verify` would keep failing. A task and
+  # not a handler, since the verification inside that role runs before any handler would.
+  - name: 'systemctl restart tuned.service'
+    ansible.builtin.service:
+      name: 'tuned.service'
+      state: 'restarted'
+    when:
+      - '__kernel_settings__modprobe_sunrpc_result is changed'
+      - '__kernel_settings__profile_sunrpc_result["stdout_lines"] | length > 0'
 
   # fedora.linux_system_roles >= 2.5.0 accepts only null (leave the setting alone) for an unset
   # value and rejects the empty string our defaults carry, while a template cannot hand a role a

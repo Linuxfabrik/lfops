@@ -10,6 +10,9 @@
 # bug is still present in tuned 2.28.0 (reproduced on Fedora 44 with a profile setting a missing
 # sysctl). Debian 12/13 and Ubuntu 24.04+ only avoid it because their tuned profiles do not set
 # these two sysctls.
-__kernel_settings__sysctl__role_var:
+__kernel_settings__sysctl__platform:
   - name: 'drop'
     value: 'kernel.sched_min_granularity_ns,kernel.sched_wakeup_granularity_ns'
+  # see vars/Ubuntu24.yml
+  - name: 'kernel.kptr_restrict'
+    value: 1
