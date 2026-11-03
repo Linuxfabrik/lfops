@@ -36,21 +36,47 @@ _DEVICE = '/dev/vdb1'
 class _FakeLvm:
     """In-memory stand-in for pvs, pvcreate, pvresize and pvremove."""
 
+    # the values of a 2 GiB disk in a VG with 4 MiB extents, as LVM 2.03.36 reports them
+    _PE_START = 1024**2
+    _EXTENT_SIZE = 4 * 1024**2
+
     def __init__(self):
         self.pv_size = None  # None: the device is not a PV
         self.device_size = 2 * 1024**3
+        self.in_vg = True
         self.commands = []
+
+    def _pvs_resize_fields(self):
+        """dev_size;pv_size;pe_start;vg_extent_size;pv_pe_count"""
+        if not self.in_vg:
+            return f'{self.device_size};{self.pv_size};{self._PE_START};0;0'
+        pe_count = self.pv_size // self._EXTENT_SIZE
+        return (
+            f'{self.device_size};{pe_count * self._EXTENT_SIZE};{self._PE_START};'
+            f'{self._EXTENT_SIZE};{pe_count}'
+        )
 
     def run_command(self, module, args, check_rc=False, **kwargs):
         self.commands.append(list(args))
         if args[0] == 'pvs':
             if self.pv_size is None:
                 return 5, '', f'Failed to find physical volume "{args[-1]}".'
+            if '--separator' in args:
+                return 0, f'  {self._pvs_resize_fields()}\n', ''
             if '--units' in args:
                 return 0, f'  {self.pv_size}\n', ''
             return 0, f'  {args[-1]} lvm2 a-- 1.00g 1.00g\n', ''
-        if args[0] in ('pvcreate', 'pvresize'):
+        if args[0] == 'pvcreate':
             self.pv_size = self.device_size
+        elif args[0] == 'pvresize':
+            # pvresize sets the PV to the extents that fit behind pe_start
+            self.pv_size = (
+                self.device_size
+                if not self.in_vg
+                else (self.device_size - self._PE_START)
+                // self._EXTENT_SIZE
+                * self._EXTENT_SIZE
+            )
         elif args[0] == 'pvremove':
             self.pv_size = None
         return 0, '', ''
@@ -133,18 +159,38 @@ class TestResize(LvmPvTestCase):
         self.assertTrue(result['changed'])
         self.assertEqual(self.lvm.issued('pvresize'), [['pvresize', _DEVICE]])
 
-    def test_unchanged_device_reports_no_change(self):
-        # pvresize runs every time, only a different size afterwards is a change
+    def test_unchanged_device_is_not_resized(self):
+        # pvresize writes a file to /etc/lvm/archive even when the size stays the same, so it
+        # must not run for a PV that already fills its device
+        self.lvm.pv_size = self.lvm.device_size - self.lvm._PE_START
+        result = self._run(resize=True)
+        self.assertFalse(result['changed'])
+        self.assertEqual(self.lvm.issued('pvresize'), [])
+
+    def test_grown_orphan_pv_is_resized(self):
+        self.lvm.in_vg = False
+        self.lvm.pv_size = 512 * 1024**2
+        result = self._run(resize=True)
+        self.assertTrue(result['changed'])
+        self.assertEqual(self.lvm.issued('pvresize'), [['pvresize', _DEVICE]])
+
+    def test_unchanged_orphan_pv_is_not_resized(self):
+        self.lvm.in_vg = False
         self.lvm.pv_size = self.lvm.device_size
         result = self._run(resize=True)
         self.assertFalse(result['changed'])
-        self.assertEqual(self.lvm.issued('pvresize'), [['pvresize', _DEVICE]])
+        self.assertEqual(self.lvm.issued('pvresize'), [])
 
     def test_check_mode_does_not_resize(self):
         self.lvm.pv_size = 512 * 1024**2
         result = self._run(resize=True, _ansible_check_mode=True)
         self.assertTrue(result['changed'])
         self.assertEqual(self.lvm.issued('pvresize'), [])
+
+    def test_check_mode_reports_no_change_for_unchanged_device(self):
+        self.lvm.pv_size = self.lvm.device_size - self.lvm._PE_START
+        result = self._run(resize=True, _ansible_check_mode=True)
+        self.assertFalse(result['changed'])
 
     def test_new_pv_is_not_resized(self):
         # pvcreate already uses the whole device
