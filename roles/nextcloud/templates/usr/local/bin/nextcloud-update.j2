@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026110101
+# 2026110301
 
 set -euo pipefail
 
@@ -226,6 +226,16 @@ echo '----------------------'
 if ! grep -q "db_add_missing_columns_done" "${STATE_FILE}"; then
     sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:add-missing-columns
     echo "db_add_missing_columns_done" >> "${STATE_FILE}"
+else
+    echo 'skipping.'
+fi
+
+echo
+echo 'db:add-missing-primary-keys'
+echo '---------------------------'
+if ! grep -q "db_add_missing_primary_keys_done" "${STATE_FILE}"; then
+    sudo -u "${WEBSERVER_USER}" php "${NC_DIR}/occ" db:add-missing-primary-keys
+    echo "db_add_missing_primary_keys_done" >> "${STATE_FILE}"
 else
     echo 'skipping.'
 fi
