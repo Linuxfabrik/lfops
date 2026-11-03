@@ -70,6 +70,16 @@ aide__rules__role_var:
   # entries here whenever the python_venv role updates pip in a venv.
   - path: '/root/\.cache'
     type: 'negative'
+  # Not in the shipped list. gpg-agent and keyboxd keep their sockets and locks here while they
+  # run, from a run of the duplicity role or of a backup until the next reboot, so they come and
+  # go between two checks. The keys and the trust database stay covered by the rule below.
+  # Verified with GnuPG 2.4 on Rocky 10.
+  - path: '/root/\.gnupg/S\.'
+    type: 'negative'
+  - path: '/root/\.gnupg/.*\.lock$'
+    type: 'negative'
+  - path: '/root/\.gnupg/.*/\.#lk'
+    type: 'negative'
   - path: '/root'
     attributes: 'NORMAL'
 
@@ -489,6 +499,12 @@ aide__rules__role_var:
   # and Ubuntu 26.04.
   - path: '/etc/fwupd/fwupd\.conf$'
     attributes: 'ftype+u+g+selinux+xattrs'
+
+  # Not in the shipped list. LVM writes the metadata of a VG here before every change to it and
+  # removes the oldest copies itself (backup/retain_min, backup/retain_days in lvm.conf), so
+  # added and removed files are allowed, as for /var/log/audit.
+  - path: '/etc/lvm/archive'
+    attributes: 'PERMS+ANF+ARF'
 
   # Now everything else
   - path: '/etc'

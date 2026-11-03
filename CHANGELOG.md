@@ -207,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:aide**: The check no longer reports the sockets and locks of gpg-agent and keyboxd below `/root/.gnupg`, or LVM metadata archives coming and going in `/etc/lvm/archive`.
 * **role:lvm**: A run no longer writes an LVM metadata archive for every PV whose size did not change, which AIDE reported, and `--check` no longer reports such PVs as changed.
 * **role:monitoring_plugins**: The icons in IcingaWeb2 belong to root instead of the user ID of the Ansible controller user, and a run no longer rewrites all of them, which AIDE reported.
 * **role:mariadb_server**: A run no longer logs denied logins of `root`, and the `proxies_priv` warning goes away with `skip_name_resolve`, also after a change of the host name.
