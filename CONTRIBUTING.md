@@ -513,7 +513,7 @@ roles:
 #### Templates
 
 * Always use `ansible.builtin.template`, never `copy`, even without variables: easier to extend, and it allows the header.
-* Always set `backup: true` (timestamped copy, e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`).
+* Always set `backup: true` (timestamped copy, e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`), except for a file that holds or held a secret: the copy keeps the secret after it moved to a systemd credential or changed. Delete the copies such a file got from earlier versions of the role (`roles/borg_local`, `roles/nextcloud`).
 * Start every template with `# {{ ansible_managed }}` and a `# YYYYMMDDNN` version line (e.g. `# 2021081601`), in the target's comment syntax.
 * Update the version line whenever the rendered file changes, and only then. A change that renders the same on every host (a variable renamed to one with the same value, a Jinja comment such as the `Based on` line) keeps it: the version line alone would make every host report a changed file.
 * Never use `{{ template_run_date }}`, it breaks idempotency.
@@ -549,12 +549,12 @@ Templates that are copies of a packaged file (`<series>-coolwsd.xml.j2`, `<serie
 
 #### Secrets for systemd Services
 
-A secret that a systemd service reads from a file (a daemon, or a script run by a timer) is stored as a systemd credential, not in a config file below `/etc`. Backups of `/etc` then hold no plaintext password, since the host key in `/var/lib/systemd/` is not backed up.
+A secret that a systemd service reads from a file (a daemon, or a script run by a timer), or that a script needs which only admins run by hand, is stored as a systemd credential, neither in a config file below `/etc` nor templated into the script. Backups of `/etc` then hold no plaintext password, since the host key in `/var/lib/systemd/` is not backed up.
 
 * Store it with `linuxfabrik.lfops.systemd_credential` and register the result. The module encrypts the credential into `/etc/credstore.encrypted/` with systemd 251 and newer, and otherwise writes it in plain text to `/etc/credstore/` (`0700` directory, `0600` file, root).
 * In the unit, add `LoadCredentialEncrypted=<name>` only when the registered result is `encrypted`, so the unit loads the credential from the store the module chose.
 * The service reads `${CREDENTIALS_DIRECTORY:-/etc/credstore}/<name>`. A script aborts with a hint to run the unit if the file is not readable: started by hand, outside the unit, it cannot decrypt the credential.
-* A tool that admins also run by hand (e.g. `duba`) instead falls back to `systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -` if neither file exists, which works for root only. It passes the secret on to the program it calls through the environment or stdin, never on the command line.
+* A tool that admins also or only run by hand (e.g. `duba`, `nextcloud-update`) instead falls back to `systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -` if neither file exists, which works for root only. It passes the secret on to the program it calls through the environment or stdin, never on the command line.
 * Use a template rendered through `lookup('ansible.builtin.template', ...)` as `content`, below `templates/etc/credstore/`. It keeps the header and version line, but is never deployed itself, so there is no `backup: true` copy of the secret. Exception: build a JSON credential inline with `to_json` (e.g. `'{{ {"password": ...} | to_json }}'`), since ansible-core before 2.19 turns a rendered string that looks like a dict into one, and the module then stores its Python repr.
 * When moving an existing secret file to a credential, delete the old file and its `backup: true` copies.
 * Name the credential after the file it replaces, e.g. `mariadb-dump-login.cnf`.
@@ -562,7 +562,7 @@ A secret that a systemd service reads from a file (a daemon, or a script run by 
 * If the service must keep working without the secret, leave `LoadCredentialEncrypted=` out of the unit: when systemd cannot decrypt a credential listed there, the unit does not start at all. The script then decrypts it itself (`systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -`, else reads `/etc/credstore/<name>`) and goes on without it on failure. `roles/schedule_reboot` (`do-reboot`) does this, so that a credential the TPM2 no longer releases costs the Icinga downtime, not the reboot.
 * If the program fetches the secret through a command itself (e.g. borg's `BORG_PASSCOMMAND`), give it `systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -` when the registered result is `encrypted`, else `cat /etc/credstore/<name>`. The secret then reaches neither an environment variable nor the command line, and admins can run the program by hand as root. `roles/borg_local` does this.
 * If the service only takes the secret inline in its config, the pattern does not apply without a wrapper that renders the config at start; keep the config file `0600` and owned by the service user.
-* `roles/borg_local` (`borg-backup`), `roles/duplicity` (`duba`), `roles/mariadb_server` (`mariadb-dump`) and `roles/mongodb` (`mongodb-dump`) implement this pattern.
+* `roles/borg_local` (`borg-backup`), `roles/duplicity` (`duba`), `roles/mariadb_server` (`mariadb-dump`), `roles/mongodb` (`mongodb-dump`) and `roles/nextcloud` (`nextcloud-update`) implement this pattern.
 
 
 #### OS-specific Variables
@@ -694,7 +694,7 @@ Before adding an `allow` rule, work out what it buys an attacker **on top of** t
 * `mariadb_server`: the dump login is a systemd credential, see "Secrets for systemd Services".
 * `mongodb`: `state: skip` in `mongodb__databases` / `mongodb__users` leaves an entry untouched; the dump login is a systemd credential, see "Secrets for systemd Services".
 * `moodle`: patch tag discovered via `api.github.com/repos/moodle/moodle/tags`, first match of `^v<configured-version>`.
-* `nextcloud`: a state file skips install-only tasks after the initial installation; concise "Tags" README section.
+* `nextcloud`: a state file skips install-only tasks after the initial installation; concise "Tags" README section; the Icinga2 API login of `nextcloud-update` is a systemd credential, see "Secrets for systemd Services".
 * `php`: present/absent split of `php__modules__combined_var` into two batched package calls.
 * `redis`: installed version via `package_facts` selects `<version>-redis.conf.j2`; systemd via unit-file overrides.
 
