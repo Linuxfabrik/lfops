@@ -207,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:monitoring_plugins**: The icons in IcingaWeb2 belong to root instead of the user ID of the Ansible controller user, and a run no longer rewrites all of them, which AIDE reported.
 * **role:mariadb_server**: A run no longer logs denied logins of `root`, and the `proxies_priv` warning goes away with `skip_name_resolve`, also after a change of the host name.
 * **role:sshd**: `sshd__x11_forwarding` takes effect on RHEL 9 and newer, where the `50-redhat.conf` of the package kept X11 forwarding on.
 * **role:duplicity**: Swift backups work again on fresh installations, since the role installs `python-keystoneclient` into the virtual environment.
