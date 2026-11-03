@@ -69,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:redis**: Add template for Redis 8.10.
 * **role:mariadb_server**: `mariadb_server__cnf_innodb_linux_aio` selects the Linux AIO implementation, for hosts where the kernel blocks io_uring.
 * **role:nextcloud**: A fresh installation enforces two-factor authentication, has TOTP enabled and no mimetype migrations pending. `nextcloud-update` runs the mimetype migrations after each update. Existing installations keep their enforcement state.
 * **role:nextcloud**: Nextcloud sends mail through the relay host of the `postfix` role by default, unless a mail server is already configured.
