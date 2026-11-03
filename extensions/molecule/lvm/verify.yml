@@ -19,6 +19,29 @@
           - '__molecule__lvm_pvs_vdb10_result["stdout"].split()[1] | float > 1900'
         fail_msg: '{{ __molecule__lvm_pvs_vdb10_result["stdout"] }}'
 
+    # pvresize writes a file to /etc/lvm/archive even when the PV keeps its size, which file
+    # integrity checks such as AIDE report. Another run of the role on the unchanged layout must
+    # not leave a new one.
+    - name: 'find /etc/lvm/archive -type f'
+      ansible.builtin.find:
+        paths: '/etc/lvm/archive'
+      register: '__molecule__lvm_archive_before_result'
+
+    - name: 'Run the lvm role again on the unchanged layout'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.lvm'
+
+    - name: 'find /etc/lvm/archive -type f'
+      ansible.builtin.find:
+        paths: '/etc/lvm/archive'
+      register: '__molecule__lvm_archive_after_result'
+
+    - name: 'Assert that the second run wrote no LVM metadata archive'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_archive_after_result["matched"] == __molecule__lvm_archive_before_result["matched"]'
+        fail_msg: '{{ __molecule__lvm_archive_after_result["files"] | map(attribute="path") | sort }}'
+
     # "gone" was removed although it still held an LV, and "multi" took over its PV. The extent
     # size is still the one "multi" was created with.
     - name: 'vgs gone'
