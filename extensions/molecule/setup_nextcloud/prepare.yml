@@ -1,0 +1,19 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# What an earlier version of the role left behind: a copy from `backup: true` of a
+# nextcloud-update that carried the Icinga2 API login. The role has to delete it.
+- name: 'Deploy a backup copy of nextcloud-update of an earlier version of the role'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Deploy a backup copy of /usr/local/bin/nextcloud-update'
+      ansible.builtin.copy:
+        content: "#!/usr/bin/env bash\n# {{ icinga2_master__downtime_api_user['password'] }}\n"
+        dest: '/usr/local/bin/nextcloud-update.1234.2026-01-01@00:00:00~'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755

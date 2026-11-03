@@ -708,16 +708,47 @@
 
 - block:
 
-  # 0o700: the script carries the credentials of the Icinga API user, and only root can run it
-  # anyway, since it restarts services and switches to the web server user.
+  # encrypted with systemd 251 and newer, see the systemd_credential module. nextcloud-update
+  # decrypts it on every run, so a changed one needs no further step.
+  - name: 'Store the Icinga2 API login as the systemd credential nextcloud-update-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'nextcloud-update-icinga2-login.curlrc'
+      content: '{{ lookup("ansible.builtin.template", "etc/credstore/nextcloud-update-icinga2-login.curlrc.j2") }}'
+    when:
+      - 'nextcloud__icinga2_api_user_login is defined'
+      - 'nextcloud__icinga2_api_user_login | length > 0'
+
+  - name: 'Remove the systemd credential nextcloud-update-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'nextcloud-update-icinga2-login.curlrc'
+      state: 'absent'
+    when: 'nextcloud__icinga2_api_user_login is not defined or nextcloud__icinga2_api_user_login | length == 0'
+
+  # 0o700: only root can run it anyway, since it restarts services and switches to the web server
+  # user. No backup: earlier versions of the script carried the Icinga2 API login.
   - name: 'Deploy /usr/local/bin/nextcloud-update'
     ansible.builtin.template:
-      backup: true
       src: 'usr/local/bin/nextcloud-update.j2'
       dest: '/usr/local/bin/nextcloud-update'
       owner: 'root'
       group: 'root'
       mode: 0o700
+
+  # the copies `backup: true` left still contain the Icinga2 API login, which is now in the
+  # credential
+  - name: 'find /usr/local/bin -maxdepth 1 -name nextcloud-update.*~'
+    ansible.builtin.find:
+      paths: '/usr/local/bin'
+      patterns: 'nextcloud-update.*~'
+    register: '__nextcloud__nextcloud_update_backups_result'
+
+  - name: 'rm -f /usr/local/bin/nextcloud-update.*~'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __nextcloud__nextcloud_update_backups_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   tags:
     - 'nextcloud'

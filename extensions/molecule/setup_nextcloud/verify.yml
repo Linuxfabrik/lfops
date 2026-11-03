@@ -478,8 +478,10 @@
         status_code: 207
 
 
-# nextcloud-update carries the credentials of the Icinga API user, and only root runs it.
-- name: 'Verify nextcloud-update is readable by root only'
+# Only root runs nextcloud-update. The Icinga2 API login it uses lives in the systemd credential
+# store, neither in the script nor in the copies earlier versions of the role left (prepare.yml
+# plants one).
+- name: 'Verify nextcloud-update is root only and takes the Icinga2 API login from the credential'
   hosts: 'systems_under_test'
   gather_facts: false
   become: true
@@ -496,6 +498,56 @@
           - '__molecule__nextcloud_update_stat_result["stat"]["mode"] == "0700"'
           - '__molecule__nextcloud_update_stat_result["stat"]["pw_name"] == "root"'
         fail_msg: '/usr/local/bin/nextcloud-update is {{ __molecule__nextcloud_update_stat_result["stat"] | d("missing") | to_json }}'
+
+    - name: 'systemctl --version' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl --version'
+      changed_when: false
+      register: '__molecule__systemctl_version_result'
+
+    # the credential holds the login base64-encoded, as part of the Authorization header
+    - name: 'grep --recursive --files-with-matches --fixed-strings <Icinga2 password> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ icinga2_master__downtime_api_user["password"] }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__icinga2_password_grep_result'
+
+    - name: 'grep --recursive --files-with-matches --fixed-strings <Icinga2 login, base64> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ __molecule__expected_credentials | ansible.builtin.b64encode }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__icinga2_login_grep_result'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+
+    - name: 'Assert that the Icinga2 API login is only in the credential store'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icinga2_password_grep_result["stdout_lines"] == []'
+          - '__molecule__icinga2_login_grep_result["stdout_lines"] == (__molecule__systemd_version | int >= 251) | ternary([], ["/etc/credstore/nextcloud-update-icinga2-login.curlrc"])'
+        fail_msg: '{{ __molecule__icinga2_password_grep_result["stdout_lines"] + __molecule__icinga2_login_grep_result["stdout_lines"] }}'
+      vars:
+        __molecule__systemd_version: '{{ __molecule__systemctl_version_result["stdout_lines"][0].split()[1] }}'
+
+    # the way nextcloud-update reads the credential (read_credential in the script)
+    - name: 'systemd-creds decrypt --name=nextcloud-update-icinga2-login.curlrc ... (or cat /etc/credstore/...)'
+      ansible.builtin.shell:
+        cmd: |-
+          if [[ -e /etc/credstore.encrypted/nextcloud-update-icinga2-login.curlrc ]]; then
+              systemd-creds decrypt --name=nextcloud-update-icinga2-login.curlrc /etc/credstore.encrypted/nextcloud-update-icinga2-login.curlrc -
+          else
+              cat /etc/credstore/nextcloud-update-icinga2-login.curlrc
+          fi
+        executable: '/bin/bash'
+      changed_when: false
+      no_log: true
+      register: '__molecule__icinga2_login_credential_result'
+
+    - name: 'Assert that the credential holds the Authorization header for curl'
+      ansible.builtin.assert:
+        that: '("header = \"Authorization: Basic " ~ (__molecule__expected_credentials | ansible.builtin.b64encode) ~ "\"") in __molecule__icinga2_login_credential_result["stdout_lines"]'
+        fail_msg: 'The credential does not hold the Authorization header of icinga2_master__downtime_api_user.'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
 
 
 # The SMTP TLS overrides that earlier versions of the role set are gone, so Nextcloud verifies the

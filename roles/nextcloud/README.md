@@ -23,6 +23,7 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 * The installation downloads the release archive, its signature and the Nextcloud key on the Ansible controller and copies them to the target. The controller needs outbound access to `download.nextcloud.com` and `nextcloud.com`. The run aborts unless the key with the fingerprint `28806A878AE423A28372792ED75899B9A724937A` signed the archive. Under `--check`, the signature is not verified. An existing installation downloads nothing.
 * `setup_nextcloud` keeps PHP sessions for 24 hours, deviating from the upstream default of 1440 seconds, because Nextcloud caps its `session_lifetime` at `session.gc_maxlifetime`. It lets the Nextcloud vHost wait 3600 seconds for PHP and for clients, deviating from the upstream default of 60 seconds to match `max_execution_time`, and removes the time limit for reading a request body, so that slow uploads and the assembly of large files are not cut off. A reverse proxy in front of Nextcloud needs the same `conf_timeout`, `conf_proxy_timeout` and `conf_request_read_timeout`. Change this with `nextcloud__php__ini_session_gc_maxlifetime__dependent_var` and `nextcloud__apache_httpd__vhosts__dependent_var`.
 * This automatic update covers app updates only. Updating the Nextcloud server itself is a separate, manual step via `/usr/local/bin/nextcloud-update`.
+* `/usr/local/bin/nextcloud-update` sets an Icinga2 downtime with the login from `nextcloud__icinga2_api_user_login`, which is stored as the systemd credential `nextcloud-update-icinga2-login.curlrc`. With systemd 251 and newer (RHEL 9 and newer, Debian 12 and newer, Ubuntu 24.04 and newer), it is encrypted in `/etc/credstore.encrypted/` with the host key `/var/lib/systemd/credential.secret`, which the backup does not include. On RHEL 8 and Ubuntu 22.04, it stays in plain text in `/etc/credstore/`, readable by root only. `nextcloud-update` therefore has to run as root. With a TPM2 chip, the credential is bound to the Secure Boot state: after a firmware or Secure Boot change, `nextcloud-update` updates Nextcloud without a downtime until the role runs again.
 
 
 ## Known Limitations
@@ -124,7 +125,7 @@ nextcloud__app_configs__host_var:
 
 `nextcloud:scripts`
 
-* Deploys `/usr/local/bin/nextcloud-update`.
+* Deploys `/usr/local/bin/nextcloud-update` and stores the Icinga2 API login it uses as a systemd credential.
 * Triggers: none.
 
 `nextcloud:state`

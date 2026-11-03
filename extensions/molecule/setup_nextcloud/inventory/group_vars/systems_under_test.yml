@@ -7,10 +7,10 @@ coturn__static_auth_secret: 'linuxfabrik'
 # nextcloud__icinga2_api_user_login defaults to this, so the downtime steps of
 # /usr/local/bin/nextcloud-update are rendered. The script itself is not run here: it
 # downloads and applies real Nextcloud updates and restarts notify_push, which this
-# scenario skips.
+# scenario skips. A password no other file contains, so that verify.yml can search for it.
 icinga2_master__downtime_api_user:
   username: 'molecule'
-  password: 'linuxfabrik'
+  password: 'molecule-icinga2-password-marker'
 
 mailto_root__from: 'noreply@example.com'
 

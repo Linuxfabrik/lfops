@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026110302
+# 2026110303
 
 set -euo pipefail
 
@@ -29,35 +29,51 @@ END_TIME=$(( START_TIME + 1800 ))
 mkdir -p "${TMP_DIR}"
 touch "${STATE_FILE}"
 
-# The Icinga API credentials reach curl as a header read from a pipe that the printf builtin
-# fills, so they never show up in the process list the way `curl --user` would put them there.
+{% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
+# Prints the systemd credential that the nextcloud role stored. Root only: systemd-creds needs
+# the host key. A login that cannot be read costs the downtime, not the update.
+read_credential () {
+    local name="$1"
+    if [[ -e "/etc/credstore.encrypted/$name" ]]; then
+        systemd-creds decrypt --name="$name" "/etc/credstore.encrypted/$name" -
+    else
+        cat "/etc/credstore/$name"
+    fi
+}
+{% endif %}
 
 {% if nextcloud__icinga2_api_user_login is defined and nextcloud__icinga2_api_user_login | length %}
 echo
 echo 'set icinga2 downtime'
 echo '--------------------'
 if ! grep -q "set_icinga2_downtime_done" "${STATE_FILE}"; then
-    curl \
-    --connect-timeout 5 \
-    --insecure \
-    --silent \
-    --header @<(printf 'Authorization: Basic %s\n' '{{ (nextcloud__icinga2_api_user_login["username"] ~ ":" ~ nextcloud__icinga2_api_user_login["password"]) | b64encode }}') \
-    --header 'Accept: application/json' \
-    --request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/schedule-downtime' \
-    --data-binary @- 1> /dev/null << EOF
-    {
-        "type": "Host",
-        "filter": "match(\"{{ nextcloud__icinga2_hostname }}\", host.name)",
-        "start_time": "${START_TIME}",
-        "end_time": "${END_TIME}",
-        "author": "{{ nextcloud__icinga2_hostname }}",
-        "comment": "Running Nextcloud update",
-        "all_services": true
-    }
+    # The login reaches curl through a pipe that the printf builtin fills, so it never shows up
+    # in the process list the way `curl --user` would put it there.
+    if icinga2_login=$(read_credential 'nextcloud-update-icinga2-login.curlrc'); then
+        curl \
+        --connect-timeout 5 \
+        --insecure \
+        --silent \
+        --config <(printf '%s\n' "${icinga2_login}") \
+        --header 'Accept: application/json' \
+        --request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/schedule-downtime' \
+        --data-binary @- 1> /dev/null << EOF
+        {
+            "type": "Host",
+            "filter": "match(\"{{ nextcloud__icinga2_hostname }}\", host.name)",
+            "start_time": "${START_TIME}",
+            "end_time": "${END_TIME}",
+            "author": "{{ nextcloud__icinga2_hostname }}",
+            "comment": "Running Nextcloud update",
+            "all_services": true
+        }
 EOF
-    echo "set_icinga2_downtime_done" >> "${STATE_FILE}"
-    echo 'done.'
-    sleep 5
+        echo "set_icinga2_downtime_done" >> "${STATE_FILE}"
+        echo 'done.'
+        sleep 5
+    else
+        echo 'Cannot read the Icinga2 API login, skipping the downtime.' >&2
+    fi
 else
     echo 'skipping.'
 fi
@@ -266,23 +282,29 @@ echo
 echo 'remove icinga2 downtime'
 echo '-----------------------'
 if ! grep -q "remove_icinga2_downtime_done" "${STATE_FILE}"; then
-    curl \
-    --connect-timeout 5 \
-    --insecure \
-    --silent \
-    --header @<(printf 'Authorization: Basic %s\n' '{{ (nextcloud__icinga2_api_user_login["username"] ~ ":" ~ nextcloud__icinga2_api_user_login["password"]) | b64encode }}') \
-    --header 'Accept: application/json' \
-    --request POST '{{ nextcloud__icinga2_api_url  }}/v1/actions/remove-downtime' \
-    --data-binary @- 1> /dev/null << EOF
-    {
-        "type": "Host",
-        "filter": "host.name==\"{{ nextcloud__icinga2_hostname }}\"",
-        "pretty": true
-    }
+    # The login reaches curl through a pipe that the printf builtin fills, so it never shows up
+    # in the process list the way `curl --user` would put it there.
+    if icinga2_login=$(read_credential 'nextcloud-update-icinga2-login.curlrc'); then
+        curl \
+        --connect-timeout 5 \
+        --insecure \
+        --silent \
+        --config <(printf '%s\n' "${icinga2_login}") \
+        --header 'Accept: application/json' \
+        --request POST '{{ nextcloud__icinga2_api_url }}/v1/actions/remove-downtime' \
+        --data-binary @- 1> /dev/null << EOF
+        {
+            "type": "Host",
+            "filter": "host.name==\"{{ nextcloud__icinga2_hostname }}\"",
+            "pretty": true
+        }
 EOF
-    echo "remove_icinga2_downtime_done" >> "${STATE_FILE}"
-    echo 'done.'
-    sleep 5
+        echo "remove_icinga2_downtime_done" >> "${STATE_FILE}"
+        echo 'done.'
+        sleep 5
+    else
+        echo 'Cannot read the Icinga2 API login, skipping the downtime.' >&2
+    fi
 else
     echo 'skipping.'
 fi
