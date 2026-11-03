@@ -1,0 +1,3 @@
+# RHEL 10 ships no Redis, so setup_nextcloud installs Valkey there.
+__nextcloud__redis_group: 'valkey'
+__nextcloud__redis_unixsocket: '/run/valkey/valkey.sock'
