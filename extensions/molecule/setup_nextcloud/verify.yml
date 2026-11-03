@@ -198,6 +198,56 @@
         fail_msg: 'Nextcloud connects as {{ __molecule__nextcloud_dbuser_result["stdout"] }}'
 
 
+# notify_push opens its database connection at startup and keeps it in its pool. Over the Unix
+# socket, MariaDB lists the connection with the host "localhost", over TCP with "<address>:<port>".
+# A TCP connection lands on ::1, which the database user for "localhost" does not cover once
+# MariaDB skips name resolution. The scenario skips the notify_push setup, which needs DNS, so the
+# play starts the service itself.
+- name: 'Verify notify_push connects to MariaDB through the Unix socket'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'systemctl restart notify_push.service'
+      ansible.builtin.systemd_service:
+        name: 'notify_push.service'
+        state: 'restarted'
+      changed_when: false
+
+    - name: 'mariadb --execute "SELECT host FROM information_schema.processlist WHERE user = ..."'
+      ansible.builtin.command: >-
+        mariadb --user '{{ mariadb_server__admin_user["username"] }}'
+        --batch --skip-column-names --execute
+        "SELECT host FROM information_schema.processlist
+        WHERE user = '{{ nextcloud__database_login["username"] }}'
+        AND command = 'Sleep'"
+      environment:
+        MYSQL_PWD: '{{ mariadb_server__admin_user["password"] }}'
+      register: '__molecule__notify_push_processlist_result'
+      changed_when: false
+      until: '__molecule__notify_push_processlist_result["stdout_lines"] | length > 0'
+      retries: 10
+      delay: 1
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert notify_push is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__unit["state"] | d("") == "running"'
+          - '__molecule__unit["status"] | d("") == "enabled"'
+        fail_msg: 'notify_push.service: {{ __molecule__unit | d("not known to systemd") }}'
+      vars:
+        __molecule__unit: '{{ ansible_facts["services"]["notify_push.service"] | d({}) }}'
+
+    - name: 'Assert every connection of the Nextcloud database user uses the Unix socket'
+      ansible.builtin.assert:
+        that: '__molecule__notify_push_processlist_result["stdout_lines"] | unique == ["localhost"]'
+        fail_msg: 'connections from: {{ __molecule__notify_push_processlist_result["stdout_lines"] }}'
+
+
 # The role installs mysql-selinux so mariadbd gets `mysqld_exec_t` (MDEV-30520). Assert the domain
 # of the running process, not the label on the file: only that tells `mysqld_t` apart from
 # `initrc_t` and the `unconfined_service_t` that used to mask a missing label.

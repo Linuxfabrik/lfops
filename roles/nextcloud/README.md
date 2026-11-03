@@ -277,7 +277,7 @@ nextcloud__version: 'latest-35'
 
 `nextcloud__database_host`
 
-* Host where MariaDB is located.
+* Host where MariaDB is located. The role writes it to `dbhost` in `config.php` on every run. With `'localhost'`, it writes the path to the MariaDB socket instead, so Nextcloud and notify_push both connect through the socket.
 * Type: String.
 * Default: `'localhost'`
 

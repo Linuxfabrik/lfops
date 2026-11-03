@@ -219,6 +219,17 @@ nextcloud__sysconfig__role_var:
   - key: 'datadirectory'
     value: '{{ nextcloud__datadir }}'
     state: 'present'
+  # notify_push reads 'dbhost' from config.php as well. For a bare 'localhost' it only looks for
+  # the MariaDB socket at /var/run/mysqld/mysqld.sock, /tmp/mysql.sock and /run/mysql/mysql.sock
+  # (nextcloud-config-parser 0.15.4, src/nc.rs), and otherwise connects over TCP to ::1, which
+  # the database user for 'localhost' does not cover once MariaDB skips name resolution. With
+  # the socket path in 'dbhost', Nextcloud and notify_push both use the socket.
+  - key: 'dbhost'
+    value: '{{
+        (nextcloud__database_host == "localhost")
+        | ternary("localhost:" ~ __nextcloud__mysql_login_unix_socket, nextcloud__database_host)
+      }}'
+    state: 'present'
   - key: 'default_language'
     value: 'en'
     state: 'present'
