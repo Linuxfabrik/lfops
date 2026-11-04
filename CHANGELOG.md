@@ -215,6 +215,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
+* **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
 * **role:monitoring_plugins**: On a host switched from the source install to the package, the plugins use the Linuxfabrik library of the package again, since the role removes what the source install left behind, such as `/usr/lib64/nagios/plugins/lib`.
 * **role:python_venv, role:duplicity**: A venv built with another Python minor release than `python_executable` is rebuilt, so the duplicity venv on RHEL 8 hosts set up before the switch to Python 3.11 installs again instead of failing with `ResolutionImpossible`.
 * **role:repo_mydumper**: A run against an unchanged host no longer reports the signing key of the mydumper repository as changed from time to time.

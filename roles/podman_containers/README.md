@@ -50,7 +50,7 @@ kernel_modules__modules__host_var:
 
 `podman_containers:state`
 
-* Manages the state of the containers, networks and volumes.
+* Manages the state of the containers, networks and volumes. Restarts a running container whose unit changed in the same run.
 * Triggers: none.
 
 `podman_containers:volumes`
