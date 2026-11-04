@@ -1,0 +1,10 @@
+# Molecule scenario marker for the 'from_source' sub-scenario, run with
+# `molecule test --scenario-name monitoring_plugins/from_source`.
+#
+# Covers the switch from the source install to the package. It overrides the prepare step (see
+# prepare.yml), which sets the host up with the source install, so that converge switches it to
+# the package from group_vars. The 'install' sub-scenario covers a host without the monitoring
+# plugins.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

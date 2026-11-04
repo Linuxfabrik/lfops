@@ -105,8 +105,8 @@
       - '__monitoring_plugins__installed_packages | length > 0'
 
   # A source install from this role or from the one-line installer lists everything it placed.
-  # Only paths below the locations an install writes to are honoured, so a damaged or tampered
-  # manifest cannot point the removal anywhere else.
+  # Only paths below the locations an install writes to are honoured, see
+  # __monitoring_plugins__manifest_allowed_paths.
   - name: 'Check whether an install manifest exists'
     ansible.builtin.stat:
       path: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
@@ -123,18 +123,9 @@
     ansible.builtin.file:
       path: '{{ item }}'
       state: 'absent'
-    vars:
-      __monitoring_plugins__manifest_allowed: '{{
-          "^(/usr/lib64/nagios/plugins/[^/]+"
-          ~ "|/usr/lib64/nagios/plugins/device-(mibs|oids)/.+"
-          ~ "|/usr/lib64/linuxfabrik-monitoring-plugins"
-          ~ "|/etc/sudoers[.]d/linuxfabrik-monitoring-plugins(-logging)?"
-          ~ "|/etc/bash_completion[.]d/linuxfabrik-monitoring-plugins"
-          ~ "|/usr/share/selinux/packages/linuxfabrik-monitoring-plugins[.]cil)$"
-        }}'
     loop: '{{
         (__monitoring_plugins__manifest["content"] | d("") | b64decode).splitlines()
-        | select("match", __monitoring_plugins__manifest_allowed)
+        | select("match", __monitoring_plugins__manifest_allowed_paths)
         | reject("search", "/[.][.]?(/|$)")
         | list
       }}'

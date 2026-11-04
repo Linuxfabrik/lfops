@@ -1,0 +1,13 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# The state converge starts from: a host with the source install of the development version,
+# which places the Linuxfabrik library in /usr/lib64/nagios/plugins/lib and writes the install
+# manifest. Play vars take precedence over the group_vars that converge uses.
+- name: 'Set the host up with the source install'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.monitoring_plugins'
+  vars:
+    monitoring_plugins__install_method: 'source'
+    monitoring_plugins__version: 'dev'

@@ -1,0 +1,41 @@
+- name: 'Verify the switch from the source install to the package'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: '/usr/lib64/nagios/plugins/about-me'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/about-me'
+      register: '__molecule__about_me_result'
+      changed_when: false
+
+    - name: 'Assert that the about-me plugin runs'
+      ansible.builtin.assert:
+        that: '__molecule__about_me_result["rc"] == 0'
+        fail_msg: '{{ __molecule__about_me_result["stdout"] }}'
+
+    # Ask Python where a plugin gets the library from, with the directory of the plugins first on
+    # sys.path, as it is when a plugin runs. A library the source install left next to the plugins
+    # would win over the one in the venv of the package.
+    - name: '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python -c "import sys; sys.path.insert(0, ...); import lib.base; print(lib.base.__file__)"'
+      ansible.builtin.command:
+        argv:
+          - '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+          - '-c'
+          - 'import sys; sys.path.insert(0, "/usr/lib64/nagios/plugins"); import lib.base; print(lib.base.__file__)'
+      register: '__molecule__lib_path_result'
+      changed_when: false
+
+    - name: 'Assert that the plugins use the library of the package'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lib_path_result["stdout"] is search("^/usr/lib64/linuxfabrik-monitoring-plugins/venv/lib(64)?/python3[.][0-9]+/site-packages/lib/")'
+        fail_msg: '{{ __molecule__lib_path_result["stdout"] }}'
+
+    - name: 'Gather the package facts'
+      ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the package is installed'
+      ansible.builtin.assert:
+        that:
+          - '"linuxfabrik-monitoring-plugins" in ansible_facts["packages"]'

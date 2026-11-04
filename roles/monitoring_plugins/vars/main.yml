@@ -15,3 +15,15 @@ monitoring_plugins__bootloader__cmdline_options__dependent_var: '{{
     __monitoring_plugins__bootloader__cmdline_options__dependent_var
     | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
   }}'
+
+# The paths an install manifest of a source install may list: everything below the locations a
+# source install or the one-line installer writes to. Entries outside of them are ignored, so a
+# damaged or tampered manifest cannot point a removal anywhere else.
+__monitoring_plugins__manifest_allowed_paths: '{{
+    "^(/usr/lib64/nagios/plugins/[^/]+"
+    ~ "|/usr/lib64/nagios/plugins/device-(mibs|oids)/.+"
+    ~ "|/usr/lib64/linuxfabrik-monitoring-plugins"
+    ~ "|/etc/sudoers[.]d/linuxfabrik-monitoring-plugins(-logging)?"
+    ~ "|/etc/bash_completion[.]d/linuxfabrik-monitoring-plugins"
+    ~ "|/usr/share/selinux/packages/linuxfabrik-monitoring-plugins[.]cil)$"
+  }}'
