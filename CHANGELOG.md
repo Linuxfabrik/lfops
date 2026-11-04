@@ -219,6 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: The README example for the Collabora WOPI allow list includes the Nextcloud host next to the reverse proxy. With the proxy alone, documents fail to load with "Unauthorized WOPI host".
 * **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
 * **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
 * **role:login, playbook:setup_basic**: A run no longer locks Ansible out of `sudo` with "Missing sudo password" on hosts set up by LFOps before v6.0.0, where the Ansible user gets its password-less sudo from `/etc/sudoers.d/lfops_login` only, and the role leaves that file alone if `login__passwordless_sudo_group` is not set.
