@@ -15,6 +15,7 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 ## How the Role Behaves
 
 * App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
+* Before it changes anything, the role aborts if `nextcloud__database_login` is missing, or if it names the database user of the installed Nextcloud with another password, since the run would set that password for the MariaDB user and lock Nextcloud out of its database. The error message tells how to read the login from `config.php` with `occ`. `setup_nextcloud` runs this check before its first role.
 * A fresh installation enforces two-factor authentication for all users (TOTP is enabled by default) and runs the Nextcloud mimetype migrations. An existing installation keeps its enforcement state. `/usr/local/bin/nextcloud-update` runs the mimetype migrations after each update.
 * A fresh installation keeps deleted files and old file versions for at least 30 days and deletes them when space runs out (`auto, 30`). An existing installation keeps its retention.
 * `admin_audit` is enabled and writes `audit.log` to the data directory. Previews are limited to 2048 px at JPEG quality 60, and the web updater is disabled in favour of `/usr/local/bin/nextcloud-update`.
@@ -158,7 +159,7 @@ nextcloud__app_configs__host_var:
 
 `nextcloud__database_login`
 
-* The MariaDB user Nextcloud connects as. The playbook `setup_nextcloud` creates it with the privileges the Nextcloud installer would grant, on the Nextcloud database only. Nextcloud takes it over at the installation; an existing installation keeps the database user it was set up with.
+* The MariaDB user Nextcloud connects as. The playbook `setup_nextcloud` creates it with the privileges the Nextcloud installer would grant, on the Nextcloud database only. Nextcloud takes it over at the installation; an existing installation keeps the database user it was set up with. For an existing installation, take the login from `sudo -u apache php /var/www/html/nextcloud/occ config:system:get dbuser` and `... dbpassword`.
 * Type: Dictionary.
 * Subkeys:
 
