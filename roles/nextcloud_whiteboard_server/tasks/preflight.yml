@@ -1,0 +1,23 @@
+# Checks that need nothing changed on the host. Imported at the top of tasks/main.yml, and
+# included by playbooks/nextcloud_whiteboard_server.yml in its pre_tasks, so that an unsupported
+# host aborts before the login role creates the user.
+- block:
+
+  - name: 'systemctl show --property=Version --value'
+    ansible.builtin.command: 'systemctl show --property=Version --value'
+    register: '__nextcloud_whiteboard_server__systemd_version_result'
+    changed_when: false
+    check_mode: false
+
+  # systemd-creds encrypts user-scoped credentials since systemd 256 (NEWS, "CHANGES WITH 256").
+  - name: 'Assert that systemd is 256 or newer'
+    ansible.builtin.assert:
+      that:
+        - '__nextcloud_whiteboard_server__systemd_version_result["stdout"] | regex_search("^\d+") | int >= 256'
+      quiet: true
+      fail_msg: >-
+        The role needs systemd 256 or newer to store the JWT secret as a user-scoped systemd
+        credential, found {{ __nextcloud_whiteboard_server__systemd_version_result["stdout"] }}.
+
+  tags:
+    - 'nextcloud_whiteboard_server'

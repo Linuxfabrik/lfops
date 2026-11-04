@@ -1,0 +1,48 @@
+argument_specs:
+  main:
+    options:
+
+      nextcloud_whiteboard_server__container_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Whether the container starts at boot.'
+
+      nextcloud_whiteboard_server__container_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'absent'
+          - 'present'
+          - 'started'
+          - 'stopped'
+        description: 'The state of the container.'
+
+      nextcloud_whiteboard_server__jwt_secret_key:
+        type: 'str'
+        required: true
+        no_log: true
+        description: 'The secret shared with the Whiteboard app in Nextcloud (jwt_secret_key).'
+
+      nextcloud_whiteboard_server__nextcloud_url:
+        type: 'str'
+        required: true
+        description: 'The URL of the Nextcloud instance.'
+
+      nextcloud_whiteboard_server__port:
+        type: 'int'
+        required: false
+        default: 3002
+        description: 'The port on 127.0.0.1 the server listens on.'
+
+      nextcloud_whiteboard_server__user_home_directory:
+        type: 'str'
+        required: false
+        default: '/opt/nextcloud-whiteboard-server'
+        description: 'Home directory of the user that runs the container.'
+
+      nextcloud_whiteboard_server__version:
+        type: 'str'
+        required: true
+        description: 'The tag of the container image.'

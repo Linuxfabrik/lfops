@@ -745,6 +745,15 @@ Calls the following roles (in order):
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network)
 
 
+## nextcloud_whiteboard_server.yml
+
+Calls the following roles (in order):
+
+* [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login): `nextcloud_whiteboard_server__skip_login`
+* [nextcloud_whiteboard_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud_whiteboard_server)
+* [podman_containers](https://github.com/Linuxfabrik/lfops/tree/main/roles/podman_containers): `nextcloud_whiteboard_server__skip_podman_containers`
+
+
 ## nfs_client.yml
 
 Calls the following roles (in order):

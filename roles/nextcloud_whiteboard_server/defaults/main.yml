@@ -1,0 +1,60 @@
+nextcloud_whiteboard_server__container_enabled: true
+nextcloud_whiteboard_server__container_state: 'started'
+nextcloud_whiteboard_server__port: 3002
+nextcloud_whiteboard_server__user_home_directory: '/opt/nextcloud-whiteboard-server'
+
+# -----------------------------------------------------------------------------
+
+nextcloud_whiteboard_server__login__users__dependent_var:
+  - name: 'nextcloud-whiteboard'
+    home: '{{ nextcloud_whiteboard_server__user_home_directory }}'
+    state: 'present'
+    linger: true
+
+nextcloud_whiteboard_server__podman_containers__auto_update__dependent_var:
+  - user: 'nextcloud-whiteboard'
+    state: 'present'
+
+# The JWT secret reaches the container as a file, never as a container environment variable:
+# Podman writes the environment of a running container in plain text into its storage below
+# the user's home (overlay-containers/<id>/userdata/config.json), which a backup would pick up.
+# systemd 257 cannot load a user-scoped credential with LoadCredentialEncrypted= in a user unit
+# (it decrypts in-process without access to the host key, systemd 258 asks systemd-creds.socket
+# instead), so ExecStartPre= decrypts it into the runtime directory (tmpfs, 0700, removed on
+# stop), and the entrypoint wrapper exports it inside the container. Podman's "shell" secret
+# driver does not work either: rootless Podman runs the lookup in its user namespace as UID 0,
+# where systemd-creds tries the host key. Verified with systemd 257 and Podman 5.8 on Rocky 10.
+nextcloud_whiteboard_server__podman_containers__containers__dependent_var:
+  - name: 'nextcloud-whiteboard-server'
+    raw_container: |
+      AutoUpdate=registry
+      ContainerName=nextcloud-whiteboard-server
+      DropCapability=ALL
+      Entrypoint=/bin/sh
+      Environment=NEXTCLOUD_URL={{ nextcloud_whiteboard_server__nextcloud_url }}
+      # sessions in memory, enough for a single server; Redis is only needed for several
+      Environment=STORAGE_STRATEGY=lru
+      # refuses to start the server without the secret, which would otherwise come up with an
+      # empty one
+      Exec=-c "set -e; JWT_SECRET_KEY=$$(cat /run/secrets/jwt_secret_key); test -n \"$$JWT_SECRET_KEY\"; export JWT_SECRET_KEY; exec npm --prefix /app run server:start"
+      HealthCmd=["node", "--eval", "require('http').get('http://127.0.0.1:3002/', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"]
+      HealthInterval=30s
+      HealthOnFailure=kill
+      HealthRetries=5
+      HealthStartPeriod=10s
+      HealthTimeout=10s
+      Image=ghcr.io/nextcloud-releases/whiteboard:{{ nextcloud_whiteboard_server__version }}
+      LogDriver=journald
+      NoNewPrivileges=true
+      PublishPort=127.0.0.1:{{ nextcloud_whiteboard_server__port }}:3002/tcp
+      # U hands the file (0600) to the user the server runs as in the container (nobody)
+      Volume=%t/nextcloud-whiteboard-server/jwt_secret_key:/run/secrets/jwt_secret_key:ro,Z,U
+    raw_service: |
+      ExecStartPre=/usr/bin/systemd-creds decrypt --user --name=jwt-secret-key %h/.config/credstore.encrypted/jwt-secret-key %t/nextcloud-whiteboard-server/jwt_secret_key
+      Restart=always
+      RuntimeDirectory=nextcloud-whiteboard-server
+      RuntimeDirectoryMode=0700
+      UMask=0077
+    user: 'nextcloud-whiteboard'
+    state: '{{ nextcloud_whiteboard_server__container_state }}'
+    enabled: '{{ nextcloud_whiteboard_server__container_enabled | bool }}'

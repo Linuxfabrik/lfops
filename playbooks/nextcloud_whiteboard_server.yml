@@ -1,0 +1,65 @@
+- name: 'Playbook linuxfabrik.lfops.nextcloud_whiteboard_server'
+  hosts:
+    - 'lfops_nextcloud_whiteboard_server'
+  # run the handlers notified so far even if a later task fails. otherwise a deployed config
+  # never reaches the running service: every later run reports the file unchanged and
+  # notifies nothing again.
+  force_handlers: true
+
+  pre_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-start.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+      tags:
+        - 'always'
+
+    # abort on a host with systemd older than 256 before the login role creates the user
+    - name: 'Run the preflight checks of the nextcloud_whiteboard_server role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.nextcloud_whiteboard_server'
+        tasks_from: 'preflight.yml'
+      tags:
+        - 'nextcloud_whiteboard_server'
+
+
+  roles:
+
+    - role: 'linuxfabrik.lfops.login'
+      login__users__dependent_var: '{{
+          nextcloud_whiteboard_server__login__users__dependent_var
+        }}'
+      when:
+        - 'not nextcloud_whiteboard_server__skip_login | d(false)'
+
+    # stores the JWT secret, which the container loads when podman_containers starts it
+    - role: 'linuxfabrik.lfops.nextcloud_whiteboard_server'
+
+    - role: 'linuxfabrik.lfops.podman_containers'
+      podman_containers__auto_update__dependent_var: '{{
+          nextcloud_whiteboard_server__podman_containers__auto_update__dependent_var
+        }}'
+      podman_containers__containers__dependent_var: '{{
+          nextcloud_whiteboard_server__podman_containers__containers__dependent_var
+        }}'
+      when:
+        - 'not nextcloud_whiteboard_server__skip_podman_containers | d(false)'
+
+
+  post_tasks:
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'log-end.yml'
+      tags:
+        - 'always'
+
+    - ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'print-messages.yml'
+      tags:
+        - 'always'
