@@ -1,0 +1,10 @@
+# Molecule scenario marker for the 'migrate' sub-scenario, run with
+# `molecule test --scenario-name login/migrate`.
+#
+# Covers a host set up by LFOps before v6.0.0, on which the Ansible user gets its password-less
+# sudo from /etc/sudoers.d/lfops_login only, and which the role moves to
+# /etc/sudoers.d/linuxfabrik. It overrides the prepare step (see prepare.yml), which builds that
+# starting point, and converge.yml connects as that user, as a production run does.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'
