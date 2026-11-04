@@ -226,6 +226,42 @@ argument_specs:
           - 'stopped'
         description: 'The runtime state of the php-fpm service.'
 
+      php__ini_apc_enable_cli__dependent_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether APCu is enabled for the CLI. Dependent-role injection.'
+
+      php__ini_apc_enable_cli__group_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether APCu is enabled for the CLI. Group-level override.'
+
+      php__ini_apc_enable_cli__host_var:
+        type: 'raw'
+        required: false
+        default: ''
+        description: 'Whether APCu is enabled for the CLI. Host-level override.'
+
+      php__ini_apc_shm_size__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The size of the APCu shared memory segment. Dependent-role injection.'
+
+      php__ini_apc_shm_size__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The size of the APCu shared memory segment. Group-level override.'
+
+      php__ini_apc_shm_size__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: 'The size of the APCu shared memory segment. Host-level override.'
+
       php__ini_date_timezone__dependent_var:
         type: 'str'
         required: false
