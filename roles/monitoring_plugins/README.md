@@ -15,6 +15,7 @@ Notes:
 
 * **Source install builds a virtual environment.** With `monitoring_plugins__install_method: 'source'`, the role deploys the plugins into a self-contained Python virtual environment under `/usr/lib64/linuxfabrik-monitoring-plugins/venv` and rewrites the plugin shebangs to that interpreter, mirroring the layout of the rpm/deb package. Check, event and notification plugins all land flat in `/usr/lib64/nagios/plugins`, and their assets in `/usr/lib64/nagios/plugins/assets`, which is where the Icinga command definitions expect them. The OID lists and MIBs of the `snmp` plugin go into `device-oids/` and `device-mibs/` next to it. Device definitions of your own in these directories are left alone, by updates and by `monitoring_plugins:remove`.
 * **The role provisions a suitable Python itself.** On RHEL 8 the system Python is 3.6, which is too old. The role installs Python 3.9 (package `python39`) and builds the virtual environment with it, so a source install works on RHEL 8 without any manual Python setup. Every other supported platform already ships Python 3.9 or newer and is used as-is. A virtual environment left behind by an earlier run with a different Python is rebuilt.
+* **On Windows, the controller downloads the newest build of the release.** It fetches the highest package iteration of `monitoring_plugins__version` from [download.linuxfabrik.ch](https://download.linuxfabrik.ch/monitoring-plugins/), e.g. `lfmp-8.1.0-3`, and copies it to the target.
 * **The source install needs no Internet access on the target.** The Ansible controller clones the monitoring-plugins and Linuxfabrik library repositories, downloads every Python dependency as a wheel for the interpreter, architecture and glibc of each target, and copies everything over. pip on the target installs from those files only, so air-gapped hosts are provisioned like any other.
 * **Dependencies are pinned and verified.** The source install uses the lockfiles of the monitoring-plugins checkout, which pin every package to an exact version and to the checksums of its files, the same set CI tests the plugins against and the rpm/deb packages ship. pip refuses any file whose checksum does not match. A later run moves an existing venv to the versions of the current lockfile.
 * **On Linux, the Icinga2 agent keeps running during a deployment.** Plugins and library files are replaced by renaming, so a check never runs a half-written plugin. The virtual environment of the source install is changed in place, though: while the role moves it to new dependency versions, or rebuilds it for another Python, a check that runs at that moment can fail. The next check passes again.
@@ -171,6 +172,10 @@ monitoring_plugins__skip_package_versionlock: false
 
 
 ## Troubleshooting
+
+**`https://download.linuxfabrik.ch/monitoring-plugins/ offers no lfmp-<version>-*.signed-<type>.windows.x86_64.zip`**
+
+* No Windows build of `monitoring_plugins__version` is published. Set a release that [download.linuxfabrik.ch](https://download.linuxfabrik.ch/monitoring-plugins/) lists.
 
 **`No package linuxfabrik-monitoring-plugins-main available. msg: Failed to install some of the specified packages`**
 
