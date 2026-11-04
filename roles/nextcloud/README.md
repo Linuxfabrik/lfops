@@ -54,7 +54,26 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 Manual steps:
 
 * Size the `/tmp` partition for your upload load. For example, to allow 5 simultaneous uploads of 10 GB each, set it to 50 GB+.
-* Configure the systemd service for [notify_push](https://github.com/nextcloud/notify_push).
+* Set up the reverse proxy in front of Nextcloud, including the path `/push/` for notify_push, before running `setup_nextcloud`, see "Reverse Proxy in Front of Nextcloud" below. Otherwise set `nextcloud__skip_notify_push` until it is in place.
+
+
+## Reverse Proxy in Front of Nextcloud
+
+The Nextcloud vHost of `setup_nextcloud` serves plain HTTP on port 80 (`nextcloud__vhost_virtualhost_port`), and [notify_push](https://github.com/nextcloud/notify_push) listens on port 7867. TLS ends on the reverse proxy, which forwards `https://<nextcloud__fqdn>/push/` to notify_push and everything else to the vHost. `setup_nextcloud` registers notify_push with `occ notify_push:setup https://<nextcloud__fqdn>/push`, which checks the whole way through the proxy, so the proxy has to forward `/push/` by then.
+
+On the reverse proxy, forward with `ProxyPass`, the notify_push paths first, since Apache uses the first `ProxyPass` that matches:
+
+```apache
+ProxyPass           /push/ws ws://nextcloud-host.example.com:7867/ws
+ProxyPass           /push/ http://nextcloud-host.example.com:7867/
+ProxyPassReverse    /push/ http://nextcloud-host.example.com:7867/
+ProxyPass           / http://nextcloud-host.example.com/ nocanon
+ProxyPassReverse    / http://nextcloud-host.example.com/
+```
+
+Do not forward with `RewriteRule ... [proxy]`. mod_rewrite matches against the decoded path and passes it on decoded, so a `?` in a file name reaches Nextcloud as the start of the query string: renaming such a file in the web interface fails with "File not found", and the Windows client does not sync it. `ProxyPass` passes the path on encoded, and `nocanon` passes it on exactly as the client sent it. The characters that cause this are also on the list of characters the role forbids in file names (`forbidden_filename_characters` in `nextcloud__sysconfig__role_var`).
+
+On the Nextcloud side, the reverse proxy goes into `config.php` (`trusted_proxies`, `overwriteprotocol` and so on, see the example of `nextcloud__sysconfig__host_var`), and the proxy needs the timeouts described under "How the Role Behaves".
 
 
 ## Connecting Collabora Online
