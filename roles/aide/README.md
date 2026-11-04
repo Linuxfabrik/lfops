@@ -117,6 +117,7 @@ This role is compatible with the following aide versions:
     * `!/root/\.ansible/tmp` is added, since Ansible creates and deletes a directory there for every task it runs as root.
     * `!/root/\.cache` is added. It holds disposable caches only and gains pip cache entries on every run of the python_venv role.
     * `!/root/\.gnupg/S\.`, `!/root/\.gnupg/.*\.lock$` and `!/root/\.gnupg/.*/\.#lk` are added. gpg-agent and keyboxd keep their sockets and locks there while they run, after a run of the duplicity role or a backup until the next reboot.
+    * `!/opt/cool/cache` is added. Collabora caches the settings it fetches from the WOPI host there, per host and per user, and deletes them after some time of disuse.
     * `!/opt/cool/child-roots` is added. Collabora creates a jail per process there, under a new name on every start.
     * `!/usr/lib/sysimage/rpm` is added. The RPM database lives there on RHEL 10, and every rpm or dnf query rewrites it.
     * The audit tool rules of the CIS benchmarks are added.
