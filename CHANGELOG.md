@@ -76,6 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **module:systemd_credential**: `scope: 'user'` stores a credential for the services of an unprivileged user, such as a rootless Podman container, on hosts with systemd 256 or newer.
+* **role:nextcloud_whiteboard_server, playbook:nextcloud_whiteboard_server**: New role and playbook for the collaboration server of the Nextcloud Whiteboard app (real-time collaboration and recordings), run as an automatically updated rootless Podman container on hosts with systemd 256 or newer.
 * **role:php**: `php__ini_apc_enable_cli` and `php__ini_apc_shm_size` configure APCu.
 * **role:mariadb_server**: `mariadb_server__cnf_innodb_linux_aio` selects the Linux AIO implementation, for hosts where the kernel blocks io_uring.
 * **role:nextcloud**: A fresh installation enforces two-factor authentication, has TOTP enabled and no mimetype migrations pending. `nextcloud-update` runs the mimetype migrations after each update. Existing installations keep their enforcement state.
@@ -217,6 +219,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
+* **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
 * **role:login, playbook:setup_basic**: A run no longer locks Ansible out of `sudo` with "Missing sudo password" on hosts set up by LFOps before v6.0.0, where the Ansible user gets its password-less sudo from `/etc/sudoers.d/lfops_login` only, and the role leaves that file alone if `login__passwordless_sudo_group` is not set.
 * **role:monitoring_plugins**: Windows hosts install a monitoring plugins release that was rebuilt on download.linuxfabrik.ch, such as 8.1.0, where the download failed with a 404.
 * **role:monitoring_plugins**: On a host switched from the source install to the package, the plugins use the Linuxfabrik library of the package again, since the role removes what the source install left behind, such as `/usr/lib64/nagios/plugins/lib`.

@@ -1,0 +1,5 @@
+# The secret is a unique marker instead of 'linuxfabrik', since verify.yml searches the disk for
+# it and checks that the server inside the container received exactly this value.
+nextcloud_whiteboard_server__jwt_secret_key: 'molecule-jwt-secret-marker'
+nextcloud_whiteboard_server__nextcloud_url: 'https://nextcloud.example.com'
+nextcloud_whiteboard_server__version: 'stable'

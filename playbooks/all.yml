@@ -85,6 +85,7 @@
 - import_playbook: 'motd.yml'
 - import_playbook: 'mount.yml'
 - import_playbook: 'network.yml'
+- import_playbook: 'nextcloud_whiteboard_server.yml'
 - import_playbook: 'nfs_client.yml'
 - import_playbook: 'nfs_server.yml'
 - import_playbook: 'nodejs.yml'

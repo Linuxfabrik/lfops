@@ -31,7 +31,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.modules import systemd_creden
 
 class FakeModule:
     """Stands in for AnsibleModule. run_command() emulates `systemd-creds encrypt - -` and
-    `systemd-creds decrypt <path> -`, and records every call.
+    `systemd-creds decrypt <path> -` (with or without `--user`), and records every call.
     """
 
     def __init__(self, fail_encrypt=False):
@@ -45,7 +45,8 @@ class FakeModule:
                 return 1, b'', b'boom'
             return 0, b'ENC:' + data, b''
         if args[1] == 'decrypt':
-            with open(args[3], 'rb') as f:
+            # `decrypt [--user] --name=<name> <path> -`
+            with open(args[-2], 'rb') as f:
                 content = f.read()
             if content.startswith(b'ENC:'):
                 return 0, content[4:], b''
@@ -298,6 +299,76 @@ class TestAbsent(StoreTestCase):
         self.apply()
         self.assertTrue(self.apply(state='absent', check_mode=True)[0])
         self.assertTrue(os.path.exists(self.enc_path))
+
+
+class TestUserScope(unittest.TestCase):
+    """apply_user() runs as the user, so the temporary directory owned by the user running the
+    tests stands in for the home directory.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.store = os.path.join(self.tmp, '.config', 'credstore.encrypted')
+        self.path = os.path.join(self.store, 'cred')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def apply(self, data=b'secret', state='present', check_mode=False, module=None):
+        return systemd_credential.apply_user(
+            module or FakeModule(),
+            'cred',
+            data,
+            state,
+            'systemd-creds',
+            check_mode,
+            self.store,
+        )
+
+    def test_create_and_idempotence(self):
+        self.assertEqual(self.apply(), (True, self.path))
+        with open(self.path, 'rb') as f:
+            self.assertEqual(f.read(), b'ENC:secret')
+        self.assertEqual(mode(self.path), 0o600)
+        self.assertEqual(mode(self.store), 0o700)
+        self.assertEqual(mode(os.path.dirname(self.store)), 0o700)
+        self.assertEqual(self.apply(), (False, self.path))
+
+    def test_user_flag_and_no_secret_in_argv(self):
+        module = FakeModule()
+        self.apply(module=module)
+        self.apply(module=module)
+        for args, _data, _kwargs in module.calls:
+            self.assertIn('--user', args)
+            self.assertFalse(any('secret' in a for a in args), args)
+
+    def test_existing_config_dir_is_left_alone(self):
+        os.mkdir(os.path.join(self.tmp, '.config'), 0o755)
+        self.apply()
+        self.assertEqual(mode(os.path.join(self.tmp, '.config')), 0o755)
+
+    def test_content_change(self):
+        self.apply()
+        self.assertEqual(self.apply(data=b'other'), (True, self.path))
+
+    def test_check_mode_writes_nothing(self):
+        self.assertEqual(self.apply(check_mode=True), (True, self.path))
+        self.assertFalse(os.path.lexists(os.path.join(self.tmp, '.config')))
+
+    def test_symlinked_store_dir_fails(self):
+        elsewhere = os.path.join(self.tmp, 'elsewhere')
+        os.mkdir(elsewhere)
+        os.mkdir(os.path.dirname(self.store))
+        os.symlink(elsewhere, self.store)
+        with self.assertRaises(systemd_credential.StoreError):
+            self.apply()
+        self.assertEqual(os.listdir(elsewhere), [])
+
+    def test_absent(self):
+        self.apply()
+        self.assertEqual(self.apply(state='absent'), (True, ''))
+        self.assertFalse(os.path.lexists(self.path))
+        self.assertEqual(self.apply(state='absent'), (False, ''))
 
 
 class TestWriteAtomic(StoreTestCase):
