@@ -97,7 +97,7 @@ ProxyPass           /cool http://nextcloud-host.example.com:9980/cool
 ProxyPassReverse    /cool http://nextcloud-host.example.com:9980/cool
 ```
 
-In Nextcloud, enable the Nextcloud Office app and point it at the Collabora hostname. Collabora calls back into Nextcloud through the reverse proxy, so the allow list names the proxy:
+In Nextcloud, enable the Nextcloud Office app and point it at the Collabora hostname. Collabora calls back into Nextcloud through the reverse proxy. Depending on `trusted_proxies` (and on `mod_remoteip`, see `apache_httpd__mod_remoteip_internal_proxy`), Nextcloud sees either the reverse proxy or the Nextcloud host itself as the sender, since the proxy passes the Nextcloud host in `X-Forwarded-For`. The WOPI allow list therefore names both; otherwise documents fail to load with "Unauthorized WOPI host", and `nextcloud.log` reports "WOPI request denied from ...":
 
 ```yaml
 nextcloud__apps__host_var:
@@ -108,7 +108,7 @@ nextcloud__app_configs__host_var:
     value: 'https://office.example.com'
     state: 'present'
   - key: 'richdocuments wopi_allowlist'
-    value: '192.0.2.7' # IP of the reverse proxy
+    value: '192.0.2.7,192.0.2.10' # IPs of the reverse proxy and the Nextcloud host
     state: 'present'
   - key: 'richdocuments wopi_url'
     value: 'https://office.example.com'
