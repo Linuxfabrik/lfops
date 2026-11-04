@@ -219,6 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:uptimerobot_mwindow, role:uptimerobot**: Daily, weekly and monthly maintenance windows can be created again after UptimeRobot started to reject them with HTTP 400, changing the duration of a weekly window with several days works, and a failed API call names UptimeRobot's reason instead of only "Bad Request".
 * **role:nextcloud**: The README example for the Collabora WOPI allow list includes the Nextcloud host next to the reverse proxy. With the proxy alone, documents fail to load with "Unauthorized WOPI host".
 * **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
 * **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
