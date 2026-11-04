@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2026102101
+; 2026110401
 ; php 8.4
 
 [PHP]
@@ -31,6 +31,11 @@ opcache.memory_consumption = {{ php__ini_opcache_memory_consumption__combined_va
 opcache.revalidate_freq = {{ php__ini_opcache_revalidate_freq__combined_var }}
 opcache.save_comments = {{ php__ini_opcache_save_comments__combined_var }}
 opcache.validate_timestamps = {{ php__ini_opcache_validate_timestamps__combined_var }}
+
+[apcu]
+; only read if the APCu extension is loaded
+apc.enable_cli = {{ php__ini_apc_enable_cli__combined_var }}
+apc.shm_size = {{ php__ini_apc_shm_size__combined_var }}
 
 [mail function]
 mail.add_x_header = Off

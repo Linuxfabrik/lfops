@@ -10,15 +10,17 @@ __nextcloud__gpg_key_fingerprint: '28806A878AE423A28372792ED75899B9A724937A'
 # (`__`-prefixed) dict first, public variable second, both non-overridable from inventory.
 # See "OS-specific Dependent Variables" in CONTRIBUTING.md.
 
-# PHP modules installed by the linuxfabrik.lfops.php role via nextcloud__php__modules__dependent_var.
-# 'present' are the modules Nextcloud 35 requires or recommends (OC_Util::checkServer(),
-# apps/settings/lib/SetupChecks/PhpModules.php), the ones the role's features need (redis for all
-# caches, ldap for user_ldap, smbclient for SMB external storage) and the ones with setup checks of
-# their own (opcache, imagick). 'absent' are modules the role used to install and Nextcloud does
-# not use here: apcu and memcached (all caches live in Redis / Valkey), bcmath (gmp covers
-# WebAuthn and SFTP) and imap (only the IMAP backend of user_external needs it). php-json is not
-# listed: it is part of PHP 8 itself, and on RHEL only a name that php-common provides, so
-# 'absent' would take PHP with it.
+# PHP modules installed by the linuxfabrik.lfops.php role via
+# nextcloud__php__modules__dependent_var. 'present' are the modules Nextcloud 35 requires or
+# recommends (OC_Util::checkServer(), apps/settings/lib/SetupChecks/PhpModules.php), the ones the
+# role's features need (redis for the distributed cache and file locking, ldap for user_ldap,
+# smbclient for SMB external storage) and the ones with setup checks of their own (opcache,
+# imagick). apcu holds the local cache, and web requests generate Snowflake IDs from it instead of
+# from a flock'ed and fsync'ed file per ID (lib/private/Server.php, ISequence; verified against
+# Nextcloud 35.0.2). 'absent' are modules the role used to install and Nextcloud does not use here:
+# memcached (Redis / Valkey and APCu cover all caches), bcmath (gmp covers WebAuthn and SFTP) and
+# imap (only the IMAP backend of user_external needs it). php-json is not listed: it is part of PHP
+# 8 itself, and on RHEL only a name that php-common provides, so 'absent' would take PHP with it.
 __nextcloud__php__modules__dependent_var:
   RedHat:
     - name: 'php-bcmath'
@@ -46,7 +48,7 @@ __nextcloud__php__modules__dependent_var:
     - name: 'php-opcache'
       state: 'present'
     - name: 'php-pecl-apcu'
-      state: 'absent'
+      state: 'present'
     - name: 'php-process' # posix module for oc
       state: 'present'
     - name: 'php-redis'
@@ -68,7 +70,7 @@ __nextcloud__php__modules__dependent_var:
   # no version branch is needed here.
   Debian:
     - name: 'php{{ __php__installed_version }}-apcu'
-      state: 'absent'
+      state: 'present'
     - name: 'php{{ __php__installed_version }}-bcmath'
       state: 'absent'
     - name: 'php{{ __php__installed_version }}-gd'
