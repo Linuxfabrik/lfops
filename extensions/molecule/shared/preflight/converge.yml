@@ -1,0 +1,36 @@
+- name: 'Converge the disk space check'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'A requirement that fits passes'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'preflight.yml'
+      vars:
+        shared__disk_space_requirements:
+          - name: 'small'
+            path: '/usr'
+            required_mib: 1
+
+    - name: 'A requirement of something already installed is dropped'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'preflight.yml'
+      vars:
+        shared__disk_space_requirements:
+          - name: 'installed'
+            creates: '/usr/bin/env'
+            path: '/usr'
+            required_mib: 999999999
+
+    - name: 'lfops__skip_disk_space_check skips the check'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'preflight.yml'
+      vars:
+        lfops__skip_disk_space_check: true
+        shared__disk_space_requirements:
+          - name: 'skipped'
+            path: '/usr'
+            required_mib: 999999999

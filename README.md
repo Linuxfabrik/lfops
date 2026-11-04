@@ -400,6 +400,15 @@ This variable is used as the default across all `repo_*` roles if it is set. Can
 lfops__repo_mirror_url: 'https://mirror.example.com'
 ```
 
+#### `lfops__skip_disk_space_check`
+
+Playbooks and roles with known disk space needs check them before they install anything, and abort naming the filesystem and how much space is missing. Set this variable to `true` if you know that the space suffices.
+
+```bash
+ansible-playbook linuxfabrik.lfops.setup_icinga2_master --limit myhost \
+  --extra-vars='lfops__skip_disk_space_check=true'
+```
+
 #### `lfops__skip_restart_handlers`
 
 Set this to `true` to deploy configuration changes without restarting the affected services. Every role's restart handler is skipped, so a config change is written to disk but the running process keeps its old configuration. Reload handlers are not affected, because a reload applies the new configuration without an outage.

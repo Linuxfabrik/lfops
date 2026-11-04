@@ -44,6 +44,10 @@ Pre-release builds (`7.3.0-1.alpha.1`) are ignored by `--check` and refused by a
 unless `--allow-prerelease` is given. Some vendors keep the marker in the package
 release only, so the package version alone (`7.3.0`) looks like a final release.
 
+For distribution packages, which change a package without changing its version, the
+manifest can follow the package release too (`follow_release`); the version then names
+one build, `9.0.120-2.el9_8`.
+
 Exit code 0: nothing to review, or no new release. 1: conflicts or packaging findings to
 review, or new releases found. 2: the run could not complete. Run this tool from the
 repository root directory. It never commits.
@@ -62,7 +66,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102904'
+__version__ = '2026102905'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 MANIFEST = os.path.join(REPO_ROOT, 'tools', 'follow-upstream.yml')
@@ -77,8 +81,12 @@ HEADER_LINES = 10  # the header comment block is searched within the first lines
 # Versions and file names come from the vendor's repository and end up in templates, in
 # the output a headless agent reads, and in GitHub issues, so anything unusual is refused.
 VERSION_RE = re.compile(r'\d+(?:\.\d+)+')
+# the package release (`2.el9_8`), part of the version for `follow_release`
+RELEASE_RE = re.compile(r'[0-9A-Za-z._+~]+', re.ASCII)
 PATH_RE = re.compile(r'[\w.+@:~/-]+', re.ASCII)
-BASED_ON_RE = re.compile(r'Based on (?P<package>\S+) (?P<version>\d+(?:\.\d+)+)\b')
+BASED_ON_RE = re.compile(
+    r'Based on (?P<package>\S+) (?P<version>\d+(?:\.\d+)+(?:-[0-9A-Za-z._+~]+)?)(?!\S)'
+)
 TIMESTAMP_RE = re.compile(r'^(?P<prefix>\W*)(?P<stamp>\d{10})(?P<suffix>\W*)$')
 ENV_RE = re.compile(r'\$\{(?P<name>\w+)\}')
 # A pre-release marker in the package version or release, matched case-insensitively.
@@ -114,13 +122,36 @@ def expand(value):
 
 
 def version_key(version):
+    """Sort key like rpm's: numbers compare numerically and after letters, so
+    `9.0.120-2.el9_10` is newer than `9.0.120-2.el9_8`."""
     return [
-        int(part) if part.isdigit() else part for part in re.split(r'[.-]', version)
+        (1, int(part)) if part.isdigit() else (0, part)
+        for part in re.findall(r'\d+|[A-Za-z]+', version)
     ]
 
 
 def series_of(version, parts):
-    return '.'.join(version.split('.')[:parts])
+    # without the package release of `follow_release` (`9.0.120-2.el9_8`)
+    return '.'.join(version.split('-')[0].split('.')[:parts])
+
+
+def valid_version(config, version):
+    """Whether `version` is a version of the application, with the package release for
+    `follow_release` (`9.0.120-2.el9_8`)."""
+    if not config.get('follow_release'):
+        return VERSION_RE.fullmatch(version) is not None
+    number, _, release = version.partition('-')
+    return VERSION_RE.fullmatch(number) is not None and (
+        RELEASE_RE.fullmatch(release) is not None
+    )
+
+
+def rpm_repo_of(config, version):
+    """The RPM repository of the series of `version`, unexpanded."""
+    series = series_of(version, config['series_parts'])
+    if series in config.get('series_rpm_repo', {}):
+        return config['series_rpm_repo'][series]
+    return config['rpm_repo'].replace('{series}', repo_series(config, version))
 
 
 def repo_series(config, version):
@@ -242,9 +273,13 @@ def fetch(app, config, fmt, package, version):
         gpg_key = config['series_gpg_key'][series]['url']
         sha1 = config['series_gpg_key'][series].get('sha1', False)
     gpg_key = expand(gpg_key.replace('{series}', series))
+    # `follow_release`: the version names one build, `9.0.120-2.el9_8`
+    number, _, release = version.partition('-')
+    if not config.get('follow_release'):
+        number, release = version, ''
     if fmt == 'rpm':
-        display = config['rpm_repo'].replace('{series}', series)
-        env = {'REPO': expand(display)}
+        display = rpm_repo_of(config, version)
+        env = {'RELEASE': release, 'REPO': expand(display)}
         script = container_script('fetch-rpm.sh')
     else:
         # `deb_repo` is written like a sources.list line: `<url> <suite> <component>`
@@ -266,7 +301,7 @@ def fetch(app, config, fmt, package, version):
             'PACKAGE': package,
             'PRERELEASE_RE': PRERELEASE_RE,
             'REPO_DISPLAY': display,
-            'VERSION': version,
+            'VERSION': number,
         }
     )
     print(f'Fetching {package} {version} ({fmt}) from {display}', file=sys.stderr)
@@ -704,12 +739,17 @@ def next_series(series):
 
 
 def list_versions(config, packages, series_list):
-    """Return {package: {version, ...}} over the RPM repositories of `series_list`."""
+    """Return {package: {version, ...}} over the RPM repositories of `series_list` and
+    those of `series_rpm_repo`. A series of `series_rpm_repo` only counts in its own
+    repository: the default one may serve another build of it (EL 9 and EL 10)."""
+    own = config.get('series_rpm_repo', {})
     repos = []
     for series in series_list:
         repos.append(
             f'{series} {expand(config["rpm_repo"].replace("{series}", series))}'
         )
+    for series, repo in sorted(own.items()):
+        repos.append(f'own:{series} {expand(repo)}')
     result = run_container(
         container_script('list-rpm.sh'),
         {'PACKAGES': ' '.join(sorted(packages)), 'REPOS': '\n'.join(repos)},
@@ -732,7 +772,20 @@ def list_versions(config, packages, series_list):
         if is_prerelease(fields[3]):
             prereleases += 1
             continue
-        versions[fields[1]].add(fields[2])
+        # a series of `series_rpm_repo` counts in its own repository only
+        series = series_of(fields[2], config['series_parts'])
+        own_repo = f'own:{series}' if series in own else None
+        if (own_repo and fields[0] != own_repo) or (
+            not own_repo and fields[0].startswith('own:')
+        ):
+            continue
+        version = fields[2]
+        if config.get('follow_release'):
+            if not RELEASE_RE.fullmatch(fields[3]):
+                unusual += 1
+                continue
+            version = f'{fields[2]}-{fields[3]}'
+        versions[fields[1]].add(version)
     if unusual:
         print(f'{unusual} unusual package version(s) ignored', file=sys.stderr)
     if prereleases:
@@ -910,12 +963,14 @@ def main():
         return
     if not args.version:
         parser.error('the version is required')
-    if not VERSION_RE.fullmatch(args.version):
+    app, config = find_app(manifest, args.app)
+    if not valid_version(config, args.version):
+        if config.get('follow_release'):
+            parser.error(f'{app} takes the version and release, e.g. `9.0.120-2.el9_8`')
         parser.error('the version consists of numbers and dots, e.g. `7.2.1`')
 
     global ALLOW_PRERELEASE  # read by fetch()
     ALLOW_PRERELEASE = args.allow_prerelease
-    app, config = find_app(manifest, args.app)
     try:
         findings = check_packaging(app, config, args.version)
         findings += check_scripts(app, config, args.version)

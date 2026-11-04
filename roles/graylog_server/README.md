@@ -30,6 +30,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
     * `/`: at least 4 GB free disk space (create a 8+ GB partition).
     * `/var`: at least 15 GB free disk space (create a 20+ GB partition).
 
+    The run aborts on a host without Graylog that has less, adding up both values if `/` and `/var` are the same filesystem. Set `lfops__skip_disk_space_check: true` to skip this check.
+
 Manual steps:
 
 * Set hostnames properly and ensure that communication via DNS among all participating hosts works. This especially affects clustered systems, because the datanode instance registers itself to the mongodb database with its hostname.

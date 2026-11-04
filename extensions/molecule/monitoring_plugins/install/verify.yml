@@ -81,3 +81,29 @@
         that:
           - '__molecule__former_repo_files["files"] | length == 0'
         fail_msg: '{{ __molecule__former_repo_files["files"] | map(attribute="path") | join(", ") }}'
+
+    # converge.yml left a stale icon owned by uid 1000. The role has to replace its content and
+    # hand it and all other icons to root, while the idempotence step proves that a second run
+    # leaves the icons alone, which rewrote all of them before.
+    - name: 'find /usr/share/icingaweb2/public/img/icons -name *.svg'
+      ansible.builtin.find:
+        paths: '/usr/share/icingaweb2/public/img/icons'
+        patterns: '*.svg'
+      register: '__molecule__icons_result'
+
+    - name: 'cat /usr/share/icingaweb2/public/img/icons/cpu-usage.svg'
+      ansible.builtin.command: 'cat /usr/share/icingaweb2/public/img/icons/cpu-usage.svg'
+      changed_when: false
+      register: '__molecule__cpu_usage_icon_result'
+
+    - name: 'Assert that the icons are deployed, owned by root and readable for the web server'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icons_result["matched"] > 100'
+          - '__molecule__icons_result["files"] | map(attribute="uid") | unique == [0]'
+          - '__molecule__icons_result["files"] | map(attribute="gid") | unique == [0]'
+          - '__molecule__icons_result["files"] | map(attribute="mode") | unique == ["0644"]'
+          - '"<svg" in __molecule__cpu_usage_icon_result["stdout"]'
+        fail_msg: >-
+          {{ __molecule__icons_result["files"]
+            | rejectattr("uid", "eq", 0) | map(attribute="path") | list }}

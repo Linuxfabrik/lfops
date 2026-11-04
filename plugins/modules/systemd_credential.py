@@ -13,7 +13,7 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 module: systemd_credential
 
-short_description: Manage a systemd credential in the system credential store
+short_description: Manage a systemd credential in the system or a user's credential store
 
 description:
     - Stores a secret as a systemd credential, so that a service can load it with C(LoadCredentialEncrypted=) or C(LoadCredential=) and read it from C($CREDENTIALS_DIRECTORY/<name>).
@@ -22,14 +22,15 @@ description:
     - "Idempotent: an encrypted credential is decrypted on the host and compared with I(content). It is only encrypted again if the content differs or the file cannot be decrypted, for example after the host key was lost. C(systemd-creds encrypt) produces a different file on every call, so comparing files would always report a change."
     - The secret is passed to C(systemd-creds) on stdin, never on the command line, and the module never returns it.
     - Switching between the two stores, for example after an upgrade from RHEL 8 to RHEL 9, removes the credential from the store that is no longer used.
-    - The store directory is kept at mode C(0700) and the credential at C(0600), both owned by root. A symlink in place of the store directory makes the module fail, a symlink or other non-regular file in place of the credential is replaced. Files are written to a temporary file in the store, synced and renamed, so a service never loads a half-written credential.
+    - With I(scope=user), the module runs as the user whose services load the credential (C(become_user)), encrypts it with C(systemd-creds encrypt --user) and stores it in C(~/.config/credstore.encrypted/<name>), owned by that user. This needs systemd 256 or newer; there is no plain text fallback. With systemd 257, the per-user service manager cannot load such a credential with C(LoadCredentialEncrypted=) (it decrypts in-process and has no access to the host key, systemd 258 asks C(systemd-creds.socket) instead), so the service decrypts it itself, for example in C(ExecStartPre=) with C(systemd-creds decrypt --user --name=<name> <path> <file below the runtime directory>).
+    - The store directory is kept at mode C(0700) and the credential at C(0600), both owned by root (by the user with I(scope=user)). A symlink in place of the store directory makes the module fail, a symlink or other non-regular file in place of the credential is replaced. Files are written to a temporary file in the store, synced and renamed, so a service never loads a half-written credential.
 
 notes:
     - A service reads its credentials only when it starts. Restart it when the module reports a change.
     - The encrypted credential is bound to the host key C(/var/lib/systemd/credential.secret) and, if the host has one, to its TPM2 chip. On a host without a TPM2 chip, a full copy of the disk is enough to decrypt it.
     - With a TPM2 chip, C(systemd-creds) also binds the credential to the Secure Boot state (PCR 7). After a firmware, shim or Secure Boot update, the service cannot decrypt it and fails to start until the module runs again and re-encrypts it.
     - Check mode is supported. Diff mode is not, since a diff would reveal the secret.
-    - Has to run as root.
+    - Has to run as root with I(scope=system), and as the user, not root, with I(scope=user).
     - The version of the running service manager decides between the two stores, since it is the one that loads the credential.
 
 requirements:
@@ -49,6 +50,14 @@ options:
         description: Name of the credential, also used as the file name in the credential store and embedded in the encrypted file. Letters, digits, C(_), C(-) and C(.) only.
         required: True
         type: str
+    scope:
+        description: C(system) stores the credential for system services in C(/etc/credstore.encrypted/) (or C(/etc/credstore/)). C(user) stores it for the services of the user the module runs as, for example rootless Podman containers, in C(~/.config/credstore.encrypted/).
+        required: False
+        type: str
+        default: 'system'
+        choices:
+            - 'system'
+            - 'user'
     state:
         description: Whether the credential should exist. C(absent) removes it from both stores.
         required: False
@@ -86,11 +95,20 @@ EXAMPLES = r"""
   linuxfabrik.lfops.systemd_credential:
     name: 'mariadb-dump-login.cnf'
     state: 'absent'
+
+# For the services of a rootless user, e.g. a Podman container run by "whiteboard"
+- name: 'Store the JWT secret as a user-scoped systemd credential'
+  linuxfabrik.lfops.systemd_credential:
+    name: 'jwt-secret-key'
+    content: 'linuxfabrik'
+    scope: 'user'
+  become: true
+  become_user: 'whiteboard'
 """
 
 RETURN = r"""
 encrypted:
-    description: Whether the credential is stored encrypted (systemd 251 or newer). Use it to decide between C(LoadCredentialEncrypted=) and the plain fallback.
+    description: Whether the credential is stored encrypted (systemd 251 or newer, always with I(scope=user)). Use it to decide between C(LoadCredentialEncrypted=) and the plain fallback.
     returned: always
     type: bool
     sample: true
@@ -99,6 +117,11 @@ path:
     returned: always
     type: str
     sample: '/etc/credstore.encrypted/mariadb-dump-login.cnf'
+scope:
+    description: The scope the credential is stored in.
+    returned: always
+    type: str
+    sample: 'system'
 systemd_version:
     description: Major version of the running systemd service manager.
     returned: always
@@ -107,6 +130,7 @@ systemd_version:
 """
 
 import os
+import pwd
 import re
 import stat
 import tempfile
@@ -118,15 +142,32 @@ from ansible.module_utils.basic import AnsibleModule
 # exists since 250.
 MIN_ENCRYPTED_VERSION = 251
 
+# systemd 256 is the first release whose systemd-creds encrypts and decrypts user-scoped
+# credentials (--user, NEWS "CHANGES WITH 256"), through the systemd-creds.socket Varlink service
+# when not run as root.
+MIN_USER_SCOPE_VERSION = 256
+
+# Where a user-scoped credential is stored, relative to the user's home directory. The per-user
+# service manager of later systemd releases searches it ($XDG_CONFIG_HOME/credstore.encrypted/).
+USER_STORE_SUBDIR = os.path.join('.config', 'credstore.encrypted')
+
 # The directories systemd searches for system credentials, created by systemd itself with
 # mode 0700 root:root since 253 (tmpfiles.d/credstore.conf).
 ENCRYPTED_DIR = '/etc/credstore.encrypted'
 PLAIN_DIR = '/etc/credstore'
 
-# Owner of the store and its files. Module constants, so that the unit tests can run them
-# without root.
+# Owner of the system store and its files. Module constants, so that the unit tests can run
+# them without root. The user store belongs to the user the module runs as.
 OWNER_UID = 0
 OWNER_GID = 0
+
+
+def default_owner(owner):
+    """Return `owner` (uid, gid), or the owner of the system store if it is None. Resolved at
+    call time, so that the unit tests can redirect the module constants.
+    """
+    return owner if owner is not None else (OWNER_UID, OWNER_GID)
+
 
 # Keeps the name a plain file name inside the store: no `/`, no `..`, no leading dot, no control
 # characters (systemd rejects those as credential names).
@@ -151,17 +192,18 @@ def parse_systemd_version(output):
     return int(match.group(1)) if match else None
 
 
-def ensure_store_dir(path, check_mode):
-    """Make `path` a directory owned by root with mode 0700. Refuses a symlink or anything else
-    that is not a directory, since following it would put the secret somewhere else. Returns
-    True if something changed.
+def ensure_store_dir(path, check_mode, owner=None):
+    """Make `path` a directory owned by `owner` (root by default) with mode 0700. Refuses a
+    symlink or anything else that is not a directory, since following it would put the secret
+    somewhere else. Returns True if something changed.
     """
+    uid, gid = default_owner(owner)
     try:
         st = os.lstat(path)
     except FileNotFoundError:
         if not check_mode:
             os.mkdir(path, 0o700)
-            os.chown(path, OWNER_UID, OWNER_GID)
+            os.chown(path, uid, gid)
             os.chmod(path, 0o700)
         return True
     if not stat.S_ISDIR(st.st_mode):
@@ -169,10 +211,10 @@ def ensure_store_dir(path, check_mode):
             f'{path} is not a directory (or a symlink). Remove it and run again.'
         )
     changed = False
-    if (st.st_uid, st.st_gid) != (OWNER_UID, OWNER_GID):
+    if (st.st_uid, st.st_gid) != (uid, gid):
         changed = True
         if not check_mode:
-            os.chown(path, OWNER_UID, OWNER_GID)
+            os.chown(path, uid, gid)
     if stat.S_IMODE(st.st_mode) != 0o700:
         changed = True
         if not check_mode:
@@ -188,16 +230,17 @@ def is_regular_file(path):
         return False
 
 
-def ensure_file_attributes(path, check_mode):
-    """Make the regular file `path` owned by root with mode 0600. Returns True if something
-    changed.
+def ensure_file_attributes(path, check_mode, owner=None):
+    """Make the regular file `path` owned by `owner` (root by default) with mode 0600. Returns
+    True if something changed.
     """
+    uid, gid = default_owner(owner)
     st = os.lstat(path)
     changed = False
-    if (st.st_uid, st.st_gid) != (OWNER_UID, OWNER_GID):
+    if (st.st_uid, st.st_gid) != (uid, gid):
         changed = True
         if not check_mode:
-            os.chown(path, OWNER_UID, OWNER_GID)
+            os.chown(path, uid, gid)
     if stat.S_IMODE(st.st_mode) != 0o600:
         changed = True
         if not check_mode:
@@ -226,18 +269,19 @@ def fsync_dir(path):
         os.close(fd)
 
 
-def write_atomic(dest, data):
-    """Write `data` (bytes) to `dest`, owned by root with mode 0600, via a temporary file in the
+def write_atomic(dest, data, owner=None):
+    """Write `data` (bytes) to `dest`, owned by `owner` (root by default) with mode 0600, via a temporary file in the
     same directory and an atomic rename, which also replaces a symlink at `dest` instead of
     following it. os.rename() instead of AnsibleModule.atomic_move(), which gives a new file the
     mode 0666 minus the umask, so mostly world-readable. Synced before and after the rename, so
     that a crash does not leave an empty credential behind.
     """
+    uid, gid = default_owner(owner)
     directory = os.path.dirname(dest)
     fd, tmp = tempfile.mkstemp(dir=directory, prefix='.ansible-')
     try:
         with os.fdopen(fd, 'wb') as f:
-            os.fchown(f.fileno(), OWNER_UID, OWNER_GID)
+            os.fchown(f.fileno(), uid, gid)
             os.fchmod(f.fileno(), 0o600)
             f.write(data)
             f.flush()
@@ -258,7 +302,12 @@ def remove(path, check_mode):
     return True
 
 
-def decrypts_to(module, creds_bin, name, path, data):
+def scope_args(scope):
+    """Return the systemd-creds options for `scope`."""
+    return ['--user'] if scope == 'user' else []
+
+
+def decrypts_to(module, creds_bin, name, path, data, scope='system'):
     """Return True if the encrypted credential at `path` decrypts to `data`. A file that cannot
     be decrypted (wrong host key, other name, corrupt) or is not a regular file counts as
     different, so that it gets replaced. The decrypted secret never leaves this function.
@@ -266,20 +315,20 @@ def decrypts_to(module, creds_bin, name, path, data):
     if not is_regular_file(path):
         return False
     rc, stdout, _ = module.run_command(
-        [creds_bin, 'decrypt', f'--name={name}', path, '-'],
+        [creds_bin, 'decrypt', *scope_args(scope), f'--name={name}', path, '-'],
         binary_data=True,
         encoding=None,
     )
     return rc == 0 and stdout == data
 
 
-def encrypt(module, creds_bin, name, data):
+def encrypt(module, creds_bin, name, data, scope='system'):
     """Return `data` (bytes, passed on stdin) encrypted by systemd-creds. The ciphertext comes
     back on stdout, so that write_atomic() writes it with the right owner and mode, instead of
     systemd-creds' own temporary file with mode 0666 minus the umask.
     """
     rc, stdout, stderr = module.run_command(
-        [creds_bin, 'encrypt', f'--name={name}', '-', '-'],
+        [creds_bin, 'encrypt', *scope_args(scope), f'--name={name}', '-', '-'],
         data=data,
         binary_data=True,
         encoding=None,
@@ -308,8 +357,45 @@ def get_systemd_version(module):
     return version
 
 
+def user_store_dir():
+    """Return the user store of the user the module runs as."""
+    return os.path.join(pwd.getpwuid(os.geteuid()).pw_dir, USER_STORE_SUBDIR)
+
+
+def apply_user(module, name, data, state, creds_bin, check_mode, store_dir):
+    """Bring the user-scoped credential `name` in `store_dir` into the desired state. Runs as
+    the user, so everything it creates belongs to the user and a symlink the user planted can
+    only redirect the user's own files. Returns (changed, path).
+    """
+    path = os.path.join(store_dir, name)
+    if state == 'absent':
+        return remove(path, check_mode), ''
+
+    owner = (os.geteuid(), os.getegid())
+    changed = False
+    # ~/.config, if missing; an existing one is the user's business
+    parent = os.path.dirname(store_dir)
+    if not os.path.lexists(parent):
+        changed = True
+        if not check_mode:
+            os.mkdir(parent, 0o700)
+    changed |= ensure_store_dir(store_dir, check_mode, owner)
+    if check_mode and not os.path.isdir(store_dir):
+        return True, path
+
+    if decrypts_to(module, creds_bin, name, path, data, scope='user'):
+        changed |= ensure_file_attributes(path, check_mode, owner)
+    else:
+        changed = True
+        if not check_mode:
+            write_atomic(
+                path, encrypt(module, creds_bin, name, data, scope='user'), owner
+            )
+    return changed, path
+
+
 def apply(module, name, data, state, encrypted, creds_bin, check_mode):
-    """Bring the credential `name` into the desired state. Returns (changed, path)."""
+    """Bring the system credential `name` into the desired state. Returns (changed, path)."""
     encrypted_path = os.path.join(ENCRYPTED_DIR, name)
     plain_path = os.path.join(PLAIN_DIR, name)
 
@@ -347,16 +433,23 @@ def main():
         argument_spec=dict(
             content=dict(type='str', no_log=True),
             name=dict(type='str', required=True),
+            scope=dict(type='str', default='system', choices=['system', 'user']),
             state=dict(type='str', default='present', choices=['absent', 'present']),
         ),
         required_if=[('state', 'present', ['content'])],
         supports_check_mode=True,
     )
     name = module.params['name']
+    scope = module.params['scope']
     state = module.params['state']
 
-    if os.geteuid() != 0:
+    if scope == 'system' and os.geteuid() != 0:
         module.fail_json(msg='The module has to run as root (become: true).')
+    if scope == 'user' and os.geteuid() == 0:
+        module.fail_json(
+            msg='With scope=user, the module has to run as the user whose services load the'
+            ' credential (become_user), not as root.',
+        )
     if not is_valid_name(name):
         module.fail_json(
             msg=f'Invalid credential name {name!r}: use letters, digits, "_", "-" and "." only,'
@@ -370,18 +463,41 @@ def main():
         module.fail_json(msg='Cannot determine the systemd version.')
 
     creds_bin = module.get_bin_path('systemd-creds')
-    encrypted = systemd_version >= MIN_ENCRYPTED_VERSION and creds_bin is not None
     data = module.params['content'].encode('utf-8') if state == 'present' else b''
 
     try:
-        changed, path = apply(
-            module, name, data, state, encrypted, creds_bin, module.check_mode
-        )
+        if scope == 'user':
+            if systemd_version < MIN_USER_SCOPE_VERSION or creds_bin is None:
+                module.fail_json(
+                    msg=f'scope=user needs systemd {MIN_USER_SCOPE_VERSION} or newer and'
+                    f' systemd-creds, found systemd {systemd_version}.',
+                )
+            encrypted = True
+            changed, path = apply_user(
+                module,
+                name,
+                data,
+                state,
+                creds_bin,
+                module.check_mode,
+                user_store_dir(),
+            )
+        else:
+            encrypted = (
+                systemd_version >= MIN_ENCRYPTED_VERSION and creds_bin is not None
+            )
+            changed, path = apply(
+                module, name, data, state, encrypted, creds_bin, module.check_mode
+            )
     except StoreError as e:
         module.fail_json(msg=str(e))
 
     module.exit_json(
-        changed=changed, encrypted=encrypted, path=path, systemd_version=systemd_version
+        changed=changed,
+        encrypted=encrypted,
+        path=path,
+        scope=scope,
+        systemd_version=systemd_version,
     )
 
 

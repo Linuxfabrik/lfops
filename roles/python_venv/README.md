@@ -6,6 +6,11 @@ This role creates and manages various [Python 3 virtual environments (venv)](htt
 *Available since LFOps `1.0.0`.*
 
 
+## How the Role Behaves
+
+* A venv is rebuilt from scratch when its Python minor release differs from the one of `python_executable`, for example after `python_executable` changed from `python3` (Python 3.6 on RHEL 8) to `python3.11`, or after a distribution upgrade moved `python3` to a new minor release. Packages installed into the venv by hand are lost in the process; the role reinstalls the `packages` of the venv. A patch release update (3.11.9 to 3.11.13) keeps the venv.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.

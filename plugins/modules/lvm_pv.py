@@ -92,6 +92,39 @@ def get_pv_size(module, device):
     return int(out.strip())
 
 
+def pv_needs_resize(module, device):
+    """Tell whether pvresize would change the size of the PV.
+
+    Local patch: upstream runs pvresize on every call. pvresize commits the VG metadata even
+    when the size stays the same, which writes a file to /etc/lvm/archive on every run
+    (pv_resize_single() in lib/metadata/pv_manip.c, verified with LVM 2.03.36 on Rocky 10).
+
+    A PV in a VG reports pe_count * extent size as pv_size, and pvresize sets pe_count to
+    (device size - pe_start) / extent size. A second metadata area at the end of the device
+    makes this an overestimate, so pvresize runs as before. An orphan PV has neither extents
+    nor an extent size, and reports the device size it was last resized to.
+    """
+    cmd = [
+        'pvs',
+        '--noheadings',
+        '--nosuffix',
+        '--units',
+        'b',
+        '--separator',
+        ';',
+        '-o',
+        'dev_size,pv_size,pe_start,vg_extent_size,pv_pe_count',
+        device,
+    ]
+    _rc, out, _err = module.run_command(cmd, check_rc=True)
+    dev_size, pv_size, pe_start, extent_size, pe_count = (
+        int(value) for value in out.strip().split(';')
+    )
+    if extent_size == 0:
+        return dev_size != pv_size
+    return (dev_size - pe_start) // extent_size != pe_count
+
+
 def rescan_device(module, device):
     """Perform storage rescan for the device."""
     base_device = os.path.basename(device)
@@ -164,21 +197,22 @@ def main():
         # Handle resizing
         elif resize and is_pv:
             if module.check_mode:
-                # In check mode, assume resize would change
-                changed = True
-                actions.append('would be resized')
+                if pv_needs_resize(module, device):
+                    changed = True
+                    actions.append('would be resized')
             else:
                 # Perform device rescan if each time
                 if rescan_device(module, device):
                     actions.append('rescanned')
-                original_size = get_pv_size(module, device)
-                _rc, _out, _err = module.run_command(
-                    ['pvresize', device], check_rc=True
-                )
-                new_size = get_pv_size(module, device)
-                if new_size != original_size:
-                    changed = True
-                    actions.append('resized')
+                if pv_needs_resize(module, device):
+                    original_size = get_pv_size(module, device)
+                    _rc, _out, _err = module.run_command(
+                        ['pvresize', device], check_rc=True
+                    )
+                    new_size = get_pv_size(module, device)
+                    if new_size != original_size:
+                        changed = True
+                        actions.append('resized')
 
     elif state == 'absent':
         if is_pv:

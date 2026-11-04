@@ -354,6 +354,9 @@ A playbook that runs many roles, such as `setup_basic`, aborts on a missing prer
 
 * includes `shared/tasks/validate-role-arguments.yml`, tagged `always`, with the roles it runs. It lists them in `<playbook>__roles__internal_var`, each with the condition under which the play skips it; `tests/unit/test_playbooks.py` keeps the list in sync with the play.
 * includes the `preflight.yml` of each role that has one, with `tasks_from`, gated on the role's skip variable and tagged like the role.
+* imports the `network` role ahead of a preflight that has to reach a server by name, since the image of a fresh VM can bring a dead nameserver. This is the only role that changes the host before the preflight checks.
+
+Disk space needs go through `shared/tasks/preflight.yml`, never into a README alone. A role with a fixed need calls it in its `preflight.yml` (reference: `roles/graylog_server`). A playbook whose roles only fill up the disk together passes all of them at once, since the task adds them up per filesystem (reference: `playbooks/setup_icinga2_master.yml`). Measure the numbers on a real installation, and give every requirement a `creates`, so that an installed host with a full disk can still be re-configured.
 
 
 #### Reporting a Manual Step to the Operator
@@ -510,7 +513,7 @@ roles:
 #### Templates
 
 * Always use `ansible.builtin.template`, never `copy`, even without variables: easier to extend, and it allows the header.
-* Always set `backup: true` (timestamped copy, e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`).
+* Always set `backup: true` (timestamped copy, e.g. `keycloak.conf.23875.2025-02-14@15:19:16~`), except for a file that holds or held a secret: the copy keeps the secret after it moved to a systemd credential or changed. Delete the copies such a file got from earlier versions of the role (`roles/borg_local`, `roles/nextcloud`).
 * Start every template with `# {{ ansible_managed }}` and a `# YYYYMMDDNN` version line (e.g. `# 2021081601`), in the target's comment syntax.
 * Update the version line whenever the rendered file changes, and only then. A change that renders the same on every host (a variable renamed to one with the same value, a Jinja comment such as the `Based on` line) keeps it: the version line alone would make every host report a changed file.
 * Never use `{{ template_run_date }}`, it breaks idempotency.
@@ -546,20 +549,21 @@ Templates that are copies of a packaged file (`<series>-coolwsd.xml.j2`, `<serie
 
 #### Secrets for systemd Services
 
-A secret that a systemd service reads from a file (a daemon, or a script run by a timer) is stored as a systemd credential, not in a config file below `/etc`. Backups of `/etc` then hold no plaintext password, since the host key in `/var/lib/systemd/` is not backed up.
+A secret that a systemd service reads from a file (a daemon, or a script run by a timer), or that a script needs which only admins run by hand, is stored as a systemd credential, neither in a config file below `/etc` nor templated into the script. Backups of `/etc` then hold no plaintext password, since the host key in `/var/lib/systemd/` is not backed up.
 
 * Store it with `linuxfabrik.lfops.systemd_credential` and register the result. The module encrypts the credential into `/etc/credstore.encrypted/` with systemd 251 and newer, and otherwise writes it in plain text to `/etc/credstore/` (`0700` directory, `0600` file, root).
 * In the unit, add `LoadCredentialEncrypted=<name>` only when the registered result is `encrypted`, so the unit loads the credential from the store the module chose.
 * The service reads `${CREDENTIALS_DIRECTORY:-/etc/credstore}/<name>`. A script aborts with a hint to run the unit if the file is not readable: started by hand, outside the unit, it cannot decrypt the credential.
-* A tool that admins also run by hand (e.g. `duba`) instead falls back to `systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -` if neither file exists, which works for root only. It passes the secret on to the program it calls through the environment or stdin, never on the command line.
-* Use a template rendered through `lookup('ansible.builtin.template', ...)` as `content`, below `templates/etc/credstore/`. It keeps the header and version line, but is never deployed itself, so there is no `backup: true` copy of the secret. Exception: build a JSON credential inline with `to_json` (e.g. `'{{ {"password": ...} | to_json }}'`), since ansible-core before 2.19 turns a rendered string that looks like a dict into one, and the module then stores its Python repr.
+* A tool that admins also or only run by hand (e.g. `duba`, `nextcloud-update`) instead falls back to `systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -` if neither file exists, which works for root only. It passes the secret on to the program it calls through the environment or stdin, never on the command line.
+* Use a template rendered through `lookup('ansible.builtin.template', ...)` as `content`, below `templates/etc/credstore/`. It keeps the header and version line, but is never deployed itself, so there is no `backup: true` copy of the secret. Exceptions: build a JSON credential inline with `to_json` (e.g. `'{{ {"password": ...} | to_json }}'`), since ansible-core before 2.19 turns a rendered string that looks like a dict into one, and the module then stores its Python repr. Pass a bare secret inline if the consumer takes the whole file as the value and a header would become part of it (`roles/nextcloud_whiteboard_server`).
 * When moving an existing secret file to a credential, delete the old file and its `backup: true` copies.
 * Name the credential after the file it replaces, e.g. `mariadb-dump-login.cnf`.
 * Document in the role README where the secret ends up per platform, that a script has to run via `systemctl start <unit>`, and the TPM2 caveat: with a TPM2 chip, the credential is bound to the Secure Boot state, so after a firmware or Secure Boot change the unit cannot read it until the role runs again.
 * If the service must keep working without the secret, leave `LoadCredentialEncrypted=` out of the unit: when systemd cannot decrypt a credential listed there, the unit does not start at all. The script then decrypts it itself (`systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -`, else reads `/etc/credstore/<name>`) and goes on without it on failure. `roles/schedule_reboot` (`do-reboot`) does this, so that a credential the TPM2 no longer releases costs the Icinga downtime, not the reboot.
 * If the program fetches the secret through a command itself (e.g. borg's `BORG_PASSCOMMAND`), give it `systemd-creds decrypt --name=<name> /etc/credstore.encrypted/<name> -` when the registered result is `encrypted`, else `cat /etc/credstore/<name>`. The secret then reaches neither an environment variable nor the command line, and admins can run the program by hand as root. `roles/borg_local` does this.
 * If the service only takes the secret inline in its config, the pattern does not apply without a wrapper that renders the config at start; keep the config file `0600` and owned by the service user.
-* `roles/borg_local` (`borg-backup`), `roles/duplicity` (`duba`), `roles/mariadb_server` (`mariadb-dump`) and `roles/mongodb` (`mongodb-dump`) implement this pattern.
+* A rootless Podman container (a user unit) gets a user-scoped credential: store it with `scope: 'user'` and `become_user: <service user>`, which needs systemd 256 or newer and ends up in `~/.config/credstore.encrypted/<name>`. systemd 257 cannot load it with `LoadCredentialEncrypted=` in a user unit (systemd 258 can), and Podman's `shell` secret driver runs its lookup as UID 0 in the user namespace, where `systemd-creds` fails too. So the Quadlet decrypts it in `ExecStartPre=` (`systemd-creds decrypt --user`) into its `RuntimeDirectory=` (tmpfs), mounts the file read-only with `:U` into the container, and an entrypoint wrapper reads it there and refuses to start without it. Never hand the secret to the container as an environment variable (`Environment=`, `EnvironmentFile=`, `--secret type=env`): Podman keeps the environment of a running container in plain text in its storage below the user's home. `roles/nextcloud_whiteboard_server` implements this.
+* `roles/borg_local` (`borg-backup`), `roles/duplicity` (`duba`), `roles/mariadb_server` (`mariadb-dump`), `roles/mongodb` (`mongodb-dump`) and `roles/nextcloud` (`nextcloud-update`) implement this pattern.
 
 
 #### OS-specific Variables
@@ -691,7 +695,7 @@ Before adding an `allow` rule, work out what it buys an attacker **on top of** t
 * `mariadb_server`: the dump login is a systemd credential, see "Secrets for systemd Services".
 * `mongodb`: `state: skip` in `mongodb__databases` / `mongodb__users` leaves an entry untouched; the dump login is a systemd credential, see "Secrets for systemd Services".
 * `moodle`: patch tag discovered via `api.github.com/repos/moodle/moodle/tags`, first match of `^v<configured-version>`.
-* `nextcloud`: a state file skips install-only tasks after the initial installation; concise "Tags" README section.
+* `nextcloud`: a state file skips install-only tasks after the initial installation; concise "Tags" README section; the Icinga2 API login of `nextcloud-update` is a systemd credential, see "Secrets for systemd Services".
 * `php`: present/absent split of `php__modules__combined_var` into two batched package calls.
 * `redis`: installed version via `package_facts` selects `<version>-redis.conf.j2`; systemd via unit-file overrides.
 
@@ -701,7 +705,7 @@ Before adding an `allow` rule, work out what it buys an attacker **on top of** t
 Some plugins are vendored from upstream (local patches, upstream needs a newer ansible-core, or the dependency must ship to the managed node). Keep them in lockstep with upstream; re-sync or drop them when the condition is met.
 
 * `plugins/modules/ipagroup.py`, `ipahbacrule.py`, `ipahostgroup.py`, `ipapwpolicy.py`, `ipasudocmd.py`, `ipasudocmdgroup.py`, `ipasudorule.py`, `ipauser.py`: from <https://github.com/freeipa/ansible-freeipa>, with `--diff` support from PR [#1415](https://github.com/freeipa/ansible-freeipa/pull/1415). Drop when a release contains it; switch to `freeipa.ansible_freeipa.<module>`.
-* `plugins/modules/lvm_pv.py`: from community.general (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), in 11.0.0, which needs ansible-core >= 2.18; LFOps still supports RHEL 8 / Python 3.6). Local patch, keep on re-sync: `from __future__ import annotations` replaced by `from __future__ import absolute_import, division, print_function`. Drop when LFOps requires ansible-core >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm`.
+* `plugins/modules/lvm_pv.py`: from community.general (PR [#10070](https://github.com/ansible-collections/community.general/pull/10070), in 11.0.0, which needs ansible-core >= 2.18; LFOps still supports RHEL 8 / Python 3.6). Local patches, keep on re-sync: `from __future__ import annotations` replaced by `from __future__ import absolute_import, division, print_function`, and `pvresize` only runs when the device holds more or fewer extents than the PV (`pv_needs_resize()`), since every `pvresize` writes a file to `/etc/lvm/archive`. Drop when LFOps requires ansible-core >= 2.18; switch to `community.general.lvm_pv` and update `roles/lvm`.
 * `plugins/module_utils/gnupg.py` (with `gnupg.py_LICENSE.txt`): byte-identical [python-gnupg](https://github.com/vsajip/python-gnupg), revision in its `__version__`, used by `gpg_key` on the managed node to avoid a pip install there. Not expected to be dropped; re-sync unmodified.
 
 

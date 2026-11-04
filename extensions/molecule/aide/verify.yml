@@ -8,11 +8,12 @@
 # /etc/aide.conf. Then a file below the scenario's regular rule makes the check fail and shows up
 # in the report with all its attributes (report level added_removed_entries), while files below
 # its negative rules (one in the rule list, one in aide__conf_raw) do not, and neither does a file
-# below /opt, whose default rule the scenario removes. A content change of /root/.lfops-molecule
-# is reported, which only its own rule does, not the default '/root/\..* PERMS' of the same
-# directory, and so is a content change of /boot/efi/lfops-molecule. This only works if the rules
-# and the raw part from the inventory are in effect, since /srv is not monitored otherwise and
-# /opt is by default.
+# below /opt, whose default rule the scenario removes, nor the sockets and locks of gpg-agent and
+# keyboxd or a new LVM metadata archive, while a new file next to the sockets is. A content
+# change of /root/.lfops-molecule is reported, which only its own rule does, not the default
+# '/root/\..* PERMS' of the same directory, and so is a content change of
+# /boot/efi/lfops-molecule. This only works if the rules and the raw part from the inventory are
+# in effect, since /srv is not monitored otherwise and /opt is by default.
 # In between, the role is run again twice, each time after a change it has to revert, to
 # prove that its handler leaves the database alone in both cases where re-baselining would
 # accept unvetted changes: a database found without the role's check unit, and a last check
@@ -46,6 +47,21 @@
         that:
           - '__molecule__aide_timer_enabled_result["stdout"] == "enabled"'
           - '__molecule__aide_timer_active_result["stdout"] == "active"'
+
+    # the check reads the whole system, so it has to yield to everything else on the host
+    - name: 'systemctl show --property CPUWeight,IOSchedulingClass,IOWeight,Nice aidecheck.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show --property CPUWeight,IOSchedulingClass,IOWeight,Nice aidecheck.service'
+      changed_when: false
+      register: '__molecule__aide_priority_result'
+
+    - name: 'Assert that aidecheck.service runs with the lowest priority'
+      ansible.builtin.assert:
+        that:
+          - '"CPUWeight=1" in __molecule__aide_priority_result["stdout_lines"]'
+          - '"IOSchedulingClass=3" in __molecule__aide_priority_result["stdout_lines"]'
+          - '"IOWeight=1" in __molecule__aide_priority_result["stdout_lines"]'
+          - '"Nice=19" in __molecule__aide_priority_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__aide_priority_result["stdout"] }}'
 
     # the package, not its timer: aide-common on Ubuntu 22.04 runs its check from
     # /etc/cron.daily/aide and has no timer at all.
@@ -293,6 +309,51 @@
         - '/srv/lfops-molecule/probe'
         - '/srv/lfops-molecule/raw-ignored/probe'
 
+    # what auditd and a package do to /var/log on their own, see the rules in the role defaults
+    - name: 'mkdir -p /var/log/audit /var/log/lfops-molecule' # noqa risky-file-permissions (keeps the mode auditd set)
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+      loop:
+        - '/var/log/audit'
+        - '/var/log/lfops-molecule'
+
+    - name: 'Rotate an audit log'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '/var/log/audit/audit.log.99'
+        owner: 'root'
+        group: 'root'
+        mode: 0o400
+
+    # what gpg-agent, keyboxd and LVM do on their own, see the rules in the role defaults. The
+    # rules match by name, so plain files stand in for the sockets. A file next to them that
+    # looks like a key has to be reported.
+    - name: 'mkdir -p /root/.gnupg/public-keys.d /etc/lvm/archive'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o700
+      loop:
+        - '/etc/lvm/archive'
+        - '/root/.gnupg/public-keys.d'
+
+    - name: 'Create the sockets and locks of gpg-agent and keyboxd, an LVM archive and a key'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '{{ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o600
+      loop:
+        - '/etc/lvm/archive/lfops-molecule_00000-1.vg'
+        - '/root/.gnupg/S.gpg-agent'
+        - '/root/.gnupg/lfops-molecule-key'
+        - '/root/.gnupg/public-keys.d/.#lk0x0.lfops-molecule.1'
+        - '/root/.gnupg/public-keys.d/pubring.db.lock'
+
     - name: 'Change the content of /root/.lfops-molecule'
       ansible.builtin.copy:
         content: 'lfops-molecule-changed'
@@ -346,6 +407,14 @@
           - '"/srv/lfops-molecule/raw-ignored" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/opt/lfops-molecule-probe" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/etc/cron.d/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/var/log/audit/audit.log.99" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/var/log/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/etc/lvm/archive/lfops-molecule" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/root/.gnupg/S.gpg-agent" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/root/.gnupg/public-keys.d/.#lk" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/root/.gnupg/public-keys.d/pubring.db.lock" not in __molecule__aide_changed_log_result["stdout"]'
+          - '"/root/.gnupg/lfops-molecule-key" in __molecule__aide_changed_log_result["stdout"]'
+          - '__molecule__aide_changed_log_result["stdout"] is not search("/var/log\\s*(:|$)", multiline=True)'
         fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
 
     - name: 'Assert that the check reports the changed content of /boot/efi/lfops-molecule'
@@ -394,7 +463,12 @@
         path: '{{ item }}'
         state: 'absent'
       loop:
+        - '/etc/lvm/archive/lfops-molecule_00000-1.vg'
         - '/opt/lfops-molecule-probe'
+        - '/root/.gnupg/S.gpg-agent'
+        - '/root/.gnupg/lfops-molecule-key'
+        - '/root/.gnupg/public-keys.d/.#lk0x0.lfops-molecule.1'
+        - '/root/.gnupg/public-keys.d/pubring.db.lock'
         - '/srv/lfops-molecule'
 
     # back to the content prepare.yml deployed, so the second verify after the idempotence step

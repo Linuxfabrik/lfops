@@ -1,0 +1,29 @@
+- name: 'Verify the python_venv role built the venv'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    # Ask the venv's own interpreter, not pyvenv.cfg: it runs the Python the venv was built with
+    # and imports from the venv's site-packages. On RHEL, prepare.yml left a venv of another
+    # Python minor release, which the role has to have rebuilt.
+    - name: '/opt/python-venv/lfops-molecule/bin/python -c "import cowsay, sys; ..."'
+      ansible.builtin.command:
+        argv:
+          - '/opt/python-venv/lfops-molecule/bin/python'
+          - '-c'
+          - 'import cowsay, sys; print("{}.{}".format(*sys.version_info)); print(cowsay.__file__)'
+      register: '__molecule__venv_python_result'
+      changed_when: false
+
+    - name: '{{ __molecule__python_venv__python_executable }} --version'
+      ansible.builtin.command: '{{ __molecule__python_venv__python_executable }} --version'
+      register: '__molecule__python_version_result'
+      changed_when: false
+
+    - name: 'Assert that the venv runs python_executable and imports cowsay from the venv'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__python_version_result["stdout"] is search("^Python " ~ (__molecule__venv_python_result["stdout_lines"][0] | regex_escape) ~ "\.")'
+          - '__molecule__venv_python_result["stdout_lines"][1] is search("^/opt/python-venv/lfops-molecule/")'
+        fail_msg: '{{ __molecule__venv_python_result["stdout_lines"] | to_json }} vs. {{ __molecule__python_version_result["stdout"] }}'

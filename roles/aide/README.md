@@ -15,6 +15,7 @@ This role is compatible with the following aide versions:
 
 ## How the Role Behaves
 
+* Every aide run of the role, of the check unit, of `system_update` and of the dpkg hook has the lowest CPU and I/O priority (`Nice=19`, idle I/O class, CPU and I/O weight of 1), so that it yields to everything else on the host. A run still shows up in `/proc/pressure/io`, since on an idle host the one task with work to do is the one waiting for the disk.
 * Before it deploys `/etc/aide.conf`, the role has aide check the new file (`aide --config-check`) and aborts the run if aide does not accept it, for example because of a typo in a rule or in `aide__conf_raw`. The file on the host stays as it was.
 * `/etc/aide.conf` is fully templated, with the same path, database (`/var/lib/aide/aide.db.gz`) and rules on every platform. The options and the attribute groups (`NORMAL`, `CONTENT`, `PERMS`, ...) follow the installed aide version. All groups use sha512 as their only checksum. The rules come from `aide__rules__*_var`, whose default is the rule list RHEL 9 and 10 ship, extended by the Debian and Ubuntu counterparts of its paths and by the audit tool rules the CIS benchmarks ask for. A path a host does not have is skipped.
 * Rules from the inventory with a path of their own are placed above the default rules, so that a rule such as `/root/\.bashrc$` takes effect instead of the default `/root/\..*` rule. A default rule changed from the inventory keeps its place.
@@ -115,6 +116,8 @@ This role is compatible with the following aide versions:
     * The RHEL 9 / 10 list is used on every platform, extended by the Debian and Ubuntu counterparts of its paths. On Debian and Ubuntu the rules of `aide-common` are not used.
     * `!/root/\.ansible/tmp` is added, since Ansible creates and deletes a directory there for every task it runs as root.
     * `!/root/\.cache` is added. It holds disposable caches only and gains pip cache entries on every run of the python_venv role.
+    * `!/root/\.gnupg/S\.`, `!/root/\.gnupg/.*\.lock$` and `!/root/\.gnupg/.*/\.#lk` are added. gpg-agent and keyboxd keep their sockets and locks there while they run, after a run of the duplicity role or a backup until the next reboot.
+    * `!/opt/cool/child-roots` is added. Collabora creates a jail per process there, under a new name on every start.
     * `!/usr/lib/sysimage/rpm` is added. The RPM database lives there on RHEL 10, and every rpm or dnf query rewrites it.
     * The audit tool rules of the CIS benchmarks are added.
     * `/etc/ld.so.cache` and `/etc/udev/hwdb.bin` are checked without their inode (`DATAONLY`), since systemd rebuilds both on the first boot after an update.
@@ -122,6 +125,9 @@ This role is compatible with the following aide versions:
     * `/etc/aliases.db` is checked for permissions only (`PERMS`), since postfix on the Red Hat family rebuilds it on its start.
     * `/etc/resolv.conf` is checked for permissions only (`PERMS`), since DHCP clients and NetworkManager rewrite it at runtime.
     * `/etc/fwupd/fwupd.conf` is checked without its mode, since fwupd sets the file to 0640 whenever its daemon starts.
+    * `/var/log` itself is checked without its link count, which follows its subdirectories.
+    * `/etc/lvm/archive` allows added and removed files, since LVM archives the metadata of a VG before every change and removes old archives itself.
+    * `/var/log/audit` allows added and removed files, since auditd rotates its logs itself.
 
 * Subkeys:
 

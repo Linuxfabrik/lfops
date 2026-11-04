@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026100101
+# 2026110201
 
 # Named aidecheck.service / aidecheck.timer, without a dash, since the CIS benchmarks for the
 # Red Hat family check for units of exactly these names. Neither the aide rpm nor the aide
@@ -32,7 +32,9 @@ Type=simple
 # /run/aide.lock, so they run one after the other. aide locks its report file itself, but a
 # second run then exits with 21 (LOCK_ERROR) instead of waiting.
 ExecStart=/usr/bin/flock /run/aide.lock {{ __aide__binary_path }} --check --config=/etc/aide.conf
+CPUWeight=1
 IOSchedulingClass=idle
+IOWeight=1
 Nice=19
 
 [Install]

@@ -3,3 +3,8 @@
 # later Ubuntu-specific drift has a dedicated home instead of silently
 # inheriting Debian values.
 __lynis__binary: '/usr/sbin/lynis'
+
+# See vars/Debian.yml.
+__lynis__skip_tests__platform:
+  - name: 'FILE-7524'
+    comment: 'at reads /etc/at.deny as group daemon, so it keeps mode 0640, which CIS 2.4.2.1 allows; Lynis wants 0600.'

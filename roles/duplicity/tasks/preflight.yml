@@ -1,0 +1,20 @@
+# Imported at the top of tasks/main.yml, not in the pre_tasks of setup_basic: the lvm role runs
+# later in that playbook and is what grows /tmp, so an earlier check would abort a host whose
+# inventory already asks for enough space.
+#
+# duplicity aborts with exit code 35 unless the temp dir has (concurrency + 2) volumes plus 30% of
+# one free, which is 860 MiB with the concurrency of 2 and the volume size of 200 MiB in duba. The
+# space a run frees comes back with a delay: with 909 MiB free on an idle 1 GiB /tmp, the next
+# source saw only 818 MiB and failed. Hence the reserve. Verified with duplicity 3.2.2 on Rocky 10.
+- name: 'Check that there is enough disk space'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'preflight.yml'
+  vars:
+    shared__disk_space_requirements:
+      - name: 'duplicity'
+        creates: '/usr/local/bin/duba'
+        path: '/tmp'
+        required_mib: 1024
+  tags:
+    - 'duplicity'

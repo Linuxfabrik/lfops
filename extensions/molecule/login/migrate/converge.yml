@@ -1,0 +1,8 @@
+# Connect as the unprivileged Ansible user from prepare.yml and become root through sudo, as a
+# production run does, so that the role has to keep its own sudo working while it moves the
+# sudoers file. Play vars take precedence over the `ansible_user: 'root'` of the shared inventory.
+- name: 'Converge login playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.login'
+  vars:
+    ansible_become: true # noqa var-naming[pattern]
+    ansible_user: 'molecule-ansible' # noqa var-naming[pattern]

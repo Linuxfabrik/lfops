@@ -2,5 +2,22 @@
   ansible.builtin.import_playbook: '../../playbooks/monitoring-plugins-latest.yml'
 
 
+# Stands in for the icon directory of an IcingaWeb2 host on which an earlier run left an icon with
+# the numeric owner of the controller user and outdated content. `creates` keeps the play
+# idempotent, so the idempotence step only sees what the role itself changes.
+- name: 'Create /usr/share/icingaweb2/public/img/icons with a stale icon'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'install -d /usr/share/icingaweb2/public/img/icons; install -o 1000 -g 1000 cpu-usage.svg'
+      ansible.builtin.shell: |
+        install --directory --mode=0755 /usr/share/icingaweb2/public/img/icons
+        echo stale > /usr/share/icingaweb2/public/img/icons/cpu-usage.svg
+        chown 1000:1000 /usr/share/icingaweb2/public/img/icons/cpu-usage.svg
+      args:
+        creates: '/usr/share/icingaweb2/public/img/icons'
+
+
 - name: 'Converge monitoring_plugins playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.monitoring_plugins'

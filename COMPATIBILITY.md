@@ -31,6 +31,7 @@ Which Ansible role is proven to run on which OS?
 | collect_rpmnew_rpmsave                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    | Fedora 40                                    |
 | core_dumps                            |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | coturn                                |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| cron_permissions                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | curaline                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | x86_64 only                                  |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -115,6 +116,7 @@ Which Ansible role is proven to run on which OS?
 | mount                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | network                               |   -    |   -    |   x    |   x    |    x    |           |           |           |                                              |
 | nextcloud                             |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| nextcloud_whiteboard_server           |   -    |   x    |   -    |   -    |    x    |     -     |     -     |     x     | systemd 256+                                 |
 | nfs_client                            |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |

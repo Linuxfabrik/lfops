@@ -24,6 +24,16 @@
       tags:
         - 'always'
 
+    # abort on a missing or wrong database login before mariadb_server sets its password
+    - name: 'Run the preflight checks of the nextcloud role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.nextcloud'
+        tasks_from: 'preflight.yml'
+      tags:
+        - 'mariadb_server'
+        - 'mariadb_server:users'
+        - 'nextcloud'
+
 
   roles:
 
@@ -59,6 +69,24 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_nextcloud__skip_policycoreutils | default(false)'
+
+    # Before the services: installing the policy build dependencies can update the SELinux policy,
+    # and a daemon started under an older policy keeps its domain until it is restarted. On a Rocky
+    # 10.0 host the first start of Valkey ended up in unconfined_service_t, and httpd_t may not
+    # connect to its socket there.
+    - role: 'linuxfabrik.lfops.selinux'
+      selinux__booleans__dependent_var: '{{
+          nextcloud__selinux__booleans__dependent_var
+        }}'
+      selinux__fcontexts__dependent_var: '{{
+          nextcloud__selinux__fcontexts__dependent_var
+        }}'
+      selinux__modules__dependent_var: '{{
+          php__selinux__modules__dependent_var
+        }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_nextcloud__skip_selinux | default(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
@@ -110,11 +138,16 @@
 
     - role: 'linuxfabrik.lfops.php'
       php__fpm_pool_conf_request_terminate_timeout__dependent_var: '{{ nextcloud__php__fpm_pool_conf_request_terminate_timeout__dependent_var }}'
+      php__ini_apc_enable_cli__dependent_var: '{{ nextcloud__php__ini_apc_enable_cli__dependent_var }}'
+      php__ini_apc_shm_size__dependent_var: '{{ nextcloud__php__ini_apc_shm_size__dependent_var }}'
       php__ini_max_execution_time__dependent_var: '{{ nextcloud__php__ini_max_execution_time__dependent_var }}'
       php__ini_max_file_uploads__dependent_var: '{{ nextcloud__php__ini_max_file_uploads__dependent_var }}'
       php__ini_memory_limit__dependent_var: '{{ nextcloud__php__ini_memory_limit__dependent_var }}'
       php__ini_opcache_interned_strings_buffer__dependent_var: '{{ nextcloud__php__ini_opcache_interned_strings_buffer__dependent_var }}'
+      php__ini_opcache_max_accelerated_files__dependent_var: '{{ nextcloud__php__ini_opcache_max_accelerated_files__dependent_var }}'
+      php__ini_opcache_memory_consumption__dependent_var: '{{ nextcloud__php__ini_opcache_memory_consumption__dependent_var }}'
       php__ini_post_max_size__dependent_var: '{{ nextcloud__php__ini_post_max_size__dependent_var }}'
+      php__ini_session_gc_maxlifetime__dependent_var: '{{ nextcloud__php__ini_session_gc_maxlifetime__dependent_var }}'
       php__ini_upload_max_filesize__dependent_var: '{{ nextcloud__php__ini_upload_max_filesize__dependent_var }}'
       php__modules__dependent_var: '{{ nextcloud__php__modules__dependent_var }}'
       when:
@@ -134,35 +167,31 @@
         - 'not setup_nextcloud__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
+      mariadb_server__cnf_bind_address__dependent_var: '{{ nextcloud__mariadb_server__cnf_bind_address__dependent_var }}'
+      mariadb_server__cnf_skip_name_resolve__dependent_var: '{{ nextcloud__mariadb_server__cnf_skip_name_resolve__dependent_var }}'
+      mariadb_server__databases__dependent_var: '{{
+          nextcloud__mariadb_server__databases__dependent_var
+        }}'
+      mariadb_server__users__dependent_var: '{{
+          nextcloud__mariadb_server__users__dependent_var
+        }}'
       when:
         - 'not setup_nextcloud__skip_mariadb_server | d(false)'
 
 
       # === Redis / Valkey
     - role: 'linuxfabrik.lfops.redis'
+      redis__conf_maxmemory_policy: '{{ nextcloud__redis__conf_maxmemory_policy }}'
       when:
         - 'not setup_nextcloud__skip_redis__internal_var'
 
     - role: 'linuxfabrik.lfops.valkey'
+      valkey__conf_maxmemory_policy: '{{ nextcloud__valkey__conf_maxmemory_policy }}'
       when:
         - 'not setup_nextcloud__skip_valkey__internal_var'
 
 
       # === Nextcloud Application
-    - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var: '{{
-          nextcloud__selinux__booleans__dependent_var
-        }}'
-      selinux__fcontexts__dependent_var: '{{
-          nextcloud__selinux__fcontexts__dependent_var
-        }}'
-      selinux__modules__dependent_var: '{{
-          php__selinux__modules__dependent_var
-        }}'
-      when:
-        - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_selinux | default(false)'
-
     - role: 'linuxfabrik.lfops.systemd_unit'
       systemd_unit__services__dependent_var: '{{
           nextcloud__systemd_unit__services__dependent_var

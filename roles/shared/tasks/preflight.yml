@@ -1,0 +1,57 @@
+# Aborts the run before anything is installed if a filesystem is too small for what is about to
+# land on it. See the shared role's README for the parameters.
+#
+# Requirements are added up per filesystem, as `/usr` and `/var` often are the same one.
+# `command` with `creates` drops a requirement for software that is already installed, so an
+# installed host with a full disk can still be re-configured, and a run that aborted halfway
+# only asks for what is still missing. Verified with ansible-core 2.16 on Rocky 10.
+- block:
+
+  - name: 'df --block-size=1M --output=target,avail <path>'
+    ansible.builtin.command:
+      cmd: 'df --block-size=1M --output=target,avail {{ item["path"] }}'
+      creates: '{{ item["creates"] | d(omit) }}'
+    loop: '{{ shared__disk_space_requirements }}'
+    loop_control:
+      label: '{{ item["name"] }}: {{ item["path"] }}'
+    register: '__shared__disk_space_df_result'
+    changed_when: false
+    check_mode: false # read-only, and the assert below needs the result
+
+  - name: 'Forget the filesystems of a previous check'
+    ansible.builtin.set_fact:
+      __shared__disk_space_filesystems: {}
+
+  - name: 'Add up the requirements per filesystem'
+    ansible.builtin.set_fact:
+      __shared__disk_space_filesystems: '{{ __shared__disk_space_filesystems | combine({
+          __shared__disk_space_mount: {
+            "free_mib": __shared__disk_space_df[1] | int,
+            "names": __shared__disk_space_known["names"] | d([]) + [item["item"]["name"]],
+            "required_mib": __shared__disk_space_known["required_mib"] | d(0) | int + item["item"]["required_mib"] | int,
+          }
+        }) }}'
+    vars:
+      __shared__disk_space_df: '{{ item["stdout_lines"][-1].split() }}'
+      __shared__disk_space_known: '{{ __shared__disk_space_filesystems[__shared__disk_space_mount] | d({}) }}'
+      __shared__disk_space_mount: '{{ __shared__disk_space_df[0] }}'
+    loop: '{{ __shared__disk_space_df_result["results"] | rejectattr("stdout", "search", "^skipped") | list }}'
+    loop_control:
+      label: '{{ item["item"]["name"] }}'
+
+  - name: 'Assert that each filesystem has enough free space'
+    ansible.builtin.assert:
+      that:
+        - 'item["value"]["free_mib"] | int >= item["value"]["required_mib"] | int'
+      quiet: true
+      fail_msg: >-
+        {{ item["key"] }} has {{ item["value"]["free_mib"] }} MiB free, but
+        {{ item["value"]["names"] | join(", ") }} need {{ item["value"]["required_mib"] }} MiB
+        there. Grow the filesystem and run again, or set lfops__skip_disk_space_check to true
+        if you know that the space suffices.
+    loop: '{{ __shared__disk_space_filesystems | dict2items }}'
+    loop_control:
+      label: '{{ item["key"] }}'
+
+  when:
+    - 'not lfops__skip_disk_space_check | d(false) | bool'

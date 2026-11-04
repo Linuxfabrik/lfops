@@ -67,7 +67,17 @@ class TestPlaybooks(unittest.TestCase):
                     continue
                 checked += 1
                 listed = [item['name'] for item in value]
+                # a role that has to run ahead of a preflight check is imported in pre_tasks
+                imported = [
+                    task['ansible.builtin.import_role']
+                    for task in play.get('pre_tasks', [])
+                    if 'ansible.builtin.import_role' in task
+                ]
                 in_play = [
+                    role['name'].split('.')[-1]
+                    for role in imported
+                    if 'tasks_from' not in role
+                ] + [
                     entry['role'].split('.')[-1]
                     for entry in play.get('roles', [])
                     if isinstance(entry, dict) and 'role' in entry

@@ -1,4 +1,8 @@
 kernel_settings__sysctl__group_var:
+  # overrides the value of the hardening baseline, to check that an inventory entry replaces
+  # the default entry of the same name
+  - name: 'kernel.kptr_restrict'
+    value: 1
   - name: 'sunrpc.tcp_slot_table_entries'
     value: 128
   - name: 'vm.overcommit_memory'

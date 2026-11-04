@@ -16,6 +16,22 @@
       tags:
         - 'always'
 
+    - name: 'Run the preflight checks of the graylog_datanode role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.graylog_datanode'
+        tasks_from: 'preflight.yml'
+      when:
+        - 'not setup_graylog_server__skip_graylog_datanode | d(false)'
+      tags:
+        - 'graylog_datanode'
+
+    - name: 'Run the preflight checks of the graylog_server role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.graylog_server'
+        tasks_from: 'preflight.yml'
+      tags:
+        - 'graylog_server'
+
 
   roles:
 

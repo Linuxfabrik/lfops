@@ -6,11 +6,17 @@ This role installs at, a daemon that allows commands to be run at a specified ti
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* On the Red Hat family, `/etc/at.deny` gets mode `0600`, owned by `root:root`, as the CIS Benchmarks require. On Debian and Ubuntu it keeps the `root:daemon` `0640` the package ships, since `at` reads it as group `daemon` there.
+
+
 ## Tags
 
 `at`
 
 * Installs and configures at/atd.
+* Restricts the mode of `/etc/at.deny`.
 * Triggers: none.
 
 `at:state`

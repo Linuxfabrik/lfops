@@ -16,6 +16,13 @@
       tags:
         - 'always'
 
+    - name: 'Run the preflight checks of the graylog_datanode role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.graylog_datanode'
+        tasks_from: 'preflight.yml'
+      tags:
+        - 'graylog_datanode'
+
 
   roles:
 

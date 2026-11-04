@@ -1,0 +1,5 @@
+__molecule__python_venv__package_requirements:
+  - 'python3.11'
+__molecule__python_venv__python_executable: 'python3.11'
+# python3 is Python 3.9.
+__molecule__python_venv__stale_python_executable: 'python3'

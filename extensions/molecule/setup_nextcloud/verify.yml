@@ -5,7 +5,7 @@
 # PHP-FPM -> Nextcloud request path works end to end, not just that the FPM unit is running.
 - name: 'Verify Nextcloud is installed and serving'
   hosts: 'systems_under_test'
-  gather_facts: false
+  gather_facts: true
   become: true
   tasks:
 
@@ -69,6 +69,51 @@
         - path: '/remote/webdav'
           status: 200 # reaches remote.php, which answers a plain GET with its notice page
 
+    - name: 'php --run "echo ini_get(session.gc_maxlifetime);"'
+      ansible.builtin.command:
+        argv:
+          - 'php'
+          - '--run'
+          - 'echo ini_get("session.gc_maxlifetime");'
+      register: '__molecule__nextcloud_gc_maxlifetime_result'
+      changed_when: false
+
+    - name: 'Assert PHP keeps sessions as long as Nextcloud does'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_gc_maxlifetime_result["stdout"] | trim == "86400"'
+        fail_msg: 'session.gc_maxlifetime is "{{ __molecule__nextcloud_gc_maxlifetime_result["stdout"] }}", which caps the Nextcloud session lifetime.'
+
+    # With a body limit, mod_reqtimeout answers a stalled body with 408 after 20 seconds. Apache
+    # has to keep the connection open past that, so the client gets to send the rest. httpd 2.4.37
+    # on RHEL 8 only reads the setting from the default vHost, see the README of the role.
+    - name: 'Send half a request body to Apache and wait 25 seconds for an answer'
+      ansible.builtin.command:
+        argv:
+          - 'python3'
+          - '-c'
+          - |-
+            import socket
+            sock = socket.create_connection(('127.0.0.1', 80))
+            sock.settimeout(25)
+            sock.sendall(b'PUT /remote.php/dav/ HTTP/1.1\r\nHost: {{ nextcloud__fqdn }}\r\nContent-Length: 10\r\n\r\n12345')
+            try:
+                print(sock.recv(64))
+            except socket.timeout:
+                print('still waiting')
+      register: '__molecule__nextcloud_slow_body_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] != "RedHat" or ansible_facts["distribution_major_version"] | int >= 9'
+
+    - name: 'Assert Apache keeps waiting for a slow request body'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_slow_body_result["stdout"] | trim == "still waiting"'
+        fail_msg: 'Apache gave up on a slow request body: {{ __molecule__nextcloud_slow_body_result["stdout"] }}'
+      when:
+        - '__molecule__nextcloud_slow_body_result is not skipped'
+
     - name: 'systemctl show nextcloud-ldap-show-remnants.timer --property=Triggers' # noqa command-instead-of-module (the test asserts on the property as systemd reports it)
       ansible.builtin.command: 'systemctl show nextcloud-ldap-show-remnants.timer --property=Triggers'
       register: '__molecule__nextcloud_ldap_timer_result'
@@ -127,6 +172,144 @@
         that:
           - '__molecule__nextcloud_dav_search_index_result["stdout"] | trim == "yes"'
         fail_msg: 'dav buildCalendarSearchIndex is "{{ __molecule__nextcloud_dav_search_index_result["stdout"] | trim }}", the dav repair step skips itself only on "yes".'
+
+
+# Nextcloud connects as nextcloud__database_login, which the playbook creates for localhost only,
+# instead of the "oc_" user that the installer creates for any host when it gets the database
+# administrator.
+- name: 'Verify Nextcloud uses its own database user'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get dbuser'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get dbuser'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_dbuser_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud connects as nextcloud__database_login'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_dbuser_result["stdout"] == nextcloud__database_login["username"]'
+        fail_msg: 'Nextcloud connects as {{ __molecule__nextcloud_dbuser_result["stdout"] }}'
+
+
+# The preflight check aborts before mariadb_server sets a password for the MariaDB user Nextcloud
+# connects as, if nextcloud__database_login is missing or names that user with another password.
+- name: 'Verify the preflight check catches a missing or wrong database login'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Set the LFOps-wide platform variables'
+      ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+
+    - block:
+
+      - name: 'Run the preflight checks of the nextcloud role without nextcloud__database_login'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.nextcloud'
+          tasks_from: 'preflight.yml'
+        vars:
+          nextcloud__database_login: {}
+
+      - name: 'Fail, since the preflight check accepted a missing database login'
+        ansible.builtin.fail:
+          msg: 'The preflight check did not abort without nextcloud__database_login.'
+
+      rescue:
+
+      - name: 'Assert that the preflight check failed on the missing login and names occ'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] == "Assert that nextcloud__database_login is set"'
+            - 'ansible_failed_result["msg"] is search("occ config:system:get dbpassword")'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    - block:
+
+      - name: 'Run the preflight checks of the nextcloud role with a wrong password'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.nextcloud'
+          tasks_from: 'preflight.yml'
+        vars:
+          nextcloud__database_login:
+            username: 'nextcloud'
+            password: 'wrong-password'
+
+      - name: 'Fail, since the preflight check accepted a wrong password'
+        ansible.builtin.fail:
+          msg: 'The preflight check did not abort on a password that differs from config.php.'
+
+      rescue:
+
+      - name: 'Assert that the preflight check failed on the password mismatch'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] == "Assert that nextcloud__database_login matches the installed Nextcloud"'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    - name: 'Run the preflight checks of the nextcloud role with the login of the installation'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.nextcloud'
+        tasks_from: 'preflight.yml'
+
+
+# notify_push opens its database connection at startup and keeps it in its pool. Over the Unix
+# socket, MariaDB lists the connection with the host "localhost", over TCP with "<address>:<port>".
+# A TCP connection lands on ::1, which the database user for "localhost" does not cover once
+# MariaDB skips name resolution. The scenario skips the notify_push setup, which needs DNS, so the
+# play starts the service itself.
+- name: 'Verify notify_push connects to MariaDB through the Unix socket'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'systemctl restart notify_push.service'
+      ansible.builtin.systemd_service:
+        name: 'notify_push.service'
+        state: 'restarted'
+      changed_when: false
+
+    - name: 'mariadb --execute "SELECT host FROM information_schema.processlist WHERE user = ..."'
+      ansible.builtin.command: >-
+        mariadb --user '{{ mariadb_server__admin_user["username"] }}'
+        --batch --skip-column-names --execute
+        "SELECT host FROM information_schema.processlist
+        WHERE user = '{{ nextcloud__database_login["username"] }}'
+        AND command = 'Sleep'"
+      environment:
+        MYSQL_PWD: '{{ mariadb_server__admin_user["password"] }}'
+      register: '__molecule__notify_push_processlist_result'
+      changed_when: false
+      until: '__molecule__notify_push_processlist_result["stdout_lines"] | length > 0'
+      retries: 10
+      delay: 1
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert notify_push is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__unit["state"] | d("") == "running"'
+          - '__molecule__unit["status"] | d("") == "enabled"'
+        fail_msg: 'notify_push.service: {{ __molecule__unit | d("not known to systemd") }}'
+      vars:
+        __molecule__unit: '{{ ansible_facts["services"]["notify_push.service"] | d({}) }}'
+
+    - name: 'Assert every connection of the Nextcloud database user uses the Unix socket'
+      ansible.builtin.assert:
+        that: '__molecule__notify_push_processlist_result["stdout_lines"] | unique == ["localhost"]'
+        fail_msg: 'connections from: {{ __molecule__notify_push_processlist_result["stdout_lines"] }}'
 
 
 # The role installs mysql-selinux so mariadbd gets `mysqld_exec_t` (MDEV-30520). Assert the domain
@@ -195,3 +378,306 @@
     - name: 'systemctl start mariadb-dump.service' # noqa command-instead-of-module (starts the oneshot dump and waits for it to finish)
       ansible.builtin.command: 'systemctl start mariadb-dump.service'
       changed_when: false
+
+    - name: 'php occ twofactorauth:enforce'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ twofactorauth:enforce'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_twofactor_result'
+      changed_when: false
+
+    - name: 'php occ config:list --private --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:list --private --output=json'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_config_result'
+      changed_when: false
+
+    - name: 'php occ app:list --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ app:list --output=json'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_apps_result'
+      changed_when: false
+
+    - name: 'Assert the setup warnings the role takes care of are gone'
+      ansible.builtin.assert:
+        that:
+          - '"is enforced" in __molecule__nextcloud_twofactor_result["stdout"]'
+          - '__molecule__nextcloud_config["system"]["mail_domain"] == "example.com"'
+          - '__molecule__nextcloud_config["system"]["mail_smtphost"] == "mail.example.com"'
+          - '__molecule__nextcloud_config["system"]["mail_smtpport"] | int == 587'
+          - '__molecule__nextcloud_config["system"]["serverid"] | int == 0'
+          - '"mimetype_version" in __molecule__nextcloud_config["apps"]["files"]'
+          - '"app_api" not in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+          - '"twofactor_totp" in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+          - '"admin_audit" in (__molecule__nextcloud_apps_result["stdout"] | from_json)["enabled"]'
+          - '__molecule__nextcloud_config["system"]["trashbin_retention_obligation"] == "auto, 30"'
+          - '__molecule__nextcloud_config["system"]["upgrade.disable-web"] | bool'
+      vars:
+        __molecule__nextcloud_config: '{{ __molecule__nextcloud_config_result["stdout"] | from_json }}'
+
+    - name: 'ss --listening --numeric --tcp'
+      ansible.builtin.command: 'ss --listening --numeric --tcp'
+      register: '__molecule__ss_result'
+      changed_when: false
+
+    - name: 'Assert that MariaDB listens on localhost only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__ss_result["stdout"] is search("127\\.0\\.0\\.1:3306")'
+          - '__molecule__ss_result["stdout"] is not search("(0\\.0\\.0\\.0|\\*):3306")'
+        fail_msg: '{{ __molecule__ss_result["stdout"] }}'
+
+
+# Nextcloud keeps its caches and file locks in Redis / Valkey and reaches it through the Unix
+# socket (a path in 'redis host'), which only the members of the server's group may use.
+# Nextcloud's own memcache check writes a value and reads it back (CLI, as the web server user),
+# and a PROPFIND takes a shared lock through Apache and PHP-FPM, so both paths have to get
+# through the socket.
+- name: 'Verify Nextcloud reaches Redis / Valkey through the Unix socket'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get redis host'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get redis host'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_redis_host_result'
+      changed_when: false
+
+    - name: 'Assert Nextcloud connects through the Unix socket'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_redis_host_result["stdout"] is match("/")'
+        fail_msg: 'redis host is {{ __molecule__nextcloud_redis_host_result["stdout"] }}, so Nextcloud connects over TCP'
+
+    - name: 'stat {{ __molecule__nextcloud_redis_host_result["stdout"] }}'
+      ansible.builtin.stat:
+        path: '{{ __molecule__nextcloud_redis_host_result["stdout"] }}'
+      register: '__molecule__nextcloud_redis_socket_stat_result'
+
+    # 0770 and the server's group: the web server user gets in as a member of that group, nobody
+    # else does. Rocky 8 and 9 run Redis, Rocky 10 runs Valkey, so the group names the server.
+    - name: 'Assert the socket is open to the group of Redis / Valkey only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_redis_socket_stat_result["stat"]["issock"]'
+          - '__molecule__nextcloud_redis_socket_stat_result["stat"]["mode"] == "0770"'
+          - '__molecule__nextcloud_redis_socket_stat_result["stat"]["gr_name"] in ["redis", "valkey"]'
+        fail_msg: '{{ __molecule__nextcloud_redis_socket_stat_result["stat"] | d("missing") | to_json }}'
+
+    - name: 'stat /etc/{{ __molecule__redis_server }}/{{ __molecule__redis_server }}.conf'
+      ansible.builtin.stat:
+        path: '/etc/{{ __molecule__redis_server }}/{{ __molecule__redis_server }}.conf'
+      register: '__molecule__nextcloud_redis_conf_stat_result'
+      vars:
+        __molecule__redis_server: '{{ __molecule__nextcloud_redis_socket_stat_result["stat"]["gr_name"] }}'
+
+    # The package's tmpfiles.d rule restores <server>:root at every boot. A role that deployed any
+    # other ownership would report the config file as changed on the first run after a reboot.
+    - name: 'Assert the config file keeps the ownership the package restores at boot'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_redis_conf_stat_result["stat"]["pw_name"] == __molecule__redis_server'
+          - '__molecule__nextcloud_redis_conf_stat_result["stat"]["gr_name"] == "root"'
+          - '__molecule__nextcloud_redis_conf_stat_result["stat"]["mode"] == "0640"'
+        fail_msg: '{{ __molecule__nextcloud_redis_conf_stat_result["stat"] | d("missing") | to_json }}'
+      vars:
+        __molecule__redis_server: '{{ __molecule__nextcloud_redis_socket_stat_result["stat"]["gr_name"] }}'
+
+    - name: 'php occ setupchecks --output=json'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ setupchecks --output=json'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_setupchecks_result'
+      changed_when: false
+      # setupchecks exits non-zero as soon as any check warns, which is not what this play tests
+      failed_when: '__molecule__nextcloud_setupchecks_result["stdout"] | length == 0'
+
+    - name: 'Assert the memcache check could write and read a value'
+      ansible.builtin.assert:
+        that: '__molecule__nextcloud_memcache_check["severity"] == "success"'
+        fail_msg: '{{ __molecule__nextcloud_memcache_check | to_json }}'
+      vars:
+        # selected by the end of its name, the key holds the PHP namespace with its backslashes
+        __molecule__nextcloud_memcache_check: '{{
+            (__molecule__nextcloud_setupchecks_result["stdout"] | from_json)["system"]
+            | dict2items
+            | selectattr("key", "search", "MemcacheConfigured$")
+            | map(attribute="value")
+            | first
+          }}'
+
+    - name: 'php occ config:system:get memcache.local'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get memcache.local'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_memcache_local_result'
+      changed_when: false
+
+    - name: 'php --run ''echo ini_get("apc.enable_cli"), " ", ini_get("apc.shm_size");'''
+      ansible.builtin.command: 'php --run ''echo ini_get("apc.enable_cli"), " ", ini_get("apc.shm_size");'''
+      register: '__molecule__nextcloud_apc_ini_result'
+      changed_when: false
+
+    # with apc.enable_cli the memcache check above writes to and reads from APCu in occ, instead
+    # of a cache that silently does nothing
+    - name: 'Assert the local cache is APCu, with the settings of the Nextcloud All-in-One image'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_memcache_local_result["stdout"] == "\\OC\\Memcache\\APCu"'
+          - '__molecule__nextcloud_apc_ini_result["stdout"] == "1 128M"'
+        fail_msg: '{{ __molecule__nextcloud_memcache_local_result["stdout"] }} / {{ __molecule__nextcloud_apc_ini_result["stdout"] }}'
+
+    # Nextcloud recommends apcu, and web requests take their Snowflake IDs from it instead of a
+    # flock'ed file. The other recommended modules are none of this test's business.
+    - name: 'Assert the PHP modules check does not miss apcu'
+      ansible.builtin.assert:
+        that: '"apcu" not in __molecule__nextcloud_php_modules_check["description"] | d("", true)'
+        fail_msg: '{{ __molecule__nextcloud_php_modules_check | to_json }}'
+      vars:
+        __molecule__nextcloud_php_modules_check: '{{
+            (__molecule__nextcloud_setupchecks_result["stdout"] | from_json)["php"]
+            | dict2items
+            | selectattr("key", "search", "PhpModules$")
+            | map(attribute="value")
+            | first
+          }}'
+
+    # With two-factor authentication enforced, Nextcloud refuses the login password of a WebDAV
+    # client and only accepts an app password (lib/private/User/Session.php, logClientIn()).
+    - name: 'php occ user:auth-tokens:add --password-from-env --name=molecule {{ nextcloud__users[0]["username"] }}'
+      ansible.builtin.command: >-
+        php /var/www/html/nextcloud/occ user:auth-tokens:add
+        --password-from-env --name=molecule {{ nextcloud__users[0]["username"] }}
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      environment:
+        NC_PASS: '{{ nextcloud__users[0]["password"] }}'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_app_password_result'
+      changed_when: true # adds another app password on every run
+
+    - name: 'PROPFIND /remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/ through Apache and PHP-FPM'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/remote.php/dav/files/{{ nextcloud__users[0]["username"] }}/'
+        method: 'PROPFIND'
+        url_username: '{{ nextcloud__users[0]["username"] }}'
+        url_password: '{{ __molecule__nextcloud_app_password_result["stdout_lines"][-1] }}'
+        force_basic_auth: true
+        headers:
+          Depth: '1'
+          Host: '{{ nextcloud__fqdn }}'
+        status_code: 207
+
+
+# Only root runs nextcloud-update. The Icinga2 API login it uses lives in the systemd credential
+# store, neither in the script nor in the copies earlier versions of the role left (prepare.yml
+# plants one).
+- name: 'Verify nextcloud-update is root only and takes the Icinga2 API login from the credential'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'stat /usr/local/bin/nextcloud-update'
+      ansible.builtin.stat:
+        path: '/usr/local/bin/nextcloud-update'
+      register: '__molecule__nextcloud_update_stat_result'
+
+    - name: 'Assert that nextcloud-update is readable by root only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_update_stat_result["stat"]["mode"] == "0700"'
+          - '__molecule__nextcloud_update_stat_result["stat"]["pw_name"] == "root"'
+        fail_msg: '/usr/local/bin/nextcloud-update is {{ __molecule__nextcloud_update_stat_result["stat"] | d("missing") | to_json }}'
+
+    - name: 'systemctl --version' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl --version'
+      changed_when: false
+      register: '__molecule__systemctl_version_result'
+
+    # the credential holds the login base64-encoded, as part of the Authorization header
+    - name: 'grep --recursive --files-with-matches --fixed-strings <Icinga2 password> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ icinga2_master__downtime_api_user["password"] }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__icinga2_password_grep_result'
+
+    - name: 'grep --recursive --files-with-matches --fixed-strings <Icinga2 login, base64> /etc /usr/local/bin'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings {{ __molecule__expected_credentials | ansible.builtin.b64encode }} /etc /usr/local/bin'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__icinga2_login_grep_result'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+
+    - name: 'Assert that the Icinga2 API login is only in the credential store'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icinga2_password_grep_result["stdout_lines"] == []'
+          - '__molecule__icinga2_login_grep_result["stdout_lines"] == (__molecule__systemd_version | int >= 251) | ternary([], ["/etc/credstore/nextcloud-update-icinga2-login.curlrc"])'
+        fail_msg: '{{ __molecule__icinga2_password_grep_result["stdout_lines"] + __molecule__icinga2_login_grep_result["stdout_lines"] }}'
+      vars:
+        __molecule__systemd_version: '{{ __molecule__systemctl_version_result["stdout_lines"][0].split()[1] }}'
+
+    # the way nextcloud-update reads the credential (read_credential in the script)
+    - name: 'systemd-creds decrypt --name=nextcloud-update-icinga2-login.curlrc ... (or cat /etc/credstore/...)'
+      ansible.builtin.shell:
+        cmd: |-
+          if [[ -e /etc/credstore.encrypted/nextcloud-update-icinga2-login.curlrc ]]; then
+              systemd-creds decrypt --name=nextcloud-update-icinga2-login.curlrc /etc/credstore.encrypted/nextcloud-update-icinga2-login.curlrc -
+          else
+              cat /etc/credstore/nextcloud-update-icinga2-login.curlrc
+          fi
+        executable: '/bin/bash'
+      changed_when: false
+      no_log: true
+      register: '__molecule__icinga2_login_credential_result'
+
+    - name: 'Assert that the credential holds the Authorization header for curl'
+      ansible.builtin.assert:
+        that: '("header = \"Authorization: Basic " ~ (__molecule__expected_credentials | ansible.builtin.b64encode) ~ "\"") in __molecule__icinga2_login_credential_result["stdout_lines"]'
+        fail_msg: 'The credential does not hold the Authorization header of icinga2_master__downtime_api_user.'
+      vars:
+        __molecule__expected_credentials: '{{ icinga2_master__downtime_api_user["username"] }}:{{ icinga2_master__downtime_api_user["password"] }}'
+
+
+# The SMTP TLS overrides that earlier versions of the role set are gone, so Nextcloud verifies the
+# certificate of the mail server again. `config:system:get` exits 1 for a key that does not exist.
+- name: 'Verify Nextcloud verifies the SMTP server certificate'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'php occ config:system:get mail_smtpstreamoptions ssl {{ item }}'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get mail_smtpstreamoptions ssl {{ item }}'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_smtp_result'
+      changed_when: false
+      failed_when: false
+      loop:
+        - 'allow_self_signed'
+        - 'verify_peer'
+        - 'verify_peer_name'
+
+    - name: 'Assert no SMTP TLS check is switched off'
+      ansible.builtin.assert:
+        that: 'item["rc"] == 1'
+        fail_msg: 'mail_smtpstreamoptions ssl {{ item["item"] }} is set to {{ item["stdout"] }}'
+      loop: '{{ __molecule__nextcloud_smtp_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

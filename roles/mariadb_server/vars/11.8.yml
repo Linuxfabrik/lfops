@@ -38,6 +38,7 @@ mariadb_server__cnf_innodb_encryption_threads__role_var: 4  # upstream default: 
 mariadb_server__cnf_innodb_flush_log_at_trx_commit__role_var: 1
 mariadb_server__cnf_innodb_flush_neighbors__role_var: 0  # upstream default: 1
 mariadb_server__cnf_innodb_io_capacity__role_var: 200
+mariadb_server__cnf_innodb_linux_aio__role_var: 'auto'
 mariadb_server__cnf_innodb_log_buffer_size__role_var: '16M'
 mariadb_server__cnf_innodb_log_file_size__role_var: '96M'
 mariadb_server__cnf_innodb_max_dirty_pages_pct__role_var: '90'
@@ -83,7 +84,7 @@ mariadb_server__cnf_sql_mode__role_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_
 mariadb_server__cnf_ssl_ca__role_var: ''
 mariadb_server__cnf_ssl_cert__role_var: ''
 mariadb_server__cnf_ssl_key__role_var: ''
-mariadb_server__cnf_table_definition_cache__role_var: 400
+mariadb_server__cnf_table_definition_cache__role_var: 600  # upstream default: 400
 mariadb_server__cnf_table_open_cache__role_var: '2000'
 mariadb_server__cnf_tls_version__role_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__role_var: '16M'

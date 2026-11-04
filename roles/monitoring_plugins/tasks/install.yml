@@ -196,11 +196,21 @@
       retries: 3 # ride out a brief outage of the package repository
       delay: 10
 
+    # --checksum and --no-times for the reasons given at the plugin transfer in linux-source.yml:
+    # without them, every run rewrote all icons, under a new inode that file integrity checks
+    # such as AIDE report. --chown instead of --no-owner / --no-group, since the directory
+    # belongs to the icingaweb2 package and has no chown task of its own: it also hands back to
+    # root the icons earlier runs left with the numeric owner of the controller user.
     - name: 'rsync icons to IcingaWeb2'
       ansible.posix.synchronize:
         src: '/tmp/ansible.monitoring-plugins-repo-flattened/icons/'
         dest: '/usr/share/icingaweb2/public/img/icons'
         mode: 'push'
+        rsync_opts:
+          - '--checksum'
+          - '--chmod=D755,F644'
+          - '--chown=root:root'
+          - '--no-times'
 
     when:
       - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'

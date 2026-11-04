@@ -201,6 +201,13 @@ Calls the following roles (in order):
 * [coturn](https://github.com/Linuxfabrik/lfops/tree/main/roles/coturn)
 
 
+## cron_permissions.yml
+
+Calls the following roles (in order):
+
+* [cron_permissions](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron_permissions)
+
+
 ## crypto_policy.yml
 
 Calls the following roles (in order):
@@ -738,6 +745,15 @@ Calls the following roles (in order):
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network)
 
 
+## nextcloud_whiteboard_server.yml
+
+Calls the following roles (in order):
+
+* [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login): `nextcloud_whiteboard_server__skip_login`
+* [nextcloud_whiteboard_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud_whiteboard_server)
+* [podman_containers](https://github.com/Linuxfabrik/lfops/tree/main/roles/podman_containers): `nextcloud_whiteboard_server__skip_podman_containers`
+
+
 ## nfs_client.yml
 
 Calls the following roles (in order):
@@ -1116,7 +1132,7 @@ Calls the following roles (in order):
 
 ## setup_basic.yml
 
-Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, and that the Icinga2 master is reachable. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
+Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, that the Icinga2 master is reachable, and that the new `sshd_config` still admits the user Ansible logs in as. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
 
 Calls the following roles (in order):
 
@@ -1147,6 +1163,7 @@ Calls the following roles (in order):
 * [chrony](https://github.com/Linuxfabrik/lfops/tree/main/roles/chrony): `setup_basic__skip_chrony`
 * [motd](https://github.com/Linuxfabrik/lfops/tree/main/roles/motd): `setup_basic__skip_motd`
 * [at](https://github.com/Linuxfabrik/lfops/tree/main/roles/at): `setup_basic__skip_at`
+* [cron_permissions](https://github.com/Linuxfabrik/lfops/tree/main/roles/cron_permissions): `setup_basic__skip_cron_permissions`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_basic__skip_python`, `setup_basic__skip_python_venv`
 * [glances](https://github.com/Linuxfabrik/lfops/tree/main/roles/glances): `setup_basic__skip_glances`
 * [tools](https://github.com/Linuxfabrik/lfops/tree/main/roles/tools): `setup_basic__skip_tools`
@@ -1188,6 +1205,8 @@ Calls the following roles (in order):
 
 ## setup_graylog_datanode.yml
 
+Before the first role changes the host, the playbook checks that the disk space the `graylog_datanode` role asks for is free. Too little space aborts the run there.
+
 Calls the following roles (in order):
 
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_graylog_datanode__skip_policycoreutils`
@@ -1203,6 +1222,8 @@ Calls the following roles (in order):
 
 
 ## setup_graylog_server.yml
+
+Before the first role changes the host, the playbook checks that the disk space the `graylog_datanode` and `graylog_server` roles ask for is free. Too little space aborts the run there.
 
 Calls the following roles (in order):
 
@@ -1220,6 +1241,8 @@ Calls the following roles (in order):
 
 
 ## setup_icinga2_master.yml
+
+Before the first role changes the host, the playbook adds up the disk space of the roles that are not installed yet and checks that it is free, unless the run is limited with `--tags`. Too little space aborts the run there.
 
 Calls the following roles (in order):
 
@@ -1264,7 +1287,7 @@ Calls the following roles (in order):
 * [icingaweb2_module_incubator](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_incubator): `setup_icinga2_master__icingaweb2_module_incubator__skip_role`
 * [icingaweb2_module_jira](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_jira): `setup_icinga2_master__icingaweb2_module_jira__skip_role` (default: `true`)
 * [chromium_headless](https://github.com/Linuxfabrik/lfops/tree/main/roles/chromium_headless): `setup_icinga2_master__chromium_headless__skip_role` (default: tracks `icingaweb2_module_pdfexport__skip_role`)
-* [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport): `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role` (default: `true`)
+* [icingaweb2_module_pdfexport](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_pdfexport): `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role`
 * [icingaweb2_module_vspheredb](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_vspheredb): `setup_icinga2_master__icingaweb2_module_vspheredb__skip_role` (default: `true`)
 * [icingaweb2_module_director](https://github.com/Linuxfabrik/lfops/tree/main/roles/icingaweb2_module_director): `setup_icinga2_master__icingaweb2_module_director__skip_role`
 * [repo_grafana](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_grafana): `setup_icinga2_master__repo_grafana__skip_role`
@@ -1371,6 +1394,7 @@ Calls the following roles (in order):
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_nextcloud__skip_repo_epel`
 * [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_nextcloud__skip_repo_linuxfabrik` (runs only together with `acme_sh`)
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_nextcloud__skip_policycoreutils`
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_nextcloud__skip_selinux`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_nextcloud__skip_python`
 * [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban): `setup_nextcloud__skip_fail2ban`
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_nextcloud__skip_kernel_settings`
@@ -1382,7 +1406,6 @@ Calls the following roles (in order):
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server): `setup_nextcloud__skip_mariadb_server`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_nextcloud__skip_redis`
 * [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_nextcloud__skip_valkey`
-* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_nextcloud__skip_selinux`
 * [systemd_unit](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_unit): `nextcloud__skip_systemd_unit`
 * [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud)
 * [repo_collabora_code](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora_code): `setup_nextcloud__skip_repo_collabora_code`

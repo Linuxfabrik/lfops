@@ -1,0 +1,18 @@
+# Imported at the top of tasks/main.yml, and included by the setup_graylog_* playbooks in their
+# pre_tasks, so that a host without enough disk space aborts before any role changes it.
+- name: 'Check that there is enough disk space'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'preflight.yml'
+  vars:
+    shared__disk_space_requirements:
+      - name: 'graylog_datanode'
+        creates: '/etc/graylog/datanode/datanode.conf'
+        path: '/'
+        required_mib: 4096
+      - name: 'graylog_datanode'
+        creates: '/etc/graylog/datanode/datanode.conf'
+        path: '/var'
+        required_mib: 15360
+  tags:
+    - 'graylog_datanode'

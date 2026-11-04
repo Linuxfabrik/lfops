@@ -74,7 +74,7 @@ icingadb_web__api_user_login:
 
 * Sets the maximum number of characters to display in plugin output.
 * Type: Number.
-* Default: `20000`
+* Default: `65536`
 
 `icingadb_web__redis2_host`
 
@@ -140,7 +140,7 @@ icingadb_web__database_login:
   username: 'icingadb'
   password: 'linuxfabrik'
 icingadb_web__database_name: 'icingadb'
-icingadb_web__plugin_output_character_limit: 20000
+icingadb_web__plugin_output_character_limit: 65536
 icingadb_web__redis_ca: '/etc/pki/tls/certs/rootCA.pem'
 icingadb_web__redis_host: '127.0.0.1'
 icingadb_web__redis_insecure: true

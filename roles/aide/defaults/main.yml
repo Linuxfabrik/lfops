@@ -70,6 +70,16 @@ aide__rules__role_var:
   # entries here whenever the python_venv role updates pip in a venv.
   - path: '/root/\.cache'
     type: 'negative'
+  # Not in the shipped list. gpg-agent and keyboxd keep their sockets and locks here while they
+  # run, from a run of the duplicity role or of a backup until the next reboot, so they come and
+  # go between two checks. The keys and the trust database stay covered by the rule below.
+  # Verified with GnuPG 2.4 on Rocky 10.
+  - path: '/root/\.gnupg/S\.'
+    type: 'negative'
+  - path: '/root/\.gnupg/.*\.lock$'
+    type: 'negative'
+  - path: '/root/\.gnupg/.*/\.#lk'
+    type: 'negative'
   - path: '/root'
     attributes: 'NORMAL'
 
@@ -221,8 +231,10 @@ aide__rules__role_var:
 
   # auditing
   # AIDE produces an audit record, so this becomes perpetual motion.
+  # Deviates from the shipped PERMS: auditd rotates audit.log itself (max_log_file_action = ROTATE)
+  # and adds and removes files here, as the rule for /var/log allows.
   - path: '/var/log/audit'
-    attributes: 'PERMS'
+    attributes: 'PERMS+ANF+ARF'
   - path: '/etc/audit'
     attributes: 'NORMAL'
   - path: '/etc/libaudit.conf$'
@@ -272,6 +284,10 @@ aide__rules__role_var:
     attributes: 'NORMAL'
 
   # Log directory
+  # Not in the shipped list. The link count of a directory follows its subdirectories, so a package
+  # that adds one below /var/log would be reported, although ANF allows the addition itself.
+  - path: '/var/log$'
+    attributes: 'LOG-n'
   - path: '/var/log'
     attributes: 'LOG'
   # Journal files - exclude xattrs and link count due to systemd journal's user.crtime_usec extended attribute changes and new directory creation
@@ -484,6 +500,12 @@ aide__rules__role_var:
   - path: '/etc/fwupd/fwupd\.conf$'
     attributes: 'ftype+u+g+selinux+xattrs'
 
+  # Not in the shipped list. LVM writes the metadata of a VG here before every change to it and
+  # removes the oldest copies itself (backup/retain_min, backup/retain_days in lvm.conf), so
+  # added and removed files are allowed, as for /var/log/audit.
+  - path: '/etc/lvm/archive'
+    attributes: 'PERMS+ANF+ARF'
+
   # Now everything else
   - path: '/etc'
     attributes: 'PERMS'
@@ -501,6 +523,10 @@ aide__rules__role_var:
   # =/lost\+found    DIR
   # =/home           DIR
 
+  # Not in the shipped list. Collabora creates a jail per process here, under a new name on every
+  # start.
+  - path: '/opt/cool/child-roots'
+    type: 'negative'
   # Ditto /var/log/sa reason...
   - path: '/var/log/httpd'
     type: 'negative'

@@ -37,6 +37,18 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
     * `shared__reboot_reason`: Mandatory. Spool file name, by convention the role name.
     * `shared__reboot_detail`: Mandatory. What changed, in lower case. Goes into the notification mail, followed by the name of the calling role, and into the message the operator sees.
 
+`preflight.yml`
+
+* Aborts the run if a filesystem has less free space than the given requirements need, see "Preflight Checks" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Requirements that end up on the same filesystem are added up, and a requirement whose software is already installed is dropped. Skipped with [`lfops__skip_disk_space_check`](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__skip_disk_space_check).
+* Parameters:
+
+    * `shared__disk_space_requirements`: Mandatory. List of dictionaries with these subkeys:
+
+        * `creates`: Optional. A file or directory that exists once the software is installed. If it exists, the requirement is dropped.
+        * `name`: Mandatory. What needs the space, shown in the error message.
+        * `path`: Mandatory. An existing path on the filesystem to check, for example `/usr`.
+        * `required_mib`: Mandatory. The free space needed, in MiB.
+
 `validate-role-arguments.yml`
 
 * Validates the variables of several roles against their `meta/argument_specs.yml` at once, see "Preflight Checks" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Import it in the `pre_tasks` of a playbook that runs many roles, tagged `always`, so that a missing or wrongly typed variable of a late role aborts the run before the first role changes the host. Roles without `meta/argument_specs.yml` are skipped.
