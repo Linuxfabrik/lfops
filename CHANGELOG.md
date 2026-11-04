@@ -182,6 +182,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis**: Redis 8.0 starts with the deployed configuration and loads the modules of the installed Remi packages (`redis-json`, `redis-bloom`, `redis-timeseries`); the configuration loaded modules from paths that do not exist ([#346](https://github.com/Linuxfabrik/lfops/issues/346)).
 * **role:telegraf**: A `"` or `\` in a username or password no longer breaks the configuration.
 * **role:logstash**: `.rpmnew` files of `/etc/default/logstash` and `/etc/logstash/pipelines.yml` are removed after a package upgrade ([#515](https://github.com/Linuxfabrik/lfops/issues/515)).
 * **role:mongodb**: mongod keeps logging to `/var/log/mongodb/mongod.log` after the log rotation on RHEL; until now its log was lost until the next restart. The next run restarts mongod once ([#531](https://github.com/Linuxfabrik/lfops/issues/531)).
