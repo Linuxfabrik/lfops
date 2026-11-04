@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
-# 2026061601
-{# Based on icingadb 1.5.1 #}
+# 2026110301
+{# Based on icingadb 1.6.0 #}
 
 # This is the configuration file for Icinga DB.
 
@@ -26,6 +26,7 @@ database:
 
   # Database password.
   password: '{{ icingadb__database_login["password"] }}'
+#  password_file: /run/secerets/icingadb_database_password
 
   # List of low-level database options that can be set to influence some Icinga DB internal default behaviours.
   # Do not change the defaults if you don't have to!
@@ -80,6 +81,7 @@ redis:
   # Authentication password. May be used alone or together with a `username`.
   password: '{{ icingadb__redis_password }}'
 {% endif %}
+#  password_file: /run/secerets/icingadb_redis_password
 
   # Numerical database identifier, defaults to `0`.
 #  database: 0
@@ -164,11 +166,37 @@ retention:
 # Icinga DB can act as an event source for Icinga Notifications. If the following block is not empty, Icinga DB will
 # submit events to the Icinga Notifications API.
 #notifications:
-  # URL to the API root.
-#  url: http://localhost:5680
+  # URL to the API root. Different URI schemes are possible.
+  # - http: Unencrypted HTTP connection. Requires username and password/password_file to be set.
+  #   For example: http://example.com:5680
+  # - https: HTTPS connection. Either username and password/password_file or cert and key are required.
+  #   For example: https://example.com:5680
+  # - unix: HTTP connection over a Unix Domain Socket. Authentication is based on the operating system user.
+  #   For example: unix:///path/to/socket
+#  url:
+
+  # Base URL of the Icinga Web 2 setup in front of this Icinga DB. It is used to build the absolute object URLs
+  # transmitted with each event, which Icinga Notifications passes on to the notified contacts. This must be an
+  # absolute URL. If left empty, events are submitted without an object URL.
+#  icingaweb2_url: https://example.com/icingaweb2
 
   # Username to authenticate against the Icinga Notifications API.
-#  username: icingadb
+#  username:
 
   # Password for the defined user.
-#  password: insecureinsecure
+#  password:
+#  password_file: /run/secerets/icingadb_notifications_password
+
+  # TLS configuration for https URLs. The ca is used to verify the server cert, while cert and key are the client certificate.
+#  ca: /path/to/ca
+#  cert: /path/to/client.crt
+#  key: /path/to/client.key
+
+  # Relations as an array of JSONPath to resolve and include in the events submitted to Icinga Notifications.
+  # For example '$.host.vars' and '$.services[*].vars'.
+#  default_relations:
+
+  # Allow Icinga DB Web to configure this integration, e.g. via its one-click setup. Options set in this file or via
+  # environment variables are locked and cannot be changed by Icinga DB Web. Set to false to configure Icinga
+  # Notifications only here.
+#  synchronize_with_database: true

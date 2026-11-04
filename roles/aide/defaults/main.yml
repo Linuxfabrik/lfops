@@ -527,6 +527,10 @@ aide__rules__role_var:
   # start.
   - path: '/opt/cool/child-roots'
     type: 'negative'
+  # Not in the shipped list. Collabora caches the settings it fetches from the WOPI host here, per
+  # host and per user, and deletes them after `cache_files.expiry_min` of disuse.
+  - path: '/opt/cool/cache'
+    type: 'negative'
   # Ditto /var/log/sa reason...
   - path: '/var/log/httpd'
     type: 'negative'

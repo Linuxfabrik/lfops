@@ -226,6 +226,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:logstash**: `.rpmnew` files of `/etc/default/logstash` and `/etc/logstash/pipelines.yml` are removed after a package upgrade ([#515](https://github.com/Linuxfabrik/lfops/issues/515)).
 * **role:mongodb**: mongod keeps logging to `/var/log/mongodb/mongod.log` after the log rotation on RHEL; until now its log was lost until the next restart. The next run restarts mongod once ([#531](https://github.com/Linuxfabrik/lfops/issues/531)).
 * **role:mongodb**: `mongodb__conf_replication_oplog_size_mb` can be set as a number on Debian and Ubuntu; the run aborted with `object of type 'int' has no len()` ([#532](https://github.com/Linuxfabrik/lfops/issues/532)).
+* **role:aide**: AIDE no longer reports the files Collabora caches below `/opt/cool/cache` for every new user and document setting.
 * **role:nextcloud**: The README example for the Collabora WOPI allow list includes the Nextcloud host next to the reverse proxy. With the proxy alone, documents fail to load with "Unauthorized WOPI host".
 * **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
 * **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
