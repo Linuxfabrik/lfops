@@ -198,6 +198,70 @@
         fail_msg: 'Nextcloud connects as {{ __molecule__nextcloud_dbuser_result["stdout"] }}'
 
 
+# The preflight check aborts before mariadb_server sets a password for the MariaDB user Nextcloud
+# connects as, if nextcloud__database_login is missing or names that user with another password.
+- name: 'Verify the preflight check catches a missing or wrong database login'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'Set the LFOps-wide platform variables'
+      ansible.builtin.import_role:
+        name: 'shared'
+        tasks_from: 'global-variables.yml'
+
+    - block:
+
+      - name: 'Run the preflight checks of the nextcloud role without nextcloud__database_login'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.nextcloud'
+          tasks_from: 'preflight.yml'
+        vars:
+          nextcloud__database_login: {}
+
+      - name: 'Fail, since the preflight check accepted a missing database login'
+        ansible.builtin.fail:
+          msg: 'The preflight check did not abort without nextcloud__database_login.'
+
+      rescue:
+
+      - name: 'Assert that the preflight check failed on the missing login and names occ'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] == "Assert that nextcloud__database_login is set"'
+            - 'ansible_failed_result["msg"] is search("occ config:system:get dbpassword")'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    - block:
+
+      - name: 'Run the preflight checks of the nextcloud role with a wrong password'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.nextcloud'
+          tasks_from: 'preflight.yml'
+        vars:
+          nextcloud__database_login:
+            username: 'nextcloud'
+            password: 'wrong-password'
+
+      - name: 'Fail, since the preflight check accepted a wrong password'
+        ansible.builtin.fail:
+          msg: 'The preflight check did not abort on a password that differs from config.php.'
+
+      rescue:
+
+      - name: 'Assert that the preflight check failed on the password mismatch'
+        ansible.builtin.assert:
+          that:
+            - 'ansible_failed_task["name"] == "Assert that nextcloud__database_login matches the installed Nextcloud"'
+          fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
+
+    - name: 'Run the preflight checks of the nextcloud role with the login of the installation'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.nextcloud'
+        tasks_from: 'preflight.yml'
+
+
 # notify_push opens its database connection at startup and keeps it in its pool. Over the Unix
 # socket, MariaDB lists the connection with the host "localhost", over TCP with "<address>:<port>".
 # A TCP connection lands on ::1, which the database user for "localhost" does not cover once

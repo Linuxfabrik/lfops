@@ -24,6 +24,16 @@
       tags:
         - 'always'
 
+    # abort on a missing or wrong database login before mariadb_server sets its password
+    - name: 'Run the preflight checks of the nextcloud role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.nextcloud'
+        tasks_from: 'preflight.yml'
+      tags:
+        - 'mariadb_server'
+        - 'mariadb_server:users'
+        - 'nextcloud'
+
 
   roles:
 
