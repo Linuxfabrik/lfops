@@ -1,0 +1,6 @@
+# python3.13 comes from EPEL.
+__molecule__python_venv__package_requirements:
+  - 'python3.13'
+__molecule__python_venv__python_executable: 'python3.13'
+# python3 is Python 3.12.
+__molecule__python_venv__stale_python_executable: 'python3'
