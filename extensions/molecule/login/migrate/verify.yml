@@ -1,0 +1,41 @@
+- name: 'Verify the move from lfops_login to linuxfabrik'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # Ask sudo itself instead of reading /etc/sudoers.d: sudo parses its whole configuration here,
+    # so a drop-in that does not apply (or does not even parse) shows up as a failure.
+    - name: 'sudo --list --other-user=molecule-ansible'
+      ansible.builtin.command: 'sudo --list --other-user=molecule-ansible'
+      changed_when: false
+      register: '__molecule__sudo_result'
+
+    - name: 'Assert sudo grants the Ansible user password-less root'
+      ansible.builtin.assert:
+        that: '"NOPASSWD: ALL" in __molecule__sudo_result["stdout"]'
+        fail_msg: '{{ __molecule__sudo_result["stdout"] }}'
+
+    # End-to-end check: log in as the Ansible user and run sudo without a terminal, so a password
+    # prompt is a failure instead of a hang.
+    - name: 'ssh molecule-ansible@{{ ansible_host }} sudo --non-interactive id --user --name'
+      ansible.builtin.command: >-
+        ssh -i {{ ansible_ssh_private_key_file }}
+        -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+        molecule-ansible@{{ ansible_host }} sudo --non-interactive id --user --name
+      delegate_to: 'localhost'
+      become: false
+      changed_when: false
+      register: '__molecule__ssh_sudo_result'
+
+    - name: 'Assert the Ansible user becomes root without a password'
+      ansible.builtin.assert:
+        that: '__molecule__ssh_sudo_result["stdout"] == "root"'
+
+    - name: 'stat /etc/sudoers.d/lfops_login'
+      ansible.builtin.stat:
+        path: '/etc/sudoers.d/lfops_login'
+      register: '__molecule__lfops_login_result'
+
+    - name: 'Assert the sudoers file of LFOps before v6.0.0 is gone'
+      ansible.builtin.assert:
+        that: 'not __molecule__lfops_login_result["stat"]["exists"]'

@@ -1,0 +1,42 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# The starting point: an unprivileged Ansible user that logs in with the scenario's SSH key and
+# gets password-less sudo from /etc/sudoers.d/lfops_login only, the file LFOps wrote before
+# v6.0.0. No /etc/sudoers.d/linuxfabrik, as on hosts that were not installed with the Linuxfabrik
+# kickstart.
+- name: 'Create an Ansible user with password-less sudo from lfops_login'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'groupadd linuxfabrik'
+      ansible.builtin.group:
+        name: 'linuxfabrik'
+        state: 'present'
+
+    - name: 'useradd --create-home --groups linuxfabrik molecule-ansible'
+      ansible.builtin.user:
+        name: 'molecule-ansible'
+        create_home: true
+        groups:
+          - 'linuxfabrik'
+        shell: '/bin/bash'
+        state: 'present'
+
+    - name: 'Deploy /home/molecule-ansible/.ssh/authorized_keys'
+      ansible.posix.authorized_key:
+        user: 'molecule-ansible'
+        key: '{{ lookup("ansible.builtin.file", lookup("ansible.builtin.env", "MOLECULE_EPHEMERAL_DIRECTORY") ~ "/molecule_key.pub") | trim }}'
+        state: 'present'
+
+    - name: 'Deploy /etc/sudoers.d/lfops_login'
+      ansible.builtin.copy:
+        content: "%linuxfabrik ALL=(ALL) NOPASSWD: ALL\n"
+        dest: '/etc/sudoers.d/lfops_login'
+        owner: 'root'
+        group: 'root'
+        mode: 0o440
+        validate: 'visudo -cf %s'
