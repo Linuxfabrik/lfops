@@ -177,6 +177,18 @@ php__version: '8.4'
 
 Variables for `php.ini` directives and their default values, defined and supported by this role.
 
+`php__ini_apc_enable_cli__group_var` / `php__ini_apc_enable_cli__host_var`
+
+* Enables APCu for the CLI version of PHP. Only takes effect if the APCu extension is installed. [php.net](https://www.php.net/manual/en/apcu.configuration.php)
+* Type: Number.
+* Default: `0`
+
+`php__ini_apc_shm_size__group_var` / `php__ini_apc_shm_size__host_var`
+
+* The size of the shared memory segment APCu uses. Only takes effect if the APCu extension is installed. [php.net](https://www.php.net/manual/en/apcu.configuration.php)
+* Type: String.
+* Default: `'32M'`
+
 `php__ini_date_timezone__group_var` / `php__ini_date_timezone__host_var`
 
 * The default timezone used by all date/time functions. [php.net](https://www.php.net/manual/en/datetime.configuration.php)
@@ -390,6 +402,8 @@ Note that setting `php__ini_opcache_huge_code_pages__group_var` or `php__ini_opc
 Example:
 ```yaml
 # optional
+php__ini_apc_enable_cli__host_var: 1
+php__ini_apc_shm_size__host_var: '128M'
 php__ini_date_timezone__host_var: 'Europe/Zurich'
 php__ini_default_socket_timeout__host_var: 10
 php__ini_display_errors__host_var: 'Off'
