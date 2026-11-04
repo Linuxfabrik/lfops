@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud, playbook:setup_nextcloud**: Nextcloud keeps its local cache in APCu instead of Redis or Valkey, as the Nextcloud admin manual recommends, with 128 MB of shared memory and APCu enabled for `occ` and the cron jobs. Redis or Valkey keeps the distributed cache and file locking. To stay with Redis or Valkey, set `memcache.local` in `nextcloud__sysconfig__host_var`.
 * **role:nextcloud**: The role sets `dbhost` in `config.php` to `nextcloud__database_host` on every run, where it only used the variable for the installation, and writes `localhost` as the path to the MariaDB socket, so notify_push connects through the socket instead of over TCP. On a host whose `config.php` names another database server than the inventory, set `nextcloud__database_host` to that server before the run.
 * **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
 * **role:nextcloud**: `nextcloud__version` is mandatory, for example `'latest-35'`. It only picks the release that a new installation downloads.
@@ -139,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* **role:nextcloud**: The role removes the PHP extensions APCu, bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: all caches live in Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
+* **role:nextcloud**: The role removes the PHP extensions bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: the caches live in APCu, Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Icinga DB Web shows up to 65536 characters of a plugin output instead of 20000, so long check outputs are no longer cut off.
 * **role:aide, role:system_update**: AIDE always runs with the lowest CPU and I/O priority, also where the role and the update scripts call it directly, so it yields to everything else on the host.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.

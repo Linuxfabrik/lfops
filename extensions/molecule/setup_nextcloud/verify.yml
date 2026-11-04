@@ -450,6 +450,44 @@
             | first
           }}'
 
+    - name: 'php occ config:system:get memcache.local'
+      ansible.builtin.command: 'php /var/www/html/nextcloud/occ config:system:get memcache.local'
+      args:
+        chdir: '/var/www/html/nextcloud/'
+      become: true
+      become_user: 'apache'
+      register: '__molecule__nextcloud_memcache_local_result'
+      changed_when: false
+
+    - name: 'php --run ''echo ini_get("apc.enable_cli"), " ", ini_get("apc.shm_size");'''
+      ansible.builtin.command: 'php --run ''echo ini_get("apc.enable_cli"), " ", ini_get("apc.shm_size");'''
+      register: '__molecule__nextcloud_apc_ini_result'
+      changed_when: false
+
+    # with apc.enable_cli the memcache check above writes to and reads from APCu in occ, instead
+    # of a cache that silently does nothing
+    - name: 'Assert the local cache is APCu, with the settings of the Nextcloud All-in-One image'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nextcloud_memcache_local_result["stdout"] == "\\OC\\Memcache\\APCu"'
+          - '__molecule__nextcloud_apc_ini_result["stdout"] == "1 128M"'
+        fail_msg: '{{ __molecule__nextcloud_memcache_local_result["stdout"] }} / {{ __molecule__nextcloud_apc_ini_result["stdout"] }}'
+
+    # Nextcloud recommends apcu, and web requests take their Snowflake IDs from it instead of a
+    # flock'ed file. The other recommended modules are none of this test's business.
+    - name: 'Assert the PHP modules check does not miss apcu'
+      ansible.builtin.assert:
+        that: '"apcu" not in __molecule__nextcloud_php_modules_check["description"] | d("", true)'
+        fail_msg: '{{ __molecule__nextcloud_php_modules_check | to_json }}'
+      vars:
+        __molecule__nextcloud_php_modules_check: '{{
+            (__molecule__nextcloud_setupchecks_result["stdout"] | from_json)["php"]
+            | dict2items
+            | selectattr("key", "search", "PhpModules$")
+            | map(attribute="value")
+            | first
+          }}'
+
     # With two-factor authentication enforced, Nextcloud refuses the login password of a WebDAV
     # client and only accepts an app password (lib/private/User/Session.php, logClientIn()).
     - name: 'php occ user:auth-tokens:add --password-from-env --name=molecule {{ nextcloud__users[0]["username"] }}'
