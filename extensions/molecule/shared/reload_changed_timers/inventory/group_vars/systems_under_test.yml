@@ -1,9 +1,25 @@
-# The timer under test, once in the system manager and once in the manager of a lingering user.
+# The timers under test, each in the system manager and in the manager of a lingering user.
 # `user` is passed to reload-changed-timers.yml as `shared__reload_changed_timers_user`.
+# `persistent` sets `Persistent=`: such a timer also reads its last run back from its stamp file
+# on every start, which unloading alone does not drop.
 __molecule__timers:
-  - runs_file: '/var/tmp/molecule-count.runs'
+  - name: 'molecule-count'
+    persistent: false
+    runs_file: '/var/tmp/molecule-count.runs'
     unit_dir: '/etc/systemd/system'
     user: ''
-  - runs_file: '/var/tmp/molecule-count-user.runs'
+  - name: 'molecule-count'
+    persistent: false
+    runs_file: '/var/tmp/molecule-count-user.runs'
+    unit_dir: '/home/molecule-timers/.config/systemd/user'
+    user: 'molecule-timers'
+  - name: 'molecule-count-persistent'
+    persistent: true
+    runs_file: '/var/tmp/molecule-count-persistent.runs'
+    unit_dir: '/etc/systemd/system'
+    user: ''
+  - name: 'molecule-count-persistent'
+    persistent: true
+    runs_file: '/var/tmp/molecule-count-persistent-user.runs'
     unit_dir: '/home/molecule-timers/.config/systemd/user'
     user: 'molecule-timers'
