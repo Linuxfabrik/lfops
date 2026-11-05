@@ -19,7 +19,7 @@
 
 
 # Regular lane, deployed on all hosts:
-# - notify-and-schedule: informational "updates pending" mail
+# - notify-and-schedule: informational "updates pending" mail, off by default
 # - update-and-reboot:   applies all updates at the window, drops a reboot request if
 #                        needed. The reboot itself is handled by the schedule_reboot role.
 - block:
@@ -184,11 +184,14 @@
          __system_update__security_service_result is changed or
          __system_update__security_timer_result is changed'
 
-  - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
+  # the announcement belongs to the regular lane: it is only armed if that lane is, too.
+  - name: 'systemctl {{ __system_update__notify_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
     ansible.builtin.systemd:
       name: 'notify-and-schedule.timer'
-      state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ system_update__update_enabled }}'
+      state: '{{ __system_update__notify_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ __system_update__notify_enabled | bool }}'
+    vars:
+      __system_update__notify_enabled: '{{ system_update__update_enabled | bool and system_update__notify_and_schedule_enabled | bool }}'
 
   - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} update-and-reboot.timer --now'
     ansible.builtin.systemd:

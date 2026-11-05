@@ -1,2 +1,0 @@
-# Molecule scenario marker. Inherits the VM backend and the full test_sequence
-# from extensions/molecule/config.yml.

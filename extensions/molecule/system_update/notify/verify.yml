@@ -1,0 +1,64 @@
+# Verify the opt-in announcement on the running system: with a weekly update day and
+# system_update__notify_and_schedule_enabled, the notify-and-schedule timer is enabled
+# and armed for the day before the update, the update timer for the update day, and a
+# run of the announcement itself ends clean.
+- name: 'Verify the system_update announcement'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'systemctl is-enabled notify-and-schedule.timer update-and-reboot.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-enabled {{ item }}'
+      loop:
+        - 'notify-and-schedule.timer'
+        - 'update-and-reboot.timer'
+      register: '__molecule__timers_enabled_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'systemctl is-active notify-and-schedule.timer update-and-reboot.timer' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active {{ item }}'
+      loop:
+        - 'notify-and-schedule.timer'
+        - 'update-and-reboot.timer'
+      register: '__molecule__timers_active_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the announcement and the update timers are enabled and armed'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__timers_enabled_result["results"] | map(attribute="stdout") | list == ["enabled", "enabled"]'
+          - '__molecule__timers_active_result["results"] | map(attribute="stdout") | list == ["active", "active"]'
+
+    # The scenario's update day is Tuesday at the reboot window 03:00
+    # (schedule_reboot__reboot_time__group_var), the announcement Monday at 10:00.
+    - name: 'systemctl show --property=TimersCalendar notify-and-schedule.timer update-and-reboot.timer' # noqa command-instead-of-module (no module reads a timer's schedule)
+      ansible.builtin.command: 'systemctl show --property=TimersCalendar --value {{ item }}'
+      loop:
+        - 'notify-and-schedule.timer'
+        - 'update-and-reboot.timer'
+      register: '__molecule__timers_calendar_result'
+      changed_when: false
+
+    - name: 'Assert the announcement fires the day before the weekly update'
+      ansible.builtin.assert:
+        that:
+          - '"OnCalendar=Mon *-*-* 10:00:00" in __molecule__timers_calendar_result["results"][0]["stdout"]'
+          - '"OnCalendar=Tue *-*-* 03:00:00" in __molecule__timers_calendar_result["results"][1]["stdout"]'
+
+    # The announcement only refreshes the metadata and lists pending updates, it changes no
+    # package, so it can run here without touching the host.
+    - name: 'systemctl start notify-and-schedule.service' # noqa command-instead-of-module (need to run the oneshot and read its Result)
+      ansible.builtin.command: 'systemctl start notify-and-schedule.service'
+      changed_when: false
+
+    - name: 'systemctl show --property=Result notify-and-schedule.service' # noqa command-instead-of-module (no module reads a oneshot Result)
+      ansible.builtin.command: 'systemctl show --property=Result --value notify-and-schedule.service'
+      register: '__molecule__notify_result'
+      changed_when: false
+
+    - name: 'Assert the announcement ran clean'
+      ansible.builtin.assert:
+        that: '__molecule__notify_result["stdout"] == "success"'

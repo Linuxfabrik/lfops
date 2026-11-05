@@ -1,0 +1,7 @@
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name system_update/install`. Inherits the VM backend and the
+# full test_sequence from extensions/molecule/config.yml.
+#
+# Covers the defaults: daily updates without an announcement, and on Rocky the security
+# lane four times a day. The 'notify' sub-scenario covers weekly updates with the
+# announcement the day before.

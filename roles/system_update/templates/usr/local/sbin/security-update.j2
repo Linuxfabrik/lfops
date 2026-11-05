@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026110201
+# 2026110501
 
 # Apply Rocky Linux security hot-fixes from the dedicated `security` repository,
 # together with the dependencies they need from the other enabled repositories,
@@ -66,7 +66,7 @@ last_txn_id () {
     # neither the header nor the separator line starts with a digit. Comparing the id
     # from before and after the transaction is what tells us whether this run changed
     # anything at all: a bare `yum history info` always reports the last transaction,
-    # even the one the weekly lane made minutes earlier on a day where both run. A host
+    # even the one the regular lane made minutes earlier on a day where both run. A host
     # whose history is still empty yields an empty id on both sides, which compares
     # equal and is correct.
     # Verified against dnf 4.7 (Rocky 8), 4.14 (Rocky 9) and 4.20 (Rocky 10).
@@ -114,12 +114,12 @@ if ! makecache_with_retry --disablerepo="*" --enablerepo="$REPOS"; then
 fi
 
 # only act when the security repo actually has updates pending, and list the latest version
-# of each, which the upgrade below installs. exit quietly if there are none, so the daily
-# timer does not send a "Nothing to do" mail. This gate sits above the AIDE check and the
-# pre-update code, so both only run when there is something to install, and the post-update
-# code further down always runs after the pre-update code. Unlike `check-update`, `repoquery
-# --upgrades` does not list a package that only obsoletes an installed one, so this lane
-# leaves such a package to the regular (weekly) update lane.
+# of each, which the upgrade below installs. exit quietly if there are none, so the timer,
+# which fires several times a day, does not send a "Nothing to do" mail. This gate sits
+# above the AIDE check and the pre-update code, so both only run when there is something
+# to install, and the post-update code further down always runs after the pre-update code.
+# Unlike `check-update`, `repoquery --upgrades` does not list a package that only obsoletes
+# an installed one, so this lane leaves such a package to the regular update lane.
 if ! yum repoquery --upgrades --latest-limit 1 --disablerepo="*" --enablerepo="$REPOS" --queryformat '%{name}-%{evr}.%{arch}\n' 1> /tmp/security-update-packages 2> /tmp/security-check-stderr; then
     log "Security update check failed; see /tmp/security-check-stderr"
     send_msg "$SUBJECT_PREFIX - Security update check failed" "$(</tmp/security-check-stderr)"
@@ -142,10 +142,11 @@ AIDE_UNIT='aidecheck'
 # check before the transaction, the same way update-and-reboot does, and only re-baseline
 # further down if that check came out clean: the re-baseline accepts everything that changed
 # since the check it relies on, an intrusion included. Two deliberate differences to
-# update-and-reboot: this sits below the gates above, since this script runs daily and would
-# otherwise check and mail every day, also when there is nothing to install. And the log is
-# copied to a name of its own, since on a day both scripts run the second copy would otherwise
-# overwrite the first with a log that already contains the changes of the first update.
+# update-and-reboot: this sits below the gates above, since this script runs several times
+# a day and would otherwise check and mail on every run, also when there is nothing to
+# install. And the log is copied to a name of its own, since when both scripts run the
+# second copy would otherwise overwrite the first with a log that already contains the
+# changes of the first update.
 # The AIDE code is the same as in update-and-reboot, where it is verified and the exit codes
 # are explained.
 AIDE_WAS_CLEAN=0
@@ -167,10 +168,10 @@ ${AIDE_CHECK_STDERR}"
 fi
 
 {% if system_update__security_pre_update_code | length %}
-# below the gates above, not at the top of the script: this lane runs daily and exits
-# on most days without installing anything, while the pre-update code guards a
-# transaction that is about to happen. Running it at the top would fire it (and any
-# notification or abort it carries) on every day the repository had nothing pending.
+# below the gates above, not at the top of the script: this lane runs several times a
+# day and exits on most runs without installing anything, while the pre-update code
+# guards a transaction that is about to happen. Running it at the top would fire it (and
+# any notification or abort it carries) on every run the repository had nothing pending.
 # start raw system_update__security_pre_update_code
 {{ system_update__security_pre_update_code }}
 # end raw system_update__security_pre_update_code
@@ -182,7 +183,7 @@ fi
 # newer linux-firmware. Upgrading with the security repo alone then fails with "nothing
 # provides". The exact name-version-release keeps this lane to the hot-fixes and what they
 # need: by name only, dnf would pick the newest version of any enabled repo, which is the job
-# of the regular (weekly) update lane. Verified with dnf 4 on Rocky 8.3, 9.4 and 10.0.
+# of the regular update lane. Verified with dnf 4 on Rocky 8.3, 9.4 and 10.0.
 log "Applying security hot-fixes from $REPOS: ${SECURITY_PKGS//$'\n'/ }"
 TXN_BEFORE=$(last_txn_id)
 # word splitting of $SECURITY_PKGS is intended, one argument per package
