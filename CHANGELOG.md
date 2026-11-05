@@ -225,6 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:postgresql_server**: The role works with the community.postgresql collection 5.x, where it aborted with "Unsupported parameters ... port".
 * **plugin:uptimerobot_mwindow, role:uptimerobot**: Daily, weekly and monthly maintenance windows can be created again after UptimeRobot started to reject them with HTTP 400, changing the duration of a weekly window with several days works, and a failed API call names UptimeRobot's reason instead of only "Bad Request".
 * **role:aide**: AIDE no longer reports the files Collabora caches below `/opt/cool/cache` for every new user and document setting.
+* **role:aide**: The check no longer reports the rotation of the dnf logs, the container storage of rootless podman below `/opt`, the service state of GitLab, the shell history of service users or the mongosh logs of root. Each of them blocked the database update after the nightly system update.
 * **role:nextcloud**: The README example for the Collabora WOPI allow list includes the Nextcloud host next to the reverse proxy. With the proxy alone, documents fail to load with "Unauthorized WOPI host".
 * **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
 * **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
