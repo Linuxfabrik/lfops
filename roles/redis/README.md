@@ -71,6 +71,12 @@ This role is compatible with the following Redis versions:
 * Type: String.
 * Default: `'90s'`
 
+`redis__skip_packaged_modules`
+
+* Redis 8 from packages.redis.io (Debian, Ubuntu) ships the JSON, Search, Bloom and TimeSeries modules in `/usr/lib/redis/modules`. The role loads all modules found there from `/etc/redis/modules/packaged.conf`, as the packaged `redis.conf` does. Set this to `true` to not load them. On RHEL, the Remi module packages (`redis-json`, ...) bring their own configuration, which this variable does not affect.
+* Type: Bool.
+* Default: `false`
+
 Example:
 
 ```yaml
@@ -80,6 +86,7 @@ redis__service_limit_nofile: 10240
 redis__service_state: 'started'
 redis__service_timeout_start_sec: 5
 redis__service_timeout_stop_sec: 5
+redis__skip_packaged_modules: true
 ```
 
 

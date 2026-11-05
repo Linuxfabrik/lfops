@@ -1,0 +1,2 @@
+# packages.redis.io ships modules, which the role must leave unloaded here.
+redis__skip_packaged_modules: true

@@ -1,0 +1,51 @@
+# The modules are read back from the running server, so the whole chain is checked: the files of the
+# package, packaged.conf (or the Remi configs), the include in the template, and what Redis loaded.
+- name: 'Verify redis and its modules'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  vars:
+    __molecule__redis_service_name: '{{
+        (ansible_facts["os_family"] == "RedHat") | ternary("redis.service", "redis-server.service")
+      }}'
+  tasks:
+
+    - name: 'Get the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the redis service is enabled and running'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"][__molecule__redis_service_name]["state"] == "running"'
+          - 'ansible_facts["services"][__molecule__redis_service_name]["status"] == "enabled"'
+
+    - name: 'find /usr/lib/redis/modules /usr/lib64/redis/modules -name *.so'
+      ansible.builtin.find:
+        paths:
+          - '/usr/lib/redis/modules'
+          - '/usr/lib64/redis/modules'
+        patterns: '*.so'
+      register: '__molecule__redis_module_files_result'
+
+    - name: 'redis-cli MODULE LIST'
+      ansible.builtin.command: 'redis-cli MODULE LIST'
+      register: '__molecule__redis_module_list_result'
+      changed_when: false
+
+    # On RHEL every module file belongs to a Remi package that brings its own config, so all of them
+    # must be loaded. On Debian and Ubuntu the role loads them unless told not to.
+    - name: 'Assert that Redis loaded exactly the expected module files'
+      ansible.builtin.assert:
+        that: '__molecule__expected == __molecule__loaded'
+        fail_msg: 'expected {{ __molecule__expected }}, loaded {{ __molecule__loaded }}'
+      vars:
+        __molecule__files: '{{ __molecule__redis_module_files_result["files"] | map(attribute="path") | list }}'
+        __molecule__expected: '{{
+            [] if (redis__skip_packaged_modules | d(false) | bool and ansible_facts["os_family"] == "Debian")
+            else __molecule__files | sort
+          }}'
+        __molecule__loaded: '{{
+            __molecule__files
+            | select("in", __molecule__redis_module_list_result["stdout_lines"])
+            | sort
+          }}'
