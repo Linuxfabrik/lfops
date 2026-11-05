@@ -16,6 +16,7 @@ This role is compatible with the following Redis versions:
 * 8.0
 * 8.2
 * 8.8
+* 8.10
 
 
 *Available since LFOps `2.0.0`.*
@@ -89,117 +90,117 @@ Variables for `redis.conf` directives and their default values, defined and supp
 
 `redis__conf_appendonly`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'no'`
 
 `redis__conf_auto_aof_rewrite_min_size`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'64mb'`
 
 `redis__conf_bind`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'127.0.0.1 -::1'`
 * A `-` in front of an address makes it optional: Redis logs a warning and keeps running where that address does not exist, rather than aborting with `Failed listening on port 6379 (tcp), aborting.`. Without the prefix, `::1` takes down the service on a host with no IPv6 loopback, such as a RHEL minimal installation.
 
 `redis__conf_databases`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: Number.
 * Default: `16`
 
 `redis__conf_loglevel`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'notice'`
 
 `redis__conf_maxmemory`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'50M'`
 
 `redis__conf_maxmemory_policy`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'noeviction'`
 
 `redis__conf_port`
 
-* If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* If port `0` is specified Redis will not listen on a TCP socket. [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: Number.
 * Default: `6379`
 
 `redis__conf_protected_mode`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'yes'`
 
 `redis__conf_replica_serve_stale_data`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'yes'`
 
 `redis__conf_requirepass`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_save`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: List.
 * Default: `['3600 1', '300 100', '60 10000']`
 
 `redis__conf_tls_auth_clients`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_ca_cert_file`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_cert_file`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_key_file`
 
-* [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: unset
 
 `redis__conf_tls_port`
 
-* TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* TLS Port. Set `redis__conf_port: 0` to only listen with TLS. [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: Number.
 * Default: unset
 
 `redis__conf_unixsocket`
 
-* Path of the Unix socket Redis listens on, in addition to the TCP port. Set it to `''` to listen on no Unix socket. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* Path of the Unix socket Redis listens on, in addition to the TCP port. Set it to `''` to listen on no Unix socket. [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'/run/redis/redis.sock'` on RHEL, `'/run/redis/redis-server.sock'` on Debian and Ubuntu
 * Deviates from the upstream default on Debian and Ubuntu, whose package listens on no Unix socket: local clients such as Nextcloud connect faster through the socket than through TCP, and `redis__conf_unixsocketperm` keeps it closed to anyone outside the `redis` group.
 
 `redis__conf_unixsocketperm`
 
-* Permissions of the Unix socket. Only the `redis` user and the members of the `redis` group can connect with `770`; a role that needs access adds its service user to the group. [redis.conf](https://github.com/redis/redis/blob/8.8/redis.conf)
+* Permissions of the Unix socket. Only the `redis` user and the members of the `redis` group can connect with `770`; a role that needs access adds its service user to the group. [redis.conf](https://github.com/redis/redis/blob/8.10/redis.conf)
 * Type: String.
 * Default: `'770'`
 * Deviates from the upstream default, which leaves the mode to the umask of the service, so that the socket is writable, and thus usable, by the `redis` user only.

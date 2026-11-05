@@ -76,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:redis**: Add template for Redis 8.10.
 * **role:nextcloud, playbook:setup_nextcloud**: The run aborts before it changes anything if `nextcloud__database_login` is missing or names the database user of the installed Nextcloud with another password, and tells how to read the login with `occ`. Until now a wrong password locked Nextcloud out of its database.
 * **module:systemd_credential**: `scope: 'user'` stores a credential for the services of an unprivileged user, such as a rootless Podman container, on hosts with systemd 256 or newer.
 * **role:nextcloud_whiteboard_server, playbook:nextcloud_whiteboard_server**: New role and playbook for the collaboration server of the Nextcloud Whiteboard app (real-time collaboration and recordings), run as an automatically updated rootless Podman container on hosts with systemd 256 or newer.
