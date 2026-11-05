@@ -1,0 +1,7 @@
+# Molecule scenario marker for the 'notify' sub-scenario, run with
+# `molecule test --scenario-name system_update/notify`. Inherits the VM backend and the
+# full test_sequence from extensions/molecule/config.yml.
+#
+# Covers weekly updates with the announcement the day before, which an inventory has to
+# opt into. The 'install' sub-scenario covers the defaults and the update lanes
+# themselves.

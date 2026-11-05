@@ -1,13 +1,14 @@
-# Verify system_update on the running system: both regular-lane timers and the
-# schedule-reboot timer it pulls in are armed; the regular check lane runs clean,
-# which exercises the metadata refresh (with its transient-mirrorlist retry) before
-# any update; on Rocky the security lane exists and is a clean no-op without the
-# security repo; off Rocky the security lane is absent, and neither lane runs the
-# pre/post update hooks without a transaction to wrap. On Rocky, a fixture security
-# repository then proves that the lane installs a hot-fix whose dependency only BaseOS
-# provides, runs both hooks around it, and exits before the hooks once nothing is
-# left to install. sendmail (the transport the
-# scripts now use) is available. Finally the regular update lane itself runs twice,
+# Verify system_update on the running system: the regular update timer is armed for a
+# daily run, the notify-and-schedule timer is off by default, the Rocky security timer
+# fires four times a day, and the schedule-reboot timer it pulls in is armed; the
+# regular check lane runs clean, which exercises the metadata refresh (with its
+# transient-mirrorlist retry) before any update; on Rocky the security lane exists and
+# is a clean no-op without the security repo; off Rocky the security lane is absent,
+# and neither lane runs the pre/post update hooks without a transaction to wrap. On
+# Rocky, a fixture security repository then proves that the lane installs a hot-fix
+# whose dependency only BaseOS provides, runs both hooks around it, and exits before
+# the hooks once nothing is left to install. sendmail (the transport the scripts use)
+# is available. Finally the regular update lane itself runs twice,
 # so the second run lands on a host that is genuinely up to date and must stay quiet.
 #
 # gather_facts is on here because the security-lane checks branch on
@@ -63,12 +64,32 @@
       changed_when: false
       failed_when: false
 
-    - name: 'Assert the regular-lane and reboot timers are enabled'
+    # the announcement is off by default (system_update__notify_and_schedule_enabled)
+    - name: 'Assert the regular-lane and reboot timers are enabled, the announcement is not'
       ansible.builtin.assert:
-        that: 'item["stdout"] == "enabled"'
+        that: 'item["stdout"] == ("disabled" if item["item"] == "notify-and-schedule.timer" else "enabled")'
       loop: '{{ __molecule__update_timers_enabled_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    # The scenario's reboot window is 03:00 (schedule_reboot__reboot_time__group_var).
+    # The regular lane runs daily there, the Rocky security lane every 6 hours from there.
+    - name: 'systemctl show --property=TimersCalendar update-and-reboot.timer security-update.timer' # noqa command-instead-of-module (no module reads a timer's schedule)
+      ansible.builtin.command: 'systemctl show --property=TimersCalendar --value {{ item }}'
+      loop:
+        - 'update-and-reboot.timer'
+        - 'security-update.timer'
+      register: '__molecule__timers_calendar_result'
+      changed_when: false
+
+    - name: 'Assert the regular lane runs daily'
+      ansible.builtin.assert:
+        that: '"OnCalendar=*-*-* 03:00:00" in __molecule__timers_calendar_result["results"][0]["stdout"]'
+
+    - name: 'Assert the security lane runs four times a day (Rocky only)'
+      ansible.builtin.assert:
+        that: '"OnCalendar=*-*-* 03,09,15,21:00:00" in __molecule__timers_calendar_result["results"][1]["stdout"]'
+      when: 'ansible_facts["distribution"] == "Rocky"'
 
     # The regular check lane is non-mutating (metadata refresh + check-update, no
     # package changes). Running it exercises makecache_with_retry on the happy path

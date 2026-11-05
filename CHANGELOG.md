@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:system_update**: Hosts install all updates daily instead of every Tuesday, Rocky hosts check for security hot-fixes four times a day instead of once, and pending updates are no longer announced by mail the day before. Mails for applied updates, reboots and failures stay. To keep weekly updates with the announcement, set `system_update__update_day: 'Tue'` and `system_update__notify_and_schedule_enabled: true`; to keep the single daily security run, set `system_update__security_on_calendar`.
 * **role:nextcloud, playbook:setup_nextcloud**: Nextcloud keeps its local cache in APCu instead of Redis or Valkey, as the Nextcloud admin manual recommends, with 128 MB of shared memory and APCu enabled for `occ` and the cron jobs. Redis or Valkey keeps the distributed cache and file locking. To stay with Redis or Valkey, set `memcache.local` in `nextcloud__sysconfig__host_var`.
 * **role:nextcloud**: The role sets `dbhost` in `config.php` to `nextcloud__database_host` on every run, where it only used the variable for the installation, and writes `localhost` as the path to the MariaDB socket, so notify_push connects through the socket instead of over TCP. On a host whose `config.php` names another database server than the inventory, set `nextcloud__database_host` to that server before the run.
 * **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
@@ -223,6 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: `--tags system_update:state` no longer aborts on an undefined variable.
 * **role:nextcloud**: notify_push waits for MariaDB, Redis and Valkey at boot and restarts after a failure, instead of staying down when it started before the database was ready.
 * **role:nodejs**: `nodejs__dnf_module_stream` works on RHEL 10, which has no modules, by installing the versioned package such as `nodejs24`. On RHEL 8 and 9 it no longer reports a change on every run, and on Debian and Ubuntu it no longer makes the run fail ([#374](https://github.com/Linuxfabrik/lfops/issues/374)).
 * **role:opensearch**: Heap and environment settings take effect on Debian and Ubuntu, where the role wrote them to `/etc/sysconfig/opensearch` instead of `/etc/default/opensearch` ([#512](https://github.com/Linuxfabrik/lfops/issues/512)).

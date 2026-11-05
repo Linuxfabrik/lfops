@@ -1,11 +1,11 @@
 # {{ ansible_managed }}
-# 2026061001
+# 2026110501
 
 [Unit]
 Description=security-update Service
 # order-only edges (no Wants/Requires); the Rocky-only security lane is the outlier,
 # so it owns the ordering relative to the regular lane.
-# After=update-and-reboot.service: on a day where both fire, let the weekly lane
+# After=update-and-reboot.service: when both fire at the window, let the regular lane
 # apply the frozen mirror snapshot first, then top up only the delta from the live
 # security repo here (if the snapshot already covers it, this lane's check-update
 # finds nothing and exits). It also serializes the two dnf runs so they never hit
