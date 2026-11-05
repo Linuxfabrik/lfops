@@ -107,3 +107,62 @@
         fail_msg: >-
           {{ __molecule__icons_result["files"]
             | rejectattr("uid", "eq", 0) | map(attribute="path") | list }}
+
+    # The lock pins exactly the installed version, and each package once.
+    - name: 'dnf versionlock list'
+      ansible.builtin.command: 'dnf versionlock list'
+      changed_when: false
+      register: '__molecule__versionlock_list_result'
+      when:
+        - 'ansible_facts["pkg_mgr"] == "dnf"'
+
+    - name: 'Assert that the versionlock pins the installed packages once each'
+      ansible.builtin.assert:
+        that:
+          - >-
+            __molecule__versionlock_list_result["stdout_lines"]
+            | select("match", "linuxfabrik-monitoring-plugins-0:")
+            | list
+            == ["linuxfabrik-monitoring-plugins-0:" ~ ansible_facts["packages"]["linuxfabrik-monitoring-plugins"][0]["version"] ~ "-" ~ ansible_facts["packages"]["linuxfabrik-monitoring-plugins"][0]["release"] ~ ".*"]
+          - >-
+            __molecule__versionlock_list_result["stdout_lines"]
+            | select("match", "linuxfabrik-monitoring-plugins-selinux-0:")
+            | list | length == 1
+        fail_msg: '{{ __molecule__versionlock_list_result["stdout_lines"] }}'
+      when:
+        - 'ansible_facts["pkg_mgr"] == "dnf"'
+
+    # Molecule runs this verify after the converge and again after the idempotence step. The first
+    # run records the checksum and inode of versionlock.list, the second one compares them: lifting
+    # and setting the lock again on every run rewrote the file, which AIDE reported.
+    - name: 'stat /etc/dnf/plugins/versionlock.list'
+      ansible.builtin.stat:
+        path: '/etc/dnf/plugins/versionlock.list'
+      register: '__molecule__versionlock_file_result'
+      when:
+        - 'ansible_facts["pkg_mgr"] == "dnf"'
+
+    - name: 'Record the checksum and inode of versionlock.list from the first verify'
+      ansible.builtin.copy:
+        content: '{{ __molecule__versionlock_file_result["stat"]["checksum"] }} {{ __molecule__versionlock_file_result["stat"]["inode"] }}'
+        dest: '/var/tmp/molecule-versionlock.list.stat'
+        force: false
+        mode: 0o644
+      register: '__molecule__versionlock_record_result'
+      when:
+        - 'ansible_facts["pkg_mgr"] == "dnf"'
+
+    - name: 'cat /var/tmp/molecule-versionlock.list.stat'
+      ansible.builtin.command: 'cat /var/tmp/molecule-versionlock.list.stat'
+      changed_when: false
+      register: '__molecule__versionlock_recorded_result'
+      when:
+        - 'ansible_facts["pkg_mgr"] == "dnf"'
+
+    - name: 'Assert that the run after the first verify left versionlock.list alone'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__versionlock_recorded_result["stdout"] == __molecule__versionlock_file_result["stat"]["checksum"] ~ " " ~ __molecule__versionlock_file_result["stat"]["inode"]'
+        fail_msg: 'recorded: {{ __molecule__versionlock_recorded_result["stdout"] }}'
+      when:
+        - 'ansible_facts["pkg_mgr"] == "dnf"'
