@@ -222,6 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:system_update**: `--tags system_update:state` no longer aborts on an undefined variable.
 * A changed schedule of a timer no longer runs its job right away when the new time already passed since the last run, for example system updates and reboots in the middle of the day after switching from weekly to daily (acme_sh, aide, clamav, duplicity, fangfrisch, gitlab_ce, glpi_agent, grav, influxdb, lynis, mariadb_server, matomo_import_logs, mongodb, moodle, nextcloud, podman_containers, postgresql_server, schedule_reboot, system_update, systemd_unit, wordpress).
 * **role:postgresql_server**: The role works with the community.postgresql collection 5.x, where it aborted with "Unsupported parameters ... port".
 * **plugin:uptimerobot_mwindow, role:uptimerobot**: Daily, weekly and monthly maintenance windows can be created again after UptimeRobot started to reject them with HTTP 400, changing the duration of a weekly window with several days works, and a failed API call names UptimeRobot's reason instead of only "Bad Request".

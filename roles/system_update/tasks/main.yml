@@ -163,12 +163,6 @@
           (__system_update__security_timer_result is changed) | ternary(["security-update.timer"], [])
         }}'
 
-  tags:
-    - 'system_update'
-
-
-- block:
-
   # run daemon-reload as a regular task (not a handler) before the state block, so the
   # enable/start tasks act on the freshly deployed units. gated on any unit-file change
   # (service or timer, regular or security) to stay idempotent. skipped Rocky tasks
@@ -183,6 +177,12 @@
          __system_update__update_timer_result is changed or
          __system_update__security_service_result is changed or
          __system_update__security_timer_result is changed'
+
+  tags:
+    - 'system_update'
+
+
+- block:
 
   # the announcement belongs to the regular lane: it is only armed if that lane is, too.
   - name: 'systemctl {{ __system_update__notify_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
