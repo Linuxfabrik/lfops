@@ -41,7 +41,7 @@
 
 - name: 'postgresql_server: SELECT line_number, error FROM pg_hba_file_rules WHERE error IS NOT NULL'
   community.postgresql.postgresql_query:
-    port: '{{ (__postgresql_server__postmaster_pid_result["content"] | b64decode).splitlines()[3] }}'
+    login_port: '{{ (__postgresql_server__postmaster_pid_result["content"] | b64decode).splitlines()[3] }}'
     login_password: '{{ postgresql_server__login_password | default(omit) }}'
     query: 'SELECT line_number, error FROM pg_hba_file_rules WHERE error IS NOT NULL'
   become: true

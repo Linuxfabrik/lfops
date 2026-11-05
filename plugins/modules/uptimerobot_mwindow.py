@@ -20,6 +20,8 @@ description:
     - Identification is by I(friendly_name). When omitted on I(state=present), the module synthesises one as C("<type> [<value>] <start_time>-<end_time>") (e.g. C(weekly mon 03:30-05:30), C(daily 02:00-02:30)) so re-runs stay idempotent without having to invent a name.
     - Update is intentionally narrow - only I(duration) and I(status) are diffed against the existing window. Changing the schedule itself (I(type), I(value), I(start_time), I(end_time)) means changing I(friendly_name) too (or the synthesised one), which results in a *new* window being created next to the old one rather than an in-place edit. This also avoids UptimeRobot's inconsistent C(start_time) storage (older windows are kept as local C(HH:MM), newer ones as UTC C(HH:MM:SS)) confusing the diff.
     - Provide either I(end_time) or I(duration), not both. When I(end_time) is given, the duration in minutes is computed automatically (wrapping over midnight when C(end_time < start_time)).
+    - A new window of I(type=daily), C(weekly) or C(monthly) is created through the v3 API (C(POST /v3/maintenance-windows)), since the v2 C(newMWindow) rejects recurring windows. C(once) windows, updates and deletes go through v2.
+    - UptimeRobot lists a new window only about a minute after its creation. A run repeated within that minute does not find the window and creates it a second time.
 author:
     - Linuxfabrik GmbH, Zurich, Switzerland (info (at) linuxfabrik (dot) ch)
 options:
@@ -364,7 +366,11 @@ def main():
             },
         )
 
-    body = dict(desired)
+    # Send only what changed. The schedule cannot change here (see above), and
+    # sending it back made v2 reject a weekly window with several days
+    # ("invalid day "mon"" for `mon-wed`), since `value` is not translated as a
+    # list. Verified against api.uptimerobot.com on 2026-11-04.
+    body = dict(field_diff)
     body['id'] = current['id']
     success, result = ur.edit_mwindow(module, api_key, body)
     if not success:

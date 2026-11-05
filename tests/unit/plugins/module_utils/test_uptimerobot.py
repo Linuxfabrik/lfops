@@ -109,7 +109,7 @@ class TestPagination(unittest.TestCase):
     def run_pages(self, total, nested, result_key='alert_contacts'):
         offsets = []
 
-        def fake_fetch_url(module, url, data=None, **kwargs):
+        def fake_fetch_url(module, url, data=None, **_kwargs):
             body = dict(pair.split('=', 1) for pair in data.decode('utf-8').split('&'))
             offset = int(body['offset'])
             offsets.append(offset)
@@ -224,6 +224,176 @@ class TestResponseTranslators(unittest.TestCase):
         ur._translate_alert_contact_response(item)
         self.assertEqual(item['status'], 'active')
         self.assertEqual(item['type'], 'email')
+
+
+class TestErrorFromInfo(unittest.TestCase):
+    """The reason of a rejected request comes from the response body, not from
+    the HTTP reason phrase that fetch_url() puts into `msg`."""
+
+    def test_v2_error_object(self):
+        # The body UptimeRobot v2 answered a daily newMWindow with on 2026-11-04.
+        info = {
+            'status': 400,
+            'msg': 'HTTP Error 400: Bad Request',
+            'body': b'{"stat":"fail","error":{"type":"invalid_parameter",'
+            b'"message":"date field is not allowed for \\"daily\\" interval"}}',
+        }
+        self.assertEqual(
+            ur._error_from_info(info),
+            'invalid_parameter: date field is not allowed for "daily" interval',
+        )
+
+    def test_v3_message_list(self):
+        info = {'status': 400, 'body': b'{"message":["time must match","x"]}'}
+        self.assertEqual(ur._error_from_info(info), 'time must match; x')
+
+    def test_raw_body_then_reason_phrase(self):
+        self.assertEqual(
+            ur._error_from_info({'body': b'gateway down\n'}), 'gateway down'
+        )
+        self.assertEqual(
+            ur._error_from_info({'msg': 'HTTP Error 502: Bad Gateway'}),
+            'HTTP Error 502: Bad Gateway',
+        )
+
+    def test_request_uncached_reports_the_body(self):
+        def fake_fetch_url(module, url, data=None, **_kwargs):
+            return None, {
+                'status': 400,
+                'msg': 'HTTP Error 400: Bad Request',
+                'body': b'{"stat":"fail","error":{"type":"invalid_parameter","message":"m"}}',
+            }
+
+        with mock.patch.object(ur, 'fetch_url', side_effect=fake_fetch_url):
+            success, msg = ur._request_uncached(
+                _FakeModule(), 'k', 'newMWindow', {}, 'mwindow'
+            )
+        self.assertFalse(success)
+        self.assertIn('invalid_parameter: m', msg)
+        self.assertNotIn('Bad Request', msg)
+
+
+class TestNewMWindow(unittest.TestCase):
+    """Daily windows go to v3 (v2 rejects them), all other types stay on v2."""
+
+    def capture(self, params, response):
+        calls = []
+
+        def fake_fetch_url(
+            module, url, data=None, headers=None, method=None, **_kwargs
+        ):
+            calls.append(
+                {'url': url, 'data': data, 'headers': headers, 'method': method}
+            )
+            return _FakeResponse(response), {'status': 200}
+
+        with mock.patch.object(
+            ur, 'fetch_url', side_effect=fake_fetch_url
+        ), mock.patch.object(ur, '_cache_invalidate'):
+            result = ur.new_mwindow(_FakeModule(), 'k', params)
+        return result, calls
+
+    def test_daily_uses_v3_without_date(self):
+        # v3 response as returned by api.uptimerobot.com on 2026-11-04
+        response = {
+            'id': 387885,
+            'name': 'daily 03:30-05:30',
+            'interval': 'daily',
+            'date': None,
+            'time': '03:30:00',
+            'duration': 120,
+            'status': 'active',
+        }
+        (success, window), calls = self.capture(
+            {
+                'friendly_name': 'daily 03:30-05:30',
+                'type': 'daily',
+                'start_time': '03:30',
+                'duration': 120,
+            },
+            response,
+        )
+        self.assertTrue(success)
+        self.assertEqual(len(calls), 1)
+        call = calls[0]
+        self.assertEqual(
+            call['url'], 'https://api.uptimerobot.com/v3/maintenance-windows'
+        )
+        self.assertEqual(call['method'], 'POST')
+        self.assertEqual(call['headers']['Authorization'], 'Bearer k')
+        self.assertEqual(
+            json.loads(call['data'].decode('utf-8')),
+            {
+                'name': 'daily 03:30-05:30',
+                'interval': 'daily',
+                'time': '03:30:00',
+                'duration': 120,
+            },
+        )
+        self.assertEqual(
+            window,
+            {
+                'duration': 120,
+                'friendly_name': 'daily 03:30-05:30',
+                'id': 387885,
+                'start_time': '03:30:00',
+                'status': 'active',
+                'type': 'daily',
+            },
+        )
+
+    def test_weekly_uses_v3_with_weekday_numbers(self):
+        (success, window), calls = self.capture(
+            {
+                'friendly_name': 'weekly mon-wed-fri 03:30-05:30',
+                'type': 'weekly',
+                'value': 'mon-wed-fri',
+                'start_time': '03:30',
+                'duration': 120,
+            },
+            {
+                'id': 2,
+                'name': 'weekly mon-wed-fri 03:30-05:30',
+                'interval': 'weekly',
+                'time': '03:30:00',
+                'duration': 120,
+                'days': [1, 3, 5],
+                'status': 'active',
+            },
+        )
+        self.assertTrue(success)
+        self.assertEqual(
+            calls[0]['url'], 'https://api.uptimerobot.com/v3/maintenance-windows'
+        )
+        self.assertEqual(
+            json.loads(calls[0]['data'].decode('utf-8'))['days'], [1, 3, 5]
+        )
+        self.assertEqual(window['value'], 'mon-wed-fri')
+
+    def test_monthly_days_of_the_month(self):
+        self.assertEqual(ur._mwindow_days('monthly', '10-17-26'), [10, 17, 26])
+        self.assertEqual(ur._mwindow_days('monthly', '-1'), [-1])
+        self.assertEqual(ur._mwindow_days('weekly', 'sun'), [7])
+        self.assertEqual(ur._mwindow_days('daily', None), [])
+
+    def test_once_stays_on_v2(self):
+        # v2 still accepts a once window (api.uptimerobot.com, 2026-11-04)
+        (success, _), calls = self.capture(
+            {
+                'friendly_name': 'cert-renewal',
+                'type': 'once',
+                'start_time': '1825290000',
+                'duration': 60,
+            },
+            {'stat': 'ok', 'mwindow': {'id': 1, 'status': 1}},
+        )
+        self.assertTrue(success)
+        self.assertEqual(calls[0]['url'], 'https://api.uptimerobot.com/v2/newMWindow')
+        body = dict(
+            pair.split('=', 1) for pair in calls[0]['data'].decode('utf-8').split('&')
+        )
+        self.assertEqual(body['type'], '1')
+        self.assertNotIn('Authorization', calls[0]['headers'])
 
 
 if __name__ == '__main__':
