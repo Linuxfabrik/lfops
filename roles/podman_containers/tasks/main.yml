@@ -295,7 +295,17 @@
       __podman_containers__auto_update_on_calendar: '{{ (podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | first)["on_calendar"] }}'
     when:
       - 'podman_containers__auto_update__combined_var | selectattr("user", "equalto", "root") | selectattr("on_calendar", "defined") | length > 0'
+    register: '__podman_containers__auto_update_system_dropin_result'
     notify: 'podman_containers: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers # system'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__podman_containers__auto_update_system_dropin_result is changed) | ternary(["podman-auto-update.timer"], [])
+        }}'
 
   - name: 'Deploy podman-auto-update.timer.d/z00-linuxfabrik.conf # user'
     ansible.builtin.template:
@@ -315,6 +325,27 @@
     loop: '{{ podman_containers__auto_update__combined_var }}'
     loop_control:
       label: '{{ item["user"] }}'
+    register: '__podman_containers__auto_update_user_dropin_result'
+
+  # a loop variable of its own: the included tasks loop over `item` themselves, and the vars
+  # below are only evaluated there
+  - name: 'Reload systemd for the changed timers # user'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers:
+        - 'podman-auto-update.timer'
+      shared__reload_changed_timers_user: '{{ __podman_containers__changed_user_dropin["item"]["user"] }}'
+    loop: '{{
+        __podman_containers__auto_update_user_dropin_result["results"]
+        | selectattr("changed", "defined")
+        | selectattr("changed")
+        | list
+      }}'
+    loop_control:
+      loop_var: '__podman_containers__changed_user_dropin'
+      label: '{{ __podman_containers__changed_user_dropin["item"]["user"] }}'
 
   - name: 'systemctl enable/disable (--user) --now podman-auto-update.timer'
     ansible.builtin.systemd:

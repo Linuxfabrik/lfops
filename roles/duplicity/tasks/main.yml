@@ -175,7 +175,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__duplicity__timer_result'
     notify: 'duplicity: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__duplicity__timer_result is changed) | ternary(["duba.timer"], [])
+        }}'
 
   tags:
     - 'duplicity'

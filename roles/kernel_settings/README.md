@@ -118,20 +118,11 @@ These variables are intended to be used in a host / group variable file in the A
       value: 0
     ```
 
-    On Ubuntu 22.04 additionally:
+    On Ubuntu 22.04 and 24.04, `kernel.kptr_restrict` is `1` instead of `2` (see "How the Role Behaves"). On Ubuntu 22.04 additionally:
 
     ```yaml
     - name: 'drop'
       value: 'kernel.sched_min_granularity_ns,kernel.sched_wakeup_granularity_ns'
-    - name: 'kernel.kptr_restrict'
-      value: 1
-    ```
-
-    On Ubuntu 24.04 additionally:
-
-    ```yaml
-    - name: 'kernel.kptr_restrict'
-      value: 1
     ```
 
 * Deviates from the upstream default `[]`: a host deployed with LFOps should pass the sysctl checks of the CIS Benchmarks without further inventory. On Ubuntu 22.04 the TuneD profile also sets two scheduler sysctls that the 5.15 kernel does not have, and TuneD's own verification would fail on every run (see "How the Role Behaves").

@@ -214,6 +214,15 @@
     register: '__aide__timer_unit_result'
     notify: 'aide: update database'
 
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__aide__timer_unit_result is changed) | ternary(["aidecheck.timer"], [])
+        }}'
+
   - name: 'systemctl daemon-reload' # noqa no-handler (the timer tasks below need the new units)
     ansible.builtin.systemd:
       daemon_reload: true

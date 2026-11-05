@@ -1,0 +1,94 @@
+# Deploys a timer that counts its runs through the task file under test, once as a system timer
+# and once as a timer of a lingering user. The behaviour itself is time-dependent and therefore
+# checked in verify.yml.
+- name: 'Converge a timer through reload-changed-timers.yml'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'useradd molecule-timers'
+      ansible.builtin.user:
+        name: 'molecule-timers'
+        create_home: true
+      register: '__molecule__user_result'
+
+    - name: 'loginctl enable-linger molecule-timers'
+      ansible.builtin.command:
+        cmd: 'loginctl enable-linger molecule-timers'
+        creates: '/var/lib/systemd/linger/molecule-timers'
+
+    # enable-linger starts the user manager asynchronously
+    - name: 'systemctl start user@{{ __molecule__user_result["uid"] }}.service'
+      ansible.builtin.systemd:
+        name: 'user@{{ __molecule__user_result["uid"] }}.service'
+        state: 'started'
+
+    - name: 'mkdir -p /home/molecule-timers/.config/systemd/user'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        owner: 'molecule-timers'
+        group: 'molecule-timers'
+        mode: 0o755
+      loop:
+        - '/home/molecule-timers/.config'
+        - '/home/molecule-timers/.config/systemd'
+        - '/home/molecule-timers/.config/systemd/user'
+
+    - name: 'Deploy molecule-count.service'
+      ansible.builtin.copy:
+        content: |
+          [Service]
+          Type=oneshot
+          ExecStart=/bin/sh -c 'date +%%s >> {{ item["runs_file"] }}'
+        dest: '{{ item["unit_dir"] }}/molecule-count.service'
+        owner: '{{ item["user"] | d("root", true) }}'
+        group: '{{ item["user"] | d("root", true) }}'
+        mode: 0o644
+      loop: '{{ __molecule__timers }}'
+      loop_control:
+        label: '{{ item["unit_dir"] }}'
+
+    - name: 'Deploy molecule-count.timer'
+      ansible.builtin.copy:
+        content: |
+          [Timer]
+          OnCalendar=*-*-* 23:59:00
+          AccuracySec=1s
+
+          [Install]
+          WantedBy=timers.target
+        dest: '{{ item["unit_dir"] }}/molecule-count.timer'
+        owner: '{{ item["user"] | d("root", true) }}'
+        group: '{{ item["user"] | d("root", true) }}'
+        mode: 0o644
+      loop: '{{ __molecule__timers }}'
+      loop_control:
+        label: '{{ item["unit_dir"] }}'
+      register: '__molecule__timer_result'
+
+    - name: 'Reload the changed timer'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'reload-changed-timers.yml'
+      vars:
+        shared__reload_changed_timers: '{{
+            (__molecule__changed_timer is changed) | ternary(["molecule-count.timer"], [])
+          }}'
+        shared__reload_changed_timers_user: '{{ __molecule__changed_timer["item"]["user"] }}'
+      loop: '{{ __molecule__timer_result["results"] }}'
+      loop_control:
+        label: '{{ __molecule__changed_timer["item"]["unit_dir"] }}'
+        loop_var: '__molecule__changed_timer'
+
+    - name: 'systemctl enable molecule-count.timer --now'
+      ansible.builtin.systemd:
+        name: 'molecule-count.timer'
+        scope: '{{ (item["user"] | length > 0) | ternary("user", "system") }}'
+        state: 'started'
+        enabled: true
+      become_user: '{{ item["user"] | d("root", true) }}'
+      loop: '{{ __molecule__timers }}'
+      loop_control:
+        label: '{{ item["unit_dir"] }}'

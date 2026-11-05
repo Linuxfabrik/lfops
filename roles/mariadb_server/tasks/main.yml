@@ -817,7 +817,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__mariadb_server__dump_timer_result'
     notify: 'mariadb_server: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__mariadb_server__dump_timer_result is changed) | ternary(["mariadb-dump.timer"], [])
+        }}'
 
   - name: 'systemctl enable mariadb-dump.timer --now'
     ansible.builtin.systemd:

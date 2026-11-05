@@ -77,6 +77,14 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 
     * `shared__remove_rpmnew_rpmsave_config_file`: Mandatory. Absolute path of the deployed config file (without the `.rpmnew` / `.rpmsave` suffix).
 
+`reload-changed-timers.yml`
+
+* Reloads systemd after the unit file or a drop-in of calendar timers changed, without letting a timer run at once because of its new schedule. systemd computes the next run of a calendar timer from its last run, so a schedule moved to a point between the last run and now, for example from weekly to daily, fires as soon as the manager loads it. The task stops and disables the given timers, runs `systemctl daemon-reload`, which unloads them together with their last run, and then enables and starts each one again if it was before. Include it right after the role deployed its units and before anything else reloads systemd, see "Calendar Timers" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Does nothing if the list is empty.
+* Parameters:
+
+    * `shared__reload_changed_timers`: Mandatory. List of the timer units whose unit file or drop-in changed in this run, e.g. `['update-and-reboot.timer']`.
+    * `shared__reload_changed_timers_user`: Optional. User whose service manager runs the timers (`systemctl --user`). Default: unset (the system manager).
+
 
 ## Usage Example
 
