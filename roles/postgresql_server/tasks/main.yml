@@ -277,7 +277,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__postgresql_server__dump_timer_result'
     notify: 'postgresql_server: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__postgresql_server__dump_timer_result is changed) | ternary(["postgresql-dump.timer"], [])
+        }}'
 
   - name: 'systemctl enable postgresql-dump.timer --now'
     ansible.builtin.systemd:

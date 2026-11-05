@@ -85,6 +85,15 @@
       mode: 0o644
     register: '__lynis__timer_result'
 
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__lynis__timer_result is changed) | ternary(["lynis.timer"], [])
+        }}'
+
   - name: 'systemctl daemon-reload' # noqa no-handler (the state tasks below need the new units)
     ansible.builtin.systemd:
       daemon_reload: true

@@ -70,7 +70,24 @@
       label: '{{ item["name"] }}'
     when:
       - 'item["state"] | d("present") != "absent"'
+    register: '__matomo_import_logs__timer_result'
     notify: 'matomo_import_logs: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          __matomo_import_logs__timer_result["results"]
+          | selectattr("changed", "defined")
+          | selectattr("changed")
+          | map(attribute="item")
+          | map(attribute="name")
+          | map("regex_replace", "^", "matomo-import-logs-")
+          | map("regex_replace", "$", ".timer")
+          | list
+        }}'
 
   tags:
     - 'matomo_import_logs'

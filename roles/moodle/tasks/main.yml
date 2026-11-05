@@ -165,7 +165,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__moodle__cron_timer_result'
     notify: 'moodle: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__moodle__cron_timer_result is changed) | ternary(["moodle-cron.timer"], [])
+        }}'
 
   tags:
     - 'moodle'

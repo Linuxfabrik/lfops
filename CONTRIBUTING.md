@@ -547,6 +547,15 @@ Templates that are copies of a packaged file (`<series>-coolwsd.xml.j2`, `<serie
 * `roles/example` implements the chain (`example__kernel_settings__sysctl__dependent_var`, fed into `kernel_settings` by `playbooks/example.yml`, plus the drop-in). `roles/icinga2_agent` shows a non-TuneD case (`z00-after-sssd.conf`).
 
 
+#### Calendar Timers
+
+systemd computes the next run of a calendar timer from its last run, not from now. A schedule moved to a point between the last run and now, for example from weekly to daily, fires as soon as the manager loads the new unit: an update lane would update in the middle of the day, a reboot timer would reboot. `daemon-reload`, `restart` and the reload that `systemctl enable` / `disable` do implicitly all keep the last run.
+
+* Register every task that deploys a timer unit or a drop-in with `OnCalendar=`, and include `shared/tasks/reload-changed-timers.yml` right after the role deployed its units, with the timers that changed (`shared__reload_changed_timers`, `shared__reload_changed_timers_user` for a user's timers). It stops and disables them before reloading, so that the manager unloads them together with their last run, and restores their state afterwards.
+* Include it before the role's own `daemon-reload` task, and never notify a `daemon-reload` handler for a timer instead: the handler runs at the end of the play, and any `enable` / `disable` in between reloads the manager with the new schedule.
+* `roles/system_update` implements this; `extensions/molecule/shared/reload_changed_timers` tests the behaviour.
+
+
 #### Secrets for systemd Services
 
 A secret that a systemd service reads from a file (a daemon, or a script run by a timer), or that a script needs which only admins run by hand, is stored as a systemd credential, neither in a config file below `/etc` nor templated into the script. Backups of `/etc` then hold no plaintext password, since the host key in `/var/lib/systemd/` is not backed up.

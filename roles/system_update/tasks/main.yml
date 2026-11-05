@@ -150,6 +150,25 @@
 
 - block:
 
+  # before anything reloads systemd: a changed schedule would otherwise update or reboot the
+  # host at once. skipped Rocky tasks register a non-changed result.
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__system_update__notify_timer_result is changed) | ternary(["notify-and-schedule.timer"], []) +
+          (__system_update__update_timer_result is changed) | ternary(["update-and-reboot.timer"], []) +
+          (__system_update__security_timer_result is changed) | ternary(["security-update.timer"], [])
+        }}'
+
+  tags:
+    - 'system_update'
+
+
+- block:
+
   # run daemon-reload as a regular task (not a handler) before the state block, so the
   # enable/start tasks act on the freshly deployed units. gated on any unit-file change
   # (service or timer, regular or security) to stay idempotent. skipped Rocky tasks

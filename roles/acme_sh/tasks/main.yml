@@ -87,7 +87,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__acme_sh__timer_result'
     notify: 'acme_sh: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__acme_sh__timer_result is changed) | ternary(["acme-sh.timer"], [])
+        }}'
 
   - name: 'mkdir -p /var/www/html/letsencrypt/.well-known/acme-challenge'
     ansible.builtin.file:

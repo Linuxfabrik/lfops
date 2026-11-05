@@ -42,6 +42,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__grav__selfupgrade_timer_result'
     notify: 'grav: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/grav-update.service'
@@ -62,7 +63,18 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__grav__update_timer_result'
     notify: 'grav: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__grav__selfupgrade_timer_result is changed) | ternary(["grav-selfupgrade.timer"], []) +
+          (__grav__update_timer_result is changed) | ternary(["grav-update.timer"], [])
+        }}'
 
   tags:
     - 'grav'

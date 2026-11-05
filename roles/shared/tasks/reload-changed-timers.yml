@@ -1,0 +1,89 @@
+# Reloads systemd after the unit files (or drop-ins) of calendar timers changed, without letting
+# a timer run at once because of its new schedule.
+#
+# systemd computes the next run of a calendar timer from its last run, not from now
+# (src/core/timer.c, timer_enter_waiting()). If a new schedule has an occurrence between the last
+# run and now, for example weekly changed to daily, the timer fires as soon as the manager loads
+# the new unit: on `daemon-reload`, and on the reload that `systemctl enable` / `disable` do
+# implicitly. Stopping, restarting or reloading keeps the last run time; only unloading the timer
+# drops it, and the manager unloads a stopped timer that nothing references, i.e. a disabled one.
+# Hence: stop all of them first (a stopped timer does not fire on a reload), then disable them,
+# reload, and bring back the state each one had. Verified with systemd 239, 252 and 257 on Rocky 8,
+# 9 and 10 and on Debian 13 (extensions/molecule/shared/reload_changed_timers).
+#
+# Include it right after the role deployed its units and before anything else reloads systemd,
+# with the timers whose unit or drop-in changed in this run.
+- block:
+
+  - name: 'systemctl show {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.systemd:
+      name: '{{ shared__reload_changed_timer }}'
+      scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ shared__reload_changed_timers }}'
+    loop_control:
+      loop_var: 'shared__reload_changed_timer'
+    register: '__shared__reload_changed_timers_status_result'
+
+  - name: 'systemctl stop {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.systemd:
+      name: '{{ item["shared__reload_changed_timer"] }}'
+      scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
+      state: 'stopped'
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ __shared__reload_changed_timers_status_result["results"] }}'
+    loop_control:
+      label: '{{ item["shared__reload_changed_timer"] }}'
+    when:
+      - 'item["status"]["ActiveState"] | d("inactive") == "active"'
+
+  - name: 'systemctl disable {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.systemd:
+      name: '{{ item["shared__reload_changed_timer"] }}'
+      scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
+      enabled: false
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ __shared__reload_changed_timers_status_result["results"] }}'
+    loop_control:
+      label: '{{ item["shared__reload_changed_timer"] }}'
+    when:
+      - 'item["status"]["UnitFileState"] | d("disabled") == "enabled"'
+
+  - name: 'systemctl daemon-reload'
+    ansible.builtin.systemd:
+      daemon_reload: true
+      scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+
+  - name: 'systemctl enable {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.systemd:
+      name: '{{ item["shared__reload_changed_timer"] }}'
+      scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
+      enabled: true
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ __shared__reload_changed_timers_status_result["results"] }}'
+    loop_control:
+      label: '{{ item["shared__reload_changed_timer"] }}'
+    when:
+      - 'item["status"]["UnitFileState"] | d("disabled") == "enabled"'
+
+  - name: 'systemctl start {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.systemd:
+      name: '{{ item["shared__reload_changed_timer"] }}'
+      scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
+      state: 'started'
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ __shared__reload_changed_timers_status_result["results"] }}'
+    loop_control:
+      label: '{{ item["shared__reload_changed_timer"] }}'
+    when:
+      - 'item["status"]["ActiveState"] | d("inactive") == "active"'
+
+  when:
+    - 'shared__reload_changed_timers | length > 0'

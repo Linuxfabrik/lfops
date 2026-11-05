@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'reload_changed_timers' sub-scenario, run with
+# `molecule test --scenario-name shared/reload_changed_timers`.
+#
+# The task file belongs to the `shared` role, which has no playbook of its own, so the scenario
+# calls it directly with a timer of its own instead of the roles that use it: their services
+# would install updates or reboot the test VM when the timer fires.

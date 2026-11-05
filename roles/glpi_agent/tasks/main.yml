@@ -151,7 +151,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__glpi_agent__database_inventory_timer_unit_result'
     notify: 'glpi_agent: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__glpi_agent__database_inventory_timer_unit_result is changed) | ternary(["glpi-agent-database-inventory.timer"], [])
+        }}'
 
   - name: 'systemctl enable --now glpi-agent-database-inventory.timer'
     ansible.builtin.systemd:

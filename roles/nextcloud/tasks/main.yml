@@ -571,6 +571,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__nextcloud__jobs_timer_result'
     notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'php occ config:app:get core backgroundjobs_mode'
@@ -622,6 +623,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__nextcloud__app_update_timer_result'
     notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-scan-files.service'
@@ -642,6 +644,7 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__nextcloud__scan_files_timer_result'
     notify: 'nextcloud: systemctl daemon-reload'
 
   - name: 'Deploy /etc/systemd/system/nextcloud-ldap-show-remnants.service'
@@ -662,7 +665,20 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__nextcloud__ldap_show_remnants_timer_result'
     notify: 'nextcloud: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__nextcloud__jobs_timer_result is changed) | ternary(["nextcloud-jobs.timer"], []) +
+          (__nextcloud__app_update_timer_result is changed) | ternary(["nextcloud-app-update.timer"], []) +
+          (__nextcloud__scan_files_timer_result is changed) | ternary(["nextcloud-scan-files.timer"], []) +
+          (__nextcloud__ldap_show_remnants_timer_result is changed) | ternary(["nextcloud-ldap-show-remnants.timer"], [])
+        }}'
 
   - name: 'Deploy /usr/local/bin/nextcloud-ldap-show-remnants'
     ansible.builtin.template:
