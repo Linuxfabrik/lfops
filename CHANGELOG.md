@@ -223,6 +223,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: notify_push waits for MariaDB, Redis and Valkey at boot and restarts after a failure, instead of staying down when it started before the database was ready.
 * **role:nodejs**: `nodejs__dnf_module_stream` works on RHEL 10, which has no modules, by installing the versioned package such as `nodejs24`. On RHEL 8 and 9 it no longer reports a change on every run, and on Debian and Ubuntu it no longer makes the run fail ([#374](https://github.com/Linuxfabrik/lfops/issues/374)).
 * **role:opensearch**: Heap and environment settings take effect on Debian and Ubuntu, where the role wrote them to `/etc/sysconfig/opensearch` instead of `/etc/default/opensearch` ([#512](https://github.com/Linuxfabrik/lfops/issues/512)).
 * **role:icingaweb2_module_vspheredb**: On RHEL 10, the SELinux file context for the daemon's runtime directory is set instead of aborting the run with `conflicts with equivalency rule '/var/run /run'`.
