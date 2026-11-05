@@ -65,6 +65,18 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # The audit has to run after the reboot window of schedule_reboot (04:xx), otherwise the
+    # report from before the reboot keeps KRNL-5830 alive until the next audit.
+    - name: 'systemctl show lynis.timer --property=TimersCalendar' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show lynis.timer --property=TimersCalendar'
+      changed_when: false
+      register: '__molecule__lynis_timer_calendar_result'
+
+    - name: 'Assert that lynis.timer fires at 06:xx'
+      ansible.builtin.assert:
+        that: '__molecule__lynis_timer_calendar_result["stdout"] is search("OnCalendar=\\*-\\*-\\* 06:")'
+        fail_msg: '{{ __molecule__lynis_timer_calendar_result["stdout"] }}'
+
     # The Lynis Service Set of the monitoring plugins expects lynis.service to be static, that is
     # started by the timer only and never enabled on its own.
     - name: 'systemctl is-enabled lynis.service' # noqa command-instead-of-module (read-only state query)
