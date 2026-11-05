@@ -39,9 +39,27 @@ aide__rules__role_var:
     attributes: 'NORMAL'
   - path: '/lib64'
     attributes: 'NORMAL'
+  # Not in the shipped list. Service users such as those of the rocketchat and podman_containers
+  # roles have their home below /opt. Rootless podman keeps its container storage there: every
+  # container start rewrites db.sql, the locks and the volatile-*.json files, and every new image
+  # adds and removes layers. Podman verifies the images by their digest itself.
+  - path: '/opt/[^/]+/\.local/share/containers'
+    type: 'negative'
+  # Not in the shipped list. Like the dot files of root below, the shell history of a service user
+  # changes with every login, so only its permissions are checked. Has to come before '/opt',
+  # aide applies the first matching rule of a directory.
+  - path: '/opt/[^/]+/\.bash_history$'
+    attributes: 'PERMS'
   # Monitor /opt selectively to avoid noise from auto-updating applications
   - path: '/opt'
     attributes: 'CONTENT'
+  # Not in the shipped list. runsv of GitLab's omnibus package writes the pid and the state of
+  # each service here whenever it starts it, and puma its own pid and state below /opt/gitlab/var.
+  # The run scripts in /opt/gitlab/sv stay covered.
+  - path: '/opt/gitlab/sv/[^/]+/(log/)?supervise'
+    type: 'negative'
+  - path: '/opt/gitlab/var'
+    type: 'negative'
   - path: '/usr'
     attributes: 'NORMAL'
   # These are too volatile
@@ -79,6 +97,10 @@ aide__rules__role_var:
   - path: '/root/\.gnupg/.*\.lock$'
     type: 'negative'
   - path: '/root/\.gnupg/.*/\.#lk'
+    type: 'negative'
+  # Not in the shipped list. mongosh, which the mongodb role and its mongodb-dump.service run as
+  # root, writes a log file per session here and removes the old ones itself.
+  - path: '/root/\.mongodb/mongosh'
     type: 'negative'
   - path: '/root'
     attributes: 'NORMAL'
@@ -284,6 +306,15 @@ aide__rules__role_var:
     attributes: 'NORMAL'
 
   # Log directory
+  # Not in the shipped list. dnf rotates its logs itself by renaming them (log_size, log_rotate in
+  # dnf.conf; RotatingFileHandler in dnf/logging.py, rotating_file_logger.cpp in dnf5), and the
+  # file it starts gets the SELinux user of whoever runs dnf: `unconfined_u` from an SSH session or
+  # Ansible, `system_u` from a systemd unit. With every rotation the names move on, and with them
+  # the SELinux user that LOG checks. Seen with dnf 4.7 on Rocky 8 and dnf 4.20 on Rocky 10. Has
+  # to come before '/var/log', aide applies the first matching rule of a directory. Rule order
+  # verified with aide 0.16 on Rocky 8 and 0.19.2 on Rocky 9 and 10.
+  - path: '/var/log/dnf5?\.(librepo\.|rpm\.)?log'
+    attributes: 'LOG-selinux-xattrs'
   # Not in the shipped list. The link count of a directory follows its subdirectories, so a package
   # that adds one below /var/log would be reported, although ANF allows the addition itself.
   - path: '/var/log$'
