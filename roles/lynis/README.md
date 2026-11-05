@@ -53,8 +53,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * When `lynis.timer` runs the audit, in the calendar event format of `systemd.time(7)`.
 * Type: String.
-* Default: `'*-*-* 02:{{ 59 | random(seed=inventory_hostname) }}'`
-* Deviates from the upstream default `daily` (midnight, randomized by up to 30 minutes): the audit runs at a fixed minute per host, so the results are in place at a predictable time.
+* Default: `'*-*-* 06:{{ 59 | random(seed=inventory_hostname) }}'`
+* Deviates from the upstream default `daily` (midnight, randomized by up to 30 minutes): the audit runs at a fixed minute per host, so the results are in place at a predictable time. It runs after the reboot window of the `schedule_reboot` role (04:xx), so a report from before the reboot does not keep findings like KRNL-5830 ("Reboot of system is most likely needed") alive for a whole day.
 
 `lynis__skip_tests__host_var` / `lynis__skip_tests__group_var`
 

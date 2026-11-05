@@ -24,3 +24,7 @@ postfix__sender_canonicals__host_var:
 setup_basic__skip_duplicity: true
 setup_basic__skip_repo_icinga: true
 setup_basic__skip_icinga2_agent: true
+
+# Not the default on purpose: the 50-redhat.conf of the package sets the default value as well,
+# so only the non-default value proves that the variable reaches sshd on RHEL 9 and newer.
+sshd__gssapi_authentication: false
