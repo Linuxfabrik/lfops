@@ -438,6 +438,9 @@
     check_mode: false
     register: '__nextcloud__app_list_result'
 
+  # The role defaults apply in full on a fresh installation only. Afterwards, the Nextcloud admin
+  # may enable or disable apps, and the role keeps only the inventory entries and
+  # __nextcloud__apps_enforced. Undefined when the installer did not run in this play (tags).
   - name: 'Manage Nextcloud apps'
     linuxfabrik.lfops.nextcloud_occ_app:
       name: '{{ item["name"] }}'
@@ -446,7 +449,20 @@
       installed_apps_json: '{{ __nextcloud__app_list_result["stdout"] | from_json }}'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
-    loop: '{{ nextcloud__apps__combined_var }}'
+    loop: '{{
+        nextcloud__apps__combined_var
+        if __nextcloud__install_result | d({}) is changed
+        else nextcloud__apps__combined_var | selectattr("name", "in", __nextcloud__apps_managed)
+      }}'
+    vars:
+      __nextcloud__apps_managed: '{{
+          __nextcloud__apps_enforced +
+          (
+            nextcloud__apps__dependent_var +
+            nextcloud__apps__group_var +
+            nextcloud__apps__host_var
+          ) | map(attribute="name") | list
+        }}'
     register: '__nextcloud__apps_result'
 
   # Apps installed just now miss the file contexts that differ from their directory, such as bin_t
@@ -467,6 +483,7 @@
     check_mode: false
     register: '__nextcloud__config_list_result'
 
+  # Same as for the apps above.
   - name: 'Set Nextcloud app settings'
     linuxfabrik.lfops.nextcloud_occ_app_config:
       app: '{{ (item["key"] | split)[0] }}'
@@ -477,7 +494,20 @@
       installed_config_json: '{{ __nextcloud__config_list_result["stdout"] | from_json }}'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
-    loop: '{{ nextcloud__app_configs__combined_var }}'
+    loop: '{{
+        nextcloud__app_configs__combined_var
+        if __nextcloud__install_result | d({}) is changed
+        else nextcloud__app_configs__combined_var | selectattr("key", "in", __nextcloud__app_configs_managed)
+      }}'
+    vars:
+      __nextcloud__app_configs_managed: '{{
+          __nextcloud__app_configs_enforced +
+          (
+            nextcloud__app_configs__dependent_var +
+            nextcloud__app_configs__group_var +
+            nextcloud__app_configs__host_var
+          ) | map(attribute="key") | list
+        }}'
     register: '__nextcloud__app_configs_result'
 
   - name: 'restart {{ __nextcloud__php_fpm_service_name }}'

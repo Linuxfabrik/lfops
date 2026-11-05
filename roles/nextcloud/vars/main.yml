@@ -3,6 +3,33 @@
 # the archives, so only this pin ties a signature to Nextcloud.
 __nextcloud__gpg_key_fingerprint: '28806A878AE423A28372792ED75899B9A724937A'
 
+# On an existing installation, the role leaves the apps and app settings of
+# nextcloud__apps__role_var and nextcloud__app_configs__role_var to the Nextcloud admin, except
+# for the ones listed here, which it keeps enforcing on every run.
+#
+# App settings:
+# * dav buildCalendarSearchIndex: as a boolean, the dav repair step fails on every upgrade
+# * password_policy enforceHaveIBeenPwned, password_policy minLength: the password baseline
+# * preview jpeg_quality: stored as string, every JPEG preview fails
+#
+# Apps:
+# * admin_audit: the audit trail of an instance
+# * notify_push: the role sets it up right after the apps
+# * password_policy: the password baseline
+# * support: keeps the subscription record of an Enterprise instance current
+# * twofactor_totp: the second factor that twofactor_enforced relies on
+__nextcloud__app_configs_enforced:
+  - 'dav buildCalendarSearchIndex'
+  - 'password_policy enforceHaveIBeenPwned'
+  - 'password_policy minLength'
+  - 'preview jpeg_quality'
+__nextcloud__apps_enforced:
+  - 'admin_audit'
+  - 'notify_push'
+  - 'password_policy'
+  - 'support'
+  - 'twofactor_totp'
+
 # OS-specific values consumed by a *different* role that runs *earlier* in the same play (the
 # `__dependent_var` pattern). vars/<os>.yml would load too late for an earlier consumer, but
 # vars/main.yml is auto-loaded at play parse and is visible to every role in the play. The OS
