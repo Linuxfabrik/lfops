@@ -145,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:lynis**: The daily audit runs at 06:xx instead of 02:xx, after the reboot window, so a report from before the nightly reboot no longer warns about a pending reboot for a whole day.
 * **role:nextcloud**: The role removes the PHP extensions bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: the caches live in APCu, Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Icinga DB Web shows up to 65536 characters of a plugin output instead of 20000, so long check outputs are no longer cut off.
 * **role:aide, role:system_update**: AIDE always runs with the lowest CPU and I/O priority, also where the role and the update scripts call it directly, so it yields to everything else on the host.
