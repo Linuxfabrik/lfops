@@ -224,6 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nextcloud**: Nextcloud generates previews of JPEG images again, which failed because the role stored the JPEG preview quality as text instead of a number.
 * **role:monitoring_plugins**: On RHEL, a run no longer rewrites `/etc/dnf/plugins/versionlock.list`, which AIDE reported after every run ([#596](https://github.com/Linuxfabrik/lfops/issues/596)).
 * **role:system_update**: `--tags system_update:state` no longer aborts on an undefined variable.
 * **role:nextcloud**: notify_push waits for MariaDB, Redis and Valkey at boot and restarts after a failure, instead of staying down when it started before the database was ready.

@@ -251,6 +251,7 @@ nextcloud__version: 'latest-35'
 * Type: List of dictionaries.
 * Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
 * Deviates from the upstream default `'no'` for `support hide-app`: the Support section is hidden from the administration settings. Set it to `'no'` to enter an Enterprise subscription key there. The `support` app only accepts the string `'yes'`, not a boolean.
+* Deviates from the upstream default `80` for `preview jpeg_quality`: previews are generated at quality 60, as in the Nextcloud All-in-One image, which keeps them smaller.
 * Subkeys:
 
     * `key`:

@@ -33,8 +33,11 @@ nextcloud__app_configs__role_var:
     value: 12
     type: 'integer'
     state: 'present'
+  # Image::getJpegQuality() reads it with getValueInt(), which throws on a value stored as
+  # string, so no JPEG preview gets generated (verified against Nextcloud 35.0.2)
   - key: 'preview jpeg_quality'
-    value: '60'
+    value: 60  # upstream default: 80
+    type: 'integer'
     state: 'present'
   - key: 'privacy readableLocation'
     value: 'ch'
