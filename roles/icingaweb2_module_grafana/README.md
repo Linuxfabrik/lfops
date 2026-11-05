@@ -94,6 +94,12 @@ icingaweb2_module_grafana__version: 'v3.1.3'
 * Type: String.
 * Default: `'Default'`
 
+`icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config`
+
+* Keep this host out of runs with the `icingaweb2_module_grafana:monitoring_plugins_graphs` tag, for example on a host that maintains its own `/etc/icingaweb2/modules/grafana/graphs.ini`. This also skips the deployment of `icingaweb2_module_grafana__custom_graphs_config`.
+* Type: Bool.
+* Default: `false`
+
 `icingaweb2_module_grafana__theme`
 
 * The theme for the Grafana graphs. Possible options:
@@ -126,6 +132,7 @@ icingaweb2_module_grafana__custom_graphs_config: |-
   dashboarduid = "default"
   timerange = "7d"
 icingaweb2_module_grafana__default_dashboard: 'Default'
+icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config: true
 icingaweb2_module_grafana__theme: 'light'
 icingaweb2_module_grafana__url: 'https://monitoring.example.com/grafana'
 ```
