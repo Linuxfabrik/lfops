@@ -50,7 +50,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__clamav__clamdscan_timer_result'
     notify: 'clamav: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__clamav__clamdscan_timer_result is changed) | ternary(["clamav-clamdscan.timer"], [])
+        }}'
 
   - name: 'Deploy /usr/local/bin/clamav-virusevent.sh'
     ansible.builtin.template:

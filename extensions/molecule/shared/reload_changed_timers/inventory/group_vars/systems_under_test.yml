@@ -1,0 +1,9 @@
+# The timer under test, once in the system manager and once in the manager of a lingering user.
+# `user` is passed to reload-changed-timers.yml as `shared__reload_changed_timers_user`.
+__molecule__timers:
+  - runs_file: '/var/tmp/molecule-count.runs'
+    unit_dir: '/etc/systemd/system'
+    user: ''
+  - runs_file: '/var/tmp/molecule-count-user.runs'
+    unit_dir: '/home/molecule-timers/.config/systemd/user'
+    user: 'molecule-timers'

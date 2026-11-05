@@ -345,6 +345,15 @@
       mode: 0o644
     register: '__wordpress__cron_timer_result'
 
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__wordpress__cron_timer_result is changed) | ternary(["wordpress-cron-" ~ __wordpress__instance ~ ".timer"], [])
+        }}'
+
   - name: 'systemctl enable wordpress-cron-{{ __wordpress__instance }}.timer --now'
     ansible.builtin.systemd:
       name: 'wordpress-cron-{{ __wordpress__instance }}.timer'
@@ -381,6 +390,15 @@
       group: 'root'
       mode: 0o644
     register: '__wordpress__core_minor_update_timer_result'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__wordpress__core_minor_update_timer_result is changed) | ternary(["wordpress-core-minor-update-" ~ __wordpress__instance ~ ".timer"], [])
+        }}'
 
   - name: 'systemctl {{ wordpress__timer_core_minor_update_enabled | bool | ternary("enable", "disable") }} wordpress-core-minor-update-{{ __wordpress__instance }}.timer --now'
     ansible.builtin.systemd:

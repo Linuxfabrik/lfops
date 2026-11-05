@@ -133,7 +133,17 @@
       owner: 'root'
       group: 'root'
       mode: 0o644
+    register: '__influxdb__dump_timer_result'
     notify: 'influxdb: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__influxdb__dump_timer_result is changed) | ternary(["influxdb-dump.timer"], [])
+        }}'
 
   - name: 'Deploy /etc/systemd/system/influxdb-dump.service'
     ansible.builtin.template:

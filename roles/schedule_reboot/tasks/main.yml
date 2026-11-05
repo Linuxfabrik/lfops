@@ -95,6 +95,17 @@
       mode: 0o644
     register: '__schedule_reboot__timer_result'
 
+  # before anything reloads systemd: a changed reboot time would otherwise reboot the host at
+  # once if a request is waiting in the spool
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__schedule_reboot__timer_result is changed) | ternary(["schedule-reboot.timer"], [])
+        }}'
+
   - name: 'Deploy /etc/tmpfiles.d/schedule-reboot.conf'
     ansible.builtin.template:
       backup: true

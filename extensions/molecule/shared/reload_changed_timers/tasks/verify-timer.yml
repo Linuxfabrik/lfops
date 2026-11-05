@@ -1,0 +1,178 @@
+# Checks one molecule-count.timer, given as `__molecule__timer` (see inventory/group_vars).
+
+- name: 'rm -f {{ __molecule__timer["runs_file"] }}'
+  ansible.builtin.file:
+    path: '{{ __molecule__timer["runs_file"] }}'
+    state: 'absent'
+
+# times are computed on the host, since OnCalendar= is in the host's time zone
+- name: 'date --date=now+6seconds +%H:%M:%S'
+  ansible.builtin.command: 'date --date=now+6seconds +%H:%M:%S'
+  register: '__molecule__first_time_result'
+  changed_when: false
+
+# 1. let the timer run once, so that systemd knows a last run
+- name: 'Schedule molecule-count.timer a few seconds ahead'
+  ansible.builtin.copy:
+    content: |
+      [Timer]
+      OnCalendar=*-*-* {{ __molecule__first_time_result['stdout'] }}
+      AccuracySec=1s
+
+      [Install]
+      WantedBy=timers.target
+    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    owner: '{{ __molecule__timer["user"] | d("root", true) }}'
+    group: '{{ __molecule__timer["user"] | d("root", true) }}'
+    mode: 0o644
+
+- name: 'systemctl daemon-reload; systemctl restart molecule-count.timer'
+  ansible.builtin.systemd:
+    name: 'molecule-count.timer'
+    scope: '{{ (__molecule__timer["user"] | length > 0) | ternary("user", "system") }}'
+    state: 'restarted'
+    daemon_reload: true
+  become_user: '{{ __molecule__timer["user"] | d("root", true) }}'
+
+- name: 'Wait for the first run'
+  ansible.builtin.command: 'cat {{ __molecule__timer["runs_file"] }}'
+  register: '__molecule__first_run_result'
+  changed_when: false
+  failed_when: false
+  retries: 20
+  delay: 2
+  until: '__molecule__first_run_result["stdout_lines"] | d([]) | length == 1'
+
+# 2. control: a plain daemon-reload runs the service at once
+- name: 'date --date=@<first run + 2s> +%H:%M:%S'
+  ansible.builtin.command: 'date --date=@{{ __molecule__first_run_result["stdout_lines"][0] | int + 2 }} +%H:%M:%S'
+  register: '__molecule__control_time_result'
+  changed_when: false
+
+- name: 'Move the schedule between the last run and now, with a plain daemon-reload'
+  ansible.builtin.copy:
+    content: |
+      [Timer]
+      OnCalendar=*-*-* {{ __molecule__control_time_result['stdout'] }}
+      AccuracySec=1s
+
+      [Install]
+      WantedBy=timers.target
+    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    owner: '{{ __molecule__timer["user"] | d("root", true) }}'
+    group: '{{ __molecule__timer["user"] | d("root", true) }}'
+    mode: 0o644
+
+- name: 'Wait until the new schedule lies in the past'
+  ansible.builtin.wait_for:
+    timeout: 4
+
+- name: 'systemctl daemon-reload'
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: '{{ (__molecule__timer["user"] | length > 0) | ternary("user", "system") }}'
+  become_user: '{{ __molecule__timer["user"] | d("root", true) }}'
+
+- name: 'Assert that the plain daemon-reload ran the service at once'
+  ansible.builtin.command: 'cat {{ __molecule__timer["runs_file"] }}'
+  register: '__molecule__control_result'
+  changed_when: false
+  retries: 10
+  delay: 1
+  until: '__molecule__control_result["stdout_lines"] | length == 2'
+
+# 3. the same through reload-changed-timers.yml must not run it
+- name: 'date --date=@<last run + 2s> +%H:%M:%S'
+  ansible.builtin.command: 'date --date=@{{ __molecule__control_result["stdout_lines"][-1] | int + 2 }} +%H:%M:%S'
+  register: '__molecule__fix_time_result'
+  changed_when: false
+
+- name: 'Move the schedule between the last run and now again'
+  ansible.builtin.copy:
+    content: |
+      [Timer]
+      OnCalendar=*-*-* {{ __molecule__fix_time_result['stdout'] }}
+      AccuracySec=1s
+
+      [Install]
+      WantedBy=timers.target
+    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    owner: '{{ __molecule__timer["user"] | d("root", true) }}'
+    group: '{{ __molecule__timer["user"] | d("root", true) }}'
+    mode: 0o644
+  register: '__molecule__changed_timer_result'
+
+- name: 'Wait until the new schedule lies in the past'
+  ansible.builtin.wait_for:
+    timeout: 4
+
+- name: 'Reload the changed timer through reload-changed-timers.yml'
+  ansible.builtin.include_role:
+    name: 'linuxfabrik.lfops.shared'
+    tasks_from: 'reload-changed-timers.yml'
+  vars:
+    shared__reload_changed_timers: '{{
+        (__molecule__changed_timer_result is changed) | ternary(["molecule-count.timer"], [])
+      }}'
+    shared__reload_changed_timers_user: '{{ __molecule__timer["user"] }}'
+
+- name: 'Wait whether the service runs'
+  ansible.builtin.wait_for:
+    timeout: 5
+
+- name: 'cat {{ __molecule__timer["runs_file"] }}'
+  ansible.builtin.command: 'cat {{ __molecule__timer["runs_file"] }}'
+  register: '__molecule__after_fix_result'
+  changed_when: false
+
+- name: 'systemctl show molecule-count.timer'
+  ansible.builtin.systemd:
+    name: 'molecule-count.timer'
+    scope: '{{ (__molecule__timer["user"] | length > 0) | ternary("user", "system") }}'
+  become_user: '{{ __molecule__timer["user"] | d("root", true) }}'
+  register: '__molecule__timer_status_result'
+
+- name: 'Assert that the service did not run and the timer is back, waiting for tomorrow'
+  ansible.builtin.assert:
+    that:
+      - '__molecule__after_fix_result["stdout_lines"] | length == 2'
+      - '__molecule__timer_status_result["status"]["ActiveState"] == "active"'
+      - '__molecule__timer_status_result["status"]["UnitFileState"] == "enabled"'
+      # unloading dropped the last run, which only systemd's own runs set
+      - '__molecule__timer_status_result["status"]["LastTriggerUSec"] | d("") in ["", "n/a", "0"]'
+    fail_msg: >-
+      runs: {{ __molecule__after_fix_result["stdout_lines"] | length }},
+      ActiveState: {{ __molecule__timer_status_result["status"]["ActiveState"] }},
+      UnitFileState: {{ __molecule__timer_status_result["status"]["UnitFileState"] }},
+      LastTriggerUSec: {{ __molecule__timer_status_result["status"]["LastTriggerUSec"] | d("") }}
+
+# 4. back to the converge state for the idempotence step
+- name: 'Restore molecule-count.timer as converged'
+  ansible.builtin.copy:
+    content: |
+      [Timer]
+      OnCalendar=*-*-* 23:59:00
+      AccuracySec=1s
+
+      [Install]
+      WantedBy=timers.target
+    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    owner: '{{ __molecule__timer["user"] | d("root", true) }}'
+    group: '{{ __molecule__timer["user"] | d("root", true) }}'
+    mode: 0o644
+  register: '__molecule__restored_timer_result'
+
+- name: 'Reload the restored timer through reload-changed-timers.yml'
+  ansible.builtin.include_role:
+    name: 'linuxfabrik.lfops.shared'
+    tasks_from: 'reload-changed-timers.yml'
+  vars:
+    shared__reload_changed_timers: '{{
+        (__molecule__restored_timer_result is changed) | ternary(["molecule-count.timer"], [])
+      }}'
+    shared__reload_changed_timers_user: '{{ __molecule__timer["user"] }}'
+
+- name: 'rm -f {{ __molecule__timer["runs_file"] }}'
+  ansible.builtin.file:
+    path: '{{ __molecule__timer["runs_file"] }}'
+    state: 'absent'

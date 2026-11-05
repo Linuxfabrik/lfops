@@ -84,7 +84,23 @@
     when:
       - 'item["state"] | d("present") != "absent"'
     loop: '{{ systemd_unit__timers__combined_var }}'
+    register: '__systemd_unit__timers_result'
     notify: 'systemd_unit: systemctl daemon-reload'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          __systemd_unit__timers_result["results"]
+          | selectattr("changed", "defined")
+          | selectattr("changed")
+          | map(attribute="item")
+          | map(attribute="name")
+          | map("regex_replace", "$", ".timer")
+          | list
+        }}'
 
   tags:
     - 'systemd_unit'
