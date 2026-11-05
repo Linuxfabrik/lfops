@@ -249,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:lvm**: A run no longer writes an LVM metadata archive for every PV whose size did not change, which AIDE reported, and `--check` no longer reports such PVs as changed.
 * **role:monitoring_plugins**: The icons in IcingaWeb2 belong to root instead of the user ID of the Ansible controller user, and a run no longer rewrites all of them, which AIDE reported.
 * **role:mariadb_server**: A run no longer logs denied logins of `root`, and the `proxies_priv` warning goes away with `skip_name_resolve`, also after a change of the host name.
-* **role:sshd**: `sshd__x11_forwarding` takes effect on RHEL 9 and newer, where the `50-redhat.conf` of the package kept X11 forwarding on.
+* **role:sshd**: `sshd__gssapi_authentication` and `sshd__x11_forwarding` take effect on RHEL 9 and newer, where the `50-redhat.conf` of the package kept GSSAPI authentication and X11 forwarding on ([#354](https://github.com/Linuxfabrik/lfops/issues/354)).
 * **role:kernel_settings**: A run no longer fails on hosts whose kernel settings still contain a `sunrpc.*` value from an earlier run while the `sunrpc` module is not loaded.
 * **role:duplicity**: Swift backups work again on fresh installations, since the role installs `python-keystoneclient` into the virtual environment.
 * **role:aide**: The check no longer reports the rotation of the audit logs or a new directory below `/var/log`.
