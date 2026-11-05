@@ -4,6 +4,7 @@ system_update__mail_recipients_new_configfiles: '{{ mailto_root__to }}'
 system_update__mail_recipients_updates: '{{ mailto_root__to }}'
 system_update__mail_subject_hostname: '$(hostname --short)'
 system_update__mail_subject_prefix: ''
+system_update__notify_and_schedule_enabled: false
 # default: the morning before the regular update day, so the heads-up arrives
 # before the window. derived as the weekday preceding system_update__update_day;
 # for a multi-day or date-based update_day, set this explicitly.
@@ -12,15 +13,21 @@ system_update__notify_and_schedule_on_calendar: '{{
   }} 10:00'
 system_update__rocketchat_msg_suffix: ''
 system_update__security_enabled: true
-# the reboot window is owned by the schedule_reboot role; d() fallback keeps this
-# role usable if it is ever run without schedule_reboot in the play.
-system_update__security_on_calendar: '*-*-* {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'
+# four times a day, every 6 hours starting at the reboot window, so the first run each
+# day is followed by the reboot right away. the reboot window is owned by the
+# schedule_reboot role; d() fallback keeps this role usable if it is ever run without
+# schedule_reboot in the play.
+system_update__security_on_calendar: '*-*-* {%
+    for __offset in [0, 6, 12, 18] %}{{
+      "%02d" | format(((schedule_reboot__reboot_time__combined_var | d("04:00")).split(":")[0] | int + __offset) % 24)
+    }}{{ "" if loop.last else "," }}{%
+    endfor %}:{{ (schedule_reboot__reboot_time__combined_var | d("04:00")).split(":")[1] }}'
 # the security lane runs the same hooks as the regular one unless told otherwise.
-# set either to '' to keep the daily lane free of code the weekly lane runs.
+# set either to '' to keep the security lane free of code the regular lane runs.
 system_update__security_post_update_code: '{{ system_update__post_update_code | d("") }}'
 system_update__security_pre_update_code: '{{ system_update__pre_update_code | d("") }}'
 system_update__security_repos:
   - 'security'
-system_update__update_day: 'Tue'
+system_update__update_day: '*-*-*'
 system_update__update_enabled: true
 system_update__update_on_calendar: '{{ system_update__update_day }} {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'

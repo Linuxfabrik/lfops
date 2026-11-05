@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.system_update
 
-This role configures the server to do system updates. A weekly regular lane applies all available updates, and on Rocky Linux a daily security lane applies only security hot-fixes from the dedicated `security` repository. Both run at one configurable maintenance window per host and reboot the host afterwards if an update requires it. A `notify-and-schedule` script informs the administrators (via email or [Rocket.Chat](https://rocket.chat/)) when and which updates are pending.
+This role configures the server to do system updates. A daily regular lane applies all available updates, and on Rocky Linux a security lane applies only security hot-fixes from the dedicated `security` repository four times a day. Updates that require a reboot are followed by one at a configurable maintenance window per host. The administrators are informed (via email or [Rocket.Chat](https://rocket.chat/)) about the applied updates, reboots and failures. For weekly updates, an optional `notify-and-schedule` script announces the pending updates the day before.
 
 Reboots are not performed by the update scripts themselves. They are delegated to the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role: an update that needs a reboot drops a request into that role's spool, and `schedule_reboot` reboots the host once, at the window.
 
@@ -10,15 +10,17 @@ Reboots are not performed by the update scripts themselves. They are delegated t
 
 ## How the Role Behaves
 
-* **Updates run at the reboot window.** The regular lane (weekly) and the Rocky security lane (daily) both run at the maintenance window defined by `schedule_reboot__reboot_time__*` (the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role). When an update needs a reboot it drops a request into that role's spool; the update unit is ordered before the reboot actor, so the reboot waits for the update to finish before it runs.
+* **Updates run at the reboot window.** The regular lane runs daily at the maintenance window defined by `schedule_reboot__reboot_time__*` (the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) role). When an update needs a reboot it drops a request into that role's spool; the update unit is ordered before the reboot actor, so the reboot waits for the update to finish before it runs.
+* **The Rocky security lane runs four times a day.** Every 6 hours, starting at the maintenance window, for example at 04:12, 10:12, 16:12 and 22:12. A hot-fix installed outside the window that needs a reboot is followed by the reboot at the next window, not right away.
+* **Pending updates are not announced by default.** With daily updates there is no time left for a heads-up. For weekly updates, set `system_update__update_day` to a weekday and `system_update__notify_and_schedule_enabled: true`; the announcement then arrives the day before.
 * **The regular lane only reports when it actually changed something.** On an update day where nothing was pending, it still checks whether a reboot is outstanding, but sends no "System updated without Reboot" mail. The mail it does send lists the packages of that run, not of an earlier one.
-* **The security lane installs the hot-fixes together with what they need.** It installs exactly the versions the `security` repository has updates for, and resolves them with all enabled repositories. A hot-fix that requires a newer package from BaseOS or AppStream, such as a kernel that needs a newer `linux-firmware` on an older Rocky 8 release, pulls in that package too. Other pending updates are left to the weekly regular lane.
+* **The security lane installs the hot-fixes together with what they need.** It installs exactly the versions the `security` repository has updates for, and resolves them with all enabled repositories. A hot-fix that requires a newer package from BaseOS or AppStream, such as a kernel that needs a newer `linux-firmware` on an older Rocky 8 release, pulls in that package too. Other pending updates are left to the regular lane.
 * **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and requests no reboot. Turn the lane off entirely with `system_update__security_enabled: false`.
-* **The update hooks run in both lanes, but only around a real transaction.** `system_update__pre_update_code` and `system_update__post_update_code` are run by the regular lane and, by default, by the security lane too. The security lane fires daily and exits on most days without installing anything, so it reaches the hooks only once the `security` repository actually has hot-fixes pending. Code that aborts the update or reports a failed pre-condition therefore stays quiet on the days there is nothing to install. Where a daily hot-fix does not warrant what a weekly full update does, `system_update__security_pre_update_code` and `system_update__security_post_update_code` override the security lane's half, `''` included.
+* **The update hooks run in both lanes, but only around a real transaction.** `system_update__pre_update_code` and `system_update__post_update_code` are run by the regular lane and, by default, by the security lane too. The security lane fires four times a day and exits on most runs without installing anything, so it reaches the hooks only once the `security` repository actually has hot-fixes pending. Code that aborts the update or reports a failed pre-condition therefore stays quiet on the runs there is nothing to install. Where a hot-fix does not warrant what a full update does, `system_update__security_pre_update_code` and `system_update__security_post_update_code` override the security lane's half, `''` included.
 * **The reboot notification says why.** The notification sent when the host reboots lists what asked for the reboot: the `needs-restarting` hint on Rocky, and on Debian and Ubuntu the packages from `/run/reboot-required.pkgs` and the `needrestart` summary. This also holds for a reboot carried over from an earlier window.
 * **Unused kernels are removed before the update on Debian and Ubuntu.** `apt-get upgrade` installs every new kernel but never removes one, so the regular lane first removes the kernel packages apt lists as auto-removable, the same way unattended-upgrades does with `Remove-Unused-Kernel-Packages`. apt keeps the running and the newest kernel; held packages, the packages of the running kernel and anything other than versioned kernel packages are never removed. If the removal would remove or install anything beyond that, it is skipped. The update mail lists the removed packages. On Rocky, dnf's `installonly_limit` does the same within the transaction.
 * **Packages the update leaves unused are removed on Debian and Ubuntu.** After the upgrade, the regular lane removes the packages that became auto-removable in this run, typically libraries replaced by a renamed package, like unattended-upgrades does with `Remove-New-Unused-Dependencies`, and with the same checks as the kernel removal. Packages that were unused before the run stay installed; remove them with `apt autoremove` if they are not needed.
-* **An interrupted dpkg is repaired on Debian and Ubuntu.** If an earlier dpkg run was cut short, for example by a crash or a reboot from outside the window, the regular lane runs `dpkg --configure -a` before the update, keeping the existing configuration files, instead of failing every week until someone repairs the host by hand.
+* **An interrupted dpkg is repaired on Debian and Ubuntu.** If an earlier dpkg run was cut short, for example by a crash or a reboot from outside the window, the regular lane runs `dpkg --configure -a` before the update, keeping the existing configuration files, instead of failing on every run until someone repairs the host by hand.
 * **The regular lane waits for the package manager.** If another process holds the apt or dpkg lock, for example an Ansible run or an admin in `apt`, the regular lane and its update check (`notify-and-schedule`) wait up to 10 minutes for it on Debian and Ubuntu instead of failing. If the update check still cannot refresh the package lists, it sends a "System update check failed" mail instead of announcing updates from stale lists.
 * **A failed update stops the run.** A metadata refresh, a removal of packages or an upgrade that exits non-zero sends a "System update failed" mail with the error output and ends the run, on both families. Nothing downstream happens: no AIDE re-baseline, no reboot request, and no success mail for a host that is left half-configured.
 * **AIDE is re-baselined only when a check right before the update was clean.** If the host runs the AIDE check of the [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide) role (`aidecheck.timer` is active), the update runs an AIDE check before it installs anything, and if the update changed packages and that check was clean, it refreshes the AIDE database afterwards and starts the check again, so the next check does not flag every file the update touched. This applies to the regular and the security lane alike. If the check reports changes, the database is left untouched and the report is kept at `/var/log/aide/aide.log-pre-system-update` (regular lane) or `/var/log/aide/aide.log-pre-security-update` (security lane): drift that predates the update, an intrusion included, is never accepted as the new baseline. If the check cannot run at all, for example without an AIDE database, the database is left untouched as well, and a separate "AIDE check failed" mail quotes the error.
@@ -69,7 +71,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `system_update__mail_recipients_updates`
 
-* A list of email recipients to notify about the expected updates and the report of the installed updates.
+* A list of email recipients to notify about the expected updates (if enabled), the installed updates and failures.
 * Type: List of strings.
 * Default: `'{{ mailto_root__to }}'`
 
@@ -85,11 +87,17 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `''`
 
+`system_update__notify_and_schedule_enabled`
+
+* Enables or disables the informational "updates pending" notification (the `notify-and-schedule` timer), analogous to `systemctl enable/disable --now`. Meant for weekly updates, see `system_update__update_day`. Only takes effect if `system_update__update_enabled` is `true`.
+* Type: Bool.
+* Default: `false`
+
 `system_update__notify_and_schedule_on_calendar`
 
-* When the informational "updates pending" notification is sent. This is purely a heads-up; the update is applied later at the maintenance window. By default it is sent at 10:00 on the day before `system_update__update_day`, so it always arrives before the update runs. If you set a multi-day or date-based `system_update__update_day`, set this explicitly. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* When the informational "updates pending" notification is sent, if enabled by `system_update__notify_and_schedule_enabled`. This is purely a heads-up; the update is applied later at the maintenance window. By default it is sent at 10:00 on the day before a weekday set in `system_update__update_day`, so it arrives before the update runs. For any other `system_update__update_day`, such as the daily default, it falls back to Monday 10:00, so set this explicitly. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
-* Default: 10:00 on the day before `system_update__update_day` (for example `'Mon 10:00'` when the update day is `Tue`)
+* Default: 10:00 on the day before `system_update__update_day` (for example `'Mon 10:00'` when the update day is `Tue`), otherwise `'Mon 10:00'`
 
 `system_update__post_update_code`
 
@@ -123,19 +131,19 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `system_update__security_on_calendar`
 
-* When the security lane checks for and installs security hot-fixes. Defaults to the reboot window (`schedule_reboot__reboot_time__*`) so the reboot follows right after. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* When the security lane checks for and installs security hot-fixes. Defaults to four times a day, every 6 hours starting at the reboot window (`schedule_reboot__reboot_time__*`), so the first run of the day is followed by the reboot right after. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
-* Default: `'*-*-* {{ schedule_reboot__reboot_time__combined_var | d("04:00") }}'`
+* Default: every 6 hours starting at the reboot window, for example `'*-*-* 04,10,16,22:12'` for a window at `04:12`
 
 `system_update__security_post_update_code`
 
-* The codeblock the security lane executes after the hot-fixes have been installed and before a potential reboot. Set it to `''` to keep the daily lane free of code the weekly lane runs, or to a codeblock of its own to have the two lanes do different things.
+* The codeblock the security lane executes after the hot-fixes have been installed and before a potential reboot. Set it to `''` to keep the security lane free of code the regular lane runs, or to a codeblock of its own to have the two lanes do different things.
 * Type: String.
 * Default: `'{{ system_update__post_update_code | d("") }}'`
 
 `system_update__security_pre_update_code`
 
-* The codeblock the security lane executes before it installs the hot-fixes. Set it to `''` to keep the daily lane free of code the weekly lane runs, or to a codeblock of its own to have the two lanes do different things.
+* The codeblock the security lane executes before it installs the hot-fixes. Set it to `''` to keep the security lane free of code the regular lane runs, or to a codeblock of its own to have the two lanes do different things.
 * Type: String.
 * Default: `'{{ system_update__pre_update_code | d("") }}'`
 
@@ -147,9 +155,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `system_update__update_day`
 
-* The weekday on which the regular (weekly) update lane runs. Combined with the maintenance window to build the timer schedule, for example `Tue 04:00`. Defaults to `Tue` so the Monday notification (`system_update__notify_and_schedule_on_calendar`) arrives before the update. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* The day(s) on which the regular update lane runs. Combined with the maintenance window to build the timer schedule, for example `*-*-* 04:00` (daily) or `Tue 04:00` (weekly). For weekly updates with an announcement the day before, set a weekday here and enable `system_update__notify_and_schedule_enabled`. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
 * Type: String.
-* Default: `'Tue'`
+* Default: `'*-*-*'`
 
 `system_update__update_enabled`
 
@@ -176,6 +184,7 @@ system_update__mail_recipients_updates:
   - 'support@example.com'
 system_update__mail_subject_hostname: '$(hostname --long)'
 system_update__mail_subject_prefix: '001-'
+system_update__notify_and_schedule_enabled: true
 system_update__notify_and_schedule_on_calendar: 'mon *-*-01..07 10:00' # first monday of the month
 system_update__post_update_code: |-
   VAR='hello world'
@@ -193,8 +202,8 @@ system_update__pre_update_code: |-
 system_update__rocketchat_msg_suffix: '@administrator'
 system_update__rocketchat_url: 'https://chat.example.com/hooks/abcd1234'
 system_update__security_enabled: true
-system_update__security_on_calendar: '*-*-* 04:00'
-system_update__security_post_update_code: '' # a daily hot-fix does not warrant what the weekly lane does here
+system_update__security_on_calendar: '*-*-* 04,10,16,22:00'
+system_update__security_post_update_code: '' # a hot-fix does not warrant what the regular lane does here
 system_update__security_pre_update_code: |- # replaces system_update__pre_update_code, it does not add to it
   systemctl is-active --quiet pacemaker || exit 1
 system_update__security_repos:

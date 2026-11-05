@@ -19,7 +19,7 @@
 
 
 # Regular lane, deployed on all hosts:
-# - notify-and-schedule: informational "updates pending" mail
+# - notify-and-schedule: informational "updates pending" mail, off by default
 # - update-and-reboot:   applies all updates at the window, drops a reboot request if
 #                        needed. The reboot itself is handled by the schedule_reboot role.
 - block:
@@ -163,12 +163,6 @@
           (__system_update__security_timer_result is changed) | ternary(["security-update.timer"], [])
         }}'
 
-  tags:
-    - 'system_update'
-
-
-- block:
-
   # run daemon-reload as a regular task (not a handler) before the state block, so the
   # enable/start tasks act on the freshly deployed units. gated on any unit-file change
   # (service or timer, regular or security) to stay idempotent. skipped Rocky tasks
@@ -184,11 +178,20 @@
          __system_update__security_service_result is changed or
          __system_update__security_timer_result is changed'
 
-  - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
+  tags:
+    - 'system_update'
+
+
+- block:
+
+  # the announcement belongs to the regular lane: it is only armed if that lane is, too.
+  - name: 'systemctl {{ __system_update__notify_enabled | bool | ternary("enable", "disable") }} notify-and-schedule.timer --now'
     ansible.builtin.systemd:
       name: 'notify-and-schedule.timer'
-      state: '{{ system_update__update_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ system_update__update_enabled }}'
+      state: '{{ __system_update__notify_enabled | bool | ternary("started", "stopped") }}'
+      enabled: '{{ __system_update__notify_enabled | bool }}'
+    vars:
+      __system_update__notify_enabled: '{{ system_update__update_enabled | bool and system_update__notify_and_schedule_enabled | bool }}'
 
   - name: 'systemctl {{ system_update__update_enabled | bool | ternary("enable", "disable") }} update-and-reboot.timer --now'
     ansible.builtin.systemd:

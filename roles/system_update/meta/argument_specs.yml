@@ -60,6 +60,14 @@ argument_specs:
         default: ''
         description: 'Prefix shown in front of the hostname in the mail subject.'
 
+      system_update__notify_and_schedule_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Enables or disables the informational "updates pending" notification
+          (the notify-and-schedule timer). Meant for weekly updates.
+
       system_update__notify_and_schedule_on_calendar:
         type: 'str'
         required: false
@@ -104,7 +112,7 @@ argument_specs:
         required: false
         description: >-
           When the security lane checks for and installs security hot-fixes. See
-          systemd.time(7). Defaults to the reboot window.
+          systemd.time(7). Defaults to every 6 hours, starting at the reboot window.
 
       system_update__security_post_update_code:
         type: 'str'
@@ -134,9 +142,9 @@ argument_specs:
       system_update__update_day:
         type: 'str'
         required: false
-        default: 'Tue'
+        default: '*-*-*'
         description: >-
-          The weekday on which the regular (weekly) update lane runs. See
+          The day(s) on which the regular update lane runs, daily by default. See
           systemd.time(7).
 
       system_update__update_enabled:
