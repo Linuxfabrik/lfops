@@ -222,6 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:icingaweb2_module_vspheredb**: On RHEL 10, the SELinux file context for the daemon's runtime directory is set instead of aborting the run with `conflicts with equivalency rule '/var/run /run'`.
 * **role:redis**: Redis 8 from packages.redis.io loads the modules the package ships (JSON, Search, Bloom, TimeSeries), as its own configuration does; `redis__skip_packaged_modules: true` keeps them off. Redis restarts once ([#589](https://github.com/Linuxfabrik/lfops/issues/589)).
 * **role:redis**: Redis 8.0 starts with the deployed configuration and loads the modules of the installed Remi packages (`redis-json`, `redis-bloom`, `redis-timeseries`); the configuration loaded modules from paths that do not exist ([#346](https://github.com/Linuxfabrik/lfops/issues/346)).
 * **role:telegraf**: A `"` or `\` in a username or password no longer breaks the configuration.
