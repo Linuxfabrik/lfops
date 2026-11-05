@@ -1,0 +1,2 @@
+# The Redis 8.0 of the distribution ships no modules, so packaged.conf must not be deployed.
+redis__skip_repo_redis: true

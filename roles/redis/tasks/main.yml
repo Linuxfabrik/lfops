@@ -47,6 +47,48 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '{{ __redis__config_dir }}/{{ __redis__config_file }}'
 
+  # The packages.redis.io DEB ships its modules in /usr/lib/redis/modules and loads them from its
+  # own redis.conf, which the template replaces. The templates include __redis__module_dir, where
+  # the Remi module packages put their configs, so the modules get loaded from a file there. Remi
+  # installs to /usr/lib64, and the distribution packages ship no modules.
+  - name: 'find /usr/lib/redis/modules -name *.so'
+    ansible.builtin.find:
+      paths: '/usr/lib/redis/modules'
+      patterns: '*.so'
+    register: '__redis__packaged_modules_result'
+
+  - name: 'mkdir -p {{ __redis__module_dir }}'
+    ansible.builtin.file:
+      path: '{{ __redis__module_dir }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      state: 'directory'
+    when:
+      - '__redis__packaged_modules_result["files"] | length > 0'
+      - 'not redis__skip_packaged_modules | bool'
+
+  - name: 'Deploy {{ __redis__module_dir }}/packaged.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/redis/modules/packaged.conf.j2'
+      dest: '{{ __redis__module_dir }}/packaged.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'redis: restart redis'
+    when:
+      - '__redis__packaged_modules_result["files"] | length > 0'
+      - 'not redis__skip_packaged_modules | bool'
+
+  - name: 'rm -f {{ __redis__module_dir }}/packaged.conf'
+    ansible.builtin.file:
+      path: '{{ __redis__module_dir }}/packaged.conf'
+      state: 'absent'
+    notify: 'redis: restart redis'
+    when:
+      - '__redis__packaged_modules_result["files"] | length == 0 or redis__skip_packaged_modules | bool'
+
   - name: 'mkdir -p /etc/systemd/system/{{ __redis__service_name }}.d/'
     ansible.builtin.file:
       path: '/etc/systemd/system/{{ __redis__service_name }}.d/'

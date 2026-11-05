@@ -76,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:telegraf**: Add the `telegraf:configure` tag.
 * **role:redis**: Add template for Redis 8.10.
 * **role:nextcloud, playbook:setup_nextcloud**: The run aborts before it changes anything if `nextcloud__database_login` is missing or names the database user of the installed Nextcloud with another password, and tells how to read the login with `occ`. Until now a wrong password locked Nextcloud out of its database.
 * **module:systemd_credential**: `scope: 'user'` stores a credential for the services of an unprivileged user, such as a rootless Podman container, on hosts with systemd 256 or newer.
@@ -221,6 +222,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis**: Redis 8 from packages.redis.io loads the modules the package ships (JSON, Search, Bloom, TimeSeries), as its own configuration does; `redis__skip_packaged_modules: true` keeps them off. Redis restarts once ([#589](https://github.com/Linuxfabrik/lfops/issues/589)).
+* **role:redis**: Redis 8.0 starts with the deployed configuration and loads the modules of the installed Remi packages (`redis-json`, `redis-bloom`, `redis-timeseries`); the configuration loaded modules from paths that do not exist ([#346](https://github.com/Linuxfabrik/lfops/issues/346)).
+* **role:telegraf**: A `"` or `\` in a username or password no longer breaks the configuration.
+* **role:logstash**: `.rpmnew` files of `/etc/default/logstash` and `/etc/logstash/pipelines.yml` are removed after a package upgrade ([#515](https://github.com/Linuxfabrik/lfops/issues/515)).
+* **role:mongodb**: mongod keeps logging to `/var/log/mongodb/mongod.log` after the log rotation on RHEL; until now its log was lost until the next restart. The next run restarts mongod once ([#531](https://github.com/Linuxfabrik/lfops/issues/531)).
+* **role:mongodb**: `mongodb__conf_replication_oplog_size_mb` can be set as a number on Debian and Ubuntu; the run aborted with `object of type 'int' has no len()` ([#532](https://github.com/Linuxfabrik/lfops/issues/532)).
 * A changed schedule of a timer no longer runs its job right away when the new time already passed since the last run, for example system updates and reboots in the middle of the day after switching from weekly to daily (acme_sh, aide, clamav, duplicity, fangfrisch, gitlab_ce, glpi_agent, grav, influxdb, lynis, mariadb_server, matomo_import_logs, mongodb, moodle, nextcloud, podman_containers, postgresql_server, schedule_reboot, system_update, systemd_unit, wordpress).
 * **role:postgresql_server**: The role works with the community.postgresql collection 5.x, where it aborted with "Unsupported parameters ... port".
 * **plugin:uptimerobot_mwindow, role:uptimerobot**: Daily, weekly and monthly maintenance windows can be created again after UptimeRobot started to reject them with HTTP 400, changing the duration of a weekly window with several days works, and a failed API call names UptimeRobot's reason instead of only "Bad Request".
@@ -411,6 +418,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:telegraf**: The configuration, which contains credentials, and its backups are no longer world-readable (`0640 root:telegraf`).
 * **role:nextcloud**: The login of the Icinga2 API user that `nextcloud-update` uses is stored as a systemd credential, encrypted on RHEL 9 and newer, instead of in the script, and the role deletes the older copies of the script that still contain it.
 * **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
 * **role:nextcloud**: `/usr/local/bin/nextcloud-update` is readable by root only.

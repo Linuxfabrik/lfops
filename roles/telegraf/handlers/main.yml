@@ -5,7 +5,7 @@
 # `is not defined` covers a run that skips the state block (`--skip-tags telegraf:state`), where
 # the result is never registered.
 - name: 'telegraf: systemctl restart telegraf.service'
-  ansible.builtin.systemd:
+  ansible.builtin.service:
     name: 'telegraf.service'
     state: 'restarted'
   when:

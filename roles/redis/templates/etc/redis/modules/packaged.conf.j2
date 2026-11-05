@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# 2026110501
+
+# The modules the redis-server package ships, see redis__skip_packaged_modules.
+{% for module in __redis__packaged_modules_result['files'] | map(attribute='path') | sort %}
+loadmodule {{ module }}
+{% endfor %}

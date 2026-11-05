@@ -1,0 +1,104 @@
+# No InfluxDB here: a small HTTP server on the default URL records what telegraf really sends, which
+# proves that telegraf can read its configuration as its own user and that the settings arrive.
+- name: 'Verify telegraf'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  vars:
+    __molecule__expected_request: 'db=telegraf molecule:{{ telegraf__outputs_influxdb_password }}'
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that telegraf.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["telegraf.service"]["state"] == "running"'
+
+    - name: 'stat the files with credentials'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/etc/telegraf/telegraf.conf'
+        - '/etc/telegraf/telegraf.d/graylog.conf'
+      register: '__molecule__telegraf_stat_result'
+
+    - name: 'Assert that only root and telegraf can read the credentials'
+      ansible.builtin.assert:
+        that:
+          - 'item["stat"]["pw_name"] == "root"'
+          - 'item["stat"]["gr_name"] == "telegraf"'
+          - 'item["stat"]["mode"] == "0640"'
+        fail_msg: '{{ item["item"] }}: {{ item["stat"]["mode"] }} {{ item["stat"]["pw_name"] }}:{{ item["stat"]["gr_name"] }}'
+      loop: '{{ __molecule__telegraf_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    - name: 'grep database, skip_database_creation /etc/telegraf/telegraf.conf'
+      ansible.builtin.command: 'grep --extended-regexp "^  (database|skip_database_creation) = " /etc/telegraf/telegraf.conf'
+      register: '__molecule__telegraf_conf_result'
+      changed_when: false
+
+    - name: 'Assert that the rendered values are the defaults of the role'
+      ansible.builtin.assert:
+        that:
+          - '"  database = \"telegraf\"" in __molecule__telegraf_conf_result["stdout_lines"]'
+          - '"  skip_database_creation = true" in __molecule__telegraf_conf_result["stdout_lines"]'
+
+    - name: 'Deploy /tmp/molecule-influxdb.py'
+      ansible.builtin.copy:
+        dest: '/tmp/molecule-influxdb.py'
+        mode: 0o644
+        content: |
+          import base64
+          import http.server
+          import urllib.parse
+
+
+          class Handler(http.server.BaseHTTPRequestHandler):
+              def do_POST(self):
+                  self.rfile.read(int(self.headers.get('Content-Length', 0)))
+                  query = urllib.parse.urlparse(self.path).query
+                  database = urllib.parse.parse_qs(query).get('db', [''])[0]
+                  auth = self.headers.get('Authorization', 'Basic ').split()[1]
+                  credentials = base64.b64decode(auth).decode()
+                  with open('/tmp/molecule-influxdb.log', 'a') as log:
+                      log.write('db={} {}\n'.format(database, credentials))
+                  self.send_response(204)
+                  self.end_headers()
+
+              def log_message(self, format, *args):
+                  pass
+
+
+          http.server.HTTPServer(('127.0.0.1', 8086), Handler).serve_forever()
+
+    - name: 'rm -f /tmp/molecule-influxdb.log'
+      ansible.builtin.file:
+        path: '/tmp/molecule-influxdb.log'
+        state: 'absent'
+
+    - name: 'systemd-run python3 /tmp/molecule-influxdb.py'
+      ansible.builtin.command: 'systemd-run --collect --unit=molecule-influxdb {{ ansible_facts["python"]["executable"] }} /tmp/molecule-influxdb.py'
+      changed_when: true # starts the server
+
+    - name: 'Wait for the first metrics from telegraf'
+      ansible.builtin.wait_for:
+        path: '/tmp/molecule-influxdb.log'
+        search_regex: '^db='
+        timeout: 60
+
+    - name: 'cat /tmp/molecule-influxdb.log'
+      ansible.builtin.slurp:
+        src: '/tmp/molecule-influxdb.log'
+      register: '__molecule__telegraf_requests_result'
+
+    - name: 'Assert that telegraf wrote to the database with the configured credentials'
+      ansible.builtin.assert:
+        that: '__molecule__expected_request in (__molecule__telegraf_requests_result["content"] | b64decode)'
+        fail_msg: '{{ __molecule__telegraf_requests_result["content"] | b64decode }}'
+
+    - name: 'systemctl stop molecule-influxdb.service'
+      ansible.builtin.service:
+        name: 'molecule-influxdb.service'
+        state: 'stopped'
