@@ -23,12 +23,16 @@
   # the lock is lifted so the `state: latest` install below can update within
   # monitoring_plugins__version, and set again afterwards. Whether that changed anything is
   # reported by the lock task, so this intermediate step never reports a change.
+  # dnf 4 keeps the lock: its versionlock is a plugin, which the install below disables for its
+  # transaction. Lifting and setting the lock again would rewrite versionlock.list on every run,
+  # since `dnf versionlock add` writes a timestamp, and AIDE would report the file.
   - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins*'
     ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins*'
     changed_when: false
     failed_when: false # e.g. apt-mark unhold fails when the package is not known yet
     when:
       - 'not monitoring_plugins__skip_package_versionlock'
+      - 'ansible_facts["pkg_mgr"] != "dnf"'
 
   # if a step below fails, the always section sets the lock lifted above again. Only a lock that
   # existed before the run is restored: locking a package that is not installed does not work
@@ -39,6 +43,7 @@
       __monitoring_plugins__versionlock_restore: '{{ "linuxfabrik-monitoring-plugins" in __monitoring_plugins__versionlock_list_result["stdout"] | d("") }}'
     when:
       - 'not monitoring_plugins__skip_package_versionlock'
+      - 'ansible_facts["pkg_mgr"] != "dnf"'
 
   # refresh the apt cache so the following `state: latest` upgrade resolves
   # against current metadata, e.g. to roll out security updates. apt does not
@@ -60,6 +65,8 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
     register: '__monitoring_plugins__package_result'
+    when:
+      - 'ansible_facts["pkg_mgr"] != "dnf"'
 
   - name: 'install linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_suffix }}' # noqa package-latest
     ansible.builtin.package:
@@ -71,6 +78,23 @@
     register: '__monitoring_plugins__selinux_package_result'
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["pkg_mgr"] != "dnf"'
+
+  # Verified with dnf 4.20 on Rocky 10: with the versionlock plugin disabled, the transaction
+  # updates a locked package and leaves versionlock.list untouched.
+  - name: 'dnf install --disableplugin=versionlock linuxfabrik-monitoring-plugins{{ __monitoring_plugins__package_version_suffix }} linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_suffix }}' # noqa package-latest
+    ansible.builtin.dnf:
+      name:
+        - 'linuxfabrik-monitoring-plugins{{ __monitoring_plugins__package_version_suffix }}'
+        - 'linuxfabrik-monitoring-plugins-selinux{{ __monitoring_plugins__package_version_suffix }}'
+      state: 'latest' # use latest for the versionlock after
+      disable_plugin:
+        - 'versionlock'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+    register: '__monitoring_plugins__dnf_package_result'
+    when:
+      - 'ansible_facts["pkg_mgr"] == "dnf"'
 
   # A host switched from the source install to the package keeps what the source install placed
   # where the package places nothing. The harmful part is the library in
@@ -151,6 +175,7 @@
       __monitoring_plugins__versionlock_restore: false
     when:
       - 'not monitoring_plugins__skip_package_versionlock'
+      - 'ansible_facts["pkg_mgr"] != "dnf"'
 
   # the lock changed if there was none before, or if a package was updated (a dnf lock pins
   # the exact version). Every lock list names the package (dnf versionlock list, apt-mark
@@ -163,6 +188,27 @@
         or __monitoring_plugins__selinux_package_result is changed'
     when:
       - 'not monitoring_plugins__skip_package_versionlock'
+      - 'ansible_facts["pkg_mgr"] != "dnf"'
+
+  # dnf 4 only touches the lock if there was none, or if the install updated a package, since the
+  # lock pins the exact version. The old entry goes first, otherwise both versions stay listed.
+  - block:
+
+    - name: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins* # drop the lock of the previous version'
+      ansible.builtin.command: '{{ __monitoring_plugins__versionlock_unlock_command }} linuxfabrik-monitoring-plugins*'
+      changed_when: false # the lock task below reports the change
+      when:
+        - '"linuxfabrik-monitoring-plugins" in __monitoring_plugins__versionlock_list_result["stdout"] | d("")'
+
+    - name: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins*'
+      ansible.builtin.command: '{{ __monitoring_plugins__versionlock_lock_command }} linuxfabrik-monitoring-plugins*'
+      changed_when: true
+
+    when:
+      - 'not monitoring_plugins__skip_package_versionlock'
+      - 'ansible_facts["pkg_mgr"] == "dnf"'
+      - '"linuxfabrik-monitoring-plugins" not in __monitoring_plugins__versionlock_list_result["stdout"] | d("")
+        or __monitoring_plugins__dnf_package_result is changed'
 
   always:
 
