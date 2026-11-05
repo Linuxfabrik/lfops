@@ -53,7 +53,7 @@ Which Ansible role is proven to run on which OS?
 | glances                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | glpi_agent                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | grafana                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| grafana_grizzly                       |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| grafana_grizzly                       |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | grav                                  |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | graylog_datanode                      |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | graylog_server                        |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
@@ -61,28 +61,28 @@ Which Ansible role is proven to run on which OS?
 | hetzner_vm                            |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | hostname                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | icinga2_agent                         |  (x)   |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | Fedora 35                                    |
-| icinga2_master                        |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| icinga2_master                        |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | icinga_kubernetes                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
 | icinga_kubernetes_web                 |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingadb                              |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingadb_web                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2                            |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_businessprocess     |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| icingadb                              |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingadb_web                          |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2                            |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_businessprocess     |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | icingaweb2_module_company             |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | icingaweb2_module_cube                |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_director            |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_doc                 |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_director            |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_doc                 |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | icingaweb2_module_fileshipper         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | icingaweb2_module_generictts          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_grafana             |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_incubator           |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_jira                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_pdfexport           |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_reporting           |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_module_vspheredb           |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_grafana             |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_incubator           |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_jira                |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_pdfexport           |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_reporting           |  (x)   |  (x)   |   x    |  (x)   |    x    |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_module_vspheredb           |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | icingaweb2_module_x509                |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
-| icingaweb2_theme_linuxfabrik          |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
-| influxdb                              |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| icingaweb2_theme_linuxfabrik          |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
+| influxdb                              |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | infomaniak_vm                         |        |        |        |        |         |           |           |           | Fedora 35+                                   |
 | kdump                                 |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | keepalived                            |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
@@ -110,7 +110,7 @@ Which Ansible role is proven to run on which OS?
 | mod_maxminddb                         |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | mongodb                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | monitoring_plugins                    |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Debian 9, Fedora, SLES 15, SLES 16, Windows  |
-| monitoring_plugins_grafana_dashboards |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| monitoring_plugins_grafana_dashboards |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | moodle                                |   -    |   -    |   x    |   x    |   (x)   |           |           |           |                                              |
 | motd                                  |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | mount                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
@@ -143,10 +143,10 @@ Which Ansible role is proven to run on which OS?
 | repo_epel                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_gitlab_ce                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_gitlab_runner                    |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
-| repo_grafana                          |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_grafana                          |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | repo_graylog                          |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | repo_icinga                           |   x    |   x    |   x    |   x    |    x    |     x     |    (x)    |    (x)    | Fedora 43                                    |
-| repo_influxdb                         |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| repo_influxdb                         |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | repo_linuxfabrik                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 44, openSUSE Leap 15, SLES 15 and 16  |
 | repo_mariadb                          |   x    |   x    |   x    |   x    |    x    |    (x)    |     x     |    (x)    |                                              |
 | repo_mongodb                          |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
