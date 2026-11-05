@@ -1,0 +1,40 @@
+# RHEL 10 and newer have no modules. The alternative Node.js versions are separate packages
+# (`nodejs24`), which install `/usr/bin/node-24` etc. only, so the role links the unversioned
+# names. Verified with nodejs24 24.21.0 on Rocky 10.2.
+- block:
+
+  - name: 'Get the list of installed packages'
+    ansible.builtin.package_facts:  # yamllint disable-line rule:empty-values
+    check_mode: false # run task even if `--check` is specified
+
+  # The `nodejs` package owns `/usr/bin/node`, `/usr/bin/npm` and `/usr/bin/npx`.
+  - name: 'Assert that the nodejs package is not installed'
+    ansible.builtin.assert:
+      that:
+        - '"nodejs" not in ansible_facts["packages"]'
+      fail_msg: 'The nodejs package (the default Node.js version) is installed, which owns /usr/bin/node. Remove it with `dnf remove nodejs` before installing nodejs{{ __nodejs__dnf_module_stream }}.'
+      quiet: true
+
+  - name: 'Install nodejs{{ __nodejs__dnf_module_stream }} nodejs{{ __nodejs__dnf_module_stream }}-npm'
+    ansible.builtin.package:
+      name:
+        - 'nodejs{{ __nodejs__dnf_module_stream }}'
+        - 'nodejs{{ __nodejs__dnf_module_stream }}-npm'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  - name: 'ln -s /usr/bin/{{ item }}-{{ __nodejs__dnf_module_stream }} /usr/bin/{{ item }}'
+    ansible.builtin.file:
+      src: '/usr/bin/{{ item }}-{{ __nodejs__dnf_module_stream }}'
+      dest: '/usr/bin/{{ item }}'
+      state: 'link'
+    loop:
+      - 'node'
+      - 'npm'
+      - 'npx'
+
+  when:
+    - '__nodejs__dnf_module_stream | length > 0'
+  tags:
+    - 'nodejs'

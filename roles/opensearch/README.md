@@ -254,7 +254,7 @@ This is a post-installation step and not managed by the role, because `cluster.d
 
 * Deploys `/etc/opensearch/jvm.options.d/heap.options`.
 * Deploys `/etc/opensearch/opensearch.yml`.
-* Deploys `/etc/sysconfig/opensearch`.
+* Deploys `/etc/sysconfig/opensearch` (RHEL) or `/etc/default/opensearch` (Debian, Ubuntu).
 * Deploys internal users configuration (if security plugin is enabled).
 * Triggers: opensearch.service restart.
 

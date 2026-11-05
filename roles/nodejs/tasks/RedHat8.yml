@@ -1,0 +1,31 @@
+# RHEL 8 and 9 ship the alternative Node.js versions as DNF module streams. RedHat9.yml is a copy
+# of this file.
+- block:
+
+  # Exits with 1 if the stream is not enabled. Resetting an enabled stream and enabling it again
+  # would report a change on every run.
+  - name: 'dnf module list --enabled nodejs:{{ __nodejs__dnf_module_stream }}'
+    ansible.builtin.command: 'dnf module list --enabled nodejs:{{ __nodejs__dnf_module_stream }}'
+    register: '__nodejs__dnf_module_enabled_result'
+    changed_when: false
+    failed_when: '__nodejs__dnf_module_enabled_result["rc"] not in [0, 1]'
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'dnf -y module reset nodejs'
+    ansible.builtin.command: 'dnf -y module reset nodejs'
+    register: '__nodejs__dnf_module_reset_result'
+    changed_when: '"Nothing to do" not in __nodejs__dnf_module_reset_result["stdout"]'
+    when: '__nodejs__dnf_module_enabled_result["rc"] != 0'
+
+  - name: 'Install @nodejs:{{ __nodejs__dnf_module_stream }}/common -y'
+    ansible.builtin.package:
+      name:
+        - '@nodejs:{{ __nodejs__dnf_module_stream }}/common'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  when:
+    - '__nodejs__dnf_module_stream | length > 0'
+  tags:
+    - 'nodejs'

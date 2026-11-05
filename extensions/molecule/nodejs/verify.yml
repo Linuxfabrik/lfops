@@ -1,0 +1,39 @@
+- name: 'Verify the nodejs playbook installed a runnable Node.js'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Gather the distribution facts'
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+
+    # /bin/nodejs is the symlink of the role, and resolves to /usr/bin/node.
+    - name: '/bin/nodejs --version'
+      ansible.builtin.command: '/bin/nodejs --version'
+      changed_when: false
+      register: '__molecule__nodejs_version_result'
+
+    - name: 'npm --version'
+      ansible.builtin.command: 'npm --version'
+      changed_when: false
+      register: '__molecule__npm_version_result'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that the configured Node.js version runs on the Red Hat family'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nodejs_version_result["stdout"] is match("v24\.")'
+          - '__molecule__npm_version_result["rc"] == 0'
+        fail_msg: '{{ __molecule__nodejs_version_result["stdout"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that the Node.js of the distribution runs on Debian and Ubuntu'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__nodejs_version_result["stdout"] is match("v\d+\.")'
+        fail_msg: '{{ __molecule__nodejs_version_result["stdout"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "Debian"'
