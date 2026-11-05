@@ -222,6 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:nodejs**: `nodejs__dnf_module_stream` works on RHEL 10, which has no modules, by installing the versioned package such as `nodejs24`. On RHEL 8 and 9 it no longer reports a change on every run, and on Debian and Ubuntu it no longer makes the run fail ([#374](https://github.com/Linuxfabrik/lfops/issues/374)).
 * **role:opensearch**: Heap and environment settings take effect on Debian and Ubuntu, where the role wrote them to `/etc/sysconfig/opensearch` instead of `/etc/default/opensearch` ([#512](https://github.com/Linuxfabrik/lfops/issues/512)).
 * **role:redis**: Redis 8 from packages.redis.io loads the modules the package ships (JSON, Search, Bloom, TimeSeries), as its own configuration does; `redis__skip_packaged_modules: true` keeps them off. Redis restarts once ([#589](https://github.com/Linuxfabrik/lfops/issues/589)).
 * **role:redis**: Redis 8.0 starts with the deployed configuration and loads the modules of the installed Remi packages (`redis-json`, `redis-bloom`, `redis-timeseries`); the configuration loaded modules from paths that do not exist ([#346](https://github.com/Linuxfabrik/lfops/issues/346)).
