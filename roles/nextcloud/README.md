@@ -18,6 +18,7 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 * Before it changes anything, the role aborts if `nextcloud__database_login` is missing, or if it names the database user of the installed Nextcloud with another password, since the run would set that password for the MariaDB user and lock Nextcloud out of its database. The error message tells how to read the login from `config.php` with `occ`. `setup_nextcloud` runs this check before its first role.
 * A fresh installation enforces two-factor authentication for all users (TOTP is enabled by default) and runs the Nextcloud mimetype migrations. An existing installation keeps its enforcement state. `/usr/local/bin/nextcloud-update` runs the mimetype migrations after each update.
 * A fresh installation keeps deleted files and old file versions for at least 30 days and deletes them when space runs out (`auto, 30`). An existing installation keeps its retention.
+* A fresh installation gets the full list of apps and app settings from the role defaults. On an existing installation, the role only manages the apps and settings of the inventory and the ones it relies on, so apps that the Nextcloud admin enables or disables in the web interface stay as they are. See `nextcloud__apps__host_var` and `nextcloud__app_configs__host_var`.
 * `admin_audit` is enabled and writes `audit.log` to the data directory. Previews are limited to 2048 px at JPEG quality 60, and the web updater is disabled in favour of `/usr/local/bin/nextcloud-update`.
 * MariaDB listens on `127.0.0.1` and `::1` only, which needs MariaDB 10.11 or newer. Redis and Valkey evict the least recently used keys when they are full. Change this with `nextcloud__mariadb_server__cnf_bind_address__dependent_var`, `nextcloud__redis__conf_maxmemory_policy` and `nextcloud__valkey__conf_maxmemory_policy`; in `setup_nextcloud`, these take precedence over the variables of the `mariadb_server`, `redis` and `valkey` roles.
 * The mail server is taken from `nextcloud__mail_smtp_*`, which default to the relay host of the `postfix` role, and is only set while Nextcloud has no `mail_domain`, so a mail server configured by hand stays untouched. The SMTP password ends up in `config.php`.
@@ -248,9 +249,11 @@ nextcloud__version: 'latest-35'
 `nextcloud__app_configs__host_var` / `nextcloud__app_configs__group_var`
 
 * List of dictionaries containing key-value pairs for configuring apps in Nextcloud.
+* The role defaults apply in full on a fresh installation only. On an existing installation, the role sets the entries of the inventory and the settings it relies on (`dav buildCalendarSearchIndex`, `password_policy enforceHaveIBeenPwned`, `password_policy minLength`, `preview jpeg_quality`), and leaves all other settings to the Nextcloud admin.
 * Type: List of dictionaries.
 * Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
 * Deviates from the upstream default `'no'` for `support hide-app`: the Support section is hidden from the administration settings. Set it to `'no'` to enter an Enterprise subscription key there. The `support` app only accepts the string `'yes'`, not a boolean.
+* Deviates from the upstream default `80` for `preview jpeg_quality`: previews are generated at quality 60, as in the Nextcloud All-in-One image, which keeps them smaller.
 * Subkeys:
 
     * `key`:
@@ -279,6 +282,7 @@ nextcloud__version: 'latest-35'
 
 * List of dictionaries containing Nextcloud apps to install, enable, disable or remove.
 * An entry overrides only the subkeys it sets. The role default disables some apps, for example `activity`, `notifications` and `systemtags`; an entry for such an app without `state` keeps it disabled, so set `state: 'enabled'` explicitly.
+* The role defaults apply in full on a fresh installation only. On an existing installation, the role manages the apps of the inventory and the apps it relies on (`admin_audit`, `notify_push`, `password_policy`, `support`, `twofactor_totp`), and leaves all other apps to the Nextcloud admin, who may enable or disable them in the web interface.
 * Type: List of dictionaries.
 * Default: Have a look at [defaults/main.yml](https://github.com/Linuxfabrik/lfops/blob/main/roles/nextcloud/defaults/main.yml)
 * Subkeys:
