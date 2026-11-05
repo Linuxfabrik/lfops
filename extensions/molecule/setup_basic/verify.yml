@@ -338,10 +338,11 @@
         that:
           - '"clientalivecountmax 2" in __molecule__sshd_effective_config_result["stdout_lines"]'
           - '"clientaliveinterval 15" in __molecule__sshd_effective_config_result["stdout_lines"]'
+          - '"gssapiauthentication no" in __molecule__sshd_effective_config_result["stdout_lines"]'
           - '"x11forwarding no" in __molecule__sshd_effective_config_result["stdout_lines"]'
           - '"permitrootlogin without-password" in __molecule__sshd_effective_config_result["stdout_lines"]
             or "permitrootlogin prohibit-password" in __molecule__sshd_effective_config_result["stdout_lines"]'
-        fail_msg: '{{ __molecule__sshd_effective_config_result["stdout_lines"] | select("search", "^(clientalive|permitrootlogin)") | list }}'
+        fail_msg: '{{ __molecule__sshd_effective_config_result["stdout_lines"] | select("search", "^(clientalive|gssapiauthentication|permitrootlogin|x11forwarding)") | list }}'
 
     - name: 'Gather the distribution facts'
       ansible.builtin.setup:

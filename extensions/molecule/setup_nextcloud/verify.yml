@@ -312,6 +312,45 @@
         fail_msg: 'connections from: {{ __molecule__notify_push_processlist_result["stdout_lines"] }}'
 
 
+# notify_push exits when the database is not reachable at startup, for example when it starts
+# before MariaDB after a reboot. Kill it and expect systemd to bring it back.
+- name: 'Verify systemd restarts notify_push after a failure'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'systemctl show notify_push.service --property=MainPID' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show notify_push.service --property=MainPID --value'
+      changed_when: false
+      register: '__molecule__notify_push_pid_before_result'
+
+    - name: 'systemctl kill --signal=SIGKILL notify_push.service' # noqa command-instead-of-module (systemd_service cannot send signals)
+      ansible.builtin.command: 'systemctl kill --signal=SIGKILL notify_push.service'
+      changed_when: false
+
+    - name: 'systemctl show notify_push.service --property=ActiveState,MainPID' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show notify_push.service --property=ActiveState --property=MainPID'
+      changed_when: false
+      register: '__molecule__notify_push_state_after_result'
+      until:
+        - '"ActiveState=active" in __molecule__notify_push_state_after_result["stdout_lines"]'
+        - '"MainPID=" ~ __molecule__notify_push_pid_before_result["stdout"]
+          not in __molecule__notify_push_state_after_result["stdout_lines"]'
+        - '"MainPID=0" not in __molecule__notify_push_state_after_result["stdout_lines"]'
+      retries: 30
+      delay: 1
+
+    - name: 'systemctl show notify_push.service --property=After' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl show notify_push.service --property=After --value'
+      changed_when: false
+      register: '__molecule__notify_push_after_result'
+
+    - name: 'Assert that notify_push starts after MariaDB'
+      ansible.builtin.assert:
+        that: '"mariadb.service" in __molecule__notify_push_after_result["stdout"].split()'
+        fail_msg: 'After={{ __molecule__notify_push_after_result["stdout"] }}'
+
 # The role installs mysql-selinux so mariadbd gets `mysqld_exec_t` (MDEV-30520). Assert the domain
 # of the running process, not the label on the file: only that tells `mysqld_t` apart from
 # `initrc_t` and the `unconfined_service_t` that used to mask a missing label.

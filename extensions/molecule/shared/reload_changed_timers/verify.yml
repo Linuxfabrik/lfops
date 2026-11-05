@@ -1,19 +1,20 @@
 # verify.yml runs after converge and again after the idempotence step.
 #
-# For the system timer and for the timer of a lingering user, it moves the schedule of a timer that
-# has run to a point between that run and now, once with a plain `daemon-reload`, which has to run
-# the service at once (otherwise the test could not tell the fix from the bug), and once through
-# reload-changed-timers.yml, which must not run it. At the end it restores the converge state, so
-# that the idempotence step finds nothing to change.
+# For every timer from inventory/group_vars (system and lingering user, with and without
+# `Persistent=true`), it moves the schedule of a timer that has run to a point between that run
+# and now, once with a plain `daemon-reload`, which has to run the service at once (otherwise the
+# test could not tell the fix from the bug), and once through reload-changed-timers.yml, which must
+# not run it. At the end it restores the converge state, so that the idempotence step finds
+# nothing to change.
 - name: 'Verify that a changed timer does not run because of its new schedule'
   hosts: 'systems_under_test'
   gather_facts: false
   become: true
   tasks:
 
-    - name: 'Verify molecule-count.timer'
+    - name: 'Verify the timers'
       ansible.builtin.include_tasks: 'tasks/verify-timer.yml'
       loop: '{{ __molecule__timers }}'
       loop_control:
-        label: '{{ __molecule__timer["unit_dir"] }}'
+        label: '{{ __molecule__timer["unit_dir"] }}/{{ __molecule__timer["name"] }}.timer'
         loop_var: '__molecule__timer'

@@ -1,0 +1,2 @@
+# Remi on the Red Hat family; Debian and Ubuntu get the newest release of packages.redis.io.
+repo_remi__enabled_redis_version: '8.8'

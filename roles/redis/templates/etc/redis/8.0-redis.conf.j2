@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026092201
+# 2026102901
 {# Based on redis 8.0.6 #}
 
 # Redis v8.0 configuration file.
@@ -47,6 +47,8 @@
 # include /path/to/other.conf
 # include /path/to/fragments/*.conf
 #
+# Module configuration files
+include {{ __redis__module_dir }}/*.conf
 
 ################################## MODULES #####################################
 
@@ -56,13 +58,6 @@
 # loadmodule /path/to/my_module.so
 # loadmodule /path/to/other_module.so
 # loadmodule /path/to/args_module.so [arg [arg ...]]
-
-{% if __redis__package == 'redis' %}
-loadmodule /usr/lib/redis/modules/rejson.so
-loadmodule /usr/lib/redis/modules/redisbloom.so
-loadmodule /usr/lib/redis/modules/redistimeseries.so
-loadmodule /usr/lib/redis/modules/redisearch.so
-{% endif %}
 
 ################################## NETWORK #####################################
 

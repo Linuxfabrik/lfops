@@ -27,8 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:kernel_modules**: The `usb-storage` kernel module is blocked by default, as the CIS Benchmarks require, which stops USB flash drives and USB disks after the next reboot. The run aborts on hosts with a USB disk attached, since a host booting from one would no longer boot. Add `kernel_modules__modules__host_var: [{name: 'usb-storage', enabled: true}]` to the inventory of hosts that need USB storage.
 * **role:kernel_settings**: A sysctl hardening baseline following the CIS Benchmarks is applied by default: ICMP redirects are neither accepted nor sent, source-routed packets are dropped, martian packets are logged, unprivileged users can no longer read the kernel log or attach a debugger to processes they did not start themselves, and unprivileged BPF is off for good. Override single values in `kernel_settings__sysctl__host_var`, or remove them with `state: 'absent'`.
 * **role:duplicity, playbook:duplicity, playbook:setup_basic**: On a host where `duba` is not installed yet, the run aborts unless `/tmp` has 1024 MiB free, since smaller filesystems fail the backup. Grow `/tmp` with `lvm__lvs__host_var`, or set `lfops__skip_disk_space_check` to skip the check.
-* **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off. A reverse proxy in front of Nextcloud needs `conf_timeout` and `conf_proxy_timeout` set to `3600` and `conf_request_read_timeout` set to `header=20-40,MinRate=500 body=0`. To keep the previous values, set `nextcloud__apache_httpd__vhosts__dependent_var`.
-* **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime. To keep the previous value, set `nextcloud__php__ini_session_gc_maxlifetime__dependent_var` to `1440`.
+* **playbook:setup_nextcloud**: The Nextcloud vHost waits up to 3600 seconds for PHP and clients and no longer limits the time for reading a request body, so slow uploads and the assembly of large files are not cut off. A reverse proxy in front of Nextcloud needs `conf_timeout` and `conf_proxy_timeout` set to `3600` and `conf_request_read_timeout` set to `header=20-40,MinRate=500 body=0`. To keep the previous values, add the Nextcloud vHost (same `conf_server_name` and `virtualhost_port`) to `apache_httpd__vhosts__host_var` / `apache_httpd__vhosts__group_var` with `conf_timeout: 600` and `conf_request_read_timeout: 'header=20-40,MinRate=500 body=20,MinRate=500'`.
+* **playbook:setup_nextcloud**: PHP keeps sessions for 24 hours instead of 24 minutes, so users stay logged in for the full Nextcloud session lifetime. To keep the previous value, set `php__ini_session_gc_maxlifetime__host_var` / `php__ini_session_gc_maxlifetime__group_var` to `1440`.
 * **role:nextcloud**: The installation downloads the release archive on the Ansible controller instead of the target, so the controller needs outbound access to `download.nextcloud.com` and `nextcloud.com`.
 * **playbook:setup_icinga2_master**: PDF export runs on the IcingaWeb2 PDF Export Module with headless Chromium by default, since the fallback fails on current versions. Set `icingaweb2_module_pdfexport__version` in the inventory (`v0.13.0` works with `icinga-php-thirdparty` 1.1.0), or set `setup_icinga2_master__icingaweb2_module_pdfexport__skip_role: true`.
 * **role:graylog_datanode, role:graylog_server, playbook:setup_graylog_datanode, playbook:setup_graylog_server, playbook:setup_icinga2_master**: On a host where the software is not installed yet, the run aborts before it installs anything if the disk space is too small, instead of failing halfway through: Graylog needs the 4 GB on `/` and 15 GB on `/var` its README asks for, and `setup_icinga2_master` up to 2.4 GB on the filesystem of `/usr`. Grow the filesystem, or set `lfops__skip_disk_space_check: true` if you know that the space suffices.
@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:telegraf**: Add the `telegraf:configure` tag.
 * **role:redis**: Add template for Redis 8.10.
 * **role:nextcloud, playbook:setup_nextcloud**: The run aborts before it changes anything if `nextcloud__database_login` is missing or names the database user of the installed Nextcloud with another password, and tells how to read the login with `occ`. Until now a wrong password locked Nextcloud out of its database.
 * **module:systemd_credential**: `scope: 'user'` stores a credential for the services of an unprivileged user, such as a rootless Podman container, on hosts with systemd 256 or newer.
@@ -145,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:lynis**: The daily audit runs at 06:xx instead of 02:xx, after the reboot window, so a report from before the nightly reboot no longer warns about a pending reboot for a whole day.
 * **role:nextcloud**: The role removes the PHP extensions bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: the caches live in APCu, Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Icinga DB Web shows up to 65536 characters of a plugin output instead of 20000, so long check outputs are no longer cut off.
 * **role:aide, role:system_update**: AIDE always runs with the lowest CPU and I/O priority, also where the role and the update scripts call it directly, so it yields to everything else on the host.
@@ -223,10 +225,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **role:system_update**: `--tags system_update:state` no longer aborts on an undefined variable.
+* **role:nextcloud**: notify_push waits for MariaDB, Redis and Valkey at boot and restarts after a failure, instead of staying down when it started before the database was ready.
+* **role:nodejs**: `nodejs__dnf_module_stream` works on RHEL 10, which has no modules, by installing the versioned package such as `nodejs24`. On RHEL 8 and 9 it no longer reports a change on every run, and on Debian and Ubuntu it no longer makes the run fail ([#374](https://github.com/Linuxfabrik/lfops/issues/374)).
+* **role:opensearch**: Heap and environment settings take effect on Debian and Ubuntu, where the role wrote them to `/etc/sysconfig/opensearch` instead of `/etc/default/opensearch` ([#512](https://github.com/Linuxfabrik/lfops/issues/512)).
+* **role:icingaweb2_module_vspheredb**: On RHEL 10, the SELinux file context for the daemon's runtime directory is set instead of aborting the run with `conflicts with equivalency rule '/var/run /run'`.
+* **role:redis**: Redis 8 from packages.redis.io loads the modules the package ships (JSON, Search, Bloom, TimeSeries), as its own configuration does; `redis__skip_packaged_modules: true` keeps them off. Redis restarts once ([#589](https://github.com/Linuxfabrik/lfops/issues/589)).
+* **role:redis**: Redis 8.0 starts with the deployed configuration and loads the modules of the installed Remi packages (`redis-json`, `redis-bloom`, `redis-timeseries`); the configuration loaded modules from paths that do not exist ([#346](https://github.com/Linuxfabrik/lfops/issues/346)).
+* **role:telegraf**: A `"` or `\` in a username or password no longer breaks the configuration.
+* **role:logstash**: `.rpmnew` files of `/etc/default/logstash` and `/etc/logstash/pipelines.yml` are removed after a package upgrade ([#515](https://github.com/Linuxfabrik/lfops/issues/515)).
+* **role:mongodb**: mongod keeps logging to `/var/log/mongodb/mongod.log` after the log rotation on RHEL; until now its log was lost until the next restart. The next run restarts mongod once ([#531](https://github.com/Linuxfabrik/lfops/issues/531)).
+* **role:mongodb**: `mongodb__conf_replication_oplog_size_mb` can be set as a number on Debian and Ubuntu; the run aborted with `object of type 'int' has no len()` ([#532](https://github.com/Linuxfabrik/lfops/issues/532)).
 * A changed schedule of a timer no longer runs its job right away when the new time already passed since the last run, for example system updates and reboots in the middle of the day after switching from weekly to daily (acme_sh, aide, clamav, duplicity, fangfrisch, gitlab_ce, glpi_agent, grav, influxdb, lynis, mariadb_server, matomo_import_logs, mongodb, moodle, nextcloud, podman_containers, postgresql_server, schedule_reboot, system_update, systemd_unit, wordpress).
 * **role:postgresql_server**: The role works with the community.postgresql collection 5.x, where it aborted with "Unsupported parameters ... port".
 * **plugin:uptimerobot_mwindow, role:uptimerobot**: Daily, weekly and monthly maintenance windows can be created again after UptimeRobot started to reject them with HTTP 400, changing the duration of a weekly window with several days works, and a failed API call names UptimeRobot's reason instead of only "Bad Request".
 * **role:aide**: AIDE no longer reports the files Collabora caches below `/opt/cool/cache` for every new user and document setting.
+* **role:aide**: The check no longer reports the rotation of the dnf logs, the container storage of rootless podman below `/opt`, the service state of GitLab, the shell history of service users or the mongosh logs of root. Each of them blocked the database update after the nightly system update.
 * **role:nextcloud**: The README example for the Collabora WOPI allow list includes the Nextcloud host next to the reverse proxy. With the proxy alone, documents fail to load with "Unauthorized WOPI host".
 * **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
 * **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
@@ -243,7 +256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:lvm**: A run no longer writes an LVM metadata archive for every PV whose size did not change, which AIDE reported, and `--check` no longer reports such PVs as changed.
 * **role:monitoring_plugins**: The icons in IcingaWeb2 belong to root instead of the user ID of the Ansible controller user, and a run no longer rewrites all of them, which AIDE reported.
 * **role:mariadb_server**: A run no longer logs denied logins of `root`, and the `proxies_priv` warning goes away with `skip_name_resolve`, also after a change of the host name.
-* **role:sshd**: `sshd__x11_forwarding` takes effect on RHEL 9 and newer, where the `50-redhat.conf` of the package kept X11 forwarding on.
+* **role:sshd**: `sshd__gssapi_authentication` and `sshd__x11_forwarding` take effect on RHEL 9 and newer, where the `50-redhat.conf` of the package kept GSSAPI authentication and X11 forwarding on ([#354](https://github.com/Linuxfabrik/lfops/issues/354)).
 * **role:kernel_settings**: A run no longer fails on hosts whose kernel settings still contain a `sunrpc.*` value from an earlier run while the `sunrpc` module is not loaded.
 * **role:duplicity**: Swift backups work again on fresh installations, since the role installs `python-keystoneclient` into the virtual environment.
 * **role:aide**: The check no longer reports the rotation of the audit logs or a new directory below `/var/log`.
@@ -412,6 +425,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:telegraf**: The configuration, which contains credentials, and its backups are no longer world-readable (`0640 root:telegraf`).
 * **role:nextcloud**: The login of the Icinga2 API user that `nextcloud-update` uses is stored as a systemd credential, encrypted on RHEL 9 and newer, instead of in the script, and the role deletes the older copies of the script that still contain it.
 * **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
 * **role:nextcloud**: `/usr/local/bin/nextcloud-update` is readable by root only.

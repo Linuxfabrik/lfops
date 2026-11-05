@@ -119,6 +119,11 @@ This role is compatible with the following aide versions:
     * `!/root/\.gnupg/S\.`, `!/root/\.gnupg/.*\.lock$` and `!/root/\.gnupg/.*/\.#lk` are added. gpg-agent and keyboxd keep their sockets and locks there while they run, after a run of the duplicity role or a backup until the next reboot.
     * `!/opt/cool/cache` is added. Collabora caches the settings it fetches from the WOPI host there, per host and per user, and deletes them after some time of disuse.
     * `!/opt/cool/child-roots` is added. Collabora creates a jail per process there, under a new name on every start.
+    * `!/opt/gitlab/sv/[^/]+/(log/)?supervise` and `!/opt/gitlab/var` are added. GitLab writes the pid and the state of its services there whenever it starts them.
+    * `!/opt/[^/]+/\.local/share/containers` is added. Rootless podman of service users with their home below `/opt` rewrites its container storage on every container start and image update.
+    * `!/root/\.mongodb/mongosh` is added. mongosh writes a log file per session there and removes the old ones itself.
+    * `/opt/*/.bash_history` is checked for permissions only (`PERMS`), like the dot files of root.
+    * `/var/log/dnf.log`, `dnf.librepo.log`, `dnf.rpm.log` and `dnf5.log` are checked without their SELinux context, since dnf rotates them by renaming, and each file keeps the SELinux user of whoever ran dnf when it was started.
     * `!/usr/lib/sysimage/rpm` is added. The RPM database lives there on RHEL 10, and every rpm or dnf query rewrites it.
     * The audit tool rules of the CIS benchmarks are added.
     * `/etc/ld.so.cache` and `/etc/udev/hwdb.bin` are checked without their inode (`DATAONLY`), since systemd rebuilds both on the first boot after an update.

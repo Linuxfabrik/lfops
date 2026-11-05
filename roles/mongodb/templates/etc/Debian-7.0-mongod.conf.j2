@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025071001
+# 2026103001
 {# Based on mongodb-org-server 7.0.45 #}
 
 # mongod.conf
@@ -23,6 +23,7 @@ storage:
 systemLog:
   destination: file
   logAppend: true
+  logRotate: reopen
   path: /var/log/mongodb/mongod.log
 
 # network interfaces
@@ -45,7 +46,7 @@ security:
 {% if mongodb__conf_replication_repl_set_name__combined_var is defined and mongodb__conf_replication_repl_set_name__combined_var | length %}
 replication:
   replSetName: "{{ mongodb__conf_replication_repl_set_name__combined_var }}"
-{% if mongodb__conf_replication_oplog_size_mb is defined and mongodb__conf_replication_oplog_size_mb | length %}
+{% if mongodb__conf_replication_oplog_size_mb is defined %}
   oplogSizeMB: {{ mongodb__conf_replication_oplog_size_mb }}
 {% endif %}
 {% endif %}

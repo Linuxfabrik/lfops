@@ -1,0 +1,3 @@
+# Not the default on any distribution under test. RHEL 8 and 9 install it as a module stream,
+# RHEL 10 as the nodejs24 package. Debian and Ubuntu ignore it and install their nodejs package.
+nodejs__dnf_module_stream: 24

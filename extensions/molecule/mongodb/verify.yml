@@ -154,3 +154,71 @@
             [] if (__molecule__systemd_version_result["stdout"] | regex_search("^\d+") | int) >= 251
             else ["/etc/credstore/mongodb-dump-login.json"]
           }}'
+
+    # The postrotate script has to make mongod reopen its log, otherwise mongod keeps writing to
+    # the rotated file and mongod.log stays missing until the next restart. systemd-run starts
+    # logrotate like logrotate.service does, so that on the Red Hat family it runs confined in
+    # logrotate_t, which a call from this session would not. The rotations of an earlier verify
+    # run are removed first, because with `dateext` logrotate refuses to rotate onto an existing
+    # file of the same day. The role ships the drop-in only, and the Debian cloud images come
+    # without logrotate.
+    - name: 'Install logrotate'
+      ansible.builtin.package:
+        name:
+          - 'logrotate'
+        state: 'present'
+
+    - name: 'getenforce'
+      ansible.builtin.command: 'getenforce'
+      register: '__molecule__mongodb_getenforce_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that SELinux is enforcing'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_getenforce_result["stdout"] == "Enforcing"'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'find /var/log/mongodb -name mongod.log-*'
+      ansible.builtin.find:
+        paths: '/var/log/mongodb'
+        patterns: 'mongod.log-*'
+      register: '__molecule__mongodb_rotated_logs_result'
+
+    - name: 'rm -f /var/log/mongodb/mongod.log-*'
+      ansible.builtin.file:
+        path: '{{ item["path"] }}'
+        state: 'absent'
+      loop: '{{ __molecule__mongodb_rotated_logs_result["files"] }}'
+
+    - name: 'systemd-run --wait logrotate --force /etc/logrotate.d/mongod'
+      ansible.builtin.command: 'systemd-run --wait --collect --unit=molecule-logrotate /usr/sbin/logrotate --force /etc/logrotate.d/mongod'
+      changed_when: true # rotates the log
+
+    - name: 'stat /var/log/mongodb/mongod.log'
+      ansible.builtin.stat:
+        path: '/var/log/mongodb/mongod.log'
+      register: '__molecule__mongodb_log_stat_result'
+      until: '__molecule__mongodb_log_stat_result["stat"]["exists"]'
+      retries: 5
+      delay: 2
+
+    - name: 'Assert that mongod reopened its log after the rotation'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_log_stat_result["stat"]["exists"]'
+
+    - name: 'grep "denied.*logrotate_t" /var/log/audit/audit.log'
+      ansible.builtin.command: 'grep --count "denied.*logrotate_t" /var/log/audit/audit.log'
+      register: '__molecule__mongodb_logrotate_avc_result'
+      changed_when: false
+      failed_when: '__molecule__mongodb_logrotate_avc_result["rc"] > 1'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that SELinux denied logrotate nothing'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_logrotate_avc_result["stdout"] == "0"'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'

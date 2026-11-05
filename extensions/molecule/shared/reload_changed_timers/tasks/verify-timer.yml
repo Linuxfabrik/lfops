@@ -1,4 +1,4 @@
-# Checks one molecule-count.timer, given as `__molecule__timer` (see inventory/group_vars).
+# Checks one timer, given as `__molecule__timer` (see inventory/group_vars).
 
 - name: 'rm -f {{ __molecule__timer["runs_file"] }}'
   ansible.builtin.file:
@@ -12,23 +12,24 @@
   changed_when: false
 
 # 1. let the timer run once, so that systemd knows a last run
-- name: 'Schedule molecule-count.timer a few seconds ahead'
+- name: 'Schedule {{ __molecule__timer["name"] }}.timer a few seconds ahead'
   ansible.builtin.copy:
     content: |
       [Timer]
       OnCalendar=*-*-* {{ __molecule__first_time_result['stdout'] }}
       AccuracySec=1s
+      Persistent={{ __molecule__timer["persistent"] | ternary("true", "false") }}
 
       [Install]
       WantedBy=timers.target
-    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    dest: '{{ __molecule__timer["unit_dir"] }}/{{ __molecule__timer["name"] }}.timer'
     owner: '{{ __molecule__timer["user"] | d("root", true) }}'
     group: '{{ __molecule__timer["user"] | d("root", true) }}'
     mode: 0o644
 
-- name: 'systemctl daemon-reload; systemctl restart molecule-count.timer'
+- name: 'systemctl daemon-reload; systemctl restart {{ __molecule__timer["name"] }}.timer'
   ansible.builtin.systemd:
-    name: 'molecule-count.timer'
+    name: '{{ __molecule__timer["name"] }}.timer'
     scope: '{{ (__molecule__timer["user"] | length > 0) | ternary("user", "system") }}'
     state: 'restarted'
     daemon_reload: true
@@ -55,10 +56,11 @@
       [Timer]
       OnCalendar=*-*-* {{ __molecule__control_time_result['stdout'] }}
       AccuracySec=1s
+      Persistent={{ __molecule__timer["persistent"] | ternary("true", "false") }}
 
       [Install]
       WantedBy=timers.target
-    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    dest: '{{ __molecule__timer["unit_dir"] }}/{{ __molecule__timer["name"] }}.timer'
     owner: '{{ __molecule__timer["user"] | d("root", true) }}'
     group: '{{ __molecule__timer["user"] | d("root", true) }}'
     mode: 0o644
@@ -93,10 +95,11 @@
       [Timer]
       OnCalendar=*-*-* {{ __molecule__fix_time_result['stdout'] }}
       AccuracySec=1s
+      Persistent={{ __molecule__timer["persistent"] | ternary("true", "false") }}
 
       [Install]
       WantedBy=timers.target
-    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    dest: '{{ __molecule__timer["unit_dir"] }}/{{ __molecule__timer["name"] }}.timer'
     owner: '{{ __molecule__timer["user"] | d("root", true) }}'
     group: '{{ __molecule__timer["user"] | d("root", true) }}'
     mode: 0o644
@@ -106,13 +109,18 @@
   ansible.builtin.wait_for:
     timeout: 4
 
+- name: 'date +%s'
+  ansible.builtin.command: 'date +%s'
+  register: '__molecule__fix_start_result'
+  changed_when: false
+
 - name: 'Reload the changed timer through reload-changed-timers.yml'
   ansible.builtin.include_role:
     name: 'linuxfabrik.lfops.shared'
     tasks_from: 'reload-changed-timers.yml'
   vars:
     shared__reload_changed_timers: '{{
-        (__molecule__changed_timer_result is changed) | ternary(["molecule-count.timer"], [])
+        (__molecule__changed_timer_result is changed) | ternary([__molecule__timer["name"] ~ ".timer"], [])
       }}'
     shared__reload_changed_timers_user: '{{ __molecule__timer["user"] }}'
 
@@ -125,12 +133,20 @@
   register: '__molecule__after_fix_result'
   changed_when: false
 
-- name: 'systemctl show molecule-count.timer'
+- name: 'systemctl show {{ __molecule__timer["name"] }}.timer'
   ansible.builtin.systemd:
-    name: 'molecule-count.timer'
+    name: '{{ __molecule__timer["name"] }}.timer'
     scope: '{{ (__molecule__timer["user"] | length > 0) | ternary("user", "system") }}'
   become_user: '{{ __molecule__timer["user"] | d("root", true) }}'
   register: '__molecule__timer_status_result'
+
+# a persistent timer read its last run back from the stamp file, which the task set to now
+- name: 'stat the stamp file of {{ __molecule__timer["name"] }}.timer'
+  ansible.builtin.stat:
+    path: '{{ (__molecule__timer["user"] | length > 0) | ternary("~/.local/share", "/var/lib") }}/systemd/timers/stamp-{{ __molecule__timer["name"] }}.timer'
+  become_user: '{{ __molecule__timer["user"] | d("root", true) }}'
+  register: '__molecule__stamp_result'
+  when: '__molecule__timer["persistent"]'
 
 - name: 'Assert that the service did not run and the timer is back, waiting for tomorrow'
   ansible.builtin.assert:
@@ -139,24 +155,29 @@
       - '__molecule__timer_status_result["status"]["ActiveState"] == "active"'
       - '__molecule__timer_status_result["status"]["UnitFileState"] == "enabled"'
       # unloading dropped the last run, which only systemd's own runs set
-      - '__molecule__timer_status_result["status"]["LastTriggerUSec"] | d("") in ["", "n/a", "0"]'
+      - '__molecule__timer["persistent"] or __molecule__timer_status_result["status"]["LastTriggerUSec"] | d("") in ["", "n/a", "0"]'
+      # the stamp file of a persistent timer was set to now while the timer was stopped
+      - 'not __molecule__timer["persistent"] or __molecule__stamp_result["stat"]["mtime"] | int >= __molecule__fix_start_result["stdout"] | int'
     fail_msg: >-
       runs: {{ __molecule__after_fix_result["stdout_lines"] | length }},
       ActiveState: {{ __molecule__timer_status_result["status"]["ActiveState"] }},
       UnitFileState: {{ __molecule__timer_status_result["status"]["UnitFileState"] }},
-      LastTriggerUSec: {{ __molecule__timer_status_result["status"]["LastTriggerUSec"] | d("") }}
+      LastTriggerUSec: {{ __molecule__timer_status_result["status"]["LastTriggerUSec"] | d("") }},
+      stamp mtime: {{ __molecule__stamp_result["stat"]["mtime"] | d("-") }},
+      fix started: {{ __molecule__fix_start_result["stdout"] }}
 
 # 4. back to the converge state for the idempotence step
-- name: 'Restore molecule-count.timer as converged'
+- name: 'Restore {{ __molecule__timer["name"] }}.timer as converged'
   ansible.builtin.copy:
     content: |
       [Timer]
       OnCalendar=*-*-* 23:59:00
       AccuracySec=1s
+      Persistent={{ __molecule__timer["persistent"] | ternary("true", "false") }}
 
       [Install]
       WantedBy=timers.target
-    dest: '{{ __molecule__timer["unit_dir"] }}/molecule-count.timer'
+    dest: '{{ __molecule__timer["unit_dir"] }}/{{ __molecule__timer["name"] }}.timer'
     owner: '{{ __molecule__timer["user"] | d("root", true) }}'
     group: '{{ __molecule__timer["user"] | d("root", true) }}'
     mode: 0o644
@@ -168,7 +189,7 @@
     tasks_from: 'reload-changed-timers.yml'
   vars:
     shared__reload_changed_timers: '{{
-        (__molecule__restored_timer_result is changed) | ternary(["molecule-count.timer"], [])
+        (__molecule__restored_timer_result is changed) | ternary([__molecule__timer["name"] ~ ".timer"], [])
       }}'
     shared__reload_changed_timers_user: '{{ __molecule__timer["user"] }}'
 

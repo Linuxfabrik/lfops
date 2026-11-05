@@ -1,16 +1,18 @@
 # {{ ansible_managed }}
-# 2022101701
+# 2026103001
 
 /var/log/mongodb/mongod.log
 {
     compress
     daily
     dateext
+    delaycompress
     missingok
     notifempty
     rotate 14
-    sharedscripts
     postrotate
-        /bin/kill -SIGUSR1 `cat /var/lib/mongodb/mongod.lock 2> /dev/null` 2> /dev/null || true
+        if systemctl --quiet is-active mongod.service; then
+            pkill --signal SIGUSR1 --exact mongod
+        fi
     endscript
 }

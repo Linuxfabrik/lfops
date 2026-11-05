@@ -1,5 +1,5 @@
-# Deploys a timer that counts its runs through the task file under test, once as a system timer
-# and once as a timer of a lingering user. The behaviour itself is time-dependent and therefore
+# Deploys the timers from inventory/group_vars, which count their runs, through the task file
+# under test, each as a system timer and as a timer of a lingering user. The behaviour itself is time-dependent and therefore
 # checked in verify.yml.
 - name: 'Converge a timer through reload-changed-timers.yml'
   hosts: 'systems_under_test'
@@ -36,36 +36,37 @@
         - '/home/molecule-timers/.config/systemd'
         - '/home/molecule-timers/.config/systemd/user'
 
-    - name: 'Deploy molecule-count.service'
+    - name: 'Deploy the services of the timers'
       ansible.builtin.copy:
         content: |
           [Service]
           Type=oneshot
           ExecStart=/bin/sh -c 'date +%%s >> {{ item["runs_file"] }}'
-        dest: '{{ item["unit_dir"] }}/molecule-count.service'
+        dest: '{{ item["unit_dir"] }}/{{ item["name"] }}.service'
         owner: '{{ item["user"] | d("root", true) }}'
         group: '{{ item["user"] | d("root", true) }}'
         mode: 0o644
       loop: '{{ __molecule__timers }}'
       loop_control:
-        label: '{{ item["unit_dir"] }}'
+        label: '{{ item["unit_dir"] }}/{{ item["name"] }}'
 
-    - name: 'Deploy molecule-count.timer'
+    - name: 'Deploy the timers'
       ansible.builtin.copy:
         content: |
           [Timer]
           OnCalendar=*-*-* 23:59:00
           AccuracySec=1s
+          Persistent={{ item["persistent"] | ternary("true", "false") }}
 
           [Install]
           WantedBy=timers.target
-        dest: '{{ item["unit_dir"] }}/molecule-count.timer'
+        dest: '{{ item["unit_dir"] }}/{{ item["name"] }}.timer'
         owner: '{{ item["user"] | d("root", true) }}'
         group: '{{ item["user"] | d("root", true) }}'
         mode: 0o644
       loop: '{{ __molecule__timers }}'
       loop_control:
-        label: '{{ item["unit_dir"] }}'
+        label: '{{ item["unit_dir"] }}/{{ item["name"] }}'
       register: '__molecule__timer_result'
 
     - name: 'Reload the changed timer'
@@ -74,21 +75,21 @@
         tasks_from: 'reload-changed-timers.yml'
       vars:
         shared__reload_changed_timers: '{{
-            (__molecule__changed_timer is changed) | ternary(["molecule-count.timer"], [])
+            (__molecule__changed_timer is changed) | ternary([__molecule__changed_timer["item"]["name"] ~ ".timer"], [])
           }}'
         shared__reload_changed_timers_user: '{{ __molecule__changed_timer["item"]["user"] }}'
       loop: '{{ __molecule__timer_result["results"] }}'
       loop_control:
-        label: '{{ __molecule__changed_timer["item"]["unit_dir"] }}'
+        label: '{{ __molecule__changed_timer["item"]["unit_dir"] }}/{{ __molecule__changed_timer["item"]["name"] }}.timer'
         loop_var: '__molecule__changed_timer'
 
-    - name: 'systemctl enable molecule-count.timer --now'
+    - name: 'systemctl enable --now the timers'
       ansible.builtin.systemd:
-        name: 'molecule-count.timer'
+        name: '{{ item["name"] }}.timer'
         scope: '{{ (item["user"] | length > 0) | ternary("user", "system") }}'
         state: 'started'
         enabled: true
       become_user: '{{ item["user"] | d("root", true) }}'
       loop: '{{ __molecule__timers }}'
       loop_control:
-        label: '{{ item["unit_dir"] }}'
+        label: '{{ item["unit_dir"] }}/{{ item["name"] }}'

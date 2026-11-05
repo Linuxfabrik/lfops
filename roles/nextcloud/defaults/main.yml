@@ -614,13 +614,20 @@ nextcloud__valkey__conf_maxmemory_policy: 'allkeys-lru'
 nextcloud__systemd_unit__services__dependent_var:
   - name: 'notify_push'
     description: 'Push daemon for Nextcloud clients'
+    # notify_push exits if the database or Redis / Valkey is not reachable at startup. After
+    # a reboot it started before MariaDB had opened its socket and stayed down. Ordering only
+    # helps when they run on the same host, so restart it as well.
     raw_unit: |-
       Documentation=https://github.com/nextcloud/notify_push
+      After=network-online.target mariadb.service redis.service redis-server.service valkey.service
+      Wants=network-online.target
     raw_service: |-
       Environment=NEXTCLOUD_URL=https://{{ nextcloud__fqdn }}
       Environment=PORT=7867
       ExecStartPre=-/bin/chcon --type bin_t /var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push
       ExecStart=/var/www/html/nextcloud/apps/notify_push/bin/x86_64/notify_push /var/www/html/nextcloud/config/config.php
+      Restart=on-failure
+      RestartSec=10
       User={{ __shared__apache_httpd_user }}
     enabled: true
     state: 'present'

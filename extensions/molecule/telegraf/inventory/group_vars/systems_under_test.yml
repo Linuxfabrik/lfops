@@ -1,0 +1,11 @@
+telegraf__agent_interval: '2s'
+
+# A template with credentials next to telegraf.conf. Telegraf only logs that it cannot reach Graylog.
+telegraf__conf__group_var:
+  - filename: 'graylog'
+    template: 'graylog'
+    username: 'linuxfabrik'
+
+# The special characters check that the password reaches InfluxDB unchanged, see verify.yml.
+telegraf__outputs_influxdb_password: 'linuxfabrik"pass\word'
+telegraf__outputs_influxdb_username: 'molecule'

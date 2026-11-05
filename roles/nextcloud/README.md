@@ -76,6 +76,15 @@ Do not forward with `RewriteRule ... [proxy]`. mod_rewrite matches against the d
 
 On the Nextcloud side, the reverse proxy goes into `config.php` (`trusted_proxies`, `overwriteprotocol` and so on, see the example of `nextcloud__sysconfig__host_var`), and the proxy needs the timeouts described under "How the Role Behaves".
 
+If the reverse proxy runs the `apache-404` jail of the `fail2ban` role, exclude the 404 responses that Nextcloud and Collabora give in normal use: WebDAV and OCS answer with 404 for files that were just moved or deleted, for circles without an avatar and for the user status heartbeat, the login flow polls until the login in the browser is completed, and Collabora requests icons it does not ship. A user who restructures their files otherwise exceeds the jail's limit within seconds and is banned. Unauthenticated WebDAV and OCS requests get 401, so scanners still hit the jail. fail2ban removes the timestamp from the line before it applies these expressions, so do not match it with `\[...\]`:
+
+```yaml
+fail2ban__filter_apache_404_ignoreregex:
+  - '^[^"]*"\S+ /(remote\.php/(dav|webdav)|ocs/v[12]\.php)/'
+  - '^[^"]*"POST /index\.php/login/v2/poll '
+  - '^[^"]*"GET /browser/[0-9a-f]+/images/'
+```
+
 
 ## Connecting Collabora Online
 

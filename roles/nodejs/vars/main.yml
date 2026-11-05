@@ -1,0 +1,2 @@
+# `nodejs__dnf_module_stream` is optional and accepts a number or a string.
+__nodejs__dnf_module_stream: '{{ nodejs__dnf_module_stream | default("") | string }}'

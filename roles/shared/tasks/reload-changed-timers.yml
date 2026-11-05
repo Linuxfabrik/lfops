@@ -5,11 +5,30 @@
 # (src/core/timer.c, timer_enter_waiting()). If a new schedule has an occurrence between the last
 # run and now, for example weekly changed to daily, the timer fires as soon as the manager loads
 # the new unit: on `daemon-reload`, and on the reload that `systemctl enable` / `disable` do
-# implicitly. Stopping, restarting or reloading keeps the last run time; only unloading the timer
-# drops it, and the manager unloads a stopped timer that nothing references, i.e. a disabled one.
+# implicitly. Upstream knows this and keeps the catch-up as the default
+# (https://github.com/systemd/systemd/issues/16732); the `CatchUp=false` proposed in
+# https://github.com/systemd/systemd/pull/43659 would replace this task once the supported
+# platforms ship it.
+#
+# The last run lives in two places, and both have to go:
+# * In memory, for every timer. `daemon-reload` and `daemon-reexec` serialize it, and since
+#   systemd v259 `start` keeps it as well (systemd PR #38868, backported to RHEL 8 as RHEL-108744
+#   and to RHEL 9 as RHEL-118215), so a plain stop/start or restart fires on Rocky 8, 9 and 10;
+#   systemd 257 falls back to the previous activation time anyway. Only unloading the timer drops
+#   it, and the manager unloads a stopped timer that no other unit references, i.e. a disabled
+#   one. A timer that another loaded unit still references (e.g. `Wants=` in a target) stays
+#   loaded and keeps its last run.
+# * On disk, for `Persistent=true` timers (e.g. podman-auto-update.timer): the mtime of the stamp
+#   file below /var/lib/systemd/timers/ (~/.local/share/systemd/timers/ for a user manager), which
+#   `timer_start()` reads back on every start. Unloading does not touch it, so the task sets it to
+#   now while the timer is stopped. A run missed while the host was down is not lost: the timer
+#   was active up to this point and caught up on it at boot already. `systemctl clean
+#   --what=state` would delete the file instead, but systemd 239 does not have it.
+#
 # Hence: stop all of them first (a stopped timer does not fire on a reload), then disable them,
-# reload, and bring back the state each one had. Verified with systemd 239, 252 and 257 on Rocky 8,
-# 9 and 10 and on Debian 13 (extensions/molecule/shared/reload_changed_timers).
+# reload, move the stamp files to now, and bring back the state each one had. Verified with
+# systemd 239, 252 and 257 on Rocky 8, 9 and 10 and on Debian 13
+# (extensions/molecule/shared/reload_changed_timers).
 #
 # Include it right after the role deployed its units and before anything else reloads systemd,
 # with the timers whose unit or drop-in changed in this run.
@@ -58,6 +77,35 @@
       scope: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("user", "system") }}'
     become: true
     become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+
+  # Only timers that will be started again matter. The stamp file is touched whether or not the
+  # timer is Persistent=true: a timer that is not ignores it, and one that just became persistent
+  # is covered as well. `~` resolves to the home of the become user. systemd honours
+  # $XDG_DATA_HOME of a user manager instead, which LFOps does not set.
+  - name: 'stat the stamp files of {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.stat:
+      path: '{{ (shared__reload_changed_timers_user | d("") | length > 0) | ternary("~/.local/share", "/var/lib") }}/systemd/timers/stamp-{{ item["shared__reload_changed_timer"] }}'
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ __shared__reload_changed_timers_status_result["results"] }}'
+    loop_control:
+      label: '{{ item["shared__reload_changed_timer"] }}'
+    when:
+      - 'item["status"]["ActiveState"] | d("inactive") == "active"'
+    register: '__shared__reload_changed_timers_stamp_result'
+
+  - name: 'touch the stamp files of {{ shared__reload_changed_timers | join(" ") }}'
+    ansible.builtin.file:
+      path: '{{ item["stat"]["path"] }}'
+      state: 'file'
+      modification_time: 'now'
+    become: true
+    become_user: '{{ shared__reload_changed_timers_user | d("root", true) }}'
+    loop: '{{ __shared__reload_changed_timers_stamp_result["results"] }}'
+    loop_control:
+      label: '{{ item["stat"]["path"] | d(item["item"]["shared__reload_changed_timer"]) }}'
+    when:
+      - 'item["stat"]["exists"] | d(false)'
 
   - name: 'systemctl enable {{ shared__reload_changed_timers | join(" ") }}'
     ansible.builtin.systemd:
