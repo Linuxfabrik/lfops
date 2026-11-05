@@ -29,7 +29,14 @@ icingaweb2_module_vspheredb__mariadb_server__users__dependent_var:
       - '{{ icingaweb2_module_vspheredb__database_name | replace("_", "\_") | replace("%", "\%") }}.*:ALL'
     state: 'present'
 
+# semanage only accepts the canonical side of the '/run' <-> '/var/run' equivalency rule, and the
+# direction flipped with RHEL 10: RHEL 8 and 9 refuse '/run/...', RHEL 10 refuses '/var/run/...'
+# ("conflicts with equivalency rule"). Verified with policycoreutils-python-utils 2.9 (Rocky 8),
+# 3.6 (Rocky 9) and 3.10 (Rocky 10).
 icingaweb2_module_vspheredb__selinux__fcontexts__dependent_var:
   - setype: 'icingaweb2_rw_content_t'
-    target: '/var/run/icinga-vspheredb(/.*)?'
+    target: '{{
+        (ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution_major_version"] | int >= 10)
+        | ternary("/run", "/var/run")
+      }}/icinga-vspheredb(/.*)?'
     state: 'present'
