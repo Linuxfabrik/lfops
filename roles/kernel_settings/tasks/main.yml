@@ -20,7 +20,7 @@
 
   # fedora.linux_system_roles.kernel_settings merges the given sysctls into the profile it wrote
   # before (kernel_settings_purge is false), so the profile keeps the settings of earlier runs of
-  # other playbooks, e.g. the sunrpc.* setting of mariadb_server, and `tuned-adm verify` checks
+  # other playbooks, e.g. a sunrpc.* setting from the inventory, and `tuned-adm verify` checks
   # them in every run. Verified with fedora.linux_system_roles 1.121.0
   # (roles/kernel_settings/tasks/main.yml). Depending on the TuneD release, that role writes the
   # profile below /etc/tuned or /etc/tuned/profiles. grep exits with 2 for the path that does not

@@ -10,11 +10,12 @@
 modules.
 
 Currently targets UptimeRobot API v2 (POST + form-urlencoded, API key in body),
-because v2 is fully specified, all five resources are covered by
-linuxfabrik-lib's `lib.uptimerobot`, and there's no public, machine-readable
-spec for v3 that we can rely on. Migration to v3 is local to this file: change
-the endpoint URLs / request shape in `_request()` and the per-resource
-methods, modules don't have to change.
+because v2 is fully specified and all five resources are covered by
+linuxfabrik-lib's `lib.uptimerobot`. The one exception is the creation of
+recurring maintenance windows, which v2 no longer accepts, see `new_mwindow()`;
+that goes to v3 (https://cdn.uptimerobot.com/api/openapi.yaml). Migration to v3 is local
+to this file: change the endpoint URLs / request shape in `_request()` and the
+per-resource methods, modules don't have to change.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -30,6 +31,7 @@ from urllib.parse import urlencode
 from ansible.module_utils.urls import fetch_url
 
 API_BASE = 'https://api.uptimerobot.com/v2/'
+API_BASE_V3 = 'https://api.uptimerobot.com/v3/'
 ENV_API_KEY = 'UPTIMEROBOT_API_KEY'
 DEFAULT_API_KEY_FILE = '~/.uptimerobot'
 
@@ -395,8 +397,7 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
 
         if status < 200 or status >= 300:
             module.log(f'uptimerobot: POST {endpoint} -> HTTP {status}')
-            msg = info.get('msg') or info.get('body') or ''
-            return False, f'HTTP {status} from {url}: {msg}'
+            return False, f'HTTP {status} from {url}: {_error_from_info(info)}'
 
         try:
             payload = json.loads(resp.read().decode('utf-8'))
@@ -442,6 +443,75 @@ def _request_uncached(module, api_key, endpoint, params, result_key):
         f'uptimerobot: POST {endpoint} stat=ok pages={pages} items={len(aggregated)}'
     )
     return True, aggregated
+
+
+def _error_from_info(info):
+    """The reason UptimeRobot gives for a rejected request.
+
+    fetch_url() puts the HTTP reason phrase ("Bad Request") into `msg` and the
+    response body into `body`. The body is what names the cause, as JSON:
+    `{"stat": "fail", "error": {"type": ..., "message": ...}}` on v2, and an
+    object with a `message` (a string or a list of strings) on v3. Fall back to
+    the raw body, then to the reason phrase.
+    """
+    body = info.get('body') or b''
+    if isinstance(body, bytes):
+        body = body.decode('utf-8', errors='replace')
+    try:
+        payload = json.loads(body)
+    except ValueError:
+        payload = None
+    if isinstance(payload, dict):
+        error = payload.get('error')
+        if isinstance(error, dict) and (error.get('type') or error.get('message')):
+            return f'{error.get("type", "unknown")}: {error.get("message", "")}'
+        message = payload.get('message')
+        if isinstance(message, list):
+            return '; '.join(str(m) for m in message)
+        if message:
+            return str(message)
+    return body.strip()[:500] or info.get('msg') or ''
+
+
+def _request_v3(module, api_key, method, path, payload):
+    """Send one JSON request to the v3 API and return (success, result).
+
+    Only used where v2 falls short (see `new_mwindow()`). v3 takes the same API
+    key as a bearer token. No pagination and no cache: this is for writes.
+    Retries once on HTTP 429.
+    """
+    # a `nextLink` of a paginated v3 response is already a full URL
+    url = path if path.startswith('https://') else API_BASE_V3 + path
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json',
+    }
+    data = json.dumps(payload).encode('utf-8') if payload is not None else None
+    module.log(f'uptimerobot: {method} v3/{path} keys={_safe_keys(payload or {})}')
+    resp, info = fetch_url(
+        module, url, data=data, headers=headers, method=method, timeout=20
+    )
+    status = info.get('status', -1)
+    if status == 429:
+        sleep_for = min(
+            int(info.get('retry-after') or DEFAULT_RATE_LIMIT_RETRY_SECONDS), 60
+        )
+        module.warn(
+            f'uptimerobot: rate limited on v3/{path} (HTTP 429); sleeping {sleep_for}s and retrying once',
+        )
+        time.sleep(sleep_for)
+        resp, info = fetch_url(
+            module, url, data=data, headers=headers, method=method, timeout=20
+        )
+        status = info.get('status', -1)
+    if status < 200 or status >= 300:
+        module.log(f'uptimerobot: {method} v3/{path} -> HTTP {status}')
+        return False, f'HTTP {status} from {url}: {_error_from_info(info)}'
+    try:
+        return True, json.loads(resp.read().decode('utf-8'))
+    except (ValueError, AttributeError) as exc:
+        return False, f'Could not parse JSON from {url}: {exc}'
 
 
 def _filter_keys(params, allowed):
@@ -641,7 +711,84 @@ def _translate_mwindow_response(item):
                 pass
 
 
+_MWINDOW_RECURRING = ('daily', 'monthly', 'weekly')
+
+
+def _mwindow_days(window_type, value):
+    """`value` as the `days` list of v3: weekday numbers (1 = Monday, as in v2)
+    for a weekly window, days of the month (-1 = last day) for a monthly one.
+    Accepts the labels and the dash-joined lists the module documents."""
+    if window_type not in ('monthly', 'weekly') or value in (None, ''):
+        return []
+    days = []
+    # a leading '-' is the "last day of the month" marker, not a separator
+    tokens = ['-1'] if str(value) == '-1' else str(value).split('-')
+    for token in tokens:
+        token = token.strip().lower()
+        if window_type == 'weekly' and token in MWINDOW_DAY:
+            days.append(MWINDOW_DAY[token])
+        else:
+            days.append(int(token))
+    return days
+
+
+def _translate_mwindow_v3(item):
+    """A v3 maintenance window in the shape `get_mwindows()` produces."""
+    window = {
+        'duration': item.get('duration'),
+        'friendly_name': item.get('name'),
+        'id': item.get('id'),
+        'start_time': item.get('time'),
+        'status': item.get('status'),
+        'type': item.get('interval'),
+    }
+    days = item.get('days') or []
+    if days:
+        if item.get('interval') == 'weekly':
+            read_day = {v: k for k, v in MWINDOW_DAY.items()}
+            window['value'] = '-'.join(read_day.get(day, str(day)) for day in days)
+        else:
+            window['value'] = '-'.join(str(day) for day in days)
+    return window
+
+
+def _new_recurring_mwindow(module, api_key, params):
+    """Create a daily, weekly or monthly maintenance window through the v3 API.
+
+    v2 `newMWindow` rejects these with "invalid_parameter: date field is not
+    allowed for "daily" interval" (or "weekly"), whatever `start_time` looks
+    like, although no date is sent. A `once` window is still accepted by v2. v3
+    `POST /v3/maintenance-windows` without a `date` creates them, and v2
+    `getMWindows` / `editMWindow` handle the result like any other window.
+    Verified against api.uptimerobot.com on 2026-11-04 for daily and weekly
+    windows.
+
+    Returns the window in the shape `get_mwindows()` produces.
+    """
+    start_time = str(params['start_time'])
+    if len(start_time) == 5:  # HH:MM, v3 wants HH:mm:ss
+        start_time += ':00'
+    payload = {
+        'duration': int(params['duration']),
+        'interval': params['type'],
+        'name': params['friendly_name'],
+        'time': start_time,
+    }
+    days = _mwindow_days(params['type'], params.get('value'))
+    if days:
+        payload['days'] = days
+    success, result = _request_v3(
+        module, api_key, 'POST', 'maintenance-windows', payload
+    )
+    if not success:
+        return success, result
+    _cache_invalidate('getMWindows')
+    return True, _translate_mwindow_v3(result)
+
+
 def new_mwindow(module, api_key, params):
+    if params.get('type') in _MWINDOW_RECURRING:
+        return _new_recurring_mwindow(module, api_key, params)
     allowed = {'friendly_name', 'type', 'value', 'start_time', 'duration'}
     body = _filter_keys(params, allowed)
     body = _translate_keys(body, _MWINDOW_TRANSLATIONS)

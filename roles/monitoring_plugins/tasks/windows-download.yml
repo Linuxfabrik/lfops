@@ -1,12 +1,50 @@
 # Example of an MSI package: https://download.linuxfabrik.ch/monitoring-plugins/lfmp-1.2.0.11-1.signed-packaged.windows.x86_64.zip
 # Example of an ZIP archive: https://download.linuxfabrik.ch/monitoring-plugins/lfmp-1.2.0.11-1.signed-compiled.windows.x86_64.zip
 # Therefore "__monitoring_plugins__file_type" is "packaged" or "compiled"
+# A rebuilt release gets a higher package iteration ("-2", "-3", ...), so the highest one
+# published for the version is taken from the directory listing.
 
 - block:
 
+  - name: 'curl https://download.linuxfabrik.ch/monitoring-plugins/'
+    ansible.builtin.uri:
+      url: 'https://download.linuxfabrik.ch/monitoring-plugins/'
+      method: 'GET'
+      return_content: true
+      status_code: 200
+    register: '__monitoring_plugins__download_listing'
+    changed_when: false
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
+    delegate_to: 'localhost'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Find the package iterations of lfmp-{{ monitoring_plugins__version }} ({{ __monitoring_plugins__file_type }})'
+    ansible.builtin.set_fact:
+      # `[.]` instead of `\.` keeps backslashes out of the Jinja string. The `.asc` and
+      # `.sha256` files match as well, which only repeats an iteration.
+      __monitoring_plugins__download_iterations: '{{
+          __monitoring_plugins__download_listing["content"]
+          | regex_findall(__monitoring_plugins__download_regex)
+          | map("int")
+          | list
+        }}'
+    vars:
+      __monitoring_plugins__download_regex: 'lfmp-{{ monitoring_plugins__version | regex_escape }}-([0-9]+)[.]signed-{{ __monitoring_plugins__file_type }}[.]windows[.]x86_64[.]zip'
+
+  - name: 'Fail if lfmp-{{ monitoring_plugins__version }} is not available for Windows'
+    ansible.builtin.assert:
+      that:
+        - '__monitoring_plugins__download_iterations | length > 0'
+      fail_msg: 'https://download.linuxfabrik.ch/monitoring-plugins/ offers no lfmp-{{ monitoring_plugins__version }}-*.signed-{{ __monitoring_plugins__file_type }}.windows.x86_64.zip. Check monitoring_plugins__version.'
+      quiet: true
+
   - name: 'Set __monitoring_plugins__download_url for zipped MSI package'
     ansible.builtin.set_fact:
-      __monitoring_plugins__download_url: 'https://download.linuxfabrik.ch/monitoring-plugins/lfmp-{{ monitoring_plugins__version }}-1.signed-{{ __monitoring_plugins__file_type }}.windows.x86_64.zip'
+      __monitoring_plugins__download_url: 'https://download.linuxfabrik.ch/monitoring-plugins/lfmp-{{ monitoring_plugins__version }}-{{ __monitoring_plugins__download_iterations | max }}.signed-{{ __monitoring_plugins__file_type }}.windows.x86_64.zip'
 
   - name: 'Debug'
     ansible.builtin.debug:

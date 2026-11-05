@@ -1,0 +1,13 @@
+# The interpreter of the venv differs per platform, see host_vars. Debian and Ubuntu ship a single
+# python3, so they cover the plain installation only.
+__molecule__python_venv__package_requirements: []
+__molecule__python_venv__python_executable: 'python3'
+
+# cowsay is pure Python and shipped by no distribution, so verify.yml can tell an import from the
+# venv apart from one from the system site-packages.
+python_venv__venvs__group_var:
+  - name: 'lfops-molecule'
+    package_requirements: '{{ __molecule__python_venv__package_requirements }}'
+    packages:
+      - 'cowsay'
+    python_executable: '{{ __molecule__python_venv__python_executable }}'

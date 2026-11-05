@@ -139,20 +139,28 @@
       - 'login'
       - 'login:authorized_keys'
 
-  - name: 'Remove old "lfops_login" sudoers file'
-    community.general.sudoers:
-      name: 'lfops_login'
-      state: 'absent'
 
-  - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
-    # the name must match the kickstart file: https://github.com/Linuxfabrik/kickstart/blob/main/lf-rhel.cfg#L231
-    community.general.sudoers:
-      name: 'linuxfabrik'
-      group: '{{ login__passwordless_sudo_group }}'
-      commands: 'ALL'
-      runas: 'ALL' # allow switching to any other user
-      nopassword: true
-      state: 'present'
+  # Create the new file before removing the old one, and remove the old one only when the new one
+  # is created. On a host where the Ansible user gets its password-less sudo from `lfops_login`
+  # only (set up by LFOps before v6.0.0, not from the Linuxfabrik kickstart), removing it first
+  # locks the run out of sudo before the new file is in place ("Missing sudo password").
+  - block:
+
+    - name: 'Allow "{{ login__passwordless_sudo_group }}" group to have password-less sudo'
+      # the name must match the kickstart file: https://github.com/Linuxfabrik/kickstart/blob/main/lf-rhel.cfg#L231
+      community.general.sudoers:
+        name: 'linuxfabrik'
+        group: '{{ login__passwordless_sudo_group }}'
+        commands: 'ALL'
+        runas: 'ALL' # allow switching to any other user
+        nopassword: true
+        state: 'present'
+
+    - name: 'Remove old "lfops_login" sudoers file'
+      community.general.sudoers:
+        name: 'lfops_login'
+        state: 'absent'
+
     when: 'login__passwordless_sudo_group is defined and login__passwordless_sudo_group | length > 0'
 
   tags:

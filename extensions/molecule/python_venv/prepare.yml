@@ -1,0 +1,32 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# Hosts set up before `python_executable` changed carry a venv built with the old interpreter,
+# e.g. the duplicity venv with Python 3.6 on RHEL 8. Build the venv of this scenario with the
+# distribution's default interpreter, so the role has to rebuild it with `python_executable`.
+# Without pip, as the role must not rely on anything inside the old venv.
+- name: 'Build a venv with another Python minor release'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+
+    - block:
+
+      - name: 'mkdir -p /opt/python-venv'
+        ansible.builtin.file:
+          path: '/opt/python-venv'
+          state: 'directory'
+          owner: 'root'
+          group: 'root'
+          mode: 0o755
+
+      - name: '{{ __molecule__python_venv__stale_python_executable }} -m venv --without-pip /opt/python-venv/lfops-molecule'
+        ansible.builtin.command: '{{ __molecule__python_venv__stale_python_executable }} -m venv --without-pip /opt/python-venv/lfops-molecule'
+        args:
+          creates: '/opt/python-venv/lfops-molecule/pyvenv.cfg'
+
+      when:
+        - '__molecule__python_venv__stale_python_executable is defined'

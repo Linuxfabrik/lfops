@@ -1,0 +1,20 @@
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
+
+
+- block:
+
+  # The content is the bare secret, not a template with the usual header and version line: the
+  # server takes the whole file as the key.
+  - name: 'Store the JWT secret as the user-scoped systemd credential jwt-secret-key'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'jwt-secret-key'
+      content: '{{ nextcloud_whiteboard_server__jwt_secret_key }}'
+      scope: 'user'
+    become: true
+    become_user: 'nextcloud-whiteboard'
+    notify: 'nextcloud_whiteboard_server: systemctl --user restart nextcloud-whiteboard-server-container.service'
+
+  tags:
+    - 'nextcloud_whiteboard_server'
+    - 'nextcloud_whiteboard_server:configure'

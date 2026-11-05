@@ -745,6 +745,15 @@ Calls the following roles (in order):
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network)
 
 
+## nextcloud_whiteboard_server.yml
+
+Calls the following roles (in order):
+
+* [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login): `nextcloud_whiteboard_server__skip_login`
+* [nextcloud_whiteboard_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud_whiteboard_server)
+* [podman_containers](https://github.com/Linuxfabrik/lfops/tree/main/roles/podman_containers): `nextcloud_whiteboard_server__skip_podman_containers`
+
+
 ## nfs_client.yml
 
 Calls the following roles (in order):
@@ -1385,6 +1394,7 @@ Calls the following roles (in order):
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_nextcloud__skip_repo_epel`
 * [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_nextcloud__skip_repo_linuxfabrik` (runs only together with `acme_sh`)
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `setup_nextcloud__skip_policycoreutils`
+* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_nextcloud__skip_selinux`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `setup_nextcloud__skip_python`
 * [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban): `setup_nextcloud__skip_fail2ban`
 * [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `setup_nextcloud__skip_kernel_settings`
@@ -1396,7 +1406,6 @@ Calls the following roles (in order):
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server): `setup_nextcloud__skip_mariadb_server`
 * [redis](https://github.com/Linuxfabrik/lfops/tree/main/roles/redis): `setup_nextcloud__skip_redis`
 * [valkey](https://github.com/Linuxfabrik/lfops/tree/main/roles/valkey): `setup_nextcloud__skip_valkey`
-* [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `setup_nextcloud__skip_selinux`
 * [systemd_unit](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_unit): `nextcloud__skip_systemd_unit`
 * [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud)
 * [repo_collabora_code](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_collabora_code): `setup_nextcloud__skip_repo_collabora_code`

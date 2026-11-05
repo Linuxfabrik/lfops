@@ -1,0 +1,129 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state: the rootless container answers, its server got the secret, the secret is nowhere on
+# disk in plain text, and Chromium and ffmpeg for recordings run under the container's
+# restrictions.
+- name: 'Verify the Nextcloud Whiteboard server'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+
+    __molecule__user: 'nextcloud-whiteboard'
+    __molecule__home: '/opt/nextcloud-whiteboard-server'
+    __molecule__unit: 'nextcloud-whiteboard-server-container.service'
+    # the user's session, without which podman falls back to cgroupfs and cannot join the
+    # container's cgroup (Debian 13: "crun: write file .../cgroup.procs: Permission denied")
+    __molecule__user_env:
+      DBUS_SESSION_BUS_ADDRESS: 'unix:path=/run/user/{{ ansible_facts["getent_passwd"][__molecule__user][1] }}/bus'
+      XDG_RUNTIME_DIR: '/run/user/{{ ansible_facts["getent_passwd"][__molecule__user][1] }}'
+
+  tasks:
+
+    - name: 'getent passwd {{ __molecule__user }}'
+      ansible.builtin.getent:
+        database: 'passwd'
+        key: '{{ __molecule__user }}'
+
+    # as the user instead of `--machine=<user>@`, which needs the system D-Bus (absent on Debian 13)
+    - name: 'systemctl --user is-active {{ __molecule__unit }}'
+      ansible.builtin.command: 'systemctl --user is-active {{ __molecule__unit }}'
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_env }}'
+      register: '__molecule__unit_result'
+      changed_when: false
+      failed_when: '__molecule__unit_result["stdout"] != "active"'
+
+    - name: 'Assert the server answers on 127.0.0.1:3002'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:3002/'
+        return_content: true
+      register: '__molecule__home_result'
+      # the first start pulls the image
+      retries: 30
+      delay: 10
+      until: '__molecule__home_result["content"] | d("") == "Nextcloud Whiteboard Collaboration Server"'
+
+    # the Engine.IO open packet ("0{...}") proves that Socket.IO, which the browsers talk to, is up
+    - name: 'Assert the Socket.IO endpoint hands out a session'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:3002/socket.io/?EIO=4&transport=polling'
+        return_content: true
+      register: '__molecule__socketio_result'
+      failed_when: 'not __molecule__socketio_result["content"].startswith("0{")'
+
+    - name: 'Assert the server does not listen on other addresses'
+      ansible.builtin.command: 'ss --listening --numeric --tcp --no-header sport = :3002'
+      register: '__molecule__listen_result'
+      changed_when: false
+      failed_when: >-
+        __molecule__listen_result["stdout_lines"] | length == 0
+        or __molecule__listen_result["stdout_lines"]
+          | reject("search", "127\.0\.0\.1:3002")
+          | list | length > 0
+
+    - name: 'stat the credential'
+      ansible.builtin.stat:
+        path: '{{ __molecule__home }}/.config/credstore.encrypted/jwt-secret-key'
+      register: '__molecule__credential_stat_result'
+
+    - name: 'Assert the credential belongs to the user and is not world-readable'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__credential_stat_result["stat"]["exists"]'
+          - '__molecule__credential_stat_result["stat"]["pw_name"] == __molecule__user'
+          - '__molecule__credential_stat_result["stat"]["mode"] == "0600"'
+        fail_msg: '{{ __molecule__credential_stat_result["stat"] | to_json }}'
+
+    # Podman would keep a container environment variable in plain text in its storage below the
+    # home directory, so this also covers the way the secret reaches the container.
+    - name: 'Assert the secret is nowhere below the home directory and /etc in plain text'
+      ansible.builtin.command: 'grep --recursive --files-with-matches --fixed-strings molecule-jwt-secret-marker {{ __molecule__home }} /etc'
+      register: '__molecule__grep_result'
+      changed_when: false
+      failed_when: '__molecule__grep_result["rc"] != 1'
+
+    - name: 'Assert the server process received the secret'
+      ansible.builtin.command: 'podman exec nextcloud-whiteboard-server sh -c ''tr "\0" "\n" < /proc/1/environ'''
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_env }}'
+      register: '__molecule__environ_result'
+      changed_when: false
+      failed_when: '"JWT_SECRET_KEY=molecule-jwt-secret-marker" not in __molecule__environ_result["stdout_lines"]'
+
+    # Recordings run a headless Chromium and ffmpeg inside the container. Like the server
+    # (websocket_server/Services/RecordingService.js), Chromium gets a profile below /tmp, since
+    # its default below HOME=/app is not writable.
+    - name: 'Assert Chromium renders a page inside the container'
+      ansible.builtin.command: >-
+        podman exec nextcloud-whiteboard-server sh -c
+        'chromium-browser --headless --no-sandbox --disable-gpu --user-data-dir="$(mktemp -d)" --dump-dom about:blank'
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_env }}'
+      register: '__molecule__chromium_result'
+      changed_when: false
+      failed_when: '"<html" not in __molecule__chromium_result["stdout"]'
+
+    - name: 'Assert ffmpeg runs inside the container'
+      ansible.builtin.command: 'podman exec nextcloud-whiteboard-server ffmpeg -version'
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_env }}'
+      changed_when: false
+
+    - name: 'podman auto-update --dry-run --format json'
+      ansible.builtin.command: 'podman auto-update --dry-run --format json'
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_env }}'
+      register: '__molecule__auto_update_result'
+      changed_when: false
+      failed_when: >-
+        __molecule__unit not in (__molecule__auto_update_result["stdout"] | from_json
+          | map(attribute="Unit") | list)
+
+    - name: 'systemctl --user is-active podman-auto-update.timer'
+      ansible.builtin.command: 'systemctl --user is-active podman-auto-update.timer'
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_env }}'
+      register: '__molecule__timer_result'
+      changed_when: false
+      failed_when: '__molecule__timer_result["stdout"] != "active"'

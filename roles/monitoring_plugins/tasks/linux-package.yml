@@ -72,6 +72,70 @@
     when:
       - 'ansible_facts["os_family"] == "RedHat"'
 
+  # A host switched from the source install to the package keeps what the source install placed
+  # where the package places nothing. The harmful part is the library in
+  # /usr/lib64/nagios/plugins/lib, which the package ships in its venv instead: Python puts the
+  # directory of a plugin first on sys.path, so the plugins go on importing the library of the
+  # source install, which no package update reaches. Verified with linuxfabrik-monitoring-plugins
+  # 8.1.0 on Rocky 10.
+  # Of what the install manifest lists, only paths no package owns are removed, after the package
+  # install, so that the plugins, the venv directory and the assets the package took over are
+  # kept. Removing the manifest last makes this a one-off.
+  - name: 'stat /usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+    ansible.builtin.stat:
+      path: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+    register: '__monitoring_plugins__manifest_stat'
+
+
+  - block:
+
+    - name: 'cat /usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+      ansible.builtin.slurp:
+        src: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+      register: '__monitoring_plugins__manifest'
+
+    - name: 'Remove what the install manifest of the former source install lists and no package owns'
+      ansible.builtin.shell:
+        cmd: |
+          owned() {
+            if command -v rpm >/dev/null 2>&1 && rpm --query --file "$1" >/dev/null 2>&1; then
+              return 0
+            fi
+            if command -v dpkg >/dev/null 2>&1 && dpkg --search "$1" >/dev/null 2>&1; then
+              return 0
+            fi
+            return 1
+          }
+          failed=0
+          while read -r path; do
+            [ -e "$path" ] || [ -L "$path" ] || continue
+            owned "$path" && continue
+            if rm --recursive --force -- "$path"; then
+              echo "removed: $path"
+            else
+              failed=1
+            fi
+          done
+          exit "$failed"
+        executable: '/bin/bash'
+        # double quotes, so that YAML turns `\n` into the newline that separates the paths
+        stdin: "{{
+            (__monitoring_plugins__manifest['content'] | b64decode).splitlines()
+            | select('match', __monitoring_plugins__manifest_allowed_paths)
+            | reject('search', '/[.][.]?(/|$)')
+            | join('\n')
+          }}"
+      register: '__monitoring_plugins__remove_source_leftovers_result'
+      changed_when: '"removed:" in __monitoring_plugins__remove_source_leftovers_result["stdout"]'
+
+    - name: 'rm -f /usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+      ansible.builtin.file:
+        path: '/usr/lib64/linuxfabrik-monitoring-plugins/install-manifest.txt'
+        state: 'absent'
+
+    when:
+      - '__monitoring_plugins__manifest_stat["stat"]["exists"] | bool'
+
   - name: 'Make sure sudoers drop-ins placed under earlier names are absent (each would duplicate the Cmnd_Alias of the packaged /etc/sudoers.d/linuxfabrik-monitoring-plugins)'
     ansible.builtin.file:
       # monitoring-plugins: the name the source install used before; icinga2-plugins: the manual

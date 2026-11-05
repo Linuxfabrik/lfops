@@ -1,0 +1,11 @@
+# Molecule scenario marker for the 'python_venv' scenario, run with
+# `molecule test --scenario-name python_venv`.
+#
+# The prepare playbook is overridden to leave a venv on the RHEL hosts that was built with
+# another Python minor release than the one the inventory asks for, as on hosts set up before
+# `python_executable` changed; see the scenario-local prepare.yml. It imports the shared
+# vm-prepare.yml first, so the systems under test are still waited for and their facts still
+# gathered.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

@@ -84,6 +84,7 @@
     loop: '{{ podman_containers__containers__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
+    register: '__podman_containers__container_units_result'
     notify: 'podman_containers: systemctl daemon-reload'
 
   tags:
@@ -173,6 +174,27 @@
   # Note about enabling / disabling units todo
   # also, we always do a `daemon_reload`. this is easier here than via a handler, as the daemon needs to be reloaded for the correct users.
 
+  # The user's service manager may already run (lingering) when Podman pulls in the user D-Bus
+  # (dbus-user-session on Debian and Ubuntu), and then has no bus until it restarts, usually at
+  # the next boot. Rootless Podman needs it to manage the container's cgroup (`podman exec`
+  # fails with "crun: write file .../cgroup.procs: Permission denied") and `podman auto-update`
+  # to restart the units. Verified on Debian 13.
+  - name: 'systemctl --user start dbus.socket'
+    ansible.builtin.systemd:
+      name: 'dbus.socket'
+      scope: 'user'
+      state: 'started'
+    become: true
+    become_user: '{{ item }}'
+    loop: '{{
+          (podman_containers__containers__combined_var +
+          podman_containers__networks__combined_var +
+          podman_containers__volumes__combined_var)
+          | selectattr("user", "defined")
+          | map(attribute="user")
+          | unique
+      }}'
+
   - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}-network.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-network.service'
@@ -201,11 +223,14 @@
     loop_control:
       label: '{{ item["name"] }}'
 
+  # A running container keeps the settings it was started with, so a container whose unit just
+  # changed is restarted instead of only started.
   - name: 'systemctl {{ (item["state"] | d("started")) | regex_replace("p?ed$", "") }} {{ item["name"] }}-container.service'
     ansible.builtin.systemd:
       name: '{{ item["name"] }}-container.service'
       scope: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary("user", omit) }}'
-      state: '{{ item["state"] | d("started") }}'
+      state: '{{ (item["state"] | d("started") == "started" and item["name"] in __podman_containers__changed_containers)
+        | ternary("restarted", item["state"] | d("started")) }}'
       daemon_reload: true
     become: true
     become_user: '{{ item["user"] | d(omit) }}'
@@ -214,6 +239,16 @@
     loop: '{{ podman_containers__containers__combined_var }}'
     loop_control:
       label: '{{ item["name"] }} - state: {{ item["state"] | d("started") }}'
+    vars:
+      # empty when the play runs only the podman_containers:state tag
+      __podman_containers__changed_containers: '{{
+          __podman_containers__container_units_result["results"] | d([])
+          | selectattr("changed", "defined")
+          | selectattr("changed")
+          | map(attribute="item")
+          | map(attribute="name")
+          | list
+        }}'
 
   tags:
     - 'podman_containers'

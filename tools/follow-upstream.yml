@@ -316,9 +316,10 @@ grafana:
     - '/etc/default/grafana-server'
     - '/etc/sysconfig/grafana-server'
 
-# Install scripts (icingadb 1.5.1, RPM and DEB): create the user and register the
-# systemd unit. The DEB postinst also sets the owner of /etc/icingadb and the mode 0640
-# of config.yml on every run, as the icingadb role does. None touch the file content.
+# Install scripts (icingadb 1.6.0, RPM and DEB): create the user, add it to the
+# icinga-notifications group if that group exists, and register the systemd unit. The
+# DEB postinst also sets the owner of /etc/icingadb and the mode 0640 of config.yml on
+# every run, as the icingadb role does. None touch the file content.
 # Icinga's RHEL repository is for subscribers only, so the public Fedora repository
 # stands in for it. It has no version-independent path: before Fedora 44 drops out,
 # bump the release in `rpm_repo` to a newer Fedora whose repository already serves the

@@ -1,0 +1,62 @@
+# Checks that need nothing changed on the host. Imported at the top of tasks/main.yml, and
+# included by playbooks/setup_nextcloud.yml in its pre_tasks, so that a missing or wrong database
+# login aborts before mariadb_server sets its password for the MariaDB user. Tagged for
+# mariadb_server as well, since a run limited to its tags changes that password, too.
+- block:
+
+  - name: 'Assert that nextcloud__database_login is set'
+    ansible.builtin.assert:
+      that:
+        - 'nextcloud__database_login["username"] | d("") | length > 0'
+        - 'nextcloud__database_login["password"] | d("") | length > 0'
+      quiet: true
+      fail_msg: >-
+        nextcloud__database_login needs the username and the password of the MariaDB user
+        Nextcloud connects as. On an existing installation, Nextcloud has them in config.php:
+        'sudo -u {{ __shared__apache_httpd_user }} php /var/www/html/nextcloud/occ config:system:get dbuser'
+        and
+        'sudo -u {{ __shared__apache_httpd_user }} php /var/www/html/nextcloud/occ config:system:get dbpassword'.
+
+  - name: 'stat /var/www/html/nextcloud/config/config.php'
+    ansible.builtin.stat:
+      path: '/var/www/html/nextcloud/config/config.php'
+    register: '__nextcloud__preflight_config_php_stat_result'
+
+  # Reads config.php directly instead of asking occ, which would also need a working database.
+  - name: 'Get dbuser and dbpassword of the installed Nextcloud'
+    ansible.builtin.command:
+      argv:
+        - 'php'
+        - '--run'
+        - 'include "/var/www/html/nextcloud/config/config.php"; echo json_encode([$CONFIG["dbuser"] ?? "", $CONFIG["dbpassword"] ?? ""]);'
+    register: '__nextcloud__preflight_db_login_result'
+    changed_when: false
+    check_mode: false # read-only, and the assert below needs the result
+    no_log: true # the output contains the database password
+    when:
+      - '__nextcloud__preflight_config_php_stat_result["stat"]["exists"]'
+
+  # Only a login with the same username matters: the playbook sets its password for the MariaDB
+  # user Nextcloud connects as. A different username gets a MariaDB user of its own, and the
+  # installation keeps the one it was set up with.
+  - name: 'Assert that nextcloud__database_login matches the installed Nextcloud'
+    ansible.builtin.assert:
+      that:
+        - '__nextcloud__preflight_installed_db_login[0] != nextcloud__database_login["username"]
+          or __nextcloud__preflight_installed_db_login[1] == nextcloud__database_login["password"]'
+      quiet: true
+      fail_msg: >-
+        The password in nextcloud__database_login differs from the one the installed Nextcloud
+        connects with as {{ nextcloud__database_login["username"] }}. The run would set it for
+        the MariaDB user and lock Nextcloud out of its database. Put the password from
+        'sudo -u {{ __shared__apache_httpd_user }} php /var/www/html/nextcloud/occ config:system:get dbpassword'
+        into the inventory.
+    vars:
+      __nextcloud__preflight_installed_db_login: '{{ __nextcloud__preflight_db_login_result["stdout"] | from_json }}'
+    when:
+      - '__nextcloud__preflight_config_php_stat_result["stat"]["exists"]'
+
+  tags:
+    - 'mariadb_server'
+    - 'mariadb_server:users'
+    - 'nextcloud'

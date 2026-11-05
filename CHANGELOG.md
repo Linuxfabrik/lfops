@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:nextcloud, playbook:setup_nextcloud**: Nextcloud keeps its local cache in APCu instead of Redis or Valkey, as the Nextcloud admin manual recommends, with 128 MB of shared memory and APCu enabled for `occ` and the cron jobs. Redis or Valkey keeps the distributed cache and file locking. To stay with Redis or Valkey, set `memcache.local` in `nextcloud__sysconfig__host_var`.
+* **role:nextcloud**: The role sets `dbhost` in `config.php` to `nextcloud__database_host` on every run, where it only used the variable for the installation, and writes `localhost` as the path to the MariaDB socket, so notify_push connects through the socket instead of over TCP. On a host whose `config.php` names another database server than the inventory, set `nextcloud__database_host` to that server before the run.
+* **role:nextcloud**: `nextcloud__database_login` is mandatory, and `nextcloud__mariadb_login` is gone. A new installation connects to MariaDB as this user, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only, instead of handing the database administrator to the installer, which created an `oc_` user that may connect from any host. Existing installations keep their database user.
+* **role:nextcloud**: `nextcloud__version` is mandatory, for example `'latest-35'`. It only picks the release that a new installation downloads.
+* **role:nextcloud**: Nextcloud reaches Redis or Valkey through its Unix socket instead of over TCP, and the web server user joins the `redis` or `valkey` group, which may use the socket. Run the complete `setup_nextcloud` playbook rather than the `nextcloud` role alone, so that Redis or Valkey open the socket first. Set `nextcloud__redis_unixsocket: ''` to stay with TCP.
+* **role:nextcloud**: The role aborts before it changes anything when the installed PHP or MariaDB does not fit the installed Nextcloud major version, or when it does not know that major version (30 to 35 are known). For example, Nextcloud 35 needs PHP 8.3 to 8.5 and MariaDB 10.11 or newer. Upgrade PHP or MariaDB, as the error message says, before running the role again.
+* **role:nextcloud**: Nextcloud verifies the certificate of the SMTP server, where the role had switched the check off. If your mail server presents a self-signed certificate, make Nextcloud trust it, or set `mail_smtpstreamoptions ssl allow_self_signed` to `true` and `mail_smtpstreamoptions ssl verify_peer` and `mail_smtpstreamoptions ssl verify_peer_name` to `false` in `nextcloud__sysconfig__host_var` to keep the previous behaviour.
 * **playbook:setup_icinga2_master, playbook:setup_nextcloud**: MariaDB runs with `skip_name_resolve = ON`, so accounts bound to a host name no longer log in. Move them to an IP address, or set `mariadb_server__cnf_skip_name_resolve__host_var`.
 * **role:mariadb_server**: `table_definition_cache` defaults to 600 instead of 400, which needs a restart of MariaDB.
 * **role:duplicity, playbook:duplicity, playbook:setup_basic**: On a host where `duba` is not installed yet, the run aborts unless `/tmp` has 1024 MiB free, since smaller filesystems fail the backup. Grow `/tmp` with `lvm__lvs__host_var`, or set `lfops__skip_disk_space_check` to skip the check.
@@ -70,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:redis**: Add template for Redis 8.10.
+* **role:nextcloud, playbook:setup_nextcloud**: The run aborts before it changes anything if `nextcloud__database_login` is missing or names the database user of the installed Nextcloud with another password, and tells how to read the login with `occ`. Until now a wrong password locked Nextcloud out of its database.
+* **module:systemd_credential**: `scope: 'user'` stores a credential for the services of an unprivileged user, such as a rootless Podman container, on hosts with systemd 256 or newer.
+* **role:nextcloud_whiteboard_server, playbook:nextcloud_whiteboard_server**: New role and playbook for the collaboration server of the Nextcloud Whiteboard app (real-time collaboration and recordings), run as an automatically updated rootless Podman container on hosts with systemd 256 or newer.
+* **role:php**: `php__ini_apc_enable_cli` and `php__ini_apc_shm_size` configure APCu.
 * **role:mariadb_server**: `mariadb_server__cnf_innodb_linux_aio` selects the Linux AIO implementation, for hosts where the kernel blocks io_uring.
 * **role:nextcloud**: A fresh installation enforces two-factor authentication, has TOTP enabled and no mimetype migrations pending. `nextcloud-update` runs the mimetype migrations after each update. Existing installations keep their enforcement state.
 * **role:nextcloud**: Nextcloud sends mail through the relay host of the `postfix` role by default, unless a mail server is already configured.
@@ -133,6 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:nextcloud**: The role removes the PHP extensions bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: the caches live in APCu, Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
+* **role:icingadb_web, playbook:setup_icinga2_master**: Icinga DB Web shows up to 65536 characters of a plugin output instead of 20000, so long check outputs are no longer cut off.
 * **role:aide, role:system_update**: AIDE always runs with the lowest CPU and I/O priority, also where the role and the update scripts call it directly, so it yields to everything else on the host.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502.
 * **role:icingaweb2, playbook:setup_icinga2_master**: IcingaWeb2 accepts selections of up to 500 objects and has 5 minutes for long requests such as PDF exports. A reverse proxy in front of it needs `apache_httpd__conf_limit_request_field_size` and `apache_httpd__conf_limit_request_line` set to `131072` as well.
@@ -208,6 +221,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:uptimerobot_mwindow, role:uptimerobot**: Daily, weekly and monthly maintenance windows can be created again after UptimeRobot started to reject them with HTTP 400, changing the duration of a weekly window with several days works, and a failed API call names UptimeRobot's reason instead of only "Bad Request".
+* **role:aide**: AIDE no longer reports the files Collabora caches below `/opt/cool/cache` for every new user and document setting.
+* **role:nextcloud**: The README example for the Collabora WOPI allow list includes the Nextcloud host next to the reverse proxy. With the proxy alone, documents fail to load with "Unauthorized WOPI host".
+* **role:podman_containers**: On Debian and Ubuntu, rootless containers can be updated by `podman auto-update` and reached with `podman exec` right after the first run, not only after a reboot.
+* **role:podman_containers**: A container whose settings change is restarted, so that it runs with the new settings instead of the ones it was started with.
+* **role:login, playbook:setup_basic**: A run no longer locks Ansible out of `sudo` with "Missing sudo password" on hosts set up by LFOps before v6.0.0, where the Ansible user gets its password-less sudo from `/etc/sudoers.d/lfops_login` only, and the role leaves that file alone if `login__passwordless_sudo_group` is not set.
+* **role:monitoring_plugins**: Windows hosts install a monitoring plugins release that was rebuilt on download.linuxfabrik.ch, such as 8.1.0, where the download failed with a 404.
+* **role:monitoring_plugins**: On a host switched from the source install to the package, the plugins use the Linuxfabrik library of the package again, since the role removes what the source install left behind, such as `/usr/lib64/nagios/plugins/lib`.
+* **role:python_venv, role:duplicity**: A venv built with another Python minor release than `python_executable` is rebuilt, so the duplicity venv on RHEL 8 hosts set up before the switch to Python 3.11 installs again instead of failing with `ResolutionImpossible`.
+* **role:repo_mydumper**: A run against an unchanged host no longer reports the signing key of the mydumper repository as changed from time to time.
+* **role:nextcloud**: A run after a failed installation installs Nextcloud, where it skipped the installer because the failed attempt had left a `config.php` behind.
+* **role:nextcloud**: A run against an unchanged host no longer restarts PHP-FPM and reports no change at all.
+* **role:nextcloud**: `nextcloud-update` adds missing primary keys after an update, which Nextcloud leaves to the administrator.
+* **role:nextcloud**: A `nextcloud__datadir` other than `/data` gets the ownership and the SELinux label Nextcloud needs, which the role only ever set on `/data`.
 * **role:aide**: The check no longer reports the sockets and locks of gpg-agent and keyboxd below `/root/.gnupg`, or LVM metadata archives coming and going in `/etc/lvm/archive`.
 * **role:lvm**: A run no longer writes an LVM metadata archive for every PV whose size did not change, which AIDE reported, and `--check` no longer reports such PVs as changed.
 * **role:monitoring_plugins**: The icons in IcingaWeb2 belong to root instead of the user ID of the Ansible controller user, and a run no longer rewrites all of them, which AIDE reported.
@@ -381,6 +408,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:nextcloud**: The login of the Icinga2 API user that `nextcloud-update` uses is stored as a systemd credential, encrypted on RHEL 9 and newer, instead of in the script, and the role deletes the older copies of the script that still contain it.
+* **role:nextcloud**: The password of the Icinga API user no longer shows up in the process list while `nextcloud-update` sets or removes the downtime.
+* **role:nextcloud**: `/usr/local/bin/nextcloud-update` is readable by root only.
+* **role:nextcloud**: The database and admin passwords no longer show up in the process list during the installation.
 * **role:nextcloud**: The installation aborts unless Nextcloud signed the downloaded release archive.
 * **role:borg_local**: The repository passphrase and the Icinga2 API login are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/etc/borg/borg-passphrase` and `/usr/local/bin/borg-backup`, so the passphrase is no longer readable in the backup it protects. The old files and their copies are deleted. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. `source /etc/borg/borg.conf` followed by `borg` still works for restores, as root.
 * **role:schedule_reboot**: The Icinga2 API login and the Rocket.Chat webhook URL are stored encrypted with `systemd-creds` on systemd 251 and newer instead of in plain text in `/usr/local/libexec/do-reboot`. On RHEL 8 and Ubuntu 22.04 they stay in plain text, in `/etc/credstore/`. If the credentials cannot be decrypted, the host still reboots, without the downtime and the chat message.

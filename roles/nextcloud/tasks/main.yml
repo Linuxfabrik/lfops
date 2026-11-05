@@ -1,3 +1,7 @@
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
+
+
 - block:
 
   - name: 'Set platform/version specific variables'
@@ -144,6 +148,63 @@
       - 'not __nextcloud__config_dir_stat_result["stat"]["exists"]'
 
 
+  # Checked against the unpacked code rather than nextcloud__version, which only picks the
+  # download of a new installation and names at most the major version ('latest-35'), and on
+  # every run, so a PHP or MariaDB that falls below what the installed Nextcloud needs stops
+  # the run before the role touches the instance.
+  - name: 'stat /var/www/html/nextcloud/version.php'
+    ansible.builtin.stat:
+      path: '/var/www/html/nextcloud/version.php'
+    register: '__nextcloud__version_php_result'
+
+  - block:
+
+    - name: 'Get the Nextcloud major version and the PHP version'
+      ansible.builtin.command:
+        argv:
+          - 'php'
+          - '--run'
+          - 'require "/var/www/html/nextcloud/version.php"; echo $OC_Version[0], " ", PHP_VERSION;'
+      register: '__nextcloud__versions_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Get the MariaDB version'
+      ansible.mariadb.mariadb_info:
+        login_user: '{{ nextcloud__database_login["username"] }}'
+        login_password: '{{ nextcloud__database_login["password"] }}'
+        login_host: '{{ nextcloud__database_host }}'
+        login_unix_socket: '{{ (nextcloud__database_host == "localhost") | ternary(__nextcloud__mysql_login_unix_socket, omit) }}' # https://github.com/PyMySQL/PyMySQL/issues/509#issuecomment-244072354
+        filter: 'version'
+      register: '__nextcloud__mariadb_info_result'
+      check_mode: false
+
+    - name: 'Assert that PHP and MariaDB meet the requirements of the installed Nextcloud'
+      ansible.builtin.assert:
+        that:
+          - '__nextcloud__major_version in __nextcloud__requirements'
+          - '__nextcloud__php_version is version(__nextcloud__requirements[__nextcloud__major_version]["php_min"], ">=")'
+          - '__nextcloud__php_version is version(__nextcloud__requirements[__nextcloud__major_version]["php_max"], "<")'
+          - '__nextcloud__mariadb_version is version(__nextcloud__requirements[__nextcloud__major_version]["mariadb_min"], ">=")'
+        quiet: true
+        fail_msg: >-
+          {% if __nextcloud__major_version not in __nextcloud__requirements -%}
+          Nextcloud {{ __nextcloud__major_version }} is not supported by this role.
+          Supported versions: {{ __nextcloud__requirements | list | join(", ") }}.
+          {%- else -%}
+          Nextcloud {{ __nextcloud__major_version }} needs
+          PHP {{ __nextcloud__requirements[__nextcloud__major_version]["php_min"] }} or newer, but older than {{ __nextcloud__requirements[__nextcloud__major_version]["php_max"] }},
+          and MariaDB {{ __nextcloud__requirements[__nextcloud__major_version]["mariadb_min"] }} or newer.
+          Found PHP {{ __nextcloud__php_version }} and MariaDB {{ __nextcloud__mariadb_version }}.
+          {%- endif %}
+      vars:
+        __nextcloud__major_version: '{{ __nextcloud__versions_result["stdout"].split()[0] }}'
+        __nextcloud__mariadb_version: '{{ __nextcloud__mariadb_info_result["version"]["full"] | regex_search("^[0-9.]+") }}'
+        __nextcloud__php_version: '{{ __nextcloud__versions_result["stdout"].split()[1] }}'
+
+    when:
+      - '__nextcloud__version_php_result["stat"]["exists"]'
+
   - name: 'Deploy /var/www/html/nextcloud/config/objectstore.config.php (storage backend)'
     ansible.builtin.template:
       backup: true
@@ -170,7 +231,7 @@
       group: '{{ __shared__apache_httpd_group }}'
       mode: 0o750
     loop:
-      - '/data'
+      - '{{ nextcloud__datadir }}'
       - '/var/www/html/nextcloud/data'
 
   - name: 'chmod +x /var/www/html/nextcloud/occ'
@@ -178,31 +239,54 @@
       path: '/var/www/html/nextcloud/occ'
       mode: 0o755
 
-  - name: 'restorecon -Fvr /data /var/www/html/nextcloud'
-    ansible.builtin.command: 'restorecon -Fvr /data /var/www/html/nextcloud'
+  # Without --force: that would also reset the SELinux user of every file the installer and
+  # Nextcloud create later, which the targeted policy ignores, and report a change on every run.
+  - name: 'restorecon -vr {{ nextcloud__datadir }} /var/www/html/nextcloud'
+    ansible.builtin.command: 'restorecon -vr {{ nextcloud__datadir | quote }} /var/www/html/nextcloud'
     register: 'nextcloud__restorecon_nextcloud_result'
     changed_when: 'nextcloud__restorecon_nextcloud_result["stdout"] | length > 0'
     when:
       - 'ansible_facts["selinux"]["status"] != "disabled"'
 
+  # Asked instead of checking for config.php, which Nextcloud writes at the start of the
+  # installation, so a failed attempt would otherwise make every later run skip the installer.
+  - name: 'php occ status --output=json'
+    ansible.builtin.command: 'php occ status --output=json'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    register: '__nextcloud__status_result'
+    changed_when: false
+    check_mode: false
+    when:
+      - '__nextcloud__version_php_result["stat"]["exists"]'
+
+  # The passwords reach occ on stdin, not on its command line, where every local user could
+  # read them in the process list. Without --database-pass and --admin-pass, occ asks for
+  # the database password first and the admin password second, and without a TTY it reads
+  # one line of stdin per question (verified with Nextcloud 35.0.0 on Rocky 10).
   - name: 'Run the Nextcloud installer'
-    # installation hangs without "--admin-user" and "--admin-pass"
     ansible.builtin.command: >-
       php occ maintenance:install
-        --admin-pass '{{ nextcloud__users.0.password }}'
-        --admin-user '{{ nextcloud__users.0.username }}'
+        --admin-user '{{ nextcloud__users[0]["username"] }}'
         --data-dir '{{ nextcloud__datadir }}'
         --database 'mysql'
         --database-host '{{ nextcloud__database_host }}'
         --database-name '{{ nextcloud__database_name }}'
-        --database-user '{{ nextcloud__mariadb_login.username }}'
-        --database-pass '{{ nextcloud__mariadb_login.password }}'
+        --database-user '{{ nextcloud__database_login["username"] }}'
     args:
       chdir: '/var/www/html/nextcloud/'
-      creates: '/var/www/html/nextcloud/config/config.php'
+      stdin: |-
+        {{ nextcloud__database_login["password"] }}
+        {{ nextcloud__users[0]["password"] }}
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     register: '__nextcloud__install_result'
+    changed_when: true # only runs while Nextcloud is not installed
+    when:
+      - '__nextcloud__status_result is not skipped'
+      - 'not (__nextcloud__status_result["stdout"] | from_json)["installed"]'
 
   # Only on a fresh installation: enforcing it later would make every existing user set up a
   # second factor at the next login.
@@ -262,6 +346,17 @@
 
 - block:
 
+  # The socket is open to the members of the Redis / Valkey group only. The PHP-FPM restart below
+  # gives the workers the new group.
+  - name: 'usermod --append --groups {{ nextcloud__redis_group }} {{ __shared__apache_httpd_user }}'
+    ansible.builtin.user:
+      name: '{{ __shared__apache_httpd_user }}'
+      groups: '{{ nextcloud__redis_group }}'
+      append: true
+    register: '__nextcloud__redis_group_result'
+    when:
+      - 'nextcloud__redis_unixsocket | length > 0'
+
   - name: 'Get Nextcloud config list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
     become: true
@@ -280,6 +375,7 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__sysconfig__combined_var }}'
+    register: '__nextcloud__sysconfig_result'
 
   # Leaves a mail server alone that was configured by hand. Nextcloud treats a set mail_domain
   # without a test mail as verified, see EmailTestSuccessful.php.
@@ -324,6 +420,8 @@
     ansible.builtin.service:
       name: '{{ __nextcloud__php_fpm_service_name }}'
       state: 'restarted'
+    when:
+      - '__nextcloud__redis_group_result is changed or __nextcloud__sysconfig_result is changed'
 
   tags:
     - 'nextcloud'
@@ -349,6 +447,17 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__apps__combined_var }}'
+    register: '__nextcloud__apps_result'
+
+  # Apps installed just now miss the file contexts that differ from their directory, such as bin_t
+  # on the notify_push binary.
+  - name: 'restorecon -vr /var/www/html/nextcloud/apps'
+    ansible.builtin.command: 'restorecon -vr /var/www/html/nextcloud/apps'
+    register: '__nextcloud__restorecon_apps_result'
+    changed_when: '__nextcloud__restorecon_apps_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      - '__nextcloud__apps_result is changed'
 
   - name: 'Get Nextcloud config list'
     ansible.builtin.command: 'php /var/www/html/nextcloud/occ --no-interaction --output=json config:list --private'
@@ -369,11 +478,14 @@
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
     loop: '{{ nextcloud__app_configs__combined_var }}'
+    register: '__nextcloud__app_configs_result'
 
   - name: 'restart {{ __nextcloud__php_fpm_service_name }}'
     ansible.builtin.service:
       name: '{{ __nextcloud__php_fpm_service_name }}'
       state: 'restarted'
+    when:
+      - '__nextcloud__apps_result is changed or __nextcloud__app_configs_result is changed'
 
   when:
     - 'not nextcloud__skip_apps'
@@ -461,14 +573,27 @@
       mode: 0o644
     notify: 'nextcloud: systemctl daemon-reload'
 
-  - name: 'Set background job to "cron"'
-    ansible.builtin.command: |
-      php occ background:cron
+  - name: 'php occ config:app:get core backgroundjobs_mode'
+    ansible.builtin.command: 'php occ config:app:get core backgroundjobs_mode'
     args:
       chdir: '/var/www/html/nextcloud/'
     become: true
     become_user: '{{ __shared__apache_httpd_user }}'
-    changed_when: true # there is no easy way to check for changes
+    register: '__nextcloud__backgroundjobs_mode_result'
+    changed_when: false
+    # exits 1 while the key is unset, which is the "ajax" default
+    failed_when: '__nextcloud__backgroundjobs_mode_result["rc"] not in [0, 1]'
+    check_mode: false
+
+  - name: 'php occ background:cron'
+    ansible.builtin.command: 'php occ background:cron'
+    args:
+      chdir: '/var/www/html/nextcloud/'
+    become: true
+    become_user: '{{ __shared__apache_httpd_user }}'
+    changed_when: true # only runs while the mode is not cron yet
+    when:
+      - '__nextcloud__backgroundjobs_mode_result["stdout"] != "cron"'
 
   - name: 'Deploy /usr/local/bin/nextcloud-app-update'
     ansible.builtin.template:
@@ -587,14 +712,47 @@
 
 - block:
 
+  # encrypted with systemd 251 and newer, see the systemd_credential module. nextcloud-update
+  # decrypts it on every run, so a changed one needs no further step.
+  - name: 'Store the Icinga2 API login as the systemd credential nextcloud-update-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'nextcloud-update-icinga2-login.curlrc'
+      content: '{{ lookup("ansible.builtin.template", "etc/credstore/nextcloud-update-icinga2-login.curlrc.j2") }}'
+    when:
+      - 'nextcloud__icinga2_api_user_login is defined'
+      - 'nextcloud__icinga2_api_user_login | length > 0'
+
+  - name: 'Remove the systemd credential nextcloud-update-icinga2-login.curlrc'
+    linuxfabrik.lfops.systemd_credential:
+      name: 'nextcloud-update-icinga2-login.curlrc'
+      state: 'absent'
+    when: 'nextcloud__icinga2_api_user_login is not defined or nextcloud__icinga2_api_user_login | length == 0'
+
+  # 0o700: only root can run it anyway, since it restarts services and switches to the web server
+  # user. No backup: earlier versions of the script carried the Icinga2 API login.
   - name: 'Deploy /usr/local/bin/nextcloud-update'
     ansible.builtin.template:
-      backup: true
       src: 'usr/local/bin/nextcloud-update.j2'
       dest: '/usr/local/bin/nextcloud-update'
       owner: 'root'
       group: 'root'
-      mode: 0o755
+      mode: 0o700
+
+  # the copies `backup: true` left still contain the Icinga2 API login, which is now in the
+  # credential
+  - name: 'find /usr/local/bin -maxdepth 1 -name nextcloud-update.*~'
+    ansible.builtin.find:
+      paths: '/usr/local/bin'
+      patterns: 'nextcloud-update.*~'
+    register: '__nextcloud__nextcloud_update_backups_result'
+
+  - name: 'rm -f /usr/local/bin/nextcloud-update.*~'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __nextcloud__nextcloud_update_backups_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
 
   tags:
     - 'nextcloud'

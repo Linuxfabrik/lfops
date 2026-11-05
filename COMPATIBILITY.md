@@ -116,6 +116,7 @@ Which Ansible role is proven to run on which OS?
 | mount                                 |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
 | network                               |   -    |   -    |   x    |   x    |    x    |           |           |           |                                              |
 | nextcloud                             |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
+| nextcloud_whiteboard_server           |   -    |   x    |   -    |   -    |    x    |     -     |     -     |     x     | systemd 256+                                 |
 | nfs_client                            |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nfs_server                            |  (x)   |  (x)   |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | nodejs                                |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |

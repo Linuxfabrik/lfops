@@ -5,6 +5,53 @@
   retries: 3 # ride out a brief outage of the package repository
   delay: 10
 
+# A venv is bound to the minor release of the interpreter that built it, its packages live in
+# lib/pythonX.Y. The `creates:` of the venv task below would keep a venv built with an earlier
+# `python_executable` forever, e.g. a Python 3.6 venv on RHEL 8 whose packages pip can no longer
+# resolve. Compare the minor release of `python_executable` with the one recorded in pyvenv.cfg
+# and rebuild the venv if they differ. The venv module writes "version = X.Y.Z" there
+# (Lib/venv/__init__.py), verified with Python 3.6, 3.11, 3.12 and 3.13 on Rocky 8, Rocky 10 and
+# Debian 13. A patch release update keeps the minor release and therefore the venv.
+- name: '{{ venv["python_executable"] | d("python3") }} --version'
+  ansible.builtin.command: '{{ venv["python_executable"] | d("python3") }} --version'
+  register: '__python_venv__python_version_result'
+  changed_when: false # read-only command, never changes anything
+  check_mode: false # also run in check mode
+  ignore_errors: '{{ ansible_check_mode | bool }}' # the interpreter may not be installed yet in check mode
+
+- name: 'stat /opt/python-venv/{{ venv["name"] }}/pyvenv.cfg'
+  ansible.builtin.stat:
+    path: '/opt/python-venv/{{ venv["name"] }}/pyvenv.cfg'
+  register: '__python_venv__pyvenv_cfg_stat_result'
+
+- name: 'cat /opt/python-venv/{{ venv["name"] }}/pyvenv.cfg'
+  ansible.builtin.slurp:
+    src: '/opt/python-venv/{{ venv["name"] }}/pyvenv.cfg'
+  register: '__python_venv__pyvenv_cfg_result'
+  when:
+    - '__python_venv__pyvenv_cfg_stat_result["stat"]["exists"]'
+
+- name: 'rm -rf /opt/python-venv/{{ venv["name"] }} (built with another Python minor release)'
+  ansible.builtin.file:
+    path: '/opt/python-venv/{{ venv["name"] }}'
+    state: 'absent'
+  vars:
+    # "Python 3.11.13" -> "3.11"
+    __python_venv__python_minor_version: '{{
+        __python_venv__python_version_result["stdout"] | d("")
+        | regex_search("\d+\.\d+") | d("", true)
+      }}'
+    # "version = 3.6.8" -> "3.6"
+    __python_venv__venv_minor_version: '{{
+        __python_venv__pyvenv_cfg_result["content"] | d("") | b64decode
+        | regex_search("(?<=^version = )\d+\.\d+", multiline=true) | d("", true)
+      }}'
+  when:
+    - '__python_venv__python_version_result is not failed'
+    - '__python_venv__python_minor_version | length > 0'
+    - '__python_venv__venv_minor_version | length > 0'
+    - '__python_venv__python_minor_version != __python_venv__venv_minor_version'
+
 - name: '{{ venv["python_executable"] | d("python3") }} -m venv {% if venv["system_site_packages"] | d("true") %} --system-site-packages {% endif %}{{ venv["name"] }}'
   ansible.builtin.command:
     cmd: '{{ venv["python_executable"] | d("python3") }} -m venv {% if venv["system_site_packages"] | d("true") %} --system-site-packages {% endif %}{{ venv["name"] }}'
