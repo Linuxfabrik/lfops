@@ -163,7 +163,7 @@
 
   - name: 'Create, update or delete PostgreSQL users'
     community.postgresql.postgresql_user:
-      port: '{{ postgresql_server__conf_port }}'
+      login_port: '{{ postgresql_server__conf_port }}'
       name: '{{ item["username"] }}'
       password: '{{ item["password"] | default(omit) }}'
       login_password: '{{ postgresql_server__login_password | default(omit) }}'
@@ -184,7 +184,7 @@
 
   - name: 'SELECT datname FROM pg_database'
     community.postgresql.postgresql_query:
-      port: '{{ postgresql_server__conf_port }}'
+      login_port: '{{ postgresql_server__conf_port }}'
       login_password: '{{ postgresql_server__login_password | default(omit) }}'
       query: 'SELECT datname FROM pg_database'
     become: true
@@ -200,7 +200,7 @@
   # 8, 9 and 10), so the order does not change with an OS upgrade.
   - name: 'Create or delete PostgreSQL databases'
     community.postgresql.postgresql_db:
-      port: '{{ postgresql_server__conf_port }}'
+      login_port: '{{ postgresql_server__conf_port }}'
       name: '{{ item["name"] }}'
       lc_collate: '{{ item["lc_collate"] | default(omit if item["name"] in __postgresql_server__existing_databases else "C.UTF-8") }}'
       lc_ctype: '{{ item["lc_ctype"] | default(omit if item["name"] in __postgresql_server__existing_databases else "C.UTF-8") }}'
@@ -225,7 +225,7 @@
   - name: 'Grant or revoke privileges'
     community.postgresql.postgresql_privs:
       login_db: 'postgres'
-      port: '{{ postgresql_server__conf_port }}'
+      login_port: '{{ postgresql_server__conf_port }}'
       roles: '{{ item["roles"] | join(",") }}'
       privs: '{{ item["privs"] | default([]) | join(",") }}'
       type: '{{ item["type"] | d("database") }}'
