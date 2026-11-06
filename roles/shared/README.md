@@ -37,7 +37,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
     * `shared__reboot_reason`: Mandatory. Spool file name, by convention the role name.
     * `shared__reboot_detail`: Mandatory. What changed, in lower case. Goes into the notification mail, followed by the name of the calling role, and into the message the operator sees.
 
-`preflight.yml`
+`assert-disk-space.yml`
 
 * Aborts the run if a filesystem has less free space than the given requirements need, see "Preflight Checks" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Requirements that end up on the same filesystem are added up, and a requirement whose software is already installed is dropped. Skipped with [`lfops__skip_disk_space_check`](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__skip_disk_space_check).
 * Parameters:

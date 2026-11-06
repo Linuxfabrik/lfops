@@ -60,6 +60,8 @@ If there is a related issue, append `(fix #N)`:
 - `style`: Changes that do not affect the meaning of the code (whitespace, formatting, etc.)
 - `test`: Adding missing tests
 
+Commit messages, pull request bodies and documentation never name a customer host, nor a Linuxfabrik-internal one. Describe the host generically instead, for example "a Rocky 8 host" or "a Nextcloud host with about 400 GB of data".
+
 
 ### Changelog
 
@@ -356,7 +358,7 @@ A playbook that runs many roles, such as `setup_basic`, aborts on a missing prer
 * includes the `preflight.yml` of each role that has one, with `tasks_from`, gated on the role's skip variable and tagged like the role.
 * imports the `network` role ahead of a preflight that has to reach a server by name, since the image of a fresh VM can bring a dead nameserver. This is the only role that changes the host before the preflight checks.
 
-Disk space needs go through `shared/tasks/preflight.yml`, never into a README alone. A role with a fixed need calls it in its `preflight.yml` (reference: `roles/graylog_server`). A playbook whose roles only fill up the disk together passes all of them at once, since the task adds them up per filesystem (reference: `playbooks/setup_icinga2_master.yml`). Measure the numbers on a real installation, and give every requirement a `creates`, so that an installed host with a full disk can still be re-configured.
+Disk space needs go through `shared/tasks/assert-disk-space.yml`, never into a README alone. A role with a fixed need calls it in its `preflight.yml` (reference: `roles/graylog_server`). A playbook whose roles only fill up the disk together passes all of them at once, since the task adds them up per filesystem (reference: `playbooks/setup_icinga2_master.yml`). Measure the numbers on a real installation, and give every requirement a `creates`, so that an installed host with a full disk can still be re-configured.
 
 
 #### Reporting a Manual Step to the Operator

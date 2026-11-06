@@ -6,7 +6,7 @@
     - name: 'A requirement that fits passes'
       ansible.builtin.include_role:
         name: 'linuxfabrik.lfops.shared'
-        tasks_from: 'preflight.yml'
+        tasks_from: 'assert-disk-space.yml'
       vars:
         shared__disk_space_requirements:
           - name: 'small'
@@ -16,7 +16,7 @@
     - name: 'A requirement of something already installed is dropped'
       ansible.builtin.include_role:
         name: 'linuxfabrik.lfops.shared'
-        tasks_from: 'preflight.yml'
+        tasks_from: 'assert-disk-space.yml'
       vars:
         shared__disk_space_requirements:
           - name: 'installed'
@@ -27,7 +27,7 @@
     - name: 'lfops__skip_disk_space_check skips the check'
       ansible.builtin.include_role:
         name: 'linuxfabrik.lfops.shared'
-        tasks_from: 'preflight.yml'
+        tasks_from: 'assert-disk-space.yml'
       vars:
         lfops__skip_disk_space_check: true
         shared__disk_space_requirements:
