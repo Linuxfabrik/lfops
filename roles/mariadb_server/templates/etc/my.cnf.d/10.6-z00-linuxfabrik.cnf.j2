@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026070201
+# 2026110601
 # 10.6
 
 [client]
@@ -62,7 +62,10 @@ innodb_open_files              = {{ mariadb_server__cnf_innodb_open_files__combi
 innodb_print_all_deadlocks     = {{ mariadb_server__cnf_innodb_print_all_deadlocks__combined_var }}
 innodb_purge_batch_size        = {{ mariadb_server__cnf_innodb_purge_batch_size__combined_var }}
 innodb_read_io_threads         = {{ mariadb_server__cnf_innodb_read_io_threads__combined_var }}
-innodb_snapshot_isolation      = {{ mariadb_server__cnf_innodb_snapshot_isolation__combined_var }}
+{# loose_: MariaDB before 10.6.18 does not know innodb_snapshot_isolation and refuses to start on
+   an unknown variable; with the prefix it only logs a warning (mysys/my_getopt.c, verified
+   against mariadb 10.6.17 and 10.6.18). #}
+loose_innodb_snapshot_isolation = {{ mariadb_server__cnf_innodb_snapshot_isolation__combined_var }}
 innodb_strict_mode             = {{ mariadb_server__cnf_innodb_strict_mode__combined_var }}
 innodb_sync_spin_loops         = {{ mariadb_server__cnf_innodb_sync_spin_loops__combined_var }}
 innodb_write_io_threads        = {{ mariadb_server__cnf_innodb_write_io_threads__combined_var }}

@@ -225,6 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: MariaDB 10.6 before 10.6.18 and 10.11 before 10.11.8 start again with the configuration of the role, which sets `innodb_snapshot_isolation`, a variable these releases do not know.
 * **role:icingaweb2_module_grafana**: `icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config` is back, so a host can again be kept out of runs with the `icingaweb2_module_grafana:monitoring_plugins_graphs` tag, the same way `icingaweb2_module_director__skip_basket_import` works for the Director basket.
 * **role:nextcloud**: Nextcloud generates previews of JPEG images again, which failed because the role stored the JPEG preview quality as text instead of a number.
 * **role:monitoring_plugins**: On RHEL, a run no longer rewrites `/etc/dnf/plugins/versionlock.list`, which AIDE reported after every run ([#596](https://github.com/Linuxfabrik/lfops/issues/596)).
