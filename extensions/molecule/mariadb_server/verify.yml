@@ -144,14 +144,14 @@
       changed_when: false
 
     # ask the running server, the cnf file alone proves nothing
-    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio"'
-      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio"'
+    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation"'
+      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation"'
       register: '__molecule__mariadb_variables_result'
       changed_when: false
 
     - name: 'Assert that the server uses the configured values'
       ansible.builtin.assert:
-        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", "aio"]'
+        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", "aio", "1"]'
         fail_msg: '{{ __molecule__mariadb_variables_result["stdout"] }}'
 
     # verify.yml runs again after the idempotence step, so this also covers a second run

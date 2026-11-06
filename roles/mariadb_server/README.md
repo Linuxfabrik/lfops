@@ -659,7 +659,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_innodb_linux_aio__group_var` / `mariadb_server__cnf_innodb_linux_aio__host_var`
 
-* [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_linux_aio). Needs MariaDB 10.11 or newer. Set it to `'aio'` where `kernel.io_uring_disabled` keeps `auto` from using io_uring, otherwise MariaDB logs a warning on every start before it falls back to libaio.
+* [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_linux_aio). Set it to `'aio'` where `kernel.io_uring_disabled` keeps `auto` from using io_uring, otherwise MariaDB logs a warning on every start before it falls back to libaio. Needs MariaDB 10.11.14, 11.4.8 or 11.8.3 or newer in the respective series; older releases ignore it with a warning in the MariaDB error log. The role does not write it for MariaDB 10.6.
 * Type: String. One of `auto`, `aio`, `io_uring`.
 * Default: `'auto'`
 
@@ -724,6 +724,7 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: String.
 * Default: `'OFF'`
 * Deviates from the upstream default on MariaDB 11.8, which ships it on; 10.6, 10.11 and 11.4 ship it off.
+* Needs MariaDB 10.6.18 or 10.11.8 or newer in the respective series; older releases ignore it with a warning in the MariaDB error log.
 
 `mariadb_server__cnf_innodb_strict_mode__group_var` / `mariadb_server__cnf_innodb_strict_mode__host_var`
 

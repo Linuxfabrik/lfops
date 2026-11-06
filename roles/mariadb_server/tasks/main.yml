@@ -132,6 +132,27 @@
   - name: 'Load default values for {{ mariadb_server__installed_version }}'
     ansible.builtin.include_vars: 'vars/{{ mariadb_server__installed_version }}.yml'
 
+  # The templates write innodb_linux_aio with the loose_ prefix, so that MariaDB versions without
+  # it still start. With the prefix, MariaDB also accepts an invalid value with nothing but a log
+  # line and runs with 'auto' (verified against mariadb 10.11.14), so check the value here.
+  - name: 'Assert that mariadb_server__cnf_innodb_linux_aio is one of auto, aio, io_uring'
+    ansible.builtin.assert:
+      that:
+        - 'mariadb_server__cnf_innodb_linux_aio__combined_var in ["aio", "auto", "io_uring"]'
+      quiet: true
+      fail_msg: 'mariadb_server__cnf_innodb_linux_aio must be one of auto, aio, io_uring, got "{{ mariadb_server__cnf_innodb_linux_aio__combined_var }}".'
+    when:
+      - 'mariadb_server__installed_version is version("10.11", ">=")'
+
+  # The 10.6 and 10.11 templates write innodb_snapshot_isolation with the loose_ prefix as well, so
+  # check its value for the same reason.
+  - name: 'Assert that mariadb_server__cnf_innodb_snapshot_isolation is ON or OFF'
+    ansible.builtin.assert:
+      that:
+        - 'mariadb_server__cnf_innodb_snapshot_isolation__combined_var | string | upper in ["0", "1", "FALSE", "OFF", "ON", "TRUE"]'
+      quiet: true
+      fail_msg: 'mariadb_server__cnf_innodb_snapshot_isolation must be ON or OFF, got "{{ mariadb_server__cnf_innodb_snapshot_isolation__combined_var }}".'
+
   - ansible.builtin.include_tasks: 'assert-deprecated.yml'
 
   tags:
