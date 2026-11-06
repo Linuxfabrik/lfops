@@ -17,7 +17,7 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 * App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
 * Before it changes anything, the role aborts if `nextcloud__database_login` is missing, or if it names the database user of the installed Nextcloud with another password, since the run would set that password for the MariaDB user and lock Nextcloud out of its database. The error message tells how to read the login from `config.php` with `occ`. `setup_nextcloud` runs this check before its first role.
 * A fresh installation enforces two-factor authentication for all users (TOTP is enabled by default) and runs the Nextcloud mimetype migrations. An existing installation keeps its enforcement state. `/usr/local/bin/nextcloud-update` runs the mimetype migrations after each update.
-* A fresh installation keeps deleted files and old file versions for at least 30 days and deletes them when space runs out (`auto, 30`). An existing installation keeps its retention.
+* A fresh installation deletes files from the trash bin and old file versions after 30 days, and earlier when a user runs out of space (`auto, 30`). An existing installation keeps its retention, see "Migrating an Existing Installation".
 * A fresh installation gets the full list of apps and app settings from the role defaults. On an existing installation, the role only manages the apps and settings of the inventory and the ones it relies on, so apps that the Nextcloud admin enables or disables in the web interface stay as they are. See `nextcloud__apps__host_var` and `nextcloud__app_configs__host_var`.
 * `admin_audit` is enabled and writes `audit.log` to the data directory. Previews are limited to 2048 px at JPEG quality 60, and the web updater is disabled in favour of `/usr/local/bin/nextcloud-update`.
 * MariaDB listens on `127.0.0.1` and `::1` only, which needs MariaDB 10.11 or newer. Redis and Valkey evict the least recently used keys when they are full. Change this with `nextcloud__mariadb_server__cnf_bind_address__dependent_var`, `nextcloud__redis__conf_maxmemory_policy` and `nextcloud__valkey__conf_maxmemory_policy`; in `setup_nextcloud`, these take precedence over the variables of the `mariadb_server`, `redis` and `valkey` roles.
@@ -124,6 +124,77 @@ nextcloud__app_configs__host_var:
   - key: 'richdocuments wopi_url'
     value: 'https://office.example.com'
     state: 'present'
+```
+
+
+## Migrating an Existing Installation
+
+The role does some things only while it installs Nextcloud, so that a run never changes what the users of a running instance are used to. An installation set up by hand or with an older LFOps release lacks them. Run the `occ` commands as the web server user in `/var/www/html/nextcloud`, `apache` on RHEL, `www-data` on Debian and Ubuntu.
+
+Two-factor authentication and the retention change what the users of the instance experience. Agree on them with the customer and announce them before you switch them on.
+
+### Two-Factor Authentication
+
+A fresh installation enforces two-factor authentication for all users. On an existing installation, every user without a second factor has to set one up at the next login once it is enforced. TOTP is available, since the role keeps the `twofactor_totp` app enabled on every run.
+
+```bash
+sudo --user=apache php occ twofactorauth:enforce --on
+```
+
+To keep it under Ansible control, add `twofactor_enforced` to the inventory instead:
+
+```yaml
+nextcloud__sysconfig__host_var:
+  - key: 'twofactor_enforced'
+    value: 'true'
+```
+
+### Retention of Deleted Files and Versions
+
+A fresh installation sets `auto, 30` for both: Nextcloud deletes files from the trash bin and old file versions once they are older than 30 days, and earlier when a user runs out of space. Nextcloud's own default `auto` keeps them as long as there is space. The first background job after the change deletes everything older than 30 days.
+
+```bash
+sudo --user=apache php occ config:system:set trashbin_retention_obligation --value='auto, 30'
+sudo --user=apache php occ config:system:set versions_retention_obligation --value='auto, 30'
+```
+
+Or in the inventory:
+
+```yaml
+nextcloud__sysconfig__host_var:
+  - key: 'trashbin_retention_obligation'
+    value: 'auto, 30'
+  - key: 'versions_retention_obligation'
+    value: 'auto, 30'
+```
+
+### Mimetype Migrations
+
+A fresh installation runs the expensive repair steps, which include the mimetype migrations, and `/usr/local/bin/nextcloud-update` runs them after every update. On an existing installation that was never updated with it, run them once. On a large instance this takes a while, so do it outside office hours:
+
+```bash
+sudo --user=apache php occ maintenance:repair --include-expensive
+```
+
+### Apps and App Settings
+
+A fresh installation gets the full lists of `nextcloud__apps__role_var` and `nextcloud__app_configs__role_var` (`roles/nextcloud/defaults/main.yml`). On an existing installation, the role only manages the entries of the inventory and the few it relies on, such as `admin_audit`, `password_policy` and `twofactor_totp`. Compare the defaults with `occ app:list` and `occ config:list`, and add what the instance should get to `nextcloud__apps__host_var` and `nextcloud__app_configs__host_var`, or change it once with `occ app:disable <app>` and `occ config:app:set <app> <key> --value=<value>`.
+
+### Dedicated Database User
+
+A fresh installation connects to MariaDB as the user from `nextcloud__database_login`, which `setup_nextcloud` creates with access to the Nextcloud database from `localhost` only. The installer of an older installation created an `oc_` user that may connect from any host, and the installation keeps it. To move to a dedicated user:
+
+1. Set `nextcloud__database_login` to the new user, for example `nextcloud`, and run `setup_nextcloud`. A username other than the one in `config.php` gets a MariaDB user of its own, and Nextcloud keeps using the old one.
+2. Edit `dbuser` and `dbpassword` in `/var/www/html/nextcloud/config/config.php` by hand, which keeps the password out of the process list, then restart notify_push with `systemctl restart notify_push.service`.
+3. Check with `sudo --user=apache php occ status` and a login in the web interface.
+4. Drop the old user, after looking it up with `SELECT user, host FROM mysql.user WHERE user LIKE 'oc\_%';`, for example `DROP USER 'oc_admin'@'%';`.
+
+### Mail Server
+
+The role configures the mail server only while `mail_domain` is missing from `config.php`, so a mail server set in the web interface stays. To switch an existing installation to the relay host of the `postfix` role, delete the key and run the role again, which then writes all mail settings:
+
+```bash
+sudo --user=apache php occ config:system:delete mail_domain
 ```
 
 
