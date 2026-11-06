@@ -7,6 +7,6 @@
 # controller part and dependencies need Python 3.10, module_utils only need the standard library.
 # That is also why this file is not compiled with pip-compile, which would add the dependencies.
 # The hashes are those of the wheel and the sdist on PyPI.
-ansible-core==2.16.19 \
-    --hash=sha256:5125f26412039ffb99a3a7723618535ab80e6ef38944aa2453997350388f4ef4 \
-    --hash=sha256:d7a32ba0f96f9c6582b7ff159a4a6f0e694662cfc4840497c88fed63bf58cd14
+ansible-core==2.16.20 \
+    --hash=sha256:2d52121c87e744cf8d01464bf1ed4a7f26c9e95f430633ea0ee9e033583ee4be \
+    --hash=sha256:7a6fcaba5fbc002013ddbd2053f35c5b1b03aa7fb9e9cec55b620dc61e560158
