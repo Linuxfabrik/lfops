@@ -1,5 +1,5 @@
-# Molecule scenario marker for the 'preflight' sub-scenario, run with
-# `molecule test --scenario-name shared/preflight`.
+# Molecule scenario marker for the 'assert_disk_space' sub-scenario, run with
+# `molecule test --scenario-name shared/assert_disk_space`.
 #
 # The check is a task file of the `shared` role, which has no playbook of its own, so the scenario
 # calls it directly instead of the setup playbooks that use it: these need far more disk space

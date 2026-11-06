@@ -15,7 +15,7 @@
       - name: 'Run the check with two requirements on the same filesystem'
         ansible.builtin.include_role:
           name: 'linuxfabrik.lfops.shared'
-          tasks_from: 'preflight.yml'
+          tasks_from: 'assert-disk-space.yml'
         vars:
           __molecule__three_quarters_mib: '{{ __molecule__df_result["stdout_lines"][-1] | int * 3 // 4 }}'
           shared__disk_space_requirements:
