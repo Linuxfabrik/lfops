@@ -17,7 +17,7 @@ After installing Nextcloud, head over to your http(s)://nextcloud/index.php/sett
 * App updates are applied automatically by the `nextcloud-app-update.timer` (enabled by default, disable via `nextcloud__timer_app_update_enabled`). The timer runs `/usr/local/bin/nextcloud-app-update`, which first checks whether any app update is pending. Nextcloud is switched into maintenance mode only when there is something to update; when everything is up to date the instance keeps serving requests untouched. After updating, the recommended database migrations (`db:add-missing-indices`, `db:add-missing-columns`, `db:add-missing-primary-keys`) are applied. A failed run leaves maintenance mode disabled again, so the instance does not stay offline, and reports the failure to systemd.
 * Before it changes anything, the role aborts if `nextcloud__database_login` is missing, or if it names the database user of the installed Nextcloud with another password, since the run would set that password for the MariaDB user and lock Nextcloud out of its database. The error message tells how to read the login from `config.php` with `occ`. `setup_nextcloud` runs this check before its first role.
 * A fresh installation enforces two-factor authentication for all users (TOTP is enabled by default) and runs the Nextcloud mimetype migrations. An existing installation keeps its enforcement state. `/usr/local/bin/nextcloud-update` runs the mimetype migrations after each update.
-* A fresh installation deletes files from the trash bin and old file versions after 30 days, and earlier when a user runs out of space (`auto, 30`). An existing installation keeps its retention, see "Migrating an Existing Installation".
+* A fresh installation deletes files from the trash bin after 30 days, and earlier when a user runs out of space (`auto, 30`). An existing installation keeps its retention, see "Migrating an Existing Installation". Old file versions follow Nextcloud's default `auto`.
 * A fresh installation gets the full list of apps and app settings from the role defaults. On an existing installation, the role only manages the apps and settings of the inventory and the ones it relies on, so apps that the Nextcloud admin enables or disables in the web interface stay as they are. See `nextcloud__apps__host_var` and `nextcloud__app_configs__host_var`.
 * `admin_audit` is enabled and writes `audit.log` to the data directory. Previews are limited to 2048 px at JPEG quality 60, and the web updater is disabled in favour of `/usr/local/bin/nextcloud-update`.
 * MariaDB listens on `127.0.0.1` and `::1` only, which needs MariaDB 10.11 or newer. Redis and Valkey evict the least recently used keys when they are full. Change this with `nextcloud__mariadb_server__cnf_bind_address__dependent_var`, `nextcloud__redis__conf_maxmemory_policy` and `nextcloud__valkey__conf_maxmemory_policy`; in `setup_nextcloud`, these take precedence over the variables of the `mariadb_server`, `redis` and `valkey` roles.
@@ -149,13 +149,12 @@ nextcloud__sysconfig__host_var:
     value: 'true'
 ```
 
-### Retention of Deleted Files and Versions
+### Retention of Deleted Files
 
-A fresh installation sets `auto, 30` for both: Nextcloud deletes files from the trash bin and old file versions once they are older than 30 days, and earlier when a user runs out of space. Nextcloud's own default `auto` keeps them as long as there is space. The first background job after the change deletes everything older than 30 days.
+A fresh installation sets `trashbin_retention_obligation` to `auto, 30`: Nextcloud deletes files from the trash bin once they are older than 30 days, and earlier when a user runs out of space. Nextcloud's own default `auto` keeps them as long as there is space. The first background job after the change deletes everything older than 30 days.
 
 ```bash
 sudo --user=apache php occ config:system:set trashbin_retention_obligation --value='auto, 30'
-sudo --user=apache php occ config:system:set versions_retention_obligation --value='auto, 30'
 ```
 
 Or in the inventory:
@@ -164,9 +163,9 @@ Or in the inventory:
 nextcloud__sysconfig__host_var:
   - key: 'trashbin_retention_obligation'
     value: 'auto, 30'
-  - key: 'versions_retention_obligation'
-    value: 'auto, 30'
 ```
+
+Old file versions keep Nextcloud's default `auto` for `versions_retention_obligation`, which the role does not set. Nextcloud thins out the versions of each file: of the last hour it keeps one per minute, of the last 24 hours one per hour, of the last 30 days one per day, and one per week beyond that, with no maximum age. The versions of a user may take up to half of the user's free quota, or the free disk space for a user without a quota. Beyond that, Nextcloud deletes the oldest versions first.
 
 ### Mimetype Migrations
 
