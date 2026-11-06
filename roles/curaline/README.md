@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.curaline
 
-This role installs and configures the curaLINE Client (`cdr-client`) of Swisscom, which exchanges files with the curaLINE Document Routing (CDR) service of the Swiss healthcare system. It unpacks the client from the Swisscom download page, configures its connectors and runs it as the systemd service `swisscom-schweiz-ag-cdr-client.service`, either under a system account of its own or under an existing account such as `hnet` of an H-Net SecureClient installation.
+This role installs the curaLINE Client (`cdr-client`) of Swisscom, which exchanges files with the curaLINE Document Routing (CDR) service of the Swiss healthcare system, from the Linuxfabrik repository, and configures its connectors and folders. The client runs as the systemd service `swisscom-schweiz-ag-cdr-client.service` under the account `swisscom-schweiz-ag-cdr-client`, which the package creates.
 
 
 *Available in the next LFOps release.*
@@ -8,47 +8,41 @@ This role installs and configures the curaLINE Client (`cdr-client`) of Swisscom
 
 ## How the Role Behaves
 
-* The client is downloaded on the Ansible controller (`delegate_to: 'localhost'`) into `/tmp` and uploaded to the target, so targets without Internet access can still be provisioned. The controller needs outbound HTTPS access to `cdr.health.swisscom.ch`. The target needs it only for the client to do its work.
-* The client comes with its own Java runtime and is only published for `linux-amd64`. The role aborts on other architectures.
-* The installed version is recorded in `/usr/lib/swisscom-schweiz-ag/cdr-client/.ansible-version`. When it differs from `curaline__version`, the role removes `/usr/lib/swisscom-schweiz-ag/cdr-client`, unpacks the new version and restarts the service. The configuration lives in `/etc/swisscom-schweiz-ag/cdr-client` and survives the update.
-* The service runs as `curaline__user` and `curaline__group`. If they do not exist, the role creates them as a system user and group. An existing user is taken over as it is: the role changes neither its UID, home, shell nor comment, so other software using the account keeps working.
-* The installation directory belongs to `curaline__user`, as with the Debian package of the client. The role hands it over recursively when `curaline__user` or `curaline__group` change.
-* The systemd unit is modelled on the one of the Debian package, with the same name, user and group names and directories, but with a static user instead of a dynamic one. The client gets `/var/lib/swisscom-schweiz-ag/cdr-client` as its `$HOME`, whatever the home of `curaline__user` is, and writes its log to `/var/log/swisscom-schweiz-ag/cdr-client`. The unit runs the client sandboxed: it may only write to its installation, configuration, state, cache and log directories and to the folders of its connectors.
-* The folders of the connectors (`source-folder`, `target-folder`, `source-archive-folder`) and `curaline__local_folder` are created for `curaline__user` if they do not exist yet. Existing folders keep their owner, mode and content, so they must already be writable by `curaline__user`. Parent directories are created owned by `root`. The client creates the subfolders below them, such as `error`, itself.
-* Files must be written to a source folder under a temporary name and renamed to `*.xml` when complete, and must be readable by `curaline__user`. The client uploads a file that is still being written in fragments, and retries an unreadable file forever as `*.upload`.
-* The files in `/etc/swisscom-schweiz-ag/cdr-client` are re-rendered on every run (a timestamped backup is kept), so manual edits are overwritten. This includes the client secret in `application-customer.yaml`.
+* The package `swisscom-schweiz-ag-cdr-client` brings the client with its own Java runtime, the account, the default configuration and the systemd unit. Updates of the client come through the package manager.
+* The role renders `/etc/swisscom-schweiz-ag/cdr-client/application-customer.yaml` on every run (a timestamped backup is kept), so manual edits are overwritten. This includes the client secret. The file belongs to `swisscom-schweiz-ag-cdr-client`, since the client refuses to start with a configuration it does not own.
 * With `curaline__renew_credential: true` the client renews the secret and rewrites `application-customer.yaml` itself. The next run of the role restores the old secret and renewal time from the inventory, so the client immediately tries to renew again with a secret that is no longer valid, and its login is denied. Keep it at `false` and renew the secret by hand.
+* The packaged unit runs the client sandboxed (`ProtectSystem=strict`): it may only write to its own directories below `/etc`, `/var/lib`, `/var/cache` and `/var/log`. The role adds the folders of the connectors (`source-folder`, `target-folder`, `source-archive-folder`) and `curaline__local_folder` to the drop-in `/etc/systemd/system/swisscom-schweiz-ag-cdr-client.service.d/read-write-paths.conf`.
+* Missing folders are created for `swisscom-schweiz-ag-cdr-client:swisscom-schweiz-ag-cdr-client` with mode `2770`, so the accounts of the scripts that fill the source folders and empty the target folders get access by being added to the group `swisscom-schweiz-ag-cdr-client`. Existing folders keep their owner, mode and content, so they must already be writable by the account. Parent directories are created owned by `root`. The client creates the subfolders below them, such as `error`, itself.
+* Files must be written to a source folder under a temporary name and renamed to `*.xml` when complete, and must be readable by `swisscom-schweiz-ag-cdr-client`. The client uploads a file that is still being written in fragments, and retries an unreadable file forever as `*.upload`.
 * The role does not manage the firewall. The client only makes outgoing connections, and its management ports `8191` and `8193` listen on `127.0.0.1`.
-* On the Red Hat family with SELinux, the role sets the `bin_t` file context on `/usr/lib/swisscom-schweiz-ag/cdr-client/bin`, so that systemd may execute the client from `/usr/lib`.
-* The client downloads a document into `curaline__local_folder` and then moves it to the target folder, so the file keeps the SELinux label of `curaline__local_folder`. If a confined service reads the target folder, for example the `/data/xml` tree of an H-Net SecureClient installation labelled `user_home_t`, put `curaline__local_folder` below the same tree, such as `/data/xml/cdr-inflight`.
+* The client downloads a document into `curaline__local_folder` and then moves it to the target folder, so on the Red Hat family the file keeps the SELinux label of `curaline__local_folder` (`var_lib_t` by default). If a confined service such as Samba or httpd reads the target folder, put `curaline__local_folder` below the same tree as the target folder.
 
 
 ## Known Limitations
 
 * Only `x86_64` hosts are supported.
-* Hosts with the Debian package of the client are not supported. Remove the package before running the role.
 * The role does not configure the proxy of the client.
 * The role manages one client per host.
+
+
+## Dependent Roles
+
+Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
+
+* The Linuxfabrik repository must be enabled (role: [linuxfabrik.lfops.repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik)). The package of the client is served from it.
 
 
 ## Requirements
 
 * Credentials for the curaLINE Document Routing service: the client ID and the client secret of the application registered for this client, and the connector ID(s) of the practice or institution.
-* Outbound HTTPS access from the Ansible controller to `cdr.health.swisscom.ch`, and from the target to `cdr.health.swisscom.ch` and `login.microsoftonline.com`.
+* Outbound HTTPS access from the target to `cdr.health.swisscom.ch` and `login.microsoftonline.com`.
 
 
 ## Replacing the H-Net SecureClient
 
-To take over the data folders of an H-Net SecureClient installation (typically `/data/xml/{inbox,outbox,archive}` and their `-test` counterparts, owned by `hnet:hnet`), run the client under the same account:
+The SecureClient keeps its data in `/data/xml/{inbox,outbox,archive}` and their `-test` counterparts, owned by `hnet:hnet`. The curaLINE Client writes exactly into the configured folder, while the SecureClient appends the transaction type, so the folders of a connector end in `XMLDatenforum`, for example `/data/xml/outbox/XMLDatenforum`. Give `swisscom-schweiz-ag-cdr-client` access to the existing folders, for example by handing them to its group, or let the role create new ones.
 
-```yaml
-curaline__group: 'hnet'
-curaline__user: 'hnet'
-```
-
-The role leaves the `hnet` account, `/home/hnet`, `/var/hnet` and the SELinux setup of the SecureClient (`user_home_t` on `/data/xml`, the `HnetSecureService` policy module) untouched, and does not manage `hnet-securesvc.service`.
-
-**Warning:** Do not run both clients on the same folders. The SecureClient and the curaLINE Client would both pick up the files in the outbox, and documents could be sent twice or get lost. Stop and disable the SecureClient (`systemctl disable --now hnet-securesvc.service`) before the curaLINE Client is started for the first time, or deploy the role with `curaline__service_enabled: false` and `curaline__service_state: 'stopped'` until the switch-over.
+**Warning:** Do not run both clients on the same folders. Both would pick up the files in the outbox, and documents could be sent twice or get lost. Stop and disable the SecureClient (`systemctl disable --now hnet-securesvc.service`) before the curaLINE Client is started for the first time, or deploy the role with `curaline__service_enabled: false` and `curaline__service_state: 'stopped'` until the switch-over.
 
 
 ## Post-Installation Steps
@@ -60,30 +54,21 @@ The role leaves the `hnet` account, `/home/hnet`, `/var/hnet` and the SELinux se
 
 `curaline`
 
-* Installs the required packages.
-* Creates the user and group of the service if they do not exist, and the missing folders of the connectors.
 * Installs the client.
-* Deploys the configuration files and the systemd unit.
-* Sets the SELinux file context of the client (Red Hat family with SELinux).
+* Creates the missing folders of the connectors.
+* Deploys the configuration file and the systemd drop-in.
 * Ensures the service is in the desired state.
 * Triggers: swisscom-schweiz-ag-cdr-client.service restart.
 
 `curaline:configure`
 
-* Deploys the configuration files and the systemd unit.
-* Sets the SELinux file context of the client (Red Hat family with SELinux).
+* Deploys the configuration file and the systemd drop-in.
 * Triggers: swisscom-schweiz-ag-cdr-client.service restart.
 
 `curaline:state`
 
 * Manages the service state (start, stop, enable, disable).
 * Triggers: none.
-
-`curaline:update`
-
-* Installs the client in the version of `curaline__version`, if a different version or none is installed, and hands the installation directory to `curaline__user`.
-* Sets the SELinux file context of the client (Red Hat family with SELinux).
-* Triggers: swisscom-schweiz-ag-cdr-client.service restart.
 
 
 ## Mandatory Role Variables
@@ -148,11 +133,6 @@ The role leaves the `hnet` account, `/home/hnet`, `/var/hnet` and the SELinux se
 
     * Any other key the client knows is written to the configuration as it is.
 
-`curaline__version`
-
-* The version of the curaLINE Client to install.
-* Type: String.
-
 Example:
 ```yaml
 # mandatory
@@ -166,7 +146,6 @@ curaline__connectors__host_var:
     target-folder: '/data/xml/inbox-test/XMLDatenforum'
     source-archive-enabled: true
     source-archive-folder: '/data/xml/archive-test'
-curaline__version: '6.2.1'
 ```
 
 
@@ -232,12 +211,6 @@ curaline__version: '6.2.1'
 * Type: Bool.
 * Default: `true`
 
-`curaline__group`
-
-* Group of the service. Created as a system group if it does not exist. Set it to `'hnet'` to take over an H-Net SecureClient installation, see "Replacing the H-Net SecureClient".
-* Type: String.
-* Default: `'swisscom-schweiz-ag-cdr-client'`
-
 `curaline__idp_endpoint`
 
 * The OAuth2 token endpoint of the identity provider.
@@ -252,10 +225,9 @@ curaline__version: '6.2.1'
 
 `curaline__local_folder`
 
-* Folder for temporary downloads.
+* Folder for temporary downloads. Do not point it below `/tmp`: the unit runs the client with `PrivateTmp=yes`, which empties `/tmp` on every stop and restart and would lose the documents being downloaded.
 * Type: String.
-* Default: `'/data/cdr-inflight'`
-* Deviates from the upstream default `${java.io.tmpdir}`: the unit runs the client with `PrivateTmp=yes`, so its `/tmp` is private to the service and is emptied on every stop and restart, which would lose the documents that are being downloaded.
+* Default: `'/var/lib/swisscom-schweiz-ag/cdr-client'`
 
 `curaline__renew_credential`
 
@@ -294,12 +266,6 @@ curaline__version: '6.2.1'
 * Type: String.
 * Default: `'70b434db-eccb-4280-95dc-1e59220aca55'`
 
-`curaline__user`
-
-* User of the service. Created as a system user without a login shell if it does not exist. An existing user is not modified. Set it to `'hnet'` to take over an H-Net SecureClient installation, see "Replacing the H-Net SecureClient".
-* Type: String.
-* Default: `'swisscom-schweiz-ag-cdr-client'`
-
 Example:
 ```yaml
 # optional
@@ -310,13 +276,11 @@ curaline__cdr_api_scheme: 'https'
 curaline__credential_api_base_path: 'api/client-credentials'
 curaline__file_busy_test_strategy: 'file_size_changed'
 curaline__file_synchronization_enabled: true
-curaline__group: 'hnet'
-curaline__local_folder: '/data/cdr-inflight'
+curaline__local_folder: '/var/lib/swisscom-schweiz-ag/cdr-client'
 curaline__renew_credential: false
 curaline__schedule_delay: 'PT10M'
 curaline__service_enabled: true
 curaline__service_state: 'started'
-curaline__user: 'hnet'
 ```
 
 
@@ -328,11 +292,7 @@ curaline__user: 'hnet'
 
 **The service fails with `status=226/NAMESPACE`**
 
-* A path in `ReadWritePaths=` of the unit does not exist, typically a folder of a connector that was removed by hand, or one on a network share that is not mounted. Run the role again to recreate missing folders, or mount the share before the service starts.
-
-**The run aborts with `curaline__version must look like "6.2.1"`**
-
-* Set `curaline__version` to a release listed on the curaLINE download page.
+* A path in `ReadWritePaths=` of the drop-in does not exist, typically a folder of a connector that was removed by hand, or one on a network share that is not mounted. Run the role again to recreate missing folders, or mount the share before the service starts.
 
 **The run aborts with `At least one connector must be present ...` or `Connector ... must set content-type, source-folder and target-folder`**
 
