@@ -60,6 +60,8 @@ If there is a related issue, append `(fix #N)`:
 - `style`: Changes that do not affect the meaning of the code (whitespace, formatting, etc.)
 - `test`: Adding missing tests
 
+Commit messages, pull request bodies and documentation never name a customer host, nor a Linuxfabrik-internal one. Describe the host generically instead, for example "a Rocky 8 host" or "a Nextcloud host with about 400 GB of data".
+
 
 ### Changelog
 
