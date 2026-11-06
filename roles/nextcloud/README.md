@@ -63,15 +63,21 @@ Manual steps:
 
 The Nextcloud vHost of `setup_nextcloud` serves plain HTTP on port 80 (`nextcloud__vhost_virtualhost_port`), and [notify_push](https://github.com/nextcloud/notify_push) listens on port 7867. TLS ends on the reverse proxy, which forwards `https://<nextcloud__fqdn>/push/` to notify_push and everything else to the vHost. `setup_nextcloud` registers notify_push with `occ notify_push:setup https://<nextcloud__fqdn>/push`, which checks the whole way through the proxy, so the proxy has to forward `/push/` by then.
 
-On the reverse proxy, forward with `ProxyPass`, the notify_push paths first, since Apache uses the first `ProxyPass` that matches:
+On the reverse proxy, forward with `ProxyPass`, the notify_push paths first, since Apache uses the first `ProxyPass` that matches. In this example, `nextcloud.example.com` is `nextcloud__fqdn`:
 
 ```apache
+ProxyPreserveHost   On
 ProxyPass           /push/ws ws://nextcloud-host.example.com:7867/ws
 ProxyPass           /push/ http://nextcloud-host.example.com:7867/
 ProxyPassReverse    /push/ http://nextcloud-host.example.com:7867/
 ProxyPass           / http://nextcloud-host.example.com/ nocanon
 ProxyPassReverse    / http://nextcloud-host.example.com/
+ProxyPassReverse    / http://nextcloud.example.com/
 ```
+
+`ProxyPreserveHost On` (`conf_proxy_preserve_host: 'On'` with the `proxy` template of the `apache_httpd` role) passes the public name on, so that the Nextcloud host selects the Nextcloud vHost by its `ServerName`. The vHost then builds its redirects, such as the 301 for `/.well-known/caldav`, from the public name with scheme `http`, which only the last `ProxyPassReverse` turns into `https`; without it, clients take a detour over plain HTTP.
+
+Do not copy the rules of Nextcloud's `.htaccess` into the proxy vHost, such as the `.well-known` redirects, the denied paths or the `Cache-Control` headers. The Nextcloud vHost applies them itself, also behind the proxy. A rewrite of `/ocm-provider` to an absolute URL even breaks federation discovery: Apache answers it with a 302 that ends on the login page instead of the OCM provider data.
 
 Do not forward with `RewriteRule ... [proxy]`. mod_rewrite matches against the decoded path and passes it on decoded, so a `?` in a file name reaches Nextcloud as the start of the query string: renaming such a file in the web interface fails with "File not found", and the Windows client does not sync it. `ProxyPass` passes the path on encoded, and `nocanon` passes it on exactly as the client sent it. The characters that cause this are also on the list of characters the role forbids in file names (`forbidden_filename_characters` in `nextcloud__sysconfig__role_var`).
 
