@@ -1,0 +1,74 @@
+# Asks DNF itself for the values it uses, through its Python API, instead of reading the file
+# the role wrote: DNF only logs an invalid value and goes on with its built-in default, which a
+# check of the file would not notice. /usr/libexec/platform-python exists on RHEL 8, 9 and 10.
+- name: 'Verify that DNF uses the configured values'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - name: 'stat /etc/dnf/dnf.conf'
+      ansible.builtin.stat:
+        path: '/etc/dnf/dnf.conf'
+      register: '__molecule__dnf_conf_stat_result'
+
+    # Without DNF the role must leave the host alone and create nothing
+    - name: 'Assert that the role wrote no dnf.conf on a host without DNF'
+      ansible.builtin.assert:
+        that:
+          - 'not __molecule__dnf_conf_stat_result["stat"]["exists"]'
+      when: 'ansible_facts["pkg_mgr"] != "dnf"'
+
+
+    - block:
+
+      - name: 'Read the effective DNF configuration'
+        ansible.builtin.command:
+          argv:
+            - '/usr/libexec/platform-python'
+            - '-c'
+            - |-
+              import json, dnf
+              base = dnf.Base()
+              base.conf.read()
+              c = base.conf
+              print(json.dumps({
+                  'best': c.best,
+                  'clean_requirements_on_remove': c.clean_requirements_on_remove,
+                  'exclude': list(c.exclude),
+                  'gpgcheck': c.gpgcheck,
+                  'installonly_limit': c.installonly_limit,
+                  'ip_resolve': c.ip_resolve,
+                  'max_parallel_downloads': c.max_parallel_downloads,
+                  'minrate': c.minrate,
+                  'skip_if_unavailable': c.skip_if_unavailable,
+                  'timeout': c.timeout,
+              }))
+        register: '__molecule__dnf_conf_result'
+        changed_when: false
+
+      - name: 'Assert that DNF uses the configured values'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__dnf_conf["best"] == true'
+            - '__molecule__dnf_conf["clean_requirements_on_remove"] == true'
+            # set by hand in converge.yml, not listed in the inventory
+            - '__molecule__dnf_conf["exclude"] == ["kernel-debug*"]'
+            - '__molecule__dnf_conf["gpgcheck"] == true'
+            # set by hand in converge.yml, not listed in the inventory
+            - '__molecule__dnf_conf["installonly_limit"] == 5'
+            # set by hand in converge.yml and removed through `state: 'absent'`; libdnf's default
+            - '__molecule__dnf_conf["ip_resolve"] == "whatever"'
+            - '__molecule__dnf_conf["max_parallel_downloads"] == 7'
+            - '__molecule__dnf_conf["minrate"] == 307200'  # 300k
+            - '__molecule__dnf_conf["skip_if_unavailable"] == false'
+            - '__molecule__dnf_conf["timeout"] == 15'  # role default
+            # DNF prints "Invalid configuration value" to stderr and keeps the default
+            - '__molecule__dnf_conf_result["stderr"] | length == 0'
+          fail_msg: 'DNF reports {{ __molecule__dnf_conf_result["stdout"] }}, stderr: {{ __molecule__dnf_conf_result["stderr"] }}'
+        vars:
+          __molecule__dnf_conf: '{{ __molecule__dnf_conf_result["stdout"] | from_json }}'
+
+      - name: 'dnf makecache --refresh'
+        ansible.builtin.command: 'dnf makecache --refresh'
+        changed_when: false
+
+      when: 'ansible_facts["pkg_mgr"] == "dnf"'

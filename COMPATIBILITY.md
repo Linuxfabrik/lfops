@@ -34,6 +34,7 @@ Which Ansible role is proven to run on which OS?
 | cron_permissions                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | curaline                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | x86_64 only                                  |
+| dnf                                   |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
