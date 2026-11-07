@@ -98,6 +98,10 @@ all:
 _ROLE_TASKS = """
 - name: 'Role task'
   ansible.builtin.command: 'true'
+  changed_when: inventory_hostname == 't-h04'
+
+- name: 'Second role task'
+  ansible.builtin.command: 'true'
   changed_when: false
 """
 
@@ -133,6 +137,34 @@ _PLAYBOOK = """
       ansible.builtin.command: 'true'
       changed_when: false
       delegate_to: 'localhost'
+
+    - name: 'Include per item'
+      ansible.builtin.include_tasks: 'roles/demo/tasks/included.yml'
+      loop:
+        - name: 'alpha'
+          packages: ['linuxfabrik-a', 'linuxfabrik-b']
+
+    - name: 'Grouped changes'
+      ansible.builtin.shell: >-
+        {{{{ 'echo a; echo b' if inventory_hostname == 't-h01' else 'echo b; echo a' }}}}
+      changed_when: inventory_hostname in ['t-h01', 't-h02']
+
+    - name: 'Warning task'
+      warn_module:
+      when: inventory_hostname in ['t-h02', 't-h03']
+
+    - name: 'Final failure'
+      ansible.builtin.fail:
+        msg: 'linuxfabrik-final'
+      when: inventory_hostname == 't-h04'
+"""
+
+# a module that only emits a warning, found in library/ next to the playbook
+_WARN_MODULE = """
+from ansible.module_utils.basic import AnsibleModule
+module = AnsibleModule(argument_spec={})
+module.warn('linuxfabrik-warning')
+module.exit_json(changed=False)
 """
 
 
@@ -143,11 +175,16 @@ class TestCompactOutput(unittest.TestCase):
         assert _ANSIBLE_PLAYBOOK, 'ansible-playbook not found'  # nosec B101
         cls.tmp = tempfile.mkdtemp(prefix='lfops_compact_')
         tmp = cls.tmp
+        os.makedirs(os.path.join(tmp, 'library'))
         os.makedirs(os.path.join(tmp, 'roles', 'demo', 'tasks'))
         files = {
             'inventory.yml': _INVENTORY.format(python=sys.executable),
             'playbook.yml': _PLAYBOOK.format(tmp=tmp),
+            'library/warn_module.py': _WARN_MODULE,
             'roles/demo/tasks/main.yml': _ROLE_TASKS,
+            'roles/demo/tasks/included.yml': (
+                "- name: 'Included task'\n  ansible.builtin.debug:\n    msg: 'x'\n"
+            ),
             # an empty config, so no ansible.cfg of the developer interferes
             'ansible.cfg': '[defaults]\n',
         }
@@ -199,8 +236,64 @@ class TestCompactOutput(unittest.TestCase):
             end += 1
         return [line for line in self.lines[start:end] if line]
 
-    def test_run_succeeds(self):
-        self.assertEqual(self.returncode, 0, self.output + self.stderr)
+    def test_run_fails_for_the_failing_host_only(self):
+        # 2 is the exit code of ansible-playbook for failed hosts
+        self.assertEqual(self.returncode, 2, self.output + self.stderr)
+
+    def test_include_names_hosts_compact_and_the_item_by_name(self):
+        self.assertIn(
+            'included: demo/tasks/included.yml for t-{h01,h02,h03,h04} (item=alpha)',
+            self.lines,
+        )
+
+    def test_changes_with_the_same_lines_are_one_group(self):
+        # same lines in another order, like restorecon -v
+        block = self._block('Grouped changes')
+        self.assertEqual(block[1:3], ['changed: t-{h01,h02}', '  stdout:'])
+        # shown in the order of the host that finished first
+        self.assertEqual(sorted(block[3:5]), ['    a', '    b'])
+        self.assertEqual(block[5:], ['ok: t-{h03,h04}'])
+
+    def test_identical_warnings_are_grouped_with_their_hosts(self):
+        self.assertEqual(self.stderr.count('[WARNING]: linuxfabrik-warning'), 1)
+        self.assertIn('[WARNING]: linuxfabrik-warning\n  on t-{h02,h03}\n', self.stderr)
+
+    def test_report_per_message_by_severity(self):
+        # the report follows the recap
+        i = self.lines.index('# FATAL')
+        play = 'linuxfabrik.lfops.test'
+        self.assertEqual(
+            self.lines[i:],
+            [
+                '# FATAL',
+                '',
+                f'* {play} - Final failure: linuxfabrik-final',
+                '  t-h04',
+                '',
+                '# WARNING',
+                '',
+                f'* {play} - Warning task: linuxfabrik-warning',
+                '  t-{h02,h03}',
+                '',
+                '# IGNORED',
+                '',
+                f'* {play} - Failing task: linuxfabrik-boom',
+                '  t-h03',
+                '',
+                '# CHANGED',
+                '',
+                # role tasks name the role instead of the playbook
+                '* demo - Role task',
+                '  t-h04',
+                f'* {play} - Changed without diff',
+                '  t-h02',
+                f'* {play} - Changed with diff',
+                '  t-h01',
+                f'* {play} - Grouped changes',
+                '  t-{h01,h02}',
+                '',
+            ],
+        )
 
     def test_play_line(self):
         self.assertIn('Playbook: linuxfabrik.lfops.test', self.lines)
@@ -209,8 +302,15 @@ class TestCompactOutput(unittest.TestCase):
         i = self.lines.index('Task: Role task')
         self.assertEqual(self.lines[i - 1], 'Role: demo')
 
+    def test_section_header_only_when_the_section_changes(self):
+        self.assertEqual(self.lines.count('Role: demo'), 1)
+        # back to the tasks of the playbook after the role
+        i = self.lines.index('Task: All ok')
+        self.assertEqual(self.lines[i - 1], 'Playbook: linuxfabrik.lfops.test')
+        self.assertEqual(self.lines.count('Playbook: linuxfabrik.lfops.test'), 2)
+
     def test_ok_hosts_as_bar_and_one_line(self):
-        self.assertEqual(self._block('All ok'), ['****', 'ok: t-{h01,h02,h03,h04}'])
+        self.assertEqual(self._block('All ok'), ['****', 'ok: all 4 hosts'])
 
     def test_changed_without_diff_shows_the_result(self):
         block = self._block('Changed without diff')
@@ -226,13 +326,19 @@ class TestCompactOutput(unittest.TestCase):
         self.assertEqual(block[-1], 'skipped: t-{h02,h03,h04}')
 
     def test_failed_shows_the_message_as_plain_text(self):
-        self.assertIn('fatal: [t-h03]: FAILED!', self.output)
-        self.assertIn('MSG:\n\nlinuxfabrik-boom', self.output)
-        self.assertIn('...ignoring', self.output)
+        self.assertIn('fatal: [t-h04]: FAILED!', self.output)
+        self.assertIn('MSG:\n\nlinuxfabrik-final', self.output)
+
+    def test_ignored_failure_is_compact(self):
+        self.assertEqual(
+            self._block('Failing task')[1:],
+            ['ignored: t-h03', '  linuxfabrik-boom', 'skipped: t-{h01,h02,h04}'],
+        )
+        self.assertNotIn('fatal: [t-h03]', self.output)
 
     def test_delegated_hosts_are_merged(self):
         self.assertEqual(
-            self._block('Delegated task')[-1], 'ok: t-{h01,h02,h03,h04} > localhost'
+            self._block('Delegated task')[-1], 'ok: all 4 hosts > localhost'
         )
 
 
@@ -264,9 +370,27 @@ class TestCompactOutputOnTerminal(unittest.TestCase):
                 "- hosts: 'all'\n  gather_facts: false\n  tasks:\n"
                 "    - name: 'All ok'\n      ansible.builtin.debug:\n"
                 "        msg: 'linuxfabrik'\n"
+                "    - name: 'Warning'\n      warn_module:\n"
+                "      when: inventory_hostname == 't-h07'\n"
+                # the fileglob lookup warns about the missing directory of each
+                # host, before `when` is evaluated
+                "    - name: 'Lookup warning'\n      ansible.builtin.debug:\n"
+                "        msg: '{{ item }}'\n"
+                '      with_fileglob:\n'
+                "        - '/nonexistent-linuxfabrik/{{ inventory_hostname }}/*'\n"
+                '      when: false\n'
+            ),
+            # a module that only emits a warning, found in library/ next to the
+            # playbook
+            'library/warn_module.py': (
+                'from ansible.module_utils.basic import AnsibleModule\n'
+                'module = AnsibleModule(argument_spec={})\n'
+                "module.warn('linuxfabrik-warning')\n"
+                'module.exit_json(changed=False)\n'
             ),
             'ansible.cfg': '[defaults]\n',
         }
+        os.makedirs(os.path.join(tmp, 'library'))
         for name, content in files.items():
             with open(os.path.join(tmp, name), 'w') as f:
                 f.write(content)
@@ -344,6 +468,30 @@ class TestCompactOutputOnTerminal(unittest.TestCase):
         self.assertEqual(
             [len(line) for line in bar],
             [_TERMINAL_COLUMNS - 1, _TERMINAL_HOSTS - (_TERMINAL_COLUMNS - 1)],
+        )
+
+    def _task_lines(self, task_name):
+        lines = self._screen_lines()
+        start = lines.index(f'Task: {task_name}') + 1
+        end = start
+        while end < len(lines) and lines[end]:
+            end += 1
+        return lines[start:end]
+
+    def test_warning_follows_the_task_with_its_host(self):
+        block = self._task_lines('Warning')
+        self.assertTrue(block[0].startswith('*'), block)
+        self.assertEqual(block[-2:], ['[WARNING]: linuxfabrik-warning', '  on t-h07'])
+
+    def test_lookup_warnings_of_all_hosts_are_one_group(self):
+        block = self._task_lines('Lookup warning')
+        # the bar stays in one piece (39 columns, 50 hosts)
+        self.assertEqual([len(line) for line in block[:2]], [39, 11])
+        warnings = [line for line in block if line.startswith('[WARNING]')]
+        self.assertEqual(len(warnings), 1, block)
+        self.assertIn("'/nonexistent-linuxfabrik/<host>", warnings[0])
+        self.assertEqual(
+            block[block.index(warnings[0]) + 1], f'  on all {_TERMINAL_HOSTS} hosts'
         )
 
 

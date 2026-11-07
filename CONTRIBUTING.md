@@ -734,7 +734,7 @@ In-house plugins live in `plugins/{callback,filter,lookup,modules,module_utils}/
 * Start with the standard Linuxfabrik Python header (copy it from any in-house plugin), followed by `from __future__ import absolute_import, division, print_function` and `__metaclass__ = type`.
 * Modules start with `#!/usr/bin/python` instead of the header's `#!/usr/bin/env python3`. ansible-core applies interpreter discovery and `ansible_python_interpreter` only to a shebang whose interpreter is named `python`; it runs `#!/usr/bin/env python3` as it is, which fails on RHEL 8 hosts without `python3`. The `module-shebang` pre-commit hook guards this.
 * Use single quotes and f-strings (vendored plugins keep their upstream style).
-* Carry valid-YAML `DOCUMENTATION` (and `RETURN` / `EXAMPLES` where applicable). A `description` bullet with a colon followed by a space becomes a mapping and breaks `ansible-doc`; rephrase or quote it. Verify with `ansible-doc -t <callback|filter|lookup|module> linuxfabrik.lfops.<name>`; `tests/unit/test_plugin_docs.py` guards this.
+* Carry valid-YAML `DOCUMENTATION` (and `RETURN` / `EXAMPLES` where applicable). A `description` bullet with a colon followed by a space becomes a mapping and breaks `ansible-doc`; rephrase or quote it. Verify with `ansible-doc --type <callback|filter|lookup|module> linuxfabrik.lfops.<name>`; `tests/unit/test_plugin_docs.py` guards this.
 * Set `version_added` to the first release, never change it.
 * `module_utils` holds shared code. Do not import the Linuxfabrik Python Libraries (`lib`); copy what you need and note the origin.
 
