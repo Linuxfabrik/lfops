@@ -358,7 +358,7 @@ ssh_args = -o ControlMaster=auto -o ControlPersist=60s
 
 ### Compact Output
 
-The `linuxfabrik.lfops.compact` stdout callback keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module:
+The `linuxfabrik.lfops.compact` stdout callback keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module, and the warnings with the hosts they occurred on, both grouped by identical text, so a change or warning that affects many hosts appears once. Failures that a role accepts with `ignore_errors` are shown in one `ignored` line per message. At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED):
 
 ```text
 Playbook: linuxfabrik.lfops.setup_basic

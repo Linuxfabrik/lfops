@@ -12,6 +12,7 @@ __metaclass__ = type
 
 import multiprocessing
 import os
+import re
 import sys
 
 from ansible import constants as C
@@ -28,8 +29,11 @@ DOCUMENTATION = r"""
     - Prints one block per task, with the role and the task name on lines of their own.
     - While the task runs, every host result appends an asterisk in the color of its status (ok, changed, skipped, failed, unreachable), so the asterisks add up to a progress bar.
     - After the task, unchanged ok and skipped hosts are listed in one C(ok) and one C(skipped) line. Host names that share the part up to the last dash and the delegation target are merged in bash brace expansion syntax, for example C(web-{01,02} > localhost).
-    - Changed results print the host as a header above their diff. Without a diff, the C(msg), C(results), C(stdout) and C(stderr) of the result are shown below the host, since that is where modules report what they changed.
+    - While a task runs, only the progress bar and failures are printed. At its end, the changed hosts follow, grouped by identical output (the diff, or without a diff the C(msg), C(results), C(stdout) and C(stderr) of the result, where modules report what they changed), then the ok and skipped hosts, then the warnings.
     - Failed and unreachable results are printed as usual, with C(msg), C(stdout), C(stderr), C(module_stdout) and C(module_stderr) as plain text below the JSON, so tracebacks stay readable.
+    - Warnings are grouped by text and list the hosts they occurred on. A host name within a warning of Ansible itself (for example from a lookup) is replaced by C(<host>) for the grouping.
+    - Failures that a task accepts with C(ignore_errors) are shown in one C(ignored) line per message with the hosts, not as a full result (C(--verbose) shows the full result).
+    - At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED) and in task order within a section, with the role (or the playbook) and the task.
   author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
   notes:
@@ -125,8 +129,29 @@ class CallbackModule(Default):
         super().__init__()
         # (host, task uuid) -> number of diffs already printed with a header
         self._diff_printed = {}
+        # (kind, role or playbook, task name, message) -> host names, in order of
+        # first appearance, for the report at the end
+        self._report = {}
+        # ignored failures of the running task: message -> host labels
+        self._ignored = {}
         self._ok_hosts = []
         self._skipped_hosts = []
+        # Output collected while a task runs, printed grouped at its end:
+        # grouping key -> [header suffix, body lines, host labels]
+        self._changes = {}
+        # (host label or None, text)
+        self._task_warnings = []
+        # host names with a result so far, to find them in the text of warnings
+        self._seen_hosts = set()
+        # host names with a result in the running task
+        self._task_hosts = set()
+        # the running task, None between tasks
+        self._task = None
+        # header line of the play, and of the current section (role or play)
+        self._play_line = 'Play'
+        self._section = None
+        # warnings printed outside of a task, Ansible shows each text only once
+        self._warned = set()
         # State of the progress bar: whether it is open (more results may follow)
         # and the (char, color) pairs of its current line
         self._line_open = False
@@ -146,8 +171,56 @@ class CallbackModule(Default):
         # covers output that does not come from this callback.
         self._display_orig = self._display.display
         self._display.display = self._display_wrapper
+        # Catch the warnings of Ansible itself (lookups, templating) before Display
+        # wraps them, to group them at the end of the task. ansible-core 2.19+ hands
+        # them to the main process as a WarningSummary via Display._warning, before
+        # that Display.warning formats them in the worker process.
+        if hasattr(type(self._display), '_warning'):
+            self._warning_orig = self._display._warning
+            self._display._warning = self._warning_summary_hook
+        else:
+            self._warning_orig = self._display.warning
+            self._display.warning = self._warning_hook
+
+    # Prefix of a warning text that a worker process sends to the main process
+    _WARNING_MARK = '\x00linuxfabrik.lfops.compact warning\x00'
+
+    def _warning_hook(self, msg, *args, **kwargs):
+        # ansible-core before 2.19. Takes the `formatted` argument of Display.warning()
+        # and ignores it, the text is never wrapped here.
+        if multiprocessing.parent_process() is not None:
+            # A worker process: send the unwrapped text through the proxied
+            # display() to the main process, see _display_wrapper().
+            self._display.display(self._WARNING_MARK + msg, stderr=True)
+            return
+        self._foreign_warning(msg)
+
+    def _warning_summary_hook(self, warning):
+        # ansible-core 2.19+
+        if multiprocessing.parent_process() is not None:
+            # a worker process, the original proxies it to the main process
+            self._warning_orig(warning)
+            return
+        self._foreign_warning(warning.event.msg)
+
+    def _foreign_warning(self, text):
+        if self._task is not None:
+            self._task_warnings.append((None, text))
+            return
+        if text not in self._warned:
+            self._warned.add(text)
+            self._close_line()
+            self._display_orig(f'[WARNING]: {text}', color=C.COLOR_WARN, stderr=True)
 
     def _display_wrapper(self, msg, *args, **kwargs):
+        # in a worker process, the proxied display() carries it to the main process
+        if (
+            isinstance(msg, str)
+            and msg.startswith(self._WARNING_MARK)
+            and multiprocessing.parent_process() is None
+        ):
+            self._foreign_warning(msg[len(self._WARNING_MARK) :])
+            return None
         # Forked workers proxy their output to the main process and only carry a
         # stale copy of the line state.
         if (
@@ -200,7 +273,53 @@ class CallbackModule(Default):
         sys.stdout.flush()
         self._line_open = True
 
+    @staticmethod
+    def _warning_texts(result):
+        res = _res(result)
+        if not res.get('warnings') or not getattr(C, 'ACTION_WARNINGS', True):
+            return []
+        # ansible-core 2.19+ keeps the warnings as WarningSummary objects on the
+        # task result, before that they are strings in the result dict.
+        summaries = getattr(result, 'warnings', None)
+        if summaries:
+            return [summary.event.msg for summary in summaries]
+        return [str(warning) for warning in res['warnings']]
+
+    def _record(self, result, kind, messages):
+        """Remember a result for the summary at the end of the run. `messages` is a
+        list; one entry is recorded per message, `[None]` records one without.
+        """
+        self._record_entry(_host(result).get_name(), kind, _task(result), messages)
+
+    def _source_and_name(self, task):
+        """The role of a task (or the playbook, for its own tasks) and its name."""
+        name = task.get_name().strip()
+        if task._role:
+            # Task.get_name() renders role tasks as "<role> : <name>"
+            source = task._role.get_name()
+            return source, name.removeprefix(f'{source} : ')
+        return self._play.get_name().strip().removeprefix('Playbook '), name
+
+    def _record_entry(self, host, kind, task, messages):
+        if not messages:
+            return
+        source, name = self._source_and_name(task)
+        for message in messages:
+            hosts = self._report.setdefault((kind, source, name, message), [])
+            if host not in hosts:
+                hosts.append(host)
+
     def _warnings(self, result):
+        """Collect the warnings of a result for the end of the task and record them
+        for the summary. Ansible itself would print a warning text only once per run
+        and without the host, so it does not get them.
+        """
+        texts = self._warning_texts(result)
+        label = self.host_label(result)
+        self._task_warnings.extend((label, text) for text in texts)
+        self._record(result, 'warning', texts)
+        _res(result).pop('warnings', None)
+        # deprecations and exceptions stay with Ansible
         if hasattr(self, '_handle_warnings_and_exception'):
             # ansible-core 2.19+
             self._handle_warnings_and_exception(result)
@@ -208,14 +327,84 @@ class CallbackModule(Default):
             self._handle_warnings(_res(result))
 
     def _flush_hosts(self):
+        """Print what was collected during the task: the changes, grouped by
+        identical output, the ok and skipped hosts, and the warnings.
+        """
         self._close_line()
+        for suffix, body, hosts in self._changes.values():
+            self._display.display(
+                f'changed: {self._host_list(hosts)}{suffix}', color=C.COLOR_CHANGED
+            )
+            for line in body:
+                self._display.display(line)
+        self._changes.clear()
+        for message, hosts in self._ignored.items():
+            self._display.display(
+                f'ignored: {self._host_list(hosts)}', color=C.COLOR_SKIP
+            )
+            self._display.display(f'  {message}')
+        self._ignored.clear()
+        self._print_ok_skipped()
+        self._ok_hosts.clear()
+        self._skipped_hosts.clear()
+        self._flush_warnings()
+        self._task = None
+        self._task_hosts.clear()
+
+    def _print_ok_skipped(self):
         for label, hosts, color in (
             ('ok', self._ok_hosts, C.COLOR_OK),
             ('skipped', self._skipped_hosts, C.COLOR_SKIP),
         ):
             if hosts:
-                self._display.display(f'{label}: {compact_hosts(hosts)}', color=color)
-                hosts.clear()
+                self._display.display(f'{label}: {self._host_list(hosts)}', color=color)
+
+    def _saw(self, result):
+        name = _host(result).get_name()
+        self._seen_hosts.add(name)
+        self._task_hosts.add(name)
+
+    def _host_list(self, labels):
+        """compact_hosts(), or "all <n> hosts" if `labels` covers every host with a
+        result in this task, which spares the same long list on task after task.
+        """
+        names = {label.partition(' -> ')[0] for label in labels}
+        delegates = {label.partition(' -> ')[2] for label in labels}
+        if len(names) > 1 and names == self._task_hosts and len(delegates) == 1:
+            delegate = delegates.pop()
+            text = f'all {len(names)} hosts'
+            return f'{text} > {delegate}' if delegate else text
+        return compact_hosts(labels)
+
+    def _find_host(self, text):
+        """Return the first known host name in `text` and the text with all of
+        its occurrences replaced by "<host>", or (None, text).
+        """
+        # longest first, so "web-1" does not match within "web-10"
+        for host in sorted(self._seen_hosts, key=len, reverse=True):
+            pattern = rf'(?<![\w-]){re.escape(host)}(?![\w-])'
+            if re.search(pattern, text):
+                return host, re.sub(pattern, '<host>', text)
+        return None, text
+
+    def _flush_warnings(self):
+        # text -> host labels, in order of first appearance
+        groups = {}
+        for host, text in self._task_warnings:
+            if host is None:
+                host, text = self._find_host(text)
+                if host is not None and self._task is not None:
+                    self._record_entry(host, 'warning', self._task, [text])
+            hosts = groups.setdefault(text, [])
+            if host is not None:
+                hosts.append(host)
+        self._task_warnings.clear()
+        for text, hosts in groups.items():
+            self._display.display(f'[WARNING]: {text}', color=C.COLOR_WARN, stderr=True)
+            if hosts:
+                self._display.display(
+                    f'  on {self._host_list(hosts)}', color=C.COLOR_WARN, stderr=True
+                )
 
     def _dump_results(self, result, *args, **kwargs):
         # Print multi-line text fields (tracebacks, command output) as plain text
@@ -232,10 +421,10 @@ class CallbackModule(Default):
                 output += f'\n\n{key.upper()}:\n\n{saved[key]}\n'
         return output
 
-    def _print_task_banner(self, task):
-        # "Role: x" / "Task: y" instead of "TASK [x : y] ****". Mirrors the default
-        # callback, minus the check mode marker (the run starts with a DRY RUN banner
-        # anyway).
+    def _banner_parts(self, task):
+        """Return the section header (role or playbook), the prefix ("Task",
+        "Handler", ...) and the rest of the banner line of a task.
+        """
         args = ''
         if not task.no_log and C.DISPLAY_ARGS_TO_STDOUT:
             args = ' ' + ', '.join(f'{k}={v}' for k, v in task.args.items())
@@ -245,13 +434,26 @@ class CallbackModule(Default):
         name = self._last_task_name
         if name is None:
             name = task.get_name().strip()
-        self._display.display('')
         if task._role:
             # Task.get_name() renders role tasks as "<role> : <name>"
             role = task._role.get_name()
             name = name.removeprefix(f'{role} : ')
-            self._display_styled(f'{stringc("Role:", "blue")} {role}', f'Role: {role}')
-        line = f'{name}{args}'
+            section = f'Role: {role}'
+        else:
+            section = self._play_line
+        return section, prefix, f'{name}{args}'
+
+    def _print_task_banner(self, task):
+        # "Role: x" / "Task: y" instead of "TASK [x : y] ****". Mirrors the default
+        # callback, minus the check mode marker (the run starts with a DRY RUN banner
+        # anyway).
+        section, prefix, line = self._banner_parts(task)
+        self._display.display('')
+        # The tasks are grouped in sections, one per role and one for the tasks of
+        # the playbook itself, with a bold header line whenever the section changes.
+        if section != self._section:
+            self._section = section
+            self._bold(section)
         self._display_styled(
             f'{stringc(f"{prefix}:", "green")} {line}', f'{prefix}: {line}'
         )
@@ -261,6 +463,7 @@ class CallbackModule(Default):
 
     def _task_start(self, task, prefix=None):
         self._flush_hosts()
+        self._task = task
         super()._task_start(task, prefix)
         # The default callback defers the banner when ok/skipped results are hidden.
         # Print it right away instead, unless it was already printed.
@@ -269,8 +472,20 @@ class CallbackModule(Default):
         if self._last_task_name is not None and self._last_task_banner != task._uuid:
             self._print_task_banner(task)
 
+    def _add_change(self, result, body, item=False):
+        """Collect a changed host for the end of the task, grouped with the hosts
+        whose output has the same lines (in any order, e.g. restorecon -v).
+        """
+        label = self._short_label(self._get_item_label(_res(result)))
+        suffix = f' (item={label})' if item else ''
+        key = (suffix, tuple(sorted(body)))
+        self._changes.setdefault(key, [suffix, body, []])[2].append(
+            self.host_label(result)
+        )
+        self._saw(result)
+
     def _print_changed(self, result, item=False):
-        """Print "changed: host", unless v2_on_file_diff already did."""
+        """Collect a changed host, unless v2_on_file_diff already did."""
         task = _task(result)
         res = _res(result)
         key = (_host(result).get_name(), task._uuid)
@@ -280,16 +495,12 @@ class CallbackModule(Default):
         if self._last_task_banner != task._uuid:
             self._print_task_banner(task)
         self._bar(C.COLOR_CHANGED)
-        msg = f'changed: {self.host_label(result)}'
-        if item:
-            msg += f' (item={self._get_item_label(res)})'
+        self._record(result, 'changed', [None])
         self._clean_results(res, task.action)
         if self._run_is_verbose(result):
-            self._display.display(
-                f'{msg} => {self._dump_results(res)}', color=C.COLOR_CHANGED
-            )
+            self._add_change(result, [f'=> {self._dump_results(res)}'], item)
             return
-        self._display.display(msg, color=C.COLOR_CHANGED)
+        body = []
         # Without a diff, these fields are where modules report what they changed
         # (e.g. the network_connections module of fedora.linux_system_roles logs to
         # stderr, dnf lists "Installed: x" in results). Loop results are dicts and
@@ -302,15 +513,15 @@ class CallbackModule(Default):
                 value = '\n'.join(value)
             if not isinstance(value, str) or not value.strip():
                 continue
-            self._display.display(f'  {field}:')
-            for line in value.rstrip('\n').splitlines():
-                self._display.display(f'    {line}')
+            body.append(f'  {field}:')
+            body.extend(f'    {line}' for line in value.rstrip('\n').splitlines())
+        self._add_change(result, body, item)
 
     def v2_on_file_diff(self, result):
         # Ansible sends v2_on_file_diff right before v2_runner_(item_)on_ok for the
         # same result (executor/task_executor.py, plugins/strategy/__init__.py,
-        # verified against ansible-core 2.16). Print the host as header above its
-        # diff and skip the "changed" line that would follow below it.
+        # verified against ansible-core 2.16). Collect the host with its diff and
+        # skip the "changed" that follows for the same result.
         task = _task(result)
         res = _res(result)
         if (task.loop and 'results' in res) or not res.get('changed'):
@@ -322,10 +533,9 @@ class CallbackModule(Default):
         if self._last_task_banner != task._uuid:
             self._print_task_banner(task)
         self._bar(C.COLOR_CHANGED)
-        self._display.display(
-            f'changed: {self.host_label(result)}', color=C.COLOR_CHANGED
-        )
-        self._display.display(diff)
+        self._record(result, 'changed', [None])
+        # the empty line keeps the next "changed" apart from the diff
+        self._add_change(result, [*diff.rstrip('\n').splitlines(), ''], task.loop)
         key = (_host(result).get_name(), task._uuid)
         self._diff_printed[key] = self._diff_printed.get(key, 0) + 1
 
@@ -335,12 +545,23 @@ class CallbackModule(Default):
         path = included_file._filename
         if '/roles/' in path:
             path = path.rsplit('/roles/', 1)[1]
-        hosts = ', '.join(sorted(h.name for h in included_file._hosts))
+        hosts = compact_hosts(h.name for h in included_file._hosts)
         msg = f'included: {path} for {hosts}'
         label = self._get_item_label(included_file._vars)
         if label:
-            msg += f' (item={label})'
+            msg += f' (item={self._short_label(label)})'
         self._display.display(msg, color=C.COLOR_SKIP)
+
+    _LABEL_MAX = 60
+
+    def _short_label(self, label):
+        """The name of a dict item, else the item cut to _LABEL_MAX characters."""
+        if isinstance(label, dict) and isinstance(label.get('name'), str):
+            return label['name']
+        label = str(label)
+        if len(label) > self._LABEL_MAX:
+            return label[: self._LABEL_MAX - 3] + '...'
+        return label
 
     def v2_playbook_on_no_hosts_remaining(self):
         self._flush_hosts()
@@ -352,21 +573,73 @@ class CallbackModule(Default):
         name = play.get_name().strip()
         # LFOps names its plays "Playbook linuxfabrik.lfops.<name>".
         if name.startswith('Playbook '):
-            line = f'Playbook: {name[len("Playbook ") :]}'
+            self._play_line = f'Playbook: {name[len("Playbook ") :]}'
         else:
-            line = f'Play: {name}' if name else 'Play'
+            self._play_line = f'Play: {name}' if name else 'Play'
+        self._section = self._play_line
+        self._bold(self._play_line)
+
+    def _bold(self, line):
         # Ansible's color names have no bold, so use the plain SGR code
         self._display_styled(f'\033[1m{line}\033[0m' if ANSIBLE_COLOR else line, line)
 
     def v2_playbook_on_stats(self, stats):
         self._flush_hosts()
         super().v2_playbook_on_stats(stats)
+        self._print_issues()
+
+    # Sections of the report at the end of the run, most severe first
+    _REPORT_SECTIONS = (
+        ('failed', 'FATAL', 'COLOR_ERROR'),
+        ('unreachable', 'UNREACHABLE', 'COLOR_UNREACHABLE'),
+        ('warning', 'WARNING', 'COLOR_WARN'),
+        ('ignored', 'IGNORED', 'COLOR_SKIP'),
+        ('changed', 'CHANGED', 'COLOR_CHANGED'),
+    )
+
+    def _print_issues(self):
+        """The report at the end of the run, in Markdown: one section per kind,
+        most severe first, the heading in the color of the kind. Below, each
+        distinct message in task order, "* <role or playbook> - <task>: <message>",
+        and the hosts it occurred on on the next line.
+        """
+        for kind, title, color in self._REPORT_SECTIONS:
+            entries = [
+                (source, name, message, hosts)
+                for (k, source, name, message), hosts in self._report.items()
+                if k == kind
+            ]
+            if not entries:
+                continue
+            self._display.display('')
+            heading = f'# {title}'
+            color = getattr(C, color)
+            if ANSIBLE_COLOR:
+                self._display_styled(
+                    f'\033[1m{stringc(heading, color)}\033[0m', heading
+                )
+            else:
+                self._display.display(heading)
+            self._display.display('')
+            for source, name, message, hosts in entries:
+                line = f'* {source} - {name}'
+                if message:
+                    # one line per entry, multi-line messages are joined
+                    line += ': ' + ' '.join(str(message).split())
+                self._display.display(line)
+                # always the hosts themselves, so the report names every one
+                self._display.display(f'  {compact_hosts(hosts)}')
+        if self._report:
+            self._display.display('')
 
     def v2_runner_item_on_ok(self, result):
-        # Unchanged items are covered by the host's asterisk and the "ok" line.
-        if isinstance(_task(result), TaskInclude) or not _res(result).get('changed'):
+        if isinstance(_task(result), TaskInclude):
             return
-        self._print_changed(result, item=True)
+        res = _res(result)
+        if res.get('changed'):
+            self._print_changed(result, item=True)
+        # unchanged items are covered by the host's asterisk and the "ok" line
+        self._warnings(result)
 
     def v2_runner_item_on_skipped(self, result):
         pass
@@ -376,7 +649,41 @@ class CallbackModule(Default):
         if self._last_task_banner != task._uuid:
             self._print_task_banner(task)
         self._bar(C.COLOR_ERROR)
+        self._saw(result)
+        if ignore_errors and not self._run_is_verbose(result):
+            # A failure the role accepts on purpose: collect it for the end of the
+            # task instead of the full result. --verbose shows it as usual.
+            messages = self._failure_messages(result)
+            self._record(result, 'ignored', messages)
+            for message in messages:
+                self._ignored.setdefault(message, []).append(self.host_label(result))
+            # ansible-core 2.19+ would print the exception of the failure as an
+            # error, which the message above already covers
+            _res(result).pop('exception', None)
+            self._warnings(result)
+            return
+        if ignore_errors:
+            self._record(result, 'ignored', self._failure_messages(result))
+        else:
+            self._record(result, 'failed', self._failure_messages(result))
+        self._record(result, 'warning', self._warning_texts(result))
         super().v2_runner_on_failed(result, ignore_errors)
+
+    def _failure_messages(self, result):
+        """The first line of the message of a failed result, per failed item for a
+        loop. The details are printed above with the result.
+        """
+        res = _res(result)
+        if _task(result).loop and isinstance(res.get('results'), list):
+            messages = [
+                f'(item={self._get_item_label(item)}) '
+                + (str(item.get('msg') or 'failed').strip().splitlines() or [''])[0]
+                for item in res['results']
+                if isinstance(item, dict) and item.get('failed')
+            ]
+            if messages:
+                return messages
+        return [(str(res.get('msg') or 'failed').strip().splitlines() or [''])[0]]
 
     def v2_runner_on_ok(self, result):
         task = _task(result)
@@ -384,22 +691,24 @@ class CallbackModule(Default):
         if isinstance(task, TaskInclude):
             super().v2_runner_on_ok(result)
             return
-        self._warnings(result)
         if not res.get('changed'):
             # The banner is still missing with the free strategies, see notes.
             if self._last_task_banner != task._uuid:
                 self._print_task_banner(task)
             self._ok_hosts.append(self.host_label(result))
+            self._saw(result)
             self._bar(C.COLOR_OK)
         elif not (task.loop and 'results' in res):
-            # Loop results were already printed per item.
+            # Loop results were already collected per item.
             self._print_changed(result)
+        self._warnings(result)
 
     def v2_runner_on_skipped(self, result):
         task = _task(result)
         if self._last_task_banner != task._uuid:
             self._print_task_banner(task)
         self._skipped_hosts.append(self.host_label(result))
+        self._saw(result)
         self._bar(C.COLOR_SKIP)
 
     def v2_runner_on_unreachable(self, result):
@@ -407,4 +716,6 @@ class CallbackModule(Default):
         if self._last_task_banner != task._uuid:
             self._print_task_banner(task)
         self._bar(C.COLOR_UNREACHABLE)
+        self._saw(result)
+        self._record(result, 'unreachable', [_res(result).get('msg') or 'unreachable'])
         super().v2_runner_on_unreachable(result)

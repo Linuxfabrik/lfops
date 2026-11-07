@@ -80,7 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* **plugin:compact**: The `linuxfabrik.lfops.compact` stdout callback shortens the output of large runs to one block per task, with a progress bar per host, one line each for the ok and the skipped hosts, and the diff or module output of every changed host.
+* **plugin:compact**: The `linuxfabrik.lfops.compact` stdout callback shortens the output of large runs to one block per task, with a progress bar per host, one line each for the ok and the skipped hosts, the diff or module output of the changed hosts and the warnings, each grouped by identical text, and a report of the distinct changes, warnings and errors by severity at the end.
 * **role:rpm, playbook:rpm, playbook:setup_basic**: Checks the RPM database on RHEL 8, 9 and 10 before the first package task, aborts on a damaged one instead of failing later with `rpmdb open failed`, and on RHEL 8 repairs a database that a killed rpm process left unusable, keeping all packages.
 * **role:dnf, playbook:dnf**: Sets options in `/etc/dnf/dnf.conf` on RHEL 8, 9 and 10, by default `minrate=200k` and `timeout=15`, so DNF drops slow mirrors sooner. Hosts without DNF 4 are left alone.
 * **role:telegraf**: Add the `telegraf:configure` tag.
