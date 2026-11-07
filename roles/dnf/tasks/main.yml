@@ -1,0 +1,81 @@
+# The role only acts where DNF 4 is the package manager. ansible-core sets the `pkg_mgr` fact to
+# `dnf` for it, to `dnf5` once /usr/bin/dnf is DNF 5 (Fedora 41 and newer), and to `apt` on
+# Debian and Ubuntu (module_utils/facts/system/pkg_mgr.py, ansible-core 2.16). Everywhere else
+# the role does nothing, so that setup_basic can run it on every host.
+
+
+- block:
+
+  # argument_specs cannot check the formats libdnf accepts, and DNF does not fail on an invalid
+  # value either: it logs "Invalid configuration value" and goes on with its built-in default
+  # (dnf/conf/config.py; verified against dnf 4.7.0, 4.14.0 and 4.20.0 on Rocky 8, 9 and 10).
+  # The formats follow OptionNumber with strToBytes (minrate), OptionSeconds (timeout) and the
+  # installonly_limit check in libdnf 0.63.0, 0.69.0 and 0.73.1, which rejects 1.
+  - name: 'Assert that the dnf.conf options are valid'
+    ansible.builtin.assert:
+      that:
+        - '__dnf__conf_options_present | selectattr("value", "undefined") | list | length == 0'
+        - '__dnf__conf_installonly_limit_values | reject("match", "^(0|[2-9]|[1-9][0-9]+)$") | list | length == 0'
+        - '__dnf__conf_minrate_values | reject("match", "^[0-9]+(\.[0-9]+)?[kKmMgG]?$") | list | length == 0'
+        - '__dnf__conf_timeout_values | reject("match", "^[0-9]+(\.[0-9]+)?[sSmMhHdD]?$") | list | length == 0'
+      quiet: true
+      fail_msg: >-
+        Invalid dnf__conf_options: every entry needs a value unless it has state 'absent',
+        installonly_limit must be 0 or at least 2, minrate a number of bytes with an optional
+        k, M or G, timeout a number of seconds with an optional s, m, h or d.
+        Got: {{ __dnf__conf_options_present }}
+    vars:
+      __dnf__conf_options_present: '{{
+          dnf__conf_options__combined_var | rejectattr("state", "defined") | list +
+          dnf__conf_options__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | list
+        }}'
+      __dnf__conf_installonly_limit_values: '{{
+          __dnf__conf_options_present | selectattr("name", "eq", "installonly_limit") | map(attribute="value") | map("string")
+        }}'
+      __dnf__conf_minrate_values: '{{
+          __dnf__conf_options_present | selectattr("name", "eq", "minrate") | map(attribute="value") | map("string")
+        }}'
+      __dnf__conf_timeout_values: '{{
+          __dnf__conf_options_present | selectattr("name", "eq", "timeout") | map(attribute="value") | map("string")
+        }}'
+
+  when:
+    - 'ansible_facts["pkg_mgr"] == "dnf"'
+  tags:
+    - 'always'
+
+
+# ini_file instead of a template, a deliberate exception to CONTRIBUTING: the packaged
+# dnf.conf is fine as it is, and the role only sets a few options in [main]. A template would
+# replace the whole file and drop settings added by hand, such as `proxy=` or `exclude=`.
+# ini_file changes the listed options and leaves every other line alone.
+- block:
+
+  - name: 'Set the options in /etc/dnf/dnf.conf'
+    community.general.ini_file:
+      backup: true
+      path: '/etc/dnf/dnf.conf'
+      section: 'main'
+      option: '{{ item["name"] }}'
+      value: '{{ item["value"] | d(omit) }}'
+      state: '{{ item["state"] | d("present") }}'
+      no_extra_spaces: true
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop: '{{ dnf__conf_options__combined_var }}'
+    loop_control:
+      label: '{{ item["name"] }}={{ item["value"] | d("") }} ({{ item["state"] | d("present") }})'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/dnf/dnf.conf'
+
+  when:
+    - 'ansible_facts["pkg_mgr"] == "dnf"'
+  tags:
+    - 'dnf'
+    - 'dnf:configure'

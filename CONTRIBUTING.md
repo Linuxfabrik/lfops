@@ -272,7 +272,7 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
 
 * Always use the FQCN of the module.
 * Use meta modules: `ansible.builtin.package` instead of `yum` / `dnf` / `apt`, `ansible.builtin.service` instead of `systemd`.
-* Prefer `ansible.builtin.command` (or `ansible.windows.win_command`) over `shell` over `raw`, and `ansible.builtin.template` over `copy`, `lineinfile` or `blockinfile`.
+* Prefer `ansible.builtin.command` (or `ansible.windows.win_command`) over `shell` over `raw`, and `ansible.builtin.template` over `copy`, `lineinfile` or `blockinfile`. Exception: see "Setting options in a packaged file instead of templating it".
 * Pin `ansible.builtin.shell` to `executable: '/bin/bash'` (in `args:` or next to `cmd:`): Debian's `/bin/sh` is `dash`, which rejects `set -o pipefail`, `[[ ... ]]` and `source`. `/bin/bash` resolves with or without usrmerge, `/usr/bin/bash` does not.
 * Never `state: 'latest'` with `ansible.builtin.package`, use `state: 'present'`.
 * Use `delegate_to: 'localhost'`, never `local_action`.
@@ -692,6 +692,12 @@ Before adding an `allow` rule, work out what it buys an attacker **on top of** t
 #### Reboot requests
 
 * `bootloader`: see "Reboots".
+
+
+#### Setting options in a packaged file instead of templating it
+
+* Use it when the packaged file is fine as shipped, the role only sets single options, and a template would silently drop settings made by hand.
+* `dnf`: `community.general.ini_file` with `backup: true` sets only the entries of a `name` / `value` / `state` list in `/etc/dnf/dnf.conf`; `state: 'absent'` removes an option. The file has no `ansible_managed` header, and options set by hand stay.
 
 
 #### systemd socket activation with an on-demand backend

@@ -1,0 +1,12 @@
+# minrate overrides the role default, timeout keeps it. ip_resolve is set here and removed again
+# by the host_var with `state: 'absent'`, which also removes the one converge.yml adds by hand.
+dnf__conf_options__group_var:
+  - name: 'ip_resolve'
+    value: 'ipv6'
+  - name: 'max_parallel_downloads'
+    value: '7'
+  - name: 'minrate'
+    value: '300k'
+dnf__conf_options__host_var:
+  - name: 'ip_resolve'
+    state: 'absent'

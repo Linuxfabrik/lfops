@@ -1,0 +1,63 @@
+argument_specs:
+  main:
+    options:
+
+      dnf__conf_options__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Options for the [main] section of /etc/dnf/dnf.conf. Dependent-role injection.'
+        options:
+          name:
+            type: 'str'
+            required: true
+          state:
+            type: 'str'
+            required: false
+            choices:
+              - 'absent'
+              - 'present'
+          value:
+            type: 'str'
+            required: false
+
+      dnf__conf_options__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Options for the [main] section of /etc/dnf/dnf.conf. Group-level override.'
+        options:
+          name:
+            type: 'str'
+            required: true
+          state:
+            type: 'str'
+            required: false
+            choices:
+              - 'absent'
+              - 'present'
+          value:
+            type: 'str'
+            required: false
+
+      dnf__conf_options__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Options for the [main] section of /etc/dnf/dnf.conf. Host-level override.'
+        options:
+          name:
+            type: 'str'
+            required: true
+          state:
+            type: 'str'
+            required: false
+            choices:
+              - 'absent'
+              - 'present'
+          value:
+            type: 'str'
+            required: false

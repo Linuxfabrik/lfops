@@ -11,6 +11,8 @@
     setup_basic__roles__internal_var:
       - name: 'network'
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_network | d(false) }}'
+      - name: 'dnf'
+        skip: '{{ setup_basic__skip_dnf | d(false) }}'
       - name: 'repo_baseos'
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_repo_baseos | d(false) }}'
       - name: 'repo_epel'
@@ -171,6 +173,12 @@
 
 
   roles:
+
+    # Comes first, so that every role installing packages already gets the mirror settings. The
+    # role does nothing on hosts without DNF 4.
+    - role: 'linuxfabrik.lfops.dnf'
+      when:
+        - 'not setup_basic__skip_dnf | d(false)'
 
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'

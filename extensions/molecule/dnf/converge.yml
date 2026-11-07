@@ -1,0 +1,20 @@
+# Change the dnf.conf the host ships by hand, the way an admin would. The role has to keep
+# `exclude=` and `installonly_limit=5`, which the inventory does not list, and remove
+# `ip_resolve=`, which inventory/group_vars lists with state 'absent'. The marker file makes the
+# changes only once, so that the idempotence step sees no change.
+- name: 'Change the shipped dnf.conf by hand'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - name: 'Add exclude= and ip_resolve=, set installonly_limit=5 in /etc/dnf/dnf.conf'
+      ansible.builtin.shell:
+        cmd: >-
+          sed --in-place 's/^installonly_limit=.*/installonly_limit=5/' /etc/dnf/dnf.conf &&
+          printf 'exclude=kernel-debug*\nip_resolve=4\n' >> /etc/dnf/dnf.conf &&
+          touch /root/.molecule-dnf
+        creates: '/root/.molecule-dnf'
+        executable: '/bin/bash'
+      when: 'ansible_facts["pkg_mgr"] == "dnf"'
+
+- name: 'Converge dnf playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.dnf'
