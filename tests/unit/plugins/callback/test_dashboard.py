@@ -130,7 +130,12 @@ class TestDashboardOnTerminal(unittest.TestCase):
         self.assertIn('HOST', screen)
         self.assertIn('Task   ok', screen)
         self.assertIn('Run    ok', screen)
+        self.assertIn('pending', screen)
         self.assertIn('t-h01', screen)
+        self.assertIn('F   W   C  LAST', screen)
+        # the last notable result with the letter of its kind, the playbook
+        # "linuxfabrik.lfops.test" shortened to "test"
+        self.assertIn('C test - Some changes', screen)
         # ok hosts are counted, not listed
         self.assertNotIn('t-h03', screen)
 
