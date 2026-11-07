@@ -61,6 +61,7 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
 * [Configuration](#configuration)
 
     * [Recommended ansible.cfg](#recommended-ansiblecfg)
+    * [Compact Output](#compact-output)
     * [LFOps-wide Variables](#lfops-wide-variables)
     * [Bitwarden Integration](#bitwarden-integration)
 * [Compatibility](#compatibility)
@@ -206,11 +207,16 @@ ansible-navigator:
   execution-environment:
     container-engine: podman # or docker
     enabled: true
+    environment-variables:
+      set:
+        ANSIBLE_STDOUT_CALLBACK: 'linuxfabrik.lfops.compact'
     image: ghcr.io/linuxfabrik/lfops_ee:latest
     pull:
       policy: missing
   mode: stdout
 ```
+
+`ANSIBLE_STDOUT_CALLBACK` selects the [compact output](#compact-output). ansible-navigator runs the playbook through ansible-runner, which replaces the stdout callback with its own wrapper. That wrapper only builds on the `ANSIBLE_STDOUT_CALLBACK` environment variable and ignores `stdout_callback` in the `ansible.cfg`.
 
 Then run playbooks using `ansible-navigator` instead of `ansible-playbook`:
 
@@ -340,6 +346,7 @@ inventory_ignore_extensions = ~, .orig, .bak, .ini, .cfg, .retry, .pyc, .pyo, .c
 inventory_ignore_patterns = '(host|group)_files'
 nocows = 1
 retry_files_enabled = False
+stdout_callback = linuxfabrik.lfops.compact  ; see "Compact Output" section
 strategy_plugins = /path/to/ansible_mitogen/plugins/strategy  ; see "Mitogen" section
 strategy = mitogen_linear
 timeout = 15
@@ -348,6 +355,30 @@ timeout = 15
 pipelining = True
 ssh_args = -o ControlMaster=auto -o ControlPersist=60s
 ```
+
+### Compact Output
+
+The `linuxfabrik.lfops.compact` stdout callback keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module:
+
+```text
+Playbook: linuxfabrik.lfops.setup_basic
+
+Role: linuxfabrik.lfops.dnf
+Task: Set the options in /etc/dnf/dnf.conf
+*****
+changed: web-03
+--- before: /etc/dnf/dnf.conf (content)
++++ after: /etc/dnf/dnf.conf (content)
+@@ -4,3 +4,4 @@
+ clean_requirements_on_remove=True
+ best=True
+ skip_if_unavailable=False
++minrate=200k
+
+ok: web-{01,02}, db-01, proxy01
+```
+
+Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg`, or, with ansible-navigator, with the `ANSIBLE_STDOUT_CALLBACK` environment variable (see [Using ansible-navigator](#using-ansible-navigator)). See `ansible-doc --type callback linuxfabrik.lfops.compact` for details.
 
 ### LFOps-wide Variables
 

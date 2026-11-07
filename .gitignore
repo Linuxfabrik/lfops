@@ -15,6 +15,7 @@ extensions/molecule/**/*.retry
 # mkdocs documentation
 /docs/CHANGELOG.md
 /docs/CODE_OF_CONDUCT.md
+/docs/callback/
 /docs/compatibility.md
 /docs/contributing.md
 /docs/filter/
