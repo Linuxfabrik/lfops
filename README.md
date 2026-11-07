@@ -62,6 +62,7 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
 
     * [Recommended ansible.cfg](#recommended-ansiblecfg)
     * [Compact Output](#compact-output)
+    * [Dashboard](#dashboard)
     * [LFOps-wide Variables](#lfops-wide-variables)
     * [Bitwarden Integration](#bitwarden-integration)
 * [Compatibility](#compatibility)
@@ -379,6 +380,26 @@ ok: web-{01,02}, db-01, proxy01
 ```
 
 Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg`, or, with ansible-navigator, with the `ANSIBLE_STDOUT_CALLBACK` environment variable (see [Using ansible-navigator](#using-ansible-navigator)). See `ansible-doc --type callback linuxfabrik.lfops.compact` for details.
+
+### Dashboard
+
+The `linuxfabrik.lfops.dashboard` stdout callback shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and only the hosts that need attention (fatal, then warning, then changed), each with its last notable result. Hosts that are only ok or skipped are counted, not listed:
+
+```text
+linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
+Role: linuxfabrik.lfops.firewall
+Task: Deploy the firewall rules
+──────────────────────────────────────────────────────────────────────────────────
+Task   ok 20     changed 3      skipped 5      fatal 1      unreachable 0      - 6
+Run    ok 1840   changed 61     warning 12     fatal 1      unreachable 0
+──────────────────────────────────────────────────────────────────────────────────
+HOST       FATAL   WARN  CHANGED  LAST
+web-02         1      0        2  failed: linuxfabrik.lfops.firewall - Deploy the ...
+web-01         0      2        5  warning: linuxfabrik.lfops.lvm - pvcreate / pvresize
+db-01          0      0        7  changed: linuxfabrik.lfops.firewall - Deploy the ...
+```
+
+At the end of the run, the details follow in the format of the [compact output](#compact-output), but only for the tasks with changes, warnings or failures, then the recap and the report. Without a terminal (log file, pipe, CI), with `--verbose`, or on a terminal smaller than 65 columns and 12 lines, it behaves exactly like `linuxfabrik.lfops.compact`. Enable it like the compact output, with `linuxfabrik.lfops.dashboard` as the stdout callback. See `ansible-doc --type callback linuxfabrik.lfops.dashboard` for details.
 
 ### LFOps-wide Variables
 
