@@ -86,6 +86,14 @@ class CallbackModule(Compact):
     CALLBACK_TYPE = 'stdout'
     CALLBACK_NAME = 'linuxfabrik.lfops.dashboard'
 
+    # kind -> letter and color in the LAST column of the host list
+    _KIND_LETTERS = {  # noqa: RUF012
+        'changed': ('C', C.COLOR_CHANGED),
+        'failed': ('F', C.COLOR_ERROR),
+        'unreachable': ('U', C.COLOR_UNREACHABLE),
+        'warning': ('W', C.COLOR_WARN),
+    }
+
     # at most this many redraws per second, the last state is always drawn at the
     # end of a task
     _REDRAW_INTERVAL = 0.1
@@ -188,7 +196,7 @@ class CallbackModule(Compact):
         for kind, color in kinds:
             value = counts.get(kind, 0)
             segments.append((f'{kind} ', None, False))
-            segments.append((f'{value:<7}', color if value else None, bool(value)))
+            segments.append((f'{value:<5}', color if value else None, bool(value)))
         return segments
 
     def _draw(self, force=False):
@@ -245,7 +253,8 @@ class CallbackModule(Compact):
         task_counts = Counter(self._task_counts)
         if self._play_hosts:
             alive = len(self._play_hosts - self._dead_hosts)
-            task_counts['-'] = max(alive - len(self._task_hosts), 0)
+            # hosts that are still at work on the task
+            task_counts['pending'] = max(alive - len(self._task_hosts), 0)
         screen.append(
             self._fit(
                 self._counter_segments(
@@ -258,7 +267,7 @@ class CallbackModule(Compact):
                         ('fatal', C.COLOR_ERROR),
                         ('unreachable', C.COLOR_UNREACHABLE),
                         ('ignored', C.COLOR_WARN),
-                        ('-', None),
+                        ('pending', None),
                     ),
                 ),
                 width,
@@ -294,7 +303,13 @@ class CallbackModule(Compact):
         name_width = min(max([len(h) for h in hosts] + [4]), 30)
         screen.append(
             self._fit(
-                [(f'{"HOST":<{name_width}}  FATAL   WARN  CHANGED  LAST', None, True)],
+                [
+                    (
+                        f'{"HOST":<{name_width}}  {"F":>3} {"W":>3} {"C":>3}  LAST',
+                        None,
+                        True,
+                    )
+                ],
                 width,
             )
         )
@@ -311,20 +326,21 @@ class CallbackModule(Compact):
                 color = C.COLOR_WARN
             else:
                 color = C.COLOR_CHANGED
-            screen.append(
-                self._fit(
-                    [
-                        (
-                            f'{host[:name_width]:<{name_width}}  {fatal:>5}  '
-                            f'{counts["warning"]:>5}  {counts["changed"]:>7}  ',
-                            color,
-                            bool(fatal),
-                        ),
-                        (self._host_last.get(host, ''), None, False),
-                    ],
-                    width,
-                )
-            )
+            # every count in the color of its own kind, zeros plain
+            segments = [(f'{host[:name_width]:<{name_width}} ', color, bool(fatal))]
+            for value, value_color in (
+                (fatal, C.COLOR_ERROR),
+                (counts['warning'], C.COLOR_WARN),
+                (counts['changed'], C.COLOR_CHANGED),
+            ):
+                segments.append((f' {value:>3}', value_color if value else None, False))
+            segments.append(('  ', None, False))
+            kind, text = self._host_last.get(host, (None, ''))
+            if kind:
+                letter, letter_color = self._KIND_LETTERS[kind]
+                segments.append((f'{letter} ', letter_color, True))
+            segments.append((text, None, False))
+            screen.append(self._fit(segments, width))
         if len(shown) < len(hosts):
             screen.append(f'+ {len(hosts) - len(shown)} more hosts')
 
@@ -416,11 +432,15 @@ class CallbackModule(Compact):
         counts = self._host_counts.setdefault(host, Counter())
         counts[kind] += len(messages)
         source, name = self._source_and_name(task)
+        # "namespace.collection.role" -> "role", the screen is narrow and the report
+        # at the end names it in full
+        if source.count('.') == 2:
+            source = source.rsplit('.', 1)[1]
         message = messages[-1]
-        last = f'{kind}: {source} - {name}'
+        last = f'{source} - {name}'
         if message:
             last += ': ' + ' '.join(str(message).split())
-        self._host_last[host] = last
+        self._host_last[host] = (kind, last)
         if kind == 'warning':
             self._run_counts['warning'] += len(messages)
 
