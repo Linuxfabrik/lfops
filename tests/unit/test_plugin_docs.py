@@ -37,6 +37,7 @@ _REPO_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 _PLUGIN_GLOBS = [
+    'plugins/callback/*.py',
     'plugins/filter/*.py',
     'plugins/lookup/*.py',
     'plugins/modules/*.py',

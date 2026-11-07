@@ -10,10 +10,10 @@
 for the Linuxfabrik LFOps documentation site.
 
 For roles, the existing README.md is symlinked into docs/roles/<role>.md.
-For Ansible plugins (modules, lookup, filter), the embedded DOCUMENTATION /
+For Ansible plugins (modules, callback, lookup, filter), the embedded DOCUMENTATION /
 EXAMPLES / RETURN blocks are extracted and rendered into Markdown under
-docs/modules/<name>.md, docs/lookup/<name>.md, docs/filter/<name>.md and
-collected under a single 'Modules' section in the nav.
+docs/modules/<name>.md, docs/callback/<name>.md, docs/lookup/<name>.md,
+docs/filter/<name>.md and collected under a single 'Plugins' section in the nav.
 
 Run this tool from the repository root directory.
 """
@@ -50,6 +50,7 @@ PLAYBOOKS_README = ('playbooks/README.md', 'playbooks.md', 'Playbooks')
 # lookup/filter only because we sort the merged list and append the suffix to break ties.
 PLUGIN_KINDS = [
     ('modules', 'modules', 'module'),
+    ('callback', 'callback', 'callback'),
     ('lookup', 'lookup', 'lookup'),
     ('filter', 'filter', 'filter'),
 ]
@@ -424,7 +425,7 @@ def render_plugin_md(kind, name, parsed):
 
 
 def scan_plugins():
-    """Scan plugins/{modules,lookup,filter}/ for .py files with a DOCUMENTATION block.
+    """Scan plugins/{modules,callback,lookup,filter}/ for .py files with a DOCUMENTATION block.
     Returns a list of (kind, name, source_path) tuples, sorted by name then kind.
     """
     found = []
@@ -561,14 +562,20 @@ def generate_mkdocs_yml(roles, plugin_pages):
         lines.append(f"      - '{role}': 'roles/{role}.md'")
 
     if plugin_pages:
-        # Group by plugin kind so the nav has Plugins > Modules / Lookup / Filter.
-        by_kind = {'module': [], 'lookup': [], 'filter': []}
+        # Group by plugin kind so the nav has Plugins > Modules / Callback / Lookup /
+        # Filter.
+        by_kind = {'module': [], 'callback': [], 'lookup': [], 'filter': []}
         for kind, name, path in plugin_pages:
             by_kind.setdefault(kind, []).append((name, path))
-        kind_label = {'module': 'Modules', 'lookup': 'Lookup', 'filter': 'Filter'}
+        kind_label = {
+            'callback': 'Callback',
+            'filter': 'Filter',
+            'lookup': 'Lookup',
+            'module': 'Modules',
+        }
 
         lines.append("  - 'Plugins':")
-        for kind in ('module', 'lookup', 'filter'):
+        for kind in ('module', 'callback', 'lookup', 'filter'):
             entries = sorted(by_kind.get(kind, []), key=lambda t: t[0])
             if not entries:
                 continue
@@ -618,7 +625,7 @@ def main():
         target = os.path.join(target_dir, f'{role}.md')
         create_symlink(source, target)
 
-    # Render plugin docs (modules, lookup, filter)
+    # Render plugin docs (modules, callback, lookup, filter)
     plugins = scan_plugins()
     plugin_pages = write_plugin_pages(plugins)
 

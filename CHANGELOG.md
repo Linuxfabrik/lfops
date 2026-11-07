@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server. Hosts set up with `setup_basic` follow more of the CIS Benchmarks out of the box: root can no longer log in over SSH, USB storage is blocked, a sysctl hardening baseline is applied, and the cron configuration is readable by root only. Before updating, make sure Ansible logs in with an unprivileged user, and allow USB storage on hosts that need it. Nextcloud keeps the apps and app settings that the admin changed in the web interface, and JPEG previews work again.
+**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server. Hosts set up with `setup_basic` follow more of the CIS Benchmarks out of the box: root can no longer log in over SSH, USB storage is blocked, a sysctl hardening baseline is applied, and the cron configuration is readable by root only. Before updating, make sure Ansible logs in with an unprivileged user, and allow USB storage on hosts that need it. Nextcloud keeps the apps and app settings that the admin changed in the web interface, and JPEG previews work again. Large runs are easier to follow with the `linuxfabrik.lfops.compact` stdout callback, which shows one block per task, a progress bar per host, and only what changed.
 
 ### Breaking Changes
 
@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **plugin:compact**: The `linuxfabrik.lfops.compact` stdout callback shortens the output of large runs to one block per task, with a progress bar per host, one line each for the ok and the skipped hosts, and the diff or module output of every changed host.
 * **role:rpm, playbook:rpm, playbook:setup_basic**: Checks the RPM database on RHEL 8, 9 and 10 before the first package task, aborts on a damaged one instead of failing later with `rpmdb open failed`, and on RHEL 8 repairs a database that a killed rpm process left unusable, keeping all packages.
 * **role:dnf, playbook:dnf**: Sets options in `/etc/dnf/dnf.conf` on RHEL 8, 9 and 10, by default `minrate=200k` and `timeout=15`, so DNF drops slow mirrors sooner. Hosts without DNF 4 are left alone.
 * **role:telegraf**: Add the `telegraf:configure` tag.

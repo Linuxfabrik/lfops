@@ -8,16 +8,17 @@ LFOps plugins run in two different environments, so they are tested differently:
 
 | Tier | Plugins | Runs on | Python / ansible-core |
 |---|---|---|---|
-| Controller | `plugins/filter/`, `plugins/lookup/` | Ansible controller | Python >= 3.10, ansible-core 2.15 - latest |
+| Controller | `plugins/callback/`, `plugins/filter/`, `plugins/lookup/` | Ansible controller | Python >= 3.10, ansible-core 2.15 - latest |
 | Managed node | `plugins/modules/`, `plugins/module_utils/` | target host | down to Python 3.6 (RHEL 8) |
 
-Filter and lookup plugins are evaluated on the controller during templating, so they only ever see the controller's Python. Modules and module utils are shipped to and executed on the managed node, which on RHEL 8 still uses the system Python 3.6.
+Callback, filter and lookup plugins run on the controller (callbacks during the run, filters and lookups during templating), so they only ever see the controller's Python. Modules and module utils are shipped to and executed on the managed node, which on RHEL 8 still uses the system Python 3.6.
 
 ## Layout
 
 Tests mirror the plugin tree:
 
 ```
+tests/unit/plugins/callback/test_<name>.py
 tests/unit/plugins/filter/test_<name>.py
 tests/unit/plugins/lookup/test_<name>.py
 tests/unit/plugins/modules/test_<name>.py        # managed-node tier
