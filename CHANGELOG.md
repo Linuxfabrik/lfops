@@ -150,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **playbook:setup_basic**: Sets `minrate=200k` and `timeout=15` in `/etc/dnf/dnf.conf` on RHEL 8, 9 and 10, so DNF drops slow mirrors sooner; other settings stay as they are.
 * **role:lynis**: The daily audit runs at 06:xx instead of 02:xx, after the reboot window, so a report from before the nightly reboot no longer warns about a pending reboot for a whole day.
 * **role:nextcloud**: The role removes the PHP extensions bcmath, IMAP and memcached, which Nextcloud does not use in the setup the role creates: the caches live in APCu, Redis or Valkey. An installation that needs one of them, such as the IMAP backend of the External user authentication app, lists it in `php__modules__host_var` with `state: 'present'`.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Icinga DB Web shows up to 65536 characters of a plugin output instead of 20000, so long check outputs are no longer cut off.
