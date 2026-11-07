@@ -1,0 +1,55 @@
+- name: 'Verify that rpm and DNF can read the RPM database'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - block:
+
+      - name: 'rpm --verifydb' # noqa command-instead-of-module (no module checks the RPM database)
+        ansible.builtin.command: 'rpm --verifydb'
+        changed_when: false
+
+      - name: 'rpm --query --all' # noqa command-instead-of-module (the error output of rpm is checked)
+        ansible.builtin.command: 'rpm --query --all'
+        register: '__molecule__rpm_query_all_result'
+        changed_when: false
+
+      # rpm prints a damaged page to stderr and still exits with 0
+      - name: 'Assert that rpm reads every package without an error'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__rpm_query_all_result["stderr"] | length == 0'
+            - '__molecule__rpm_query_all_result["stdout_lines"] | length > 0'
+
+      # the dnf module aborted here with "rpmdb open failed"
+      - name: 'Read the release version through the DNF Python API'
+        ansible.builtin.command:
+          argv:
+            - '/usr/libexec/platform-python'
+            - '-c'
+            - 'import dnf.rpm; print(dnf.rpm.detect_releasever("/"))'
+        register: '__molecule__rpm_releasever_result'
+        changed_when: false
+
+      - name: 'Assert that DNF detects the release version'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__rpm_releasever_result["stdout"] == ansible_facts["distribution_major_version"]'
+
+      when: 'ansible_facts["os_family"] == "RedHat"'
+
+
+    - block:
+
+      - name: 'cat /root/.molecule-rpm'
+        ansible.builtin.command: 'cat /root/.molecule-rpm'
+        register: '__molecule__rpm_count_result'
+        changed_when: false
+
+      - name: 'Assert that the repair kept every package'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__rpm_query_all_result["stdout_lines"] | length == __molecule__rpm_count_result["stdout"] | int'
+
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] == "8"'

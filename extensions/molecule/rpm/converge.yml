@@ -1,0 +1,38 @@
+# Break the Berkeley DB environment of the RPM database on RHEL 8 the way a killed rpm process
+# does, with the database files intact: overwrite the first half of Packages after its metadata
+# pages, so that rpm surely reads a damaged page (20 pages in the middle may all be free), which
+# marks the environment in __db.* for recovery, and put the original Packages back. The role has
+# to remove the environment and keep every package. The marker file holds the number of packages
+# and breaks the environment only once, so that the idempotence step sees no change.
+- name: 'Break the Berkeley DB environment of the RPM database'
+  hosts: 'systems_under_test'
+  tasks:
+
+    - name: 'Overwrite the first half of /var/lib/rpm/Packages, read it, put the original file back'
+      ansible.builtin.shell:
+        cmd: |-
+          set -o errexit -o pipefail
+          rpm --query --all | wc --lines > /root/.molecule-rpm
+          cp --archive /var/lib/rpm/Packages /root/Packages.orig
+          size=$(stat --format=%s /var/lib/rpm/Packages)
+          dd if=/dev/urandom of=/var/lib/rpm/Packages bs=4096 seek=2 count=$(( size / 4096 / 2 )) conv=notrunc
+          rpm --query --all > /dev/null 2>&1 || true
+          cp --archive /root/Packages.orig /var/lib/rpm/Packages
+          rm /root/Packages.orig
+        creates: '/root/.molecule-rpm'
+        executable: '/bin/bash'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] == "8"'
+      register: '__molecule__rpm_break_result'
+
+    # otherwise the scenario would pass without the role ever repairing anything
+    - name: 'rpm --query rpm' # noqa command-instead-of-module no-handler (checks the test setup)
+      ansible.builtin.command: 'rpm --query rpm'
+      register: '__molecule__rpm_query_result'
+      changed_when: false
+      failed_when: '"DB_RUNRECOVERY" not in __molecule__rpm_query_result["stderr"]'
+      when: '__molecule__rpm_break_result is changed'
+
+- name: 'Converge rpm playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.rpm'

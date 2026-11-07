@@ -1098,6 +1098,13 @@ Calls the following roles (in order):
 * [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury)
 
 
+## rpm.yml
+
+Calls the following roles (in order):
+
+* [rpm](https://github.com/Linuxfabrik/lfops/tree/main/roles/rpm)
+
+
 ## rstudio_server.yml
 
 Calls the following roles (in order):
