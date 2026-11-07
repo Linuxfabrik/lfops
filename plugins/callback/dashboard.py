@@ -11,13 +11,17 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import atexit
+import json
 import os
+import re
+import subprocess  # nosec B404
 import sys
 import time
 from collections import Counter
 
 from ansible import constants as C
 from ansible.playbook.task_include import TaskInclude
+from ansible.release import __version__ as ANSIBLE_CORE_VERSION
 from ansible.utils.color import ANSIBLE_COLOR, stringc
 from ansible_collections.linuxfabrik.lfops.plugins.callback.compact import (
     CallbackModule as Compact,
@@ -40,6 +44,7 @@ DOCUMENTATION = r"""
   short_description: Fixed full-screen view of a run, details at the end
   description:
     - Shows the run on one fixed screen that is updated in place instead of scrolling. At the top the playbook, the number of hosts and the elapsed time, the current role and task, then counters of the results of the current task and of the whole run.
+    - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
     - Below, only the hosts that need attention are listed, sorted by severity (fatal, then warning, then changed), with their counters and their last notable result. Hosts that are only ok or skipped are counted, not listed.
     - At the end of the run, the screen is left and the details follow in the format of C(linuxfabrik.lfops.compact), but only for the tasks with changes, warnings or failures. Then the recap and the report of the distinct messages by severity.
     - Without a terminal (log file, pipe, CI) or with C(--verbose), the plugin behaves exactly like C(linuxfabrik.lfops.compact).
@@ -77,8 +82,68 @@ _SCREEN_OFF = '\033[?25h\033[?1049l'
 _MIN_COLUMNS = 65
 _MIN_LINES = 12
 
-# lines of the screen above the host list
-_HEADER_LINES = 8
+
+def _git(root, *args):
+    """Run git in `root`, return its output or None. safe.directory: in an EE, the
+    mounted checkout belongs to another user than the one running Ansible.
+    """
+    # Without the GIT_* variables of the environment: set by git itself while it runs
+    # a hook, they would point git at another repository than `root`.
+    env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+    try:
+        proc = subprocess.run(  # nosec B603 B607
+            ['git', '-C', str(root), '-c', 'safe.directory=*', *args],
+            capture_output=True,
+            check=False,
+            env=env,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def lfops_origin(root, mountinfo='/proc/self/mountinfo'):
+    """Describe the LFOps collection at `root`: its version, for a git checkout the
+    branch, commit and number of changed files, e.g. "LFOps main@3e8a7b75, 2
+    uncommitted". Return it with the source path of a bind mount (an EE with the
+    checkout mounted), or None. The path is relative to the file system it lives
+    on, so a separate /tmp or /home shows without that prefix.
+    """
+    root = os.path.realpath(root)
+    version = None
+    try:
+        with open(os.path.join(root, 'MANIFEST.json'), encoding='utf-8') as f:
+            version = json.load(f)['collection_info']['version']
+    except (OSError, ValueError, KeyError):
+        try:
+            with open(os.path.join(root, 'galaxy.yml'), encoding='utf-8') as f:
+                m = re.search(r'^version:\s*[\'"]?([^\'"\s]+)', f.read(), re.M)
+            version = m.group(1) if m else None
+        except OSError:
+            pass
+    parts = [f'LFOps {version or "unknown"}']
+    if os.path.exists(os.path.join(root, '.git')):
+        branch = _git(root, 'rev-parse', '--abbrev-ref', 'HEAD')
+        commit = _git(root, 'rev-parse', '--short=8', 'HEAD')
+        if branch and commit:
+            parts[0] = f'LFOps {branch}@{commit}'
+            changed = _git(root, 'status', '--porcelain', '--untracked-files=no')
+            if changed:
+                parts.append(f'{len(changed.splitlines())} uncommitted')
+    # a bind mount: the 4th field is the source path, the 5th the mount point
+    source = None
+    try:
+        with open(mountinfo, encoding='utf-8') as f:
+            for line in f:
+                fields = line.split()
+                if len(fields) > 4 and fields[4] == root and fields[3] != '/':
+                    source = fields[3]
+                    break
+    except OSError:
+        pass
+    return ', '.join(parts), source
 
 
 class CallbackModule(Compact):
@@ -116,6 +181,8 @@ class CallbackModule(Compact):
         self._host_last = {}
         self._play_hosts = set()
         self._dead_hosts = set()
+        # where the plugin, and with it LFOps, comes from, see lfops_origin()
+        self._origin = None
         # output of the running task and the details for the end of the run
         self._capture = []
         self._details = []
@@ -227,6 +294,18 @@ class CallbackModule(Compact):
                 width,
             )
         )
+        if self._origin is None:
+            # collection root: plugins/callback/dashboard.py -> ../../..
+            root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            lfops, source = lfops_origin(root)
+            # the most important first, the path is cut on a narrow terminal
+            self._origin = f'{lfops}   ansible-core {ANSIBLE_CORE_VERSION}'
+            ee = os.environ.get('LFOPS_EE_VERSION')
+            if ee:
+                self._origin += f'   EE {ee}'
+            if source:
+                self._origin += f'   mounted from {source}'
+        screen.append(self._fit([(self._origin, None, False)], width))
         section, prefix, task_line = self._header
         if section and section.startswith('Role: '):
             screen.append(
