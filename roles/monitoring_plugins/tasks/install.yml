@@ -240,11 +240,14 @@
       dest: '/usr/lib64/nagios/plugins/'
       mode: 'preserve'
       backup: true
-    when:
-      - '__monitoring_plugins__custom_plugins.stat.exists'
-    # use loop for nicer diff
-    with_fileglob:
-      - '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/usr/lib64/nagios/plugins/*'
+    # use loop for nicer diff. Guard the lookup itself: the loop is templated before
+    # `when`, and fileglob warns about every host without the directory.
+    loop: >-
+      {{
+        lookup("ansible.builtin.fileglob", inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/usr/lib64/nagios/plugins/*", wantlist=True)
+        if __monitoring_plugins__custom_plugins["stat"]["exists"]
+        else []
+      }}
 
   # block
   when:
