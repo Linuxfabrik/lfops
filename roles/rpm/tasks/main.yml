@@ -1,0 +1,168 @@
+# Every package task reads the RPM database. Where it cannot be opened, the dnf module of a later
+# role aborts with "rpmdb open failed" and no hint at the cause, so setup_basic runs this role
+# first. Debian and Ubuntu keep their package database elsewhere; the role does nothing there.
+#
+# Verified against rpm 4.14.3 (Berkeley DB), 4.16.1.3 and 4.19.1.1 (SQLite) on Rocky 8, 9 and 10,
+# by damaging the database in a container:
+#
+# * `rpm --query` and `rpm --query --all` exit with 0 when they do not touch the damaged page,
+#   and often also when they do, printing the error only. `rpm --verifydb` exits with non-zero on
+#   every damaged file (BDB db->verify, SQLite PRAGMA integrity_check, rpmdbVerify() in
+#   lib/rpmdb.c).
+# * `rpm --verifydb` opens the files without the shared Berkeley DB environment in `__db.*`
+#   (RPMDB_FLAG_VERIFYONLY). It passes when only that environment is broken, for example after a
+#   killed rpm process left it marked for recovery, while every other open fails with
+#   DB_RUNRECOVERY. Removing the `__db.*` files makes rpm create a new environment, and every
+#   package is kept. This is the only repair the role does.
+# * `rpm --rebuilddb` on a damaged file exits with 0, drops the packages it cannot read (43 of
+#   148 were left on Rocky 8, 89 of 147 on Rocky 9, 69 of 138 on Rocky 10), and `rpm --verifydb`
+#   passes afterwards. Red Hat's procedures do not keep more: `rpmdb_dump Packages.bad |
+#   rpmdb_load Packages`, then `rpm --rebuilddb` (RHEL 8, solution 6903 and RH342) kept 37 of
+#   148, `rpmdb --exportdb` / `rpmdb --importdb` (RHEL 9 and later, article 6891951) kept the
+#   same 89 and 69 as `rpm --rebuilddb`. The role therefore never rebuilds the database and
+#   fails instead.
+#
+# * `rpm --verifydb` takes the shared transaction lock (rpmtsVerifyDB() in lib/rpmts.c), which
+#   fails at once while a transaction runs: "can't create transaction lock on
+#   /var/lib/rpm/.rpm.lock". rpmlockAcquire() in lib/rpmlock.c only waits where stdin is a
+#   terminal. Run against a loop of `rpm --import` / `rpm --erase`, every failed `rpm --verifydb`
+#   was such a lock error, never a reported damage, and the writer failed the same way while
+#   `rpm --verifydb` held the lock. The role retries on the lock error.
+#
+# The environment repair, the refusal while a process maps `__db.*`, and the abort on a damaged
+# `Packages` were also verified on a Rocky 8 VM.
+
+
+- block:
+
+  - name: 'rpm --eval "%{_dbpath}"' # noqa command-instead-of-module (no module reads rpm macros)
+    ansible.builtin.command: 'rpm --eval "%{_dbpath}"'
+    register: '__rpm__dbpath_result'
+    changed_when: false
+    check_mode: false
+
+  # wait for a running transaction, for example of dnf-automatic, for up to 5 minutes
+  - name: 'rpm --verifydb' # noqa command-instead-of-module (no module checks the RPM database)
+    ansible.builtin.command: 'rpm --verifydb'
+    register: '__rpm__verifydb_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    until: '"transaction lock" not in __rpm__verifydb_result["stderr"]'
+    retries: 30
+    delay: 10
+
+  - name: 'Assert that no rpm transaction holds the RPM database'
+    ansible.builtin.assert:
+      that:
+        - '"transaction lock" not in __rpm__verifydb_result["stderr"]'
+      quiet: true
+      fail_msg: >-
+        rpm: Another rpm or dnf transaction has held the RPM database in
+        {{ __rpm__dbpath_result["stdout"] }} for more than 5 minutes, `rpm --verifydb` reports:
+        {{ __rpm__verifydb_result["stderr"] }}. Run the role again once it has finished.
+
+  - name: 'Assert that the files of the RPM database are intact'
+    ansible.builtin.assert:
+      that:
+        - '__rpm__verifydb_result["rc"] == 0'
+      quiet: true
+      fail_msg: >-
+        rpm: The RPM database in {{ __rpm__dbpath_result["stdout"] }} is damaged, `rpm --verifydb`
+        reports: {{ __rpm__verifydb_result["stderr"] }}.
+        LFOps does not repair it, since `rpm --rebuilddb` drops the packages it cannot read without
+        an error. See "Troubleshooting" in the README of the rpm role.
+
+  - name: 'rpm --query rpm' # noqa command-instead-of-module (the error text of rpm is needed)
+    ansible.builtin.command: 'rpm --query rpm'
+    register: '__rpm__query_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+
+  when:
+    - 'ansible_facts["os_family"] == "RedHat"'
+  tags:
+    - 'rpm'
+
+
+# The files are intact, but rpm cannot open the database: on the Berkeley DB backend (RHEL 8), the
+# environment in __db.* is broken.
+- block:
+
+  - name: 'find {{ __rpm__dbpath_result["stdout"] }} -name "__db.*"'
+    ansible.builtin.find:
+      paths: '{{ __rpm__dbpath_result["stdout"] }}'
+      patterns: '__db.*'
+      hidden: true
+    register: '__rpm__db_env_files_result'
+
+  - name: 'Assert that the RPM database has a Berkeley DB environment to remove'
+    ansible.builtin.assert:
+      that:
+        - '__rpm__db_env_files_result["files"] | length > 0'
+      quiet: true
+      fail_msg: >-
+        rpm: The RPM database in {{ __rpm__dbpath_result["stdout"] }} cannot be opened, although
+        `rpm --verifydb` finds its files intact. `rpm --query rpm` reports:
+        {{ __rpm__query_result["stderr"] }}
+
+  # Another process may still have the old environment mapped. Removing it under that process
+  # would leave two environments for the same files.
+  - name: 'grep --files-with-matches {{ __rpm__dbpath_result["stdout"] }}/__db. /proc/*/maps'
+    ansible.builtin.shell:
+      cmd: |-
+        set -o pipefail
+        grep --files-with-matches --fixed-strings \
+          -- {{ (__rpm__dbpath_result["stdout"] ~ "/__db.") | quote }} /proc/[0-9]*/maps 2>/dev/null \
+          | sed --regexp-extended 's#^/proc/([0-9]+)/maps$#\1#' \
+          || true
+      executable: '/bin/bash'
+    register: '__rpm__db_env_users_result'
+    changed_when: false
+    check_mode: false
+
+  - name: 'Assert that no process uses the Berkeley DB environment of the RPM database'
+    ansible.builtin.assert:
+      that:
+        - '__rpm__db_env_users_result["stdout_lines"] | length == 0'
+      quiet: true
+      fail_msg: >-
+        rpm: The Berkeley DB environment of the RPM database in
+        {{ __rpm__dbpath_result["stdout"] }} is broken, but these processes still use it:
+        {{ __rpm__db_env_users_result["stdout_lines"] | join(", ") }}. Stop them, for example
+        a hanging dnf or rpm, and run the role again.
+
+  - name: 'rm --force {{ __rpm__dbpath_result["stdout"] }}/__db.*'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'absent'
+    loop: '{{ __rpm__db_env_files_result["files"] }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  - name: 'rpm --query rpm' # noqa command-instead-of-module (the error text of rpm is needed)
+    ansible.builtin.command: 'rpm --query rpm'
+    register: '__rpm__requery_result'
+    changed_when: false
+    failed_when: false
+    when:
+      - 'not ansible_check_mode'
+
+  - name: 'Assert that the RPM database can be opened again'
+    ansible.builtin.assert:
+      that:
+        - '__rpm__requery_result["rc"] == 0'
+      quiet: true
+      fail_msg: >-
+        rpm: The RPM database in {{ __rpm__dbpath_result["stdout"] }} still cannot be opened after
+        removing its Berkeley DB environment. `rpm --query rpm` reports:
+        {{ __rpm__requery_result["stderr"] }}
+    when:
+      - 'not ansible_check_mode'
+
+  when:
+    - 'ansible_facts["os_family"] == "RedHat"'
+    - '__rpm__query_result["rc"] != 0'
+  tags:
+    - 'rpm'

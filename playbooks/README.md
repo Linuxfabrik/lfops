@@ -1098,6 +1098,13 @@ Calls the following roles (in order):
 * [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury)
 
 
+## rpm.yml
+
+Calls the following roles (in order):
+
+* [rpm](https://github.com/Linuxfabrik/lfops/tree/main/roles/rpm)
+
+
 ## rstudio_server.yml
 
 Calls the following roles (in order):
@@ -1139,10 +1146,11 @@ Calls the following roles (in order):
 
 ## setup_basic.yml
 
-Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, that the Icinga2 master is reachable, and that the new `sshd_config` still admits the user Ansible logs in as. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user.
+Before the first role changes the host, the playbook validates the variables of every role it runs, checks that the Firewall Builder repository has a compiled firewall for the host, that the Icinga2 master is reachable, and that the new `sshd_config` still admits the user Ansible logs in as. A missing prerequisite aborts the run there, while the host is still reachable with the bootstrap user. On Red Hat-family hosts it first checks the RPM database, which every package task reads, see the [rpm](https://github.com/Linuxfabrik/lfops/tree/main/roles/rpm) role.
 
 Calls the following roles (in order):
 
+* [rpm](https://github.com/Linuxfabrik/lfops/tree/main/roles/rpm): `setup_basic__skip_rpm`
 * [network](https://github.com/Linuxfabrik/lfops/tree/main/roles/network): `setup_basic__skip_network`
 * [dnf](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf): `setup_basic__skip_dnf`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_basic__skip_repo_baseos`

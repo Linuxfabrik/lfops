@@ -34,9 +34,9 @@ Which Ansible role is proven to run on which OS?
 | cron_permissions                      |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | crypto_policy                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | curaline                              |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | x86_64 only                                  |
-| dnf                                   |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| dnf_makecache                         |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| dnf_versionlock                       |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
+| dnf                                   |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
+| dnf_makecache                         |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
+| dnf_versionlock                       |   -    |   -    |   x    |   x    |   (x)   |     -     |     -     |     -     |                                              |
 | docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | duplicity                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | elastic_agent                         |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
@@ -162,6 +162,7 @@ Which Ansible role is proven to run on which OS?
 | repo_rpmfusion                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |
+| rpm                                   |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | rstudio_server                        |        |        |   x    |   x    |    x    |           |           |           | x86_64 only, RHEL 10 uses the RHEL 9 build   |
 | rsyslog                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | schedule_reboot                       |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
@@ -182,7 +183,7 @@ Which Ansible role is proven to run on which OS?
 | trend_micro_v1es                      |        |        |   x    |   x    |    x    |           |     x     |           |                                              |
 | unattended_upgrades                   |  (x)   |  (x)   |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | uptimerobot                           |        |        |        |        |         |           |           |           | controller-side, talks to UptimeRobot API    |
-| valkey                                |        |   x    |   x    |   x    |    x    |           |     x     |     x     | no Valkey in Deb 12 / Ubu 22.04              |
+| valkey                                |   -    |   x    |   x    |   x    |    x    |     -     |     x     |     x     | no Valkey in Deb 12 / Ubu 22.04              |
 | vsftpd                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | wordpress                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | yum_utils                             |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |

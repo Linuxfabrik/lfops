@@ -9,6 +9,8 @@
     # The pre_tasks validate the variables of the roles that run before any role changes the
     # host. tests/unit/test_playbooks.py keeps this list in sync with the roles below.
     setup_basic__roles__internal_var:
+      - name: 'rpm'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_rpm | d(false) }}'
       - name: 'network'
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_network | d(false) }}'
       - name: 'dnf'
@@ -129,6 +131,16 @@
       tags:
         - 'always'
 
+    # Every package task reads the RPM database, starting with the one of the network role below.
+    # The rpm role aborts on a damaged database and repairs a broken Berkeley DB environment on
+    # RHEL 8, so it changes the host ahead of the preflight checks, as network does.
+    - name: 'Check the RPM database'
+      ansible.builtin.import_role:
+        name: 'linuxfabrik.lfops.rpm'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'not setup_basic__skip_rpm | d(false)'
+
     - name: 'Run the preflight checks of the firewall role'
       ansible.builtin.include_role:
         name: 'linuxfabrik.lfops.firewall'
@@ -141,7 +153,8 @@
 
     # we need correct network settings for the rest to work, starting with the preflight checks
     # below: the image of a fresh VM can bring a dead nameserver, and the Icinga2 master is reached
-    # by name. So this is the one role that changes the host ahead of a preflight check.
+    # by name. So, besides rpm, this is the one role that changes the host ahead of a preflight
+    # check.
     # fedora.linux_system_roles.network supports Fedora and EL only. Without a running
     # NetworkManager, as on Debian and Ubuntu, it falls back to its initscripts provider and
     # installs the Red Hat package network-scripts, which aborts the play there.
