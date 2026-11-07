@@ -105,6 +105,7 @@ jobs:
       - name: 'Build Execution Environment'
         run: |
           ansible-builder build \
+            --build-arg 'LFOPS_EE_VERSION=${{ env.TAG1 }}' \
             --tag '${{ env.GITHUB_REPOSITORY_OWNER_LOWERCASE }}/lfops_ee:${{ env.TAG1 }}' \
             -vvv
 

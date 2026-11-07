@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **execution-environment**: The image carries its LFOps version in the `LFOPS_EE_VERSION` environment variable and the `org.opencontainers.image.version` label, and the dashboard callback shows it.
 * **plugin:dashboard**: The `linuxfabrik.lfops.dashboard` stdout callback shows a run on one fixed screen with counters and only the hosts that need attention, and the details of the tasks with changes, warnings or failures at the end.
 * **plugin:compact**: The `linuxfabrik.lfops.compact` stdout callback shortens the output of large runs to one block per task, with a progress bar per host, one line each for the ok and the skipped hosts, the diff or module output of the changed hosts and the warnings, each grouped by identical text, and a report of the distinct changes, warnings and errors by severity at the end.
 * **role:rpm, playbook:rpm, playbook:setup_basic**: Checks the RPM database on RHEL 8, 9 and 10 before the first package task, aborts on a damaged one instead of failing later with `rpmdb open failed`, and on RHEL 8 repairs a database that a killed rpm process left unusable, keeping all packages.

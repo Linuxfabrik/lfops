@@ -6,6 +6,8 @@
 # cp --verbose linuxfabrik-lfops-*.tar.gz linuxfabrik-lfops.tar.gz
 # ansible-builder build --tag lfops_ee:local -vvv
 # ```
+# The image carries its version in LFOPS_EE_VERSION (shown by the dashboard callback);
+# set it with `--build-arg LFOPS_EE_VERSION=<version>`, else it is 'local'.
 
 # https://ansible.readthedocs.io/projects/builder/en/stable/definition/#builder-ee-definition
 version: 3
@@ -49,4 +51,7 @@ additional_build_files:
 
 additional_build_steps:
   append_final:
+    - 'ARG LFOPS_EE_VERSION=local'
+    - 'ENV LFOPS_EE_VERSION=$LFOPS_EE_VERSION'
+    - 'LABEL org.opencontainers.image.version=$LFOPS_EE_VERSION'
     - 'RUN mkdir -p /opt/mitogen && ln -s /usr/local/lib/python3.11/site-packages/mitogen /opt/mitogen/mitogen && ln -s /usr/local/lib/python3.11/site-packages/ansible_mitogen /opt/mitogen/ansible_mitogen'
