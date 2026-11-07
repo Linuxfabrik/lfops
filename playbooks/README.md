@@ -225,6 +225,13 @@ Calls the following roles (in order):
 * [curaline](https://github.com/Linuxfabrik/lfops/tree/main/roles/curaline)
 
 
+## dnf.yml
+
+Calls the following roles (in order):
+
+* [dnf](https://github.com/Linuxfabrik/lfops/tree/main/roles/dnf)
+
+
 ## dnf_makecache.yml
 
 Calls the following roles (in order):

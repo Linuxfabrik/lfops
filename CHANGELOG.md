@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:dnf, playbook:dnf**: Sets options in `/etc/dnf/dnf.conf` on RHEL 8, 9 and 10, by default `minrate=200k` and `timeout=15`, so DNF drops slow mirrors sooner. Hosts without DNF 4 are left alone.
 * **role:telegraf**: Add the `telegraf:configure` tag.
 * **role:redis**: Add template for Redis 8.10.
 * **role:nextcloud, playbook:setup_nextcloud**: The run aborts before it changes anything if `nextcloud__database_login` is missing or names the database user of the installed Nextcloud with another password, and tells how to read the login with `occ`. Until now a wrong password locked Nextcloud out of its database.

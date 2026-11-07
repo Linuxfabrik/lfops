@@ -1,0 +1,15 @@
+dnf__conf_options__combined_var: '{{ (
+      dnf__conf_options__role_var +
+      dnf__conf_options__dependent_var +
+      dnf__conf_options__group_var +
+      dnf__conf_options__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+dnf__conf_options__dependent_var: []
+dnf__conf_options__group_var: []
+dnf__conf_options__host_var: []
+dnf__conf_options__role_var:
+  - name: 'minrate'
+    value: '200k'  # upstream default: 1000
+  - name: 'timeout'
+    value: '15'  # upstream default: 30
