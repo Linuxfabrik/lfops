@@ -385,7 +385,9 @@ Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg
 
 ### Dashboard
 
-The `linuxfabrik.lfops.dashboard` stdout callback shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and only the hosts that need attention (fatal, then warning, then changed), each with its last notable result. Hosts that are only ok or skipped are counted, not listed:
+The goal of the `linuxfabrik.lfops.dashboard` stdout callback is a live view of a run, similar to how glances shows the load of a system: always visible, without scrolling, and adapting to the size of the terminal.
+
+It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and only the hosts that need attention (fatal, then warning, then changed), each with its last notable result. Hosts that are only ok or skipped are counted, not listed:
 
 ```text
 linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
