@@ -19,12 +19,16 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import fcntl
 import importlib.util
 import os
+import pty
 import shutil
+import struct
 import subprocess  # nosec B404
 import sys
 import tempfile
+import termios
 import textwrap
 import unittest
 
@@ -229,6 +233,117 @@ class TestCompactOutput(unittest.TestCase):
     def test_delegated_hosts_are_merged(self):
         self.assertEqual(
             self._block('Delegated task')[-1], 'ok: t-{h01,h02,h03,h04} > localhost'
+        )
+
+
+_TERMINAL_HOSTS = 50
+_TERMINAL_COLUMNS = 40
+
+
+class TestCompactOutputOnTerminal(unittest.TestCase):
+    """On a terminal, the callback ends every bar line and redraws it from the line
+    below (cursor up), so that the event markers of ansible-runner never sit behind
+    the bar. Run on a pseudo-terminal that is narrower than the number of hosts and
+    replay the redraws.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        assert _ANSIBLE_PLAYBOOK, 'ansible-playbook not found'  # nosec B101
+        cls.tmp = tempfile.mkdtemp(prefix='lfops_compact_tty_')
+        tmp = cls.tmp
+        hosts = ''.join(f'    t-h{i:02d}:\n' for i in range(_TERMINAL_HOSTS))
+        files = {
+            'inventory.yml': (
+                'all:\n  hosts:\n'
+                + hosts
+                + "  vars:\n    ansible_connection: 'local'\n"
+                + f"    ansible_python_interpreter: '{sys.executable}'\n"
+            ),
+            'playbook.yml': (
+                "- hosts: 'all'\n  gather_facts: false\n  tasks:\n"
+                "    - name: 'All ok'\n      ansible.builtin.debug:\n"
+                "        msg: 'linuxfabrik'\n"
+            ),
+            'ansible.cfg': '[defaults]\n',
+        }
+        for name, content in files.items():
+            with open(os.path.join(tmp, name), 'w') as f:
+                f.write(content)
+        env = dict(os.environ)
+        env.update(
+            {
+                'ANSIBLE_CONFIG': os.path.join(tmp, 'ansible.cfg'),
+                'ANSIBLE_HOME': os.path.join(tmp, '.ansible'),
+                'ANSIBLE_LOCAL_TEMP': os.path.join(tmp, '.ansible', 'tmp'),
+                'ANSIBLE_NOCOLOR': '1',
+                'ANSIBLE_STDOUT_CALLBACK': 'linuxfabrik.lfops.compact',
+            }
+        )
+        master, slave = pty.openpty()
+        # Display takes the terminal width from stdin
+        fcntl.ioctl(
+            slave, termios.TIOCSWINSZ, struct.pack('HHHH', 24, _TERMINAL_COLUMNS, 0, 0)
+        )
+        proc = subprocess.Popen(  # nosec B603
+            [
+                _ANSIBLE_PLAYBOOK,
+                '--inventory',
+                os.path.join(tmp, 'inventory.yml'),
+                os.path.join(tmp, 'playbook.yml'),
+            ],
+            cwd=tmp,
+            env=env,
+            stdin=slave,
+            stdout=slave,
+            stderr=slave,
+        )
+        os.close(slave)
+        chunks = []
+        while True:
+            try:
+                data = os.read(master, 65536)
+            except OSError:  # EIO once the child closed the terminal
+                break
+            if not data:
+                break
+            chunks.append(data)
+        os.close(master)
+        cls.returncode = proc.wait()
+        cls.raw = b''.join(chunks).decode('utf-8', 'replace')
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def _screen_lines(self):
+        """Replay the output like a terminal: a line that starts with "cursor up,
+        carriage return" replaces the line above it.
+        """
+        lines = []
+        for line in self.raw.replace('\r\n', '\n').split('\n'):
+            if line.startswith('\x1b[A\r'):
+                lines[-1] = line[len('\x1b[A\r') :]
+            else:
+                lines.append(line)
+        return lines
+
+    def test_run_succeeds(self):
+        self.assertEqual(self.returncode, 0, self.raw)
+
+    def test_bar_uses_the_full_width(self):
+        self.assertIn('\x1b[A\r', self.raw)
+        lines = self._screen_lines()
+        start = lines.index('Task: All ok') + 1
+        bar = []
+        for line in lines[start:]:
+            if not line.startswith('*'):
+                break
+            bar.append(line)
+        # one column less than the terminal, so a full line never wraps
+        self.assertEqual(
+            [len(line) for line in bar],
+            [_TERMINAL_COLUMNS - 1, _TERMINAL_HOSTS - (_TERMINAL_COLUMNS - 1)],
         )
 
 

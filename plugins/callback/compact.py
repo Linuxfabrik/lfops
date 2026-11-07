@@ -11,6 +11,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import multiprocessing
+import os
 import sys
 
 from ansible import constants as C
@@ -32,7 +33,7 @@ DOCUMENTATION = r"""
   author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
   notes:
-    - Under ansible-navigator, set the environment variable C(ANSIBLE_STDOUT_CALLBACK). ansible-runner replaces the stdout callback with its own wrapper, which only builds on this variable and ignores C(stdout_callback) in C(ansible.cfg).
+    - Under ansible-navigator, set the environment variable C(ANSIBLE_STDOUT_CALLBACK). ansible-runner replaces the stdout callback with its own wrapper, which only builds on this variable and ignores C(stdout_callback) in C(ansible.cfg). The terminal needs at least 65 columns there, since ansible-runner writes 64 characters wide invisible event markers, which wrap and become visible on a narrower terminal, with any stdout callback.
     - Made for the linear strategies (C(linear), C(mitogen_linear)), which run one task on all hosts before the next. With C(free) or C(host_pinned), the progress bar and the host lists of concurrent tasks mix.
   extends_documentation_fragment:
     - ansible.builtin.default_callback
@@ -115,15 +116,10 @@ class CallbackModule(Default):
     # display order like above
     _PLAIN_TEXT_FIELDS = ('msg', 'stdout', 'stderr', 'module_stdout', 'module_stderr')
 
-    # ansible-runner (ansible-navigator) writes an invisible event marker per
-    # callback event: base64 data (64 characters for the begin marker), then
-    # "ESC[<n>D" and "ESC[K" to move back and erase it
-    # (ansible_runner/display_callback/callback/awx_display.py). If such a marker
-    # hits the right terminal edge in the middle of the progress bar, it wraps and
-    # stays visible. So the bar always keeps this many columns free.
-    _MARKER_RESERVE = 66
-
     _BAR_CHAR = '*'
+
+    # Cursor up one line, see _bar()
+    _CURSOR_UP = '\033[A'
 
     def __init__(self):
         super().__init__()
@@ -131,9 +127,20 @@ class CallbackModule(Default):
         self._diff_printed = {}
         self._ok_hosts = []
         self._skipped_hosts = []
-        # State of the progress bar line, which is not terminated while the task runs
+        # State of the progress bar: whether it is open (more results may follow)
+        # and the (char, color) pairs of its current line
         self._line_open = False
-        self._line_col = 0
+        self._line_chars = []
+        # ansible-runner (ansible-navigator) writes an invisible event marker per
+        # callback event at the cursor: base64 data (64 characters for the begin
+        # marker), then "ESC[<n>D" and "ESC[K" to move back and erase it
+        # (ansible_runner/display_callback/callback/awx_display.py). Behind a bar
+        # that reaches the right terminal edge, such a marker wraps and stays
+        # visible. On a terminal, the bar is therefore terminated after every
+        # asterisk, so the cursor and the markers sit on the empty line below it,
+        # and the next asterisk redraws the bar line from there. Without a terminal
+        # (log, pipe, CI), the asterisks are simply appended.
+        self._redraw = sys.stdout.isatty()
         # Terminate an open bar line before anything else is printed, including
         # warnings from Ansible itself. Display is a singleton, so this patch also
         # covers output that does not come from this callback.
@@ -159,18 +166,39 @@ class CallbackModule(Default):
     def _close_line(self):
         if self._line_open:
             self._line_open = False
-            self._line_col = 0
-            self._display_orig('', screen_only=True)
+            self._line_chars = []
+            if not self._redraw:
+                self._display_orig('', screen_only=True)
 
     def _bar(self, color):
-        columns = (self._display.columns or 79) + 1
-        if self._line_open and self._line_col + 1 + self._MARKER_RESERVE > columns:
-            self._close_line()
+        # One column less than the terminal, so a full line never triggers the
+        # terminal's own wrap. Not Display.columns, which is at least 79 even on a
+        # narrower terminal. Asked on every call to follow a resized terminal.
+        try:
+            width = os.get_terminal_size(sys.stdout.fileno()).columns - 1
+        except (OSError, ValueError):
+            width = self._display.columns or 79
+        width = max(width, 1)
+        if self._line_open and len(self._line_chars) >= width:
+            # the line is full, continue on the next one
+            if not self._redraw:
+                self._display_orig('', screen_only=True)
+            self._line_chars = []
         # screen_only: the progress bar does not belong in the log file
-        self._display_orig(self._BAR_CHAR, color=color, newline=False, screen_only=True)
+        if self._redraw:
+            redraw_line = self._line_open and bool(self._line_chars)
+            self._line_chars.append((self._BAR_CHAR, color))
+            line = ''.join(stringc(char, col) for char, col in self._line_chars)
+            if redraw_line:
+                line = self._CURSOR_UP + '\r' + line
+            self._display_orig(line, screen_only=True)
+        else:
+            self._line_chars.append((self._BAR_CHAR, color))
+            self._display_orig(
+                self._BAR_CHAR, color=color, newline=False, screen_only=True
+            )
         sys.stdout.flush()
         self._line_open = True
-        self._line_col += 1
 
     def _warnings(self, result):
         if hasattr(self, '_handle_warnings_and_exception'):
