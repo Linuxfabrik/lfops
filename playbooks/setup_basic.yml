@@ -11,10 +11,10 @@
     setup_basic__roles__internal_var:
       - name: 'rpm'
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_rpm | d(false) }}'
-      - name: 'network'
-        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_network | d(false) }}'
       - name: 'dnf'
         skip: '{{ setup_basic__skip_dnf | d(false) }}'
+      - name: 'network'
+        skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_network | d(false) }}'
       - name: 'repo_baseos'
         skip: '{{ ansible_facts["os_family"] != "RedHat" or setup_basic__skip_repo_baseos | d(false) }}'
       - name: 'repo_epel'
@@ -141,6 +141,15 @@
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'not setup_basic__skip_rpm | d(false)'
 
+    # Ahead of network, which installs packages, so that every package task already gets the
+    # mirror settings. The role only edits /etc/dnf/dnf.conf, and does nothing on hosts without
+    # DNF 4.
+    - name: 'Set the options in /etc/dnf/dnf.conf'
+      ansible.builtin.import_role:
+        name: 'linuxfabrik.lfops.dnf'
+      when:
+        - 'not setup_basic__skip_dnf | d(false)'
+
     - name: 'Run the preflight checks of the firewall role'
       ansible.builtin.include_role:
         name: 'linuxfabrik.lfops.firewall'
@@ -153,8 +162,8 @@
 
     # we need correct network settings for the rest to work, starting with the preflight checks
     # below: the image of a fresh VM can bring a dead nameserver, and the Icinga2 master is reached
-    # by name. So, besides rpm, this is the one role that changes the host ahead of a preflight
-    # check.
+    # by name. So, besides rpm and dnf, this is the one role that changes the host ahead of a
+    # preflight check.
     # fedora.linux_system_roles.network supports Fedora and EL only. Without a running
     # NetworkManager, as on Debian and Ubuntu, it falls back to its initscripts provider and
     # installs the Red Hat package network-scripts, which aborts the play there.
@@ -186,12 +195,6 @@
 
 
   roles:
-
-    # Comes first, so that every role installing packages already gets the mirror settings. The
-    # role does nothing on hosts without DNF 4.
-    - role: 'linuxfabrik.lfops.dnf'
-      when:
-        - 'not setup_basic__skip_dnf | d(false)'
 
     # === Basic repositories ===
     - role: 'linuxfabrik.lfops.repo_baseos'
