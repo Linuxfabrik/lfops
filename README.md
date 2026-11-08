@@ -387,7 +387,7 @@ Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg
 
 The goal of the `linuxfabrik.lfops.dashboard` stdout callback is a live view of a run, similar to how glances shows the load of a system: always visible, without scrolling, and adapting to the size of the terminal.
 
-It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and only the hosts that need attention (fatal, then warning, then changed), each with its counts of fatal (F), warning (W) and changed (C) results and its last notable result, marked with the letter of its kind. Hosts that are only ok or skipped are counted, not listed:
+It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and the hosts, sorted by their most severe result (fatal, warning, changed, ignored, ok) and then by name, each with its counts of fatal (F), warning (W) and changed (C) results and its last notable result, marked with the letter of its kind. A host with only ok results shows its last ok result, hosts with only skipped results are counted, not listed:
 
 ```text
 linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
@@ -402,6 +402,7 @@ HOST      F   W   C  LAST
 web-02    1   0   2  F firewall - Deploy the firewall rules: ...
 web-01    0   2   5  W lvm - pvcreate / pvresize: Rescan path does not exist ...
 db-01     0   0   7  C firewall - Deploy the firewall rules
+app-01    0   0   0  O firewall - Deploy the firewall rules
 ```
 
 At the end of the run, the details follow in the format of the [compact output](#compact-output), but only for the tasks with changes, warnings or failures, then the recap and the report. Without a terminal (log file, pipe, CI), with `--verbose`, or on a terminal smaller than 65 columns and 12 lines, it behaves exactly like `linuxfabrik.lfops.compact`. Enable it like the compact output, with `linuxfabrik.lfops.dashboard` as the stdout callback. See `ansible-doc --type callback linuxfabrik.lfops.dashboard` for details.

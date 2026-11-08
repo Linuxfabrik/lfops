@@ -156,8 +156,17 @@ class TestDashboardOnTerminal(unittest.TestCase):
         # the last notable result with the letter of its kind, the playbook
         # "linuxfabrik.lfops.test" shortened to "test"
         self.assertIn('C test - Some changes', screen)
-        # ok hosts are counted, not listed
-        self.assertNotIn('t-h03', screen)
+        # hosts with only ok results are listed with their last ok result
+        self.assertIn('O test - Some changes', screen)
+
+    def test_hosts_sorted_by_severity_then_name(self):
+        # the last drawn host list, rows start with the host name
+        screen = self.raw[self.raw.rindex('LAST') : self.raw.rindex(_SCREEN_OFF)]
+        order = sorted(
+            ('t-h01', 't-h02', 't-h03', 't-h04'), key=lambda host: screen.index(host)
+        )
+        # changed before ok, by name within
+        self.assertEqual(order, ['t-h01', 't-h02', 't-h03', 't-h04'])
 
     def test_details_only_for_tasks_with_changes(self):
         after = self.raw[self.raw.rindex(_SCREEN_OFF) :].replace('\r\n', '\n')
@@ -167,6 +176,36 @@ class TestDashboardOnTerminal(unittest.TestCase):
         self.assertIn('PLAY RECAP', after)
         self.assertIn('# CHANGED', after)
         self.assertIn('linuxfabrik.lfops.test:\n\n* Some changes  \n', after)
+
+
+class TestHostSeverity(unittest.TestCase):
+    def test_order_fatal_warning_changed_ignored_ok(self):
+        callback = _module.CallbackModule()
+        for host, kind in (
+            ('a-ok', 'ok'),
+            ('b-ignored', 'ignored'),
+            ('c-changed', 'changed'),
+            ('d-warning', 'warning'),
+            ('e-unreachable', 'unreachable'),
+            ('f-failed', 'failed'),
+            ('g-changed', 'changed'),
+        ):
+            callback._host_counts[host] = _module.Counter({kind: 1})
+        hosts = sorted(
+            callback._host_counts, key=lambda h: (callback._host_severity(h), h)
+        )
+        self.assertEqual(
+            hosts,
+            [
+                'e-unreachable',
+                'f-failed',
+                'd-warning',
+                'c-changed',
+                'g-changed',
+                'b-ignored',
+                'a-ok',
+            ],
+        )
 
 
 class TestDashboardFallback(unittest.TestCase):
