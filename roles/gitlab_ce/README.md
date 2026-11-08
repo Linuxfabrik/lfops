@@ -36,14 +36,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Deploy `/etc/systemd/system/gitlab-dump.timer`
 * `systemctl enable gitlab-dump.timer --now`
 * Deploy `/etc/gitlab/gitlab.rb`
-* `gitlab-ctl reconfigure`
-* `gitlab-ctl restart`, then wait until `/-/readiness` answers
-* Triggers: `gitlab-ctl restart`.
+* `gitlab-ctl reconfigure`, then wait until `/-/readiness` answers
+* Triggers: none.
 
 `gitlab_ce:configure`
 
 * Same as above, but without install.
-* Triggers: `gitlab-ctl restart`.
+* Triggers: none.
 
 
 ## Mandatory Role Variables

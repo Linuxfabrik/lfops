@@ -332,7 +332,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
 * **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
 * **role:gitlab_ce**: A changed `gitlab-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
-* **role:gitlab_ce**: A restart after a configuration change no longer aborts the run while Puma is still finishing its requests, and the run waits until GitLab answers again.
+* **role:gitlab_ce**: A configuration change no longer aborts the run while Puma is still finishing its requests. The role leaves the restart to `gitlab-ctl reconfigure`, which restarts only the services whose configuration changed and Puma without dropping requests, instead of restarting every service, and waits until GitLab answers again.
 * **role:influxdb**: A changed `influxdb-dump.service` or `influxdb-dump.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
 * **role:mariadb_server**: A changed `mariadb-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
 * **role:mongodb**: A changed `mongodb-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
