@@ -439,8 +439,6 @@ gitlab_ce__rb_registry_nginx_proxy_set_headers:
   'X-Forwarded-Ssl': 'on'
 gitlab_ce__rb_registry_storage_filesystem_rootdirectory: '/srv/gitlab-registry'
 gitlab_ce__rb_registry_storage_maintenance_readonly_enabled: false
-
-gitlab_ce__version: '14.8.2'
 ```
 
 
