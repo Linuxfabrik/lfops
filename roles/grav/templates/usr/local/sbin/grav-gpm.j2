@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026110801
+#
+# Runs the Grav Package Manager (bin/gpm) as root for the Grav installation directory given as
+# the first argument, with the remaining arguments passed to bin/gpm, for example
+# `grav-gpm /var/www/html/www.example.com update --all-yes`.
+#
+# The code of the installation belongs to root, so only root can update it. bin/gpm loads PHP
+# from Grav's cache (cache/compiled), which the web server can write, so it gets a cache, log,
+# tmp and backup directory of its own that only root can write. user/plugins, user/themes and
+# user/config, which it loads as well, belong to root. Afterwards the directories Grav writes to
+# at runtime are handed back to the web server, the SELinux labels restored (packages are
+# unpacked below the private tmp directory and moved into place, keeping its label) and the
+# web server's cache cleared, so that it does not run compiled code of the old version.
+
+set -o errexit -o nounset -o pipefail
+
+if [ "$#" -lt 2 ] || [ ! -f "$1/system/defines.php" ]; then
+    echo "Usage: $(basename "$0") <Grav installation directory> <bin/gpm arguments>" >&2
+    exit 2
+fi
+dir=$(realpath "$1")
+shift
+
+state="/var/cache/grav-gpm/$(systemd-escape --path "$dir")"
+install --directory --owner=root --group=root --mode=0700 /var/cache/grav-gpm "$state"
+export GRAV_BACKUP_PATH="$state/backup"
+export GRAV_CACHE_PATH="$state/cache"
+export GRAV_LOG_PATH="$state/logs"
+export GRAV_TMP_PATH="$state/tmp"
+
+cd "$dir"
+rc=0
+/usr/bin/php bin/gpm "$@" || rc=$?
+
+# --no-dereference, so that a symlink does not hand its target to the web server
+{% for runtime_dir in __grav__runtime_dirs %}
+if [ -e "$dir/{{ runtime_dir }}" ]; then
+    chown --recursive --no-dereference {{ __shared__apache_httpd_user }}:{{ __shared__apache_httpd_group }} "$dir/{{ runtime_dir }}"
+fi
+{% endfor %}
+if command -v selinuxenabled > /dev/null && selinuxenabled; then
+    restorecon -R "$dir"
+fi
+# loads the plugins, which belong to root, and writes the web server's cache
+runuser --user={{ __shared__apache_httpd_user }} -- /usr/bin/php bin/grav cache
+
+exit "$rc"

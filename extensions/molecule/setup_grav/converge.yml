@@ -1,0 +1,2 @@
+- name: 'Converge setup_grav playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_grav'

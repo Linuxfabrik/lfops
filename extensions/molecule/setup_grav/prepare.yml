@@ -1,0 +1,132 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# Reproduces on rocky10-vm what earlier versions of the role left on a host: an installation that
+# belongs to apache with the modes of the permissions script from the Grav documentation, the
+# timers running bin/gpm as apache without the name of the instance, the SELinux type
+# httpd_sys_rw_content_t on the whole installation, and the security-private.php that Grav
+# generated as apache. An older release, so that verify.yml can run a real self-upgrade.
+- name: 'Install Grav the way earlier versions of the role left it'
+  hosts: 'rocky10-vm'
+  become: true
+
+  vars:
+    __molecule__grav_dir: '/var/www/html/grav.example.com'
+
+  tasks:
+
+    - name: 'Install httpd (for the apache user), policycoreutils-python-utils and unzip'
+      ansible.builtin.package:
+        name:
+          - 'httpd'
+          - 'policycoreutils-python-utils'
+          - 'unzip'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+    - name: 'Download Grav 2.2.27'
+      ansible.builtin.get_url:
+        url: 'https://github.com/getgrav/grav/releases/download/2.2.27/grav-v2.2.27.zip'
+        dest: '/tmp/grav-v2.2.27.zip'
+        mode: 0o644
+      retries: 3 # ride out a brief outage of the download source
+      delay: 10
+
+    - name: 'unzip /tmp/grav-v2.2.27.zip -d /var/www/html'
+      ansible.builtin.unarchive:
+        src: '/tmp/grav-v2.2.27.zip'
+        dest: '/var/www/html'
+        remote_src: true
+        creates: '/var/www/html/grav/index.php'
+
+    - name: 'mv /var/www/html/grav {{ __molecule__grav_dir }}'
+      ansible.builtin.command: 'mv /var/www/html/grav {{ __molecule__grav_dir }}'
+      args:
+        creates: '{{ __molecule__grav_dir }}'
+
+    # in the format Grav writes it
+    - name: 'Create {{ __molecule__grav_dir }}/user/config/security-private.php as Grav does'
+      ansible.builtin.copy:
+        content: |
+          <?php
+
+          return '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+        dest: '{{ __molecule__grav_dir }}/user/config/security-private.php'
+        owner: 'apache'
+        group: 'apache'
+        mode: 0o600
+
+    - name: 'The permissions script of the Grav documentation, with apache as the owner'
+      ansible.builtin.shell: |-
+        set -o errexit
+        cd {{ __molecule__grav_dir }}
+        chown -R apache:apache .
+        find . -type f ! -name security-private.php -exec chmod 664 {} \;
+        find ./bin -type f -exec chmod 775 {} \;
+        find . -type d -exec chmod 775 {} \;
+        find . -type d -exec chmod +s {} \;
+      args:
+        executable: '/bin/bash'
+      changed_when: true
+
+    - name: 'semanage fcontext --add --type httpd_sys_rw_content_t {{ __molecule__grav_dir }}(/.*)?'
+      community.general.sefcontext:
+        setype: 'httpd_sys_rw_content_t'
+        target: '{{ __molecule__grav_dir | ansible.builtin.regex_escape }}(/.*)?'
+        state: 'present'
+
+    - name: 'restorecon -Fr {{ __molecule__grav_dir }}'
+      ansible.builtin.command: 'restorecon -Fr {{ __molecule__grav_dir }}'
+      changed_when: true
+
+    - name: 'Deploy /etc/systemd/system/grav-{selfupgrade,update}.service as earlier versions did'
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Grav CMS Service
+
+          [Service]
+          ExecStart=/usr/bin/php --file bin/gpm {{ item }} --all-yes
+          WorkingDirectory={{ __molecule__grav_dir }}
+          Type=oneshot
+          User=apache
+        dest: '/etc/systemd/system/grav-{{ item }}.service'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop:
+        - 'selfupgrade'
+        - 'update'
+
+    - name: 'Deploy /etc/systemd/system/grav-{selfupgrade,update}.timer as earlier versions did'
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Grav CMS Timer
+
+          [Timer]
+          OnCalendar=23:00
+          Unit=grav-{{ item }}.service
+
+          [Install]
+          WantedBy=timers.target
+        dest: '/etc/systemd/system/grav-{{ item }}.timer'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop:
+        - 'selfupgrade'
+        - 'update'
+
+    - name: 'systemctl enable grav-{selfupgrade,update}.timer --now'
+      ansible.builtin.systemd:
+        name: 'grav-{{ item }}.timer'
+        state: 'started'
+        enabled: true
+        daemon_reload: true
+      loop:
+        - 'selfupgrade'
+        - 'update'

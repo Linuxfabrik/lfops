@@ -72,9 +72,6 @@
         - 'not grav__skip_php | default(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
-      selinux__booleans__dependent_var: '{{
-          grav__selinux__booleans__dependent_var
-        }}'
       selinux__fcontexts__dependent_var: '{{
           grav__selinux__fcontexts__dependent_var
         }}'

@@ -1,12 +1,12 @@
 # {{ ansible_managed }}
-# 2022093001
+# 2026110801
 
 [Unit]
-Description=Grav CMS Self Upgrade Timer
+Description=Grav CMS Self Upgrade Timer for {{ __grav__instance }}
 
 [Timer]
 OnCalendar={{ grav__on_calendar_selfupgrade }}
-Unit=grav-selfupgrade.service
+Unit=grav-selfupgrade-{{ __grav__instance }}.service
 
 [Install]
 WantedBy=timers.target

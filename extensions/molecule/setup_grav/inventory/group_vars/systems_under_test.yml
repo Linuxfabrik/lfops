@@ -1,0 +1,5 @@
+apache_httpd__conf_server_admin: 'root@localhost'
+
+grav__url: 'grav.example.com'
+
+repo_remi__enabled_php_version: '8.4'
