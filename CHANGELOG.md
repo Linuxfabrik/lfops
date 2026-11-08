@@ -232,6 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:redis**: Hosts without the Redis package of packages.redis.io, such as Remi and the distribution packages, no longer warn `Skipped '/usr/lib/redis/modules' path due to this access issue` on every run.
 * **role:lvm**: A PV listed by a symlink such as `/dev/disk/by-id/...` on a SCSI or NVMe disk is rescanned before the resize, so a disk grown on the hypervisor is picked up.
 * **role:lvm**: Runs on virtio disks (`/dev/vd*`) no longer warn `Rescan path does not exist for device` for every PV.
 * **role:monitoring_plugins**: Hosts without custom plugins in `host_files/<host>/usr/lib64/nagios/plugins` no longer print an `Unable to find` warning on every run.
