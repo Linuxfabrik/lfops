@@ -51,6 +51,16 @@
       ansible.builtin.assert:
         that: '__molecule__acme_sh_csh_result["stdout"] == "0"'
 
+    - name: 'grep --count --fixed-strings /opt/acme.sh /root/.bash_profile'
+      ansible.builtin.command: 'grep --count --fixed-strings /opt/acme.sh /root/.bash_profile'
+      register: '__molecule__acme_sh_bash_profile_result'
+      changed_when: false
+      failed_when: '__molecule__acme_sh_bash_profile_result["rc"] not in [0, 1]'
+
+    - name: 'Assert that /root/.bash_profile no longer references /opt/acme.sh'
+      ansible.builtin.assert:
+        that: '__molecule__acme_sh_bash_profile_result["stdout"] == "0"'
+
     # the online installer writes UPGRADE_HASH to account.conf, the package does not. Its presence
     # proves that the account of the former installation is the one acme.sh still uses.
     - name: 'acme.sh --config-home /etc/acme.sh --info'
@@ -62,3 +72,62 @@
       ansible.builtin.assert:
         that: '__molecule__acme_sh_info_result["stdout"] is search("^UPGRADE_HASH=", multiline=true)'
         fail_msg: '{{ __molecule__acme_sh_info_result["stdout"] }}'
+
+
+# prepare.yml left a /root/.acme.sh with program files only, which the role removed. One that
+# holds anything else, here an account, has to stay and be reported. This runs the role once
+# more instead of preparing the case in prepare.yml, since the report would break the
+# idempotence step. The directory is removed again for the next verify.
+- name: 'Verify acme_sh keeps a /root/.acme.sh with more than the program'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'mkdir -p /root/.acme.sh'
+      ansible.builtin.file:
+        path: '/root/.acme.sh'
+        state: 'directory'
+        mode: 0o700
+
+    - name: 'touch /root/.acme.sh/acme.sh /root/.acme.sh/account.conf'
+      ansible.builtin.copy:
+        content: ''
+        dest: '/root/.acme.sh/{{ item }}'
+        mode: 0o600
+      loop:
+        - 'acme.sh'
+        - 'account.conf'
+
+    - name: 'Reset the end-of-play messages'
+      ansible.builtin.set_fact:
+        __shared__end_of_play_messages: []
+
+    # the playbook sets them in its pre_tasks, the role relies on them
+    - name: 'Set the LFOps-wide variables'
+      ansible.builtin.import_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'global-variables.yml'
+
+    - name: 'Run the acme_sh role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.acme_sh'
+
+    - name: 'find /root/.acme.sh'
+      ansible.builtin.find:
+        paths: '/root/.acme.sh'
+        file_type: 'any'
+        hidden: true
+        recurse: true
+      register: '__molecule__acme_sh_root_home_result'
+
+    - name: 'Assert that /root/.acme.sh is kept unchanged and reported'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__acme_sh_root_home_result["files"] | map(attribute="path") | map("basename") | sort == ["account.conf", "acme.sh"]'
+          - '__shared__end_of_play_messages | select("search", "^/root/\\.acme\\.sh was left alone, .*\\(account\\.conf\\)") | list | length == 1'
+        fail_msg: '{{ __molecule__acme_sh_root_home_result["files"] | map(attribute="path") | list }} {{ __shared__end_of_play_messages }}'
+
+    - name: 'rm -rf /root/.acme.sh'
+      ansible.builtin.file:
+        path: '/root/.acme.sh'
+        state: 'absent'

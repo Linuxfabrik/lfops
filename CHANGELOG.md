@@ -327,6 +327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:repo_mongodb**: On Ubuntu, the role points to MongoDB's Ubuntu repository instead of the Debian one, so MongoDB can be installed there.
 * **role:redis, role:valkey**: On RHEL, a run after a reboot no longer reports the configuration file as changed, since the role keeps the ownership that the package's tmpfiles.d rule restores at every boot.
 * **role:borg_local**: The Icinga downtime for `clamd@scan` during a backup is set, where Icinga had rejected the request as invalid JSON.
+* **role:acme_sh**: `--check` no longer aborts on hosts without the acme.sh package. On hosts that still have the former `/opt/acme.sh` installation, it shows the certificates a real run would issue.
+* **role:acme_sh**: Removes a copy of the acme.sh program left in `/root/.acme.sh` by an earlier `acme.sh --install`, and the lines of the former installation in `/root/.bash_profile`, `/root/.profile` and `/root/.zshrc`. A `/root/.acme.sh` that holds anything else, such as certificates or an account, is kept and reported at the end of the play.
 * **role:acme_sh**: A changed `acme-sh.service` or `acme-sh.timer`, for example a new schedule, takes effect in the same run. Until now systemd kept the old unit until the next reload.
 * **role:clamav**: A changed `clamav-clamdscan.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
 * **role:gitlab_ce**: A changed `gitlab-dump.service` takes effect in the same run. Until now only a changed timer reloaded systemd.
