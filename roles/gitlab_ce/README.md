@@ -37,7 +37,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * `systemctl enable gitlab-dump.timer --now`
 * Deploy `/etc/gitlab/gitlab.rb`
 * `gitlab-ctl reconfigure`
-* `gitlab-ctl restart`
+* `gitlab-ctl restart`, then wait until `/-/readiness` answers
 * Triggers: `gitlab-ctl restart`.
 
 `gitlab_ce:configure`

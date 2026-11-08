@@ -107,11 +107,31 @@
     changed_when: true
     when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure and restart run in this order right after gitlab.rb changed)
 
+  # `gitlab-ctl` waits SVWAIT seconds for a service to come back (`export SVWAIT=${SVWAIT:-30}`
+  # in omnibus-gitlab config/software/gitlab-ctl.rb), and `sv restart` exits non-zero with
+  # "timeout: run: puma ..." when it has not, although the restart carries on (runit 2.1.2
+  # src/sv.c). Puma finishes running requests before it exits, which takes longer than 30
+  # seconds on an instance that has been running for a while.
   - name: 'gitlab-ctl restart'
     ansible.builtin.command: |-
       gitlab-ctl restart
+    environment:
+      SVWAIT: '120'
+    register: '__gitlab_ce__restart_result'
     changed_when: true
     when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure and restart run in this order right after gitlab.rb changed)
+
+  # GitLab answers "Bad Gateway" until Puma is up again. /-/readiness is open to 127.0.0.0/8 by default
+  # (gitlab_rails['monitoring_whitelist']). Skipped under `--check`, where the restart is.
+  - name: 'Wait for GitLab to be ready'
+    ansible.builtin.uri:
+      url: '{{ gitlab_ce__rb_nginx_listen_https | bool | ternary("https", "http") }}://127.0.0.1:{{ gitlab_ce__rb_nginx_listen_port }}/-/readiness'
+      validate_certs: false # the certificate is issued for the external name, not for 127.0.0.1
+    register: '__gitlab_ce__readiness_result'
+    until: '__gitlab_ce__readiness_result is not failed'
+    retries: 30
+    delay: 10
+    when: '__gitlab_ce__restart_result is changed' # noqa no-handler (waits right after the restart)
 
   tags:
     - 'gitlab_ce'
