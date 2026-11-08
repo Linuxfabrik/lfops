@@ -44,7 +44,7 @@ DOCUMENTATION = r"""
   short_description: Fixed full-screen view of a run, details at the end
   description:
     - Shows the run on one fixed screen that is updated in place instead of scrolling. At the top the playbook, the number of hosts and the elapsed time, the current role and task, then counters of the results of the current task and of the whole run.
-    - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
+    - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path, shortened to the initials of its parent directories, when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
     - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counters and their last notable result, or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
     - At the end of the run, the screen is left and the details follow in the format of C(linuxfabrik.lfops.compact), but only for the tasks with changes, warnings or failures. Then the recap and the report of the distinct messages by severity.
     - Without a terminal (log file, pipe, CI) or with C(--verbose), the plugin behaves exactly like C(linuxfabrik.lfops.compact).
@@ -102,6 +102,17 @@ def _git(root, *args):
     except (OSError, subprocess.SubprocessError):
         return None
     return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def shorten_path(path):
+    """Reduce every component of a path except the last one to its first character,
+    like the zsh prompt does: "/home/user/git/lfops" -> "/h/u/g/lfops". The same as
+    shorten_path() in disk.py of the Linuxfabrik lib, which the plugin cannot import.
+    """
+    if not path or '/' not in path:
+        return path
+    head, _, tail = path.rpartition('/')
+    return '/'.join(part[:1] for part in head.split('/')) + f'/{tail}'
 
 
 def lfops_origin(root, mountinfo='/proc/self/mountinfo'):
@@ -193,7 +204,9 @@ class CallbackModule(Compact):
         self._host_counts = {}
         self._host_last = {}
         self._host_last_ok = {}
+        # all hosts of the play, and those of the running batch with "serial"
         self._play_hosts = set()
+        self._batch_hosts = set()
         self._dead_hosts = set()
         # where the plugin, and with it LFOps, comes from, see lfops_origin()
         self._origin = None
@@ -296,7 +309,8 @@ class CallbackModule(Compact):
 
         elapsed = int(now - self._start)
         elapsed = f'{elapsed // 3600:02d}:{elapsed % 3600 // 60:02d}:{elapsed % 60:02d}'
-        right = f'{len(self._play_hosts)} hosts   {elapsed}'
+        count = len(self._play_hosts)
+        right = f'{count} host{"" if count == 1 else "s"}   {elapsed}'
         title = self._play_line.split(': ', 1)[-1]
         screen.append(
             self._fit(
@@ -318,7 +332,7 @@ class CallbackModule(Compact):
             if ee:
                 self._origin += f'   EE {ee}'
             if source:
-                self._origin += f'   mounted from {source}'
+                self._origin += f'   mounted from {shorten_path(source)}'
         screen.append(self._fit([(self._origin, None, False)], width))
         section, prefix, task_line = self._header
         if section and section.startswith('Role: '):
@@ -344,8 +358,8 @@ class CallbackModule(Compact):
         screen.append('─' * width)
 
         task_counts = Counter(self._task_counts)
-        if self._play_hosts:
-            alive = len(self._play_hosts - self._dead_hosts)
+        if self._batch_hosts:
+            alive = len(self._batch_hosts - self._dead_hosts)
             # hosts that are still at work on the task
             task_counts['pending'] = max(alive - len(self._task_hosts), 0)
         screen.append(
@@ -555,9 +569,16 @@ class CallbackModule(Compact):
         super().v2_playbook_on_play_start(play)
         try:
             inventory = play.get_variable_manager()._inventory
-            self._play_hosts = {h.name for h in inventory.get_hosts(play.hosts)}
-        except Exception:  # only for the host counter
+            # With "serial", the play starts once per batch, and the inventory is
+            # restricted to the hosts of the batch; --limit still applies.
+            self._play_hosts = {
+                h.name
+                for h in inventory.get_hosts(play.hosts, ignore_restrictions=True)
+            }
+            self._batch_hosts = {h.name for h in inventory.get_hosts(play.hosts)}
+        except Exception:  # only for the host counters
             self._play_hosts = set()
+            self._batch_hosts = set()
         self._dead_hosts = set()
         self._start_tui()
         # the play line is part of the screen header, not of the details, and was

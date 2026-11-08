@@ -49,6 +49,7 @@ _spec = importlib.util.spec_from_file_location('dashboard', _PLUGIN_PATH)
 _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)
 lfops_origin = _module.lfops_origin
+shorten_path = _module.shorten_path
 
 _SCREEN_ON = '\x1b[?1049h'
 _SCREEN_OFF = '\x1b[?1049l'
@@ -68,7 +69,7 @@ _PLAYBOOK = """
 """
 
 
-def _run(columns=None):
+def _run(columns=None, playbook=_PLAYBOOK):
     """Run the playbook, on a pseudo-terminal with `columns` if given. Return the
     exit code and the output.
     """
@@ -84,7 +85,7 @@ def _run(columns=None):
                 + "  vars:\n    ansible_connection: 'local'\n"
                 + f"    ansible_python_interpreter: '{sys.executable}'\n"
             ),
-            'playbook.yml': _PLAYBOOK,
+            'playbook.yml': playbook,
         }
         for name, content in files.items():
             with open(os.path.join(tmp, name), 'w') as f:
@@ -176,6 +177,29 @@ class TestDashboardOnTerminal(unittest.TestCase):
         self.assertIn('PLAY RECAP', after)
         self.assertIn('# CHANGED', after)
         self.assertIn('linuxfabrik.lfops.test:\n\n* Some changes  \n', after)
+
+
+class TestSerial(unittest.TestCase):
+    def test_header_counts_all_hosts_of_the_play(self):
+        # with "serial", the play starts once per batch of one host
+        playbook = _PLAYBOOK.replace(
+            "  hosts: 'all'\n", "  hosts: 'all'\n  serial: 1\n"
+        )
+        returncode, raw = _run(columns=100, playbook=playbook)
+        self.assertEqual(returncode, 0, raw)
+        self.assertIn('4 hosts', raw)
+        self.assertNotIn('1 host ', raw)
+
+
+class TestShortenPath(unittest.TestCase):
+    def test_parents_reduced_to_their_initial(self):
+        self.assertEqual(
+            shorten_path('/home/user/git/linuxfabrik/github/lfops'), '/h/u/g/l/g/lfops'
+        )
+
+    def test_without_a_slash_unchanged(self):
+        self.assertEqual(shorten_path('lfops'), 'lfops')
+        self.assertEqual(shorten_path(''), '')
 
 
 class TestHostSeverity(unittest.TestCase):
