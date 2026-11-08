@@ -19,11 +19,24 @@
           - 'ansible_facts["services"][__molecule__redis_service_name]["state"] == "running"'
           - 'ansible_facts["services"][__molecule__redis_service_name]["status"] == "enabled"'
 
+    # find warns on a missing path, and every platform lacks one of the two
+    - name: 'stat /usr/lib/redis/modules /usr/lib64/redis/modules'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/usr/lib/redis/modules'
+        - '/usr/lib64/redis/modules'
+      register: '__molecule__redis_module_dirs_result'
+
     - name: 'find /usr/lib/redis/modules /usr/lib64/redis/modules -name *.so'
       ansible.builtin.find:
-        paths:
-          - '/usr/lib/redis/modules'
-          - '/usr/lib64/redis/modules'
+        paths: '{{
+            __molecule__redis_module_dirs_result["results"]
+            | selectattr("stat.isdir", "defined")
+            | selectattr("stat.isdir")
+            | map(attribute="item")
+            | list
+          }}'
         patterns: '*.so'
       register: '__molecule__redis_module_files_result'
 
@@ -49,3 +62,16 @@
             | select("in", __molecule__redis_module_list_result["stdout_lines"])
             | sort
           }}'
+
+    # The role looks for the modules of packages.redis.io in /usr/lib/redis/modules, which only that
+    # package creates. On every other platform the role must not warn about the missing directory.
+    # The screen is no proof: a warning already shown in this run is not repeated.
+    - name: 'Run the redis role again'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.redis'
+
+    - name: 'Assert that the role did not warn while looking for the packaged modules'
+      ansible.builtin.assert:
+        that:
+          - '__redis__packaged_modules_result["warnings"] | d([]) | length == 0'
+        fail_msg: '{{ __redis__packaged_modules_result["warnings"] | d([]) }}'

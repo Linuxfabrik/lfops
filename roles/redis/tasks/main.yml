@@ -50,12 +50,21 @@
   # The packages.redis.io DEB ships its modules in /usr/lib/redis/modules and loads them from its
   # own redis.conf, which the template replaces. The templates include __redis__module_dir, where
   # the Remi module packages put their configs, so the modules get loaded from a file there. Remi
-  # installs to /usr/lib64, and the distribution packages ship no modules.
+  # installs to /usr/lib64, and the distribution packages ship no modules. find warns on a missing
+  # path (modules/find.py, ansible-core 2.16), so it only runs where the directory exists, and a
+  # skipped find leaves "files" undefined.
+  - name: 'stat /usr/lib/redis/modules'
+    ansible.builtin.stat:
+      path: '/usr/lib/redis/modules'
+    register: '__redis__packaged_modules_dir_result'
+
   - name: 'find /usr/lib/redis/modules -name *.so'
     ansible.builtin.find:
       paths: '/usr/lib/redis/modules'
       patterns: '*.so'
     register: '__redis__packaged_modules_result'
+    when:
+      - '__redis__packaged_modules_dir_result["stat"]["isdir"] | d(false)'
 
   - name: 'mkdir -p {{ __redis__module_dir }}'
     ansible.builtin.file:
@@ -65,6 +74,7 @@
       mode: 0o755
       state: 'directory'
     when:
+      - '__redis__packaged_modules_result["files"] is defined'
       - '__redis__packaged_modules_result["files"] | length > 0'
       - 'not redis__skip_packaged_modules | bool'
 
@@ -78,6 +88,7 @@
       mode: 0o644
     notify: 'redis: restart redis'
     when:
+      - '__redis__packaged_modules_result["files"] is defined'
       - '__redis__packaged_modules_result["files"] | length > 0'
       - 'not redis__skip_packaged_modules | bool'
 
@@ -87,7 +98,10 @@
       state: 'absent'
     notify: 'redis: restart redis'
     when:
-      - '__redis__packaged_modules_result["files"] | length == 0 or redis__skip_packaged_modules | bool'
+      - >-
+        __redis__packaged_modules_result["files"] is undefined
+        or __redis__packaged_modules_result["files"] | length == 0
+        or redis__skip_packaged_modules | bool
 
   - name: 'mkdir -p /etc/systemd/system/{{ __redis__service_name }}.d/'
     ansible.builtin.file:
