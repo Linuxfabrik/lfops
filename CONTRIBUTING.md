@@ -844,6 +844,21 @@ Verify what only the running system can confirm, not the role's steps. An assert
 * Do assert that the service runs and is enabled (`ansible.builtin.service_facts`), is reachable (`ansible.builtin.wait_for` or a request), and actually *uses* the configured values: ask it (`ansible.builtin.uri` against an API, or a CLI printing the effective configuration) for the value set in `group_vars`. Also assert end state outside packages and files (users, databases, API objects), or its absence in a removal scenario.
 
 
+#### Warnings fail a scenario
+
+A warning in `converge`, `idempotence` or `verify` fails the scenario, since it usually means a task does not do what it is meant to on some platform (a `find` on a path that does not exist there, a deprecated parameter). Molecule itself only looks at the exit code of `ansible-playbook`, and `verify.yml` does not see the warnings of `converge`, so `config.yml` loads the callback `extensions/molecule/callback_plugins/lfops_fail_on_warnings.py`. It collects every warning while `converge.yml` or `verify.yml` runs, lists the ones no allowlist accepts at the end, and makes `ansible-playbook` exit with `1`.
+
+* Fix the cause, do not hide the warning. Accept it only if the role cannot avoid it, with an entry in `extensions/molecule/warnings-allowlist.yml` (all scenarios) or in `warnings-allowlist.yml` next to the `molecule.yml` of the scenario. Each entry has a `pattern` (Python regex, searched in the text with whitespace collapsed) and a mandatory `reason`.
+* What a warning on screen does not tell you, and why `verify.yml` is the wrong place to look for one:
+
+    * Ansible shows a text only once per run (`Display._warns`), so a warning missing on screen may have occurred again. The callback sees every one.
+    * In a loop, ansible-core moves the warnings of the items to the result of the task (`executor/task_executor.py`) and drops them from `results[*]`. An `assert` on `result["results"][*]["warnings"]` always passes.
+    * ansible-core 2.19+ hands warnings to the main process as a `WarningSummary` (`Display._warning`), before that `Display.warning` itself is proxied from the workers. The callback hooks whichever exists, verified with ansible-core 2.16, 2.18 and 2.22.
+
+* Not covered: deprecation warnings, and warnings issued before the callbacks are loaded (inventory parsing, `ansible-galaxy` in the `dependency` step), as well as `create`, `prepare` and `destroy`.
+* A callback cannot set the exit code of `ansible-playbook`, and an exception raised in it is swallowed before ansible-core 2.19, or keeps the callbacks after it from finishing. So the callback changes a zero exit code on the way out (`sys.exit`). An exit code that already signals a failure is kept.
+
+
 #### Troubleshooting
 
 **Prerun aborts with `ansible_compat.errors.InvalidPrerequisiteError: Command ansible-galaxy collection install -vvv --force /path/to/lfops`**: `galaxy.yml` carries the non-semver `version: main`. Either set `prerun: false` top-level in `config.yml` and install LFOps yourself, or make the collection symlink (under `ANSIBLE_HOME`) resolve to the directory you run `molecule` in.
