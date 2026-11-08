@@ -36,6 +36,7 @@ Manual steps:
 `freeipa_server`
 
 * Installs and configures FreeIPA as a server.
+* Installs `ipa-healthcheck` and runs it daily through `ipa-healthcheck.timer`.
 * Triggers: none.
 
 `freeipa_server:configure`
@@ -46,6 +47,11 @@ Manual steps:
 `freeipa_server:group`
 
 * Manages FreeIPA groups.
+* Triggers: none.
+
+`freeipa_server:healthcheck`
+
+* Installs `ipa-healthcheck`, deploys `/etc/systemd/system/ipa-healthcheck.timer.d/z00-linuxfabrik.conf` and ensures `ipa-healthcheck.timer` is in the desired state.
 * Triggers: none.
 
 `freeipa_server:hbacrule`
@@ -61,6 +67,11 @@ Manual steps:
 `freeipa_server:pwpolicy`
 
 * Manages FreeIPA password policies.
+* Triggers: none.
+
+`freeipa_server:state`
+
+* Manages the state of `ipa-healthcheck.timer` (start, stop, enable, disable).
 * Triggers: none.
 
 `freeipa_server:sudocmd`
@@ -233,6 +244,27 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 
         * Optional. `enabled`, `disabled` or `absent`. Defaults to `enabled`.
         * Type: String.
+
+`freeipa_server__healthcheck_on_calendar`
+
+* When `ipa-healthcheck.timer` runs the healthcheck, in the calendar event format of `systemd.time(7)`. The report goes to `/var/log/ipa/healthcheck/healthcheck.log` (JSON, overwritten on each run, rotated daily by logrotate).
+* Type: String.
+* Default: `'*-*-* 06:{{ 59 | random(seed=inventory_hostname ~ "ipa-healthcheck") }}'`
+* Deviates from the upstream default `*-*-* 04:00:00`: the healthcheck runs at a fixed minute per host after the reboot window of the `schedule_reboot` role (04:xx), so the report reflects the server after a reboot, and the servers of a replicated FreeIPA domain do not all check at the same time. The seed differs from the one of `lynis__on_calendar`, so the two start in different minutes on most hosts.
+* The timer is persistent: a run missed while the host was down takes place right after the next boot, so the report does not grow older than a day plus the downtime.
+
+`freeipa_server__healthcheck_timer_enabled`
+
+* Enables or disables `ipa-healthcheck.timer`, analogous to `systemctl enable/disable`.
+* Type: Bool.
+* Default: `true`
+* Deviates from the package, which leaves the timer disabled: without a regular healthcheck, problems such as expiring certificates or broken replication go unnoticed until a service fails.
+
+`freeipa_server__healthcheck_timer_state`
+
+* Changes the state of `ipa-healthcheck.timer`, analogous to `systemctl start/stop/restart`.
+* Type: String. One of `restarted`, `started`, `stopped`.
+* Default: `'started'`
 
 `freeipa_server__hostgroups__host_var` / `freeipa_server__hostgroups__group_var`
 
@@ -581,6 +613,9 @@ freeipa_server__hbacrules__host_var:
     hbacsvcs:
       - 'sshd'
     state: 'enabled'
+freeipa_server__healthcheck_on_calendar: '*-*-* 06:15'
+freeipa_server__healthcheck_timer_enabled: true
+freeipa_server__healthcheck_timer_state: 'started'
 freeipa_server__hostgroups__host_var:
   - name: 'webservers'
     description: 'Web server hosts'

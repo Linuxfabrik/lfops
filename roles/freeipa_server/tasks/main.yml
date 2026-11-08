@@ -86,6 +86,84 @@
     - 'freeipa_server:systemd_override'
 
 
+# ipa-healthcheck.service writes the report to /var/log/ipa/healthcheck/healthcheck.log, which
+# the monitoring plugin reads. The package has to come after the server installation: it requires
+# ipa-server, and on RHEL 8 it is in the idm:DL1 module stream that the installation enables.
+- block:
+
+  - name: 'Install ipa-healthcheck'
+    ansible.builtin.package:
+      name: 'ipa-healthcheck'
+      state: 'present'
+    retries: 3
+    delay: 10
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:healthcheck'
+
+
+- block:
+
+  - name: 'mkdir -p /etc/systemd/system/ipa-healthcheck.timer.d'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/ipa-healthcheck.timer.d'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/ipa-healthcheck.timer.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/ipa-healthcheck.timer.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/systemd/system/ipa-healthcheck.timer.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__freeipa_server__healthcheck_timer_result'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__freeipa_server__healthcheck_timer_result is changed) | ternary(["ipa-healthcheck.timer"], [])
+        }}'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler (the state tasks below need the new drop-in)
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when:
+      - '__freeipa_server__healthcheck_timer_result is changed'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:configure'
+    - 'freeipa_server:healthcheck'
+
+
+# ipa-healthcheck.service is not managed: the timer triggers it. Enabling it would run the
+# healthcheck at every boot, since the package installs it with WantedBy=multi-user.target.
+- block:
+
+  - name: 'systemctl {{ freeipa_server__healthcheck_timer_enabled | bool | ternary("enable", "disable") }} ipa-healthcheck.timer'
+    ansible.builtin.service:
+      name: 'ipa-healthcheck.timer'
+      enabled: '{{ freeipa_server__healthcheck_timer_enabled | bool }}'
+
+  - name: 'systemctl {{ freeipa_server__healthcheck_timer_state | regex_replace("p?ed$", "") }} ipa-healthcheck.timer'
+    ansible.builtin.service:
+      name: 'ipa-healthcheck.timer'
+      state: '{{ freeipa_server__healthcheck_timer_state }}'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:healthcheck'
+    - 'freeipa_server:state'
+
+
 # group management
 - block:
 

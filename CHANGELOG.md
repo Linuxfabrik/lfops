@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:freeipa_server**: Installs `ipa-healthcheck` and runs it daily at 06:xx, at a fixed minute per host and after the next boot if the host was down at that time, so its report in `/var/log/ipa/healthcheck/healthcheck.log` is ready for monitoring.
 * **execution-environment**: The image carries its LFOps version in the `LFOPS_EE_VERSION` environment variable and the `org.opencontainers.image.version` label, and the dashboard callback shows it.
 * **plugin:dashboard**: The `linuxfabrik.lfops.dashboard` stdout callback shows a run on one fixed screen with counters and the hosts sorted by severity, and the details of the tasks with changes, warnings or failures at the end.
 * **plugin:compact**: The `linuxfabrik.lfops.compact` stdout callback shortens the output of large runs to one block per task, with a progress bar per host, one line each for the ok and the skipped hosts, the diff or module output of the changed hosts and the warnings, each grouped by identical text, and a report of the distinct changes, warnings and errors by severity at the end.

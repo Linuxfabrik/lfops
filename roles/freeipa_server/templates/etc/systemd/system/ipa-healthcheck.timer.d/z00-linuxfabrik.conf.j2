@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026110801
+
+[Timer]
+# reset the packaged schedule, otherwise the timer runs at both times
+OnCalendar=
+OnCalendar={{ freeipa_server__healthcheck_on_calendar }}
+# catch up on a run missed while the host was down, so the report is never older than a day plus
+# the time to boot
+Persistent=true
