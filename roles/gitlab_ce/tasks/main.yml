@@ -101,28 +101,25 @@
     vars:
       shared__remove_rpmnew_rpmsave_config_file: '/etc/gitlab/gitlab.rb'
 
+  # no `gitlab-ctl restart` afterwards: reconfigure restarts every service whose configuration
+  # changed, through `notifies :restart` on its templates and env dirs (omnibus-gitlab
+  # files/gitlab-cookbooks, e.g. gitlab/recipes/gitlab-rails.rb, gitlab-workhorse.rb,
+  # nginx/resources/configuration.rb, gitaly/recipes/enable.rb, registry/recipes/enable.rb).
+  # It restarts Puma with a HUP (`restart_command_name 'hup'` in gitlab/recipes/puma.rb), which
+  # lets running requests finish (sv-puma-h.erb), while `gitlab-ctl restart` stops every service
+  # and timed out on a busy Puma. Not covered: PostgreSQL settings that need a restart
+  # (doc/settings/database.md), which this role does not set.
   - name: 'gitlab-ctl reconfigure'
     ansible.builtin.command: |-
       gitlab-ctl reconfigure
+    register: '__gitlab_ce__reconfigure_result'
     changed_when: true
-    when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure and restart run in this order right after gitlab.rb changed)
+    when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure runs right after gitlab.rb changed)
 
-  # `gitlab-ctl` waits SVWAIT seconds for a service to come back (`export SVWAIT=${SVWAIT:-30}`
-  # in omnibus-gitlab config/software/gitlab-ctl.rb), and `sv restart` exits non-zero with
-  # "timeout: run: puma ..." when it has not, although the restart carries on (runit 2.1.2
-  # src/sv.c). Puma finishes running requests before it exits, which takes longer than 30
-  # seconds on an instance that has been running for a while.
-  - name: 'gitlab-ctl restart'
-    ansible.builtin.command: |-
-      gitlab-ctl restart
-    environment:
-      SVWAIT: '120'
-    register: '__gitlab_ce__restart_result'
-    changed_when: true
-    when: 'gitlab_ce___gitlab_rb_template_result is changed' # noqa no-handler (reconfigure and restart run in this order right after gitlab.rb changed)
-
-  # GitLab answers "Bad Gateway" until Puma is up again. /-/readiness is open to 127.0.0.0/8 by default
-  # (gitlab_rails['monitoring_whitelist']). Skipped under `--check`, where the restart is.
+  # `sv hup` returns right away (runit 2.1.2 src/sv.c), and Puma restarts in the background, so
+  # GitLab answers "Bad Gateway" for a while after reconfigure. /-/readiness is open to
+  # 127.0.0.0/8 by default (gitlab_rails['monitoring_whitelist']). Skipped under `--check`,
+  # where reconfigure is.
   - name: 'Wait for GitLab to be ready'
     ansible.builtin.uri:
       url: '{{ gitlab_ce__rb_nginx_listen_https | bool | ternary("https", "http") }}://127.0.0.1:{{ gitlab_ce__rb_nginx_listen_port }}/-/readiness'
@@ -131,7 +128,7 @@
     until: '__gitlab_ce__readiness_result is not failed'
     retries: 30
     delay: 10
-    when: '__gitlab_ce__restart_result is changed' # noqa no-handler (waits right after the restart)
+    when: '__gitlab_ce__reconfigure_result is changed' # noqa no-handler (waits right after reconfigure)
 
   tags:
     - 'gitlab_ce'
