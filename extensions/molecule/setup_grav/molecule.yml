@@ -1,0 +1,26 @@
+# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
+# needs: the playbook sets SELinux file contexts, and Grav runs on the real Apache httpd and
+# PHP-FPM services of the host.
+#
+# rocky9-vm gets a fresh installation. On rocky10-vm, prepare.yml builds what earlier versions
+# of the role left behind: an older Grav release owned by apache with modes 664/775 and the
+# setgid bit, the timers without the name of the instance, and the SELinux type
+# httpd_sys_rw_content_t on the whole installation.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'
+
+# `check` runs converge.yml with `--check` against the converged hosts, as an administrator runs
+# a dry run against production. On a fresh host the roles before grav cannot run under
+# `--check`, since they install nothing (PHP, Apache httpd).
+scenario:
+  test_sequence:
+    - 'dependency' # must stay in the list so requirements.yml is installed (see config.yml)
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    - 'check'
+    - 'verify'
+    - 'idempotence'
+    - 'verify'
+    - 'destroy'

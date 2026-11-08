@@ -55,7 +55,7 @@ Which Ansible role is proven to run on which OS?
 | glpi_agent                            |        |        |   x    |   x    |   (x)   |           |           |           |                                              |
 | grafana                               |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | grafana_grizzly                       |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| grav                                  |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| grav                                  |        |        |  (x)   |   x    |    x    |           |           |           |                                              |
 | graylog_datanode                      |   x    |   x    |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | graylog_server                        |   x    |   x    |   x    |  (x)   |   (x)   |    (x)    |    (x)    |    (x)    |                                              |
 | haveged                               |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |    (x)    |    (x)    |                                              |

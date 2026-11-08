@@ -1,0 +1,9 @@
+<?php
+// {{ ansible_managed }}
+// 2026110801
+
+// Private secret of Grav, used for CSRF nonce signing, admin rate-limit hashing and binding
+// sessions to the site. Generated once by Ansible, in the format Grav itself writes. Regenerate
+// by deleting this file and running the role again; this invalidates existing sessions.
+
+return '{{ lookup("ansible.builtin.password", "/dev/null", chars=["0123456789abcdef"], length=64) }}';

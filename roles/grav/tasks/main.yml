@@ -1,22 +1,182 @@
+# The code of Grav, its configuration, pages, plugins and themes belong to root and are read-only
+# for the web server, which only writes to __grav__runtime_dirs. Grav cannot update itself
+# therefore; /usr/local/sbin/grav-gpm runs bin/gpm as root instead.
 - block:
 
-  - name: 'Test if Grav is already installed'
+  - name: 'stat {{ grav__install_dir }}/index.php # check if Grav is already installed'
     ansible.builtin.stat:
-      path: '{{ grav__install_dir | quote }}/index.php'
-    register: 'grav__installed'
+      path: '{{ grav__install_dir }}/index.php'
+    register: '__grav__index_stat_result'
 
-  - name: 'composer create-project getgrav/grav {{ grav__install_dir | quote }}'
+  # runs `bin/grav install` afterwards, which installs the plugins and the theme Grav ships with
+  - name: 'composer create-project getgrav/grav {{ grav__install_dir }}'
     community.general.composer:
       command: 'create-project'
       arguments: 'getgrav/grav {{ grav__install_dir | quote }}'
-      working_dir: '{{ grav__install_dir | quote }}'
+      working_dir: '{{ grav__install_dir }}'
       prefer_dist: true
     environment:
       # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
       COMPOSER_ALLOW_SUPERUSER: '1'
       COMPOSER_NO_INTERACTION: '1'
+    register: '__grav__composer_result'
     when:
-      - 'not grav__installed.stat.exists'
+      - 'not __grav__index_stat_result["stat"]["exists"]'
+
+  # --no-dereference, so that a symlink does not hand its target to the other owner. The
+  # runtime directories are pruned, as is security-private.php, which has its own owner.
+  - name: 'chown --no-dereference root:root everything below {{ grav__install_dir }} but the runtime directories'
+    ansible.builtin.command: >-
+      find {{ grav__install_dir | quote }}
+      ( {{ __grav__find_runtime_dirs }} -o -path {{ (grav__install_dir ~ "/user/config/security-private.php") | quote }} ) -prune
+      -o ( ! -user root -o ! -group root ) -exec chown --changes --no-dereference root:root {} +
+    register: '__grav__chown_code_result'
+    changed_when: '__grav__chown_code_result["stdout"] | length > 0'
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  # 00755 clears the setgid bit that earlier versions of the role set on every directory
+  - name: 'chmod 00755 the directories below {{ grav__install_dir }} but the runtime directories'
+    ansible.builtin.command: >-
+      find {{ grav__install_dir | quote }}
+      {{ __grav__find_runtime_dirs }} -prune
+      -o -type d ! -perm 0755 -exec chmod --changes 00755 {} +
+    register: '__grav__chmod_dirs_result'
+    changed_when: '__grav__chmod_dirs_result["stdout"] | length > 0'
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  - name: 'chmod 0644 the files below {{ grav__install_dir }} but the runtime directories, bin/ and security-private.php'
+    ansible.builtin.command: >-
+      find {{ grav__install_dir | quote }}
+      ( {{ __grav__find_runtime_dirs }} -o -path {{ (grav__install_dir ~ "/bin") | quote }} -o -path {{ (grav__install_dir ~ "/user/config/security-private.php") | quote }} ) -prune
+      -o -type f ! -perm 0644 -exec chmod --changes 0644 {} +
+    register: '__grav__chmod_files_result'
+    changed_when: '__grav__chmod_files_result["stdout"] | length > 0'
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  - name: 'chmod 0755 the files in {{ grav__install_dir }}/bin'
+    ansible.builtin.command: >-
+      find {{ (grav__install_dir ~ "/bin") | quote }}
+      -type f ! -perm 0755 -exec chmod --changes 0755 {} +
+    register: '__grav__chmod_bin_result'
+    changed_when: '__grav__chmod_bin_result["stdout"] | length > 0'
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  - name: 'mkdir -p the runtime directories below {{ grav__install_dir }}'
+    ansible.builtin.file:
+      path: '{{ grav__install_dir }}/{{ item }}'
+      state: 'directory'
+      owner: '{{ __shared__apache_httpd_user }}'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o755
+    loop: '{{ __grav__runtime_dirs }}'
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  # the directory itself is handled by the task above; the modes inside are left to Grav
+  - name: 'chown --no-dereference apache:apache the content of the runtime directories below {{ grav__install_dir }}'
+    ansible.builtin.command: >-
+      find {{ __grav__runtime_dirs | map("regex_replace", "^", grav__install_dir ~ "/") | map("quote") | join(" ") }}
+      ( ! -user {{ __shared__apache_httpd_user }} -o ! -group {{ __shared__apache_httpd_group }} )
+      -exec chown --changes --no-dereference {{ __shared__apache_httpd_user }}:{{ __shared__apache_httpd_group }} {} +
+    register: '__grav__chown_runtime_result'
+    changed_when: '__grav__chown_runtime_result["stdout"] | length > 0'
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  # Grav generates the key on the first request if the file is missing, which it cannot do in a
+  # user/config that belongs to root. The web server only needs to read it. No backup, since the
+  # file holds a secret.
+  - name: 'Deploy {{ grav__install_dir }}/user/config/security-private.php, unless it exists'
+    ansible.builtin.template:
+      backup: false
+      force: false
+      src: 'var/www/html/grav/user/config/security-private.php.j2'
+      dest: '{{ grav__install_dir }}/user/config/security-private.php'
+      owner: 'root'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o640
+    no_log: true
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  # earlier versions of the role let Grav generate it as the web server, with 0600
+  - name: 'chown root:apache {{ grav__install_dir }}/user/config/security-private.php && chmod 0640 {{ grav__install_dir }}/user/config/security-private.php'
+    ansible.builtin.file:
+      path: '{{ grav__install_dir }}/user/config/security-private.php'
+      owner: 'root'
+      group: '{{ __shared__apache_httpd_group }}'
+      mode: 0o640
+    when:
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  # Grav writes versions.yaml on the first request if it is missing, and logs a warning on every
+  # request while it cannot. bin/gpm selfupgrade keeps it up to date afterwards.
+  - name: 'stat {{ grav__install_dir }}/user/config/versions.yaml'
+    ansible.builtin.stat:
+      path: '{{ grav__install_dir }}/user/config/versions.yaml'
+    register: '__grav__versions_stat_result'
+
+  # system/defines.php only defines constants and belongs to root
+  - name: 'php --run "require \"system/defines.php\"; ..." # get the version and schema of Grav'
+    ansible.builtin.command:
+      argv:
+        - '/usr/bin/php'
+        - '--run'
+        - 'require "system/defines.php"; echo json_encode(["version" => GRAV_VERSION, "schema" => GRAV_SCHEMA]);'
+    args:
+      chdir: '{{ grav__install_dir }}'
+    register: '__grav__defines_result'
+    changed_when: false
+    check_mode: false
+    when:
+      - 'not __grav__versions_stat_result["stat"]["exists"]'
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  - name: 'Deploy {{ grav__install_dir }}/user/config/versions.yaml, unless it exists'
+    ansible.builtin.template:
+      backup: false
+      force: false
+      src: 'var/www/html/grav/user/config/versions.yaml.j2'
+      dest: '{{ grav__install_dir }}/user/config/versions.yaml'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    vars:
+      __grav__defines: '{{ __grav__defines_result["stdout"] | from_json }}'
+    when:
+      - '__grav__defines_result["stdout"] is defined'
+
+  - name: 'restorecon -Fvr {{ grav__install_dir }}'
+    ansible.builtin.command: 'restorecon -Fvr {{ grav__install_dir | quote }}'
+    register: '__grav__restorecon_result'
+    changed_when: '__grav__restorecon_result["stdout"] | length > 0'
+    when:
+      - 'ansible_facts["selinux"]["status"] != "disabled"'
+      - 'not (ansible_check_mode and __grav__composer_result is changed)'
+
+  # The role no longer installs the Admin Panel, which cannot save anything in a read-only
+  # user/config, and leaves the removal of an installed one to the administrator.
+  - name: 'stat {{ grav__install_dir }}/user/plugins/{admin,admin2,api,login}'
+    ansible.builtin.stat:
+      path: '{{ grav__install_dir }}/user/plugins/{{ item }}'
+    loop: '{{ __grav__admin_plugins }}'
+    register: '__grav__admin_plugins_stat_result'
+
+  - name: 'Report the installed Admin Panel plugins'
+    ansible.builtin.debug:
+      msg: '{{ __grav__end_of_play_message }}'
+    when:
+      - '__grav__admin_plugins_installed | length > 0'
+
+  - name: 'Add the installed Admin Panel plugins to the end-of-play messages'
+    ansible.builtin.set_fact:
+      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__grav__end_of_play_message] }}'
+    when:
+      - '__grav__admin_plugins_installed | length > 0'
 
   tags:
     - 'grav'
@@ -24,47 +184,86 @@
 
 - block:
 
-  - name: 'Deploy /etc/systemd/system/grav-selfupgrade.service'
+  - name: 'Deploy /usr/local/sbin/grav-gpm'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/grav-gpm.j2'
+      dest: '/usr/local/sbin/grav-gpm'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Earlier versions of the role deployed the units without the name of the instance, running
+  # bin/gpm as the web server, so a second instance on the host replaced them.
+  - name: 'stat /etc/systemd/system/grav-{selfupgrade,update}.timer'
+    ansible.builtin.stat:
+      path: '/etc/systemd/system/{{ item }}'
+    loop:
+      - 'grav-selfupgrade.timer'
+      - 'grav-update.timer'
+    register: '__grav__legacy_timer_stat_result'
+
+  - name: 'systemctl disable grav-{selfupgrade,update}.timer --now'
+    ansible.builtin.systemd:
+      name: '{{ item["item"] }}'
+      state: 'stopped'
+      enabled: false
+    loop: '{{ __grav__legacy_timer_stat_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"] }}'
+    when:
+      - 'item["stat"]["exists"]'
+
+  - name: 'rm -f /etc/systemd/system/grav-{selfupgrade,update}.{service,timer}'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/{{ item }}'
+      state: 'absent'
+    loop:
+      - 'grav-selfupgrade.service'
+      - 'grav-selfupgrade.timer'
+      - 'grav-update.service'
+      - 'grav-update.timer'
+    register: '__grav__legacy_units_remove_result'
+
+  - name: 'Deploy /etc/systemd/system/grav-selfupgrade-{{ __grav__instance }}.service'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/grav-selfupgrade.service.j2'
-      dest: '/etc/systemd/system/grav-selfupgrade.service'
+      dest: '/etc/systemd/system/grav-selfupgrade-{{ __grav__instance }}.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'grav: systemctl daemon-reload'
+    register: '__grav__selfupgrade_service_result'
 
-  - name: 'Deploy /etc/systemd/system/grav-selfupgrade.timer'
+  - name: 'Deploy /etc/systemd/system/grav-selfupgrade-{{ __grav__instance }}.timer'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/grav-selfupgrade.timer.j2'
-      dest: '/etc/systemd/system/grav-selfupgrade.timer'
+      dest: '/etc/systemd/system/grav-selfupgrade-{{ __grav__instance }}.timer'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__grav__selfupgrade_timer_result'
-    notify: 'grav: systemctl daemon-reload'
 
-  - name: 'Deploy /etc/systemd/system/grav-update.service'
+  - name: 'Deploy /etc/systemd/system/grav-update-{{ __grav__instance }}.service'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/grav-update.service.j2'
-      dest: '/etc/systemd/system/grav-update.service'
+      dest: '/etc/systemd/system/grav-update-{{ __grav__instance }}.service'
       owner: 'root'
       group: 'root'
       mode: 0o644
-    notify: 'grav: systemctl daemon-reload'
+    register: '__grav__update_service_result'
 
-  - name: 'Deploy /etc/systemd/system/grav-update.timer'
+  - name: 'Deploy /etc/systemd/system/grav-update-{{ __grav__instance }}.timer'
     ansible.builtin.template:
       backup: true
       src: 'etc/systemd/system/grav-update.timer.j2'
-      dest: '/etc/systemd/system/grav-update.timer'
+      dest: '/etc/systemd/system/grav-update-{{ __grav__instance }}.timer'
       owner: 'root'
       group: 'root'
       mode: 0o644
     register: '__grav__update_timer_result'
-    notify: 'grav: systemctl daemon-reload'
 
   - name: 'Reload systemd for the changed timers'
     ansible.builtin.include_role:
@@ -72,8 +271,8 @@
       tasks_from: 'reload-changed-timers.yml'
     vars:
       shared__reload_changed_timers: '{{
-          (__grav__selfupgrade_timer_result is changed) | ternary(["grav-selfupgrade.timer"], []) +
-          (__grav__update_timer_result is changed) | ternary(["grav-update.timer"], [])
+          (__grav__selfupgrade_timer_result is changed) | ternary(["grav-selfupgrade-" ~ __grav__instance ~ ".timer"], []) +
+          (__grav__update_timer_result is changed) | ternary(["grav-update-" ~ __grav__instance ~ ".timer"], [])
         }}'
 
   tags:
@@ -82,94 +281,25 @@
 
 - block:
 
-  - name: 'systemctl {{ grav__timer_selfupgrade_enabled | bool | ternary("enable", "disable") }} grav-selfupgrade.timer --now'
+  - name: 'systemctl {{ grav__timer_selfupgrade_enabled | bool | ternary("enable", "disable") }} grav-selfupgrade-{{ __grav__instance }}.timer --now'
     ansible.builtin.systemd:
-      name: 'grav-selfupgrade.timer'
+      name: 'grav-selfupgrade-{{ __grav__instance }}.timer'
       state: '{{ grav__timer_selfupgrade_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ grav__timer_selfupgrade_enabled }}'
+      enabled: '{{ grav__timer_selfupgrade_enabled | bool }}'
+      daemon_reload: '{{ __grav__legacy_units_remove_result | d({}) is changed or __grav__selfupgrade_service_result | d({}) is changed or __grav__selfupgrade_timer_result | d({}) is changed }}'
+    # nothing is deployed in check mode, so the timer does not exist on a fresh host
+    when:
+      - 'not (ansible_check_mode and __grav__selfupgrade_timer_result | d({}) is changed)'
 
-  - name: 'systemctl {{ grav__timer_update_enabled | bool | ternary("enable", "disable") }} grav-update.timer --now'
+  - name: 'systemctl {{ grav__timer_update_enabled | bool | ternary("enable", "disable") }} grav-update-{{ __grav__instance }}.timer --now'
     ansible.builtin.systemd:
-      name: 'grav-update.timer'
+      name: 'grav-update-{{ __grav__instance }}.timer'
       state: '{{ grav__timer_update_enabled | bool | ternary("started", "stopped") }}'
-      enabled: '{{ grav__timer_update_enabled }}'
+      enabled: '{{ grav__timer_update_enabled | bool }}'
+      daemon_reload: '{{ __grav__legacy_units_remove_result | d({}) is changed or __grav__update_service_result | d({}) is changed or __grav__update_timer_result | d({}) is changed }}'
+    when:
+      - 'not (ansible_check_mode and __grav__update_timer_result | d({}) is changed)'
 
   tags:
     - 'grav'
     - 'grav:state'
-
-
-- block:
-
-  - name: 'Install the Administration Panel plugin for Grav'
-    ansible.builtin.command: |
-      bin/gpm install admin --all-yes
-    args:
-      chdir: '{{ grav__install_dir | quote }}'
-    changed_when: true # always runs, there is no easy way to tell whether it changed anything
-
-  - name: 'Create Grav User Accounts'
-    ansible.builtin.command: >-
-      bin/plugin login new-user
-        --user='{{ item['user'] }}'
-        --fullname='{{ item['fullname'] }}'
-        --password='{{ item['password'] }}'
-        --email='{{ item['email'] }}'
-        --permissions={{ item['permissions'] }}
-        --no-interaction
-    args:
-      chdir: '{{ grav__install_dir | quote }}'
-    loop: '{{ grav__users }}'
-    changed_when: true # always runs, there is no easy way to tell whether it changed anything
-
-  when:
-    - 'not grav__skip_admin'
-  tags:
-    - 'grav'
-    - 'grav:users'
-
-
-- block:
-
-    # https://learn.getgrav.org/17/troubleshooting/permissions
-
-  - name: 'chown -R apache:apache {{ grav__install_dir | quote }}'
-    ansible.builtin.file:
-      path: '{{ grav__install_dir | quote }}'
-      owner: 'apache'
-      group: 'apache'
-      recurse: true
-
-  - name: 'restorecon -Fvr ...'
-    ansible.builtin.command: 'restorecon -Fvr {{ item }}'
-    register: 'grav__restorecon_grav_result'
-    changed_when: 'grav__restorecon_grav_result["stdout"] | length > 0'
-    loop:
-      - '{{ grav__install_dir }}'
-
-  - name: 'find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }} -type f -exec chmod --changes 664 {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
-
-  - name: 'find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }}/bin -type f -exec chmod --changes 775 {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
-
-  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }} -type d -exec chmod --changes 775 {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
-
-  - name: 'find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;'
-    ansible.builtin.command: |
-      find {{ grav__install_dir | quote }} -type d -exec chmod --changes +s {} \;
-    register: 'grav__chmod_dirs_result'
-    changed_when: 'grav__chmod_dirs_result["stdout"] | length > 0'
-
-  tags:
-    - 'grav'

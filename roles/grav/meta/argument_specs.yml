@@ -1,0 +1,35 @@
+argument_specs:
+  main:
+    options:
+
+      grav__install_dir:
+        type: 'str'
+        required: false
+        description: 'Grav installation directory.'
+
+      grav__on_calendar_selfupgrade:
+        type: 'str'
+        required: false
+        description: 'Time to upgrade Grav (systemd timer notation).'
+
+      grav__on_calendar_update:
+        type: 'str'
+        required: false
+        description: 'Time to update the Grav plugins and themes (systemd timer notation).'
+
+      grav__timer_selfupgrade_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables/disables the systemd timer that upgrades Grav.'
+
+      grav__timer_update_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables/disables the systemd timer that updates the Grav plugins and themes.'
+
+      grav__url:
+        type: 'str'
+        required: true
+        description: 'The Grav URL, without `http://` or `https://`.'

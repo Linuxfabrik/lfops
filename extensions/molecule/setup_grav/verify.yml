@@ -1,0 +1,193 @@
+# verify.yml runs after converge and again after the idempotence step. It runs the update and the
+# self-upgrade the way the timers do, and asserts afterwards that the site still answers through
+# Apache httpd and PHP-FPM, that the web server can write the runtime directories and nothing
+# else, and that the upgrade left the owners, modes and SELinux types alone. On rocky10-vm, which
+# prepare.yml set up with an older release, the self-upgrade installs a newer one.
+- name: 'Verify Grav serves the site and is read-only for the web server'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+    __molecule__grav_dir: '/var/www/html/{{ grav__url }}'
+    __molecule__grav_runtime_dirs:
+      - 'assets'
+      - 'backup'
+      - 'cache'
+      - 'images'
+      - 'logs'
+      - 'tmp'
+      - 'user/accounts'
+      - 'user/data'
+    __molecule__grav_find_runtime_dirs: '{{
+        __molecule__grav_runtime_dirs
+          | map("regex_replace", "^", "-path " ~ __molecule__grav_dir ~ "/")
+          | join(" -o ")
+      }}'
+
+  tasks:
+
+    # the units of earlier versions of the role
+
+    - name: 'stat /etc/systemd/system/grav-{selfupgrade,update}.{service,timer}'
+      ansible.builtin.stat:
+        path: '/etc/systemd/system/{{ item }}'
+      loop:
+        - 'grav-selfupgrade.service'
+        - 'grav-selfupgrade.timer'
+        - 'grav-update.service'
+        - 'grav-update.timer'
+      register: '__molecule__grav_legacy_units_result'
+
+    - name: 'Assert the units of earlier versions of the role are gone'
+      ansible.builtin.assert:
+        that: '__molecule__grav_legacy_units_result["results"] | selectattr("stat.exists") | list | length == 0'
+        fail_msg: '{{ __molecule__grav_legacy_units_result["results"] | selectattr("stat.exists") | map(attribute="item") | join(", ") }} still exist'
+
+    - name: 'systemctl status grav-{selfupgrade,update}-{{ grav__url }}.timer'
+      ansible.builtin.systemd:
+        name: 'grav-{{ item }}-{{ grav__url }}.timer'
+      register: '__molecule__grav_timer_result'
+      loop:
+        - 'selfupgrade'
+        - 'update'
+
+    - name: 'Assert the timers of the instance are enabled and active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__grav_timer_result["results"] | map(attribute="status.UnitFileState") | unique == ["enabled"]'
+          - '__molecule__grav_timer_result["results"] | map(attribute="status.ActiveState") | unique == ["active"]'
+        fail_msg: '{% for result in __molecule__grav_timer_result["results"] %}{{ result["item"] }}: {{ result["status"]["UnitFileState"] }}, {{ result["status"]["ActiveState"] }}; {% endfor %}'
+
+    # the update and the upgrade, as the timers run them; a oneshot service returns when it is done
+
+    - name: 'systemctl start grav-{update,selfupgrade}-{{ grav__url }}.service'
+      ansible.builtin.systemd:
+        name: 'grav-{{ item }}-{{ grav__url }}.service'
+        state: 'started'
+      loop:
+        - 'update'
+        - 'selfupgrade'
+
+    - name: 'php --run "require \"system/defines.php\"; echo GRAV_VERSION;"'
+      ansible.builtin.command:
+        argv:
+          - '/usr/bin/php'
+          - '--run'
+          - 'require "system/defines.php"; echo GRAV_VERSION;'
+      args:
+        chdir: '{{ __molecule__grav_dir }}'
+      register: '__molecule__grav_version_result'
+      changed_when: false
+
+    - name: 'Assert the self-upgrade replaced the older release on rocky10-vm'
+      ansible.builtin.assert:
+        that: '__molecule__grav_version_result["stdout"] != "2.2.27"'
+        fail_msg: 'Grav is still at {{ __molecule__grav_version_result["stdout"] }}'
+      when: 'inventory_hostname == "rocky10-vm"'
+
+    # the site, through the same path a visitor takes
+
+    - name: 'curl --header "Host: {{ grav__url }}" http://127.0.0.1/'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/'
+        headers:
+          Host: '{{ grav__url }}'
+        return_content: true
+      register: '__molecule__grav_page_result'
+
+    - name: 'Assert Grav renders its home page'
+      ansible.builtin.assert:
+        that: '"<title>Home | Grav" in __molecule__grav_page_result["content"]'
+        fail_msg: '{{ __molecule__grav_page_result["content"] | truncate(500) }}'
+
+    - name: 'find {{ __molecule__grav_dir }}/cache -type f -user apache # Grav wrote its cache'
+      ansible.builtin.command: 'find {{ __molecule__grav_dir }}/cache/compiled -type f -user apache'
+      register: '__molecule__grav_cache_result'
+      changed_when: false
+      failed_when: '__molecule__grav_cache_result["stdout_lines"] | length == 0'
+
+    - name: 'grep "not writable" {{ __molecule__grav_dir }}/logs/grav.log'
+      ansible.builtin.command: 'grep --no-messages "not writable" {{ __molecule__grav_dir }}/logs/grav.log'
+      register: '__molecule__grav_log_result'
+      changed_when: false
+      failed_when: '__molecule__grav_log_result["rc"] == 0'
+
+    # owners, modes and SELinux types
+
+    - name: 'find {{ __molecule__grav_dir }} ... ! -user root -o ! -group root # code not owned by root'
+      ansible.builtin.command: >-
+        find {{ __molecule__grav_dir }}
+        ( {{ __molecule__grav_find_runtime_dirs }} -o -path {{ __molecule__grav_dir }}/user/config/security-private.php ) -prune
+        -o ( ! -user root -o ! -group root ) -print
+      register: '__molecule__grav_code_owner_result'
+      changed_when: false
+      failed_when: '__molecule__grav_code_owner_result["stdout_lines"] | length > 0'
+
+    - name: 'find {{ __molecule__grav_dir }} ... -type d ! -perm 0755 -o -type f ! -perm 0644 # code with another mode'
+      ansible.builtin.command: >-
+        find {{ __molecule__grav_dir }}
+        ( {{ __molecule__grav_find_runtime_dirs }} -o -path {{ __molecule__grav_dir }}/bin -o -path {{ __molecule__grav_dir }}/user/config/security-private.php ) -prune
+        -o ( -type d ! -perm 0755 -o -type f ! -perm 0644 ) -print
+      register: '__molecule__grav_code_mode_result'
+      changed_when: false
+      failed_when: '__molecule__grav_code_mode_result["stdout_lines"] | length > 0'
+
+    - name: 'find {{ __molecule__grav_dir }}/<runtime directories> ! -user apache -o ! -group apache'
+      ansible.builtin.command: >-
+        find {{ __molecule__grav_runtime_dirs | map("regex_replace", "^", __molecule__grav_dir ~ "/") | join(" ") }}
+        ( ! -user apache -o ! -group apache ) -print
+      register: '__molecule__grav_runtime_owner_result'
+      changed_when: false
+      failed_when: '__molecule__grav_runtime_owner_result["stdout_lines"] | length > 0'
+
+    - name: 'stat {{ __molecule__grav_dir }}/user/config/security-private.php'
+      ansible.builtin.stat:
+        path: '{{ __molecule__grav_dir }}/user/config/security-private.php'
+      register: '__molecule__grav_security_private_result'
+
+    - name: 'Assert security-private.php is readable for apache only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__grav_security_private_result["stat"]["pw_name"] == "root"'
+          - '__molecule__grav_security_private_result["stat"]["gr_name"] == "apache"'
+          - '__molecule__grav_security_private_result["stat"]["mode"] == "0640"'
+        fail_msg: '{{ __molecule__grav_security_private_result["stat"]["pw_name"] }}:{{ __molecule__grav_security_private_result["stat"]["gr_name"] }} {{ __molecule__grav_security_private_result["stat"]["mode"] }}'
+
+    - name: 'runuser --user=apache -- test -w <directory>'
+      ansible.builtin.command: 'runuser --user=apache -- test -w {{ __molecule__grav_dir }}/{{ item }}'
+      register: '__molecule__grav_writable_result'
+      changed_when: false
+      failed_when: false
+      loop:
+        - '.'
+        - 'system'
+        - 'user/config'
+        - 'user/pages'
+        - 'user/plugins'
+        - 'cache'
+        - 'user/data'
+
+    - name: 'Assert apache can write the runtime directories and nothing else'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__grav_writable_result["results"] | selectattr("item", "in", ["cache", "user/data"]) | map(attribute="rc") | unique == [0]'
+          - '__molecule__grav_writable_result["results"] | rejectattr("item", "in", ["cache", "user/data"]) | map(attribute="rc") | unique == [1]'
+        fail_msg: '{{ __molecule__grav_writable_result["results"] | items2dict(key_name="item", value_name="rc") | to_json }}'
+
+    - name: 'stat --format=%C {{ __molecule__grav_dir }}/{system,cache}'
+      ansible.builtin.command: 'stat --format=%C {{ __molecule__grav_dir }}/{{ item }}'
+      register: '__molecule__grav_selinux_result'
+      changed_when: false
+      loop:
+        - 'system/defines.php'
+        - 'cache'
+        - 'assets'
+
+    - name: 'Assert the SELinux type is httpd_sys_rw_content_t on the runtime directories only'
+      ansible.builtin.assert:
+        that:
+          - '":httpd_sys_content_t:" in __molecule__grav_selinux_result["results"][0]["stdout"]'
+          - '":httpd_sys_rw_content_t:" in __molecule__grav_selinux_result["results"][1]["stdout"]'
+          - '":httpd_sys_rw_content_t:" in __molecule__grav_selinux_result["results"][2]["stdout"]'
+        fail_msg: '{{ __molecule__grav_selinux_result["results"] | map(attribute="stdout") | list | to_json }}'

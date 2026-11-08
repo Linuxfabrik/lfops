@@ -1,0 +1,52 @@
+# names everything that exists once per instance (systemd units), for example 'www.example.com'
+__grav__instance: '{{ grav__url | replace("/", "-") }}'
+
+# The directories Grav writes to at runtime, relative to grav__install_dir. Everything else
+# belongs to root and is read-only for the web server. Taken from the folders that the problems
+# plugin (shipped with Grav) requires to be writable, verified against Grav 2.2.28:
+# * assets: CSS/JS pipeline output; `bin/gpm selfupgrade` replaces it with the copy from the
+#   release, /usr/local/sbin/grav-gpm hands it back.
+# * backup: backups of the Grav scheduler.
+# * cache: compiled configuration, blueprints, languages, pages and Twig templates.
+# * images: resized and processed images.
+# * logs: grav.log, quarantined SVG files.
+# * tmp: temporary files, lock of the plugin loader.
+# * user/accounts: user accounts (the problems plugin insists on it).
+# * user/data: session binding, scheduler state, form and plugin data.
+# Read-only for the web server, as the problems plugin expects as well: the root directory,
+# system, vendor, bin and the files at the top, user/config (Grav only writes
+# security-private.php and versions.yaml there, the role creates both instead), user/pages,
+# user/plugins and user/themes.
+__grav__runtime_dirs:
+  - 'assets'
+  - 'backup'
+  - 'cache'
+  - 'images'
+  - 'logs'
+  - 'tmp'
+  - 'user/accounts'
+  - 'user/data'
+
+# the runtime directories as `find` expression, for pruning them
+__grav__find_runtime_dirs: '{{
+    __grav__runtime_dirs
+      | map("regex_replace", "^", grav__install_dir ~ "/")
+      | map("quote")
+      | map("regex_replace", "^", "-path ")
+      | join(" -o ")
+  }}'
+
+# The Admin Panel (admin up to Grav 1.7, admin2 with api since Grav 2) and the login plugin it
+# depends on. The role no longer installs them.
+__grav__admin_plugins:
+  - 'admin'
+  - 'admin2'
+  - 'api'
+  - 'login'
+__grav__admin_plugins_installed: '{{
+    __grav__admin_plugins_stat_result["results"] | d([])
+      | selectattr("stat.exists")
+      | map(attribute="item")
+      | list
+  }}'
+__grav__end_of_play_message: 'grav: {{ grav__install_dir }} still has the plugins {{ __grav__admin_plugins_installed | join(", ") }}. The role no longer supports the Admin Panel, which cannot save anything since the configuration belongs to root. Remove them with `grav-gpm {{ grav__install_dir }} uninstall {{ __grav__admin_plugins_installed | join(" ") }}`.'
