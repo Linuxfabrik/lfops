@@ -466,9 +466,11 @@ class CallbackModule(Compact):
             self._details.append(('', (), {}))
             bold = f'\033[1m{section}\033[0m' if ANSIBLE_COLOR else section
             self._details.append((bold, (), {'screen_only': True}))
-        self._details.append(('', (), {}))
-        styled = f'{stringc(f"{prefix}:", "green")} {task_line}'
-        self._details.append((styled, (), {'screen_only': True}))
+        # output outside of a task, like "no hosts matched", has no task line
+        if task_line is not None:
+            self._details.append(('', (), {}))
+            styled = f'{stringc(f"{prefix}:", "green")} {task_line}'
+            self._details.append((styled, (), {'screen_only': True}))
         self._details.extend(self._capture)
         self._capture = []
 
