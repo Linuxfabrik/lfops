@@ -247,11 +247,10 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 
 `freeipa_server__healthcheck_on_calendar`
 
-* When `ipa-healthcheck.timer` runs the healthcheck, in the calendar event format of `systemd.time(7)`. The report goes to `/var/log/ipa/healthcheck/healthcheck.log` (JSON, overwritten on each run, rotated daily by logrotate).
+* When `ipa-healthcheck.timer` runs the healthcheck, in the calendar event format of `systemd.time(7)`. The report goes to `/var/log/ipa/healthcheck/healthcheck.log` (JSON, overwritten on each run, rotated daily by logrotate). The timer is persistent: a run missed while the host was down takes place right after the next boot, so the report does not grow older than a day plus the downtime.
 * Type: String.
 * Default: `'*-*-* 06:{{ 59 | random(seed=inventory_hostname ~ "ipa-healthcheck") }}'`
 * Deviates from the upstream default `*-*-* 04:00:00`: the healthcheck runs at a fixed minute per host after the reboot window of the `schedule_reboot` role (04:xx), so the report reflects the server after a reboot, and the servers of a replicated FreeIPA domain do not all check at the same time. The seed differs from the one of `lynis__on_calendar`, so the two start in different minutes on most hosts.
-* The timer is persistent: a run missed while the host was down takes place right after the next boot, so the report does not grow older than a day plus the downtime.
 
 `freeipa_server__healthcheck_timer_enabled`
 
