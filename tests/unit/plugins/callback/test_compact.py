@@ -32,6 +32,8 @@ import termios
 import textwrap
 import unittest
 
+from ansible.release import __version__ as ANSIBLE_CORE_VERSION
+
 _PLUGIN_PATH = os.path.join(
     os.path.dirname(__file__),
     '..',
@@ -153,6 +155,12 @@ _PLAYBOOK = """
       warn_module:
       when: inventory_hostname in ['t-h02', 't-h03']
 
+    - name: 'Warning per {{{{ item }}}}'
+      warn_module:
+        suffix: '{{{{ item }}}}'
+      loop: ['x']
+      when: inventory_hostname == 't-h01'
+
     - name: 'Final failure'
       ansible.builtin.fail:
         msg: 'linuxfabrik-final'
@@ -162,10 +170,19 @@ _PLAYBOOK = """
 # a module that only emits a warning, found in library/ next to the playbook
 _WARN_MODULE = """
 from ansible.module_utils.basic import AnsibleModule
-module = AnsibleModule(argument_spec={})
-module.warn('linuxfabrik-warning')
+module = AnsibleModule(argument_spec={'suffix': {'type': 'str'}})
+suffix = module.params['suffix']
+module.warn('linuxfabrik-warning' + (f' {suffix}' if suffix else ''))
 module.exit_json(changed=False)
 """
+
+
+# the name of a loop task in the report, rendered per item before ansible-core 2.19
+_LOOP_NAME = (
+    'x'
+    if tuple(int(part) for part in ANSIBLE_CORE_VERSION.split('.')[:2]) < (2, 19)
+    else '{{ item }}'
+)
 
 
 class TestCompactOutput(unittest.TestCase):
@@ -255,7 +272,7 @@ class TestCompactOutput(unittest.TestCase):
         self.assertEqual(block[5:], ['ok: t-{h03,h04}'])
 
     def test_identical_warnings_are_grouped_with_their_hosts(self):
-        self.assertEqual(self.stderr.count('[WARNING]: linuxfabrik-warning'), 1)
+        self.assertEqual(self.stderr.count('[WARNING]: linuxfabrik-warning\n'), 1)
         self.assertIn('[WARNING]: linuxfabrik-warning\n  on t-{h02,h03}\n', self.stderr)
 
     def test_report_per_message_by_severity(self):
@@ -267,29 +284,45 @@ class TestCompactOutput(unittest.TestCase):
             [
                 '# FATAL',
                 '',
-                f'* {play} - Final failure: linuxfabrik-final',
+                f'{play}:',
+                '',
+                # two trailing spaces are a hard line break in Markdown
+                '* Final failure: linuxfabrik-final  ',
                 '  t-h04',
                 '',
                 '# WARNING',
                 '',
-                f'* {play} - Warning task: linuxfabrik-warning',
+                f'{play}:',
+                '',
+                '* Warning task: linuxfabrik-warning  ',
                 '  t-{h02,h03}',
+                # once, although the loop repeats it with its final result, and
+                # ansible-core 2.19+ does not render the loop variable here
+                f'* Warning per {_LOOP_NAME}: linuxfabrik-warning x  ',
+                '  t-h01',
                 '',
                 '# IGNORED',
                 '',
-                f'* {play} - Failing task: linuxfabrik-boom',
+                f'{play}:',
+                '',
+                '* Failing task: linuxfabrik-boom  ',
                 '  t-h03',
                 '',
                 '# CHANGED',
                 '',
-                # role tasks name the role instead of the playbook
-                '* demo - Role task',
+                # one list per role or playbook, in order of first appearance
+                'demo:',
+                '',
+                '* Role task  ',
                 '  t-h04',
-                f'* {play} - Changed without diff',
+                '',
+                f'{play}:',
+                '',
+                '* Changed without diff  ',
                 '  t-h02',
-                f'* {play} - Changed with diff',
+                '* Changed with diff  ',
                 '  t-h01',
-                f'* {play} - Grouped changes',
+                '* Grouped changes  ',
                 '  t-{h01,h02}',
                 '',
             ],

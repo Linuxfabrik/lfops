@@ -361,7 +361,7 @@ ssh_args = -o ControlMaster=auto -o ControlPersist=60s
 
 The goal of the `linuxfabrik.lfops.compact` stdout callback is the most compact output without repetitions that still carries every detail a Linux system engineer needs from a run against hundreds or thousands of hosts, so that nobody has to scroll through endless walls of text. The details are the same as in the output of `ansible.posix.debug`: every changed, failed and unreachable host, every diff and every warning.
 
-The plugin keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module, and the warnings with the hosts they occurred on, both grouped by identical text, so a change or warning that affects many hosts appears once. Failures that a role accepts with `ignore_errors` are shown in one `ignored` line per message. At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED):
+The plugin keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module, and the warnings with the hosts they occurred on, both grouped by identical text, so a change or warning that affects many hosts appears once. Failures that a role accepts with `ignore_errors` are shown in one `ignored` line per message. At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED) and grouped by role or playbook:
 
 ```text
 Playbook: linuxfabrik.lfops.setup_basic
@@ -387,7 +387,7 @@ Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg
 
 The goal of the `linuxfabrik.lfops.dashboard` stdout callback is a live view of a run, similar to how glances shows the load of a system: always visible, without scrolling, and adapting to the size of the terminal.
 
-It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and only the hosts that need attention (fatal, then warning, then changed), each with its counts of fatal (F), warning (W) and changed (C) results and its last notable result, marked with the letter of its kind. Hosts that are only ok or skipped are counted, not listed:
+It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and the hosts, sorted by their most severe result (fatal, warning, changed, ignored, ok) and then by name, each with its counts of fatal (F), warning (W) and changed (C) results and its last notable result, marked with the letter of its kind. A host with only ok results shows its last ok result, hosts with only skipped results are counted, not listed:
 
 ```text
 linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
@@ -402,6 +402,7 @@ HOST      F   W   C  LAST
 web-02    1   0   2  F firewall - Deploy the firewall rules: ...
 web-01    0   2   5  W lvm - pvcreate / pvresize: Rescan path does not exist ...
 db-01     0   0   7  C firewall - Deploy the firewall rules
+app-01    0   0   0  O firewall - Deploy the firewall rules
 ```
 
 At the end of the run, the details follow in the format of the [compact output](#compact-output), but only for the tasks with changes, warnings or failures, then the recap and the report. Without a terminal (log file, pipe, CI), with `--verbose`, or on a terminal smaller than 65 columns and 12 lines, it behaves exactly like `linuxfabrik.lfops.compact`. Enable it like the compact output, with `linuxfabrik.lfops.dashboard` as the stdout callback. See `ansible-doc --type callback linuxfabrik.lfops.dashboard` for details.

@@ -45,7 +45,7 @@ DOCUMENTATION = r"""
   description:
     - Shows the run on one fixed screen that is updated in place instead of scrolling. At the top the playbook, the number of hosts and the elapsed time, the current role and task, then counters of the results of the current task and of the whole run.
     - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
-    - Below, only the hosts that need attention are listed, sorted by severity (fatal, then warning, then changed), with their counters and their last notable result. Hosts that are only ok or skipped are counted, not listed.
+    - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counters and their last notable result, or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
     - At the end of the run, the screen is left and the details follow in the format of C(linuxfabrik.lfops.compact), but only for the tasks with changes, warnings or failures. Then the recap and the report of the distinct messages by severity.
     - Without a terminal (log file, pipe, CI) or with C(--verbose), the plugin behaves exactly like C(linuxfabrik.lfops.compact).
   author:
@@ -155,9 +155,21 @@ class CallbackModule(Compact):
     _KIND_LETTERS = {  # noqa: RUF012
         'changed': ('C', C.COLOR_CHANGED),
         'failed': ('F', C.COLOR_ERROR),
+        'ignored': ('I', C.COLOR_SKIP),
+        'ok': ('O', C.COLOR_OK),
         'unreachable': ('U', C.COLOR_UNREACHABLE),
         'warning': ('W', C.COLOR_WARN),
     }
+
+    # the host list is sorted by the most severe result of a host, then by name;
+    # the name is shown in the color of that result
+    _HOST_SEVERITY = (
+        ('fatal', C.COLOR_ERROR),
+        ('warning', C.COLOR_WARN),
+        ('changed', C.COLOR_CHANGED),
+        ('ignored', C.COLOR_SKIP),
+        ('ok', C.COLOR_OK),
+    )
 
     # at most this many redraws per second, the last state is always drawn at the
     # end of a task
@@ -176,9 +188,11 @@ class CallbackModule(Compact):
         self._header = (None, None, None)
         self._task_counts = Counter()
         self._run_counts = Counter()
-        # host name -> Counter of changed/warning/failed/unreachable, last notable
+        # host name -> Counter of changed/failed/ignored/ok/unreachable/warning,
+        # its last notable result, and its last ok result for hosts without one
         self._host_counts = {}
         self._host_last = {}
+        self._host_last_ok = {}
         self._play_hosts = set()
         self._dead_hosts = set()
         # where the plugin, and with it LFOps, comes from, see lfops_origin()
@@ -370,15 +384,7 @@ class CallbackModule(Compact):
         )
         screen.append('─' * width)
 
-        hosts = sorted(
-            self._host_counts,
-            key=lambda h: (
-                -(self._host_counts[h]['failed'] + self._host_counts[h]['unreachable']),
-                -self._host_counts[h]['warning'],
-                -self._host_counts[h]['changed'],
-                h,
-            ),
-        )
+        hosts = sorted(self._host_counts, key=lambda h: (self._host_severity(h), h))
         name_width = min(max([len(h) for h in hosts] + [4]), 30)
         screen.append(
             self._fit(
@@ -399,12 +405,7 @@ class CallbackModule(Compact):
         for host in shown:
             counts = self._host_counts[host]
             fatal = counts['failed'] + counts['unreachable']
-            if fatal:
-                color = C.COLOR_ERROR
-            elif counts['warning']:
-                color = C.COLOR_WARN
-            else:
-                color = C.COLOR_CHANGED
+            color = self._HOST_SEVERITY[self._host_severity(host)][1]
             # every count in the color of its own kind, zeros plain
             segments = [(f'{host[:name_width]:<{name_width}} ', color, bool(fatal))]
             for value, value_color in (
@@ -414,7 +415,9 @@ class CallbackModule(Compact):
             ):
                 segments.append((f' {value:>3}', value_color if value else None, False))
             segments.append(('  ', None, False))
-            kind, text = self._host_last.get(host, (None, ''))
+            kind, text = self._host_last.get(host) or self._host_last_ok.get(
+                host, (None, '')
+            )
             if kind:
                 letter, letter_color = self._KIND_LETTERS[kind]
                 segments.append((f'{letter} ', letter_color, True))
@@ -463,9 +466,11 @@ class CallbackModule(Compact):
             self._details.append(('', (), {}))
             bold = f'\033[1m{section}\033[0m' if ANSIBLE_COLOR else section
             self._details.append((bold, (), {'screen_only': True}))
-        self._details.append(('', (), {}))
-        styled = f'{stringc(f"{prefix}:", "green")} {task_line}'
-        self._details.append((styled, (), {'screen_only': True}))
+        # output outside of a task, like "no hosts matched", has no task line
+        if task_line is not None:
+            self._details.append(('', (), {}))
+            styled = f'{stringc(f"{prefix}:", "green")} {task_line}'
+            self._details.append((styled, (), {'screen_only': True}))
         self._details.extend(self._capture)
         self._capture = []
 
@@ -502,24 +507,40 @@ class CallbackModule(Compact):
             self._task_counts = Counter()
             self._draw(force=True)
 
-    def _record_entry(self, host, kind, task, messages):
-        super()._record_entry(host, kind, task, messages)
-        # ignored failures are counted per task and run, the host list is for the
-        # hosts that need attention
-        if not messages or kind == 'ignored':
-            return
-        counts = self._host_counts.setdefault(host, Counter())
-        counts[kind] += len(messages)
+    def _host_severity(self, host):
+        """The index in _HOST_SEVERITY of the most severe result of a host."""
+        counts = self._host_counts[host]
+        present = {
+            'fatal': counts['failed'] + counts['unreachable'],
+            'warning': counts['warning'],
+            'changed': counts['changed'],
+            'ignored': counts['ignored'],
+        }
+        for index, (kind, _) in enumerate(self._HOST_SEVERITY):
+            if present.get(kind):
+                return index
+        return len(self._HOST_SEVERITY) - 1
+
+    def _last_text(self, task, message=None):
+        """The LAST column of the host list: "<role> - <task>: <message>"."""
         source, name = self._source_and_name(task)
         # "namespace.collection.role" -> "role", the screen is narrow and the report
         # at the end names it in full
         if source.count('.') == 2:
             source = source.rsplit('.', 1)[1]
-        message = messages[-1]
         last = f'{source} - {name}'
         if message:
             last += ': ' + ' '.join(str(message).split())
-        self._host_last[host] = (kind, last)
+        return last
+
+    def _record_entry(self, host, kind, task, messages):
+        super()._record_entry(host, kind, task, messages)
+        if not messages:
+            return
+        # ignored failures are counted, but not shown in the F, W and C columns
+        counts = self._host_counts.setdefault(host, Counter())
+        counts[kind] += len(messages)
+        self._host_last[host] = (kind, self._last_text(task, messages[-1]))
         if kind == 'warning':
             self._run_counts['warning'] += len(messages)
 
@@ -562,8 +583,15 @@ class CallbackModule(Compact):
 
     def v2_runner_on_ok(self, result):
         super().v2_runner_on_ok(result)
-        if not isinstance(_task(result), TaskInclude):
-            self._count('changed' if _res(result).get('changed') else 'ok')
+        task = _task(result)
+        if isinstance(task, TaskInclude):
+            return
+        if not _res(result).get('changed'):
+            # listed as well, so the list of a run without issues is not empty
+            host = _host(result).get_name()
+            self._host_counts.setdefault(host, Counter())['ok'] += 1
+            self._host_last_ok[host] = ('ok', self._last_text(task))
+        self._count('changed' if _res(result).get('changed') else 'ok')
 
     def v2_runner_on_skipped(self, result):
         super().v2_runner_on_skipped(result)
