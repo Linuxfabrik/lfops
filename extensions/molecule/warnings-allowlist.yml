@@ -1,0 +1,13 @@
+# Warnings that do not fail a Molecule run, for all scenarios. A scenario can accept more in a
+# warnings-allowlist.yml of its own, next to its molecule.yml. See "Warnings fail a scenario" in
+# CONTRIBUTING.md.
+#
+# Each entry is a dictionary:
+# * pattern: Python regular expression, searched in the warning text with all whitespace
+#   collapsed to single spaces (Ansible wraps long warnings).
+# * reason: why the warning is accepted. Mandatory, an entry without one aborts the run.
+#
+# Example:
+# - pattern: '^Collection hetzner\.hcloud does not support Ansible version'
+#   reason: 'hcloud requires ansible-core 2.17+, LFOps still supports 2.16; the scenarios do not use it'
+[]

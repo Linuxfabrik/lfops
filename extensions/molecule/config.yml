@@ -22,7 +22,10 @@ ansible:
   cfg:
     defaults:
       ansible_managed: 'This file is managed by Ansible - do not edit'
-      callbacks_enabled: 'profile_tasks'
+      # lfops_fail_on_warnings lets converge, idempotence and verify fail on a warning, see
+      # callback_plugins/lfops_fail_on_warnings.py
+      callback_plugins: '${MOLECULE_PROJECT_DIRECTORY}/extensions/molecule/callback_plugins'
+      callbacks_enabled: 'lfops_fail_on_warnings,profile_tasks'
       fact_caching: 'jsonfile'
       fact_caching_connection: '${MOLECULE_EPHEMERAL_DIRECTORY}/.ansible_cache'
       fact_caching_timeout: 86400
