@@ -391,7 +391,7 @@ It shows the run on one fixed screen that is updated in place instead of scrolli
 
 ```text
 linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
-LFOps main@3e8a7b75, 2 uncommitted   ansible-core 2.16.19   mounted from /home/user/lfops
+LFOps main@3e8a7b75, 2 uncommitted   ansible-core 2.16.19   mounted from /h/u/lfops
 Role: linuxfabrik.lfops.firewall
 Task: Deploy the firewall rules
 ──────────────────────────────────────────────────────────────────────────────────
