@@ -15,6 +15,7 @@
     ansible.builtin.package:
       name: 'acme.sh'
       state: 'present'
+    register: '__acme_sh__package_result'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
@@ -45,18 +46,62 @@
       path: '/opt/acme.sh'
       state: 'absent'
 
-  # the former online installer sourced /opt/acme.sh/acme.sh.env (bash) and
-  # /opt/acme.sh/acme.sh.csh (csh, tcsh) from the rc files of root. on the Red Hat family,
-  # .cshrc and .tcshrc belong to the rootfiles package, so remove the line, not the file.
+  # an `acme.sh --install` without `--home` put a copy of the program into /root/.acme.sh.
+  # remove it only if it holds nothing but program files, since acme.sh keeps certificates,
+  # account and configuration there as well when it runs without `--config-home`.
+  - name: 'stat /root/.acme.sh'
+    ansible.builtin.stat:
+      path: '/root/.acme.sh'
+    register: '__acme_sh__root_home_stat_result'
+
+  - name: 'find /root/.acme.sh -mindepth 1 -maxdepth 1'
+    ansible.builtin.find:
+      paths: '/root/.acme.sh'
+      file_type: 'any'
+      hidden: true
+    register: '__acme_sh__root_home_find_result'
+    when: '__acme_sh__root_home_stat_result["stat"]["isdir"] | d(false)'
+
+  - name: 'rm -rf /root/.acme.sh'
+    ansible.builtin.file:
+      path: '/root/.acme.sh'
+      state: 'absent'
+    when:
+      - '__acme_sh__root_home_find_result["files"] is defined'
+      - '__acme_sh__root_home_foreign_files | length == 0'
+
+  - name: 'Report that /root/.acme.sh was left alone'
+    ansible.builtin.debug:
+      msg: '{{ __acme_sh__root_home_message }}'
+    when:
+      - '__acme_sh__root_home_find_result["files"] is defined'
+      - '__acme_sh__root_home_foreign_files | length > 0'
+
+  - name: 'Collect the message for the end of the play'
+    ansible.builtin.set_fact:
+      __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__acme_sh__root_home_message] }}'
+    when:
+      - '__acme_sh__root_home_find_result["files"] is defined'
+      - '__acme_sh__root_home_foreign_files | length > 0'
+
+  # the former online installer sources acme.sh.env (bash, zsh, sh) from the one profile of
+  # root that `_detect_profile()` picks (.bashrc or .bash_profile for bash, .zshrc for zsh, else
+  # the first existing of .profile, .bashrc, .bash_profile and .zshrc), and acme.sh.csh from
+  # .cshrc and .tcshrc. Verified against acme.sh 3.1.6. on the Red Hat family, .cshrc and
+  # .tcshrc belong to the rootfiles package, so remove the line, not the file. lineinfile
+  # leaves a missing file alone and does not create it.
   - name: 'Remove the acme.sh lines of the former installation from the rc files of root'
     ansible.builtin.lineinfile:
       path: '{{ item }}'
-      regexp: '^.*"/opt/acme\.sh/acme\.sh\.(env|csh)"$'
+      regexp: '^.*"(/opt/acme\.sh|/root/\.acme\.sh)/acme\.sh\.(env|csh)"$'
       state: 'absent'
     loop:
+      - '/root/.bash_profile'
       - '/root/.bashrc'
       - '/root/.cshrc'
+      - '/root/.profile'
       - '/root/.tcshrc'
+      - '/root/.zshrc'
 
   # replaces the alias of the former installation, so that a plain `acme.sh --list` works on
   # /etc/acme.sh instead of ~/.acme.sh.
@@ -115,6 +160,16 @@
       group: '{{ __shared__apache_httpd_group }}'
       mode: 0o644
 
+  vars:
+    # what `install()` and `_installalias()` put into the working directory, verified against
+    # acme.sh 3.1.6
+    __acme_sh__root_home_foreign_files: '{{ __acme_sh__root_home_find_result["files"]
+        | map(attribute="path") | map("basename")
+        | difference(["acme.sh", "acme.sh.completion", "acme.sh.csh", "acme.sh.env", "deploy", "dnsapi", "notify"]) }}'
+    __acme_sh__root_home_message: >-
+      /root/.acme.sh was left alone, since it holds more than a copy of the acme.sh program
+      ({{ __acme_sh__root_home_foreign_files | join(", ") }}). Move what is still needed to
+      /etc/acme.sh, then remove the directory.
   tags:
     - 'acme_sh'
 
@@ -126,11 +181,22 @@
   - name: 'Flush handlers so that the web server serves the current config'
     ansible.builtin.meta: 'flush_handlers'
 
+  # in check mode the package is not actually installed, so a host still on the former
+  # /opt/acme.sh installation has no acme.sh on its PATH. The former script reads the same
+  # /etc/acme.sh and lists the same certificates, so the check shows what a real run would
+  # issue. A fresh host has neither and lists nothing.
+  - name: 'stat /opt/acme.sh/acme.sh'
+    ansible.builtin.stat:
+      path: '/opt/acme.sh/acme.sh'
+    register: '__acme_sh__former_script_result'
+    when: '__acme_sh__package_pending | bool'
+
   - name: 'acme.sh --config-home /etc/acme.sh --list --listraw'
-    ansible.builtin.command: 'acme.sh --config-home /etc/acme.sh --list --listraw'
+    ansible.builtin.command: '{{ __acme_sh__list_cmd }}'
     changed_when: false # just gathering information
     check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_result'
+    when: '__acme_sh__list_possible | bool'
 
   # `--listraw` prints one `Main_Domain|"KeyLength"|...` line per issued certificate (plus a
   # header line). Reduce it to a `name|keylength` list so we can tell whether a certificate
@@ -139,7 +205,7 @@
   - name: 'Parse issued certificates into a name|keylength list'
     ansible.builtin.set_fact:
       __acme_sh__issued: >-
-        {{ acme_sh__list_result["stdout_lines"]
+        {{ (acme_sh__list_result["stdout_lines"] if acme_sh__list_result["stdout_lines"] is defined else [])
            | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
            | list }}
 
@@ -237,16 +303,18 @@
   # targets the RSA store; it only detaches the certificate from renewal and leaves the files
   # in place.
   - name: 'acme.sh --config-home /etc/acme.sh --list --listraw (after issuing)'
-    ansible.builtin.command: 'acme.sh --config-home /etc/acme.sh --list --listraw'
+    ansible.builtin.command: '{{ __acme_sh__list_cmd }}'
     changed_when: false # just gathering information
     check_mode: false # run task even if `--check` is specified
     register: 'acme_sh__list_after_result'
-    when: '(acme_sh__key_length | string) is match("^ec-")'
+    when:
+      - '(acme_sh__key_length | string) is match("^ec-")'
+      - '__acme_sh__list_possible | bool'
 
   - name: 'Parse issued certificates (after issuing) into a name|keylength list'
     ansible.builtin.set_fact:
       __acme_sh__issued_after: >-
-        {{ acme_sh__list_after_result["stdout_lines"]
+        {{ (acme_sh__list_after_result["stdout_lines"] if acme_sh__list_after_result["stdout_lines"] is defined else [])
            | map("regex_replace", '^([^|]*)\|"?([^"|]*)"?\|.*$', '\1|\2')
            | list }}
     when: '(acme_sh__key_length | string) is match("^ec-")'
@@ -266,6 +334,11 @@
         | list | select('equalto', item['name']) | list | length > 0
     changed_when: true
 
+  vars:
+    # `is defined`, since `--tags acme_sh:certificates` skips the package task
+    __acme_sh__package_pending: '{{ ansible_check_mode and __acme_sh__package_result is defined and __acme_sh__package_result is changed }}'
+    __acme_sh__list_possible: '{{ not __acme_sh__package_pending | bool or __acme_sh__former_script_result["stat"]["exists"] }}'
+    __acme_sh__list_cmd: '{{ "/opt/acme.sh/acme.sh" if __acme_sh__package_pending | bool else "acme.sh" }} --config-home /etc/acme.sh --list --listraw'
   tags:
     - 'acme_sh'
     - 'acme_sh:certificates'
@@ -278,6 +351,10 @@
       name: 'acme-sh.timer'
       state: '{{ acme_sh__timer_enabled | bool | ternary("started", "stopped") }}'
       enabled: '{{ acme_sh__timer_enabled }}'
+    # under `--check` the role deploys no unit file, so a new acme-sh.timer is unknown to
+    # systemd and a changed one is not in effect yet. `is defined`, since
+    # `--tags acme_sh:state` skips the deployment.
+    when: 'not (ansible_check_mode and __acme_sh__timer_result is defined and __acme_sh__timer_result is changed)'
 
   tags:
     - 'acme_sh'
