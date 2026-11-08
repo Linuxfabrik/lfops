@@ -33,7 +33,7 @@ DOCUMENTATION = r"""
     - Failed and unreachable results are printed as usual, with C(msg), C(stdout), C(stderr), C(module_stdout) and C(module_stderr) as plain text below the JSON, so tracebacks stay readable.
     - Warnings are grouped by text and list the hosts they occurred on. A host name within a warning of Ansible itself (for example from a lookup) is replaced by C(<host>) for the grouping.
     - Failures that a task accepts with C(ignore_errors) are shown in one C(ignored) line per message with the hosts, not as a full result (C(--verbose) shows the full result).
-    - At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED) and in task order within a section, with the role (or the playbook) and the task.
+    - At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED), within a section one list per role (or playbook) with the task names in task order.
   author:
     - Linuxfabrik GmbH, Zurich, Switzerland, https://www.linuxfabrik.ch
   notes:
@@ -132,6 +132,8 @@ class CallbackModule(Default):
         # (kind, role or playbook, task name, message) -> host names, in order of
         # first appearance, for the report at the end
         self._report = {}
+        # (host, task uuid, message) of the warnings in the report
+        self._reported_warnings = set()
         # ignored failures of the running task: message -> host labels
         self._ignored = {}
         self._ok_hosts = []
@@ -289,11 +291,30 @@ class CallbackModule(Default):
         """Remember a result for the summary at the end of the run. `messages` is a
         list; one entry is recorded per message, `[None]` records one without.
         """
-        self._record_entry(_host(result).get_name(), kind, _task(result), messages)
+        host, task = _host(result).get_name(), _task(result)
+        if kind == 'warning':
+            # Before ansible-core 2.19, a loop repeats the warnings of its items
+            # with its final result, under the task name with the loop variable
+            # not rendered. Record each warning once per host and task.
+            keys = [(host, task._uuid, message) for message in messages]
+            messages = [
+                message
+                for key, message in zip(keys, messages)
+                if key not in self._reported_warnings
+            ]
+            self._reported_warnings.update(keys)
+        self._record_entry(host, kind, task, messages)
 
     def _source_and_name(self, task):
         """The role of a task (or the playbook, for its own tasks) and its name."""
         name = task.get_name().strip()
+        if '<< error ' in name:
+            # ansible-core 2.19+ renders a name with a variable it cannot resolve,
+            # like the loop variable, as "<< error 1 - 'item' is undefined >>",
+            # take the name as it is written in the playbook instead
+            raw = (task.get_ds() or {}).get('name')
+            if isinstance(raw, str):
+                name = raw.strip()
         if task._role:
             # Task.get_name() renders role tasks as "<role> : <name>"
             source = task._role.get_name()
@@ -599,17 +620,19 @@ class CallbackModule(Default):
 
     def _print_issues(self):
         """The report at the end of the run, in Markdown: one section per kind,
-        most severe first, the heading in the color of the kind. Below, each
-        distinct message in task order, "* <role or playbook> - <task>: <message>",
-        and the hosts it occurred on on the next line.
+        most severe first, the heading in the color of the kind. Within a section,
+        one list per role or playbook, and in it each distinct message in task
+        order, "* <task>: <message>", with the hosts on the next line, after a hard
+        line break.
         """
         for kind, title, color in self._REPORT_SECTIONS:
-            entries = [
-                (source, name, message, hosts)
-                for (k, source, name, message), hosts in self._report.items()
-                if k == kind
-            ]
-            if not entries:
+            # role or playbook -> [(task, message, hosts)], in order of first
+            # appearance
+            sources = {}
+            for (k, source, name, message), hosts in self._report.items():
+                if k == kind:
+                    sources.setdefault(source, []).append((name, message, hosts))
+            if not sources:
                 continue
             self._display.display('')
             heading = f'# {title}'
@@ -620,15 +643,19 @@ class CallbackModule(Default):
                 )
             else:
                 self._display.display(heading)
-            self._display.display('')
-            for source, name, message, hosts in entries:
-                line = f'* {source} - {name}'
-                if message:
-                    # one line per entry, multi-line messages are joined
-                    line += ': ' + ' '.join(str(message).split())
-                self._display.display(line)
-                # always the hosts themselves, so the report names every one
-                self._display.display(f'  {compact_hosts(hosts)}')
+            for source, entries in sources.items():
+                self._display.display('')
+                self._display.display(f'{source}:')
+                self._display.display('')
+                for name, message, hosts in entries:
+                    line = f'* {name}'
+                    if message:
+                        # one line per entry, multi-line messages are joined
+                        line += ': ' + ' '.join(str(message).split())
+                    # two trailing spaces are a hard line break in Markdown
+                    self._display.display(f'{line}  ')
+                    # always the hosts themselves, so the report names every one
+                    self._display.display(f'  {compact_hosts(hosts)}')
         if self._report:
             self._display.display('')
 

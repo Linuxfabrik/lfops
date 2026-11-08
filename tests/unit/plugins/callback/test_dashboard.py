@@ -166,7 +166,7 @@ class TestDashboardOnTerminal(unittest.TestCase):
         self.assertIn('changed: t-{h01,h02}', after)
         self.assertIn('PLAY RECAP', after)
         self.assertIn('# CHANGED', after)
-        self.assertIn('* linuxfabrik.lfops.test - Some changes', after)
+        self.assertIn('linuxfabrik.lfops.test:\n\n* Some changes  \n', after)
 
 
 class TestDashboardFallback(unittest.TestCase):
