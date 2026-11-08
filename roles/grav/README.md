@@ -33,6 +33,35 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * The SELinux file contexts are set by the role [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux).
 
 
+## Multiple Instances on One Host
+
+Several Grav instances can share a host as pseudo hosts in the inventory: one inventory host per instance, all with the same `ansible_host`, each with its own `grav__url`. The real host can keep one of the instances. The instances share the web server and PHP-FPM, so:
+
+* Add the pseudo hosts to `lfops_setup_grav` only, and the real host to all other playbooks, such as `setup_basic` or the monitoring.
+* Put everything that is not specific to one instance, such as `php__*`, `repo_remi__*` or `apache_httpd__*` settings other than the vHosts, into a group that contains the real host and all pseudo hosts of the machine, not into their `host_vars`. Hosts that disagree about a shared configuration file overwrite each other on every run.
+* Each instance gets its own vHost (`grav__url`), installation directory (`grav__install_dir`), SELinux file contexts and `grav-selfupgrade-<instance>.timer` / `grav-update-<instance>.timer`. The default schedules of the timers are seeded with the `inventory_hostname`, so the instances update at different times. `/usr/local/sbin/grav-gpm` is shared and takes the installation directory as its first argument.
+* Do not run the hosts of a machine in parallel, for example with `--forks 1` or one `--limit` after the other. Otherwise Ansible configures the same machine several times at once, which leads to package manager lock timeouts and overlapping service restarts.
+* All instances run as `apache`, so a hole in one instance can modify the runtime directories (cache, logs, user data) of every other instance on the host, but not their code.
+
+Example, with the real host serving `www.example.com` and a pseudo host for `test.example.com`:
+
+```yaml
+# host_vars/web01.example.com.yml
+grav__url: 'www.example.com'
+```
+
+```yaml
+# host_vars/web01.example.com-test.yml
+ansible_host: 'web01.example.com'
+grav__url: 'test.example.com'
+```
+
+```yaml
+# group_vars/grav_web01.yml, a group of web01.example.com and web01.example.com-test
+repo_remi__enabled_php_version: '8.4'
+```
+
+
 ## Post-Installation Steps
 
 * Behind a reverse proxy that terminates TLS, set `session.secure` in the site's `user/config/system.yaml`. Grav otherwise sets the `Secure` flag on its session cookies only on requests it sees arriving over HTTPS, and the proxy talks plain HTTP to it. The role does not touch this file, since it belongs to the site content. Leave it unset for a site that browsers reach over plain HTTP.
