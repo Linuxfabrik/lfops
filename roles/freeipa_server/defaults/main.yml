@@ -25,7 +25,21 @@ freeipa_server__hbacrules__dependent_var: []
 freeipa_server__hbacrules__group_var: []
 freeipa_server__hbacrules__host_var: []
 freeipa_server__hbacrules__role_var: []
+freeipa_server__healthcheck_cert_expiration_days: 28
+freeipa_server__healthcheck_excludes__combined_var: '{{ (
+      freeipa_server__healthcheck_excludes__role_var +
+      freeipa_server__healthcheck_excludes__dependent_var +
+      freeipa_server__healthcheck_excludes__group_var +
+      freeipa_server__healthcheck_excludes__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key=["type", "value"])
+  }}'
+
+freeipa_server__healthcheck_excludes__dependent_var: []
+freeipa_server__healthcheck_excludes__group_var: []
+freeipa_server__healthcheck_excludes__host_var: []
+freeipa_server__healthcheck_excludes__role_var: []
 freeipa_server__healthcheck_on_calendar: '*-*-* 06:{{ 59 | random(seed=inventory_hostname ~ "ipa-healthcheck") }}'  # upstream default: '*-*-* 04:00:00'
+freeipa_server__healthcheck_timeout: 30  # upstream default: 10
 freeipa_server__healthcheck_timer_enabled: true  # upstream default: false
 freeipa_server__healthcheck_timer_state: 'started'
 freeipa_server__hostgroups__combined_var: '{{ (

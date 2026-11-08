@@ -43,6 +43,45 @@
       failed_when: '__molecule__freeipa_server_service_enabled_result["stdout"] != "disabled"'
       register: '__molecule__freeipa_server_service_enabled_result'
 
+    # The role runs the healthcheck once while there is no report, so the monitoring plugin does not
+    # wait for the first run of the timer.
+    - name: 'stat /var/log/ipa/healthcheck/healthcheck.log'
+      ansible.builtin.stat:
+        path: '/var/log/ipa/healthcheck/healthcheck.log'
+      register: '__molecule__freeipa_server_healthcheck_log_stat_result'
+
+    - name: 'Assert that the role left a healthcheck report behind'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__freeipa_server_healthcheck_log_stat_result["stat"]["exists"]'
+
+    # Ask ipa-healthcheck itself what it reads from its configuration file. read_config() returns
+    # None for a file it cannot parse. An output option in the file would win over the command line
+    # of ipa-healthcheck.service and break the JSON report. The interpreter comes from the shebang
+    # of ipa-healthcheck, which is platform-python on RHEL 8.
+    - name: 'python3 -c "from ipahealthcheck.core.config import read_config; ..."'
+      ansible.builtin.shell:
+        cmd: >-
+          $(sed --quiet '1s/^#!//p' /usr/bin/ipa-healthcheck) -c 'import json;
+          from ipahealthcheck.core.config import read_config;
+          c = read_config("/etc/ipahealthcheck/ipahealthcheck.conf");
+          print(json.dumps(None if c is None else {k: c[k] for k in c}))'
+        executable: '/bin/bash'
+      changed_when: false
+      register: '__molecule__freeipa_server_healthcheck_config_result'
+
+    - name: 'Assert that ipa-healthcheck uses the configured timeout and excludes, and no output options'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__freeipa_server_healthcheck_config is mapping'
+          - '__molecule__freeipa_server_healthcheck_config["timeout"] == 30'
+          - '__molecule__freeipa_server_healthcheck_config["cert_expiration_days"] == 28'
+          - '__molecule__freeipa_server_healthcheck_config["excludes_source"] == ["ipahealthcheck.ipa.dna"]'
+          - '__molecule__freeipa_server_healthcheck_config.keys() | select("in", ["all", "failures_only", "output_file", "output_type"]) | list | length == 0'
+        fail_msg: 'read_config(): {{ __molecule__freeipa_server_healthcheck_config_result["stdout"] }}'
+      vars:
+        __molecule__freeipa_server_healthcheck_config: '{{ __molecule__freeipa_server_healthcheck_config_result["stdout"] | from_json }}'
+
     # The monitoring plugin reads the report the unit writes. Run it once the way the timer does
     # and check that the report is there and is JSON. ipa-healthcheck exits non-zero when it finds
     # a problem, which a fresh test installation without DNS may have, so the unit result does not
@@ -63,6 +102,8 @@
           - '__molecule__freeipa_server_healthcheck_report is sequence'
           - '__molecule__freeipa_server_healthcheck_report | length > 0'
           - '__molecule__freeipa_server_healthcheck_report[0]["source"] is defined'
+          # excluded in group_vars
+          - '__molecule__freeipa_server_healthcheck_report | selectattr("source", "eq", "ipahealthcheck.ipa.dna") | list | length == 0'
         fail_msg: '{{ __molecule__freeipa_server_healthcheck_log_result["content"] | b64decode | truncate(2000) }}'
       vars:
         __molecule__freeipa_server_healthcheck_report: '{{ __molecule__freeipa_server_healthcheck_log_result["content"] | b64decode | from_json }}'

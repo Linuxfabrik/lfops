@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+# 2026110801
+
+# Every command-line option of ipa-healthcheck may be set here as well, and a value from this file
+# wins over the command line. ipa-healthcheck.service relies on the JSON report in
+# /var/log/ipa/healthcheck/healthcheck.log, so options such as output_type, output_file, all or
+# failures_only do not belong here.
+[default]
+cert_expiration_days = {{ freeipa_server__healthcheck_cert_expiration_days }}
+timeout = {{ freeipa_server__healthcheck_timeout }}
+
+# Excluding a source or a check keeps it from running, excluding a key only filters it from the
+# report.
+[excludes]
+{% for item in freeipa_server__healthcheck_excludes__combined_var | sort(attribute='type,value') if item['state'] | d('present') != 'absent' %}
+{% if item['comment'] | d('') | length > 0 %}
+# {{ item['comment'] }}
+{% endif %}
+{{ item['type'] }} = {{ item['value'] }}
+{% endfor %}

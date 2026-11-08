@@ -105,6 +105,35 @@
 
 - block:
 
+  - name: 'Assert that every exclude of ipa-healthcheck is of type source, check or key'
+    ansible.builtin.assert:
+      that:
+        - 'item["type"] in ["check", "key", "source"]'
+        - 'item["value"] | d("") | string | length > 0'
+      fail_msg: >-
+        freeipa_server__healthcheck_excludes: "{{ item["type"] | d("") }}" is not one of source,
+        check or key, or the value is empty. ipa-healthcheck ignores such an entry without a word.
+      quiet: true
+    loop: '{{ freeipa_server__healthcheck_excludes__combined_var }}'
+    loop_control:
+      label: '{{ item["type"] | d("") }} = {{ item["value"] | d("") }}'
+
+  - name: 'Deploy /etc/ipahealthcheck/ipahealthcheck.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/ipahealthcheck/ipahealthcheck.conf.j2'
+      dest: '/etc/ipahealthcheck/ipahealthcheck.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/ipahealthcheck/ipahealthcheck.conf'
+
   - name: 'mkdir -p /etc/systemd/system/ipa-healthcheck.timer.d'
     ansible.builtin.file:
       path: '/etc/systemd/system/ipa-healthcheck.timer.d'
@@ -164,6 +193,26 @@
     - 'freeipa_server'
     - 'freeipa_server:healthcheck'
     - 'freeipa_server:state'
+
+
+# Without a report, the monitoring plugin warns until the timer runs for the first time, which can
+# take up to a day after the installation. So the role runs the healthcheck once, as the timer
+# would, as long as there is no report. ipa-healthcheck exits 1 as soon as a check reports a
+# problem, which systemctl passes on as a failed unit.
+- block:
+
+  - name: 'systemctl start --wait ipa-healthcheck.service'
+    ansible.builtin.command:
+      cmd: 'systemctl start --wait ipa-healthcheck.service'
+      creates: '/var/log/ipa/healthcheck/healthcheck.log'
+    register: '__freeipa_server__healthcheck_first_run_result'
+    failed_when: '__freeipa_server__healthcheck_first_run_result["rc"] not in [0, 1]'
+    when:
+      - 'freeipa_server__healthcheck_timer_enabled | bool'
+
+  tags:
+    - 'freeipa_server'
+    - 'freeipa_server:healthcheck'
 
 
 # group management

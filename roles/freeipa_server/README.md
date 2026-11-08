@@ -24,6 +24,35 @@ Ideally, the FreeIPA should be installed on a separate server. If that is not po
     * The reverse lookup of the FreeIPA IP server address must match the hostname of the FreeIPA server. Otherwise you'll get error messages like `In unattended mode you need to provide at least -r, -p and -a options` or `The host name "ipa.example" does not match the value "myipa" obtained by reverse lookup on IP address 192.102.0.106`.
     * If neither the domain nor the realm being set, you'll get error messages like `In unattended mode you need to provide at least -r, -p and -a options`.
 
+* The role does not set up the DNS integrated into FreeIPA (`ipa-server-dns`). The DNS server of the domain therefore needs the records FreeIPA would otherwise maintain itself, for every FreeIPA server (`ipaserver/dns_data_management.py` in FreeIPA):
+
+    * The Kerberos SRV and URI records, which clients use to find a KDC and to fail over to another one (`ipa-client-install` sets `dns_lookup_kdc = true`), and the `_kerberos` TXT record with the realm.
+    * `_ldap._tcp`, for clients and replicas that look up the LDAP servers.
+    * `ipa-ca` with the address of every server with the CA role. Every certificate FreeIPA issues names `http://ipa-ca.<domain>/` for OCSP and the CRL, so without it, clients cannot check whether a certificate was revoked.
+
+    For a server `ipa01.example.com` in the realm `EXAMPLE.COM`, e.g. with the `bind` role:
+
+    ```text
+    _kerberos              IN TXT  "EXAMPLE.COM"
+    _kerberos              IN URI  0 100 "krb5srv:m:tcp:ipa01.example.com."
+    _kerberos              IN URI  0 100 "krb5srv:m:udp:ipa01.example.com."
+    _kerberos-master._tcp  IN SRV  0 100 88  ipa01.example.com.
+    _kerberos-master._udp  IN SRV  0 100 88  ipa01.example.com.
+    _kerberos._tcp         IN SRV  0 100 88  ipa01.example.com.
+    _kerberos._udp         IN SRV  0 100 88  ipa01.example.com.
+    _kpasswd               IN URI  0 100 "krb5srv:m:tcp:ipa01.example.com."
+    _kpasswd               IN URI  0 100 "krb5srv:m:udp:ipa01.example.com."
+    _kpasswd._tcp          IN SRV  0 100 464 ipa01.example.com.
+    _kpasswd._udp          IN SRV  0 100 464 ipa01.example.com.
+    _ldap._tcp             IN SRV  0 100 389 ipa01.example.com.
+    ipa-ca                 IN A    192.0.2.10
+    ipa01                  IN A    192.0.2.10
+    ```
+
+    `ipa dns-update-system-records --dry-run` (after `kinit admin`) lists the records for the actual servers, and `ipa-healthcheck` reports every missing one (`IPADNSSystemRecordsCheck`).
+
+* Clients and replicas reach the FreeIPA server on TCP 80 and 443 (HTTP/HTTPS), 389 and 636 (LDAP/LDAPS), 88 and 464 (Kerberos) and UDP 88 and 464 (Kerberos), as `ipa-server-install` lists them. TCP 80 is easily overlooked: `ipa-client-install` fetches the CA certificate over HTTP, and every certificate FreeIPA issues points to OCSP (`http://ipa-ca.<domain>/ca/ocsp`) and the CRL (`http://ipa-ca.<domain>/ipa/crl/MasterCRL.bin`) over HTTP. Port 53 is only needed with the DNS integrated into FreeIPA, and UDP 123 only for NTP, which the role does not set up in FreeIPA (`ipaclient_no_ntp`).
+
 * Do not use an existing domain or hostname unless you own the domain. It's a common mistake to use `example.com`. We recommend to use a reserved top level domain from RFC2606 for private test installations, e.g. `ipa.test`.
 
 Manual steps:
@@ -36,7 +65,7 @@ Manual steps:
 `freeipa_server`
 
 * Installs and configures FreeIPA as a server.
-* Installs `ipa-healthcheck` and runs it daily through `ipa-healthcheck.timer`.
+* Installs and configures `ipa-healthcheck` and runs it daily through `ipa-healthcheck.timer`, and once right away while there is no report yet.
 * Triggers: none.
 
 `freeipa_server:configure`
@@ -51,7 +80,8 @@ Manual steps:
 
 `freeipa_server:healthcheck`
 
-* Installs `ipa-healthcheck`, deploys `/etc/systemd/system/ipa-healthcheck.timer.d/z00-linuxfabrik.conf` and ensures `ipa-healthcheck.timer` is in the desired state.
+* Installs `ipa-healthcheck`, deploys `/etc/ipahealthcheck/ipahealthcheck.conf` and `/etc/systemd/system/ipa-healthcheck.timer.d/z00-linuxfabrik.conf`, and ensures `ipa-healthcheck.timer` is in the desired state.
+* Runs the healthcheck once if `/var/log/ipa/healthcheck/healthcheck.log` does not exist yet, so the monitoring has a report before the timer first runs.
 * Triggers: none.
 
 `freeipa_server:hbacrule`
@@ -245,6 +275,40 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
         * Optional. `enabled`, `disabled` or `absent`. Defaults to `enabled`.
         * Type: String.
 
+`freeipa_server__healthcheck_cert_expiration_days`
+
+* How many days before a certificate expires `ipa-healthcheck` starts to warn about it.
+* Type: Number.
+* Default: `28`
+
+`freeipa_server__healthcheck_excludes__host_var` / `freeipa_server__healthcheck_excludes__group_var`
+
+* Results that `ipa-healthcheck` leaves out of its report, written to the `[excludes]` section of `/etc/ipahealthcheck/ipahealthcheck.conf`. Excluding a source or a check keeps it from running at all, excluding a key only filters that result from the report. `ipa-healthcheck` does not flag a source, check or key that does not exist.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `type`:
+
+        * Mandatory. What to exclude. One of `source` (e.g. `ipahealthcheck.ipa.certs`), `check` (e.g. `IPADNSSystemRecordsCheck`) or `key` (a result key from the report, e.g. a certmonger tracking ID).
+        * Type: String.
+
+    * `value`:
+
+        * Mandatory. The name of the source or check, or the result key. Together with `type`, it identifies the entry.
+        * Type: String.
+
+    * `comment`:
+
+        * Optional. Why the result is excluded, written as a comment above the entry.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
 `freeipa_server__healthcheck_on_calendar`
 
 * When `ipa-healthcheck.timer` runs the healthcheck, in the calendar event format of `systemd.time(7)`. The report goes to `/var/log/ipa/healthcheck/healthcheck.log` (JSON, overwritten on each run, rotated daily by logrotate). The timer is persistent: a run missed while the host was down takes place right after the next boot, so the report does not grow older than a day plus the downtime.
@@ -252,9 +316,16 @@ freeipa_server__ipa_admin_password: 'linuxfabrik'
 * Default: `'*-*-* 06:{{ 59 | random(seed=inventory_hostname ~ "ipa-healthcheck") }}'`
 * Deviates from the upstream default `*-*-* 04:00:00`: the healthcheck runs at a fixed minute per host after the reboot window of the `schedule_reboot` role (04:xx), so the report reflects the server after a reboot, and the servers of a replicated FreeIPA domain do not all check at the same time. The seed differs from the one of `lynis__on_calendar`, so the two start in different minutes on most hosts.
 
+`freeipa_server__healthcheck_timeout`
+
+* How many seconds each check of `ipa-healthcheck` may take before it counts as an error.
+* Type: Number.
+* Default: `30`
+* Deviates from the upstream default `10`: on a FreeIPA server with 2 vCPUs, `CASystemCertTrustFlagCheck` took longer than 10 seconds in a full run and was reported as an error, although it reports no problem when given the time (its source takes 11 to 12 seconds on its own).
+
 `freeipa_server__healthcheck_timer_enabled`
 
-* Enables or disables `ipa-healthcheck.timer`, analogous to `systemctl enable/disable`.
+* Enables or disables `ipa-healthcheck.timer`, analogous to `systemctl enable/disable`. With `false`, the role does not run the healthcheck once after the installation either.
 * Type: Bool.
 * Default: `true`
 * Deviates from the package, which leaves the timer disabled: without a regular healthcheck, problems such as expiring certificates or broken replication go unnoticed until a service fails.
@@ -612,7 +683,16 @@ freeipa_server__hbacrules__host_var:
     hbacsvcs:
       - 'sshd'
     state: 'enabled'
+freeipa_server__healthcheck_cert_expiration_days: 28
+freeipa_server__healthcheck_excludes__host_var:
+  - type: 'source'
+    value: 'ipahealthcheck.ipa.dna'
+    comment: 'no DNA ranges on this server'
+  - type: 'key'
+    value: '20210910141452'
+    comment: 'customer certificate tracked by certmonger, unknown to IPA'
 freeipa_server__healthcheck_on_calendar: '*-*-* 06:15'
+freeipa_server__healthcheck_timeout: 30
 freeipa_server__healthcheck_timer_enabled: true
 freeipa_server__healthcheck_timer_state: 'started'
 freeipa_server__hostgroups__host_var:
