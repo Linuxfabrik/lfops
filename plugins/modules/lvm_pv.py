@@ -126,8 +126,26 @@ def pv_needs_resize(module, device):
 
 
 def rescan_device(module, device):
-    """Perform storage rescan for the device."""
-    base_device = os.path.basename(device)
+    """Perform storage rescan for the device.
+
+    Local patch: upstream warns "Rescan path does not exist" whenever the sysfs
+    attribute is missing. Only SCSI devices have `rescan`
+    (drivers/scsi/scsi_sysfs.c) and only NVMe controllers have `rescan_controller`
+    (drivers/nvme/host/sysfs.c). virtio_blk has neither and needs none: the host
+    signals a resize with a config-change interrupt, and the guest updates the
+    capacity on its own (virtblk_config_changed() in drivers/block/virtio_blk.c).
+    Upstream thus warns on every run on a virtio-blk guest. Here, a missing
+    attribute skips the rescan silently, and a failed write still warns.
+    Verified against kernel 5.14 (Rocky 9.8) and 6.12 (Rocky 10.2), virtio_blk.
+
+    Local patch: upstream takes the basename of the given path, so a symlink such
+    as /dev/disk/by-id/scsi-...-part1 never matches its sysfs entry and the disk
+    is not rescanned. The path is resolved first.
+
+    Both reported upstream as community.general#13212. Drop these two patches once
+    upstream fixes it.
+    """
+    base_device = os.path.basename(os.path.realpath(device))
     is_partition = f'/sys/class/block/{base_device}/partition'
 
     # Determine parent device if partition exists
@@ -142,15 +160,15 @@ def rescan_device(module, device):
     # Determine rescan path
     rescan_path = f'/sys/block/{parent_device}/device/{"rescan_controller" if base_device.startswith("nvme") else "rescan"}'
 
-    if os.path.exists(rescan_path):
-        try:
-            with open(rescan_path, 'w') as f:
-                f.write('1')
-            return True
-        except OSError as e:
-            module.warn(f'Failed to rescan device {device}: {e!s}')
-    else:
-        module.warn(f'Rescan path does not exist for device {device}')
+    if not os.path.exists(rescan_path):
+        # e.g. virtio-blk, which picks up a new size without a rescan, see above
+        return False
+    try:
+        with open(rescan_path, 'w') as f:
+            f.write('1')
+        return True
+    except OSError as e:
+        module.warn(f'Failed to rescan device {device}: {e!s}')
         return False
 
 

@@ -227,9 +227,10 @@ class TestAbsent(LvmPvTestCase):
 class TestRescanDevice(unittest.TestCase):
     """rescan_device derives the sysfs rescan file of the parent disk."""
 
-    def _rescan_path(self, device, partition):
+    def _rescan_path(self, device, partition, resolves_to=None):
         module = unittest.mock.Mock()
         opened = []
+        handle = unittest.mock.mock_open()
 
         def _exists(path):
             if path.endswith('/partition'):
@@ -238,12 +239,18 @@ class TestRescanDevice(unittest.TestCase):
 
         def _open(path, mode='r'):
             opened.append(path)
-            return unittest.mock.mock_open()()
+            return handle(path, mode)
 
+        # no real /dev in a unit test: resolve only the symlink the test names
+        realpath_patch = unittest.mock.patch.object(
+            mod.os.path, 'realpath', lambda path: resolves_to or path
+        )
         exists_patch = unittest.mock.patch.object(mod.os.path, 'exists', _exists)
         open_patch = unittest.mock.patch('builtins.open', _open)
-        with exists_patch, open_patch:
+        with realpath_patch, exists_patch, open_patch:
             self.assertTrue(mod.rescan_device(module, device))
+        handle().write.assert_called_once_with('1')
+        module.warn.assert_not_called()
         return opened[0]
 
     def test_scsi_partition(self):
@@ -264,11 +271,42 @@ class TestRescanDevice(unittest.TestCase):
             '/sys/block/nvme0n1/device/rescan_controller',
         )
 
-    def test_missing_rescan_path_warns(self):
+    def test_symlink_is_resolved(self):
+        self.assertEqual(
+            self._rescan_path(
+                '/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-part1',
+                partition=True,
+                resolves_to='/dev/sda1',
+            ),
+            '/sys/block/sda/device/rescan',
+        )
+
+    def test_virtio_blk_without_rescan_is_skipped_silently(self):
+        # virtio_blk has no rescan attribute and picks up a new size on its own
         module = unittest.mock.Mock()
-        with unittest.mock.patch.object(mod.os.path, 'exists', return_value=False):
+
+        def _exists(path):
+            return path == '/sys/class/block/vdb1/partition'
+
+        exists_patch = unittest.mock.patch.object(mod.os.path, 'exists', _exists)
+        open_patch = unittest.mock.patch('builtins.open', unittest.mock.mock_open())
+        with exists_patch, open_patch as opened:
             self.assertFalse(mod.rescan_device(module, '/dev/vdb1'))
+        opened.assert_not_called()
+        module.warn.assert_not_called()
+
+    def test_failed_write_warns(self):
+        module = unittest.mock.Mock()
+        exists_patch = unittest.mock.patch.object(
+            mod.os.path, 'exists', return_value=True
+        )
+        open_patch = unittest.mock.patch(
+            'builtins.open', side_effect=OSError(13, 'Permission denied')
+        )
+        with exists_patch, open_patch:
+            self.assertFalse(mod.rescan_device(module, '/dev/sda'))
         module.warn.assert_called_once()
+        self.assertIn('Failed to rescan device /dev/sda', module.warn.call_args[0][0])
 
 
 if __name__ == '__main__':

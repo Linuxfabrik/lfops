@@ -42,6 +42,27 @@
           - '__molecule__lvm_archive_after_result["matched"] == __molecule__lvm_archive_before_result["matched"]'
         fail_msg: '{{ __molecule__lvm_archive_after_result["files"] | map(attribute="path") | sort }}'
 
+    # virtio-blk disks have no sysfs rescan attribute and need none. The lvm_pv module must
+    # skip the rescan without a warning, otherwise every run on a KVM guest warns per PV.
+    # In a loop, ansible-core moves the warnings of the items into the result of the task
+    # (executor/task_executor.py, ansible-core 2.16), so check them there. The screen is no
+    # proof: a warning already shown in this run, e.g. by the lvm role above, is not repeated.
+    - name: 'Resize the PVs on the virtio disks with the lvm_pv module'
+      linuxfabrik.lfops.lvm_pv:
+        device: '{{ item }}'
+        state: 'present'
+        resize: true
+      loop:
+        - '/dev/vdb10'
+        - '/dev/vdc'
+      register: '__molecule__lvm_pv_result'
+
+    - name: 'Assert that the lvm_pv module did not warn on the virtio disks'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lvm_pv_result["warnings"] | d([]) | length == 0'
+        fail_msg: '{{ __molecule__lvm_pv_result["warnings"] | d([]) }}'
+
     # "gone" was removed although it still held an LV, and "multi" took over its PV. The extent
     # size is still the one "multi" was created with.
     - name: 'vgs gone'
