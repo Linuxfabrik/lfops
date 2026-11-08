@@ -3,6 +3,16 @@ grafana_grizzly__version: 'v0.2.0'
 
 # -----------------------------------------------------------------------------
 
+# Grafana 13 registers the datasource routes by numeric ID (`/api/datasources/:id`) only with the
+# feature toggle `datasourceLegacyIdApi` (pkg/api/api.go:414 and
+# pkg/services/featuremgmt/registry.go:493, `Expression: "false"`, verified against Grafana
+# 13.3.0), and grizzly updates an existing datasource with `PUT /api/datasources/<id>` (v0.2.0
+# pkg/grafana/datasources.go:162, v0.7.1 pkg/grafana/datasource-handler.go:224). Without the
+# toggle, every update of a datasource fails with 404. Needed until the role uses gcx.
+grafana_grizzly__grafana__feature_toggles__dependent_var:
+  - name: 'datasourceLegacyIdApi'
+    value: true
+
 grafana_grizzly__grafana__provisioning_service_accounts__dependent_var:
   - name: '{{ grafana_grizzly__grafana_service_account_login["username"] }}'
     role: 'Admin'

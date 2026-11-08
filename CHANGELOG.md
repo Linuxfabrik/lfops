@@ -138,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:lynis, playbook:lynis, playbook:setup_basic**: Add a role and playbook that install Lynis on every `setup_basic` host and audit it once a day for the lynis-logfile monitoring plugin, with findings accepted through `lynis__skip_tests` instead of a hand-edited `/etc/lynis/custom.prf`. By default the role skips the tests whose suggestion LFOps deliberately does not follow, giving the reason for each in `custom.prf`.
 * **role:repo_monitoring_plugins**: `--tags repo_monitoring_plugins:remove` removes the repository and its signing key.
 * **role:grafana**: `grafana__preinstall_auto_update` controls whether Grafana updates its preinstalled plugins on every start.
+* **role:grafana**: `grafana__feature_toggles__*_var` sets feature toggles in the `[feature_toggles]` section of `grafana.ini`.
 * **role:icingaweb2**: `icingaweb2__cookie_path` sets the path of the session and remember-me cookies, for example `/`.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.4.
 * **role:wordpress**: Entries in `wordpress__plugins` accept `enabled: false`, which keeps a plugin installed but deactivated.
@@ -365,6 +366,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:apache_httpd**: The OWASP Core Rule Set deploys on Debian and Ubuntu, where the run failed until now, and on Ubuntu 22.04, whose ModSecurity 2.9.5 is too old for it, the run aborts with a message saying so.
 * **playbook:redis, playbook:setup_mastodon**: On Debian and Ubuntu, the playbooks no longer abort with "'redis__skip_repo_redis' is undefined" or "'setup_mastodon__skip_repo_redis' is undefined" unless the skip variable is set in the inventory.
 * **role:grafana_grizzly, role:monitoring_plugins_grafana_dashboards**: On Grafana 13.1 and newer, dashboards that the roles add or update stay in their folder, instead of landing in the root, where viewers and the graphs embedded in IcingaWeb2 got "403". A run also moves back the dashboards that earlier runs left in the root.
+* **role:grafana_grizzly**: Datasources can be updated again on Grafana 13. The playbooks with `grafana_grizzly` enable Grafana's `datasourceLegacyIdApi` feature toggle, which grizzly needs, and restart Grafana for it.
+* **playbook:monitoring_plugins_grafana_dashboards**: Creates the Grafana service account that grizzly uses. The playbook handed it to the wrong role, so it was only created by other playbooks.
 * **role:aide**: The AIDE check no longer fails on hosts with fwupd, where it reported `/etc/fwupd/fwupd.conf` as changed after the first start of the fwupd daemon.
 * **role:aide**: The AIDE check no longer fails on hosts with an EFI system partition, where it reported the files below `/boot/efi` as changed a while after the database was created.
 * **role:system_update**: The security lane installs hot-fixes that need a newer package from BaseOS or AppStream, such as the kernel on Rocky 8.3, instead of failing on every run.
