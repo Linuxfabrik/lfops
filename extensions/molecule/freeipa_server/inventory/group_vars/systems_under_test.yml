@@ -1,2 +1,8 @@
 freeipa_server__directory_manager_password: 'linuxfabrik'
 freeipa_server__ipa_admin_password: 'linuxfabrik'
+# Any source will do to see the exclude in effect. The DNS record checks stay active, so a run
+# reports warnings and ipa-healthcheck exits 1, which the first run of the role has to tolerate.
+freeipa_server__healthcheck_excludes__group_var:
+  - type: 'source'
+    value: 'ipahealthcheck.ipa.dna'
+    comment: 'excluded by the Molecule scenario'

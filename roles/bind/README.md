@@ -79,7 +79,7 @@ This role installs and configures [bind](https://www.isc.org/bind/) as a DNS ser
 
     * `raw`:
 
-        * Optional. The raw content of the zone file.
+        * Optional. The raw content of the zone file. For the records a FreeIPA server needs, see [Requirements of the freeipa_server role](https://github.com/Linuxfabrik/lfops/tree/main/roles/freeipa_server#requirements).
         * Type: Multiline string.
 
 Example:
@@ -101,7 +101,8 @@ bind__zones:
           1D )       ; <minimum-TTL>
 
       @ IN NS dns-server.example.com.
-      _ldap._tcp    IN     SRV     10 10 389 dns-server.example.com.
+      ; a FreeIPA server needs a whole set of SRV, URI, TXT and A records, see the README of the
+      ; freeipa_server role
 
       dns-server        IN A    192.0.2.2
   - name: '2.0.192.in-addr.arpa'
