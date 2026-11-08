@@ -12,6 +12,8 @@ Additionally, this role allows you to apply Grafana resources which are saved as
 
 * **Dashboards stay in their folder on Grafana 13.1 and newer.** From Grafana 13.1 on, grizzly files every dashboard it adds or updates in the root instead of in the folder named in the resource, and the dashboard loses the viewer permission it inherited from the folder, so viewers and the graphs embedded in IcingaWeb2 get "403". After applying, the role saves every dashboard that is not in its folder again, which puts it back and restores the permission. This also repairs dashboards that earlier runs left in the root. A dashboard whose resource names the folder `general` belongs into the root and is left there.
 
+* **Datasources can be updated on Grafana 13 and newer.** grizzly updates an existing datasource by its numeric ID (`PUT /api/datasources/<id>`), a route that Grafana 13 only registers with the feature toggle `datasourceLegacyIdApi`. The LFOps playbooks with this role therefore enable it in `grafana.ini` through the grafana role, which restarts Grafana, and the role waits for Grafana to answer before it applies the resources. This is needed until the role uses gcx.
+
 
 ## Dependent Roles
 
@@ -19,6 +21,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * A Grafana Server must be available (role: [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana)).
 * A Grafana [service account](https://grafana.com/docs/grafana/latest/administration/service-accounts/) with an Admin token must exist (role: [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana)).
+* On Grafana 13 and newer, the feature toggle `datasourceLegacyIdApi` must be enabled (role: [linuxfabrik.lfops.grafana](https://github.com/linuxfabrik/lfops/tree/main/roles/grafana)).
 
 
 ## Tags

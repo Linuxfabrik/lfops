@@ -144,6 +144,29 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 * Default: `true` if `grafana__root_url` starts with `https://`, otherwise `false`
 * Deviates from the upstream default `false`, which leaves the cookie without `Secure` even on an HTTPS-only site.
 
+`grafana__feature_toggles__group_var` / `grafana__feature_toggles__host_var`
+
+* [Feature toggles](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/feature-toggles/) in the `[feature_toggles]` section of `grafana.ini`. Grafana reads them at startup, so a change restarts Grafana.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. Name of the feature toggle, for example `datasourceLegacyIdApi`.
+        * Type: String.
+
+    * `value`:
+
+        * Mandatory. Whether the feature is enabled.
+        * Type: Bool.
+
+    * `state`:
+
+        * Optional. Either `present` or `absent`. Defaults to `present`.
+        * Type: String.
+
 `grafana__https_config`
 
 * Determines whether HTTPS is enabled or not.
@@ -424,6 +447,10 @@ grafana__bitwarden_collection_id: '00000000-0000-0000-0000-000000000000'
 grafana__bitwarden_organization_id: '00000000-0000-0000-0000-000000000000'
 grafana__cookie_samesite: 'lax'
 grafana__cookie_secure: true
+grafana__feature_toggles__group_var: []
+grafana__feature_toggles__host_var:
+  - name: 'datasourceLegacyIdApi'
+    value: true
 grafana__https_config:
   cert_file: '/etc/ssl/ssl-certificate.crt'
   cert_key: '/etc/ssl/ssl-certificate.key'

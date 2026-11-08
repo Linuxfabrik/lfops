@@ -53,6 +53,22 @@
 
 - block:
 
+  # a changed grafana.ini, such as the feature toggle this role injects into the grafana role,
+  # only takes effect after the restart that the grafana role notifies. grizzly has to talk to
+  # the restarted Grafana, which answers /api/health once it is up.
+  - name: 'Flush handlers so that Grafana runs with the current config'
+    ansible.builtin.meta: 'flush_handlers'
+
+  - name: 'Wait for Grafana to answer {{ grafana_grizzly__grafana_url }}/api/health'
+    ansible.builtin.uri:
+      url: '{{ grafana_grizzly__grafana_url }}/api/health'
+      validate_certs: '{{ grafana__validate_certs | d(true) }}'
+    register: '__grafana_grizzly__health_result'
+    until: '__grafana_grizzly__health_result is not failed'
+    retries: 30
+    delay: 5
+    when: 'not ansible_check_mode' # nothing restarts under `--check`, and grr does not run
+
   - name: 'mkdir -p /tmp/ansible.grafana_grizzly'
     ansible.builtin.file:
       path: '/tmp/ansible.grafana_grizzly'

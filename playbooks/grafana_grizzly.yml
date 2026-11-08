@@ -31,6 +31,9 @@
         - 'not grafana_server__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.grafana'
+      grafana__feature_toggles__dependent_var: '{{
+          grafana_grizzly__grafana__feature_toggles__dependent_var
+        }}'
       grafana__provisioning_service_accounts__dependent_var: '{{
           grafana_grizzly__grafana__provisioning_service_accounts__dependent_var
         }}'

@@ -2236,6 +2236,9 @@ preinstall_auto_update = {{ grafana__preinstall_auto_update | bool | string | lo
 # The `enable` entry is deprecated and will be removed in a future major
 # release. Use individual entries as shown above instead.
 ;enable = feature1,feature2
+{% for toggle in grafana__feature_toggles__combined_var if toggle['state'] | d('present') != 'absent' %}
+{{ toggle['name'] }} = {{ toggle['value'] | bool | string | lower }}
+{% endfor %}
 
 [date_formats]
 # For information on what formatting patterns that are supported https://momentjs.com/docs/#/displaying/
