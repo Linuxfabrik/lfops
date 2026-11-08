@@ -1,0 +1,8 @@
+# Molecule scenario marker for the 'freeipa_server' scenario, run with
+# `molecule test --scenario-name freeipa_server`.
+#
+# It overrides the prepare step (see prepare.yml), which gives each VM the two-level FQDN and the
+# reverse lookup that the FreeIPA installer insists on.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

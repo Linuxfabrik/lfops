@@ -1,0 +1,68 @@
+- name: 'Verify the freeipa_server playbook'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  vars:
+    __molecule__freeipa_server_healthcheck_minute: '{{ "%02d" | format(59 | random(seed=inventory_hostname ~ "ipa-healthcheck")) }}'
+  tasks:
+
+    - name: 'ipactl status'
+      ansible.builtin.command: 'ipactl status'
+      changed_when: false
+
+    - name: 'rpm --query ipa-healthcheck'
+      ansible.builtin.command: 'rpm --query ipa-healthcheck'
+      changed_when: false
+
+    # TimersCalendar lists every OnCalendar= the manager has loaded. Exactly one entry at 06:MM
+    # proves that the drop-in is in effect and that its empty OnCalendar= reset the packaged 04:00.
+    # Persistent=yes comes from the drop-in as well, the packaged timer is not persistent.
+    - name: 'systemctl show ipa-healthcheck.timer'
+      ansible.builtin.command: >-
+        systemctl show ipa-healthcheck.timer
+        --property=ActiveState
+        --property=Persistent
+        --property=TimersCalendar
+        --property=UnitFileState
+      changed_when: false
+      register: '__molecule__freeipa_server_timer_result'
+
+    - name: 'Assert that ipa-healthcheck.timer is enabled, active, persistent and runs daily at 06:MM only'
+      ansible.builtin.assert:
+        that:
+          - '"ActiveState=active" in __molecule__freeipa_server_timer_result["stdout_lines"]'
+          - '"Persistent=yes" in __molecule__freeipa_server_timer_result["stdout_lines"]'
+          - '"UnitFileState=enabled" in __molecule__freeipa_server_timer_result["stdout_lines"]'
+          - '__molecule__freeipa_server_timer_result["stdout"] | regex_findall("OnCalendar=") | length == 1'
+          - '("OnCalendar=*-*-* 06:" ~ __molecule__freeipa_server_healthcheck_minute ~ ":00 ") in __molecule__freeipa_server_timer_result["stdout"]'
+        fail_msg: '{{ __molecule__freeipa_server_timer_result["stdout_lines"] }}'
+
+    # Starting the unit at boot would run the healthcheck on every reboot, only the timer may.
+    - name: 'systemctl is-enabled ipa-healthcheck.service'
+      ansible.builtin.command: 'systemctl is-enabled ipa-healthcheck.service'
+      changed_when: false
+      failed_when: '__molecule__freeipa_server_service_enabled_result["stdout"] != "disabled"'
+      register: '__molecule__freeipa_server_service_enabled_result'
+
+    # The monitoring plugin reads the report the unit writes. Run it once the way the timer does
+    # and check that the report is there and is JSON. ipa-healthcheck exits non-zero when it finds
+    # a problem, which a fresh test installation without DNS may have, so the unit result does not
+    # count here.
+    - name: 'systemctl start --wait ipa-healthcheck.service'
+      ansible.builtin.command: 'systemctl start --wait ipa-healthcheck.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'cat /var/log/ipa/healthcheck/healthcheck.log'
+      ansible.builtin.slurp:
+        src: '/var/log/ipa/healthcheck/healthcheck.log'
+      register: '__molecule__freeipa_server_healthcheck_log_result'
+
+    - name: 'Assert that ipa-healthcheck.service wrote a JSON report'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__freeipa_server_healthcheck_report is sequence'
+          - '__molecule__freeipa_server_healthcheck_report | length > 0'
+          - '__molecule__freeipa_server_healthcheck_report[0]["source"] is defined'
+        fail_msg: '{{ __molecule__freeipa_server_healthcheck_log_result["content"] | b64decode | truncate(2000) }}'
+      vars:
+        __molecule__freeipa_server_healthcheck_report: '{{ __molecule__freeipa_server_healthcheck_log_result["content"] | b64decode | from_json }}'

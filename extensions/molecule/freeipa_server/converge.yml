@@ -1,0 +1,2 @@
+- name: 'Converge freeipa_server playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.freeipa_server'

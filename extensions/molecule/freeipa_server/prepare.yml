@@ -1,0 +1,35 @@
+# Replaces the shared vm-prepare.yml for this scenario (see molecule.yml), so it imports it first
+# and only adds the precondition on top.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# The FreeIPA installer wants a two-level FQDN that resolves to the address of the host, and back.
+# An /etc/hosts entry provides both, so the VMs need no DNS server. The role derives domain and
+# realm from the fact ansible_facts["domain"], so the facts are gathered again afterwards; the fact
+# cache would otherwise keep the old ones.
+- name: 'Give the VMs a two-level FQDN with a reverse lookup'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  tasks:
+
+    - name: 'hostnamectl set-hostname {{ inventory_hostname }}.lfops.test'
+      ansible.builtin.hostname:
+        name: '{{ inventory_hostname }}.lfops.test'
+
+    - name: 'Add {{ inventory_hostname }}.lfops.test to /etc/hosts'
+      ansible.builtin.lineinfile:
+        path: '/etc/hosts'
+        line: '{{ ansible_facts["default_ipv4"]["address"] }} {{ inventory_hostname }}.lfops.test {{ inventory_hostname }}'
+        regexp: '\s{{ inventory_hostname }}\.lfops\.test\s'
+
+    - name: 'Gather facts'
+      ansible.builtin.setup:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that the FQDN and the domain resolve as the FreeIPA installer expects'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["fqdn"] == inventory_hostname ~ ".lfops.test"'
+          - 'ansible_facts["domain"] == "lfops.test"'
+        fail_msg: '{{ ansible_facts["fqdn"] }} / {{ ansible_facts["domain"] }}'
