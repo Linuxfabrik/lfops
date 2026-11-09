@@ -116,7 +116,7 @@ This role is compatible with the following aide versions:
     * The RHEL 9 / 10 list is used on every platform, extended by the Debian and Ubuntu counterparts of its paths. On Debian and Ubuntu the rules of `aide-common` are not used.
     * `!/root/\.ansible/tmp` is added, since Ansible creates and deletes a directory there for every task it runs as root.
     * `!/root/\.cache` is added. It holds disposable caches only and gains pip cache entries on every run of the python_venv role.
-    * `!/root/\.gnupg/S\.`, `!/root/\.gnupg/.*\.lock$` and `!/root/\.gnupg/.*/\.#lk` are added. gpg-agent and keyboxd keep their sockets and locks there while they run, after a run of the duplicity role or a backup until the next reboot.
+    * `!/root/\.gnupg/S\.`, `!/root/\.gnupg/.*\.lock$` and `!/root/\.gnupg/(.*/)?\.#lk` are added. gpg-agent and keyboxd keep their sockets and locks there while they run, after a run of the duplicity role or a backup until the next reboot.
     * `!/opt/cool/cache` is added. Collabora caches the settings it fetches from the WOPI host there, per host and per user, and deletes them after some time of disuse.
     * `!/opt/cool/child-roots` is added. Collabora creates a jail per process there, under a new name on every start.
     * `!/opt/gitlab/sv/[^/]+/(log/)?supervise` and `!/opt/gitlab/var` are added. GitLab writes the pid and the state of its services there whenever it starts them.
