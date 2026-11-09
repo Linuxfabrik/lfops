@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026110901
+
+# Runs the daily maintenance script of LibreNMS, which also updates its code (git, composer and
+# pip below /opt/librenms), and keeps the AIDE database in step with that update, the way
+# update-and-reboot of the system_update role does for packages:
+#
+# * Before daily.sh, an AIDE check has to come out clean. Re-baselining accepts everything that
+#   changed since the check it relies on, an intrusion included.
+# * After daily.sh, the database is re-baselined only if that check was clean and daily.sh
+#   checked out another commit. Otherwise a check through aidecheck.service follows, which
+#   leaves the unit failed on any finding, so monitoring reports it as for every other check.
+#
+# The whole run holds /run/aide.lock, which every aide run of LFOps takes (aidecheck.service,
+# the aide role, security-update and update-and-reboot), so none of them runs between the check
+# and the re-baseline. The aide calls in here therefore go without flock. daily.sh does not get
+# the lock descriptor, so nothing it starts can keep the lock.
+# Without an active aidecheck.timer or an AIDE database this only runs daily.sh.
+# Verified with LibreNMS 26.10.2 and aide 0.19.2 on Rocky 10.
+
+AIDE_CONFIG='/etc/aide.conf'
+AIDE_DB='/var/lib/aide/aide.db.gz'
+AIDE_DB_NEW='/var/lib/aide/aide.db.new.gz'
+AIDE_UNIT='aidecheck'
+LIBRENMS_DIR='/opt/librenms'
+
+log() {
+    printf '%s\n' "$*"
+}
+
+head_commit() {
+    runuser --user=librenms -- git -C "$LIBRENMS_DIR" rev-parse HEAD 2> /dev/null
+}
+
+run_daily() {
+    # as the upstream cron job (dist/librenms.cron) runs it
+    runuser --user=librenms -- "${LIBRENMS_DIR}/daily.sh" > /dev/null 2>&1 {lock}>&-
+}
+
+exec {lock}> /run/aide.lock
+flock "$lock"
+
+if ! systemctl is-active --quiet "${AIDE_UNIT}.timer" || [ ! -e "$AIDE_DB" ]; then
+    run_daily
+    exit 0
+fi
+
+# exits with the bitmask of what it found (1 added, 2 removed, 4 changed), errors from 14
+nice --adjustment=19 ionice --class idle aide --config="$AIDE_CONFIG" --check > /dev/null 2>&1
+check_rc=$?
+
+head_before=$(head_commit)
+run_daily
+head_after=$(head_commit)
+
+if [ "$check_rc" -ne 0 ]; then
+    log "aide --check exited with ${check_rc} before daily.sh; the database will not be re-baselined, see /var/log/aide/aide.log"
+elif [ "$head_before" = "$head_after" ]; then
+    log 'daily.sh did not update LibreNMS; nothing to re-baseline'
+    exit 0
+else
+    log "daily.sh updated LibreNMS from ${head_before} to ${head_after}; re-baselining the AIDE database"
+    nice --adjustment=19 ionice --class idle aide --config="$AIDE_CONFIG" --update > /dev/null 2>&1
+    update_rc=$?
+    if [ "$update_rc" -ge 8 ]; then
+        log "aide --update exited with ${update_rc}; the database was not re-baselined"
+    else
+        mv "$AIDE_DB_NEW" "$AIDE_DB"
+    fi
+fi
+
+# a check against the current database, so that the report and the state of the unit reflect
+# the host again. --no-block, since it waits for the lock this script holds until it exits.
+systemctl restart --no-block "${AIDE_UNIT}.service"
+exit 0

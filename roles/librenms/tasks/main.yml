@@ -267,15 +267,61 @@
 
 - block:
 
-  # Keeps the daily self-update of LibreNMS running, among the poller and discovery jobs.
-  - name: 'cp /opt/librenms/dist/librenms.cron /etc/cron.d/librenms'
-    ansible.builtin.copy:
+  - name: 'cat /opt/librenms/dist/librenms.cron'
+    ansible.builtin.slurp:
       src: '/opt/librenms/dist/librenms.cron'
+    register: '__librenms__cron_result'
+
+  # The poller and discovery jobs as upstream ships them, except daily.sh, which
+  # librenms-daily.timer runs instead, so that its updates of the code keep the AIDE database in
+  # step. copy instead of template, since the content comes from the git checkout on the host.
+  - name: 'Deploy /etc/cron.d/librenms'
+    ansible.builtin.copy:
+      content: '{{ __librenms__cron_result["content"] | b64decode
+        | regex_replace("(?m)^[^#\n]*/opt/librenms/daily\.sh.*$",
+                        "# daily.sh runs from librenms-daily.timer, see /usr/local/sbin/librenms-daily") }}'
       dest: '/etc/cron.d/librenms'
       owner: 'root'
       group: 'root'
       mode: 0o644
-      remote_src: true
+
+  - name: 'Deploy /usr/local/sbin/librenms-daily'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/librenms-daily.j2'
+      dest: '/usr/local/sbin/librenms-daily'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/librenms-daily.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/librenms-daily.service.j2'
+      dest: '/etc/systemd/system/librenms-daily.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__librenms__daily_service_result'
+
+  - name: 'Deploy /etc/systemd/system/librenms-daily.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/librenms-daily.timer.j2'
+      dest: '/etc/systemd/system/librenms-daily.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__librenms__daily_timer_result'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__librenms__daily_timer_result is changed) | ternary(["librenms-daily.timer"], [])
+        }}'
 
   - name: 'cp /opt/librenms/dist/{{ item }} /etc/systemd/system/'
     ansible.builtin.copy:
@@ -295,7 +341,7 @@
   - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
     ansible.builtin.systemd:
       daemon_reload: true
-    when: '__librenms__scheduler_units_result is changed'
+    when: '__librenms__scheduler_units_result is changed or __librenms__daily_service_result is changed'
 
   tags:
     - 'librenms'
@@ -315,6 +361,16 @@
     ansible.builtin.service:
       name: 'librenms-scheduler.timer'
       state: '{{ librenms__scheduler_service_state }}'
+
+  - name: 'systemctl enable librenms-daily.timer'
+    ansible.builtin.service:
+      name: 'librenms-daily.timer'
+      enabled: true
+
+  - name: 'systemctl start librenms-daily.timer'
+    ansible.builtin.service:
+      name: 'librenms-daily.timer'
+      state: 'started'
 
   tags:
     - 'librenms'
