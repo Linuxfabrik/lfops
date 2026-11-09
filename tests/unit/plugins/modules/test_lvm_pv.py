@@ -23,6 +23,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import pathlib
+import tempfile
 import unittest
 import unittest.mock
 
@@ -225,88 +227,108 @@ class TestAbsent(LvmPvTestCase):
 
 
 class TestRescanDevice(unittest.TestCase):
-    """rescan_device derives the sysfs rescan file of the parent disk."""
+    """rescan_device finds the rescan attribute of the parent disk in sysfs.
 
-    def _rescan_path(self, device, partition, resolves_to=None):
-        module = unittest.mock.Mock()
-        opened = []
-        handle = unittest.mock.mock_open()
+    Ported from tests/unit/plugins/modules/test_lvm_pv.py of community.general
+    (commit 6f22759f). A fake sysfs mimics the kernel layout, where
+    /sys/class/block/<name> and /sys/block/<disk> are symlinks into /sys/devices/...
+    and partitions are subdirectories of their parent disk.
+    """
 
-        def _exists(path):
-            if path.endswith('/partition'):
-                return partition
-            return True
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.sysfs = pathlib.Path(tmp.name) / 'sys'
+        self.sysfs.mkdir()
+        self.dev = pathlib.Path(tmp.name) / 'dev'
+        self.dev.mkdir()
+        sysfs_patch = unittest.mock.patch.object(mod, '_SYSFS', str(self.sysfs))
+        sysfs_patch.start()
+        self.addCleanup(sysfs_patch.stop)
+        self.module = unittest.mock.Mock()
 
-        def _open(path, mode='r'):
-            opened.append(path)
-            return handle(path, mode)
+    def _make_disk(self, devices_path, disk, partitions=(), rescan_attr=None):
+        disk_dir = self.sysfs / 'devices' / devices_path / 'block' / disk
+        disk_dir.mkdir(parents=True)
+        device_dir = self.sysfs / 'devices' / devices_path / 'device'
+        device_dir.mkdir(parents=True, exist_ok=True)
+        (disk_dir / 'device').symlink_to(device_dir)
+        if rescan_attr:
+            (device_dir / rescan_attr).write_text('')
+        for d in ('class/block', 'block'):
+            (self.sysfs / d).mkdir(parents=True, exist_ok=True)
+        (self.sysfs / 'class' / 'block' / disk).symlink_to(disk_dir)
+        (self.sysfs / 'block' / disk).symlink_to(disk_dir)
+        for part in partitions:
+            part_dir = disk_dir / part
+            part_dir.mkdir()
+            (part_dir / 'partition').write_text('1')
+            (self.sysfs / 'class' / 'block' / part).symlink_to(part_dir)
+        return device_dir / rescan_attr if rescan_attr else None
 
-        # no real /dev in a unit test: resolve only the symlink the test names
-        realpath_patch = unittest.mock.patch.object(
-            mod.os.path, 'realpath', lambda path: resolves_to or path
-        )
-        exists_patch = unittest.mock.patch.object(mod.os.path, 'exists', _exists)
-        open_patch = unittest.mock.patch('builtins.open', _open)
-        with realpath_patch, exists_patch, open_patch:
-            self.assertTrue(mod.rescan_device(module, device))
-        handle().write.assert_called_once_with('1')
-        module.warn.assert_not_called()
-        return opened[0]
+    def _device(self, name):
+        path = self.dev / name
+        path.write_text('')
+        return str(path)
 
-    def test_scsi_partition(self):
-        self.assertEqual(
-            self._rescan_path('/dev/sda3', partition=True),
-            '/sys/block/sda/device/rescan',
-        )
+    def _assert_rescanned(self, rescan, device):
+        self.assertTrue(mod.rescan_device(self.module, device))
+        self.assertEqual(rescan.read_text(), '1')
+        self.module.warn.assert_not_called()
 
     def test_scsi_whole_disk(self):
-        self.assertEqual(
-            self._rescan_path('/dev/sdb', partition=False),
-            '/sys/block/sdb/device/rescan',
-        )
+        rescan = self._make_disk('pci0000:00/scsi', 'sdb', [], 'rescan')
+        self._assert_rescanned(rescan, self._device('sdb'))
+
+    def test_scsi_partition(self):
+        rescan = self._make_disk('pci0000:00/scsi', 'sdb', ['sdb2'], 'rescan')
+        self._assert_rescanned(rescan, self._device('sdb2'))
+
+    def test_nvme_whole_disk(self):
+        rescan = self._make_disk('pci0000:00/nvme0', 'nvme0n1', [], 'rescan_controller')
+        self._assert_rescanned(rescan, self._device('nvme0n1'))
 
     def test_nvme_partition(self):
-        self.assertEqual(
-            self._rescan_path('/dev/nvme0n1p2', partition=True),
-            '/sys/block/nvme0n1/device/rescan_controller',
+        rescan = self._make_disk(
+            'pci0000:00/nvme0', 'nvme0n1', ['nvme0n1p1'], 'rescan_controller'
         )
+        self._assert_rescanned(rescan, self._device('nvme0n1p1'))
+
+    def test_virtio_blk_is_skipped_silently(self):
+        # virtio_blk has no rescan attribute and picks up a new size on its own
+        self._make_disk('pci0000:00/virtio2', 'vdb', ['vdb1'])
+        for name in ('vdb', 'vdb1'):
+            with self.subTest(device=name):
+                self.assertFalse(mod.rescan_device(self.module, self._device(name)))
+        self.module.warn.assert_not_called()
+
+    def test_unknown_device_is_skipped_silently(self):
+        self.assertFalse(mod.rescan_device(self.module, self._device('loop0')))
+        self.module.warn.assert_not_called()
 
     def test_symlink_is_resolved(self):
-        self.assertEqual(
-            self._rescan_path(
-                '/dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi0-part1',
-                partition=True,
-                resolves_to='/dev/sda1',
-            ),
-            '/sys/block/sda/device/rescan',
-        )
+        rescan = self._make_disk('pci0000:00/scsi', 'sdb', ['sdb1'], 'rescan')
+        by_id = self.dev / 'disk' / 'by-id'
+        by_id.mkdir(parents=True)
+        link = by_id / 'scsi-0QEMU_QEMU_HARDDISK_drive-scsi1-part1'
+        link.symlink_to(self._device('sdb1'))
+        self._assert_rescanned(rescan, str(link))
 
-    def test_virtio_blk_without_rescan_is_skipped_silently(self):
-        # virtio_blk has no rescan attribute and picks up a new size on its own
-        module = unittest.mock.Mock()
-
-        def _exists(path):
-            return path == '/sys/class/block/vdb1/partition'
-
-        exists_patch = unittest.mock.patch.object(mod.os.path, 'exists', _exists)
-        open_patch = unittest.mock.patch('builtins.open', unittest.mock.mock_open())
-        with exists_patch, open_patch as opened:
-            self.assertFalse(mod.rescan_device(module, '/dev/vdb1'))
-        opened.assert_not_called()
-        module.warn.assert_not_called()
+    def test_mmcblk_partition_parent(self):
+        # the parent disk comes from sysfs, not from stripping digits off the name
+        rescan = self._make_disk('platform/mmc0', 'mmcblk0', ['mmcblk0p1'], 'rescan')
+        self._assert_rescanned(rescan, self._device('mmcblk0p1'))
 
     def test_failed_write_warns(self):
-        module = unittest.mock.Mock()
-        exists_patch = unittest.mock.patch.object(
-            mod.os.path, 'exists', return_value=True
-        )
+        self._make_disk('pci0000:00/scsi', 'sdb', [], 'rescan')
+        device = self._device('sdb')
         open_patch = unittest.mock.patch(
             'builtins.open', side_effect=OSError(13, 'Permission denied')
         )
-        with exists_patch, open_patch:
-            self.assertFalse(mod.rescan_device(module, '/dev/sda'))
-        module.warn.assert_called_once()
-        self.assertIn('Failed to rescan device /dev/sda', module.warn.call_args[0][0])
+        with open_patch:
+            self.assertFalse(mod.rescan_device(self.module, device))
+        self.module.warn.assert_called_once()
+        self.assertIn('Failed to rescan device', self.module.warn.call_args[0][0])
 
 
 if __name__ == '__main__':

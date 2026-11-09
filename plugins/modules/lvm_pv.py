@@ -41,6 +41,9 @@ options:
   resize:
     description:
       - Resize PV to device size when O(state=present).
+      - Before resizing, a rescan of the underlying disk is triggered for SCSI devices and NVMe controllers so that the
+        kernel picks up a changed disk size. Other block devices, such as virtio-blk disks, are not rescanned since
+        the kernel detects size changes for them automatically.
     type: bool
     default: false
 notes:
@@ -125,51 +128,42 @@ def pv_needs_resize(module, device):
     return (dev_size - pe_start) // extent_size != pe_count
 
 
-def rescan_device(module, device):
-    """Perform storage rescan for the device.
+_SYSFS = '/sys'
 
-    Local patch: upstream warns "Rescan path does not exist" whenever the sysfs
-    attribute is missing. Only SCSI devices have `rescan`
-    (drivers/scsi/scsi_sysfs.c) and only NVMe controllers have `rescan_controller`
-    (drivers/nvme/host/sysfs.c). virtio_blk has neither and needs none: the host
-    signals a resize with a config-change interrupt, and the guest updates the
-    capacity on its own (virtblk_config_changed() in drivers/block/virtio_blk.c).
-    Upstream thus warns on every run on a virtio-blk guest. Here, a missing
-    attribute skips the rescan silently, and a failed write still warns.
-    Verified against kernel 5.14 (Rocky 9.8) and 6.12 (Rocky 10.2), virtio_blk.
 
-    Local patch: upstream takes the basename of the given path, so a symlink such
-    as /dev/disk/by-id/scsi-...-part1 never matches its sysfs entry and the disk
-    is not rescanned. The path is resolved first.
+def rescan_device(module: AnsibleModule, device: str) -> bool:
+    """Ask the kernel to re-read the size of the disk backing the device.
 
-    Both reported upstream as community.general#13212. Drop these two patches once
-    upstream fixes it.
+    Returns True if a rescan was triggered, False otherwise. Only SCSI devices (``rescan``)
+    and NVMe controllers (``rescan_controller``) offer a rescan attribute. Other block devices
+    (virtio-blk, Xen, loop, device-mapper, MD, ...) pick up size changes on their own or do
+    not support a rescan, so they are silently skipped.
+
+    Taken from upstream commit 6f22759f (community.general#13218), which fixes
+    community.general#13212. Drop it with the rest of this file.
     """
-    base_device = os.path.basename(os.path.realpath(device))
-    is_partition = f'/sys/class/block/{base_device}/partition'
-
-    # Determine parent device if partition exists
-    parent_device = base_device
-    if os.path.exists(is_partition):
-        parent_device = (
-            base_device.rpartition('p')[0]
-            if base_device.startswith('nvme')
-            else base_device.rstrip('0123456789')
-        )
-
-    # Determine rescan path
-    rescan_path = f'/sys/block/{parent_device}/device/{"rescan_controller" if base_device.startswith("nvme") else "rescan"}'
-
-    if not os.path.exists(rescan_path):
-        # e.g. virtio-blk, which picks up a new size without a rescan, see above
+    # Resolve symlinks such as /dev/disk/by-id/... or /dev/mapper/... to the kernel device name
+    name = os.path.basename(os.path.realpath(device))
+    sys_block = os.path.join(_SYSFS, 'class', 'block', name)
+    if not os.path.exists(sys_block):
         return False
-    try:
-        with open(rescan_path, 'w') as f:
-            f.write('1')
-        return True
-    except OSError as e:
-        module.warn(f'Failed to rescan device {device}: {e!s}')
-        return False
+
+    # For a partition, the parent disk is the parent directory of its sysfs entry
+    # (for example .../block/sda/sda1 or .../block/nvme0n1/nvme0n1p1)
+    if os.path.exists(os.path.join(sys_block, 'partition')):
+        name = os.path.basename(os.path.dirname(os.path.realpath(sys_block)))
+
+    for attr in ('rescan', 'rescan_controller'):
+        rescan_path = os.path.join(_SYSFS, 'block', name, 'device', attr)
+        if os.path.exists(rescan_path):
+            try:
+                with open(rescan_path, 'w') as f:
+                    f.write('1')
+                return True
+            except OSError as e:
+                module.warn(f'Failed to rescan device {device}: {e!s}')
+                return False
+    return False
 
 
 def main():
