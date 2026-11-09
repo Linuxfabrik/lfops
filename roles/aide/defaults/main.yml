@@ -60,6 +60,21 @@ aide__rules__role_var:
     type: 'negative'
   - path: '/opt/gitlab/var'
     type: 'negative'
+  # Not in the shipped list. The runtime data of LibreNMS (librenms role): the RRD files of every
+  # poll, its logs and the caches of Laravel, which the writable directories of the upstream
+  # install guide hold, and the git metadata, which its nightly daily.sh fetches. The code and
+  # .env stay covered, so an update to a new release is reported. Verified with LibreNMS
+  # 26.10.2 and aide 0.19.2 on Rocky 10.
+  - path: '/opt/librenms/\.git'
+    type: 'negative'
+  - path: '/opt/librenms/bootstrap/cache'
+    type: 'negative'
+  - path: '/opt/librenms/logs'
+    type: 'negative'
+  - path: '/opt/librenms/rrd'
+    type: 'negative'
+  - path: '/opt/librenms/storage'
+    type: 'negative'
   - path: '/usr'
     attributes: 'NORMAL'
   # These are too volatile
@@ -72,6 +87,19 @@ aide__rules__role_var:
   # /var/lib/rpm on RHEL 8 and 9 and is below /var/lib/dpkg on Debian and Ubuntu, which no rule
   # covers. Verified with rpm 4.19 on Rocky 10.
   - path: '/usr/lib/sysimage/rpm'
+    type: 'negative'
+  # Not in the shipped list. The home of the web server user on the Red Hat family, see the
+  # dot files of root below. Ansible creates and deletes a directory in .ansible/tmp for every
+  # task the nextcloud and wordpress roles run as apache. .cache holds disposable caches only,
+  # and libsmbclient (SMB external storage of Nextcloud) rewrites its name cache
+  # .cache/samba/gencache.tdb there. LibreOffice rewrites its profile below .config/libreoffice
+  # with every document it converts, Nextcloud previews included. Verified with Samba 4.23 on
+  # Rocky 10 and LibreOffice 7.1 on Rocky 9.
+  - path: '/usr/share/httpd/\.ansible/tmp'
+    type: 'negative'
+  - path: '/usr/share/httpd/\.cache'
+    type: 'negative'
+  - path: '/usr/share/httpd/\.config/libreoffice'
     type: 'negative'
 
   # Admins dot files constantly change, just check perms
@@ -101,6 +129,11 @@ aide__rules__role_var:
   # Not in the shipped list. mongosh, which the mongodb role and its mongodb-dump.service run as
   # root, writes a log file per session here and removes the old ones itself.
   - path: '/root/\.mongodb/mongosh'
+    type: 'negative'
+  # Not in the shipped list. WP-CLI keeps every WordPress release it downloads here, and the
+  # wordpress role and its core minor update timer download them as root. Verified with
+  # WP-CLI 2.12 on Rocky 10.
+  - path: '/root/\.wp-cli/cache'
     type: 'negative'
   - path: '/root'
     attributes: 'NORMAL'
