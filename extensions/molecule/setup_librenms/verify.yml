@@ -402,3 +402,65 @@
       loop: '{{ __molecule__http_method_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }} -> {{ item["status"] }}'
+
+
+# daily.sh runs from librenms-daily.timer instead of the upstream cron job. Without aide on the
+# host the service only runs daily.sh, which logs every run to logs/daily.log.
+- name: 'Verify librenms-daily runs daily.sh'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'grep daily.sh /etc/cron.d/librenms'
+      ansible.builtin.command: 'grep --extended-regexp "^[^#]*daily\.sh" /etc/cron.d/librenms'
+      register: '__molecule__cron_daily_result'
+      changed_when: false
+      failed_when: '__molecule__cron_daily_result["rc"] >= 2'
+
+    - name: 'Assert the cron jobs no longer run daily.sh'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cron_daily_result["rc"] == 1'
+        fail_msg: '/etc/cron.d/librenms still runs daily.sh: {{ __molecule__cron_daily_result["stdout"] }}'
+
+    - name: 'systemctl show librenms-daily.timer'
+      ansible.builtin.systemd:
+        name: 'librenms-daily.timer'
+      register: '__molecule__daily_timer_result'
+
+    - name: 'Assert librenms-daily.timer is active and enabled'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__daily_timer_result["status"]["ActiveState"] == "active"'
+          - '__molecule__daily_timer_result["status"]["UnitFileState"] == "enabled"'
+        fail_msg: 'librenms-daily.timer is {{ __molecule__daily_timer_result["status"]["ActiveState"] }} and {{ __molecule__daily_timer_result["status"]["UnitFileState"] }}.'
+
+    - name: 'stat /opt/librenms/logs/daily.log'
+      ansible.builtin.stat:
+        path: '/opt/librenms/logs/daily.log'
+      register: '__molecule__daily_log_before_result'
+
+    - name: 'systemctl start librenms-daily.service'
+      ansible.builtin.systemd:
+        name: 'librenms-daily.service'
+        state: 'started'
+      changed_when: false
+
+    - name: 'systemctl show librenms-daily.service'
+      ansible.builtin.systemd:
+        name: 'librenms-daily.service'
+      register: '__molecule__daily_service_result'
+
+    - name: 'stat /opt/librenms/logs/daily.log'
+      ansible.builtin.stat:
+        path: '/opt/librenms/logs/daily.log'
+      register: '__molecule__daily_log_after_result'
+
+    - name: 'Assert librenms-daily.service ran daily.sh'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__daily_service_result["status"]["Result"] == "success"'
+          - '__molecule__daily_log_after_result["stat"]["exists"] | bool'
+          - '__molecule__daily_log_after_result["stat"]["mtime"] > __molecule__daily_log_before_result["stat"]["mtime"] | d(0)'
+        fail_msg: 'librenms-daily.service ended with {{ __molecule__daily_service_result["status"]["Result"] }}, daily.log was not written.'

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026110901
+
+[Unit]
+Description=LibreNMS daily maintenance and update timer
+
+[Timer]
+# the time of the daily.sh job in dist/librenms.cron of LibreNMS, which this timer replaces
+OnCalendar=*-*-* 00:19:00
+
+[Install]
+WantedBy=timers.target

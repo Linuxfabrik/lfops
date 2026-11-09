@@ -8,7 +8,9 @@ This role installs and configures [LibreNMS](https://www.librenms.org/).
 
 ## How the Role Behaves
 
-The role installs LibreNMS from a git checkout on the target host, not on the Ansible controller, and checks out the latest upstream release on every run. The version is not pinned, so a run updates an existing installation to whatever upstream currently offers. Between runs LibreNMS keeps itself up to date as well: the cron jobs are the ones upstream ships, and their nightly `daily.sh` updates the code on its own. `librenms__config_update_channel` selects the channel it follows.
+The role installs LibreNMS from a git checkout on the target host, not on the Ansible controller, and checks out the latest upstream release on every run. The version is not pinned, so a run updates an existing installation to whatever upstream currently offers. Between runs LibreNMS keeps itself up to date as well: its nightly `daily.sh` updates the code on its own, and `librenms__config_update_channel` selects the channel it follows. The cron jobs are the ones upstream ships, except `daily.sh`, which `librenms-daily.timer` runs at the same time (00:19) through `/usr/local/sbin/librenms-daily`.
+
+`librenms-daily` keeps the AIDE database of the [aide](https://github.com/Linuxfabrik/lfops/tree/main/roles/aide) role in step with these updates, the same way the [system_update](https://github.com/Linuxfabrik/lfops/tree/main/roles/system_update) role does for package updates. With `aidecheck.timer` active, it runs an AIDE check before `daily.sh`, and updates the database afterwards only if that check was clean and `daily.sh` checked out another commit. After a check with findings, it leaves the database alone and starts `aidecheck.service`, which fails and reports the findings. Changes made by anyone else stay reported. During the whole run it holds `/run/aide.lock`, which every AIDE run of LFOps takes, and it waits for running package updates. On a host without the aide role it only runs `daily.sh`.
 
 `librenms__url` is the one place the address of the instance is configured. The role writes it to `base_url` in `/opt/librenms/config.php`, which overrides the URL LibreNMS otherwise detects from each request, and to `APP_URL` in `/opt/librenms/.env`, which Laravel uses wherever there is no request to detect from, alert notifications above all. Both are needed: LibreNMS builds part of its links itself and leaves the rest to Laravel. Note that `base_url` ties the instance to that address, so opening the web interface under a different name makes the built-in validation fail rather than only warn. `config.php` outranks the `config` database table, so a `base_url` set through the web interface or `lnms config:set` on an existing host is masked from the next run onwards.
 
@@ -62,7 +64,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `librenms:cron`
 
-* Deploys the cron jobs and the units of the LibreNMS scheduler.
+* Deploys the cron jobs, `librenms-daily.timer` and the units of the LibreNMS scheduler.
 * Triggers: none.
 
 `librenms:logrotate`
@@ -77,7 +79,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `librenms:state`
 
-* Manages the state of the LibreNMS scheduler timer (start, stop, enable, disable).
+* Manages the state of the LibreNMS scheduler timer (start, stop, enable, disable) and starts `librenms-daily.timer`.
 * Triggers: none.
 
 

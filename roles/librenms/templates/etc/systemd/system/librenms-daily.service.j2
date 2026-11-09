@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026110901
+
+[Unit]
+Description=LibreNMS daily maintenance and update, with AIDE re-baseline
+# waits for running package jobs, as the aide role does before it touches the database. the
+# AIDE check of security-update and update-and-reboot waits for /run/aide.lock, which this
+# service holds while it runs. ordering on a unit that does not exist is ignored.
+After=dnf-automatic-install.service dnf-automatic.service security-update.service update-and-reboot.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/librenms-daily
