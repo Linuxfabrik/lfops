@@ -119,12 +119,15 @@ aide__rules__role_var:
   # Not in the shipped list. gpg-agent and keyboxd keep their sockets and locks here while they
   # run, from a run of the duplicity role or of a backup until the next reboot, so they come and
   # go between two checks. The keys and the trust database stay covered by the rule below.
-  # Verified with GnuPG 2.4 on Rocky 10.
+  # GnuPG creates the `.#lk` file of a lock next to the locked file and keeps it until the
+  # lock handle is destroyed: in the home directory for `trustdb.gpg` and `pubring.kbx`, in
+  # `public-keys.d` for the database of keyboxd (common/dotlock.c).
+  # Verified with GnuPG 2.4 and aide 0.19.2 on Rocky 10.
   - path: '/root/\.gnupg/S\.'
     type: 'negative'
   - path: '/root/\.gnupg/.*\.lock$'
     type: 'negative'
-  - path: '/root/\.gnupg/.*/\.#lk'
+  - path: '/root/\.gnupg/(.*/)?\.#lk'
     type: 'negative'
   # Not in the shipped list. mongosh, which the mongodb role and its mongodb-dump.service run as
   # root, writes a log file per session here and removes the old ones itself.
