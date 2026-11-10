@@ -26,21 +26,29 @@
 # * `not_before`: optional, `YYYY-MM-DD`, skip the entry until then, e.g. for an EOL date.
 
 - id: 'ansible-core-recommendation'
-  what: 'README.md recommends ansible-core versions and lists their Python ranges.'
+  what: >
+    README.md recommends ansible-core 2.16 for RHEL 8 and the latest release otherwise,
+    and the execution environment ships 2.16. Both rely on 2.16 being maintained after
+    its official end of life (2025-07-31).
   where:
     - 'README.md'
     - 'execution-environment.yml'
-  done_when: 'A recommended ansible-core series reaches its upstream end of life.'
+  done_when: >
+    No ansible-core 2.16 release for more than six months, or Red Hat no longer ships
+    2.16 as the default core of a supported Ansible Automation Platform, while LFOps still
+    supports RHEL 8.
   check: >
-    Compare the series in README.md "Which ansible-core version should I use?" with
-    https://endoflife.date/api/ansible-core.json. 2.16 stays as long as RHEL 8 is
-    supported, since Red Hat maintains it (AAP 2.5 to 2.7, RHEL 8 AppStream).
-  action: 'Update the recommendation; propose a newer default execution environment.'
-  interval: 'monthly'
+    Release dates of the 2.16.x versions on https://pypi.org/pypi/ansible-core/json, and
+    the default core per AAP version on
+    https://access.redhat.com/support/policy/updates/ansible-automation-platform.
+  action: >
+    Decide how to keep RHEL 8 supported, e.g. build the execution environment on the
+    ansible-core RPM of the Rocky 10 AppStream, which is rebuilt from the Red Hat sources.
+  interval: 'quarterly'
   last_checked: '2026-11-10'
   last_result: >
-    Due: README on main still recommends 2.18 (EOL 2026-05-31); fixed by PR #662. 2.19
-    EOL 2026-11-30, latest 2.22.0.
+    Unchanged: README recommends 2.16 for RHEL 8 and the latest release otherwise (#662).
+    Last 2.16 release: 2.16.20 on 2026-11-02. AAP 2.5 to 2.7 default to 2.16.
 
 - id: 'distro-eol-debian-12'
   what: >
@@ -205,7 +213,8 @@
     Compare the latest ansible-core release on https://pypi.org/pypi/ansible-core/json
     with `last_result`. If it is newer, run the `setup_basic` scenario and one setup
     playbook scenario (e.g. `setup_nextcloud`) with that release, as described in
-    CONTRIBUTING.md "Testing".
+    CONTRIBUTING.md "Testing". Leave out `rocky8-vm` (`--limit '!rocky8-vm'`): ansible-core
+    2.17 and newer cannot manage RHEL 8, which stays on 2.16.
   action: 'Fix what breaks, or document the limitation in the README.'
   interval: 'monthly'
   last_checked: '2026-11-10'
