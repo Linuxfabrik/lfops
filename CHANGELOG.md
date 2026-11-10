@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:icingaweb2_module_director, playbook:setup_icinga2_master**: Runs the Director database housekeeping daily at 03:xx, at a fixed minute per host. Set `icingaweb2_module_director__housekeeping_timer_enabled: false` to turn it off.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.6.
 * **role:collabora**: Add support for Collabora Online Enterprise 26.04.5.
 * **role:icingaweb2_module_reporting**: Add `icingaweb2_module_reporting__mail_from` to set the sender address of the report mails.
