@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * **role:collabora**: Add support for Collabora Online Enterprise 26.04.5.
+* **role:icingaweb2_module_reporting**: Add `icingaweb2_module_reporting__mail_from` to set the sender address of the report mails.
 * **role:freeipa_server**: The `freeipa_server__healthcheck_*` variables set the certificate warning period, the timeout per check and the excludes of `ipa-healthcheck`, by default with 30 instead of 10 seconds per check.
 * **role:freeipa_server**: Installs `ipa-healthcheck` and runs it right after the installation and then daily at 06:xx, at a fixed minute per host or after the next boot if the host was down at that time, so its report in `/var/log/ipa/healthcheck/healthcheck.log` is ready for monitoring.
 * **execution-environment**: The image carries its LFOps version in the `LFOPS_EE_VERSION` environment variable and the `org.opencontainers.image.version` label, and the dashboard callback shows it.
@@ -237,6 +238,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: The `wordpress` vHost template no longer blocks images and comments of a WordPress site that is reached on a non-default port, such as `https://wordpress.example.com:8443`, as hotlinking and comment spam.
+* **role:moodle**: Moodle is reachable when `moodle__url` ends with a slash or contains a path, such as `https://learning.example.com/`. Apache sent these requests to another vHost.
+* **role:icingaweb2_module_grafana**: Graphs load again when `icingaweb2_module_grafana__url` contains a port, such as `https://grafana.example.com:3000`. The port was dropped from the module configuration.
 * **role:aide**: The check no longer reports the runtime data of LibreNMS, the WordPress downloads of WP-CLI below `/root/.wp-cli/cache`, or the caches, the LibreOffice profile and the Ansible temporary files in the home of the web server user, `/usr/share/httpd`. Each of them blocked the database update after the nightly system update.
 * **role:redis**: Hosts without the Redis package of packages.redis.io, such as Remi and the distribution packages, no longer warn `Skipped '/usr/lib/redis/modules' path due to this access issue` on every run.
 * **role:lvm**: A PV on a partition of an SD card or eMMC disk, such as `/dev/mmcblk0p1`, is rescanned before the resize, so a grown disk is picked up.

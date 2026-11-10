@@ -1,5 +1,13 @@
 ; {{ ansible_managed }}
-; 2024110601
+; 2026110601
 
 [backend]
 resource = "{{ icingaweb2_module_reporting__database_name }}"
+{% if icingaweb2_module_reporting__mail_from | length > 0 %}
+{# The module falls back to reporting@icinga only if the key is missing, an empty value would
+   be used as the sender. Verified against icingaweb2-module-reporting v1.1.0
+   (library/Reporting/Actions/SendMail.php). #}
+
+[mail]
+from = "{{ icingaweb2_module_reporting__mail_from }}"
+{% endif %}

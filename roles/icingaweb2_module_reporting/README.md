@@ -64,6 +64,12 @@ icingaweb2_module_reporting__version: 'v1.0.2'
 * Type: String.
 * Default: `'icinga_reporting'`
 
+`icingaweb2_module_reporting__mail_from`
+
+* The sender address (From) of the mails the module sends for scheduled reports. Leave empty to use the module's built-in default `reporting@icinga`.
+* Type: String.
+* Default: `''`
+
 `icingaweb2_module_reporting__service_enabled`
 
 * Enables or disables the reporting service, analogous to `systemctl enable/disable --now`.
@@ -76,6 +82,7 @@ Example:
 # optional
 icingaweb2_module_reporting__database_host: 'localhost'
 icingaweb2_module_reporting__database_name: 'icinga_reporting'
+icingaweb2_module_reporting__mail_from: 'icinga-reporting@example.com'
 icingaweb2_module_reporting__service_enabled: true
 ```
 

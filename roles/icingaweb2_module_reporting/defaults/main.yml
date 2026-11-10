@@ -1,5 +1,6 @@
 icingaweb2_module_reporting__database_host: 'localhost'
 icingaweb2_module_reporting__database_name: 'icinga_reporting'
+icingaweb2_module_reporting__mail_from: ''
 icingaweb2_module_reporting__service_enabled: true
 
 # -----------------------------------------------------------------------------

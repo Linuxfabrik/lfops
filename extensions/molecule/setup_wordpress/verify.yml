@@ -413,7 +413,13 @@
       loop:
         - referer: '{{ wordpress__url }}/'
           status: 200
+        # browsers keep a non-default port in the referer
+        - referer: '{{ wordpress__url }}:8443/'
+          status: 200
         - referer: 'https://hotlinker.example.net/'
+          status: 403
+        # the host of the site as a prefix of a foreign host name
+        - referer: 'https://{{ __molecule__wordpress_host }}.hotlinker.example.net/'
           status: 403
 
     - name: 'GET <path>/wp-includes/version.php of each instance'
