@@ -540,6 +540,16 @@ Templates that are copies of a packaged file (`<series>-coolwsd.xml.j2`, `<serie
 * A patch release inside an existing series needs no CHANGELOG entry, a new series goes under `### Added`.
 
 
+#### Workarounds and Planned Removals
+
+Code that is only there until something happens elsewhere (a workaround for an upstream bug, a branch for a platform until its end of life, a vendored copy of an upstream module) gets an entry in `tools/maintenance.yml`, in the same pull request. The format is described in its header.
+
+* Write `done_when` and `check` so that someone else can decide without your context: name the upstream issue, the release or commit that has to be in, and how to verify it (`git tag --contains`, a package version in a container). A closed issue is not enough.
+* Point to the entry from the code with a comment that names the upstream link (e.g. `# see https://github.com/Icinga/icinga2/issues/10617`), or the `id` of the entry if there is no upstream link, so `git grep` finds every place.
+* The pull request that removes the workaround removes the entry.
+* The `lfops-maintenance` skill runs the checks of all due entries and reports which ones need work. It runs from a recurring calendar reminder.
+
+
 #### systemd Drop-ins and Service Ordering
 
 * Override units with drop-ins under `/etc/systemd/system/<unit>.d/`, never by templating the unit file. Name them after their purpose (`z00-linuxfabrik.conf` for the role's `[Service]` settings, `z00-after-<dependency>.conf` for ordering) and run `systemctl daemon-reload` when changed.
