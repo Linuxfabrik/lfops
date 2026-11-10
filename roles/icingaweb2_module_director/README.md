@@ -131,6 +131,18 @@ icingaweb2_module_director__version: 'v1.8.1.2021090901'
 * Type: Bool.
 * Default: `false`
 
+`icingaweb2_module_director__housekeeping_on_calendar`
+
+* When `icinga-director-housekeeping.timer` runs `icingacli director housekeeping run ALL`, which removes leftovers such as undeployed configurations and unused import data from the Director database and refreshes the host group membership cache. Have a look at [systemd.time(7)](https://www.freedesktop.org/software/systemd/man/systemd.time.html) for the format.
+* Type: String.
+* Default: `'*-*-* 03:{{ 59 | random(seed=inventory_hostname) }}'`
+
+`icingaweb2_module_director__housekeeping_timer_enabled`
+
+* Enables or disables `icinga-director-housekeeping.timer`, analogous to `systemctl enable/disable --now`.
+* Type: Bool.
+* Default: `true`
+
 `icingaweb2_module_director__service_enabled`
 
 * Enables or disables the director service, analogous to `systemctl enable/disable --now`.
@@ -159,6 +171,8 @@ icingaweb2_module_director__api_port: 5665
 icingaweb2_module_director__database_host: 'localhost'
 icingaweb2_module_director__database_name: 'icinga_director'
 icingaweb2_module_director__force_kickstart: true
+icingaweb2_module_director__housekeeping_on_calendar: 'weekly'
+icingaweb2_module_director__housekeeping_timer_enabled: false
 icingaweb2_module_director__service_enabled: true
 icingaweb2_module_director__skip_basket_import: true
 icingaweb2_module_director__url: 'https://github.com/Icinga/icingaweb2-module-director/archive/{{ icingaweb2_module_director__version }}.tar.gz'
