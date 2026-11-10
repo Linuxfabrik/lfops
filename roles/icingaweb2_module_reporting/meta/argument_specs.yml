@@ -24,6 +24,15 @@ argument_specs:
         default: 'icinga_reporting'
         description: 'Name of the SQL database.'
 
+      icingaweb2_module_reporting__mail_from:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Sender address (From) of the mails the module sends for
+          scheduled reports. Leave empty to keep the module's built-in
+          default `reporting@icinga`.
+
       icingaweb2_module_reporting__service_enabled:
         type: 'bool'
         required: false
