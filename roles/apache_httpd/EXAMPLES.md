@@ -541,6 +541,37 @@ SetEnvIf MM_COUNTRY_CODE DE AllowCountry
 ```
 
 
+### Limiting the Request Body on a Reverse Proxy
+
+`LimitRequestBody` (`apache_httpd__conf_limit_request_body`) does not apply to requests that Apache forwards with mod_proxy: its input filter treats every proxy request as unlimited, whatever the global or `<Location>` value is. A check of the `Content-Length` header, for example with `<If>`, misses chunked requests, which have no `Content-Length`.
+
+ModSecurity enforces its limit on forwarded requests as well, with and without `Content-Length`, and answers with `413`. Enable the module:
+
+```yaml
+apache_httpd__mods__host_var:
+  - filename: 'security2'
+    enabled: true
+    state: 'present'
+    template: 'security2'
+```
+
+Then add this to the `raw` content of the `proxy` vHost:
+
+```
+# security2_module
+SecRuleEngine                 On
+SecRequestBodyAccess          On
+SecRequestBodyLimit           102400
+SecRequestBodyNoFilesLimit    102400
+```
+
+* `SecRequestBodyLimit` caps every request body, file uploads included. ModSecurity's default is 128 MiB.
+* `SecRequestBodyNoFilesLimit` caps the form fields of `application/x-www-form-urlencoded` and `multipart/form-data` requests. ModSecurity's default is 1 MiB. Set it to the same value or lower.
+* With `SecRuleEngine DetectionOnly`, ModSecurity only logs a request above the limit and forwards it anyway.
+* ModSecurity reads the complete request body before it forwards the request, in memory up to `SecRequestBodyInMemoryLimit` and in `SecTmpDir` beyond that. The backend therefore only sees an upload once it has fully arrived on the proxy.
+* ModSecurity needs `mod_unique_id`, which the role enables by default. Without it, ModSecurity logs "ModSecurity requires mod_unique_id to be installed" and lets every request through unchecked.
+
+
 ### mod_security + OWASP CRS Rule Set
 
 Will be installed on reverse proxy servers only.
