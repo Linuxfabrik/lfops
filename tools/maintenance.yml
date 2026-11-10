@@ -1,0 +1,381 @@
+# Recurring maintenance work: workarounds that wait for an upstream fix or release, code
+# kept for a platform until its end of life, vendored code that has to be re-synced, and
+# periodic chores. The `lfops-maintenance` skill reads this file, runs the `check` of
+# every entry that is due and reports which entries need work. It changes nothing; the
+# work itself is done in an ordinary pull request.
+#
+# A pull request that adds a workaround adds its entry here, and the pull request that
+# removes the workaround removes the entry.
+#
+# Per entry, sorted by `id`:
+#
+# * `id`: unique, kebab-case.
+# * `what`: what LFOps does differently, in one sentence.
+# * `where`: the files involved. `git grep` the `id` or the upstream link to find all of
+#   them; the list does not have to be exhaustive.
+# * `upstream`: optional, the upstream issues and pull requests the entry waits for.
+# * `done_when`: the condition under which the work can be done, as precise as possible:
+#   a release that contains a commit, a minimum supported version, a date.
+# * `check`: how to find out whether `done_when` holds, as commands or concrete steps, so
+#   that every run checks the same way. A closed issue is not enough: check that a
+#   release contains the fix.
+# * `action`: what to do once `done_when` holds.
+# * `interval`: `monthly` or `quarterly`. A run handles the entries whose interval has
+#   passed since `last_checked`.
+# * `last_checked`: optional, `YYYY-MM-DD`, with the result in `last_result`.
+# * `not_before`: optional, `YYYY-MM-DD`, skip the entry until then, e.g. for an EOL date.
+
+- id: 'ansible-core-recommendation'
+  what: 'README.md recommends ansible-core versions and lists their Python ranges.'
+  where:
+    - 'README.md'
+    - 'execution-environment.yml'
+  done_when: 'A recommended ansible-core series reaches its upstream end of life.'
+  check: >
+    Compare the series in README.md "Which ansible-core version should I use?" with
+    https://endoflife.date/api/ansible-core.json. 2.16 stays as long as RHEL 8 is
+    supported, since Red Hat maintains it (AAP 2.5 to 2.7, RHEL 8 AppStream).
+  action: 'Update the recommendation; propose a newer default execution environment.'
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Due: README on main still recommends 2.18 (EOL 2026-05-31); fixed by PR #662. 2.19
+    EOL 2026-11-30, latest 2.22.0.
+
+- id: 'distro-eol-debian-12'
+  what: >
+    Debian 12 has no Valkey, so the setup playbooks pick Redis there, and per-OS vars
+    and templates exist for it.
+  where:
+    - 'COMPATIBILITY.md'
+    - 'playbooks/setup_icinga2_master.yml'
+    - 'playbooks/setup_mastodon.yml'
+    - 'playbooks/setup_moodle.yml'
+    - 'playbooks/setup_nextcloud.yml'
+  done_when: 'Debian 12 LTS ends (2028-06-30, verify) and LFOps drops it.'
+  check: 'curl --silent https://endoflife.date/api/debian.json, cycle 12, field eol (the LTS end).'
+  action: >
+    Propose dropping Debian 12 (decision for the maintainers), then remove its column,
+    vars files, templates and Redis-vs-Valkey branches.
+  interval: 'quarterly'
+  not_before: '2028-03-01'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: EOL (LTS) 2028-06-30.
+
+- id: 'distro-eol-rhel-8'
+  what: >
+    RHEL 8 keeps the ansible-core 2.16 floor, the Python 3.6 unit test chain and several
+    RHEL 8 branches in roles.
+  where:
+    - '.github/dependabot.yml'
+    - '.github/unit-tests-py36'
+    - '.github/unit-tests-py36-ansible-core'
+    - '.github/workflows/dependency-review.yml'
+    - 'README.md'
+    - 'extensions/molecule/warnings-allowlist.yml'
+    - 'playbooks/valkey.yml'
+    - 'plugins/callback/compact.py'
+    - 'plugins/modules/lvm_pv.py'
+    - 'roles/bind'
+    - 'roles/bootloader/tasks/RedHat.yml'
+    - 'roles/mariadb_server/tasks/main.yml'
+  done_when: 'RHEL 8 maintenance ends (2029-05-31) or LFOps drops RHEL 8 earlier.'
+  check: 'curl --silent https://endoflife.date/api/rhel.json, cycle 8, field eol.'
+  action: >
+    Propose dropping RHEL 8, then raise the ansible-core floor, remove the Python 3.6
+    chain, the `<2.19` fallbacks and the RHEL 8 branches, and switch `lvm_pv` to
+    `community.general.lvm_pv` (see entry `vendored-lvm-pv`).
+  interval: 'quarterly'
+  not_before: '2029-01-01'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: EOL 2029-05-31.
+
+- id: 'distro-eol-ubuntu-22-04'
+  what: >
+    Ubuntu 22.04 has no Valkey, skips the OWASP CRS (ModSecurity 2.9.5) and gets reduced
+    tuned settings (tuned 2.15).
+  where:
+    - 'COMPATIBILITY.md'
+    - 'roles/apache_httpd/tasks/mod_security_coreruleset.yml'
+    - 'roles/kernel_settings/vars/Ubuntu22.yml'
+    - 'playbooks/setup_mastodon.yml'
+    - 'playbooks/setup_moodle.yml'
+    - 'playbooks/setup_nextcloud.yml'
+  done_when: 'Ubuntu 22.04 standard support ends (around 2027-04 to 2027-06, verify).'
+  check: 'curl --silent https://endoflife.date/api/ubuntu.json, cycle 22.04, field eol.'
+  action: 'Propose dropping Ubuntu 22.04, then remove its column, vars and branches.'
+  interval: 'quarterly'
+  not_before: '2027-01-01'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: standard support ends 2027-06-01.
+
+- id: 'grafana-datasource-legacy-id-api'
+  what: >
+    `grafana_grizzly` enables the `datasourceLegacyIdApi` feature toggle, because grizzly
+    updates datasources by numeric ID.
+  where:
+    - 'roles/grafana_grizzly/defaults/main.yml'
+    - 'roles/grafana_grizzly/README.md'
+  done_when: >
+    The role uses gcx instead of grizzly, or a Grafana release announces the removal of
+    the toggle (then the role breaks and needs work before that release).
+  check: >
+    Read the breaking changes of every new Grafana major or minor release for
+    `datasourceLegacyIdApi`.
+  action: 'Migrate before the toggle disappears.'
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: toggle still registered (experimental) on grafana main.
+
+- id: 'hetzner-private-static-ip'
+  what: >
+    `hetzner_vm` cannot create a server with only a private network and a fixed IP
+    (documented limitation).
+  where:
+    - 'roles/hetzner_vm/README.md'
+  upstream:
+    - 'https://github.com/ansible-collections/hetzner.hcloud/issues/172'
+  done_when: 'A hetzner.hcloud release supports a fixed private IP at server creation.'
+  check: 'gh issue view 172 --repo ansible-collections/hetzner.hcloud --json state,closedAt'
+  action: 'Support it in the role and drop the limitation from the README.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: issue open.
+
+- id: 'icinga2-logrotate-rlimit'
+  what: >
+    The logrotate config sends SIGUSR1 with `kill` instead of `icinga2 internal signal`,
+    which warns about RLIMIT adjustments in the cron mail.
+  where:
+    - 'roles/icinga2_agent/templates/etc/logrotate.d/icinga2.j2'
+    - 'roles/icinga2_master/templates/etc/logrotate.d/icinga2.j2'
+  upstream:
+    - 'https://github.com/Icinga/icinga2/issues/10617'
+    - 'https://github.com/Icinga/icinga2/pull/10728'
+  done_when: >
+    The oldest Icinga 2 series LFOps supports contains merge commit 98a71edf (milestone
+    2.17.0; not backported to 2.15 or 2.16).
+  check: >
+    gh release list --repo Icinga/icinga2; git -C ~/git/other/icinga2 fetch --tags &&
+    git -C ~/git/other/icinga2 tag --contains 98a71edf
+  action: >
+    Diff the packaged /etc/logrotate.d/icinga2 against the templates, then drop the
+    templates and their tasks, or reduce them to what LFOps deliberately changes.
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: no tag contains 98a71edf; latest releases 2.16.6 and 2.15.7.
+
+- id: 'mariadb-socket-selinux'
+  what: >
+    A systemd drop-in relabels the MariaDB socket to `mysqld_var_run_t` after every start.
+  where:
+    - 'roles/mariadb_server/templates/etc/systemd/system/mariadb.service.d/socket-selinux-workaround.conf.j2'
+  upstream:
+    - 'https://jira.mariadb.org/browse/MDEV-24941'
+  done_when: >
+    MDEV-24941 is fixed in 10.11.15, 11.4.9, 11.8.4 and 12.1.2. Check whether the fix also
+    covers what the drop-in comment says it stays for (Galera nodes, a socket outside the
+    datadir and /run).
+  check: >
+    In a VM (containers have no SELinux labels of their own, so the check cannot run in
+    one), Rocky 9 with the official MariaDB repository, a current release of every
+    supported series, without the drop-in: restart, then `ls -Z` the socket, also on a
+    Galera node.
+  action: 'Drop the drop-in, or narrow its comment to the cases that remain.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Not checked: needs a VM, see check.
+
+- id: 'molecule-latest-ansible-core'
+  what: >
+    The README recommends the latest ansible-core for hosts without RHEL 8, but Molecule
+    only runs on ansible-core 2.16; on the latest release only the plugin unit tests run.
+  where:
+    - 'README.md'
+    - 'extensions/molecule'
+  done_when: 'A new ansible-core minor release is out since the last run.'
+  check: >
+    Compare the latest ansible-core release on https://pypi.org/pypi/ansible-core/json
+    with `last_result`. If it is newer, run the `setup_basic` scenario and one setup
+    playbook scenario (e.g. `setup_nextcloud`) with that release, as described in
+    CONTRIBUTING.md "Testing".
+  action: 'Fix what breaks, or document the limitation in the README.'
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Due: ansible-core 2.22.0 is out, Molecule never ran on a release newer than 2.16.
+
+- id: 'nmstate-ipv6-dns'
+  what: 'The `network` role works around nmstate rejecting IPv6 DNS with method=disabled.'
+  where:
+    - 'roles/network/README.md'
+    - 'roles/network/tasks/main.yml'
+    - 'extensions/molecule/network'
+  upstream:
+    - 'https://github.com/nmstate/nmstate/issues/3251'
+  done_when: 'The fix is in the nmstate package of every supported RHEL release.'
+  check: >
+    gh issue view 3251 --repo nmstate/nmstate; if closed, find the release that contains
+    the fix and compare with `dnf info nmstate` on Rocky 9 and 10.
+  action: 'Remove the workaround and the matching Molecule host_vars.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: issue open.
+
+- id: 'php-alternatives'
+  what: 'The `php` role works around `alternatives` not switching from auto to manual mode.'
+  where:
+    - 'roles/php/tasks/main.yml'
+  upstream:
+    - 'https://github.com/ansible-collections/community.general/issues/6756'
+  done_when: 'A community.general release LFOps can require contains the fix.'
+  check: 'gh issue view 6756 --repo ansible-collections/community.general'
+  action: 'Switch to the fixed module behaviour.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: issue open.
+
+- id: 'reload-changed-timers'
+  what: >
+    `shared/tasks/reload-changed-timers.yml` unloads changed calendar timers, so a moved
+    schedule does not fire immediately.
+  where:
+    - 'CONTRIBUTING.md'
+    - 'roles/shared/tasks/reload-changed-timers.yml'
+  upstream:
+    - 'https://github.com/systemd/systemd/issues/16732'
+    - 'https://github.com/systemd/systemd/pull/43659'
+  done_when: >
+    The systemd of every supported distribution release ships the option of PR 43659
+    (realistically years after the merge).
+  check: 'gh pr view 43659 --repo systemd/systemd --json state,mergedAt'
+  action: 'Use the option in the timer units instead of the task file.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: PR open.
+
+- id: 'repo-remi-modularity'
+  what: >
+    `repo_remi` enables PHP through DNF modules, which DNF5 deprecates; Remi still uses
+    them on RHEL 10.
+  where:
+    - 'roles/repo_remi/tasks/RedHat.yml'
+  upstream:
+    - 'https://github.com/remicollet/remirepo/issues/265'
+  done_when: >
+    Remi stops shipping PHP as DNF module streams on a supported RHEL release, or the
+    DNF of a supported RHEL release drops modularity (EL 10 runs DNF 4).
+  check: >
+    podman run --rm quay.io/rockylinux/rockylinux:10, install
+    https://rpms.remirepo.net/enterprise/remi-release-10.rpm, then `dnf --version` and
+    `dnf module list php`.
+  action: 'Adapt the stream selection.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: Rocky 10.2 runs DNF 4.20, remi-release-10.2 still lists php module
+    streams.
+
+- id: 'security-scanning'
+  what: 'GitHub code scanning and secret scanning alerts.'
+  where:
+    - '.github/workflows'
+  done_when: 'There are open alerts.'
+  check: >
+    gh api repos/Linuxfabrik/lfops/code-scanning/alerts?state=open;
+    gh api repos/Linuxfabrik/lfops/secret-scanning/alerts?state=open
+  action: 'Fix or dismiss each alert with a reason.'
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Due: 1 open code scanning alert (#40, Scorecard SASTID, since 2026-05-22), no secret
+    scanning alerts.
+
+- id: 'uri-multipart-base64'
+  what: >
+    The Bitwarden module_utils carry a copy of `prepare_multipart()` that does not
+    base64-encode file payloads, which the Bitwarden API rejects.
+  where:
+    - 'plugins/module_utils/bitwarden.py'
+  upstream:
+    - 'https://github.com/ansible/ansible/issues/73621'
+  done_when: >
+    `ansible.module_utils.urls.prepare_multipart()` of the minimum supported ansible-core
+    can send a file without base64 encoding.
+  check: >
+    Read `prepare_multipart` in `lib/ansible/module_utils/urls.py` of the minimum
+    supported ansible-core (stable branch in ~/git/other/ansible or the installed copy).
+  action: 'Use the upstream function and drop the copy.'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: prepare_multipart in ansible-core 2.16.19 still base64-encodes file
+    payloads.
+
+- id: 'vendored-freeipa-modules'
+  what: >
+    The ipa* modules are vendored from ansible-freeipa with the `--diff` support of an
+    unmerged pull request.
+  where:
+    - 'CONTRIBUTING.md'
+    - 'plugins/module_utils/ipa_diff.py'
+    - 'plugins/modules/ipa*.py'
+    - 'roles/freeipa_server/tasks/main.yml'
+  upstream:
+    - 'https://github.com/freeipa/ansible-freeipa/pull/1415'
+  done_when: 'An ansible-freeipa release contains PR 1415.'
+  check: >
+    gh pr view 1415 --repo freeipa/ansible-freeipa --json state,mergeCommit; if merged,
+    check that a release tag contains the merge commit.
+  action: 'Switch to `freeipa.ansible_freeipa.<module>` and drop the vendored copies.'
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Unchanged: PR open, last updated 2026-04-30.
+
+- id: 'vendored-gnupg'
+  what: '`plugins/module_utils/gnupg.py` is a byte-identical copy of python-gnupg.'
+  where:
+    - 'plugins/module_utils/gnupg.py'
+  done_when: 'A newer python-gnupg release than the `__version__` in the copy exists.'
+  check: >
+    Compare `__version__` in the copy with
+    https://pypi.org/pypi/python-gnupg/json (`info.version`).
+  action: 'Re-sync unmodified, see CONTRIBUTING.md "Vendored Plugins".'
+  interval: 'quarterly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Due: copy is 0.5.6, PyPI has 0.5.7.
+
+- id: 'vendored-lvm-pv'
+  what: >
+    `plugins/modules/lvm_pv.py` is vendored from community.general with local patches,
+    since the upstream module needs a newer ansible-core and Python 3.7+.
+  where:
+    - 'CONTRIBUTING.md'
+    - 'plugins/modules/lvm_pv.py'
+    - 'roles/lvm'
+  upstream:
+    - 'https://github.com/ansible-collections/community.general/blob/main/plugins/modules/lvm_pv.py'
+  done_when: 'Upstream changes the module (re-sync), or RHEL 8 is dropped (switch).'
+  check: >
+    gh api 'repos/ansible-collections/community.general/commits?path=plugins/modules/lvm_pv.py&per_page=5'
+    and compare with the base commit noted in CONTRIBUTING.md "Vendored Plugins".
+  action: >
+    Re-sync, keeping the local patches listed in CONTRIBUTING.md, and record the upstream
+    base commit there.
+  interval: 'monthly'
+  last_checked: '2026-11-10'
+  last_result: >
+    Due: upstream ead22d40 (2026-09-28) added 8 options the copy lacks; base commit of
+    the copy is not recorded.
