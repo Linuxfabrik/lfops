@@ -73,6 +73,10 @@ apache_httpd__vhosts__host_var:
     conf_proxy_preserve_host: 'On'
     conf_server_name: 'www.example.com'
     raw: !unsafe |-
+      # headers_module
+      RequestHeader unset X-Forwarded-For
+      RequestHeader unset X-Forwarded-Host
+      RequestHeader unset X-Forwarded-Port
       RequestHeader set X-Forwarded-Proto "https"
       # ssl_module
       SSLEngine on
@@ -91,6 +95,10 @@ apache_httpd__vhosts__host_var:
       ProxyPassReverse / http://webserver/
       ProxyPassReverse / http://www.example.com/
 ```
+
+Remove the `X-Forwarded-*` headers that the client sends, on every vHost that forwards with `ProxyPass` or `RewriteRule ... [proxy]`. mod_proxy appends the client address to an `X-Forwarded-For` the client brought along, and the original host name to its `X-Forwarded-Host`, instead of replacing them, and passes a client's `X-Forwarded-Port` on unchanged. Applications that take the first entry, Keycloak for example, then use the client's value, so without the `RequestHeader` lines a client could choose the address the backend logs and checks, and the host name and port the backend builds its URLs from. A trusted proxy setting in the backend does not help, since the request does come from this Apache. mod_proxy sets `X-Forwarded-For` and `X-Forwarded-Host` again after the `RequestHeader` directives.
+
+If a load balancer or CDN sits in front of this Apache, also list it in `apache_httpd__mod_remoteip_internal_proxy`. mod_remoteip then takes the client address from the load balancer's `X-Forwarded-For`, and mod_proxy passes exactly that address on. Without it, the backend sees the load balancer as the client.
 
 ### Redirect vHost
 
