@@ -368,23 +368,30 @@
 
 - id: 'vendored-lvm-pv'
   what: >
-    `plugins/modules/lvm_pv.py` is vendored from community.general with local patches,
-    since the upstream module needs a newer ansible-core and Python 3.7+.
+    `plugins/modules/lvm_pv.py` is vendored from community.general (base 28b16eab,
+    `rescan_device()` from 6f22759f) with local patches, since the upstream module needs
+    a newer ansible-core and Python 3.7+.
   where:
     - 'CONTRIBUTING.md'
     - 'plugins/modules/lvm_pv.py'
     - 'roles/lvm'
   upstream:
     - 'https://github.com/ansible-collections/community.general/blob/main/plugins/modules/lvm_pv.py'
-  done_when: 'Upstream changes the module (re-sync), or RHEL 8 is dropped (switch).'
+  done_when: >
+    Upstream fixes a bug that affects LFOps, `roles/lvm` needs one of the options upstream
+    added, or RHEL 8 is dropped and community.general >= 9 can be required. A re-sync for
+    its own sake is not worth it: since ff5c34c4 the upstream module runs its commands
+    through the private module utils `_lvm` and `_cmd_runner`, which community.general
+    < 9 lacks, so every re-sync means rewriting those calls.
   check: >
-    gh api 'repos/ansible-collections/community.general/commits?path=plugins/modules/lvm_pv.py&per_page=5'
-    and compare with the base commit noted in CONTRIBUTING.md "Vendored Plugins".
+    gh api 'repos/ansible-collections/community.general/commits?path=plugins/modules/lvm_pv.py&per_page=5';
+    read the commits newer than `last_result` for bug fixes.
   action: >
-    Re-sync, keeping the local patches listed in CONTRIBUTING.md, and record the upstream
-    base commit there.
-  interval: 'monthly'
+    Take the fix over (as `rescan_device()` was), or switch to `community.general.lvm_pv`
+    once RHEL 8 is dropped.
+  interval: 'quarterly'
   last_checked: '2026-11-10'
   last_result: >
-    Due: upstream ead22d40 (2026-09-28) added 8 options the copy lacks; base commit of
-    the copy is not recorded.
+    Unchanged, newest upstream commit 6f22759f. Since 28b16eab upstream added 7 options
+    (ead22d40), the module attributes (8ec4d10c) and moved to CmdRunner (ff5c34c4); no bug
+    fix besides `rescan_device()`, already taken. A full re-sync was prepared and dropped.
