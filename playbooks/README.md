@@ -461,7 +461,6 @@ Calls the following roles (in order):
 * [repo_mariadb](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_mariadb): `icingaweb2__skip_repo_mariadb`
 * [python](https://github.com/Linuxfabrik/lfops/tree/main/roles/python): `icingaweb2__skip_python`
 * [mariadb_server](https://github.com/Linuxfabrik/lfops/tree/main/roles/mariadb_server): `icingaweb2__skip_mariadb_server`
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `icingaweb2__skip_yum_utils`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `icingaweb2__skip_repo_remi`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `icingaweb2__skip_php`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `icingaweb2__skip_policycoreutils`
@@ -812,7 +811,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `php__skip_yum_utils`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `php__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `php__skip_repo_epel`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `php__skip_repo_remi`
@@ -1076,7 +1074,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils)
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `repo_remi__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi)
@@ -1204,7 +1201,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `grav__skip_yum_utils`
 * [policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils): `grav__skip_policycoreutils`
 * [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps): `grav__skip_apps`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `grav__skip_repo_baseos`
@@ -1274,7 +1270,6 @@ Calls the following roles (in order):
 * [python_venv](https://github.com/Linuxfabrik/lfops/tree/main/roles/python_venv): `setup_icinga2_master__python_venv__skip_role`
 * [repo_icinga](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_icinga): `setup_icinga2_master__repo_icinga__skip_role`
 * [icinga2_master](https://github.com/Linuxfabrik/lfops/tree/main/roles/icinga2_master): `setup_icinga2_master__icinga2_master__skip_role`
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_icinga2_master__yum_utils__skip_role`
 * [repo_remi](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_remi): `setup_icinga2_master__repo_remi__skip_role`
 * [repo_sury](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_sury): `setup_icinga2_master__repo_sury__skip_role`
 * [php](https://github.com/Linuxfabrik/lfops/tree/main/roles/php): `setup_icinga2_master__php__skip_role`
@@ -1334,7 +1329,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_librenms__skip_yum_utils`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_librenms__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_librenms__skip_repo_epel`
 * [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_librenms__skip_repo_linuxfabrik` (runs only together with `acme_sh`)
@@ -1405,7 +1399,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_nextcloud__skip_yum_utils`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_nextcloud__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_nextcloud__skip_repo_epel`
 * [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_nextcloud__skip_repo_linuxfabrik` (runs only together with `acme_sh`)
@@ -1467,7 +1460,6 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
-* [yum_utils](https://github.com/Linuxfabrik/lfops/tree/main/roles/yum_utils): `setup_wordpress__skip_yum_utils`
 * [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos): `setup_wordpress__skip_repo_baseos`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `setup_wordpress__skip_repo_epel`
 * [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `setup_wordpress__skip_repo_linuxfabrik` (runs only together with `acme_sh`)

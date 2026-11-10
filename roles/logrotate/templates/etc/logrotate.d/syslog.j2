@@ -14,10 +14,6 @@
     rotate {{ logrotate__rotate }}
     sharedscripts
     postrotate
-{% if ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '7' %}
-        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
-{% else %}
         /usr/bin/systemctl kill -s HUP rsyslog.service >/dev/null 2>&1 || true
-{% endif %}
     endscript
 }
