@@ -2,7 +2,7 @@
 
 This role deploys `/etc/apt/sources.list` for Debian, allowing you to point the host at a custom mirror server. It is Debian-only; running it against an Ubuntu or Red Hat-family host fails because there is no matching template.
 
-Supported Debian versions: 10, 11, 12. The version is auto-detected via `ansible_facts["distribution_major_version"]` and the matching template is rendered.
+Supported Debian versions: 12. The version is auto-detected via `ansible_facts["distribution_major_version"]` and the matching template is rendered.
 
 After deploying the sources list, the role removes any `.rpmnew` / `.dpkg-dist` / `.ucf-dist` siblings if `lfops__remove_rpmnew_rpmsave: true` is set globally. By default these files are kept.
 
