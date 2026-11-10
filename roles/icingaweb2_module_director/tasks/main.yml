@@ -102,11 +102,43 @@
       mode: 0o644
     register: 'icingaweb2_module_director__systemd_service_template_result'
 
+  - name: 'Deploy /etc/systemd/system/icinga-director-housekeeping.service'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/icinga-director-housekeeping.service.j2'
+      dest: '/etc/systemd/system/icinga-director-housekeeping.service'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__icingaweb2_module_director__housekeeping_service_result'
+
+  - name: 'Deploy /etc/systemd/system/icinga-director-housekeeping.timer'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/icinga-director-housekeeping.timer.j2'
+      dest: '/etc/systemd/system/icinga-director-housekeeping.timer'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__icingaweb2_module_director__housekeeping_timer_result'
+
+  - name: 'Reload systemd for the changed timers'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'reload-changed-timers.yml'
+    vars:
+      shared__reload_changed_timers: '{{
+          (__icingaweb2_module_director__housekeeping_timer_result is changed)
+          | ternary(["icinga-director-housekeeping.timer"], [])
+        }}'
+
   - name: 'systemctl daemon-reload'
     ansible.builtin.systemd:
       daemon_reload: true
     when:
-      - 'icingaweb2_module_director__systemd_service_template_result is changed' # noqa no-handler (the unit file is reloaded right after it changed, not at the end of the play)
+      - 'icingaweb2_module_director__systemd_service_template_result is changed
+        or __icingaweb2_module_director__housekeeping_service_result is changed
+        or __icingaweb2_module_director__housekeeping_timer_result is changed' # noqa no-handler (the unit files are reloaded right after they changed, not at the end of the play)
 
   tags:
     - 'icingaweb2_module_director'
@@ -159,6 +191,13 @@
       name: 'icinga-director.service'
       enabled: '{{ icingaweb2_module_director__service_enabled }}'
       state: '{{ icingaweb2_module_director__service_enabled | bool | ternary("started", "stopped") }}'
+
+  # after the migrations, since the housekeeping needs the current database schema
+  - name: 'systemctl {{ icingaweb2_module_director__housekeeping_timer_enabled | bool | ternary("enable", "disable") }} --now icinga-director-housekeeping.timer'
+    ansible.builtin.systemd:
+      name: 'icinga-director-housekeeping.timer'
+      enabled: '{{ icingaweb2_module_director__housekeeping_timer_enabled }}'
+      state: '{{ icingaweb2_module_director__housekeeping_timer_enabled | bool | ternary("started", "stopped") }}'
 
   tags:
     - 'icingaweb2_module_director'

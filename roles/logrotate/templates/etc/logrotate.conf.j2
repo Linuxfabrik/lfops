@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2023032101
+# 2026111001
 
 compress
 delaycompress
@@ -10,20 +10,3 @@ missingok
 rotate {{ logrotate__rotate }}
 
 include /etc/logrotate.d
-
-{% if ansible_facts['distribution'] in ['CentOS', 'RedHat'] and ansible_facts['distribution_major_version'] == "7" %}
-# no packages own wtmp and btmp -- we'll rotate them here
-/var/log/wtmp {
-    monthly
-    create 0664 root utmp
-        minsize 1M
-    rotate 1
-}
-
-/var/log/btmp {
-    missingok
-    monthly
-    create 0600 root utmp
-    rotate 1
-}
-{% endif %}
