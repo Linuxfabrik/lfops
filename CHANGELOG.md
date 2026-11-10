@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:icingaweb2_module_reporting**: Add `icingaweb2_module_reporting__mail_from` to set the sender address of the report mails.
 * **role:freeipa_server**: The `freeipa_server__healthcheck_*` variables set the certificate warning period, the timeout per check and the excludes of `ipa-healthcheck`, by default with 30 instead of 10 seconds per check.
 * **role:freeipa_server**: Installs `ipa-healthcheck` and runs it right after the installation and then daily at 06:xx, at a fixed minute per host or after the next boot if the host was down at that time, so its report in `/var/log/ipa/healthcheck/healthcheck.log` is ready for monitoring.
 * **execution-environment**: The image carries its LFOps version in the `LFOPS_EE_VERSION` environment variable and the `org.opencontainers.image.version` label, and the dashboard callback shows it.
