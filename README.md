@@ -74,19 +74,14 @@ Full documentation is available at [linuxfabrik.github.io/lfops](https://linuxfa
 ## Requirements
 
 * **Ansible**: ansible-core >= 2.16
-* **Python on the controller**: >= 3.10 (ansible-core 2.16/2.17) or >= 3.11 (ansible-core 2.18)
+* **Python on the controller**: 3.10 - 3.12 for ansible-core 2.16; for newer releases see the [ansible-core support matrix](https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix)
 * **Python on managed nodes**: >= 3.6
 * **Dependencies**: The collection depends on several community collections (see [`requirements.yml`](requirements.yml)). These are installed automatically when using `ansible-galaxy`.
 
 **Which ansible-core version should I use?**
 
-| ansible-core | Controller Python | Managed Node Python | RHEL 8 (Python 3.6) |
-|--------------|-------------------|---------------------|----------------------|
-| 2.16         | 3.10 - 3.12       | 3.6 - 3.12          | works out of the box |
-| 2.17         | 3.10 - 3.12       | 3.7 - 3.12          | needs Python >= 3.7  |
-| 2.18         | 3.11 - 3.14       | 3.8 - 3.13          | needs Python >= 3.8  |
-
-If you manage RHEL 8 hosts with the default system Python (3.6), use **ansible-core 2.16**. If all your managed nodes have Python >= 3.8 (e.g. RHEL 9+, Debian 12+, Ubuntu 22.04+), you can use **ansible-core 2.18** for the latest features.
+* If you manage RHEL 8 hosts, use **ansible-core 2.16**. It is the last release that runs modules with the system Python 3.6 of RHEL 8. It is still maintained, since Red Hat supports it for the whole life cycle of RHEL 8.
+* Otherwise, use the **latest ansible-core** release.
 
 **Set the Python interpreter of the managed nodes.** Since ansible-core 2.17, Ansible no longer prefers the system Python of the distribution, but the newest `python3.X` from its list of known versions that it finds on the host. Some roles install an additional Python, for example duplicity (Python 3.11 on RHEL 9, Python 3.13 on RHEL 10). From the next run on, Ansible then runs its modules under that Python, which lacks the Python libraries of the distribution, and roles such as kernel_settings, monitoring_plugins and python_venv fail. Pin the system Python in the inventory for all hosts except RHEL 8, where ansible-core 2.16 already picks `/usr/libexec/platform-python`:
 
@@ -158,7 +153,7 @@ strategy_plugins = /path/to/venv/lib/pythonX.Y/site-packages/ansible_mitogen/plu
 strategy = mitogen_linear
 ```
 
-Since the `strategy_plugins` path contains the Python version, it differs per venv. If you use multiple venvs (e.g. ansible-core 2.16 and 2.18), either use separate `ansible.cfg` files or install Mitogen to a shared location:
+Since the `strategy_plugins` path contains the Python version, it differs per venv. If you use multiple venvs (e.g. ansible-core 2.16 and the latest release), either use separate `ansible.cfg` files or install Mitogen to a shared location:
 
 ```bash
 pip install --target=/opt/mitogen mitogen
@@ -633,10 +628,10 @@ Which Ansible role is proven to run on which OS? See [COMPATIBILITY.md](https://
 * Install a newer Ansible version and update all collections:
 
     ```bash
-    python3 -m venv ~/venvs/ansible-2.18
-    source ~/venvs/ansible-2.18/bin/activate
+    python3 -m venv ~/venvs/ansible-latest
+    source ~/venvs/ansible-latest/bin/activate
     pip install --upgrade pip
-    pip install 'ansible-core~=2.18.0'
+    pip install --upgrade ansible-core
 
     ansible-galaxy collection install -r requirements.yml --upgrade
     ```
