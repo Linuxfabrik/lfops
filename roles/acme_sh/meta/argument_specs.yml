@@ -61,4 +61,4 @@ argument_specs:
         type: 'bool'
         required: false
         default: true
-        description: 'Enables or disables the weekly acme.sh timer.'
+        description: 'Enables or disables the daily acme.sh timer.'

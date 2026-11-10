@@ -162,6 +162,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:acme_sh**: acme.sh checks for due renewals daily instead of weekly, so certificates are renewed in time with the shorter Let's Encrypt lifetimes (64 days from 2027-02-10), a failed renewal is retried the next day, and an early renewal that Let's Encrypt requests via ARI is no longer delayed by up to a week.
 * **role:librenms**: The nightly self-update of LibreNMS keeps the AIDE database in step, as the system_update role does for package updates. `daily.sh` runs from `librenms-daily.timer` instead of `/etc/cron.d/librenms`, at the same time. After a clean AIDE check it accepts the new release into the database, so a LibreNMS update is no longer reported as a finding.
 * **playbook:setup_basic**: Sets `minrate=200k` and `timeout=15` in `/etc/dnf/dnf.conf` on RHEL 8, 9 and 10, so DNF drops slow mirrors sooner; other settings stay as they are.
 * **role:lynis**: The daily audit runs at 06:xx instead of 02:xx, after the reboot window, so a report from before the nightly reboot no longer warns about a pending reboot for a whole day.
