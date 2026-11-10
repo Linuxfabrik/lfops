@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# 2026111001
+
+[Unit]
+Description=Icinga Director - Database housekeeping timer
+
+[Timer]
+OnCalendar={{ icingaweb2_module_director__housekeeping_on_calendar }}
+
+[Install]
+WantedBy=timers.target

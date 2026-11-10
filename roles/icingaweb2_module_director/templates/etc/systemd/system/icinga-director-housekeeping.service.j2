@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# 2026111001
+
+[Unit]
+Description=Icinga Director - Database housekeeping
+Documentation=https://icinga.com/docs/icinga-director/latest/doc/60-CLI/#database-housekeeping
+
+[Service]
+Type=oneshot
+User=icingadirector
+SyslogIdentifier=icingadirector-housekeeping
+# ALL runs every task in the order upstream recommends, since some tasks leave work for others
+ExecStart=/usr/bin/icingacli director housekeeping run ALL

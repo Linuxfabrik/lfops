@@ -1,5 +1,5 @@
 ; {{ ansible_managed }}
-; 2024101501
+; 2026111001
 
 [api]
 host = "{{ icingaweb2_module_jira__api_host }}"
@@ -18,11 +18,8 @@ icingaKey = "{{ icingaweb2_module_jira__key_fields_icinga_key }}"
 icingaStatus = "{{ icingaweb2_module_jira__key_fields_icinga_status }}"
 
 [ui]
-; see https://github.com/Icinga/icingaweb2-module-jira/issues/141
 default_issuetype = "{{ icingaweb2_module_jira__ui_issuetype }}"
 default_project = "{{ icingaweb2_module_jira__ui_project }}"
-issuetype = "{{ icingaweb2_module_jira__ui_issuetype }}"
-project = "{{ icingaweb2_module_jira__ui_project }}"
 
 [icingaweb]
 url = "{{ icingaweb2_module_jira__icingaweb2_url }}"
