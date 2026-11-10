@@ -61,7 +61,10 @@ moodle__apache_httpd__vhosts__dependent_var:
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '{{ moodle__install_dir }}'
     conf_error_log: 'logs/moodle-error.log'
-    conf_server_name: '{{ moodle__url | regex_replace("^(http://|https://)", "") }}'
+    # the host part only: Apache accepts a path or a trailing slash in ServerName without an
+    # error, but then no request reaches the vHost (verified with httpd 2.4.62 on Rocky 9).
+    # regex_replace instead of urlsplit, which returns an empty hostname for a URL without a scheme.
+    conf_server_name: '{{ moodle__url | regex_replace("^https?://", "") | regex_replace("[:/].*$", "") }}'
     raw: !unsafe |-
       # Add security and privacy related headers
       SetEnv modHeadersAvailable true
