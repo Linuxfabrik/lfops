@@ -65,7 +65,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `acme_sh:state`
 
-* Manages the state of the weekly acme.sh timer.
+* Manages the state of the daily acme.sh timer.
 * Triggers: none.
 
 
@@ -154,7 +154,7 @@ acme_sh__certificates:
 
 `acme_sh__timer_enabled`
 
-* Enables or disables the weekly acme.sh timer, analogous to `systemctl enable/disable --now`.
+* Enables or disables the daily acme.sh timer, analogous to `systemctl enable/disable --now`.
 * Type: Bool.
 * Default: `true`
 
