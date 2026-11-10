@@ -1,6 +1,6 @@
 # verify.yml runs after converge and again after the idempotence step. Issuing is out of reach of
 # a test VM, so this checks what an administrator and the timer rely on: a plain `acme.sh` in a
-# login shell of root works on /etc/acme.sh, the account settings are in place, and the weekly
+# login shell of root works on /etc/acme.sh, the account settings are in place, and the daily
 # renewal run succeeds with the packaged acme.sh.
 - name: 'Verify acme_sh installs acme.sh from the package'
   hosts: 'systems_under_test'
@@ -57,7 +57,17 @@
         - 'is-active'
       changed_when: false
 
-    # the weekly renewal run, triggered now instead of on Sunday. Type=oneshot, so `systemctl
+    - name: 'systemctl show acme-sh.timer --property=TimersCalendar' # noqa command-instead-of-module (no module reads the schedule of a timer)
+      ansible.builtin.command: 'systemctl show acme-sh.timer --property=TimersCalendar'
+      register: '__molecule__acme_sh_timer_calendar_result'
+      changed_when: false
+
+    - name: 'Assert that acme-sh.timer runs daily'
+      ansible.builtin.assert:
+        that: '__molecule__acme_sh_timer_calendar_result["stdout"] is search("OnCalendar=\\*-\\*-\\* 01:17:00")'
+        fail_msg: '{{ __molecule__acme_sh_timer_calendar_result["stdout"] }}'
+
+    # the daily renewal run, triggered now instead of at night. Type=oneshot, so `systemctl
     # start` returns once the run has finished.
     - name: 'systemctl start acme-sh.service' # noqa command-instead-of-module (wait for the run to finish and read its Result)
       ansible.builtin.command: 'systemctl start acme-sh.service'

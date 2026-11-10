@@ -1,11 +1,16 @@
 # {{ ansible_managed }}
-# 2022052701
+# 2026111001
 
 [Unit]
 Description=acme.sh Timer
 
+# acme.sh only renews when `--cron` runs, and it asks the CA for the ARI renewal window
+# (RFC 9773) on every run. A daily run renews within a day of the window, retries a failed
+# renewal the next day, and catches a renewal the CA pulls forward. Persistent= catches up on a
+# run missed while the host was down.
 [Timer]
-OnCalendar=Sun 01:17:00
+OnCalendar=*-*-* 01:17:00
+Persistent=true
 Unit=acme-sh.service
 
 [Install]
