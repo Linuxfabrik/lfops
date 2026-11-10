@@ -64,7 +64,6 @@ jobs:
         # Controller-side plugins (filter, lookup). The module tests run
         # here as well; their Python 3.6 run is the managed-node job below.
         python-version:
-          - '3.9'
           - '3.10'
           - '3.11'
           - '3.12'
@@ -102,7 +101,7 @@ jobs:
 
       - name: 'Run tox for this Python (all matching ansible-core envs)'
         # `-f pyXYZ` selects every tox env carrying this Python's factor,
-        # e.g. py311 -> py311-ansible215/216/217/218.
+        # e.g. py311 -> py311-ansible216/217/218.
         run: 'tox --discover "${{ steps.target-python.outputs.python-path }}" -f "py$(echo "${{ matrix.python-version }}" | tr -d ".")"'
 
   managed-node-plugins:

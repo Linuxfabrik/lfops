@@ -162,6 +162,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **collection**: The collection declares ansible-core 2.16 as its minimum, as the README already did, so ansible-core 2.15 warns that it does not support the collection.
 * **role:grafana**: The role no longer installs `chkconfig` on RHEL 9 and 10, since Grafana ships no SysV init script anymore.
 * **role:icingaweb2_module_jira**: `config.ini` no longer sets `project` and `issuetype` in the `[ui]` section, which the module does not read; the default project and issue type stay in `default_project` and `default_issuetype`.
 * **role:acme_sh**: acme.sh checks for due renewals daily instead of weekly, so certificates are renewed in time with the shorter Let's Encrypt lifetimes (64 days from 2027-02-10), a failed renewal is retried the next day, and an early renewal that Let's Encrypt requests via ARI is no longer delayed by up to a week.
