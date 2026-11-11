@@ -45,3 +45,70 @@
 
   tags:
     - 'icingadb_web'
+
+
+# sort by severity and name instead of severity and last state change. a path unit re-applies
+# the patch after every update of icingadb-web, see the script.
+- block:
+
+  - name: 'Deploy /usr/local/sbin/icingadb-web-patch-severity-sort'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/local/sbin/icingadb-web-patch-severity-sort.j2'
+      dest: '/usr/local/sbin/icingadb-web-patch-severity-sort'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  - name: 'Deploy /etc/systemd/system/icingadb-web-patch-severity-sort.{path,service}'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/icingadb-web-patch-severity-sort.{{ item }}.j2'
+      dest: '/etc/systemd/system/icingadb-web-patch-severity-sort.{{ item }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    loop:
+      - 'path'
+      - 'service'
+
+  - name: 'systemctl enable --now icingadb-web-patch-severity-sort.path'
+    ansible.builtin.systemd:
+      name: 'icingadb-web-patch-severity-sort.path'
+      enabled: true
+      state: 'started'
+      daemon_reload: true
+
+  - name: '/usr/local/sbin/icingadb-web-patch-severity-sort'
+    ansible.builtin.command: '/usr/local/sbin/icingadb-web-patch-severity-sort'
+    register: '__icingadb_web__patch_severity_sort_result'
+    changed_when: '"patched" in __icingadb_web__patch_severity_sort_result["stdout"]'
+
+  when:
+    - 'icingadb_web__patch_severity_sort'
+  tags:
+    - 'icingadb_web'
+
+
+- block:
+
+  - name: 'systemctl disable --now icingadb-web-patch-severity-sort.path'
+    ansible.builtin.systemd:
+      name: 'icingadb-web-patch-severity-sort.path'
+      enabled: false
+      state: 'stopped'
+    failed_when: false # the unit does not exist if it was never deployed
+
+  - name: 'rm -f /etc/systemd/system/icingadb-web-patch-severity-sort.{path,service} /usr/local/sbin/icingadb-web-patch-severity-sort'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'absent'
+    loop:
+      - '/etc/systemd/system/icingadb-web-patch-severity-sort.path'
+      - '/etc/systemd/system/icingadb-web-patch-severity-sort.service'
+      - '/usr/local/sbin/icingadb-web-patch-severity-sort'
+
+  when:
+    - 'not icingadb_web__patch_severity_sort'
+  tags:
+    - 'icingadb_web'

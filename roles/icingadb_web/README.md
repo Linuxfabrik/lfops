@@ -70,6 +70,12 @@ icingadb_web__api_user_login:
 * Type: String.
 * Default: `'{{ icingadb__database_name }}'`
 
+`icingadb_web__patch_severity_sort`
+
+* Sort the host and service lists by severity and then by name when sorting by "Severity", instead of by severity and then by the last state change. This also applies to the dashboards and the problem lists. IcingaDB Web has no setting for this ([Icinga/icingadb-web#1285](https://github.com/Icinga/icingadb-web/issues/1285)), so the role patches its controllers with `/usr/local/sbin/icingadb-web-patch-severity-sort`. `icingadb-web-patch-severity-sort.path` re-applies the patch after every update of the `icingadb-web` package. If an update changes the code in a way the script does not recognize, `icingadb-web-patch-severity-sort.service` fails. `rpm --verify icingadb-web` / `dpkg --verify icingadb-web` and AIDE report the patched files as changed. Setting this to `false` removes the script and the units, and reinstalling the `icingadb-web` package restores the original files.
+* Type: Bool.
+* Default: `true`
+
 `icingadb_web__plugin_output_character_limit`
 
 * Sets the maximum number of characters to display in plugin output.
@@ -140,6 +146,7 @@ icingadb_web__database_login:
   username: 'icingadb'
   password: 'linuxfabrik'
 icingadb_web__database_name: 'icingadb'
+icingadb_web__patch_severity_sort: true
 icingadb_web__plugin_output_character_limit: 65536
 icingadb_web__redis_ca: '/etc/pki/tls/certs/rootCA.pem'
 icingadb_web__redis_host: '127.0.0.1'

@@ -179,6 +179,34 @@
   last_result: >
     Unchanged: no tag contains 98a71edf; latest releases 2.16.6 and 2.15.7.
 
+- id: 'icingadb-web-severity-sort'
+  what: >
+    The icingadb_web role patches the IcingaDB Web controllers so that "Sort By: Severity"
+    sorts by severity and name instead of severity and last state change, and a path unit
+    re-applies the patch after every package update.
+  where:
+    - 'roles/icingadb_web/tasks/main.yml'
+    - 'roles/icingadb_web/templates/etc/systemd/system/icingadb-web-patch-severity-sort.path.j2'
+    - 'roles/icingadb_web/templates/etc/systemd/system/icingadb-web-patch-severity-sort.service.j2'
+    - 'roles/icingadb_web/templates/usr/local/sbin/icingadb-web-patch-severity-sort.j2'
+  upstream:
+    - 'https://github.com/Icinga/icingadb-web/issues/1285'
+    - 'https://github.com/Icinga/ipl-web/pull/404'
+  done_when: >
+    A released IcingaDB Web sorts by severity and name, or lets the admin configure the
+    sort options or the default sort (e.g. ipl-web#404 in a released icinga-php-library
+    plus support in IcingaDB Web), or a release changes the controllers so that the script
+    no longer recognizes them.
+  check: >
+    gh issue view 1285 --repo Icinga/icingadb-web; gh pr view 404 --repo Icinga/ipl-web;
+    git -C ~/git/other/icinga/icingadb-web pull && git -C ~/git/other/icinga/icingadb-web
+    grep --line-number 'state.severity' -- application/controllers
+  action: >
+    Configure the sort through the upstream option and drop the script, the units and
+    their tasks, plus `icingadb_web__patch_severity_sort`, or adapt the patterns in the
+    script to the changed controllers.
+  interval: 'quarterly'
+
 - id: 'mariadb-socket-selinux'
   what: >
     A systemd drop-in relabels the MariaDB socket to `mysqld_var_run_t` after every start.

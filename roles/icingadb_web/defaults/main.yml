@@ -3,6 +3,7 @@ icingadb_web__api_port: 5665
 icingadb_web__database_host: '{{ icingadb__database_host }}'
 icingadb_web__database_login: '{{ icingadb__database_login }}'
 icingadb_web__database_name: '{{ icingadb__database_name }}'
+icingadb_web__patch_severity_sort: true
 icingadb_web__plugin_output_character_limit: 65536
 icingadb_web__redis2_password: '{{ icingadb_web__redis_password }}'
 icingadb_web__redis2_port: '{{ icingadb_web__redis_port }}'
