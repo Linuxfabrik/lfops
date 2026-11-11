@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:icingadb_web, playbook:setup_icinga2_master**: Sorting by "Severity" in IcingaDB Web lists hosts and services of the same severity by name instead of by the last state change, also in the dashboards and problem lists. The role patches IcingaDB Web for this and re-applies the patch after every package update. Set `icingadb_web__patch_severity_sort: false` to keep the upstream sort order.
 * **role:icingaweb2_module_director, playbook:setup_icinga2_master**: Runs the Director database housekeeping daily at 03:xx, at a fixed minute per host. Set `icingaweb2_module_director__housekeeping_timer_enabled: false` to turn it off.
 * **role:collabora**: Add support for Collabora Online CODE 26.04.6.
 * **role:collabora**: Add support for Collabora Online Enterprise 26.04.5.

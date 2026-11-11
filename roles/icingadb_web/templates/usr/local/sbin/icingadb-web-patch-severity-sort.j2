@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# 2026111101
+
+# Makes "Sort By: Severity" in IcingaDB Web sort by severity and then by name, instead of by
+# severity and then by the last state change. Upstream request:
+# https://github.com/Icinga/icingadb-web/issues/1285
+#
+# Run by Ansible and by icingadb-web-patch-severity-sort.path whenever a package update replaces
+# one of the controllers. Patches only what is not patched yet, so it runs as often as needed.
+#
+# The patch rewrites the option "Severity" of the sort control and the default sort of the
+# controllers below, for example
+#     'service.state.severity desc,service.state.last_state_change desc' => t('Severity'),
+#     ['service.state.severity DESC', 'service.state.last_state_change DESC']
+# to
+#     'service.state.severity desc,service.display_name' => t('Severity'),
+#     ['service.state.severity DESC', 'service.display_name']
+# The dashlets and the problem badges in the menu pass `sort=service.state.severity desc` only
+# and get the rest of the sort string from the option above (prefix match in
+# SortControl::getSort() in ipl-web), so they are covered as well.
+# Verified against icingadb-web 1.4.0 (git v1.4.0-87-g58422868).
+#
+# Exits non-zero if a controller is missing or contains neither the original nor the patched
+# sort string, i.e. upstream changed the code and this script needs a look. The failed unit
+# shows up in the monitoring.
+
+set -o nounset
+set -o pipefail
+
+MODULE_DIR='/usr/share/icingaweb2/modules/icingadb'
+CONTROLLERS=(
+    'application/controllers/HostController.php'
+    'application/controllers/HostgroupController.php'
+    'application/controllers/HostsController.php'
+    'application/controllers/ServicegroupController.php'
+    'application/controllers/ServicesController.php'
+)
+
+# \1 object type, \2 sort direction, \3 separator between the two sort columns ("," within
+# the option, "', '" within the default sort)
+ORIGINAL="(host|service)\.state\.severity (desc|DESC)(['\"]?,[[:space:]]*['\"]?)\1\.state\.last_state_change (desc|DESC)"
+PATCHED="(host|service)\.state\.severity (desc|DESC)(['\"]?,[[:space:]]*['\"]?)\1\.display_name"
+
+rc=0
+for controller in "${CONTROLLERS[@]}"; do
+    file="${MODULE_DIR}/${controller}"
+    if [ ! -f "$file" ]; then
+        >&2 echo "ERROR: ${file} not found"
+        rc=1
+        continue
+    fi
+
+    if grep --quiet --extended-regexp "$ORIGINAL" "$file"; then
+        backup=$(mktemp)
+        cp --preserve=all "$file" "$backup"
+        sed --in-place --regexp-extended "s/${ORIGINAL}/\1.state.severity \2\3\1.display_name/g" "$file"
+        if ! php --syntax-check "$file" > /dev/null; then
+            cp --preserve=all "$backup" "$file"
+            >&2 echo "ERROR: ${file} is no valid PHP after patching, restored the original"
+            rc=1
+        else
+            echo "patched ${file}"
+        fi
+        rm --force "$backup"
+    elif ! grep --quiet --extended-regexp "$PATCHED" "$file"; then
+        >&2 echo "ERROR: ${file} contains neither the original nor the patched sort string, upstream changed the code"
+        rc=1
+    fi
+done
+
+exit "$rc"

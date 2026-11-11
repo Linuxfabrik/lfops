@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# 2026111101
+
+[Unit]
+Description=Sort IcingaDB Web by severity and name
+Documentation=https://github.com/Linuxfabrik/lfops/tree/main/roles/icingadb_web
+
+[Service]
+Type=oneshot
+# the path unit fires on the first replaced controller and does not watch while this unit
+# runs (path_enter_running() in systemd), so wait until the package manager has replaced the
+# other controllers as well.
+ExecStartPre=/usr/bin/sleep 30
+ExecStart=/usr/local/sbin/icingadb-web-patch-severity-sort

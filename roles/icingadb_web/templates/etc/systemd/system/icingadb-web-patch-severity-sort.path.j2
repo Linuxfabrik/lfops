@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# 2026111101
+
+[Unit]
+Description=Re-apply the severity sort patch after an update of icingadb-web
+Documentation=https://github.com/Linuxfabrik/lfops/tree/main/roles/icingadb_web
+
+[Path]
+# rpm and dpkg write the new file next to the old one and rename it over, which changes the
+# link count of the watched inode (IN_ATTRIB) and triggers PathChanged=.
+PathChanged=/usr/share/icingaweb2/modules/icingadb/application/controllers/HostController.php
+PathChanged=/usr/share/icingaweb2/modules/icingadb/application/controllers/HostgroupController.php
+PathChanged=/usr/share/icingaweb2/modules/icingadb/application/controllers/HostsController.php
+PathChanged=/usr/share/icingaweb2/modules/icingadb/application/controllers/ServicegroupController.php
+PathChanged=/usr/share/icingaweb2/modules/icingadb/application/controllers/ServicesController.php
+
+[Install]
+WantedBy=paths.target
