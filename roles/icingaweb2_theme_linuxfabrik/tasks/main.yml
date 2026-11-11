@@ -12,8 +12,8 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/linuxfabrik'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'curl https://github.com/Linuxfabrik/icingaweb2-theme-linuxfabrik/archive/{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz --output /tmp/ansible.icingaweb2-theme-linuxfabrik-{{ icingaweb2_theme_linuxfabrik__version }}.tar.gz'

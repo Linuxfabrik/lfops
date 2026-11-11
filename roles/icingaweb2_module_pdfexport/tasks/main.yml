@@ -15,8 +15,8 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/pdfexport'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'curl https://github.com/Icinga/icingaweb2-module-pdfexport/archive/{{ icingaweb2_module_pdfexport__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-pdfexport-{{ icingaweb2_module_pdfexport__version }}.tar.gz' # noqa risky-file-permissions (temporary file)
@@ -64,7 +64,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/pdfexport'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -73,7 +73,7 @@
       backup: true
       src: 'etc/icingaweb2/modules/pdfexport/config.ini.j2'
       dest: '/etc/icingaweb2/modules/pdfexport/config.ini'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
       mode: 0o660
 

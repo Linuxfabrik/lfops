@@ -12,7 +12,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/fileshipper'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -20,8 +20,8 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/fileshipper'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'curl {{ icingaweb2_module_fileshipper__url }} --output /tmp/ansible.icingaweb2-module-fileshipper-{{ icingaweb2_module_fileshipper__version }}.tar.gz'
