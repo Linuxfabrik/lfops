@@ -164,6 +164,42 @@
         that: '__molecule__apache_httpd_curl_http11_result["stdout"] == "1.1 200"'
         fail_msg: 'a client refusing HTTP/2 got "{{ __molecule__apache_httpd_curl_http11_result["stdout"] }}", expected "1.1 200"'
 
+    # The vHost answers its ServerAlias and rejects every Host header that names neither it nor its
+    # ServerName, also one that only starts with the ServerName. It is the first vHost on port 443
+    # (see group_vars), so these requests reach it instead of another vHost. The TLS handshake
+    # always names the vHost, only the Host header differs.
+    - name: 'curl --header "Host: <name>" https://<vhost>/' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --header 'Host: {{ item["host"] }}'
+        --output /dev/null
+        --write-out '%{http_code}'
+        https://{{ __molecule__server_name }}/
+      register: '__molecule__apache_httpd_curl_host_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[1]["conf_server_name"] }}'
+      loop:
+        - host: '{{ apache_httpd__vhosts__group_var[1]["conf_server_alias"][0] }}'
+          expected: '200'
+        - host: '{{ apache_httpd__vhosts__group_var[1]["conf_server_alias"][0] | upper }}:443'
+          expected: '200'
+        - host: '{{ apache_httpd__vhosts__group_var[1]["conf_server_name"] }}.evil.example'
+          expected: '403'
+        - host: '127.0.0.1'
+          expected: '403'
+      loop_control:
+        label: '{{ item["host"] }}'
+
+    - name: 'Assert the vHost answers its ServerAlias and rejects foreign Host headers'
+      ansible.builtin.assert:
+        that: 'item["stdout"] == item["item"]["expected"]'
+        fail_msg: 'Host: {{ item["item"]["host"] }} answered {{ item["stdout"] }}, expected {{ item["item"]["expected"] }}'
+      loop: '{{ __molecule__apache_httpd_curl_host_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["host"] }}'
+
     # h2c is HTTP/2 over cleartext and is deliberately not in the default protocol list, so a client
     # asking to upgrade on port 80 has to be left on HTTP/1.1. Without this, dropping h2c from the
     # default would be an untested claim. The localhost vHost of the role answers here; only the
