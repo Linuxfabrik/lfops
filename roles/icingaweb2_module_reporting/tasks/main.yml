@@ -12,7 +12,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/reporting'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -20,8 +20,8 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/reporting'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'curl https://github.com/Icinga/icingaweb2-module-reporting/archive/{{ icingaweb2_module_reporting__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-reporting-{{ icingaweb2_module_reporting__version }}.tar.gz'
@@ -66,9 +66,9 @@
       backup: true
       src: 'etc/icingaweb2/modules/reporting/config.ini.j2'
       dest: '/etc/icingaweb2/modules/reporting/config.ini'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
-      mode: 0o664
+      mode: 0o660
 
   - name: 'Check if the reporting tables exist'
     ansible.mariadb.mariadb_query:

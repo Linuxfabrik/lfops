@@ -12,8 +12,8 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/cube'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'curl {{ icingaweb2_module_cube__url }} --output /tmp/ansible.icingaweb2-module-cube-{{ icingaweb2_module_cube__version }}.tar.gz'

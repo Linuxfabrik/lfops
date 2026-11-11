@@ -27,7 +27,7 @@
     ansible.builtin.file:
       path: '/etc/icingaweb2/modules/grafana'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
       mode: 0o2770
 
@@ -35,8 +35,8 @@
     ansible.builtin.file:
       path: '/usr/share/icingaweb2/modules/grafana'
       state: 'directory'
-      owner: '{{ __shared__apache_httpd_user }}'
-      group: 'icingaweb2'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
 
   - name: 'curl https://github.com/NETWAYS/icingaweb2-module-grafana/archive/{{ icingaweb2_module_grafana__version }}.tar.gz --output /tmp/ansible.icingaweb2-module-grafana-{{ icingaweb2_module_grafana__version }}.tar.gz' # noqa risky-file-permissions (temp file)
@@ -85,7 +85,7 @@
       backup: true
       src: 'etc/icingaweb2/modules/grafana/config.ini.j2'
       dest: '/etc/icingaweb2/modules/grafana/config.ini'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
       mode: 0o660
 
@@ -94,9 +94,9 @@
       src: '{{ icingaweb2_module_grafana__auth_jwt__priv_key_file }}'
       dest: '/etc/icingaweb2/modules/grafana/jwt.key.priv'
       remote_src: true
-      owner: 'apache'
+      owner: 'root'
       group: 'icingaweb2'
-      mode: 0o644
+      mode: 0o640
     when: 'icingaweb2_module_grafana__auth_jwt | bool'
 
   tags:
@@ -169,9 +169,9 @@
     ansible.builtin.copy:
       src: '/tmp/ansible.icingaweb2-module-grafana-combined.ini'
       dest: '/etc/icingaweb2/modules/grafana/graphs.ini'
-      owner: '{{ __shared__apache_httpd_user }}'
+      owner: 'root'
       group: 'icingaweb2'
-      mode: 0o664
+      mode: 0o660
 
   when:
     - 'not icingaweb2_module_grafana__skip_monitoring_plugins_graphs_config'
