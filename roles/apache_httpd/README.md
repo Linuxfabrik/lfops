@@ -596,7 +596,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `allow_requests_without_hostname`
 
-* Accessing the vHost without a hostname / just by IP is forbidden. With this setting you can disable this behavior.
+* Requests whose `Host` header is neither the `conf_server_name` nor one of the `conf_server_alias` names (optionally followed by a port) are forbidden, for example requests by IP address, without a `Host` header, or for a foreign name that ends up in this vHost because it is the default vHost of its IP address and port. With this setting you can disable this behavior.
 * Applies to: app, localhost, proxy, wordpress.
 * Type: Bool.
 * Default: `false`

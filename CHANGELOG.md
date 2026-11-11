@@ -244,6 +244,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: The `app`, `localhost`, `proxy` and `wordpress` vHost templates answer requests for a `conf_server_alias` name instead of rejecting them with 403. Requests for a foreign name that merely starts with the `conf_server_name`, such as `www.example.com.evil.example`, are rejected with 403 if they reach the vHost, which happens when it is the first vHost on its IP address and port.
 * **role:apache_httpd**: The `wordpress` vHost template no longer blocks images and comments of a WordPress site that is reached on a non-default port, such as `https://wordpress.example.com:8443`, as hotlinking and comment spam.
 * **role:moodle**: Moodle is reachable when `moodle__url` ends with a slash or contains a path, such as `https://learning.example.com/`. Apache sent these requests to another vHost.
 * **role:icingaweb2_module_grafana**: Graphs load again when `icingaweb2_module_grafana__url` contains a port, such as `https://grafana.example.com:3000`. The port was dropped from the module configuration.
