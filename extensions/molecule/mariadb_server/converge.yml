@@ -1,2 +1,26 @@
 - name: 'Converge mariadb_server playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.mariadb_server'
+
+# Depending on how mariadb-install-db was called, a server carries its PROXY entry for root
+# instead of mysql, and a renamed host keeps the entry of its former name. MariaDB ignores both
+# with skip_name_resolve and warns about them, so the role has to remove them. The entry is
+# written to the table directly, as it has no account. The marker file seeds it only once, so
+# that the idempotence step sees no change.
+- name: 'Seed a proxies_priv entry for root on a host name'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'mariadb --execute="INSERT INTO mysql.proxies_priv ..."'
+      ansible.builtin.shell:
+        cmd: >-
+          mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1
+          --execute="INSERT INTO mysql.proxies_priv
+          (Host, User, Proxied_host, Proxied_user, With_grant, Grantor)
+          VALUES ('db.example.com', 'root', '', '', 1, '')" &&
+          touch /root/.molecule-mariadb-server
+        creates: '/root/.molecule-mariadb-server'
+        executable: '/bin/bash'
+
+- name: 'Converge mariadb_server playbook again'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mariadb_server'

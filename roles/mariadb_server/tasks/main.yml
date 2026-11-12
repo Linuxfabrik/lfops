@@ -658,6 +658,15 @@
       login_unix_socket: '{{ mariadb_server__cnf_socket__combined_var }}'
       query: 'delete from mysql.db where db="test" or db="test\\_%";'
 
+  # mariadb-install-db grants PROXY on ''@'%' to <user>@<host name of the server>. <user> is
+  # root, or with unix socket authentication (the default) the user of --auth-root-socket-user,
+  # which falls back to --user (mysql in the RPM and DEB packages), $USER and root. With unix
+  # socket authentication the account itself only exists on localhost, so removing the root
+  # users above leaves this entry behind, and MariaDB warns about it at every start and FLUSH
+  # PRIVILEGES: "'proxies_priv' entry '@% root@<host name>' ignored in --skip-name-resolve mode."
+  # Verified against the MariaDB source (scripts/mariadb_system_tables_data.sql,
+  # scripts/mysql_install_db.sh, sql/sql_acl.cc) for 10.6, 10.11, 11.4 and 11.8, and against
+  # MariaDB 11.8 on Rocky 8 and 9, Debian 12 and Ubuntu 24.04.
   - name: 'Secure installation (Linuxfabrik): Remove users ignored in --skip-name-resolve mode'
     ansible.mariadb.mariadb_query:
       login_user: '{{ mariadb_server__admin_user["username"] }}'
@@ -669,7 +678,7 @@
         `mysql`.`proxies_priv`
         where
         (`host` not in ('localhost', '127.0.0.1', '::1', '%'))
-        and (`user` = 'mysql')
+        and (`user` in ('mysql', 'root'))
         and (`proxied_host` = '')
         and (`proxied_user` = '');
     when:
