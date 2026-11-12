@@ -6,6 +6,14 @@ This role deploys the [Extra Packages for Enterprise Linux (EPEL) Repository](ht
 *Available since LFOps `1.0.0`.*
 
 
+## How the Role Behaves
+
+* On RHEL 10 and its rebuilds, EPEL follows the minor release of the host. EPEL 10 has one repository per RHEL minor release, and packages built for a newer minor release may need packages the host only gets with that release. A Rocky 10.2 host therefore uses EPEL 10.2 and switches to the next EPEL repository on its own once it is updated to the next Rocky minor release.
+* EPEL stops updating the repository of a minor release once RHEL has moved on to the next one. Until the rebuild follows with its own minor release, such a host gets no EPEL updates.
+* CentOS Stream 10 has no minor releases and gets the EPEL repository of the newest RHEL minor release.
+* With `repo_epel__mirror_url` set, the host uses whatever the mirror provides below `epel/10/`, regardless of its minor release.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.

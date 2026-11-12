@@ -1,0 +1,49 @@
+# verify.yml runs after converge and again after the idempotence step. A repo file
+# that dnf cannot parse or a repository it cannot reach already fails every later dnf
+# call, so the checks ask dnf itself: which EPEL repository did the mirror service
+# hand out, and does a package resolve from it.
+- name: 'Verify repo_epel provides a usable EPEL repository'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'dnf --assumeyes --refresh repoinfo epel'
+      ansible.builtin.command: 'dnf --assumeyes --refresh repoinfo epel'
+      register: '__molecule__repoinfo_result'
+      changed_when: false
+
+    - name: 'Assert the epel repository is enabled and has packages'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__repoinfo_result["stdout"] is search("Repo-status\s*:\s*enabled")'
+          - '__molecule__repoinfo_result["stdout"] is search("Repo-pkgs\s*:\s*[1-9]")'
+        fail_msg: '{{ __molecule__repoinfo_result["stdout"] }}'
+
+    # EPEL 10 has one repository per RHEL minor release. Asking for the major release
+    # only gets the newest one, whose packages may need a RHEL minor release the host
+    # does not have yet (seen with python3.13-libs, which needed the expat of 10.3 on
+    # Rocky 10.2 and failed the whole `dnf update`). The base URL is what the mirror
+    # service answered, so it tells which repository dnf really uses.
+    - name: 'Assert EPEL follows the minor release of the host on EL10'
+      ansible.builtin.assert:
+        that: >-
+          __molecule__repoinfo_result["stdout"] is search(
+            "Repo-baseurl\s*:\s*\S+/epel/"
+            ~ (ansible_facts["distribution_version"] | regex_escape)
+            ~ "/Everything/"
+          )
+        fail_msg: >-
+          expected the EPEL {{ ansible_facts["distribution_version"] }} repository:
+          {{ __molecule__repoinfo_result["stdout"] }}
+      when: 'ansible_facts["distribution_major_version"] | int >= 10'
+
+    - name: 'dnf --assumeyes --quiet --disablerepo=* --enablerepo=epel repoquery --latest-limit 1 htop'
+      ansible.builtin.command: 'dnf --assumeyes --quiet --disablerepo=* --enablerepo=epel repoquery --latest-limit 1 htop'
+      register: '__molecule__repoquery_result'
+      changed_when: false
+
+    - name: 'Assert a package resolves from the epel repository'
+      ansible.builtin.assert:
+        that: '__molecule__repoquery_result["stdout"] is search("^htop-")'
+        fail_msg: 'dnf found no htop in epel: {{ __molecule__repoquery_result["stdout"] }} {{ __molecule__repoquery_result["stderr"] }}'
