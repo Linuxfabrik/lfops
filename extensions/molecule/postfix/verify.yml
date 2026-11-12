@@ -41,6 +41,26 @@
         fail_msg: '{{ __molecule__postfix_inet_protocols_result["stdout"] }}'
 
 
+    # Ask the running Postfix instead of reading main.cf: with disable_vrfy_command = yes it
+    # answers VRFY with `502 5.5.1 VRFY command is disabled`. Verified against Postfix 3.5 on
+    # Rocky 9.
+    - name: 'Send VRFY to the local Postfix'
+      ansible.builtin.shell:
+        cmd: |-
+          set -o pipefail
+          exec 3<>/dev/tcp/127.0.0.1/25
+          printf 'HELO localhost\r\nVRFY root\r\nQUIT\r\n' >&3
+          timeout 10 cat <&3
+        executable: '/bin/bash'
+      changed_when: false
+      register: '__molecule__postfix_vrfy_result'
+
+    - name: 'Assert that Postfix refuses VRFY'
+      ansible.builtin.assert:
+        that: '__molecule__postfix_vrfy_result["stdout"] is search("502 5.5.1 VRFY command is disabled")'
+        fail_msg: '{{ __molecule__postfix_vrfy_result["stdout"] }}'
+
+
     # A reload does not apply inet_protocols, only a restart does. prepare.yml started Postfix with
     # the `all` the packages ship, so where the role changed it, the Postfix master has to be
     # younger than main.cf.

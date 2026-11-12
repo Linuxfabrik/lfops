@@ -77,6 +77,13 @@ postfix__relayhost: 'mail.example.com:587'
 * Type: String.
 * Default: RHEL 8 / 9: `'2'`, RHEL 10: `'3.8'`, Debian 12, Ubuntu 22.04 / 24.04: `'3.6'`, Debian 13, Ubuntu 26.04: `'3.9'`
 
+`postfix__disable_vrfy_command`
+
+* Disables the SMTP `VRFY` command, which tells a client whether a recipient address exists on this host. See https://www.postfix.org/postconf.5.html#disable_vrfy_command
+* Type: Bool.
+* Default: `true`
+* Deviates from the upstream default `false`: a host that only relays its own mail has no client that needs `VRFY`, and leaving it on lets anyone who reaches the SMTP port probe for valid addresses.
+
 `postfix__inet_interfaces`
 
 * The local network interface addresses that this mail system receives mail on.
@@ -382,6 +389,7 @@ postfix__aliases__host_var:
 postfix__biff: false
 postfix__bounce_queue_lifetime: '5d'
 postfix__compatibility_level: '2'
+postfix__disable_vrfy_command: true
 postfix__inet_interfaces: 'all'
 postfix__inet_protocols: 'all'
 postfix__lookup_tables__host_var:
