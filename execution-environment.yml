@@ -27,6 +27,7 @@ dependencies:
 
   python:
     - 'ansible-lint'
+    - 'graypy' # required for custom graylog callback plugin
     - 'jmespath' # required for community.general.json_query
     - 'mitogen'
     - 'netaddr' # required for ansible.utils.ipaddr
