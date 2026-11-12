@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026111101
+# 2026111201
 
 # Makes "Sort By: Severity" in IcingaDB Web sort by severity and then by name, instead of by
-# severity and then by the last state change. Upstream request:
+# severity and then by the last state change. Services of the same severity and name are
+# sorted by the name of their host. Upstream request:
 # https://github.com/Icinga/icingadb-web/issues/1285
 #
 # Run by Ansible and by icingadb-web-patch-severity-sort.path whenever a package update replaces
@@ -14,8 +15,12 @@
 #     'service.state.severity desc,service.state.last_state_change desc' => t('Severity'),
 #     ['service.state.severity DESC', 'service.state.last_state_change DESC']
 # to
-#     'service.state.severity desc,service.display_name' => t('Severity'),
-#     ['service.state.severity DESC', 'service.display_name']
+#     'service.state.severity desc,service.display_name,host.display_name' => t('Severity'),
+#     ['service.state.severity DESC', 'service.display_name', 'host.display_name']
+# and for hosts
+#     'host.state.severity desc,host.state.last_state_change desc' => t('Severity'),
+# to
+#     'host.state.severity desc,host.display_name' => t('Severity'),
 # The dashlets and the problem badges in the menu pass `sort=service.state.severity desc` only
 # and get the rest of the sort string from the option above (prefix match in
 # SortControl::getSort() in ipl-web), so they are covered as well.
@@ -37,10 +42,21 @@ CONTROLLERS=(
     'application/controllers/ServicesController.php'
 )
 
-# \1 object type, \2 sort direction, \3 separator between the two sort columns ("," within
-# the option, "', '" within the default sort)
-ORIGINAL="(host|service)\.state\.severity (desc|DESC)(['\"]?,[[:space:]]*['\"]?)\1\.state\.last_state_change (desc|DESC)"
-PATCHED="(host|service)\.state\.severity (desc|DESC)(['\"]?,[[:space:]]*['\"]?)\1\.display_name"
+# separator between two sort columns: "," within the option, "', '" within the default sort
+SEP="(['\"]?,[[:space:]]*['\"]?)"
+
+# \1 sort direction, \2 separator
+HOST_ORIGINAL="host\.state\.severity (desc|DESC)${SEP}host\.state\.last_state_change (desc|DESC)"
+HOST_REPLACEMENT='host.state.severity \1\2host.display_name'
+HOST_PATCHED="host\.state\.severity (desc|DESC)${SEP}host\.display_name"
+
+# matches the original sort string and the one of the first version of this script, which
+# sorted by severity and service name only. the patched sort string does not match, as its
+# service.display_name is followed by "," or by "'," and not by the end of the sort string.
+# \1 sort direction, \2 separator, \5 closing quote, \6 character after the closing quote
+SERVICE_ORIGINAL="service\.state\.severity (desc|DESC)${SEP}(service\.state\.last_state_change (desc|DESC)|service\.display_name)(['\"])([^,])"
+SERVICE_REPLACEMENT='service.state.severity \1\2service.display_name\2host.display_name\5\6'
+SERVICE_PATCHED="service\.state\.severity (desc|DESC)${SEP}service\.display_name${SEP}host\.display_name"
 
 rc=0
 for controller in "${CONTROLLERS[@]}"; do
@@ -51,10 +67,13 @@ for controller in "${CONTROLLERS[@]}"; do
         continue
     fi
 
-    if grep --quiet --extended-regexp "$ORIGINAL" "$file"; then
+    if grep --quiet --extended-regexp "${HOST_ORIGINAL}|${SERVICE_ORIGINAL}" "$file"; then
         backup=$(mktemp)
         cp --preserve=all "$file" "$backup"
-        sed --in-place --regexp-extended "s/${ORIGINAL}/\1.state.severity \2\3\1.display_name/g" "$file"
+        sed --in-place --regexp-extended \
+            --expression="s/${HOST_ORIGINAL}/${HOST_REPLACEMENT}/g" \
+            --expression="s/${SERVICE_ORIGINAL}/${SERVICE_REPLACEMENT}/g" \
+            "$file"
         if ! php --syntax-check "$file" > /dev/null; then
             cp --preserve=all "$backup" "$file"
             >&2 echo "ERROR: ${file} is no valid PHP after patching, restored the original"
@@ -63,7 +82,7 @@ for controller in "${CONTROLLERS[@]}"; do
             echo "patched ${file}"
         fi
         rm --force "$backup"
-    elif ! grep --quiet --extended-regexp "$PATCHED" "$file"; then
+    elif ! grep --quiet --extended-regexp "${HOST_PATCHED}|${SERVICE_PATCHED}" "$file"; then
         >&2 echo "ERROR: ${file} contains neither the original nor the patched sort string, upstream changed the code"
         rc=1
     fi
