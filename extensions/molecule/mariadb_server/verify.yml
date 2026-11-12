@@ -144,15 +144,34 @@
       changed_when: false
 
     # ask the running server, the cnf file alone proves nothing
-    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation"'
-      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation"'
+    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation, @@skip_name_resolve"'
+      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation, @@skip_name_resolve"'
       register: '__molecule__mariadb_variables_result'
       changed_when: false
 
     - name: 'Assert that the server uses the configured values'
       ansible.builtin.assert:
-        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", "aio", "1"]'
+        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", "aio", "1", "1"]'
         fail_msg: '{{ __molecule__mariadb_variables_result["stdout"] }}'
+
+    # With skip_name_resolve, MariaDB warns about every grant bound to a host name whenever it
+    # loads the grant tables, such as the proxies_priv entry that converge.yml seeds for root. So
+    # let it load them and look for the warning. The log was rotated above, so it only holds
+    # what this play caused.
+    - name: 'mariadb --execute="FLUSH PRIVILEGES"'
+      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --execute="FLUSH PRIVILEGES"'
+      changed_when: false # reloads the grant tables, which nothing has changed since the role ran
+
+    - name: 'grep "ignored in --skip-name-resolve mode" /var/log/mariadb/mariadb.log'
+      ansible.builtin.command: 'grep --fixed-strings "ignored in --skip-name-resolve mode" /var/log/mariadb/mariadb.log'
+      register: '__molecule__mariadb_ignored_grants_result'
+      changed_when: false
+      failed_when: '__molecule__mariadb_ignored_grants_result["rc"] > 1'
+
+    - name: 'Assert that MariaDB ignores no grant because of skip_name_resolve'
+      ansible.builtin.assert:
+        that: '__molecule__mariadb_ignored_grants_result["stdout_lines"] | length == 0'
+        fail_msg: '{{ __molecule__mariadb_ignored_grants_result["stdout"] }}'
 
     # verify.yml runs again after the idempotence step, so this also covers a second run
     - name: 'grep "Access denied for user .root" /var/log/mariadb/mariadb.log'

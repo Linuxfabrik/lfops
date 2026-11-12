@@ -1,5 +1,7 @@
 mariadb_server__cnf_innodb_linux_aio__group_var: 'aio'
 mariadb_server__cnf_innodb_snapshot_isolation__group_var: 'ON'
+# With it, the role removes the proxies_priv entries that converge.yml seeds.
+mariadb_server__cnf_skip_name_resolve__group_var: 'ON'
 
 # The dump user enables the daily mariadb-dump, which needs mydumper from the mydumper repository.
 mariadb_server__admin_user:
