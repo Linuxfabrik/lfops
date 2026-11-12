@@ -38,7 +38,7 @@ notes:
 
 requirements:
     - Bitwarden CLI C(bw) version v2022.9.0 or newer. See U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The plugin connects to C(127.0.0.1:8087) by default.
+    - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The plugin connects to C(127.0.0.1:8087) by default, or to a Unix socket with I(unix_socket).
     - C(bw serve) takes its session from the environment it is started in and keeps it for its lifetime. Export C(BW_SESSION) before starting it. Unlocking the vault afterwards only affects the C(bw) CLI in your shell, so C(bw status) can report C(unlocked) while the API the plugin talks to is still locked.
 
 author:
@@ -104,6 +104,21 @@ options:
         description: What the password is for (e.g. C(MariaDB), C(Rocky)). Combined with I(hostname) to build the item name when I(name) is not given.
         required: False
         type: str
+    unix_socket:
+        description:
+            - Absolute path to the Unix socket C(bw serve) listens on, for example C(/run/user/1000/bw.sock) for C(bw serve --hostname unix:///run/user/1000/bw.sock). The plugin then talks to this socket instead of C(127.0.0.1:8087). Empty or unset means TCP.
+            - A TCP port on loopback is open to every user and process on the controller, while the file permissions of the socket decide who reaches the vault. Start C(bw serve) with C(umask 077), so only its own user can.
+            - Needs Bitwarden CLI 2025.9.0 or newer. Start C(bw serve) without C(--port), otherwise it answers every request of the plugin with 403.
+            - C(bw serve) does not remove the socket when it stops, and does not start on a path that exists. Remove the file before starting it again.
+            - Like I(create), this is a plugin-wide option and is therefore set via its environment variable or in C(ansible.cfg), not inside the lookup term.
+        required: False
+        type: str
+        env:
+            - name: LFOPS_BITWARDEN_UNIX_SOCKET
+        ini:
+            - section: bitwarden_item_lookup
+              key: unix_socket
+        version_added: "10.0.0"
     uris:
         description: List of URIs to attach when the item is created. Has no effect on already existing items.
         required: False
@@ -348,7 +363,7 @@ class LookupModule(LookupBase):
     def run(self, terms, variables=None, **kwargs):
         self.set_options(var_options=variables, direct=kwargs)
 
-        bw = Bitwarden()
+        bw = Bitwarden(unix_socket=self.get_option('unix_socket'))
 
         # one lookup at a time on this controller, so parallel workers do not all
         # create the same missing item

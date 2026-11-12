@@ -38,7 +38,7 @@ notes:
 
 requirements:
     - Bitwarden CLI C(bw) version v2022.9.0 or newer. See U(https://bitwarden.com/help/article/cli/) for installation instructions.
-    - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The module connects to C(127.0.0.1:8087) by default.
+    - You must be logged in and unlocked (C(bw login) followed by C(bw unlock)), and have the local API running, e.g. C(bw serve --hostname 127.0.0.1 --port 8087). The module connects to C(127.0.0.1:8087) by default, or to a Unix socket with I(unix_socket).
     - C(bw serve) takes its session from the environment it is started in and keeps it for its lifetime. Export C(BW_SESSION) before starting it. Unlocking the vault afterwards only affects the C(bw) CLI in your shell, so C(bw status) can report C(unlocked) while the API the module talks to is still locked.
 
 author:
@@ -91,6 +91,16 @@ options:
         description: What the password is for (e.g. C(MariaDB), C(Rocky)). Combined with I(hostname) to build the item name when I(name) is not given.
         required: False
         type: str
+    unix_socket:
+        description:
+            - Absolute path to the Unix socket C(bw serve) listens on, for example C(/run/user/1000/bw.sock) for C(bw serve --hostname unix:///run/user/1000/bw.sock). The module then talks to this socket instead of C(127.0.0.1:8087). Empty or unset means TCP.
+            - A TCP port on loopback is open to every user and process on the host, while the file permissions of the socket decide who reaches the vault. Start C(bw serve) with C(umask 077), so only its own user can.
+            - Needs Bitwarden CLI 2025.9.0 or newer. Start C(bw serve) without C(--port), otherwise it answers every request of the module with 403.
+            - C(bw serve) does not remove the socket when it stops, and does not start on a path that exists. Remove the file before starting it again.
+            - Defaults to the environment variable C(LFOPS_BITWARDEN_UNIX_SOCKET), which the C(bitwarden_item) lookup reads as well. The module reads it on the host it runs on.
+        required: False
+        type: str
+        version_added: "10.0.0"
     uris:
         description: List of URIs to set on the login item. The URI list is replaced on every run; omit only when you want the item to have no URIs.
         required: False
@@ -261,7 +271,7 @@ username:
 
 import os
 
-from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.basic import AnsibleModule, env_fallback
 from ansible_collections.linuxfabrik.lfops.plugins.module_utils.bitwarden import (
     Bitwarden,
 )
@@ -309,6 +319,12 @@ def run_module():
             type='str', required=False, default=None, no_log=False
         ),  # if we set it to True, the passwords in the RETURN values are masked too. see https://github.com/ansible/ansible/issues/71789
         purpose=dict(type='str', required=False, default=None),
+        unix_socket=dict(
+            type='str',
+            required=False,
+            default=None,
+            fallback=(env_fallback, ['LFOPS_BITWARDEN_UNIX_SOCKET']),
+        ),
         uris=dict(type='list', required=False, default=None),
         username=dict(type='str', required=False, default=None),
     )
@@ -346,7 +362,7 @@ def run_module():
     uris = module.params['uris']
     username = module.params['username']
 
-    bw = Bitwarden()
+    bw = Bitwarden(unix_socket=module.params['unix_socket'])
     # one module run at a time on this host, so parallel runs do not all create the
     # same missing item
     with bw.mutex():

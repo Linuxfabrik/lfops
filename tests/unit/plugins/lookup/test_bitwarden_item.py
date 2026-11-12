@@ -35,6 +35,7 @@ from ansible_collections.linuxfabrik.lfops.plugins.lookup import (
 )
 
 CREATE_ENV_VAR = 'LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE'
+UNIX_SOCKET_ENV_VAR = 'LFOPS_BITWARDEN_UNIX_SOCKET'
 
 
 def _load_lookup():
@@ -56,9 +57,11 @@ class _FakeBitwarden:
     vault_status = 'unlocked'
 
     mutex_held = False
+    # the keyword arguments of the last instantiation
+    init_kwargs: ClassVar[dict] = {}
 
     def __init__(self, *args, **kwargs):
-        pass
+        type(self).init_kwargs = kwargs
 
     @contextlib.contextmanager
     def mutex(self, *args, **kwargs):
@@ -134,6 +137,8 @@ class _BitwardenLookupTestCase(unittest.TestCase):
         # a value leaking in from the caller's environment would flip the
         # default of the `create` option under the tests' feet
         self._orig_create_env = os.environ.pop(CREATE_ENV_VAR, None)
+        self._orig_unix_socket_env = os.environ.pop(UNIX_SOCKET_ENV_VAR, None)
+        _FakeBitwarden.init_kwargs = {}
         self.lookup = _load_lookup()
 
     def tearDown(self):
@@ -141,6 +146,38 @@ class _BitwardenLookupTestCase(unittest.TestCase):
         os.environ.pop(CREATE_ENV_VAR, None)
         if self._orig_create_env is not None:
             os.environ[CREATE_ENV_VAR] = self._orig_create_env
+        os.environ.pop(UNIX_SOCKET_ENV_VAR, None)
+        if self._orig_unix_socket_env is not None:
+            os.environ[UNIX_SOCKET_ENV_VAR] = self._orig_unix_socket_env
+
+
+class TestUnixSocket(_BitwardenLookupTestCase):
+    _TERMS: ClassVar[list] = [{'id': 'some-id'}]
+
+    def setUp(self):
+        super().setUp()
+        _FakeBitwarden.item_by_id = {
+            'name': 'host - db',
+            'login': {'username': 'dba', 'password': 'linuxfabrik'},
+        }
+
+    def test_default_is_tcp(self):
+        self.lookup.run(self._TERMS)
+        self.assertIsNone(_FakeBitwarden.init_kwargs['unix_socket'])
+
+    def test_empty_environment_variable_is_tcp(self):
+        # must reach the client as it is, where empty means TCP, and not be
+        # resolved to the current directory as an option of type `path` would be
+        os.environ[UNIX_SOCKET_ENV_VAR] = ''
+        self.lookup.run(self._TERMS)
+        self.assertFalse(_FakeBitwarden.init_kwargs['unix_socket'])
+
+    def test_environment_variable_selects_the_socket(self):
+        os.environ[UNIX_SOCKET_ENV_VAR] = '/run/user/1000/bw.sock'
+        self.lookup.run(self._TERMS)
+        self.assertEqual(
+            _FakeBitwarden.init_kwargs['unix_socket'], '/run/user/1000/bw.sock'
+        )
 
 
 class TestRun(_BitwardenLookupTestCase):
