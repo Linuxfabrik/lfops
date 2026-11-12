@@ -44,10 +44,10 @@ except Exception:
     # AnsibleError ("Missing base YAML definition file"), since the data files are not
     # served along. Verified with Mitogen 0.3.53 and ansible-core 2.16 on Rocky Linux 9.
     class _NoopDisplay:
-        def vvv(self, msg, **kwargs):
+        def vvv(self, _msg, **_kwargs):
             pass
 
-        def warning(self, msg, **kwargs):
+        def warning(self, _msg, **_kwargs):
             pass
 
     display = _NoopDisplay()
@@ -186,8 +186,22 @@ class BitwardenException(Exception):
 class Bitwarden:
     # https://bitwarden.com/help/vault-management-api
 
-    def __init__(self, hostname='127.0.0.1', port=8087):
+    def __init__(self, hostname='127.0.0.1', port=8087, unix_socket=None):
+        # With a Unix socket, the URL no longer says where to connect to, but still
+        # provides the Host header. Since bw 2026.6.0, `bw serve` answers 403 unless
+        # that header is `localhost:<port>`, `127.0.0.1:<port>`, `[::1]:<port>` or
+        # `<--hostname>:<port>` (not checked with `--hostname all` or
+        # `--disable-origin-protection`). On a socket, <port> is still `--port`, by
+        # default 8087, so the defaults fit as long as `bw serve` runs without
+        # `--port`. `unix://` itself needs bw 2025.9.0.
+        # See apps/cli/src/commands/serve.command.ts, verified against bw 2026.10.1
+        # on Fedora 44.
         self._base_url = f'http://{hostname}:{port}'
+        self._unix_socket = unix_socket or None
+        # where `bw serve` is reached, for error messages
+        self._endpoint = (
+            f'unix://{self._unix_socket}' if self._unix_socket else self._base_url
+        )
         self._cache = None
         self._mutex_fd = None
         self._load_cache()
@@ -266,19 +280,26 @@ class Bitwarden:
                     ) from e
                 headers['Content-Type'] = content_type
 
+        via = f' via {self._endpoint}' if self._unix_socket else ''
+
         # mostly taken from ansible.builtin.url lookup plugin
         try:
             # increased the timeout since listing all items via `list/object/items` takes forever (13s for ~2500 items)
             response = open_url(
-                url, method=method, data=body, headers=headers, timeout=60
+                url,
+                method=method,
+                data=body,
+                headers=headers,
+                timeout=60,
+                unix_socket=self._unix_socket,
             )
         except HTTPError as e:
             raise BitwardenException(
-                f'Received HTTP error for {url} : {to_native(e)}'
+                f'Received HTTP error for {url}{via} : {to_native(e)}'
             ) from e
         except URLError as e:
             raise BitwardenException(
-                f'Failed lookup url for {url} : {to_native(e)}'
+                f'Failed lookup url for {url}{via} : {to_native(e)}'
             ) from e
         except SSLValidationError as e:
             raise BitwardenException(
@@ -286,7 +307,7 @@ class Bitwarden:
             ) from e
         except ConnectionError as e:
             raise BitwardenException(
-                f'Error connecting to {url}: {to_native(e)}'
+                f'Error connecting to {url}{via}: {to_native(e)}'
             ) from e
 
         try:
@@ -373,7 +394,7 @@ class Bitwarden:
         Shared by the lookup plugin and the module so both give the same advice.
         """
         return (
-            f'The Bitwarden vault behind `bw serve` at {self._base_url} reports '
+            f'The Bitwarden vault behind `bw serve` at {self._endpoint} reports '
             f'status "{status}", expected "unlocked". `bw serve` keeps its own session, '
             'taken from the environment it was started in, so `bw status` in your '
             'shell can report "unlocked" while this API does not. Run `bw login` if '

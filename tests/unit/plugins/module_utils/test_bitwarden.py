@@ -21,13 +21,17 @@ __metaclass__ = type
 
 import contextlib
 import functools
+import http.server
 import importlib.util
 import io
 import json
 import multiprocessing
 import os
 import queue
+import shutil
+import socketserver
 import tempfile
+import threading
 import time
 import unittest
 import unittest.mock
@@ -149,21 +153,21 @@ class TestApiCall(unittest.TestCase):
         bitwarden.open_url = self._orig_open_url
 
     def test_success_returns_result(self):
-        bitwarden.open_url = lambda *a, **k: _FakeResponse(
+        bitwarden.open_url = lambda *_a, **_k: _FakeResponse(
             {'success': True, 'data': {'x': 1}}
         )
         result = self.bw._api_call('status')
         self.assertEqual(result, {'success': True, 'data': {'x': 1}})
 
     def test_unsuccessful_payload_raises(self):
-        bitwarden.open_url = lambda *a, **k: _FakeResponse(
+        bitwarden.open_url = lambda *_a, **_k: _FakeResponse(
             {'success': False, 'data': 'nope'}
         )
         with self.assertRaises(bitwarden.BitwardenException):
             self.bw._api_call('status')
 
     def test_http_error_raises_bitwarden_exception(self):
-        def _raise(*a, **k):
+        def _raise(*_a, **_k):
             raise HTTPError(
                 'http://127.0.0.1:8087/status', 500, 'err', {}, io.BytesIO(b'')
             )
@@ -177,9 +181,82 @@ class TestApiCall(unittest.TestCase):
             def read(self):
                 return b'not json'
 
-        bitwarden.open_url = lambda *a, **k: _BadResponse()
+        bitwarden.open_url = lambda *_a, **_k: _BadResponse()
         with self.assertRaises(bitwarden.BitwardenException):
             self.bw._api_call('status')
+
+
+class TestUnixSocket(unittest.TestCase):
+    """With `unix_socket`, the client reaches `bw serve` through that socket."""
+
+    def setUp(self):
+        # short path: a socket path is limited to about 108 characters
+        self._tmp_dir = tempfile.mkdtemp(prefix='lfbw')
+        self.addCleanup(shutil.rmtree, self._tmp_dir)
+        self.socket_path = os.path.join(self._tmp_dir, 'bw.sock')
+        self.host_headers = host_headers = []
+
+        class _Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                host_headers.append(self.headers.get('Host'))
+                if self.path == '/forbidden':
+                    # what `bw serve` answers to a Host header it does not accept
+                    self.send_response(403)
+                    self.send_header('Content-Length', '0')
+                    self.end_headers()
+                    return
+                body = json.dumps(
+                    {'success': True, 'data': {'template': {'status': 'unlocked'}}}
+                ).encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        self._server = socketserver.UnixStreamServer(self.socket_path, _Handler)
+        thread = threading.Thread(target=self._server.serve_forever)
+        thread.daemon = True
+        thread.start()
+        self.addCleanup(thread.join)
+        self.addCleanup(self._server.server_close)
+        self.addCleanup(self._server.shutdown)
+
+    def _make(self, unix_socket):
+        bitwarden.CACHE_FILE = '/nonexistent/lfops_bw_test_cache.json'
+        return bitwarden.Bitwarden(unix_socket=unix_socket)
+
+    def test_status_is_read_through_the_socket(self):
+        self.assertEqual(self._make(self.socket_path).status, 'unlocked')
+
+    def test_host_header_is_one_bw_serve_accepts(self):
+        # `bw serve` answers 403 to any other Host header
+        _ = self._make(self.socket_path).status
+        self.assertEqual(self.host_headers, ['127.0.0.1:8087'])
+
+    def test_missing_socket_raises_and_names_the_socket(self):
+        missing = os.path.join(self._tmp_dir, 'missing.sock')
+        with self.assertRaises(bitwarden.BitwardenException) as ctx:
+            _ = self._make(missing).status
+        self.assertIn(missing, str(ctx.exception))
+
+    def test_http_error_names_the_socket(self):
+        # the URL in the message is not where the request went
+        with self.assertRaises(bitwarden.BitwardenException) as ctx:
+            self._make(self.socket_path)._api_call('forbidden')
+        self.assertIn(f'via unix://{self.socket_path}', str(ctx.exception))
+
+    def test_not_unlocked_message_names_the_socket(self):
+        message = self._make(self.socket_path).get_not_unlocked_message('locked')
+        self.assertIn(f'unix://{self.socket_path}', message)
+        self.assertNotIn('127.0.0.1', message)
+
+    def test_empty_socket_means_tcp(self):
+        # an environment variable set to nothing must not select a socket
+        message = self._make('').get_not_unlocked_message('locked')
+        self.assertIn('http://127.0.0.1:8087', message)
 
 
 class TestStatus(unittest.TestCase):
@@ -191,7 +268,7 @@ class TestStatus(unittest.TestCase):
         bitwarden.open_url = self._orig_open_url
 
     def _serve_status(self, status):
-        bitwarden.open_url = lambda *a, **k: _FakeResponse(
+        bitwarden.open_url = lambda *_a, **_k: _FakeResponse(
             {
                 'success': True,
                 'data': {'object': 'template', 'template': {'status': status}},

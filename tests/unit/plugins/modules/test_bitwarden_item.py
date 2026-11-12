@@ -21,6 +21,7 @@ __metaclass__ = type
 
 import contextlib
 import copy
+import os
 import unittest
 import unittest.mock
 from typing import ClassVar
@@ -30,6 +31,8 @@ from ansible_collections.linuxfabrik.lfops.plugins.modules import bitwarden_item
 from ansible_collections.linuxfabrik.lfops.plugins.modules.bitwarden_item import (
     diff_and_update,
 )
+
+UNIX_SOCKET_ENV_VAR = 'LFOPS_BITWARDEN_UNIX_SOCKET'
 
 
 class TestDiffAndUpdate(unittest.TestCase):
@@ -95,9 +98,11 @@ class _FakeBitwarden:
     created: ClassVar[list] = []
     vault_status = 'unlocked'
     mutex_held = False
+    # the keyword arguments of the last instantiation
+    init_kwargs: ClassVar[dict] = {}
 
     def __init__(self, *args, **kwargs):
-        pass
+        type(self).init_kwargs = kwargs
 
     @contextlib.contextmanager
     def mutex(self, *args, **kwargs):
@@ -178,7 +183,12 @@ class TestMain(unittest.TestCase):
         _FakeBitwarden.created = []
         _FakeBitwarden.mutex_held = False
         _FakeBitwarden.vault_status = 'unlocked'
+        _FakeBitwarden.init_kwargs = {}
+        environ = dict(os.environ)
+        # a value leaking in from the caller's environment would select a socket
+        environ.pop(UNIX_SOCKET_ENV_VAR, None)
         self._patchers = [
+            unittest.mock.patch.dict(os.environ, environ, clear=True),
             unittest.mock.patch.object(mod, 'Bitwarden', _FakeBitwarden),
             ansible_harness.patch_module(),
         ]
@@ -196,6 +206,28 @@ class TestMain(unittest.TestCase):
         except ansible_harness.AnsibleExitJson as exc:
             return exc.args[0]
         raise AssertionError('module did not call exit_json')
+
+    def test_default_is_tcp(self):
+        self._run({'name': 'host - db'})
+        self.assertIsNone(_FakeBitwarden.init_kwargs['unix_socket'])
+
+    def test_unix_socket_parameter_selects_the_socket(self):
+        self._run({'name': 'host - db', 'unix_socket': '/run/user/1000/bw.sock'})
+        self.assertEqual(
+            _FakeBitwarden.init_kwargs['unix_socket'], '/run/user/1000/bw.sock'
+        )
+
+    def test_empty_environment_variable_is_tcp(self):
+        os.environ[UNIX_SOCKET_ENV_VAR] = ''
+        self._run({'name': 'host - db'})
+        self.assertFalse(_FakeBitwarden.init_kwargs['unix_socket'])
+
+    def test_unix_socket_falls_back_to_the_environment_variable(self):
+        os.environ[UNIX_SOCKET_ENV_VAR] = '/run/user/1000/bw.sock'
+        self._run({'name': 'host - db'})
+        self.assertEqual(
+            _FakeBitwarden.init_kwargs['unix_socket'], '/run/user/1000/bw.sock'
+        )
 
     def test_vault_not_unlocked_fails(self):
         for status in ('unauthenticated', 'locked'):

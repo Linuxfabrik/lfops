@@ -549,6 +549,19 @@ LFOPS_BITWARDEN_LOOKUP_ITEM_CREATE=false ansible-playbook linuxfabrik.lfops.setu
 
 The lookup then aborts as soon as an item does not exist. The same switch is available as `create` in the `[bitwarden_item_lookup]` section of your `ansible.cfg`.
 
+A TCP port on loopback is open to every user and process on the controller. Where that matters, for example on a controller that runs unattended, let `bw serve` listen on a Unix socket, whose file permissions decide who reaches the vault, and point the lookup at it:
+
+```bash
+export BW_SESSION="$(bw unlock --raw)"
+rm --force "$XDG_RUNTIME_DIR/bw.sock"
+(umask 077; bw serve --hostname "unix://$XDG_RUNTIME_DIR/bw.sock" &)
+export LFOPS_BITWARDEN_UNIX_SOCKET="$XDG_RUNTIME_DIR/bw.sock"
+```
+
+This needs bw CLI 2025.9.0 or newer. `bw serve` leaves the socket behind when it stops and does not start on a path that exists, hence the `rm`. The path of a socket is limited to 107 characters. The same setting is available as `unix_socket` in the `[bitwarden_item_lookup]` section of `ansible.cfg` and as the `unix_socket` parameter of the `bitwarden_item` module.
+
+With ansible-navigator and rootless podman, mount the directory of the socket into the EE, pass `LFOPS_BITWARDEN_UNIX_SOCKET` with the path inside the EE, and add the container option `--security-opt=label=disable`, since SELinux denies a container the connection to a process on the host. ansible-navigator runs the EE as `root`, which rootless podman maps to your own user, the owner of the socket.
+
 See `ansible-doc -t lookup linuxfabrik.lfops.bitwarden_item` for all options.
 
 LFOps also ships a small set of custom modules for resource types that are not covered by Ansible core:
