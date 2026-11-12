@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026101601
+# 2026111201
 # note: adapted from /etc/postfix/main.cf.proto as /etc/postfix/main.cf is dynamically generated via debconf
 
 # Global Postfix configuration file. This file lists only a subset
@@ -722,6 +722,7 @@ smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 # Linuxfabrik specific settings from here
 biff = {{ postfix__biff | bool | ternary('yes', 'no') }}
 bounce_queue_lifetime = {{ postfix__bounce_queue_lifetime }}
+disable_vrfy_command = {{ postfix__disable_vrfy_command | bool | ternary('yes', 'no') }}
 mailbox_size_limit = {{ postfix__mailbox_size_limit }}
 maximal_queue_lifetime = {{ postfix__maximal_queue_lifetime }}
 message_size_limit = {{ postfix__message_size_limit }}

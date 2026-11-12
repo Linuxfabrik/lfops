@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026101601
+# 2026111201
 
 # Global Postfix configuration file. This file lists only a subset
 # of all parameters. For the syntax, and for a complete parameter
@@ -757,6 +757,7 @@ shlib_directory = /usr/lib64/postfix
 # Linuxfabrik specific settings from here
 biff = {{ postfix__biff | bool | ternary('yes', 'no') }}
 bounce_queue_lifetime = {{ postfix__bounce_queue_lifetime }}
+disable_vrfy_command = {{ postfix__disable_vrfy_command | bool | ternary('yes', 'no') }}
 mailbox_size_limit = {{ postfix__mailbox_size_limit }}
 maximal_queue_lifetime = {{ postfix__maximal_queue_lifetime }}
 message_size_limit = {{ postfix__message_size_limit }}
