@@ -65,12 +65,12 @@
       when:
         - 'ansible_facts["os_family"] == "Debian"'
 
+    # only the directories of the own package manager, as `find` warns about a missing one, and
+    # warnings fail the run
     - name: 'Find the files of the former repository'
       ansible.builtin.find:
-        paths:
-          - '/etc/apt/keyrings'
-          - '/etc/apt/sources.list.d'
-          - '/etc/yum.repos.d'
+        paths: '{{ (ansible_facts["os_family"] == "RedHat")
+          | ternary(["/etc/yum.repos.d"], ["/etc/apt/keyrings", "/etc/apt/sources.list.d"]) }}'
         patterns:
           - 'linuxfabrik-monitoring-plugins*'
           - 'linuxfabrik.asc'
