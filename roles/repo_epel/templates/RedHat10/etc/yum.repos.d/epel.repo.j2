@@ -1,5 +1,14 @@
 # {{ ansible_managed }}
-# 2026100601
+# 2026111201
+{# Deviates from epel-release, which asks for `epel-$releasever`: Rocky and RHEL set
+   $releasever to 10, and for that MirrorManager hands out the newest minor release of
+   EPEL, whose packages may need a RHEL minor release the host does not have yet.
+   $releasever_minor comes from the `system-release(releasever_minor)` provide of the
+   release package (libdnf/dnf-context.cpp). CentOS Stream has none and keeps `epel-10`.
+   Verified against dnf 4.20 and libdnf 0.73 on Rocky 10.2, UBI 10.2 and CentOS Stream 10. #}
+
+# EPEL 10 has one repository per RHEL minor release. Unless a mirror is configured,
+# the repositories below follow the minor release of this host.
 
 [epel]
 name=Extra Packages for Enterprise Linux $releasever - $basearch
@@ -9,8 +18,8 @@ name=Extra Packages for Enterprise Linux $releasever - $basearch
 baseurl={{ repo_epel__mirror_url }}/epel/10/Everything/x86_64
 #metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
-#baseurl=https://download.example/pub/epel/$releasever${releasever_minor:+z}/Everything/$basearch/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel${releasever_minor:+-z}-$releasever&arch=$basearch
+#baseurl=https://download.example/pub/epel/$releasever_major${releasever_minor:+.$releasever_minor}/Everything/$basearch/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-$releasever_major${releasever_minor:+.$releasever_minor}&arch=$basearch
 {% endif %}
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
 gpgcheck=1
@@ -31,8 +40,8 @@ name=Extra Packages for Enterprise Linux $releasever - $basearch - Debug
 baseurl={{ repo_epel__mirror_url }}/epel/10/Everything/x86_64/debug
 #metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
-#baseurl=https://download.example/pub/epel/$releasever${releasever_minor:+z}/Everything/$basearch/debug/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel${releasever_minor:+-z}-debug-$releasever&arch=$basearch
+#baseurl=https://download.example/pub/epel/$releasever_major${releasever_minor:+.$releasever_minor}/Everything/$basearch/debug/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-debug-$releasever_major${releasever_minor:+.$releasever_minor}&arch=$basearch
 {% endif %}
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
 gpgcheck=1
@@ -52,8 +61,8 @@ name=Extra Packages for Enterprise Linux $releasever - $basearch - Source
 baseurl={{ repo_epel__mirror_url }}/epel/10/Everything/source/tree/
 #metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever&arch=$basearch&infra=$infra&content=$contentdir
 {% else %}
-#baseurl=https://download.example/pub/epel/$releasever${releasever_minor:+z}/Everything/source/tree/
-metalink=https://mirrors.fedoraproject.org/metalink?repo=epel${releasever_minor:+-z}-source-$releasever&arch=source
+#baseurl=https://download.example/pub/epel/$releasever_major${releasever_minor:+.$releasever_minor}/Everything/source/tree/
+metalink=https://mirrors.fedoraproject.org/metalink?repo=epel-source-$releasever_major${releasever_minor:+.$releasever_minor}&arch=source
 {% endif %}
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
 gpgcheck=1

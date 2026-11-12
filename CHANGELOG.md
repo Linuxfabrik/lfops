@@ -249,6 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_epel**: On Rocky 10 and RHEL 10, EPEL follows the minor release of the host, so the daily system update no longer fails on EPEL packages built for a RHEL minor release the host does not have yet.
 * **role:mariadb_server**: With `skip_name_resolve`, the `proxies_priv` warning in the MariaDB error log also goes away on servers that carry the entry for `root` instead of `mysql`.
 * **role:libreoffice**: `libreoffice__client_apache: true` creates `~/.ansible/tmp` of the web server user at the correct path, and a second run no longer reports changes. The playbook installs the custom SELinux policy modules through the `selinux` role, so they are part of `--tags selinux` instead of `--tags libreoffice`.
 * **role:apache_httpd**: The `app`, `localhost`, `proxy` and `wordpress` vHost templates answer requests for a `conf_server_alias` name instead of rejecting them with 403. Requests for a foreign name that merely starts with the `conf_server_name`, such as `www.example.com.evil.example`, are rejected with 403 if they reach the vHost, which happens when it is the first vHost on its IP address and port.
