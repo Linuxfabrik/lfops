@@ -547,9 +547,9 @@
         ansible.builtin.command: >-
           dpkg-deb --build
           /var/tmp/lfops-debian-test/{{ item["name"] }}_{{ item["version"] }}
-          /var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | default(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb
+          /var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | d(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb
         args:
-          creates: '/var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | default(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb'
+          creates: '/var/tmp/lfops-debian-test/{{ "repo/" if item["repo"] | d(false) else "" }}{{ item["name"] }}_{{ item["version"] }}.deb'
         loop: '{{ __molecule__debian_test_packages }}'
 
       - name: 'apt-ftparchive packages /var/tmp/lfops-debian-test/repo'

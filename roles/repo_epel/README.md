@@ -27,7 +27,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; the default public repositories do not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: Dictionary.
-* Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Default: `'{{ lfops__repo_basic_auth_login | d("") }}'`
 * Subkeys:
 
     * `password`:
@@ -50,7 +50,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, the default mirrors of the repo are used.
 * Type: String.
-* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
+* Default: `'{{ lfops__repo_mirror_url | d("") }}'`
 
 Example:
 ```yaml

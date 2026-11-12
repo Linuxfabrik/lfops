@@ -85,7 +85,7 @@
       community.general.influxdb_user:
         # always pass the username and password, if there is no admin account it doesn't matter, and prevents the task from failing on the 2nd run
         username: '{{ influxdb__admin_login.username }}'
-        password: '{{ influxdb__admin_login.password | default(omit) }}'
+        password: '{{ influxdb__admin_login.password | d(omit) }}'
         user_name: '{{ influxdb__admin_login.username }}'
         user_password: '{{ influxdb__admin_login.password }}'
         admin: true
@@ -171,9 +171,9 @@
   - name: 'Create or delete influxdb databases'
     community.general.influxdb_database:
       database_name: '{{ item.name }}'
-      password: '{{ influxdb__admin_login.password | default(omit) }}'
+      password: '{{ influxdb__admin_login.password | d(omit) }}'
       username: '{{ influxdb__admin_login.username }}'
-      state: '{{ item.state | default("present") }}'
+      state: '{{ item.state | d("present") }}'
       ssl: '{{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}'
       validate_certs: '{{ influxdb__validate_certs }}'
     loop: '{{ influxdb__databases__combined_var }}'
@@ -184,7 +184,7 @@
     community.general.influxdb_retention_policy:
       database_name: '{{ item.name }}'
       policy_name: 'lf_retention_policy'
-      password: '{{ influxdb__admin_login.password | default(omit) }}'
+      password: '{{ influxdb__admin_login.password | d(omit) }}'
       username: '{{ influxdb__admin_login.username }}'
       duration: '{{ item.retention }}'
       replication: 1
@@ -205,12 +205,12 @@
 - name: 'Create, update or delete influxdb users'
   community.general.influxdb_user:
     login_username: '{{ influxdb__admin_login.username }}'
-    login_password: '{{ influxdb__admin_login.password | default(omit) }}'
+    login_password: '{{ influxdb__admin_login.password | d(omit) }}'
     user_name: '{{ item.name }}'
     user_password: '{{ item.password }}'
-    state: '{{ item.state | default("present") }}'
-    grants: '{{ item.grants | default(omit) }}'
-    admin: '{{ item.admin | default(false) }}'
+    state: '{{ item.state | d("present") }}'
+    grants: '{{ item.grants | d(omit) }}'
+    admin: '{{ item.admin | d(false) }}'
     ssl: '{{ (influxdb__conf_https is defined and influxdb__conf_https | length > 1) | string | lower }}'
     validate_certs: '{{ influxdb__validate_certs }}'
   loop: '{{ influxdb__users__combined_var }}'

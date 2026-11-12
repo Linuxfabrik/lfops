@@ -1,5 +1,5 @@
-repo_opensearch__basic_auth_login: '{{ lfops__repo_basic_auth_login | default("") }}'
-repo_opensearch__mirror_url: '{{ lfops__repo_mirror_url | default("") }}'
+repo_opensearch__basic_auth_login: '{{ lfops__repo_basic_auth_login | d("") }}'
+repo_opensearch__mirror_url: '{{ lfops__repo_mirror_url | d("") }}'
 
 repo_opensearch__version__combined_var: '{{
     repo_opensearch__version__host_var if (repo_opensearch__version__host_var | string | length) else

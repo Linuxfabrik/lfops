@@ -21,7 +21,7 @@
 
     - role: 'linuxfabrik.lfops.repo_influxdb'
       when:
-        - 'not telegraf__skip_repo_influxdb | default(false)'
+        - 'not telegraf__skip_repo_influxdb | d(false)'
 
     - role: 'linuxfabrik.lfops.telegraf'
 

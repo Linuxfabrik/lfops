@@ -102,7 +102,7 @@
       server: '{{ hetzner_vm__name }}'
       network: '{{ item["name"] }}'
       ip: '{{ item["fixed_ip"] }}'
-      state: '{{ item["state"] | default("present") }}'
+      state: '{{ item["state"] | d("present") }}'
     loop: '{{ hetzner_vm__networks }}'
     delegate_to: 'localhost'
     become: false
@@ -118,9 +118,9 @@
       automount: false
       name: '{{ item["name"] }}'
       size: '{{ item["size"] }}'
-      format: '{{ item["format"] | default("xfs") }}'
+      format: '{{ item["format"] | d("xfs") }}'
       server: '{{ hetzner_vm__name }}'
-      state: '{{ item["state"] | default("present") }}'
+      state: '{{ item["state"] | d("present") }}'
     loop: '{{ hetzner_vm__volumes }}'
     delegate_to: 'localhost'
     become: false

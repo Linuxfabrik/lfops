@@ -9,10 +9,10 @@
   - name: 'Assert that GitLab is 19.2 or newer'
     ansible.builtin.assert:
       that:
-        - 'gitlab_ce__version | default("") | length == 0 or gitlab_ce__version is version("19.2", ">=")'
+        - 'gitlab_ce__version | d("") | length == 0 or gitlab_ce__version is version("19.2", ">=")'
         - '"gitlab-ce" not in ansible_facts["packages"] or ansible_facts["packages"]["gitlab-ce"][0]["version"] is version("19.2", ">=")'
       quiet: true
-      fail_msg: 'This role needs GitLab 19.2 or newer (installed: {{ ansible_facts["packages"]["gitlab-ce"][0]["version"] | default("none") }}, gitlab_ce__version: {{ gitlab_ce__version | default("unset") }}). Upgrade GitLab first, following the GitLab upgrade path.'
+      fail_msg: 'This role needs GitLab 19.2 or newer (installed: {{ ansible_facts["packages"]["gitlab-ce"][0]["version"] | d("none") }}, gitlab_ce__version: {{ gitlab_ce__version | d("unset") }}). Upgrade GitLab first, following the GitLab upgrade path.'
 
   - name: 'install gitlab-ce'
     ansible.builtin.package:

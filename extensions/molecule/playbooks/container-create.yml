@@ -8,16 +8,16 @@
 
         - name: 'Create the container from inventory'
           containers.podman.podman_container:
-            capabilities: '{{ molecule__container_capabilities | default(omit) }}'
-            command: '{{ molecule__container_command | default("sleep 1d") }}'
+            capabilities: '{{ molecule__container_capabilities | d(omit) }}'
+            command: '{{ molecule__container_command | d("sleep 1d") }}'
             hostname: '{{ __molecule__instance_name }}'
             image: '{{ molecule__container_image }}'
-            log_driver: '{{ molecule__container_log_driver | default("json-file") }}'
+            log_driver: '{{ molecule__container_log_driver | d("json-file") }}'
             name: '{{ __molecule__instance_name }}'
-            privileged: '{{ molecule__container_privileged | default(false) | bool }}'
+            privileged: '{{ molecule__container_privileged | d(false) | bool }}'
             state: 'started'
-            systemd: '{{ molecule__container_systemd | default(false) | bool }}'
-            volumes: '{{ molecule__container_volumes | default(omit) }}'
+            systemd: '{{ molecule__container_systemd | d(false) | bool }}'
+            volumes: '{{ molecule__container_volumes | d(omit) }}'
           register: '__molecule__container_result'
           delegate_to: 'localhost'
 

@@ -31,12 +31,12 @@
         user_domain_name: 'default'
       region_name: '{{ infomaniak_vm__region_name }}'
       security_group: '{{ infomaniak_vm__name }}'
-      direction: '{{ item["direction"] | default("ingress") }}'
-      protocol: '{{ item["protocol"] | default(omit) }}'
-      port_range_min: '{{ item["port_range_min"] | default(omit) }}'
-      port_range_max: '{{ item["port_range_max"] | default(omit) }}'
-      remote_ip_prefix: '{{ item["remote_ip_prefix"] | default(omit) }}'
-      ethertype: '{{ item["ethertype"] | default("IPv4") }}'
+      direction: '{{ item["direction"] | d("ingress") }}'
+      protocol: '{{ item["protocol"] | d(omit) }}'
+      port_range_min: '{{ item["port_range_min"] | d(omit) }}'
+      port_range_max: '{{ item["port_range_max"] | d(omit) }}'
+      remote_ip_prefix: '{{ item["remote_ip_prefix"] | d(omit) }}'
+      ethertype: '{{ item["ethertype"] | d("IPv4") }}'
       state: '{{ item["state"] | d("present") }}'
     loop: '{{ infomaniak_vm__security_group_rules }}'
     delegate_to: 'localhost'
@@ -108,7 +108,7 @@
         project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: '{{ infomaniak_vm__region_name }}'
-      name: '{{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
+      name: '{{ item["port_name"] | d(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
       network: '{{ item["name"] }}'
       fixed_ips: '{{ [{"ip_address": item["fixed_ip"]}] if item["fixed_ip"] is defined else omit }}'
       # Infomaniak's Neutron policy forbids setting `port_security_enabled` on the public `ext-net1` network, so omit it there and let the cloud default apply. On every other network, disable port security — this is a sensible default for internal networks
@@ -122,12 +122,12 @@
       ansible_become: false # noqa var-naming[pattern]
     loop: '{{ infomaniak_vm__networks }}'
     loop_control:
-      label: 'name={{ item["name"] }}, port_name={{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
+      label: 'name={{ item["name"] }}, port_name={{ item["port_name"] | d(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
     when: 'infomaniak_vm__state != "absent"'
 
   - name: 'Create the list of nics for the VM'
     ansible.builtin.set_fact:
-      infomaniak_vm__nics: '{{ infomaniak_vm__nics | default([]) + [{ "port-name": item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }] }}'
+      infomaniak_vm__nics: '{{ infomaniak_vm__nics | d([]) + [{ "port-name": item["port_name"] | d(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }] }}'
     loop: '{{ infomaniak_vm__networks }}'
 
   tags:
@@ -221,7 +221,7 @@
         project_name: '{{ infomaniak_vm__api_username }}'
         user_domain_name: 'default'
       region_name: '{{ infomaniak_vm__region_name }}'
-      name: '{{ item["port_name"] | default(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
+      name: '{{ item["port_name"] | d(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
       state: 'absent'
     delegate_to: 'localhost'
     become: false

@@ -22,7 +22,7 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'deploy the repo file (mirror: {{ repo_redis__mirror_url | default("") }})'
+  - name: 'deploy the repo file (mirror: {{ repo_redis__mirror_url | d("") }})'
     ansible.builtin.template:
       backup: true
       src: 'etc/apt/sources.list.d/redis.list.j2'

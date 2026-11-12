@@ -26,7 +26,7 @@
 
     - role: 'linuxfabrik.lfops.repo_elasticsearch'
       when:
-        - 'not elasticsearch__skip_repo_elasticsearch | default(false)'
+        - 'not elasticsearch__skip_repo_elasticsearch | d(false)'
 
     - role: 'linuxfabrik.lfops.elasticsearch'
 

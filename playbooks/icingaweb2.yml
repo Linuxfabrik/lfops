@@ -40,31 +40,31 @@
     - role: 'linuxfabrik.lfops.repo_mydumper'
       when:
         - 'ansible_facts["os_family"] in ["Debian", "RedHat"] and ansible_facts["distribution"] != "Fedora"'
-        - 'not icingaweb2__skip_repo_mydumper | default(false)'
+        - 'not icingaweb2__skip_repo_mydumper | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_mariadb'
       when:
-        - 'not icingaweb2__skip_repo_mariadb | default(false)'
+        - 'not icingaweb2__skip_repo_mariadb | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
           mariadb_server__python__modules__dependent_var
         }}'
       when:
-        - 'not icingaweb2__skip_python | default(false)'
+        - 'not icingaweb2__skip_python | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
-      mariadb_server__databases__dependent_var: '{{ icingaweb2__mariadb_server__databases__dependent_var | default([]) }}'
+      mariadb_server__databases__dependent_var: '{{ icingaweb2__mariadb_server__databases__dependent_var | d([]) }}'
       mariadb_server__users__dependent_var: '{{
           icingaweb2__mariadb_server__users__dependent_var
         }}'
       when:
-        - 'not icingaweb2__skip_mariadb_server | default(false)'
+        - 'not icingaweb2__skip_mariadb_server | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not icingaweb2__skip_repo_remi | default(false)'
+        - 'not icingaweb2__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
       php__ini_memory_limit__dependent_var: '{{
@@ -80,12 +80,12 @@
           icingaweb2__php__modules__dependent_var
         }}'
       when:
-        - 'not icingaweb2__skip_php | default(false)'
+        - 'not icingaweb2__skip_php | d(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not icingaweb2__skip_policycoreutils | default(false)'
+        - 'not icingaweb2__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__modules__dependent_var: '{{
@@ -93,11 +93,11 @@
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not icingaweb2__skip_selinux | default(false)'
+        - 'not icingaweb2__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_icinga'
       when:
-        - 'not icingaweb2__skip_repo_icinga | default(false)'
+        - 'not icingaweb2__skip_repo_icinga | d(false)'
 
     # TOOD: apache with injection
 

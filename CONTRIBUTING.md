@@ -145,6 +145,7 @@ YAML:
 * For long strings use a folded scalar (`>` converts newlines to spaces, `|` keeps them) without further quoting.
 * Do not quote booleans (`true`), numbers (`42`) or octal numbers (`0o755`).
 * Put whitespace around Jinja filters: `{{ my_var | d("my_default") }}`.
+* Use `d()`, not its long form `default()`, for consistency.
 * Indent list items below their key (`list1:` then `  - item1`). No unindented items, no flow sequences like `[ 'tag1', 'tag2' ]`.
 
 Ansible:

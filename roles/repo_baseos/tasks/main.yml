@@ -8,7 +8,7 @@
 
 - block:
 
-  - name: 'Deploy the repo files (mirror: {{ repo_baseos__mirror_url | default("") }})'
+  - name: 'Deploy the repo files (mirror: {{ repo_baseos__mirror_url | d("") }})'
     ansible.builtin.template:
       backup: true
       src: '{{ item }}.j2'
@@ -16,7 +16,7 @@
       owner: 'root'
       group: 'root'
       # 0600 while the file carries the mirror credentials
-      mode: '{{ "0o600" if repo_baseos__basic_auth_login | default({}) | length > 0 else "0o644" }}'
+      mode: '{{ "0o600" if repo_baseos__basic_auth_login | d({}) | length > 0 else "0o644" }}'
     loop: '{{ __repo_baseos__repo_files }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'

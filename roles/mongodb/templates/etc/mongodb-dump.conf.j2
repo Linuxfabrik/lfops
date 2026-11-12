@@ -7,7 +7,7 @@ PORT='{{ mongodb__conf_net_port }}'
 {% if mongodb__conf_security_authorization | bool and mongodb__dump_user is defined and mongodb__dump_user | length %}
 # the password is in the systemd credential mongodb-dump-login.json
 USERNAME='{{ mongodb__dump_user["username"] }}'
-AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] | default("admin") }}'
+AUTH_DATABASE='{{ mongodb__dump_user["auth_database"] | d("admin") }}'
 {% endif %}
 
 DB_PATH='{{ __mongodb__db_path }}'

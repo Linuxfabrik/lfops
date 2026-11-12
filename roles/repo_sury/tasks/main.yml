@@ -29,7 +29,7 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
-  - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | default("") }})'
+  - name: 'deploy the repo file (mirror: {{ repo_sury__mirror_url | d("") }})'
     ansible.builtin.template:
       backup: true
       src: 'etc/apt/sources.list.d/sury.list.j2'

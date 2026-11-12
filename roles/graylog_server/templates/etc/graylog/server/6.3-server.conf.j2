@@ -72,11 +72,11 @@ root_password_sha2 = {{ graylog_server__root_user["password"] | hash('sha256') }
 
 # The email address of the root user.
 # Default is empty
-root_email = {{ graylog_server__root_user["email"] | default('') }}
+root_email = {{ graylog_server__root_user["email"] | d('') }}
 
 # The time zone setting of the root user. See http://www.joda.org/joda-time/timezones.html for a list of valid time zones.
 # Default is UTC
-root_timezone = {{ graylog_server__timezone | default('UTC') }}
+root_timezone = {{ graylog_server__timezone | d('UTC') }}
 
 # Set the bin directory here (relative or absolute)
 # This directory contains binaries that are used by the Graylog server.
@@ -106,7 +106,7 @@ plugin_dir = /usr/share/graylog-server/plugin
 # Default: 127.0.0.1:9000
 #http_bind_address = 127.0.0.1:9000
 #http_bind_address = [2001:db8::1]:9000
-http_bind_address = {{ graylog_server__http_bind_address | default('127.0.0.1') }}:{{ graylog_server__http_bind_port | default('9000') }}
+http_bind_address = {{ graylog_server__http_bind_address | d('127.0.0.1') }}:{{ graylog_server__http_bind_port | d('9000') }}
 
 #### HTTP publish URI
 #

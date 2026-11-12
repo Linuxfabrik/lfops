@@ -191,7 +191,7 @@
         quiet: true
         fail_msg: >-
           Server & Workload Protection activation failed. Output:
-          {{ __trend_micro_v1es__activation_result["stdout"] | default('n/a') }}.
+          {{ __trend_micro_v1es__activation_result["stdout"] | d('n/a') }}.
 
     when:
       - 'not (__trend_micro_v1es__identity_stat["stat"]["exists"] and __trend_micro_v1es__ds_agent_crt_stat["stat"]["exists"])'

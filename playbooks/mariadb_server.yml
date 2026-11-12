@@ -58,7 +58,7 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not mariadb_server__skip_policycoreutils | default(false)'
+        - 'not mariadb_server__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.mariadb_server'
 

@@ -18,7 +18,7 @@
 # Note: actually, TLS & DTLS sessions can connect to the
 # "plain" TCP & UDP port(s), too - if allowed by configuration.
 #
-listening-port={{ coturn__listening_port | default(3478) }}
+listening-port={{ coturn__listening_port | d(3478) }}
 
 # TURN listener port for TLS (Default: 5349).
 # Note: actually, "plain" TCP & UDP sessions can connect to the TLS & DTLS
@@ -180,8 +180,8 @@ listening-port={{ coturn__listening_port | default(3478) }}
 #
 #min-port=49152
 #max-port=65535
-min-port={{ coturn__min_port | default(49152) }}
-max-port={{ coturn__max_port | default(65535) }}
+min-port={{ coturn__min_port | d(49152) }}
+max-port={{ coturn__max_port | d(65535) }}
 
 # Socket buffer size (in bytes).
 # (default value is 2097152 which is 2MB)
@@ -500,7 +500,7 @@ bps-capacity=0
 # It defaults to 600 secs (10 min) if no value is provided. After that delay,
 # the client will get 438 error and will have to re-authenticate itself.
 #
-stale-nonce={{ coturn__state_nonce | default(600) }}
+stale-nonce={{ coturn__state_nonce | d(600) }}
 
 # Uncomment if you want to set the maximum allocation
 # time before it has to be refreshed.

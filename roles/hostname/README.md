@@ -33,7 +33,7 @@ If cloud-init is configured with `manage_etc_hosts: true`, it rewrites `/etc/hos
 
 * The IP address the hostname is mapped to in `/etc/hosts`. When empty, the `/etc/hosts` entry is skipped.
 * Type: String.
-* Default: `'{{ ansible_facts["default_ipv4"]["address"] | default("") }}'` (the host's primary IPv4 address)
+* Default: `'{{ ansible_facts["default_ipv4"]["address"] | d("") }}'` (the host's primary IPv4 address)
 
 `hostname__full_hostname`
 

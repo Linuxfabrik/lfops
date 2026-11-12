@@ -21,7 +21,7 @@
 
     - role: 'linuxfabrik.lfops.repo_elasticsearch'
       when:
-        - 'not kibana__skip_repo_elasticsearch | default(false)'
+        - 'not kibana__skip_repo_elasticsearch | d(false)'
 
     - role: 'linuxfabrik.lfops.kibana'
 

@@ -32,12 +32,12 @@
   - name: 'Manages alternative programs for common commands'
     community.general.alternatives:
       name: '{{ item["name"] }}'
-      link: '{{ item["link"] | default(omit) }}'
-      path: '{{ item["path"] | default(omit) }}'
-      priority: '{{ item["priority"] | default(omit) }}'
+      link: '{{ item["link"] | d(omit) }}'
+      path: '{{ item["path"] | d(omit) }}'
+      priority: '{{ item["priority"] | d(omit) }}'
       state: '{{ item["state"] | d("selected") }}'
-      subcommands: '{{ item["subcommands"] | default(omit) }}'
-      family: '{{ item["family"] | default(omit) }}'
+      subcommands: '{{ item["subcommands"] | d(omit) }}'
+      family: '{{ item["family"] | d(omit) }}'
     loop: '{{ alternatives__alternatives }}'
 
   tags:

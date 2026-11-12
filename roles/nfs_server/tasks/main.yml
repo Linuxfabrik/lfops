@@ -39,9 +39,9 @@
     ansible.builtin.file:
       path: '{{ item["path"] }}'
       state: 'directory'
-      owner: '{{ item["owner"] | default(nfs_server__owner) }}'
-      group: '{{ item["group"] | default(nfs_server__group) }}'
-      mode: '{{ item["mode"] | default("0o755") }}'
+      owner: '{{ item["owner"] | d(nfs_server__owner) }}'
+      group: '{{ item["group"] | d(nfs_server__group) }}'
+      mode: '{{ item["mode"] | d("0o755") }}'
     loop: '{{ nfs_server__exports }}'
 
   - name: 'Deploy /etc/exports'

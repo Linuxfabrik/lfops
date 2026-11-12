@@ -1184,15 +1184,15 @@ allow_sign_up = true
 #################################### SMTP / Emailing ##########################
 [smtp]
 enabled = {{ (grafana__smtp_config is defined and grafana__smtp_config | length > 1) | string | lower }}
-host = "{{ grafana__smtp_config.host | default('localhost:25') }}"
-user = "{{ grafana__smtp_config.user | default() }}"
+host = "{{ grafana__smtp_config.host | d('localhost:25') }}"
+user = "{{ grafana__smtp_config.user | d() }}"
 # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-password = """{{ grafana__smtp_config.password | default() }}"""
-cert_file = "{{ grafana__smtp_config.cert_file | default() }}"
-key_file = "{{ grafana__smtp_config.key_file | default() }}"
-skip_verify = {{ grafana__smtp_config.skip_verify | default(false) | string | lower }}
-from_address = "{{ grafana__smtp_config.from_address | default('admin@grafana.localhost') }}"
-from_name = "{{ grafana__smtp_config.from_name | default('Grafana') }}"
+password = """{{ grafana__smtp_config.password | d() }}"""
+cert_file = "{{ grafana__smtp_config.cert_file | d() }}"
+key_file = "{{ grafana__smtp_config.key_file | d() }}"
+skip_verify = {{ grafana__smtp_config.skip_verify | d(false) | string | lower }}
+from_address = "{{ grafana__smtp_config.from_address | d('admin@grafana.localhost') }}"
+from_name = "{{ grafana__smtp_config.from_name | d('Grafana') }}"
 # EHLO identity in SMTP dialog (defaults to instance_name)
 ;ehlo_identity = dashboard.example.com
 # SMTP startTLS policy (defaults to 'OpportunisticStartTLS')

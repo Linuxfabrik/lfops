@@ -130,7 +130,7 @@ cluster.routing.allocation.disk.watermark.low.max_headroom: '{{ elasticsearch__c
 #
 #action.destructive_requires_name: false
 
-action.auto_create_index: {{ elasticsearch__action_auto_create_index__combined_var | default(true) | string | lower }}
+action.auto_create_index: {{ elasticsearch__action_auto_create_index__combined_var | d(true) | string | lower }}
 
 {% if elasticsearch__path_repos is defined and elasticsearch__path_repos | length %}
 path.repo: {{ elasticsearch__path_repos | ansible.builtin.to_yaml }}
