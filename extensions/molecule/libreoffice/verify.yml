@@ -1,0 +1,96 @@
+# verify.yml runs after converge and again after the idempotence step. It checks what a web
+# application relies on: the web server user can convert a document with LibreOffice, and on Red
+# Hat the SELinux policy modules and file contexts for LibreOffice under `httpd_t` are in place.
+- name: 'Verify LibreOffice converts documents as the web server user'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  vars:
+    __molecule__apache_home: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("/usr/share/httpd", "/var/www") }}'
+    __molecule__apache_user: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("apache", "www-data") }}'
+  tasks:
+
+    - name: 'stat ~/.ansible/tmp ~/.cache ~/.config ~/.config/libreoffice/4 of the web server user'
+      ansible.builtin.stat:
+        path: '{{ __molecule__apache_home }}/{{ item }}'
+      loop:
+        - '.ansible/tmp'
+        - '.cache'
+        - '.config'
+        - '.config/libreoffice/4'
+      register: '__molecule__dirs_result'
+
+    - name: 'Assert that the directories exist and belong to the web server user'
+      ansible.builtin.assert:
+        that:
+          - 'item["stat"]["isdir"] | d(false)'
+          - 'item["stat"]["pw_name"] == __molecule__apache_user'
+        fail_msg: '{{ item["item"] }}: {{ item["stat"] }}'
+        quiet: true
+      loop: '{{ __molecule__dirs_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # the former role created "tmp  " with two trailing spaces instead
+    - name: 'find ~/.ansible -mindepth 1 -maxdepth 1'
+      ansible.builtin.find:
+        paths: '{{ __molecule__apache_home }}/.ansible'
+        file_type: 'any'
+        hidden: true
+      register: '__molecule__ansible_dir_result'
+
+    - name: 'Assert that ~/.ansible only contains tmp'
+      ansible.builtin.assert:
+        that: '__molecule__ansible_dir_result["files"] | map(attribute="path") | list == [__molecule__apache_home ~ "/.ansible/tmp"]'
+        fail_msg: '{{ __molecule__ansible_dir_result["files"] | map(attribute="path") | list }}'
+
+    - name: 'Deploy /tmp/molecule-libreoffice.txt'
+      ansible.builtin.copy:
+        content: 'LFOps'
+        dest: '/tmp/molecule-libreoffice.txt'
+        mode: 0o644
+
+    - name: 'soffice --headless --convert-to pdf --outdir /tmp/molecule-libreoffice /tmp/molecule-libreoffice.txt'
+      ansible.builtin.command: 'soffice --headless --convert-to pdf --outdir /tmp/molecule-libreoffice /tmp/molecule-libreoffice.txt'
+      become: true
+      become_user: '{{ __molecule__apache_user }}'
+      changed_when: false
+
+    - name: 'stat /tmp/molecule-libreoffice/molecule-libreoffice.pdf'
+      ansible.builtin.stat:
+        path: '/tmp/molecule-libreoffice/molecule-libreoffice.pdf'
+      register: '__molecule__pdf_result'
+
+    - name: 'Assert that the web server user converted the document'
+      ansible.builtin.assert:
+        that: '__molecule__pdf_result["stat"]["size"] | d(0) > 0'
+
+    - name: 'rm -rf /tmp/molecule-libreoffice /tmp/molecule-libreoffice.txt'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'absent'
+      loop:
+        - '/tmp/molecule-libreoffice'
+        - '/tmp/molecule-libreoffice.txt'
+      changed_when: false
+
+    - name: 'semodule --list-modules'
+      ansible.builtin.command: 'semodule --list-modules'
+      changed_when: false
+      register: '__molecule__semodule_result'
+      when: 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'stat --format=%C ~/.cache ~/.config/libreoffice/4 of the web server user'
+      ansible.builtin.command: 'stat --format=%C {{ __molecule__apache_home }}/.cache {{ __molecule__apache_home }}/.config/libreoffice/4'
+      changed_when: false
+      register: '__molecule__selinux_context_result'
+      when: 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that the SELinux modules are installed and the directories are writable for httpd_t'
+      ansible.builtin.assert:
+        that:
+          - '"selinux-java" in __molecule__semodule_result["stdout_lines"]'
+          - '"selinux-sofficebin" in __molecule__semodule_result["stdout_lines"]'
+          - '__molecule__selinux_context_result["stdout_lines"] | select("search", ":httpd_sys_rw_content_t:") | list | length == 2'
+        fail_msg: '{{ __molecule__semodule_result["stdout_lines"] }} {{ __molecule__selinux_context_result["stdout_lines"] }}'
+      when: 'ansible_facts["os_family"] == "RedHat"'

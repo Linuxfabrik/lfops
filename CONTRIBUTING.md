@@ -287,6 +287,7 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
 * A read-only `command` with `check_mode: false` that calls a binary the role installs itself (package, unpacked archive) fails under `--check` on a host without it, since nothing is installed in check mode. Register the task that provides the binary, skip the command with `when: 'not (ansible_check_mode and <result> is changed)'`, and let the tasks using its result cope with a skipped one (`<result>["stdout_lines"] is defined`). Add `<result> is defined and` when a tag can skip the providing task. References: `roles/example`, `roles/lvm` (`growpart`).
 * Prefer `chown -R --changes` over `ansible.builtin.file` with `recurse: true` (slow on large trees), with `changed_when: '<result>["stdout"] | length > 0'`.
 * With `ansible.builtin.template`, always set `backup`, `src`, `dest`, `owner`, `group` and `mode`.
+* The web server user (or any other service user) owns only what the application writes at runtime, such as uploads, caches or a configuration the web UI edits. Code, and configuration it only reads, belong to `root`; grant read access through the group (`owner: 'root'`, `group: '{{ __shared__apache_httpd_group }}'`, `mode: 0o640`). Otherwise a compromised web application can change the code or its own configuration. See `roles/example`.
 * Prefer `ansible.builtin.assert` over `ansible.builtin.fail` with `when`, for consistency.
 * Optionally add `ansible.builtin.debug` tasks for `__combined_var` variables.
 * Split service `enabled` and `state` into separate tasks, see "Handlers".
@@ -635,7 +636,7 @@ nextcloud__php__modules__dependent_var: '{{
 
 #### LFOps-wide Shared Variables
 
-Platform values shared by many roles (currently the Apache httpd user, group and service name) live once in `roles/shared/vars/<os>.yml`, loaded by `roles/shared/tasks/global-variables.yml` in every playbook's `pre_tasks`. Reference them directly (e.g. `owner: '{{ __shared__apache_httpd_user }}'`), and add new ones there.
+Platform values shared by many roles (currently the Apache httpd user, group and service name) live once in `roles/shared/vars/<os>.yml`, loaded by `roles/shared/tasks/global-variables.yml` in every playbook's `pre_tasks`. Reference them directly (e.g. `group: '{{ __shared__apache_httpd_group }}'`), and add new ones there.
 
 
 #### OS-specific Tasks

@@ -1,0 +1,18 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# `libreoffice__client_apache` prepares LibreOffice for the web server user, which on Red Hat only
+# exists once httpd is installed. Every host using it runs a web server.
+- name: 'Install the web server that runs LibreOffice'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'Install httpd / apache2'
+      ansible.builtin.package:
+        name: '{{ "httpd" if ansible_facts["os_family"] == "RedHat" else "apache2" }}'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
