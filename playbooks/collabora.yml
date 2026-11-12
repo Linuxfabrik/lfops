@@ -21,11 +21,11 @@
 
     - role: 'linuxfabrik.lfops.repo_collabora_code'
       when:
-        - 'not collabora__skip_repo_collabora_code | default(false)'
+        - 'not collabora__skip_repo_collabora_code | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_collabora'
       when:
-        - 'not collabora__skip_repo_collabora | default(true)'
+        - 'not collabora__skip_repo_collabora | d(true)'
 
     - role: 'linuxfabrik.lfops.collabora'
 

@@ -145,6 +145,7 @@ YAML:
 * For long strings use a folded scalar (`>` converts newlines to spaces, `|` keeps them) without further quoting.
 * Do not quote booleans (`true`), numbers (`42`) or octal numbers (`0o755`).
 * Put whitespace around Jinja filters: `{{ my_var | d("my_default") }}`.
+* Use `d()`, not its long form `default()`, for consistency.
 * Indent list items below their key (`list1:` then `  - item1`). No unindented items, no flow sequences like `[ 'tag1', 'tag2' ]`.
 
 Ansible:
@@ -174,6 +175,7 @@ A new role delivers:
 * `roles/<role-name>/README.md`, following `roles/example/README.md` and "README" below.
 * `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
 * Updates to `playbooks/README.md`, `playbooks/all.yml`, `COMPATIBILITY.md` and `CHANGELOG.md`.
+* For a role that stores data outside of the default backup sources: the directory in `duplicity__backup_sources__role_var` and in `roles/duplicity/README.md`, see "Playbooks".
 * An entry for `roles/<role-name>/defaults/main.yml` in `.ansible-lint-ignore` (`jinja[spacing]`), as the `__combined_var` expressions in the defaults span several lines.
 
 
@@ -485,7 +487,7 @@ my_role__my_var__role_var: ''
 
 * Always implement a `state` key (default `present`), otherwise the user cannot remove a default element: e.g. the default localhost vHost of `apache_httpd` is removed by setting the same element with `state: 'absent'`. Handle it with `when: 'item["state"] | d("present") == "absent"'` (remove) and `!= "absent"` (create); in templates `{% for item in ... if item['state'] | d('present') != 'absent' %}`. For `ansible.builtin.package`, pass present and absent names as two lists instead of looping (see `roles/php`).
 * `combine_lod` merges items on `unique_key` (default `name`); combine several keys where one is not unique, e.g. `combine_lod(unique_key=["conf_server_name", "virtualhost_port"])`. See `ansible-doc --type filter linuxfabrik.lfops.combine_lod`.
-* Use lists of dictionaries or simple values, never dictionaries: their key names cannot be templated, which breaks passing values on, especially via `__dependent_var` (<https://docs.linuxfabrik.ch/software/ansible.html#besonderheiten-von-ansible>).
+* Use lists of dictionaries or simple values, never dictionaries: their key names cannot be templated, which breaks passing values on, especially via `__dependent_var`.
 * A simple-value `__combined_var` is always a string; convert it to an integer when needed.
 
 

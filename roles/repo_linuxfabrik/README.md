@@ -36,7 +36,7 @@ This role deploys the [Linuxfabrik package repository](https://repo.linuxfabrik.
 
 * Use HTTP basic auth to login to the repository. Only takes effect together with a custom mirror URL; repo.linuxfabrik.ch does not use basic auth. Defaults to `lfops__repo_basic_auth_login`, making it easy to set this for all `repo_*` roles.
 * Type: Dictionary.
-* Default: `'{{ lfops__repo_basic_auth_login | default("") }}'`
+* Default: `'{{ lfops__repo_basic_auth_login | d("") }}'`
 * Subkeys:
 
     * `password`:
@@ -53,7 +53,7 @@ This role deploys the [Linuxfabrik package repository](https://repo.linuxfabrik.
 
 * Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set, repo.linuxfabrik.ch is used.
 * Type: String.
-* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
+* Default: `'{{ lfops__repo_mirror_url | d("") }}'`
 
 `repo_linuxfabrik__testing_repo_enabled`
 

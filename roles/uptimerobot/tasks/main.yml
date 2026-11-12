@@ -18,21 +18,21 @@
 
   - name: 'Apply UptimeRobot maintenance windows'
     linuxfabrik.lfops.uptimerobot_mwindow:
-      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
-      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
-      type: '{{ item.type | default(omit) }}'
-      value: '{{ item.value | default(omit) }}'
-      start_time: '{{ item.start_time | default(omit) }}'
-      end_time: '{{ item.end_time | default(omit) }}'
-      duration: '{{ item.duration | default(omit) }}'
-      status: '{{ item.status | default(omit) }}'
-      friendly_name: '{{ item.friendly_name | default(omit) }}'
-      state: '{{ item.state | default("present") }}'
+      api_key: '{{ uptimerobot__api_key | d(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | d(omit, true) }}'
+      type: '{{ item.type | d(omit) }}'
+      value: '{{ item.value | d(omit) }}'
+      start_time: '{{ item.start_time | d(omit) }}'
+      end_time: '{{ item.end_time | d(omit) }}'
+      duration: '{{ item.duration | d(omit) }}'
+      status: '{{ item.status | d(omit) }}'
+      friendly_name: '{{ item.friendly_name | d(omit) }}'
+      state: '{{ item.state | d("present") }}'
     loop: '{{ uptimerobot__mwindows }}'
     loop_control:
       label: >-
         {{ item.friendly_name
-           | default(item.type
+           | d(item.type
              ~ (" " ~ item.value if item.value is defined else "")
              ~ " " ~ item.start_time
              ~ "-" ~ item.end_time
@@ -47,41 +47,41 @@
 
   - name: 'Apply UptimeRobot monitors'
     linuxfabrik.lfops.uptimerobot_monitor:
-      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
-      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
+      api_key: '{{ uptimerobot__api_key | d(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | d(omit, true) }}'
       friendly_name: >-
         {{ item.friendly_name
-           | default(((item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "")))
+           | d(((item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "")))
                 | replace(item.prefix ~ " " ~ item.prefix, item.prefix))) }}
-      url: '{{ item.url | default(omit) }}'
-      type: '{{ item.type | default("http") }}'
-      sub_type: '{{ item.sub_type | default(omit) }}'
-      port: '{{ item.port | default(omit) }}'
-      keyword_type: '{{ item.keyword_type | default(omit) }}'
-      keyword_case_type: '{{ item.keyword_case_type | default(omit) }}'
-      keyword_value: '{{ item.keyword_value | default(omit) }}'
-      interval: '{{ item.interval | default(omit) }}'
-      timeout: '{{ item.timeout | default(omit) }}'
-      status: '{{ item.status | default(omit) }}'
-      http_username: '{{ item.http_username | default(omit) }}'
-      http_password: '{{ item.http_password | default(omit) }}'
-      http_auth_type: '{{ item.http_auth_type | default(omit) }}'
-      http_method: '{{ item.http_method | default(omit) }}'
-      post_type: '{{ item.post_type | default(omit) }}'
-      post_value: '{{ item.post_value | default(omit) }}'
-      post_content_type: '{{ item.post_content_type | default(omit) }}'
-      custom_http_headers: '{{ item.custom_http_headers | default(omit) }}'
-      custom_http_statuses: '{{ item.custom_http_statuses | default(omit) }}'
-      ignore_ssl_errors: '{{ item.ignore_ssl_errors | default(omit) }}'
-      disable_domain_expire_notifications: '{{ item.disable_domain_expire_notifications | default(omit) }}'
-      alert_contacts: '{{ item.alert_contacts | default(omit) }}'
-      mwindows: '{{ item.mwindows | default(omit) }}'
-      state: '{{ item.state | default("present") }}'
+      url: '{{ item.url | d(omit) }}'
+      type: '{{ item.type | d("http") }}'
+      sub_type: '{{ item.sub_type | d(omit) }}'
+      port: '{{ item.port | d(omit) }}'
+      keyword_type: '{{ item.keyword_type | d(omit) }}'
+      keyword_case_type: '{{ item.keyword_case_type | d(omit) }}'
+      keyword_value: '{{ item.keyword_value | d(omit) }}'
+      interval: '{{ item.interval | d(omit) }}'
+      timeout: '{{ item.timeout | d(omit) }}'
+      status: '{{ item.status | d(omit) }}'
+      http_username: '{{ item.http_username | d(omit) }}'
+      http_password: '{{ item.http_password | d(omit) }}'
+      http_auth_type: '{{ item.http_auth_type | d(omit) }}'
+      http_method: '{{ item.http_method | d(omit) }}'
+      post_type: '{{ item.post_type | d(omit) }}'
+      post_value: '{{ item.post_value | d(omit) }}'
+      post_content_type: '{{ item.post_content_type | d(omit) }}'
+      custom_http_headers: '{{ item.custom_http_headers | d(omit) }}'
+      custom_http_statuses: '{{ item.custom_http_statuses | d(omit) }}'
+      ignore_ssl_errors: '{{ item.ignore_ssl_errors | d(omit) }}'
+      disable_domain_expire_notifications: '{{ item.disable_domain_expire_notifications | d(omit) }}'
+      alert_contacts: '{{ item.alert_contacts | d(omit) }}'
+      mwindows: '{{ item.mwindows | d(omit) }}'
+      state: '{{ item.state | d("present") }}'
     loop: '{{ uptimerobot__monitors }}'
     loop_control:
       label: >-
         {{ item.friendly_name
-           | default(((item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "")))
+           | d(((item.prefix ~ " " ~ (item.url | regex_replace("^https?://", "")))
                 | replace(item.prefix ~ " " ~ item.prefix, item.prefix))) }}
 
   tags:
@@ -93,17 +93,17 @@
 
   - name: 'Apply UptimeRobot public status pages'
     linuxfabrik.lfops.uptimerobot_psp:
-      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
-      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
+      api_key: '{{ uptimerobot__api_key | d(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | d(omit, true) }}'
       friendly_name: '{{ item.friendly_name }}'
-      monitors: '{{ item.monitors | default(omit) }}'
-      custom_domain: '{{ item.custom_domain | default(omit) }}'
-      custom_url: '{{ item.custom_url | default(omit) }}'
-      password: '{{ item.password | default(omit) }}'
-      sort: '{{ item.sort | default(omit) }}'
-      hide_url_links: '{{ item.hide_url_links | default(omit) }}'
-      status: '{{ item.status | default(omit) }}'
-      state: '{{ item.state | default("present") }}'
+      monitors: '{{ item.monitors | d(omit) }}'
+      custom_domain: '{{ item.custom_domain | d(omit) }}'
+      custom_url: '{{ item.custom_url | d(omit) }}'
+      password: '{{ item.password | d(omit) }}'
+      sort: '{{ item.sort | d(omit) }}'
+      hide_url_links: '{{ item.hide_url_links | d(omit) }}'
+      status: '{{ item.status | d(omit) }}'
+      state: '{{ item.state | d("present") }}'
     loop: '{{ uptimerobot__psps }}'
     loop_control:
       label: '{{ item.friendly_name }}'
@@ -117,14 +117,14 @@
 
   - name: 'Clean up stale UptimeRobot alert contacts'
     linuxfabrik.lfops.uptimerobot_alert_contact:
-      api_key: '{{ uptimerobot__api_key | default(omit, true) }}'
-      api_key_file: '{{ uptimerobot__api_key_file | default(omit, true) }}'
-      id: '{{ item.id | default(omit) }}'
-      friendly_name: '{{ item.friendly_name | default(omit) }}'
-      state: '{{ item.state | default("absent") }}'
+      api_key: '{{ uptimerobot__api_key | d(omit, true) }}'
+      api_key_file: '{{ uptimerobot__api_key_file | d(omit, true) }}'
+      id: '{{ item.id | d(omit) }}'
+      friendly_name: '{{ item.friendly_name | d(omit) }}'
+      state: '{{ item.state | d("absent") }}'
     loop: '{{ uptimerobot__alert_contacts }}'
     loop_control:
-      label: '{{ item.friendly_name | default(item.id) }}'
+      label: '{{ item.friendly_name | d(item.id) }}'
 
   tags:
     - 'uptimerobot'

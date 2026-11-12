@@ -24,7 +24,7 @@ After deploying the sources list, the role removes any `.rpmnew` / `.dpkg-dist` 
 
 * Set the URL to a custom mirror server providing the repository. Defaults to `lfops__repo_mirror_url` to allow easily setting the same URL for all `repo_*` roles. If `lfops__repo_mirror_url` is not set either, the default Debian mirrors are used.
 * Type: String.
-* Default: `'{{ lfops__repo_mirror_url | default("") }}'`
+* Default: `'{{ lfops__repo_mirror_url | d("") }}'`
 
 Example:
 ```yaml

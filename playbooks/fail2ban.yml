@@ -31,7 +31,7 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not fail2ban__skip_selinux | default(false)'
+        - 'not fail2ban__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{
@@ -39,7 +39,7 @@
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not fail2ban__skip_selinux | default(false)'
+        - 'not fail2ban__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.sshd'
       sshd__log_level__dependent_var: 'VERBOSE'

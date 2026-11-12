@@ -1,6 +1,6 @@
 <network>
   <name>{{ network.name }}</name>
-  <mac address='{{ network.mac | default("52:54:00" | community.general.random_mac(seed=inventory_hostname)) }}'/>
+  <mac address='{{ network.mac | d("52:54:00" | community.general.random_mac(seed=inventory_hostname)) }}'/>
   {% if network.forward_mode is defined and network.forward_mode == 'nat' %}
   <forward mode='nat'>
     <nat>
@@ -13,7 +13,7 @@
   <bridge name="{{ network.bridge }}"/>
   {% endif %}
   {% if network.ip_address is defined and network.ip_address %}
-  <ip address='{{ network.ip_address }}' netmask='{{ network.subnet | default("255.255.255.0") }}'>
+  <ip address='{{ network.ip_address }}' netmask='{{ network.subnet | d("255.255.255.0") }}'>
     {% if network.dhcp_start is defined and network.dhcp_start | length and network.dhcp_end is defined and network.dhcp_end | length %}
     <dhcp>
       <range start='{{ network.dhcp_start }}' end='{{ network.dhcp_end }}'/>

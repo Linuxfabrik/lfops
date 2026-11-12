@@ -123,13 +123,13 @@ grafana__root_url: 'https://monitoring.example.com/grafana'
 
 * Will be used to store the token of the created service accounts to this Bitwarden Collection. Can be obtained from the URL in Bitwarden WebGUI.
 * Type: String.
-* Default: `'{{ lfops__bitwarden_collection_id | default() }}'`
+* Default: `'{{ lfops__bitwarden_collection_id | d() }}'`
 
 `grafana__bitwarden_organization_id`
 
 * Will be used to store the token of the created service accounts to this Bitwarden Organization. Can be obtained from the URL in Bitwarden WebGUI.
 * Type: String.
-* Default: `'{{ lfops__bitwarden_organization_id | default() }}'`
+* Default: `'{{ lfops__bitwarden_organization_id | d() }}'`
 
 `grafana__cookie_samesite`
 

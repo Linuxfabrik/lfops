@@ -157,8 +157,8 @@
     community.mongodb.mongodb_replicaset:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
-      login_user: '{{ mongodb__admin_user["username"] | default(omit) }}'
-      login_password: '{{ mongodb__admin_user["password"] | default(omit) }}'
+      login_user: '{{ mongodb__admin_user["username"] | d(omit) }}'
+      login_password: '{{ mongodb__admin_user["password"] | d(omit) }}'
       login_database: 'admin'
       replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
       members: '{{ mongodb__repl_set_members }}'
@@ -171,8 +171,8 @@
     community.mongodb.mongodb_status:
       login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
       login_port: '{{ mongodb__conf_net_port }}'
-      login_user: '{{ mongodb__admin_user["username"] | default(omit) }}'
-      login_password: '{{ mongodb__admin_user["password"] | default(omit) }}'
+      login_user: '{{ mongodb__admin_user["username"] | d(omit) }}'
+      login_password: '{{ mongodb__admin_user["password"] | d(omit) }}'
       login_database: 'admin'
       replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
       poll: 5
@@ -269,8 +269,8 @@
       name: '{{ item["username"] }}'
       password: '{{ item["password"] }}'
       database: '{{ item["database"] }}'
-      roles: '{{ item["roles"] | default(omit) }}'
-      state: '{{ item["state"] | default("present") }}'
+      roles: '{{ item["roles"] | d(omit) }}'
+      state: '{{ item["state"] | d("present") }}'
       # only set the password if the login with it failed, `always` would report a change on every run
       update_password: '{{ (__mongodb__users_password_check_result["results"][index]["rc"] | d(0) == 3) | ternary("always", "on_create") }}'
     loop: '{{ mongodb__users__combined_var }}'
@@ -358,7 +358,7 @@
           ["backup"]
           + ((mongodb__dump_method_file_based | bool) | ternary([{"role": "lfopsFsyncLock", "db": "admin"}], []))
         }}'
-      state: '{{ mongodb__dump_user["state"] | default("present") }}'
+      state: '{{ mongodb__dump_user["state"] | d("present") }}'
       # only set the password if the login with it failed, `always` would report a change on every run
       update_password: '{{ (__mongodb__dump_user_password_check_result["rc"] | d(0) == 3) | ternary("always", "on_create") }}'
     when:

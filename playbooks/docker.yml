@@ -21,7 +21,7 @@
 
     - role: 'linuxfabrik.lfops.repo_docker'
       when:
-        - 'not docker__skip_repo_docker | default(false)'
+        - 'not docker__skip_repo_docker | d(false)'
 
     - role: 'linuxfabrik.lfops.docker'
 

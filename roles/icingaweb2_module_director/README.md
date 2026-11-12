@@ -62,7 +62,7 @@ Manual steps:
     * `dev`: The development version (main branch). Use with care. Only works with `monitoring_plugins__install_method: 'source'`.
 
 * Type: String.
-* Default: `'{{ lfops__monitoring_plugins_version | default() }}'`
+* Default: `'{{ lfops__monitoring_plugins_version | d() }}'`
 
 `icingaweb2_module_director__version`
 

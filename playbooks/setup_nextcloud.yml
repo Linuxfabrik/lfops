@@ -51,7 +51,7 @@
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
         - 'ansible_facts["distribution"] != "Fedora"'
-        - 'not setup_nextcloud__skip_repo_epel | default(false)'
+        - 'not setup_nextcloud__skip_repo_epel | d(false)'
 
     # serves the acme.sh package, so it only runs together with acme_sh
     - role: 'linuxfabrik.lfops.repo_linuxfabrik'
@@ -62,7 +62,7 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_policycoreutils | default(false)'
+        - 'not setup_nextcloud__skip_policycoreutils | d(false)'
 
     # Before the services: installing the policy build dependencies can update the SELinux policy,
     # and a daemon started under an older policy keeps its domain until it is restarted. On a Rocky
@@ -80,7 +80,7 @@
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_nextcloud__skip_selinux | default(false)'
+        - 'not setup_nextcloud__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
@@ -202,7 +202,7 @@
 
     - role: 'linuxfabrik.lfops.repo_collabora'
       when:
-        - 'not setup_nextcloud__skip_repo_collabora | default(true)'
+        - 'not setup_nextcloud__skip_repo_collabora | d(true)'
 
     - role: 'linuxfabrik.lfops.collabora'
       collabora__coolwsd_storage_wopi__dependent_var: '{{

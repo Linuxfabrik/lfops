@@ -7,7 +7,7 @@
     retries: 3 # ride out a brief outage of the download source
     delay: 10
 
-  - name: 'deploy /etc/yum.repos.d/Collabora.repo (mirror: {{ repo_collabora__mirror_url | default(default) }})'
+  - name: 'deploy /etc/yum.repos.d/Collabora.repo (mirror: {{ repo_collabora__mirror_url | d(default) }})'
     ansible.builtin.template:
       backup: true
       src: 'etc/yum.repos.d/CollaboraOnline.repo.j2'
@@ -15,7 +15,7 @@
       owner: 'root'
       group: 'root'
       # 0600 while the file carries the mirror credentials
-      mode: '{{ "0o600" if repo_collabora__basic_auth_login | default({}) | length > 0 else "0o644" }}'
+      mode: '{{ "0o600" if repo_collabora__basic_auth_login | d({}) | length > 0 else "0o644" }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

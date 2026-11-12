@@ -202,7 +202,7 @@
       --zone {{ icinga2_master__cn }}
       --endpoint {{ icinga2_master__primary_host }},{{ icinga2_master__primary_host }},{{ icinga2_master__primary_port }}
       {% for item in icinga2_master__additional_master_endpoints %}
-      --endpoint {{ item['cn'] }},{{ item['host'] }},{{ item['port'] | default(5665) }}
+      --endpoint {{ item['cn'] }},{{ item['host'] }},{{ item['port'] | d(5665) }}
       {% endfor %}
       --parent_host {{ icinga2_master__primary_host }}
       --parent_zone master

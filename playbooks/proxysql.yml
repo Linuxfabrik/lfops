@@ -36,7 +36,7 @@
 
     - role: 'linuxfabrik.lfops.repo_proxysql'
       when:
-        - 'not proxysql__skip_repo_proxysql | default(false)'
+        - 'not proxysql__skip_repo_proxysql | d(false)'
 
     - role: 'linuxfabrik.lfops.proxysql'
 

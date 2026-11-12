@@ -165,7 +165,7 @@
     loop: '{{ logstash__pipelines__combined_var }}'
     loop_control:
       label: '{{ item["pipeline_id"] }}'
-    when: 'item["state"] | default("present") != "absent"'
+    when: 'item["state"] | d("present") != "absent"'
     notify: 'logstash: validate config and reload logstash'
 
   - name: 'Remove absent pipeline config files'
@@ -175,7 +175,7 @@
     loop: '{{ logstash__pipelines__combined_var }}'
     loop_control:
       label: '{{ item["pipeline_id"] }}'
-    when: 'item["state"] | default("present") == "absent"'
+    when: 'item["state"] | d("present") == "absent"'
     notify: 'logstash: validate config and reload logstash'
 
   tags:
@@ -203,7 +203,7 @@
     loop: '{{ logstash__grok_patterns__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
-    when: 'item["state"] | default("present") != "absent"'
+    when: 'item["state"] | d("present") != "absent"'
     notify: 'logstash: validate config and reload logstash'
 
   - name: 'Remove absent grok pattern files'
@@ -213,7 +213,7 @@
     loop: '{{ logstash__grok_patterns__combined_var }}'
     loop_control:
       label: '{{ item["name"] }}'
-    when: 'item["state"] | default("present") == "absent"'
+    when: 'item["state"] | d("present") == "absent"'
     notify: 'logstash: validate config and reload logstash'
 
   tags:

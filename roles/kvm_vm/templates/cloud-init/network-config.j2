@@ -8,7 +8,7 @@ ethernets:
 {% for item in kvm_vm__network_connections %}
   {{ item["name"] }}:
     match:
-      macaddress: '{{ item["mac"] | default(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=kvm_vm__name)) }}'
+      macaddress: '{{ item["mac"] | d(("52:54:" + ("%02d" | format(loop.index0) | string)) | community.general.random_mac(seed=kvm_vm__name)) }}'
 
 {% if item["addresses"] is defined and item["addresses"] | length %}
     addresses:
@@ -17,8 +17,8 @@ ethernets:
 {% endfor %}
 {% endif %}
 
-    dhcp4: {{ item["dhcp4"] | default(false) }}
-    dhcp6: {{ item["dhcp6"] | default(false) }}
+    dhcp4: {{ item["dhcp4"] | d(false) }}
+    dhcp6: {{ item["dhcp6"] | d(false) }}
 
 {% if item["gateway4"] is defined and item["gateway4"] | length %}
     gateway4: {{ item["gateway4"] }}

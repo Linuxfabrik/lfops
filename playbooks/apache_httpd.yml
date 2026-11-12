@@ -31,7 +31,7 @@
     - role: 'linuxfabrik.lfops.repo_epel'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not apache_httpd__skip_repo_epel | default(false)'
+        - 'not apache_httpd__skip_repo_epel | d(false)'
 
     # serves the acme.sh package, so it only runs together with acme_sh
     - role: 'linuxfabrik.lfops.repo_linuxfabrik'
@@ -42,7 +42,7 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not apache_httpd__skip_policycoreutils | default(false)'
+        - 'not apache_httpd__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__booleans__dependent_var: '{{
@@ -50,7 +50,7 @@
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not apache_httpd__skip_selinux | default(false)'
+        - 'not apache_httpd__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{

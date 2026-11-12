@@ -8,7 +8,7 @@
       group: 'root'
       mode: 0o644
 
-  - name: 'deploy the repo files (mirror: {{ repo_postgresql__mirror_url | default("") }})'
+  - name: 'deploy the repo files (mirror: {{ repo_postgresql__mirror_url | d("") }})'
     ansible.builtin.template:
       backup: true
       src: 'etc/yum.repos.d/pgdg-redhat-all.repo.j2'
@@ -16,7 +16,7 @@
       owner: 'root'
       group: 'root'
       # 0600 while the file carries the mirror credentials
-      mode: '{{ "0o600" if repo_postgresql__basic_auth_login | default({}) | length > 0 else "0o644" }}'
+      mode: '{{ "0o600" if repo_postgresql__basic_auth_login | d({}) | length > 0 else "0o644" }}'
 
   - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
     ansible.builtin.include_role:

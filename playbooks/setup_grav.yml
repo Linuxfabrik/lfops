@@ -22,14 +22,14 @@
     - role: 'linuxfabrik.lfops.policycoreutils'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not grav__skip_policycoreutils | default(false)'
+        - 'not grav__skip_policycoreutils | d(false)'
 
     - role: 'linuxfabrik.lfops.apps'
       apps__apps__dependent_var: '{{
           grav__apps__apps__dependent_var
         }}'
       when:
-        - 'not grav__skip_apps | default(false)'
+        - 'not grav__skip_apps | d(false)'
 
     - role: 'linuxfabrik.lfops.repo_baseos'
       repo_baseos__crb_repo_enabled__dependent_var: '{{
@@ -56,14 +56,14 @@
     - role: 'linuxfabrik.lfops.repo_remi'
       when:
         - 'ansible_facts["os_family"] == "RedHat" and ansible_facts["distribution"] != "Fedora"'
-        - 'not grav__skip_repo_remi | default(false)'
+        - 'not grav__skip_repo_remi | d(false)'
 
     - role: 'linuxfabrik.lfops.php'
       php__modules__dependent_var: '{{
           grav__php__modules__dependent_var
         }}'
       when:
-        - 'not grav__skip_php | default(false)'
+        - 'not grav__skip_php | d(false)'
 
     - role: 'linuxfabrik.lfops.selinux'
       selinux__fcontexts__dependent_var: '{{
@@ -74,7 +74,7 @@
         }}'
       when:
         - 'ansible_facts["os_family"] == "RedHat"'
-        - 'not setup_grav__skip_selinux | default(false)'
+        - 'not setup_grav__skip_selinux | d(false)'
 
     - role: 'linuxfabrik.lfops.python'
       python__modules__dependent_var: '{{
@@ -88,7 +88,7 @@
       apache_httpd__placeholder_certificates__dependent_var: '{{ acme_sh__apache_httpd__placeholder_certificates__dependent_var }}'
       apache_httpd__vhosts__dependent_var: '{{ grav__apache_httpd__vhosts__dependent_var | d([]) }}'
       when:
-        - 'not grav__skip_apache_httpd | default(false)'
+        - 'not grav__skip_apache_httpd | d(false)'
 
     - role: 'linuxfabrik.lfops.grav'
 

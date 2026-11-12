@@ -18,7 +18,7 @@
 #
 # Use a descriptive name for your cluster:
 #
-cluster.name: {{ opensearch__cluster_name__combined_var | default('my-application') }}
+cluster.name: {{ opensearch__cluster_name__combined_var | d('my-application') }}
 #
 # ------------------------------------ Node ------------------------------------
 #
@@ -150,8 +150,8 @@ cluster.initial_cluster_manager_nodes: {{ opensearch__cluster_initial_cluster_ma
 # is built once at runtime startup.
 #
 #datafusion.spill_directory:
-action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | default(true) | string | lower }}
-plugins.security.disabled: {{ opensearch__plugins_security_disabled | default(true) | string | lower }}
+action.auto_create_index: {{ opensearch__action_auto_create_index__combined_var | d(true) | string | lower }}
+plugins.security.disabled: {{ opensearch__plugins_security_disabled | d(true) | string | lower }}
 
 plugins.security.allow_default_init_securityindex: false
 plugins.security.allow_unsafe_democertificates: {{ opensearch__plugins_security_allow_unsafe_democertificates | string | lower }}

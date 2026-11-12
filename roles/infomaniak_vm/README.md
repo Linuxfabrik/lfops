@@ -206,7 +206,7 @@ infomaniak_vm__api_username: 'PCU-123456'
 Example:
 ```yaml
 # optional
-infomaniak_vm__key_name: '{{ lookup("env", "USER") | regex_replace(".", " ") }}'
+infomaniak_vm__key_name: '{{ lookup("env", "USER") | regex_replace("\.", " ") }}'
 infomaniak_vm__name: '{{ inventory_hostname }}'
 infomaniak_vm__networks:
   - name: 'ext-net1'

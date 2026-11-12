@@ -8,7 +8,7 @@
       owner: 'root'
       group: 'root'
       # 0600 while the file carries the mirror credentials
-      mode: '{{ "0o600" if repo_rpmfusion__basic_auth_login | default({}) | length > 0 else "0o644" }}'
+      mode: '{{ "0o600" if repo_rpmfusion__basic_auth_login | d({}) | length > 0 else "0o644" }}'
     loop:
       - 'etc/yum.repos.d/rpmfusion-free-updates-testing.repo'
       - 'etc/yum.repos.d/rpmfusion-free-updates.repo'

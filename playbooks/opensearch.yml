@@ -22,7 +22,7 @@
 
     - role: 'linuxfabrik.lfops.repo_opensearch'
       when:
-        - 'not opensearch__skip_repo_opensearch | default(false)'
+        - 'not opensearch__skip_repo_opensearch | d(false)'
 
     - role: 'linuxfabrik.lfops.opensearch'
 

@@ -20,7 +20,7 @@
       dest: '/etc/apt/keyrings/grafana.asc' # use asc for ASCII-armored keys
       mode: 0o644
 
-  - name: 'deploy the repo file (mirror: {{ repo_grafana__mirror_url | default("") }})'
+  - name: 'deploy the repo file (mirror: {{ repo_grafana__mirror_url | d("") }})'
     ansible.builtin.template:
       backup: true
       src: 'etc/apt/sources.list.d/grafana.list.j2'
