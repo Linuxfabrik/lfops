@@ -35,6 +35,7 @@ dependencies:
     - 'python-dateutil' # required for hetzner.hcloud
     - 'pywinrm'
     - 'requests' # required for hetzner.hcloud
+    - 'graypy' # required for custom graylog callback plugin
 
   python_interpreter:
     package_system: 'python3.11'
