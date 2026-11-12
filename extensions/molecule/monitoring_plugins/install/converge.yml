@@ -19,5 +19,22 @@
         creates: '/usr/share/icingaweb2/public/img/icons'
 
 
+# Stands in for the localhost vHost of a host with Apache HTTPd and PHP, on which an earlier run left
+# monitoring.php owned by the web server user. Here the numeric owner of the controller user stands
+# in for it, so the check does not depend on a web server being installed.
+- name: 'Create /var/www/html/localhost with a monitoring.php not owned by root'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'install -d /var/www/html/localhost; install -o 1000 -g 1000 monitoring.php'
+      ansible.builtin.shell: |
+        install --directory --mode=0755 /var/www/html/localhost
+        echo stale > /var/www/html/localhost/monitoring.php
+        chown 1000:1000 /var/www/html/localhost/monitoring.php
+      args:
+        creates: '/var/www/html/localhost'
+
+
 - name: 'Converge monitoring_plugins playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.monitoring_plugins'

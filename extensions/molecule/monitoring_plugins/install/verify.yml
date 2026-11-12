@@ -108,6 +108,22 @@
           {{ __molecule__icons_result["files"]
             | rejectattr("uid", "eq", 0) | map(attribute="path") | list }}
 
+    # converge.yml left a stale monitoring.php owned by uid 1000. The web server only executes it,
+    # so the role has to replace it and hand it to root.
+    - name: 'stat /var/www/html/localhost/monitoring.php'
+      ansible.builtin.stat:
+        path: '/var/www/html/localhost/monitoring.php'
+      register: '__molecule__monitoring_php_result'
+
+    - name: 'Assert that monitoring.php is deployed, owned by root and readable for the web server'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__monitoring_php_result["stat"]["size"] | d(0) > 10'
+          - '__molecule__monitoring_php_result["stat"]["uid"] == 0'
+          - '__molecule__monitoring_php_result["stat"]["gid"] == 0'
+          - '__molecule__monitoring_php_result["stat"]["mode"] == "0644"'
+        fail_msg: 'monitoring.php: {{ __molecule__monitoring_php_result["stat"] }}'
+
     # The lock pins exactly the installed version, and each package once.
     - name: 'dnf versionlock list'
       ansible.builtin.command: 'dnf versionlock list'
