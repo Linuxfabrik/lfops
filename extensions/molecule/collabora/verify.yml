@@ -1,0 +1,63 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state: coolwsd runs, converts a document, and its service account has no login shell.
+- name: 'Verify Collabora'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that coolwsd.service is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"]["coolwsd.service"]["state"] == "running"'
+          - 'ansible_facts["services"]["coolwsd.service"]["status"] == "enabled"'
+
+    - name: 'getent passwd cool'
+      ansible.builtin.getent:
+        database: 'passwd'
+        key: 'cool'
+
+    - name: 'Assert that cool has no login shell'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["getent_passwd"]["cool"][5] == "/sbin/nologin"'
+
+    - name: 'Create the document to convert'
+      ansible.builtin.copy:
+        content: 'Linuxfabrik'
+        dest: '/tmp/molecule-collabora.txt'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      changed_when: false
+
+    # A conversion runs the whole chain as `cool`: coolwsd hands the document to a kit process
+    # in a chroot jail below /opt/cool, which loads it and renders the PDF. This is what would
+    # break if coolwsd depended on the login shell of its service account.
+    # ansible.builtin.uri cannot send a file as multipart/form-data from the target.
+    - name: 'curl --form data=@/tmp/molecule-collabora.txt http://127.0.0.1:9980/cool/convert-to/pdf'
+      ansible.builtin.command: >-
+        curl --silent --show-error --fail
+        --form 'data=@/tmp/molecule-collabora.txt'
+        --output '/tmp/molecule-collabora.pdf'
+        http://127.0.0.1:9980/cool/convert-to/pdf
+      register: '__molecule__convert_result'
+      changed_when: false
+      # coolwsd answers before its first kit process is ready
+      retries: 12
+      delay: 10
+      until: '__molecule__convert_result["rc"] == 0'
+
+    - name: 'head --bytes=5 /tmp/molecule-collabora.pdf'
+      ansible.builtin.command: 'head --bytes=5 /tmp/molecule-collabora.pdf'
+      register: '__molecule__pdf_result'
+      changed_when: false
+
+    - name: 'Assert that coolwsd returned a PDF'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__pdf_result["stdout"] == "%PDF-"'

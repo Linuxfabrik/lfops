@@ -1,0 +1,2 @@
+# The playbook needs no variables: it installs Collabora CODE from the official repository with
+# the defaults of the role, which is what verify.yml checks.

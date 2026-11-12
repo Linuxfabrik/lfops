@@ -165,6 +165,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:collabora**: The service account `cool` has `/sbin/nologin` as its shell instead of `/bin/bash`, so no one logs in as `cool`, which also satisfies the Lynis check HOME-9304. Use `sudo -u cool <command>` to run a command as `cool`.
 * **role:postfix**: Postfix no longer answers the SMTP `VRFY` command, so a client cannot probe for valid recipient addresses, which satisfies the Lynis check MAIL-8820. Configurable with `postfix__disable_vrfy_command`.
 * **collection**: The collection declares ansible-core 2.16 as its minimum, as the README already did, so ansible-core 2.15 warns that it does not support the collection.
 * **role:grafana**: The role no longer installs `chkconfig` on RHEL 9 and 10, since Grafana ships no SysV init script anymore.
