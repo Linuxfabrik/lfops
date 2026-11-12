@@ -81,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
 * **plugin:bitwarden_item, module:bitwarden_item**: Reach `bw serve` through a Unix socket instead of the loopback port, so its file permissions decide which local users get at the vault. Needs bw CLI 2025.9.0 or newer. Set `LFOPS_BITWARDEN_UNIX_SOCKET` to the path of the socket.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Sorting by "Severity" in IcingaDB Web lists hosts and services of the same severity by name instead of by the last state change, also in the dashboards and problem lists. The role patches IcingaDB Web for this and re-applies the patch after every package update. Set `icingadb_web__patch_severity_sort: false` to keep the upstream sort order.
 * **role:icingaweb2_module_director, playbook:setup_icinga2_master**: Runs the Director database housekeeping daily at 03:xx, at a fixed minute per host. Set `icingaweb2_module_director__housekeeping_timer_enabled: false` to turn it off.
@@ -246,6 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:libreoffice**: `libreoffice__client_apache: true` creates `~/.ansible/tmp` of the web server user at the correct path, and a second run no longer reports changes. The playbook installs the custom SELinux policy modules through the `selinux` role, so they are part of `--tags selinux` instead of `--tags libreoffice`.
 * **role:apache_httpd**: The `app`, `localhost`, `proxy` and `wordpress` vHost templates answer requests for a `conf_server_alias` name instead of rejecting them with 403. Requests for a foreign name that merely starts with the `conf_server_name`, such as `www.example.com.evil.example`, are rejected with 403 if they reach the vHost, which happens when it is the first vHost on its IP address and port.
 * **role:apache_httpd**: The `wordpress` vHost template no longer blocks images and comments of a WordPress site that is reached on a non-default port, such as `https://wordpress.example.com:8443`, as hotlinking and comment spam.
 * **role:moodle**: Moodle is reachable when `moodle__url` ends with a slash or contains a path, such as `https://learning.example.com/`. Apache sent these requests to another vHost.

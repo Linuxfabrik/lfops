@@ -2,7 +2,7 @@
 
 This role installs LibreOffice on a server, intended for headless operation and mainly used for document conversion (e.g. by an Apache HTTPd-based web app calling `soffice --headless --convert-to pdf`).
 
-By default it only installs `libreoffice-core` plus the writer / calc / impress / draw / math packages. With `libreoffice__client_apache: true` it additionally prepares the host for using LibreOffice from an Apache HTTPd context (Red Hat only).
+By default it only installs `libreoffice-core` plus the writer / calc / impress / draw / math packages. With `libreoffice__client_apache: true` it additionally prepares the host for using LibreOffice from an Apache HTTPd context.
 
 
 *Available since LFOps `2.0.0`.*
@@ -10,16 +10,13 @@ By default it only installs `libreoffice-core` plus the writer / calc / impress 
 
 ## How the Role Behaves
 
-Setting `libreoffice__client_apache: true` triggers a Red Hat-specific block. On Debian / Ubuntu the block is not skipped automatically; the SELinux compile steps will fail there, so do not enable this on Debian-family hosts.
+When `libreoffice__client_apache: true` is set, the role:
 
-When enabled, the role:
+* Creates `~/.config/libreoffice/`, `~/.cache/` and `~/.ansible/tmp/` in the home directory of the web server user (`/usr/share/httpd` for `apache` on Red Hat, `/var/www` for `www-data` on Debian and Ubuntu), owned by that user.
+* Starts LibreOffice once as the web server user (`soffice --headless --terminate_after_init`) to populate `~/.config/libreoffice/4/`.
+* On Red Hat with SELinux enabled: runs `restorecon -vr` on `~/.cache` and `~/.config` after creating them.
 
-* Creates `/usr/share/httpd/.config/libreoffice/` and `/usr/share/httpd/.cache/`, owned by `apache:apache`.
-* Runs a one-shot dummy conversion as user `apache` to populate `~/.config/libreoffice/4/`.
-* Runs `restorecon -Fvr` on the two directories.
-* Compiles two custom SELinux policy modules (`selinux-sofficebin`, `selinux-java`) via `checkmodule` / `semodule_package` and installs them with `semodule --install`. These grant `httpd_t` the additional permissions LibreOffice needs (`setattr` on directories under `lib_t`, `read` on `cgroup_t` files, etc.).
-
-The SELinux booleans and fcontexts this Apache integration also needs are not set by this role. The `linuxfabrik.lfops.selinux` role, wired in by the playbook, applies them (see Dependent Roles).
+On Red Hat, LibreOffice started from the web server runs in the `httpd_t` SELinux domain and needs permissions this role does not set itself. The `linuxfabrik.lfops.selinux` role, wired in by the playbook, installs two custom policy modules (`selinux-java`, `selinux-sofficebin`), which let `httpd_t` read `cgroup_t` files, change the attributes of `lib_t` directories and write `usr_t` files, and applies the SELinux booleans and file contexts listed in Dependent Roles.
 
 
 ## Known Limitations
@@ -31,7 +28,7 @@ The SELinux booleans and fcontexts this Apache integration also needs are not se
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
-* Optional (Red Hat only, when `libreoffice__client_apache: true`): the SELinux booleans `httpd_can_network_connect` and `httpd_execmem` must be `on`, and `/usr/share/httpd/.cache` and `/usr/share/httpd/.config` must map to the `httpd_sys_rw_content_t` fcontext (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
+* Optional (Red Hat only, when `libreoffice__client_apache: true`): the custom SELinux policy modules `selinux-java` and `selinux-sofficebin` must be installed, the SELinux booleans `httpd_can_network_connect` and `httpd_execmem` must be `on`, and `/usr/share/httpd/.cache` and `/usr/share/httpd/.config` must map to the `httpd_sys_rw_content_t` fcontext (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 
 
 ## Tags
@@ -46,7 +43,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `libreoffice__client_apache`
 
-* If `true`, prepare the host for running LibreOffice from an Apache HTTPd context (directory layout, dummy run, custom SELinux modules; on Red Hat additionally the SELinux booleans / fcontexts applied by the `selinux` role the playbook wires in). Red Hat only.
+* If `true`, prepare the host for running LibreOffice from an Apache HTTPd context (directory layout, user profile; on Red Hat additionally the custom SELinux modules, booleans and file contexts applied by the `selinux` role the playbook wires in).
 * Type: Bool.
 * Default: `false`
 

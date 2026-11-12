@@ -1,0 +1,46 @@
+# Published for the `selinux` role, which the playbook runs before this role, so it has to live
+# here instead of in `vars/<os>.yml` (see "OS-specific Dependent Variables" in CONTRIBUTING.md).
+# LibreOffice started from the web server (for example by PHP) runs in the `httpd_t` domain.
+#
+# What the rules buy an attacker who controls the web server, on top of the DAC gates:
+# * `httpd_t lib_t:dir setattr`: changing the mode, owner or timestamps of a directory requires
+#   owning it (or CAP_FOWNER, which the web server lacks), so it only reaches `lib_t`
+#   directories the web server user owns. Small.
+# * `httpd_t usr_t:file write`: `usr_t` files are owned by root and not writable for others, so
+#   it only reaches `usr_t` files the web server user may write by DAC, normally those in its
+#   home directory `/usr/share/httpd`. Small.
+# * `httpd_t cgroup_t:file read`: the cgroup files are world-readable by DAC anyway. None.
+__libreoffice__selinux__modules__dependent_var:
+  RedHat:
+    - name: 'selinux-java'
+      content_te: |
+        module selinux-java 1.0;
+
+        require {
+            type cgroup_t;
+            type httpd_t;
+            class file read;
+        }
+
+        # jre/bin/java reads /sys/fs/cgroup
+        allow httpd_t cgroup_t:file read;
+    - name: 'selinux-sofficebin'
+      content_te: |
+        module selinux-sofficebin 1.0;
+
+        require {
+            type httpd_t;
+            type lib_t;
+            type usr_t;
+            class dir setattr;
+            class file write;
+        }
+
+        # soffice.bin sets the attributes of its cache directory and writes below the home
+        # directory of the web server user
+        allow httpd_t lib_t:dir setattr;
+        allow httpd_t usr_t:file write;
+libreoffice__selinux__modules__dependent_var: '{{
+    __libreoffice__selinux__modules__dependent_var
+    | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
+  }}'

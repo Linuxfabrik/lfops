@@ -1,0 +1,5 @@
+# Molecule scenario marker for the 'libreoffice' scenario, run with
+# `molecule test --scenario-name libreoffice`.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

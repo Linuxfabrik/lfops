@@ -1,0 +1,2 @@
+# The Apache HTTPd integration holds all of the logic of the role.
+libreoffice__client_apache: true
