@@ -29,7 +29,7 @@ DOCUMENTATION = r"""
     - Prints one block per task, with the role and the task name on lines of their own.
     - While the task runs, every host result appends an asterisk in the color of its status (ok, changed, skipped, failed, unreachable), so the asterisks add up to a progress bar.
     - After the task, unchanged ok and skipped hosts are listed in one C(ok) and one C(skipped) line. Host names that share the part up to the last dash and the delegation target are merged in bash brace expansion syntax, for example C(web-{01,02} > localhost).
-    - While a task runs, only the progress bar and failures are printed. At its end, the changed hosts follow, grouped by identical output (the diff, or without a diff the C(msg), C(results), C(stdout) and C(stderr) of the result, where modules report what they changed), then the ok and skipped hosts, then the warnings.
+    - While a task runs, only the progress bar and failures are printed. At its end, the changed hosts follow, grouped by identical output (the diff, or without a diff the C(msg), C(results), C(stdout) and C(stderr) of the result, where modules report what they changed), then the output of C(ansible.builtin.debug) tasks (see O(display_debug_output)), then the ok and skipped hosts, then the warnings.
     - Failed and unreachable results are printed as usual, with C(msg), C(stdout), C(stderr), C(module_stdout) and C(module_stderr) as plain text below the JSON, so tracebacks stay readable.
     - Warnings are grouped by text and list the hosts they occurred on. A host name within a warning of Ansible itself (for example from a lookup) is replaced by C(<host>) for the grouping.
     - Failures that a task accepts with C(ignore_errors) are shown in one C(ignored) line per message with the hosts, not as a full result (C(--verbose) shows the full result).
@@ -39,6 +39,18 @@ DOCUMENTATION = r"""
   notes:
     - Under ansible-navigator, set the environment variable C(ANSIBLE_STDOUT_CALLBACK). ansible-runner replaces the stdout callback with its own wrapper, which only builds on this variable and ignores C(stdout_callback) in C(ansible.cfg). The terminal needs at least 65 columns there, since ansible-runner writes 64 characters wide invisible event markers, which wrap and become visible on a narrower terminal, with any stdout callback.
     - Made for the linear strategies (C(linear), C(mitogen_linear)), which run one task on all hosts before the next. With C(free) or C(host_pinned), the progress bar and the host lists of concurrent tasks mix.
+  options:
+    display_debug_output:
+      description:
+        - Show the output of C(ansible.builtin.debug) tasks, although their hosts are ok, grouped by identical output like the changes.
+        - If disabled, the hosts of a C(ansible.builtin.debug) task are listed in the C(ok) line like those of any other task.
+      type: bool
+      default: true
+      env:
+        - name: ANSIBLE_CALLBACK_COMPACT_DISPLAY_DEBUG_OUTPUT
+      ini:
+        - section: callback_compact
+          key: display_debug_output
   extends_documentation_fragment:
     - ansible.builtin.default_callback
     - ansible.builtin.result_format_callback
@@ -141,6 +153,9 @@ class CallbackModule(Default):
         # Output collected while a task runs, printed grouped at its end:
         # grouping key -> [header suffix, body lines, host labels]
         self._changes = {}
+        # the same for the output of ok debug tasks, and the labels of their hosts
+        self._ok_output = {}
+        self._ok_output_hosts = set()
         # (host label or None, text)
         self._task_warnings = []
         # host names with a result so far, to find them in the text of warnings
@@ -365,6 +380,14 @@ class CallbackModule(Default):
             )
             self._display.display(f'  {message}')
         self._ignored.clear()
+        for suffix, body, hosts in self._ok_output.values():
+            self._display.display(
+                f'ok: {self._host_list(hosts)}{suffix}', color=C.COLOR_OK
+            )
+            for line in body:
+                self._display.display(line)
+        self._ok_output.clear()
+        self._ok_output_hosts.clear()
         self._print_ok_skipped()
         self._ok_hosts.clear()
         self._skipped_hosts.clear()
@@ -493,17 +516,47 @@ class CallbackModule(Default):
         if self._last_task_name is not None and self._last_task_banner != task._uuid:
             self._print_task_banner(task)
 
-    def _add_change(self, result, body, item=False):
+    def _add_change(self, result, body, item=False, groups=None):
         """Collect a changed host for the end of the task, grouped with the hosts
         whose output has the same lines (in any order, e.g. restorecon -v).
+        `groups` is where to collect it, by default the changes.
         """
+        if groups is None:
+            groups = self._changes
         label = self._short_label(self._get_item_label(_res(result)))
         suffix = f' (item={label})' if item else ''
         key = (suffix, tuple(sorted(body)))
-        self._changes.setdefault(key, [suffix, body, []])[2].append(
-            self.host_label(result)
-        )
+        groups.setdefault(key, [suffix, body, []])[2].append(self.host_label(result))
         self._saw(result)
+
+    # Result fields of a debug task that are not its output, see _add_debug_output()
+    _DEBUG_NO_OUTPUT_FIELDS = ('deprecations', 'exception', 'warnings')
+
+    def _shows_debug_output(self, task):
+        return task.action in C._ACTION_DEBUG and self.get_option(
+            'display_debug_output'
+        )
+
+    def _add_debug_output(self, result, item=False):
+        """Collect the output of an ok debug task for the end of the task, grouped
+        like the changes: a `msg` text as it is, anything else (`var`, or a `msg`
+        that is a list or a dict) as the default callback dumps it.
+        """
+        res = _res(result)
+        # leaves `msg` alone, or the variable of `var`
+        self._clean_results(res, _task(result).action)
+        if isinstance(res.get('msg'), str):
+            body = [f'  {line}' for line in res['msg'].rstrip('\n').splitlines()]
+        else:
+            shown = {
+                key: value
+                for key, value in res.items()
+                if key not in self._DEBUG_NO_OUTPUT_FIELDS
+            }
+            # not the _dump_results() of this class, which prints `msg` as text
+            body = [f'=> {super()._dump_results(shown)}']
+        self._add_change(result, body, item, groups=self._ok_output)
+        self._ok_output_hosts.add(self.host_label(result))
 
     def _print_changed(self, result, item=False):
         """Collect a changed host, unless v2_on_file_diff already did."""
@@ -665,7 +718,9 @@ class CallbackModule(Default):
         res = _res(result)
         if res.get('changed'):
             self._print_changed(result, item=True)
-        # unchanged items are covered by the host's asterisk and the "ok" line
+        elif self._shows_debug_output(_task(result)):
+            self._add_debug_output(result, item=True)
+        # other unchanged items are covered by the host's asterisk and the "ok" line
         self._warnings(result)
 
     def v2_runner_item_on_skipped(self, result):
@@ -722,9 +777,16 @@ class CallbackModule(Default):
             # The banner is still missing with the free strategies, see notes.
             if self._last_task_banner != task._uuid:
                 self._print_task_banner(task)
-            self._ok_hosts.append(self.host_label(result))
             self._saw(result)
             self._bar(C.COLOR_OK)
+            if task.loop and 'results' in res:
+                # the output of a debug loop was already collected per item
+                if self.host_label(result) not in self._ok_output_hosts:
+                    self._ok_hosts.append(self.host_label(result))
+            elif self._shows_debug_output(task):
+                self._add_debug_output(result)
+            else:
+                self._ok_hosts.append(self.host_label(result))
         elif not (task.loop and 'results' in res):
             # Loop results were already collected per item.
             self._print_changed(result)
