@@ -16,9 +16,10 @@ concurrency:
   cancel-in-progress: "${{ github.event_name == 'pull_request' }}"
 
 jobs:
-  # Most pull requests only touch roles and playbooks, which these tests do
-  # not cover. Skipping them there keeps the org's shared runner slots free.
-  # Pushes to main always run the full set.
+  # Most pull requests only touch roles, which these tests do not cover.
+  # Skipping them there keeps the org's shared runner slots free. Playbooks
+  # count as relevant, since tests/unit/test_playbooks.py checks them. Pushes
+  # to main always run the full set.
   changes:
     name: 'Detect relevant changes'
     runs-on: 'ubuntu-latest'
@@ -34,7 +35,7 @@ jobs:
 
       # The files API returns at most 3000 files, so a pull request that
       # large runs everything.
-      - name: 'Check whether the plugins or their tests changed'
+      - name: 'Check whether the plugins, the playbooks or their tests changed'
         id: 'filter'
         env:
           EVENT_NAME: '${{ github.event_name }}'
@@ -46,7 +47,7 @@ jobs:
             files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename')"
             if [[ "$(wc --lines <<< "$files")" -lt 3000 ]] \
               && ! grep --quiet --extended-regexp \
-                '^(\.github/(tox|unit-tests-py36|unit-tests-py36-ansible-core)/|\.github/workflows/lf-unit-tests\.yml$|plugins/|pyproject\.toml$|tests/|tox\.ini$)' \
+                '^(\.github/(tox|unit-tests-py36|unit-tests-py36-ansible-core)/|\.github/workflows/lf-unit-tests\.yml$|playbooks/|plugins/|pyproject\.toml$|tests/|tox\.ini$)' \
                 <<< "$files"; then
               relevant='false'
             fi

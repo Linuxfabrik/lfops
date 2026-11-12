@@ -141,7 +141,7 @@ duplicity__swift_login:
 
 `duplicity__backup_retention_time`
 
-* The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. `duba` removes a backup chain (a full backup and its incrementals) only once its newest backup is older than this, so with the defaults and one backup a day the oldest backup you can restore is between 31 and 61 days old.
+* The retention time of the backups. Time Formats: `s`, `m`, `h`, `D`, `W`, `M`, or `Y`. `duba` removes a backup chain (a full backup and its incrementals) only once its newest backup is older than this, so with the defaults and one backup a day the oldest backup you can restore is between 31 and 61 days old. `duba` only cleans up the paths that exist on the host when it runs: the backup chains of a removed directory, of an entry removed below a `divide: true` source, or of a source set to `state: 'absent'` stay in the storage until they are deleted by hand there.
 * Type: String.
 * Default: `'30D'`
 
