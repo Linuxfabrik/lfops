@@ -73,6 +73,10 @@ apache_httpd__vhosts__host_var:
     conf_proxy_preserve_host: 'On'
     conf_server_name: 'www.example.com'
     raw: !unsafe |-
+      # headers_module
+      RequestHeader unset X-Forwarded-For
+      RequestHeader unset X-Forwarded-Host
+      RequestHeader unset X-Forwarded-Port
       RequestHeader set X-Forwarded-Proto "https"
       # ssl_module
       SSLEngine on
@@ -91,6 +95,10 @@ apache_httpd__vhosts__host_var:
       ProxyPassReverse / http://webserver/
       ProxyPassReverse / http://www.example.com/
 ```
+
+Remove the `X-Forwarded-*` headers that the client sends, on every vHost that forwards with `ProxyPass` or `RewriteRule ... [proxy]`. mod_proxy appends the client address to an `X-Forwarded-For` the client brought along, and the original host name to its `X-Forwarded-Host`, instead of replacing them, and passes a client's `X-Forwarded-Port` on unchanged. Applications that take the first entry, Keycloak for example, then use the client's value, so without the `RequestHeader` lines a client could choose the address the backend logs and checks, and the host name and port the backend builds its URLs from. A trusted proxy setting in the backend does not help, since the request does come from this Apache. mod_proxy sets `X-Forwarded-For` and `X-Forwarded-Host` again after the `RequestHeader` directives.
+
+If a load balancer or CDN sits in front of this Apache, also list it in `apache_httpd__mod_remoteip_internal_proxy`. mod_remoteip then takes the client address from the load balancer's `X-Forwarded-For`, and mod_proxy passes exactly that address on. Without it, the backend sees the load balancer as the client.
 
 ### Redirect vHost
 
@@ -539,6 +547,37 @@ SetEnvIf MM_COUNTRY_CODE DE AllowCountry
     </RequireAny>
 </Proxy>
 ```
+
+
+### Limiting the Request Body on a Reverse Proxy
+
+`LimitRequestBody` (`apache_httpd__conf_limit_request_body`) does not apply to requests that Apache forwards with mod_proxy: its input filter treats every proxy request as unlimited, whatever the global or `<Location>` value is. A check of the `Content-Length` header, for example with `<If>`, misses chunked requests, which have no `Content-Length`.
+
+ModSecurity enforces its limit on forwarded requests as well, with and without `Content-Length`, and answers with `413`. Enable the module:
+
+```yaml
+apache_httpd__mods__host_var:
+  - filename: 'security2'
+    enabled: true
+    state: 'present'
+    template: 'security2'
+```
+
+Then add this to the `raw` content of the `proxy` vHost:
+
+```
+# security2_module
+SecRuleEngine                 On
+SecRequestBodyAccess          On
+SecRequestBodyLimit           102400
+SecRequestBodyNoFilesLimit    102400
+```
+
+* `SecRequestBodyLimit` caps every request body, file uploads included. ModSecurity's default is 128 MiB.
+* `SecRequestBodyNoFilesLimit` caps the form fields of `application/x-www-form-urlencoded` and `multipart/form-data` requests. ModSecurity's default is 1 MiB. Set it to the same value or lower.
+* With `SecRuleEngine DetectionOnly`, ModSecurity only logs a request above the limit and forwards it anyway.
+* ModSecurity reads the complete request body before it forwards the request, in memory up to `SecRequestBodyInMemoryLimit` and in `SecTmpDir` beyond that. The backend therefore only sees an upload once it has fully arrived on the proxy.
+* ModSecurity needs `mod_unique_id`, which the role enables by default. Without it, ModSecurity logs "ModSecurity requires mod_unique_id to be installed" and lets every request through unchecked.
 
 
 ### mod_security + OWASP CRS Rule Set

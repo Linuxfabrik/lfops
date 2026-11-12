@@ -48,8 +48,59 @@ Keycloak supports one of the following database servers; create a database and a
 Manual steps:
 
 * Optional: If Keycloak itself should terminate TLS (when it does not run behind a reverse proxy, or behind one in reencrypt/passthrough mode), provide the certificate and the private key and point `keycloak__https_certificate_file` and `keycloak__https_certificate_key_file` at them. Run the [linuxfabrik.lfops.acme_sh](https://github.com/Linuxfabrik/lfops/tree/main/roles/acme_sh) playbook to obtain them. Behind a reverse proxy that terminates TLS (edge mode) no certificates are needed and both variables stay empty.
+* Set up the reverse proxy so that it only publishes the paths Keycloak needs, see "Reverse Proxy in Front of Keycloak" below.
 
 All Keycloak config settings are described here: https://www.keycloak.org/server/all-config
+
+
+## Reverse Proxy in Front of Keycloak
+
+In edge mode, Keycloak serves the realms, the admin console and the Admin REST API on port 8080, and the health and metrics endpoints on the management port 9000. Forward port 8080 only. Following the [exposed path recommendations](https://www.keycloak.org/server/reverseproxy#_exposed_path_recommendations) of Keycloak, publish only `/realms/`, `/resources/` and `/.well-known/`, and allow everything else, in particular `/admin/` and the administrative realm `/realms/master/`, from the admin network only. In this example, `192.0.2.0/24` is the admin network:
+
+```yaml
+apache_httpd__vhosts__host_var:
+  - template: 'proxy'
+    allowed_http_methods:
+      - 'DELETE'
+      - 'GET'
+      - 'OPTIONS'
+      - 'POST'
+      - 'PUT'
+    conf_proxy_error_override: 'Off'
+    conf_proxy_preserve_host: 'On'
+    conf_server_name: 'keycloak.example.com'
+    raw: !unsafe |-
+      # headers_module
+      RequestHeader unset X-Forwarded-For
+      RequestHeader unset X-Forwarded-Host
+      RequestHeader unset X-Forwarded-Port
+      RequestHeader set X-Forwarded-Proto "https"
+
+      # proxy_module and other
+      <Proxy *>
+          Require all granted
+      </Proxy>
+      ProxyPass / http://keycloak-host.example.com:8080/
+      ProxyPassReverse / http://keycloak-host.example.com:8080/
+
+      <Location "/">
+          Require ip 192.0.2.0/24
+      </Location>
+      <LocationMatch "^/+(\.well-known|realms|resources)/">
+          Require all granted
+      </LocationMatch>
+      <LocationMatch "(?i)^/+realms/+master([/;]|$)">
+          Require ip 192.0.2.0/24
+      </LocationMatch>
+```
+
+Remove the `X-Forwarded-*` headers that the client sends. mod_proxy appends the client address to an `X-Forwarded-For` the client brought along instead of replacing it, and Keycloak takes the first entry, so a client could otherwise choose the IP address that Keycloak records in its events, user sessions and failed logins. `keycloak__proxy_trusted_addresses` does not help here, since it only checks the address of the reverse proxy itself. Likewise, a client-supplied `X-Forwarded-Port` ends up in the URLs Keycloak builds, such as the issuer. mod_proxy sets `X-Forwarded-For` and `X-Forwarded-Host` itself after the `RequestHeader` directives, and `X-Forwarded-Proto` is set to `https` explicitly. mod_proxy does not send a `Forwarded` header, so keep `keycloak__proxy_headers` at `'xforwarded'` behind Apache.
+
+Keep the order of the three `Location` sections: Apache applies them in the order they appear, and the last one that matches decides. Match `master` case-insensitively. The database that `setup_keycloak` creates uses the collation `utf8mb4_unicode_ci`, so Keycloak also serves the `master` realm as `/realms/MASTER/`, which a case-sensitive `<Location "/realms/master/">` lets through. Apache matches the sections against the decoded and normalized path, so percent-encoded characters, dot segments and duplicate slashes do not get around them.
+
+`conf_proxy_error_override: 'Off'` passes the error responses of Keycloak on unchanged. With the template default `On`, Apache replaces them with its own error page, so OIDC clients and the admin console do not learn why a request failed. Keycloak needs `POST` for the login and the token endpoint, and the admin console needs `PUT` and `DELETE`.
+
+Keycloak rejects request bodies above 10 MiB with `413` itself, also chunked ones, and form fields above 128 KiB. The `LimitRequestBody` of the `apache_httpd` role does not apply to forwarded requests. To cap the request body on the proxy, as the CIS Apache HTTP Server Benchmark asks for, use ModSecurity, see "Limiting the Request Body on a Reverse Proxy" in the [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md) of the `apache_httpd` role.
 
 
 ## Post-Installation Steps

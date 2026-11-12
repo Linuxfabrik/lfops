@@ -206,6 +206,7 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 `apache_httpd__conf_limit_request_body`
 
 * See [LimitRequestBody](https://httpd.apache.org/docs/2.4/mod/core.html#limitrequestbody).
+* Apache does not apply this limit to requests that it forwards with mod_proxy (`ProxyPass`, `RewriteRule ... [proxy]`), neither globally nor in a `<Location>`, so a `proxy` vHost accepts request bodies of any size. Limit them with ModSecurity instead, see "Limiting the Request Body on a Reverse Proxy" in [EXAMPLES.md](https://github.com/Linuxfabrik/lfops/blob/main/roles/apache_httpd/EXAMPLES.md).
 * Type: Number.
 * CIS: Do not set it above `102400`.
 * Default: `102400`
