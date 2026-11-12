@@ -93,3 +93,25 @@
     - name: 'Assert that /root/.acme.sh does not exist'
       ansible.builtin.assert:
         that: 'not __molecule__acme_sh_home_result["stat"]["exists"]'
+
+    # prepare.yml left the challenge directory owned by uid 1000. acme.sh writes the challenges as
+    # root and the web server only reads them, so the role has to hand both to root.
+    - name: 'stat /var/www/html/letsencrypt/.well-known/acme-challenge{,/index.html}'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/var/www/html/letsencrypt/.well-known/acme-challenge'
+        - '/var/www/html/letsencrypt/.well-known/acme-challenge/index.html'
+      register: '__molecule__acme_challenge_result'
+
+    - name: 'Assert that the challenge directory and index.html belong to root and are readable for the web server'
+      ansible.builtin.assert:
+        that:
+          - 'item["stat"]["uid"] == 0'
+          - 'item["stat"]["gid"] == 0'
+          - 'item["stat"]["mode"] == (item["stat"]["isdir"] | ternary("0755", "0644"))'
+        fail_msg: '{{ item["item"] }}: {{ item["stat"] }}'
+        quiet: true
+      loop: '{{ __molecule__acme_challenge_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
