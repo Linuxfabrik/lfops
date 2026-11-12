@@ -6,6 +6,11 @@ This role installs and configures either [Collabora Online Development Edition](
 *Available since LFOps `2.0.0`.*
 
 
+## How the Role Behaves
+
+* The service account `cool`, which the `coolwsd` package creates with `/bin/bash`, gets `/sbin/nologin` as its shell, so no one logs in as `cool`, and Lynis does not report its application directory `/opt/cool` as a home directory with too open permissions (HOME-9304). To run a command as `cool`, use `sudo -u cool <command>` or `su --shell /bin/bash cool`.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.

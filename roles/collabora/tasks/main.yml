@@ -22,6 +22,18 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  # The coolwsd package creates `cool` with `/bin/bash` as its shell, but only while the user
+  # does not exist (`%pre` in coolwsd.spec.in), so the shell set here survives package updates.
+  # coolwsd.service runs as `User=cool` and needs no shell. With a login shell, Lynis counts
+  # `/opt/cool` as a home directory and reports its mode 0755 (HOME-9304); tightening the mode
+  # would not last, since `%post` removes and recreates `/opt/cool` on every update.
+  # Verified against the Collabora Online source (branch co-25.04), and by reinstalling coolwsd
+  # on Rocky 8 and 10, which kept the shell and recreated `/opt/cool` with mode 0755.
+  - name: 'usermod --shell /sbin/nologin cool'
+    ansible.builtin.user:
+      name: 'cool'
+      shell: '/sbin/nologin'
+
   - name: 'touch /var/log/coolwsd.log & chmod 0640 /var/log/coolwsd.log'
     ansible.builtin.file:
       path: '/var/log/coolwsd.log'
