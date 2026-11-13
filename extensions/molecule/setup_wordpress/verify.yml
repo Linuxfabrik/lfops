@@ -555,3 +555,18 @@
           - '__molecule__wordpress_config_nobody_result["rc"] != 0'
           - '"Permission denied" in __molecule__wordpress_config_nobody_result["stderr"]'
         fail_msg: 'nobody read wp-config.php: rc={{ __molecule__wordpress_config_nobody_result["rc"] }}, {{ __molecule__wordpress_config_nobody_result["stderr"] }}'
+
+    # WordPress talks to MariaDB through mysqli. The obsolete ext/mysql (php-pecl-mysql), which
+    # the package name `php-mysql` resolves to with a Remi module stream, must not be loaded.
+    - name: 'php -m'
+      ansible.builtin.command: 'php -m'
+      register: '__molecule__wordpress_php_modules_result'
+      changed_when: false
+
+    - name: 'Assert that PHP loads mysqli and not ext/mysql'
+      ansible.builtin.assert:
+        that:
+          - '"mysqli" in __molecule__wordpress_php_modules_result["stdout_lines"]'
+          - '"mysqlnd" in __molecule__wordpress_php_modules_result["stdout_lines"]'
+          - '"mysql" not in __molecule__wordpress_php_modules_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__wordpress_php_modules_result["stdout_lines"] }}'
