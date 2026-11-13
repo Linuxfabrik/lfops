@@ -11,6 +11,8 @@ This role installs and configures [GitLab CE](https://about.gitlab.com/), includ
 
 ## How the Role Behaves
 
+* `gitlab-dump.service` runs `gitlab-backup create STRATEGY=copy` into `gitlab_ce__rb_gitlab_rails_backup_path`, and fails if a part of the dump fails. With `STRATEGY=copy`, as the GitLab documentation recommends for a running instance, GitLab copies each of its file stores (uploads, CI artifacts, LFS objects, the container registry, ...) to the backup path before archiving it, one after the other. On top of the archive, the backup path therefore needs free space for the largest of them. GitLab stays available during the dump.
+* `/etc/gitlab/gitlab.rb` and `/etc/gitlab/gitlab-secrets.json` are not part of the dump, back up `/etc/gitlab` separately. The `duplicity` role does so by default.
 * `gitlab-dump.service` runs with `Nice=19`, best-effort IO priority 7 and `CPUWeight=` / `IOWeight=` of `20` (systemd default: `100`), so the dump does not slow down the application on a busy host. The weights only take effect under contention. `IOWeight=` only has an effect on block devices that use the BFQ IO scheduler; with `none` or `mq-deadline`, as on a RHEL 9 VM with virtio disks, it is ignored.
 * The role does not configure sshd. Git over SSH opens one connection per `git fetch` or `git push`, so CI jobs or scripts that update many repositories at once exceed the `MaxStartups` of the [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd) role, and sshd refuses some of them. Set `sshd__max_startups__group_var: '100:30:200'` for GitLab hosts in the inventory, the value the [GitLab documentation](https://docs.gitlab.com/topics/git/troubleshooting_git/) suggests.
 

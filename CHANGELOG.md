@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:gitlab_ce**: `gitlab-dump.service` runs `gitlab-backup create STRATEGY=copy`, as the GitLab documentation recommends for a running instance, so the dump no longer fails with "file changed as we read it". GitLab copies each of its file stores (uploads, CI artifacts, LFS objects, the container registry, ...) to the backup path before archiving it, one after the other, so `gitlab_ce__rb_gitlab_rails_backup_path` needs free space for the largest of them on top of the archive. Grow the filesystem of the backup path if necessary.
 * **role:selinux**: `restorecon` only corrects the SELinux type of a file and leaves files whose type an admin customized alone, such as Podman volumes mounted with `:Z`, since `force` in `selinux__restorecons__host_var` / `selinux__restorecons__group_var` defaults to `false` instead of `true`. On large directory trees the task finishes much faster, and it reports a change only when it actually relabeled a file. Set `force: true` on a path whose files carry a customized type but have to get the type of its file context.
 * **role:collabora**: From Collabora Online CODE 26.04.6 on, documents may only pull data (inserted graphics, `=WEBSERVICE()`, external cell references) from the WOPI hosts and the host they were loaded from, as upstream ships it: private networks, localhost and the `collabora__coolwsd_post_allow` hosts are no longer allowed as data sources. List other internal data sources in `collabora__coolwsd_lok_allow` before updating.
 * **role:apache_httpd**: The role only defines the log formats Apache ships (`agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`) and drops `debug`, `fail2ban`, `gelf`, `linuxfabrikio` and `matomo`. Apache still starts with a `CustomLog` that names one of them, but writes just that name instead of the request; switch such a log to `combined`, or define the format in the vHost's `raw`.
@@ -280,6 +281,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:gitlab_ce**: `gitlab-dump.service` fails when the backup fails, so `systemctl --failed` and the monitoring notice it, instead of always reporting success.
 * **role:duplicity**: `duba` no longer removes old backups of a path whose backup failed in the same run.
 * **role:duplicity**: `duba` reports a missing or invalid `/etc/duba/duba.json` with an error message and exit code 201 or 203 instead of a Python traceback.
 * **role:repo_epel**: On CentOS Stream 10, EPEL uses the repository built for CentOS Stream instead of the one for the newest RHEL minor release.
