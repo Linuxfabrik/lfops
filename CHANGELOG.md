@@ -254,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: On the Red Hat family, PHP modules from the inventory that are already installed as a dependency of another package are marked as user-installed, so `dnf autoremove` no longer removes them once that package is gone.
 * **role:sshd**: `sshd__sftp_subsystem` from the inventory takes effect, where the role always deployed its own default.
 * **role:fangfrisch**: Without `fangfrisch__urlhaus_auth_key`, Fangfrisch no longer tries to download the URLhaus signatures, which failed with `401 Unauthorized` on every refresh.
 * **role:wordpress, playbook:setup_wordpress**: New installations get `php-mysqlnd` instead of `php-pecl-mysql`, the obsolete `mysql_*` extension that WordPress does not use. Hosts that already have `php-pecl-mysql` keep it.
