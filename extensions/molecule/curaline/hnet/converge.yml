@@ -1,2 +1,0 @@
-- name: 'Converge curaline playbook'
-  ansible.builtin.import_playbook: 'linuxfabrik.lfops.curaline'
