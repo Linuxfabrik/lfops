@@ -26,6 +26,37 @@
         that: '"usage: duba" in __molecule__duba_help_result["stdout"]'
         fail_msg: '{{ __molecule__duba_help_result | to_json }}'
 
+    # A missing or invalid config file is reported with an error message and duba's own exit
+    # code, not with a Python traceback (exit code 222).
+    - name: 'duba --config=/nonexistent'
+      ansible.builtin.command: '/usr/local/bin/duba --config=/nonexistent'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_missing_config_result'
+
+    - name: 'Deploy /tmp/molecule-duba-invalid.json'
+      ansible.builtin.copy:
+        dest: '/tmp/molecule-duba-invalid.json'
+        content: '{invalid'
+        mode: 0o600
+
+    - name: 'duba --config=/tmp/molecule-duba-invalid.json'
+      ansible.builtin.command: '/usr/local/bin/duba --config=/tmp/molecule-duba-invalid.json'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_invalid_config_result'
+
+    - name: 'Assert that duba reports a missing and an invalid config file'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_missing_config_result["rc"] == 201'
+          - '"ERROR: duba - I/O error: No such file or directory while opening or reading /nonexistent" in __molecule__duba_missing_config_result["stderr"]'
+          - '__molecule__duba_invalid_config_result["rc"] == 203'
+          - '"ERROR: duba - JSON decode error in /tmp/molecule-duba-invalid.json" in __molecule__duba_invalid_config_result["stderr"]'
+          - '"Traceback" not in __molecule__duba_missing_config_result["stdout"] ~ __molecule__duba_missing_config_result["stderr"]'
+          - '"Traceback" not in __molecule__duba_invalid_config_result["stdout"] ~ __molecule__duba_invalid_config_result["stderr"]'
+        fail_msg: '{{ [__molecule__duba_missing_config_result, __molecule__duba_invalid_config_result] | to_json }}'
+
     # Ask gpg whether the master key is imported and trusted ultimately ("u" in field 2 of the
     # colon listing), since the role encrypts every backup to it.
     - name: 'gpg --list-keys --with-colons {{ duplicity__gpg_encrypt_master_key }}'
@@ -350,7 +381,8 @@
 
     # One failed source has to fail the whole run, also if the other sources finish after it.
     # A regular file in place of the backup directory of the divided entry "broken" breaks its
-    # backup, the other sources still back up fine.
+    # backup, the other sources still back up fine. duba must not remove old backups of the
+    # path whose backup failed, while it still cleans up the others.
     - name: 'mkdir /srv/duba-molecule/divided/broken'
       ansible.builtin.file:
         path: '/srv/duba-molecule/divided/broken'
@@ -379,6 +411,14 @@
         that:
           - '__molecule__duba_service_result["rc"] != 0'
           - '__molecule__duba_journal_result["stdout_lines"] | select("search", "ERROR: duba - Exit code [0-9]+: .* file:///var/backups/duba-molecule/srv/duba-molecule/divided/broken$") | list | length > 0'
+        fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] }}'
+
+    - name: 'Assert that duba skipped the cleanup of the broken source only'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_journal_result["stdout_lines"] | select("search", "WARNING: duba - Skipping the cleanup of /srv/duba-molecule/divided/broken, since its backup failed.$") | list | length > 0'
+          - '__molecule__duba_journal_result["stdout_lines"] | select("search", "Running: .* remove-older-than .* file:///var/backups/duba-molecule/srv/duba-molecule/divided/broken$") | list | length == 0'
+          - '__molecule__duba_journal_result["stdout_lines"] | select("search", "Running: .* remove-older-than .* file:///var/backups/duba-molecule/srv/duba-molecule/plain$") | list | length > 0'
         fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] }}'
 
     - name: 'rm -rf /srv/duba-molecule/divided/broken /var/backups/duba-molecule/srv/duba-molecule/divided/broken'
