@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:fangfrisch**: `fangfrisch__urlhaus_auth_key` sets the abuse.ch Auth-Key and enables the URLhaus signatures.
 * **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
@@ -253,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:fangfrisch**: Without `fangfrisch__urlhaus_auth_key`, Fangfrisch no longer tries to download the URLhaus signatures, which failed with `401 Unauthorized` on every refresh.
 * **role:wordpress, playbook:setup_wordpress**: New installations get `php-mysqlnd` instead of `php-pecl-mysql`, the obsolete `mysql_*` extension that WordPress does not use. Hosts that already have `php-pecl-mysql` keep it.
 * **role:icinga2_agent**: The run fails if the host cannot be added to the Icinga Director, for example because of a wrong login, instead of continuing as if it had been added.
 * **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.
