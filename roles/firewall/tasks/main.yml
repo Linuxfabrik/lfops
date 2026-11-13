@@ -2,6 +2,63 @@
   ansible.builtin.import_tasks: 'preflight.yml'
 
 
+# Deployed before the other firewalls are stopped: `validate` rejects a broken ruleset, and the
+# run then aborts with the firewall the host uses still running. Installing the packages does
+# not start their services.
+- block:
+
+  - name: 'Make sure iptables-services is installed'
+    ansible.builtin.package:
+      name: 'iptables-services'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  # the block scalar adds the newline iptables-restore needs after the last COMMIT, and which
+  # a file lookup strips
+  - name: 'Deploy /etc/sysconfig/iptables'
+    ansible.builtin.copy:
+      backup: true
+      content: |
+        {{ firewall__iptables_ruleset | trim }}
+      dest: '/etc/sysconfig/iptables'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+      validate: 'iptables-restore --test %s'
+    register: 'firewall__iptables_definition_result'
+
+  when: 'firewall__firewall == "iptables"'
+  tags:
+    - 'firewall'
+
+
+- block:
+
+  - name: 'Make sure nftables is installed'
+    ansible.builtin.package:
+      name: 'nftables'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+
+  - name: 'Deploy {{ __firewall__nftables_conf }}'
+    ansible.builtin.copy:
+      backup: true
+      content: |
+        {{ firewall__nftables_ruleset | trim }}
+      dest: '{{ __firewall__nftables_conf }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o600
+      validate: 'nft --check --file %s'
+    register: '__firewall__nftables_ruleset_result'
+
+  when: 'firewall__firewall == "nftables"'
+  tags:
+    - 'firewall'
+
+
 - block:
 
   - name: 'Get the list of services'
@@ -208,26 +265,6 @@
 
 - block:
 
-  - name: 'Make sure iptables-services is installed'
-    ansible.builtin.package:
-      name: 'iptables-services'
-      state: 'present'
-    retries: 3 # ride out a brief outage of the package repository
-    delay: 10
-
-  - name: 'Copy iptables definition to /etc/sysconfig/iptables'
-    ansible.builtin.copy:
-      backup: true
-      src: "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables"
-      dest: '/etc/sysconfig/'
-      owner: 'root'
-      group: 'root'
-      mode: 0o600
-    # the parentheses are needed: `is` binds tighter than `~`, and without them the condition is a
-    # non-empty string that is always true
-    when: '(inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/etc/sysconfig/iptables") is file'
-    register: 'firewall__iptables_definition_result'
-
   - name: 'systemctl restart iptables.service'
     ansible.builtin.systemd:
       name: 'iptables.service'
@@ -243,17 +280,13 @@
 
 - block:
 
-  - name: 'Make sure nftables is installed'
-    ansible.builtin.package:
-      name: 'nftables'
-      state: 'present'
-    retries: 3 # ride out a brief outage of the package repository
-    delay: 10
-
+  # Restarted rather than reloaded after a change: stopping the unit flushes the ruleset on every
+  # platform, while the reload on Debian and Ubuntu only loads the file again, which adds to the
+  # loaded ruleset unless the file starts with `flush ruleset`.
   - name: 'Be sure nftables is started, enabled and not masked'
     ansible.builtin.systemd:
       name: 'nftables.service'
-      state: 'started'
+      state: '{{ __firewall__nftables_ruleset_result is changed | bool | ternary("restarted", "started") }}'
       enabled: true
       masked: false
 

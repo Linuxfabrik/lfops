@@ -1,0 +1,23 @@
+# Included by verify.yml once per case in which the role has to abort: runs the role with the
+# firewall and ruleset of `__molecule__abort` and checks which task failed.
+- block:
+
+  - name: 'Run the firewall role'
+    ansible.builtin.include_role:
+      name: 'linuxfabrik.lfops.firewall'
+    vars:
+      firewall__firewall: '{{ __molecule__abort["firewall"] }}'
+      firewall__iptables_ruleset: '{{ __molecule__abort["ruleset"] }}'
+      firewall__nftables_ruleset: '{{ __molecule__abort["ruleset"] }}'
+
+  - name: 'Fail, since the role did not abort'
+    ansible.builtin.fail:
+      msg: 'The firewall role did not abort.'
+
+  rescue:
+
+  - name: 'Assert that the role failed where expected, not on the task above'
+    ansible.builtin.assert:
+      that:
+        - 'ansible_failed_task["name"] is search(__molecule__abort["failed_task"])'
+      fail_msg: '{{ ansible_failed_task["name"] }}: {{ ansible_failed_result["msg"] | d("") }}'
