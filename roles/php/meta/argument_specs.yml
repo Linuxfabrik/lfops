@@ -844,6 +844,27 @@ argument_specs:
         default: []
         description: 'Additional PHP modules to install as OS packages. Host-level override.'
 
+      php__opcache_blacklist__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Paths that OPcache does not cache. Dependent-role injection.'
+
+      php__opcache_blacklist__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Paths that OPcache does not cache. Group-level override.'
+
+      php__opcache_blacklist__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Paths that OPcache does not cache. Host-level override.'
+
       php__version:
         type: 'str'
         required: false

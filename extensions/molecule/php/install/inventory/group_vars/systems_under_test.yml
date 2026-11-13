@@ -20,3 +20,11 @@ php__fpm_pools__group_var:
 php__fpm_conf_emergency_restart_interval__group_var: '2m'
 php__fpm_conf_emergency_restart_threshold__group_var: 7
 php__fpm_conf_log_level__group_var: 'debug'
+
+# One script OPcache must not cache, and an absent entry for the control script, which verify.yml
+# expects in the cache, so the absent entry must not end up in the blacklist file.
+php__opcache_blacklist__group_var:
+  - path: '/var/www/html/molecule-opcache-blacklisted'
+    state: 'present'
+  - path: '/var/www/html/molecule-opcache-cached'
+    state: 'absent'

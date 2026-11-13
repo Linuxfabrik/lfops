@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
 * **plugin:bitwarden_item, module:bitwarden_item**: Reach `bw serve` through a Unix socket instead of the loopback port, so its file permissions decide which local users get at the vault. Needs bw CLI 2025.9.0 or newer. Set `LFOPS_BITWARDEN_UNIX_SOCKET` to the path of the socket.
 * **role:icingadb_web, playbook:setup_icinga2_master**: Sorting by "Severity" in IcingaDB Web lists hosts and services of the same severity by name instead of by the last state change, and services of the same name by host name, also in the dashboards and problem lists. The role patches IcingaDB Web for this and re-applies the patch after every package update. Set `icingadb_web__patch_severity_sort: false` to keep the upstream sort order.
