@@ -1,2 +1,6 @@
 # The controller-side clone of firewall__fwbuilder_repo_url, one per repository.
 __firewall__fwbuilder_repo_dir: '/tmp/ansible.fwb-{{ firewall__fwbuilder_repo_url | d("") | hash("sha1") }}'
+
+# The file nftables.service loads, as its unit says (`ExecStart=... nft -f <file>`). Verified with
+# nftables 1.0.4 to 1.1.5 on Rocky 8, 9 and 10, Debian 12 and 13 and Ubuntu 24.04.
+__firewall__nftables_conf: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("/etc/sysconfig/nftables.conf", "/etc/nftables.conf") }}'

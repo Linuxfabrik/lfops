@@ -1,6 +1,6 @@
-- name: 'Verify the switch from fwbuilder to nftables, and the abort on a repository without a compiled firewall'
+- name: 'Verify the switch from fwbuilder to nftables, the way to iptables and back, and the aborts without a ruleset and on a repository without a compiled firewall'
   hosts: 'systems_under_test'
-  gather_facts: false
+  gather_facts: true # the role needs the os_family
 
   tasks:
 
@@ -26,6 +26,94 @@
           - '__molecule__is_active_result["stdout_lines"] == ["inactive", "active"]'
           - '__molecule__fwb_is_enabled_result["stdout"] == "masked"'
         fail_msg: '{{ __molecule__is_active_result["stdout_lines"] + [__molecule__fwb_is_enabled_result["stdout"]] }}'
+
+    # nftables.service has to load the ruleset from the inventory into the kernel.
+    - name: 'nft list table inet lfops_molecule'
+      ansible.builtin.command: 'nft list table inet lfops_molecule'
+      changed_when: false
+      register: '__molecule__nft_list_result'
+
+    - name: 'Assert that the ruleset is loaded'
+      ansible.builtin.assert:
+        that:
+          - '"tcp dport 65000 counter" in __molecule__nft_list_result["stdout"]'
+        fail_msg: '{{ __molecule__nft_list_result["stdout_lines"] }}'
+
+    # Without a ruleset in the inventory the role must abort in its preflight checks.
+    - name: 'Run the firewall role without a ruleset'
+      ansible.builtin.include_tasks: 'tasks/abort.yml'
+      loop:
+        - firewall: 'iptables'
+          ruleset: ''
+          failed_task: 'has a ruleset for'
+        - firewall: 'nftables'
+          ruleset: "  \n"
+          failed_task: 'has a ruleset for'
+        # a ruleset nft rejects must not replace the file nftables.service loads
+        - firewall: 'nftables'
+          ruleset: 'table inet lfops_molecule_broken {'
+          failed_task: 'Deploy '
+      loop_control:
+        loop_var: '__molecule__abort'
+        label: '{{ __molecule__abort["firewall"] }}: {{ __molecule__abort["ruleset"] | trim }}'
+
+    - name: 'nft list ruleset (after the aborted runs)'
+      ansible.builtin.command: 'nft list ruleset'
+      changed_when: false
+      register: '__molecule__nft_list_after_abort_result'
+
+    - name: 'Assert that the ruleset from the inventory is still the one loaded'
+      ansible.builtin.assert:
+        that:
+          - '"tcp dport 65000 counter" in __molecule__nft_list_after_abort_result["stdout"]'
+          - '"lfops_molecule_broken" not in __molecule__nft_list_after_abort_result["stdout"]'
+        fail_msg: '{{ __molecule__nft_list_after_abort_result["stdout_lines"] }}'
+
+    # The way to iptables and back, on the Red Hat family, which has the iptables-services
+    # package: iptables.service has to load the ruleset from the inventory, and nftables has to be
+    # stopped. The second run restores the state the idempotence step and this play start from.
+    - name: 'stat /etc/redhat-release'
+      ansible.builtin.stat:
+        path: '/etc/redhat-release'
+      register: '__molecule__redhat_release_result'
+
+    - block:
+
+      - name: 'Run the firewall role with iptables'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.firewall'
+        vars:
+          firewall__firewall: 'iptables'
+          firewall__iptables_ruleset: |-
+            *filter
+            :INPUT ACCEPT [0:0]
+            :FORWARD ACCEPT [0:0]
+            :OUTPUT ACCEPT [0:0]
+            -A INPUT -p tcp -m tcp --dport 65001 -j DROP
+            COMMIT
+
+      - name: 'systemctl is-active iptables.service nftables.service; iptables-save' # noqa command-instead-of-module (read-only state query)
+        ansible.builtin.shell: 'systemctl is-active iptables.service nftables.service; iptables-save'
+        changed_when: false
+        register: '__molecule__iptables_result'
+
+      - name: 'Assert that iptables.service loaded the ruleset and nftables.service is stopped'
+        ansible.builtin.assert:
+          that:
+            - '__molecule__iptables_result["stdout_lines"][:2] == ["active", "inactive"]'
+            - '__molecule__iptables_result["stdout"] is search("--dport 65001 -j DROP")'
+          fail_msg: '{{ __molecule__iptables_result["stdout_lines"] }}'
+
+      - name: 'Run the firewall role with nftables again'
+        ansible.builtin.include_role:
+          name: 'linuxfabrik.lfops.firewall'
+
+      - name: 'nft list table inet lfops_molecule (back on nftables)'
+        ansible.builtin.command: 'nft list table inet lfops_molecule'
+        changed_when: false
+
+      when:
+        - '__molecule__redhat_release_result["stat"]["exists"]'
 
     # A Firewall Builder repository without a compiled firewall for the host must abort the run
     # before the role stops the firewall that is running, here nftables.

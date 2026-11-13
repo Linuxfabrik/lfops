@@ -11,7 +11,7 @@ This role configures a firewall on the system. For the currently supported firew
 Manual steps:
 
 * When using `firewall__firewall == fwbuilder`, either manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically. Without either, or if the repository has no compiled file for the host, the run aborts before the role stops any firewall.
-* When using `firewall__firewall == iptables`, optionally place an iptables config file in your inventory, which will be deployed to the system. The file has to be placed into `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/sysconfig/iptables`.
+* When using `firewall__firewall == iptables` or `firewall__firewall == nftables`, set the ruleset in `firewall__iptables_ruleset` or `firewall__nftables_ruleset`. Without it, the run aborts before the role stops any firewall.
 
 
 ## Tags
@@ -90,6 +90,18 @@ Manual steps:
 * Type: String.
 * Default: unset
 
+`firewall__iptables_ruleset`
+
+* The iptables ruleset in `iptables-save` format, deployed to `/etc/sysconfig/iptables`. Mandatory if `firewall__firewall` is `'iptables'`. The role checks it with `iptables-restore --test` before it replaces the file, and restarts `iptables.service` after a change.
+* Type: String.
+* Default: unset
+
+`firewall__nftables_ruleset`
+
+* The nftables ruleset, deployed to the file `nftables.service` loads: `/etc/sysconfig/nftables.conf` on the Red Hat family, `/etc/nftables.conf` on Debian and Ubuntu. Mandatory if `firewall__firewall` is `'nftables'`. The role checks it with `nft --check` before it replaces the file, and restarts `nftables.service` after a change.
+* Type: String.
+* Default: unset
+
 Example:
 ```yaml
 # optional
@@ -104,6 +116,21 @@ firewall__firewalld_services__host_var:
     state: 'enabled'
 firewall__fwbuilder_fw_file: 'example'
 firewall__fwbuilder_repo_url: 'git@git.example.com:fwbuilder/fwb.git'
+# from a file in the inventory
+firewall__iptables_ruleset: '{{ lookup("ansible.builtin.file",
+    inventory_dir ~ "/host_files/" ~ inventory_hostname ~ "/etc/sysconfig/iptables")
+  }}'
+firewall__nftables_ruleset: |-
+  flush ruleset
+  table inet filter {
+      chain input {
+          type filter hook input priority filter; policy drop;
+          ct state established,related accept
+          iif "lo" accept
+          meta l4proto { icmp, ipv6-icmp } accept
+          tcp dport 22 accept
+      }
+  }
 ```
 
 
