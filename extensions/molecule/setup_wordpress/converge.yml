@@ -4,6 +4,27 @@
 - name: 'Converge setup_wordpress playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.setup_wordpress'
 
+# What a host installed by an older release looks like: `php-mysql` resolved to php-pecl-mysql,
+# which pulled in php-mysqlnd as a dependency. The following plays have to migrate it. Only once,
+# so that the idempotence run does not start over.
+- name: 'Put the PHP MySQL packages into the state an older release left behind'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'dnf install php-mysql; dnf mark remove php-mysqlnd'
+      ansible.builtin.shell: |-
+        set -o errexit
+        dnf --assumeyes install php-mysql
+        dnf mark remove php-mysqlnd
+        rpm --query php-pecl-mysql
+        touch /var/lib/lfops-molecule-legacy-php-mysql
+      args:
+        creates: '/var/lib/lfops-molecule-legacy-php-mysql'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+
 # Further instances on the same host, as pseudo hosts in the inventory would deploy them: the
 # same playbook again, with the variables of the instance overriding those from group_vars.
 # Together with the instance at the root of wordpress.example.com they cover an instance in a
