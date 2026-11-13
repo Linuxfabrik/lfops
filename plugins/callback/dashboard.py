@@ -55,6 +55,18 @@ DOCUMENTATION = r"""
     - The terminal needs at least 65 columns and 12 lines, else the plugin behaves like C(linuxfabrik.lfops.compact). ansible-runner writes 64 characters wide invisible event markers, which the screen keeps on its last line.
     - Keyboard input is not echoed while the screen is shown, so that a pressed key does not move it. Prompts (C(vars_prompt), C(pause)) are not supported on the screen.
     - Made for the linear strategies (C(linear), C(mitogen_linear)).
+  options:
+    display_debug_output:
+      description:
+        - Show the output of C(ansible.builtin.debug) tasks, although their hosts are ok, grouped by identical output like the changes, with the other details at the end of the run.
+        - If disabled, the hosts of a C(ansible.builtin.debug) task are listed in the C(ok) line like those of any other task.
+      type: bool
+      default: true
+      env:
+        - name: ANSIBLE_CALLBACK_COMPACT_DISPLAY_DEBUG_OUTPUT
+      ini:
+        - section: callback_compact
+          key: display_debug_output
   extends_documentation_fragment:
     - ansible.builtin.default_callback
     - ansible.builtin.result_format_callback
