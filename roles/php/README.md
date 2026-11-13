@@ -103,6 +103,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `php:modules`
 
 * Installs and removes the PHP modules from `php__modules__combined_var`.
+* On the Red Hat family, marks modules that are already installed as a dependency of another package as user-installed (`dnf mark install`), so `dnf autoremove` does not remove them once that other package is gone.
 * Triggers: none.
 
 `php:state`
