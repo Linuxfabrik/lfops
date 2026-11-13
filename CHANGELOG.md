@@ -97,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
 * **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.
@@ -281,6 +282,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.
 * **role:gitlab_ce**: `gitlab-dump.service` fails when the backup fails, so `systemctl --failed` and the monitoring notice it, instead of always reporting success.
 * **role:duplicity**: `duba` no longer removes old backups of a path whose backup failed in the same run.
 * **role:duplicity**: `duba` reports a missing or invalid `/etc/duba/duba.json` with an error message and exit code 201 or 203 instead of a Python traceback.

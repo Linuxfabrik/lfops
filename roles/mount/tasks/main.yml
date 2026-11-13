@@ -34,14 +34,43 @@
           + (mount__mounts__combined_var | selectattr("state", "undefined") | list))
           | selectattr("fstype", "equalto", "cifs") | list | length > 0'
 
+  # An octal number without quotes arrives as a decimal one (0o750 as 488), which the file module
+  # would apply as it is.
+  - name: 'Assert that the mode of a mount is a quoted octal number'
+    ansible.builtin.assert:
+      that:
+        - 'item["mode"] is string'
+        - 'item["mode"] is regex("^[0-7]{3,4}$")'
+      quiet: true
+      fail_msg: 'The mode of the mount {{ item["path"] }} has to be a string such as "0750", got {{ item["mode"] }}.'
+    loop: '{{ mount__mounts__combined_var | selectattr("mode", "defined") }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+
+  - name: 'stat mount-point'
+    ansible.builtin.stat:
+      path: '{{ item["path"] }}'
+    loop: '{{ mount__mounts__combined_var }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    register: '__mount__stat_result'
+
+  # Only a missing mount point is created. From the second run on, the path is the root of the
+  # mounted filesystem, whose owner and mode belong to the share (e.g. 0777 on an NFS export,
+  # where root may not even be allowed to change them).
   - name: 'mkdir -p mount-point'
     ansible.builtin.file:
-      path: '{{ item["path"] }}'
+      path: '{{ item["item"]["path"] }}'
       state: 'directory'
-      owner: '{{ item["owner"] | d("root") }}'
-      group: '{{ item["group"] | d("root") }}'
+      owner: 'root'
+      group: 'root'
       mode: 0o755
-    loop: '{{ mount__mounts__combined_var }}'
+    loop: '{{ __mount__stat_result["results"] }}'
+    loop_control:
+      label: '{{ item["item"]["path"] }}'
+    when:
+      - 'not item["stat"]["exists"]'
+      - 'item["item"]["state"] | d("mounted") != "absent"'
 
   - name: 'Mount volumes'
     ansible.posix.mount:
@@ -51,6 +80,22 @@
       state: '{{ item["state"] | d("mounted") }}'
       fstype: '{{ item["fstype"] }}'
     loop: '{{ mount__mounts__combined_var }}'
+
+  # After mounting, so that it reaches the root of the mounted filesystem right away, and only
+  # what the inventory asks for.
+  - name: 'chown / chmod mount-point'
+    ansible.builtin.file:
+      path: '{{ item["path"] }}'
+      state: 'directory'
+      owner: '{{ item["owner"] | d(omit) }}'
+      group: '{{ item["group"] | d(omit) }}'
+      mode: '{{ item["mode"] | d(omit) }}'
+    loop: '{{ mount__mounts__combined_var }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    when:
+      - 'item["owner"] is defined or item["group"] is defined or item["mode"] is defined'
+      - 'item["state"] | d("mounted") != "absent"'
 
   # A freshly created filesystem carries no SELinux labels, so everything on it is unlabeled_t
   # and confined services such as httpd are denied access ("does not contain SELinux labels"
