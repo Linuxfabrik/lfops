@@ -93,6 +93,30 @@ argument_specs:
           Maximum number of open shell, login or subsystem sessions
           permitted per network connection.
 
+      sshd__max_startups__dependent_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Dependent-role override for `MaxStartups`. See
+          `sshd__max_startups__host_var` in the README.
+
+      sshd__max_startups__group_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Group-level override for `MaxStartups`. See
+          `sshd__max_startups__host_var` in the README.
+
+      sshd__max_startups__host_var:
+        type: 'str'
+        required: false
+        default: ''
+        description: >-
+          Host-level override for `MaxStartups`. See
+          `sshd__max_startups__host_var` in the README.
+
       sshd__password_authentication:
         type: 'bool'
         required: false

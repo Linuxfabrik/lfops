@@ -6,6 +6,31 @@
     - 'always'
 
 
+- block:
+
+  # sshd refuses to start with an invalid MaxStartups (servconf.c, `Invalid MaxStartups spec`),
+  # and the handler would only notice after sshd_config has been replaced.
+  - name: 'Check variable constraints'
+    ansible.builtin.assert:
+      that:
+        - 'sshd__max_startups__combined_var | string is match("^[0-9]+(:[0-9]+:[0-9]+)?$")'
+        - '__sshd__max_startups_parts[0] >= 1'
+        - '__sshd__max_startups_parts | length == 1 or (
+            __sshd__max_startups_parts[0] <= __sshd__max_startups_parts[2] and
+            __sshd__max_startups_parts[1] >= 1 and
+            __sshd__max_startups_parts[1] <= 100
+          )'
+      quiet: true
+      fail_msg: >-
+        sshd__max_startups must be a number or `start:rate:full` with start <= full and a rate
+        between 1 and 100, got "{{ sshd__max_startups__combined_var }}".
+    vars:
+      __sshd__max_startups_parts: '{{ sshd__max_startups__combined_var | string | split(":") | map("int") | list }}'
+
+  tags:
+    - 'always'
+
+
 - name: 'Run the preflight checks'
   ansible.builtin.import_tasks: 'preflight.yml'
 
