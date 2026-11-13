@@ -14,6 +14,31 @@
         creates: '/var/tmp/lfops-molecule.img'
         executable: '/bin/bash'
 
+    # the filesystem of the mount that sets owner, group and mode in group_vars
+    - name: 'truncate --size=300M /var/tmp/lfops-molecule-owned.img; mkfs.xfs /var/tmp/lfops-molecule-owned.img'
+      ansible.builtin.shell:
+        cmd: |
+          set -o errexit
+          truncate --size=300M /var/tmp/lfops-molecule-owned.img
+          mkfs.xfs -q /var/tmp/lfops-molecule-owned.img
+        creates: '/var/tmp/lfops-molecule-owned.img'
+        executable: '/bin/bash'
+
 
 - name: 'Converge mount playbook'
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.mount'
+
+
+# What the admin of a share does: give its root an owner and a mode of its own. The mount sets
+# neither in group_vars, so the role has to leave both alone. In the idempotence step the role
+# runs before this play again, and would report a change if it reset them.
+- name: 'Change owner and mode of the root of the mounted filesystem'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'chown nobody /srv/lfops-molecule; chmod 1777 /srv/lfops-molecule'
+      ansible.builtin.file:
+        path: '/srv/lfops-molecule'
+        owner: 'nobody'
+        mode: 0o1777

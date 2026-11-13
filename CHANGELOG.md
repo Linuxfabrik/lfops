@@ -83,6 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
 * **plugin:bitwarden_item, module:bitwarden_item**: Reach `bw serve` through a Unix socket instead of the loopback port, so its file permissions decide which local users get at the vault. Needs bw CLI 2025.9.0 or newer. Set `LFOPS_BITWARDEN_UNIX_SOCKET` to the path of the socket.
@@ -252,6 +253,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.
 * **role:gitlab_ce**: `gitlab-dump.service` fails when the backup fails, so `systemctl --failed` and the monitoring notice it, instead of always reporting success.
 * **role:duplicity**: `duba` no longer removes old backups of a path whose backup failed in the same run.
 * **role:duplicity**: `duba` reports a missing or invalid `/etc/duba/duba.json` with an error message and exit code 201 or 203 instead of a Python traceback.
