@@ -97,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:fangfrisch**: `fangfrisch__urlhaus_auth_key` sets the abuse.ch Auth-Key and enables the URLhaus signatures.
 * **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
@@ -282,6 +283,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:fangfrisch**: Without `fangfrisch__urlhaus_auth_key`, Fangfrisch no longer tries to download the URLhaus signatures, which failed with `401 Unauthorized` on every refresh.
 * **role:wordpress, playbook:setup_wordpress**: New installations get `php-mysqlnd` instead of `php-pecl-mysql`, the obsolete `mysql_*` extension that WordPress does not use. Hosts that already have `php-pecl-mysql` keep it.
 * **role:icinga2_agent**: The run fails if the host cannot be added to the Icinga Director, for example because of a wrong login, instead of continuing as if it had been added.
 * **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.

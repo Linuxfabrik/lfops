@@ -14,6 +14,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * On Rocky 9+, the EPEL repository (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)) and the CRB ("Code Ready Builder") repository (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)) must be enabled so `python3-virtualenv` can be installed.
 
 
+## How the Role Behaves
+
+* Fangfrisch always downloads the [Sanesecurity](https://sanesecurity.com/) signatures. The SecuriteInfo and URLhaus signatures need an account with the provider and are only downloaded once `fangfrisch__securiteinfo_customer_id` or `fangfrisch__urlhaus_auth_key` is set.
+* On its next refresh, Fangfrisch removes the signatures it downloaded from a source that is no longer enabled.
+
+
 ## Tags
 
 `fangfrisch`
@@ -35,6 +41,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: unset
 
+`fangfrisch__urlhaus_auth_key`
+
+* Set this to enable downloading signatures from [URLhaus](https://urlhaus.abuse.ch/). Requires an Auth-Key from the [abuse.ch Authentication Portal](https://auth.abuse.ch/).
+* Type: String.
+* Default: unset
+
 `fangfrisch__timer_enabled`
 
 * Enables or disables the hourly fangfrisch timer to automatically update the signatures, analogous to `systemctl enable/disable`.
@@ -44,8 +56,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 Example:
 ```yaml
 # optional
-fangfrisch__securiteinfo_customer_id: 'IVQyhw7Yszua6pzUhlGPVowucenHt2wQe9iXDfwsMOfheeOUakB28irj5JyDsKF4e81LkLbNUtMHcUGL9EVKOJ9WxSSv4ySjBhY0vngBDunEPlixtGTBB6f1mvaTqXzz'
+fangfrisch__securiteinfo_customer_id: 'linuxfabrik'
 fangfrisch__timer_enabled: false
+fangfrisch__urlhaus_auth_key: 'linuxfabrik'
 ```
 
 
