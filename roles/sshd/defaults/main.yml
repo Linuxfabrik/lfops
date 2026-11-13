@@ -32,6 +32,7 @@ sshd__permit_root_login: 'no'  # upstream default: 'prohibit-password'
 sshd__port: 22
 sshd__service_enabled: true
 sshd__service_state: 'started'
+sshd__sftp_subsystem: '{{ __sshd__sftp_subsystem }}'
 sshd__tcp_keep_alive: false
 sshd__use_dns: false
 sshd__x11_forwarding: false
