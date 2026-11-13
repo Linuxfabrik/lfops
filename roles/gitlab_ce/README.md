@@ -12,6 +12,7 @@ This role installs and configures [GitLab CE](https://about.gitlab.com/), includ
 ## How the Role Behaves
 
 * `gitlab-dump.service` runs with `Nice=19`, best-effort IO priority 7 and `CPUWeight=` / `IOWeight=` of `20` (systemd default: `100`), so the dump does not slow down the application on a busy host. The weights only take effect under contention. `IOWeight=` only has an effect on block devices that use the BFQ IO scheduler; with `none` or `mq-deadline`, as on a RHEL 9 VM with virtio disks, it is ignored.
+* The role does not configure sshd. Git over SSH opens one connection per `git fetch` or `git push`, so CI jobs or scripts that update many repositories at once exceed the `MaxStartups` of the [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd) role, and sshd refuses some of them. Set `sshd__max_startups__group_var: '100:30:200'` for GitLab hosts in the inventory, the value the [GitLab documentation](https://docs.gitlab.com/topics/git/troubleshooting_git/) suggests.
 
 
 ## Known Limitations

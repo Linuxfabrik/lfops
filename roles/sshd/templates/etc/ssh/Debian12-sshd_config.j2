@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026101601
+# 2026111301
 
 # This is the sshd server system-wide configuration file.  See
 # sshd_config(5) for more information.
@@ -102,7 +102,7 @@ ClientAliveInterval {{ sshd__client_alive_interval }}
 ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #PidFile /run/sshd.pid
-#MaxStartups 10:30:100
+MaxStartups {{ sshd__max_startups__combined_var }}
 #PermitTunnel no
 #ChrootDirectory none
 #VersionAddendum none
