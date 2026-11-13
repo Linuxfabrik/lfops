@@ -555,3 +555,39 @@
           - '__molecule__wordpress_config_nobody_result["rc"] != 0'
           - '"Permission denied" in __molecule__wordpress_config_nobody_result["stderr"]'
         fail_msg: 'nobody read wp-config.php: rc={{ __molecule__wordpress_config_nobody_result["rc"] }}, {{ __molecule__wordpress_config_nobody_result["stderr"] }}'
+
+    # WordPress talks to MariaDB through mysqli. The obsolete ext/mysql (php-pecl-mysql), which
+    # the package name `php-mysql` resolves to with a Remi module stream, must not be loaded.
+    - name: 'php -m'
+      ansible.builtin.command: 'php -m'
+      register: '__molecule__wordpress_php_modules_result'
+      changed_when: false
+
+    - name: 'Assert that PHP loads mysqli and not ext/mysql'
+      ansible.builtin.assert:
+        that:
+          - '"mysqli" in __molecule__wordpress_php_modules_result["stdout_lines"]'
+          - '"mysqlnd" in __molecule__wordpress_php_modules_result["stdout_lines"]'
+          - '"mysql" not in __molecule__wordpress_php_modules_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__wordpress_php_modules_result["stdout_lines"] }}'
+
+    # converge.yml puts php-pecl-mysql back with php-mysqlnd as its dependency. The role has to
+    # remove the former without leaving the latter to `dnf autoremove`.
+    - name: 'dnf repoquery: php-pecl-mysql, reason of php-mysqlnd, unneeded packages'
+      ansible.builtin.shell: |-
+        set -o errexit
+        echo "installed: $(dnf --quiet repoquery --installed --queryformat '%{name}' php-pecl-mysql)"
+        echo "reason: $(dnf --quiet repoquery --installed --queryformat '%{reason}' php-mysqlnd)"
+        echo "unneeded: $(dnf --quiet repoquery --unneeded --queryformat '%{name}' | grep --line-regexp php-mysqlnd || true)"
+      register: '__molecule__wordpress_php_mysqlnd_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+
+    - name: 'Assert that php-pecl-mysql is gone and php-mysqlnd survives dnf autoremove'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__wordpress_php_mysqlnd_result["stdout_lines"] == ["installed: ", "reason: user", "unneeded: "]'
+        fail_msg: '{{ __molecule__wordpress_php_mysqlnd_result["stdout_lines"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'

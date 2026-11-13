@@ -1,5 +1,6 @@
 # Checks that GitLab runs and that its bundled NGINX uses the settings of gitlab.rb: the
-# listen port, the registry and the real IP of a request from a trusted proxy.
+# listen port, the registry and the real IP of a request from a trusted proxy. Also checks that
+# gitlab-dump.service writes a backup and fails when the dump fails.
 - name: 'Verify GitLab CE'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -69,3 +70,72 @@
       retries: 5
       delay: 2
       changed_when: false
+
+    # A dump of the running instance has to succeed and leave an archive in the backup path.
+    - name: 'systemctl start gitlab-dump.service' # noqa command-instead-of-module (a oneshot run, not a state)
+      ansible.builtin.command: 'systemctl start gitlab-dump.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__gitlab_dump_result'
+
+    - name: 'journalctl --unit=gitlab-dump.service --lines=60'
+      ansible.builtin.command: 'journalctl --unit=gitlab-dump.service --no-pager --lines=60'
+      changed_when: false
+      register: '__molecule__gitlab_dump_journal_result'
+
+    - name: 'find /backup/gitlab -name *_gitlab_backup.tar'
+      ansible.builtin.find:
+        paths: '/backup/gitlab'
+        patterns: '*_gitlab_backup.tar'
+      register: '__molecule__gitlab_dump_find_result'
+
+    - name: 'Assert that the dump succeeded and wrote an archive'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__gitlab_dump_result["rc"] == 0'
+          - '__molecule__gitlab_dump_find_result["matched"] > 0'
+        fail_msg: '{{ __molecule__gitlab_dump_journal_result["stdout_lines"] }}'
+
+    # Without PostgreSQL the database dump fails, and the unit has to fail with it, so that
+    # `systemctl --failed` and the monitoring notice a broken backup.
+    - name: 'gitlab-ctl stop postgresql'
+      ansible.builtin.command: 'gitlab-ctl stop postgresql'
+      changed_when: false
+
+    - name: 'systemctl start gitlab-dump.service # without PostgreSQL' # noqa command-instead-of-module (a oneshot run, not a state)
+      ansible.builtin.command: 'systemctl start gitlab-dump.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__gitlab_dump_failed_result'
+
+    - name: 'systemctl is-failed gitlab-dump.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-failed gitlab-dump.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__gitlab_dump_is_failed_result'
+
+    - name: 'gitlab-ctl start postgresql'
+      ansible.builtin.command: 'gitlab-ctl start postgresql'
+      changed_when: false
+
+    - name: 'systemctl reset-failed gitlab-dump.service' # noqa command-instead-of-module (clears the state the test left behind)
+      ansible.builtin.command: 'systemctl reset-failed gitlab-dump.service'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that gitlab-dump.service failed without PostgreSQL'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__gitlab_dump_failed_result["rc"] != 0'
+          - '__molecule__gitlab_dump_is_failed_result["stdout"] == "failed"'
+        fail_msg: '{{ [__molecule__gitlab_dump_failed_result, __molecule__gitlab_dump_is_failed_result] | to_json }}'
+
+    # the following verify run and the idempotence step need a GitLab that answers again
+    - name: 'curl http://127.0.0.1:8090/users/sign_in (after the PostgreSQL restart)'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1:8090/users/sign_in'
+        status_code: 200
+      register: '__molecule__gitlab_sign_in_after_result'
+      until: '__molecule__gitlab_sign_in_after_result is not failed'
+      retries: 30
+      delay: 10

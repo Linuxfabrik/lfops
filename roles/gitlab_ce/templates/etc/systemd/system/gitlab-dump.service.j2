@@ -1,13 +1,16 @@
 # {{ ansible_managed }}
-# 2026101301
+# 2026111201
 
 [Unit]
 Description=Dumps (Backups) for GitLab
 
 [Service]
-# ignore "Warning: Your gitlab.rb and gitlab-secrets.json files contain sensitive data and are not included in this backup"
-# by prefixing the path with a minus sign (we backup /etc using other tools, so its safe to ignore the warning)
-ExecStart=-/usr/bin/gitlab-backup create
+# No `-` prefix: gitlab-backup exits with 1 if a part of the dump failed, and the unit has to
+# fail then. The warning that gitlab.rb and gitlab-secrets.json are not part of the backup does
+# not change the exit code (lib/backup/manager.rb and lib/tasks/gitlab/backup.rb, GitLab 19.5).
+# STRATEGY=copy copies the files to the backup path before archiving them, so tar does not
+# fail with "file changed as we read it" on a running instance.
+ExecStart=/usr/bin/gitlab-backup create STRATEGY=copy
 Type=oneshot
 User=root
 # the dump must not slow down GitLab and the applications behind it. Nice= and the CPU / IO

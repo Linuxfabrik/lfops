@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:gitlab_ce**: `gitlab-dump.service` runs `gitlab-backup create STRATEGY=copy`, as the GitLab documentation recommends for a running instance, so the dump no longer fails with "file changed as we read it". GitLab copies each of its file stores (uploads, CI artifacts, LFS objects, the container registry, ...) to the backup path before archiving it, one after the other, so `gitlab_ce__rb_gitlab_rails_backup_path` needs free space for the largest of them on top of the archive. Grow the filesystem of the backup path if necessary.
 * **role:sshd, playbook:setup_basic**: sshd turns new connections away earlier while many logins are pending (`MaxStartups 10:30:60` instead of the OpenSSH default `10:30:100`), as the CIS Benchmarks require, and `MaxStartups` is configurable with `sshd__max_startups__host_var` / `sshd__max_startups__group_var`. A `MaxStartups` set through `sshd__raw` no longer takes effect, move it to the variable. Hosts with many simultaneous SSH logins need a higher value, for example `'100:30:200'` on GitLab hosts ([#723](https://github.com/Linuxfabrik/lfops/issues/723)).
 * **role:grav, playbook:setup_grav**: The code of Grav, its configuration, pages, plugins and themes belong to `root`, so a hole in Grav or a plugin can no longer plant code in the site. The web server only writes `assets`, `backup`, `cache`, `images`, `logs`, `tmp`, `user/accounts` and `user/data`, and only these keep the SELinux type `httpd_sys_rw_content_t`. Grav, its plugins and themes are updated as `root` by `grav-selfupgrade-<instance>.timer` and `grav-update-<instance>.timer`, which replace `grav-selfupgrade.timer` and `grav-update.timer`, so several Grav sites on one host are each updated. Run other `bin/gpm` commands with `grav-gpm <installation directory> <arguments>` instead of `sudo -u apache bin/gpm`, which now fails, and deploy content below `user/` as `root`. The role no longer installs the Admin Panel, which could not save anything anymore, and drops `grav__skip_admin` and `grav__users`; it lists the Admin Panel plugins still installed at the end of the play, for you to remove. The vHost no longer accepts `POST`, and `setup_grav` no longer sets the SELinux boolean `httpd_can_network_connect`, which keeps its current value.
 * **role:apache_httpd**: The `proxy` vHost template waits 30 instead of 5 seconds for the backend, so slower responses no longer end in a 502, and a hanging backend holds the connection longer. Set `conf_proxy_timeout: 5` on the vHost to keep the previous value.
@@ -82,6 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:fangfrisch**: `fangfrisch__urlhaus_auth_key` sets the abuse.ch Auth-Key and enables the URLhaus signatures.
+* **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
 * **plugin:bitwarden_item, module:bitwarden_item**: Reach `bw serve` through a Unix socket instead of the loopback port, so its file permissions decide which local users get at the vault. Needs bw CLI 2025.9.0 or newer. Set `LFOPS_BITWARDEN_UNIX_SOCKET` to the path of the socket.
@@ -251,6 +254,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:php**: On the Red Hat family, PHP modules from the inventory that are already installed as a dependency of another package are marked as user-installed, so `dnf autoremove` no longer removes them once that package is gone.
+* **role:sshd**: `sshd__sftp_subsystem` from the inventory takes effect, where the role always deployed its own default.
+* **role:fangfrisch**: Without `fangfrisch__urlhaus_auth_key`, Fangfrisch no longer tries to download the URLhaus signatures, which failed with `401 Unauthorized` on every refresh.
+* **role:wordpress, playbook:setup_wordpress**: Installs `php-mysqlnd` instead of `php-pecl-mysql`, the obsolete `mysql_*` extension that WordPress does not use, and removes `php-pecl-mysql` from existing hosts. If another application on the host still needs it, add `php-pecl-mysql` with `state: 'present'` to `php__modules__host_var`.
+* **role:icinga2_agent**: The run fails if the host cannot be added to the Icinga Director, for example because of a wrong login, instead of continuing as if it had been added.
+* **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.
+* **role:gitlab_ce**: `gitlab-dump.service` fails when the backup fails, so `systemctl --failed` and the monitoring notice it, instead of always reporting success.
+* **role:duplicity**: `duba` no longer removes old backups of a path whose backup failed in the same run.
+* **role:duplicity**: `duba` reports a missing or invalid `/etc/duba/duba.json` with an error message and exit code 201 or 203 instead of a Python traceback.
 * **role:grav, playbook:setup_grav**: OPcache no longer fills up with recompiled copies of Grav's file list caches and no longer throws away its whole cache every few days.
 * **role:repo_epel**: On Rocky 10 and RHEL 10, EPEL follows the minor release of the host, so the daily system update no longer fails on EPEL packages built for a RHEL minor release the host does not have yet.
 * **role:mariadb_server**: With `skip_name_resolve`, the `proxies_priv` warning in the MariaDB error log also goes away on servers that carry the entry for `root` instead of `mysql`.

@@ -20,7 +20,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102905'
+__version__ = '2026111201'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -137,8 +137,10 @@ def parse_args(argv):
 class Duba:
 
     def __init__(self, config_file='/etc/duba/duba.json'):
-        self.config = self.load_config(config_file)
+        # the logger comes first, since load_config() reports its errors with it
         self.logger = self.init_logging()
+        self.config = self.load_config(config_file)
+        self.create_logdir()
         self.duplicity_version = self.get_duplicity_version()
         # self.use_concurrency = self.duplicity_version >= (3, 0, 0)
 
@@ -154,13 +156,15 @@ class Duba:
         ))
         logger.addHandler(console_logger)
 
+        return logger
+
+
+    def create_logdir(self):
         # try creating logfile directory for duplicity
         try:
             os.mkdir(self.config.get('logdir', '/var/log/duplicity'), 0o640)
         except OSError:
             pass
-
-        return logger
 
 
     def load_config(self, config_file):
@@ -169,7 +173,7 @@ class Duba:
             with open(config_file, 'r') as f:
                 config = f.read()
         except IOError as e:
-            self.logger.exception(f'I/O error: {e.strerror} while opening or reading {config_file}')
+            self.logger.error(f'I/O error: {e.strerror} while opening or reading {config_file}')
             sys.exit(201)
         except:
             self.logger.exception(f'Unknown error opening or reading {config_file}')
@@ -179,7 +183,7 @@ class Duba:
         try:
             return json.loads(config)
         except json.JSONDecodeError as e:
-            self.logger.exception(f'JSON decode error: {e}')
+            self.logger.error(f'JSON decode error in {config_file}: {e}')
             sys.exit(203)
 
 
@@ -322,7 +326,8 @@ class Duba:
         return cmd
 
 
-    def run_cmd_in_background(self, cmd, env, running_procs, max_procs, failed_retcs):
+    def run_cmd_in_background(self, cmd, env, running_procs, max_procs, failed_retcs,
+                              path=None, failed_paths=None):
         # start duplicity in the background
         # * start n processes: start up to (cpu-cores + 1) nice processes to backup as
         #   much as possible
@@ -331,7 +336,7 @@ class Duba:
         # * use compression: saves money on external storages; bottleneck is always your uplink
         # and return immediately
         try:
-            running_procs.append(subprocess.Popen(cmd, env=env))
+            proc = subprocess.Popen(cmd, env=env)
         except OSError as e:
             self.logger.exception(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd}"')
             sys.exit(205)
@@ -341,26 +346,30 @@ class Duba:
         except Exception as e:
             self.logger.exception(f'Unknown error "{e}" while calling command "{cmd}"')
             sys.exit(207)
+        # the path this process works on, for reap_finished_procs()
+        proc.duba_path = path
+        running_procs.append(proc)
 
         # don't start more than max cpu processes
         while True:
             time.sleep(0.5)
-            self.reap_finished_procs(running_procs, failed_retcs)
+            self.reap_finished_procs(running_procs, failed_retcs, failed_paths)
             if len(running_procs) <= max_procs:
                 # allow launching of another process
                 break
 
 
-    def wait_for_running_procs(self, running_procs, failed_retcs):
+    def wait_for_running_procs(self, running_procs, failed_retcs, failed_paths=None):
         while running_procs:
             time.sleep(0.5)
-            self.reap_finished_procs(running_procs, failed_retcs)
+            self.reap_finished_procs(running_procs, failed_retcs, failed_paths)
 
 
-    def reap_finished_procs(self, running_procs, failed_retcs):
+    def reap_finished_procs(self, running_procs, failed_retcs, failed_paths=None):
         # Collect the exit code of every finished process, not just of the last one
         # polled, so that one failed source fails the whole run. Iterates over a copy,
-        # since finished processes are removed from the list.
+        # since finished processes are removed from the list. The path of a failed
+        # process is added to `failed_paths`, if given.
         for proc in list(running_procs):
             retc = proc.poll()
             if retc is None:
@@ -371,6 +380,8 @@ class Duba:
             if retc not in (0, 13):
                 self.logger.error(f"Exit code {retc}: {' '.join(proc.args)}")
                 failed_retcs.append(retc)
+                if failed_paths is not None:
+                    failed_paths.add(proc.duba_path)
 
 
     def divide_source_dir(self, src_path):
@@ -395,6 +406,7 @@ class Duba:
         cpu_count = min(os.sysconf('SC_NPROCESSORS_ONLN'), 6)
         env = self.set_env(self.config.get('env', {}))
         backup_failed_retcs = []
+        backup_failed_paths = set()
         cleanup_failed_retcs = []
 
         # iterate over backup dirs and spawn processes
@@ -417,12 +429,13 @@ class Duba:
                 self.logger.info(f"Running: {' '.join(cmd)}")
 
                 self.run_cmd_in_background(
-                    cmd, env, running_procs, cpu_count, backup_failed_retcs
+                    cmd, env, running_procs, cpu_count, backup_failed_retcs,
+                    path=f, failed_paths=backup_failed_paths
                 )
 
         # wait here for all processes to finish
         self.logger.debug('All duplicity processes started, waiting for them to finish.')
-        self.wait_for_running_procs(running_procs, backup_failed_retcs)
+        self.wait_for_running_procs(running_procs, backup_failed_retcs, backup_failed_paths)
 
         self.logger.info('Backup done.')
         self.logger.info('Starting cleanup...')
@@ -439,6 +452,11 @@ class Duba:
                 continue
 
             for f in src['filelist']:
+                # Without a new backup, nothing replaces the backups the cleanup removes: a
+                # path that keeps failing would lose every chain but its last one over time.
+                if f in backup_failed_paths:
+                    self.logger.warning(f'Skipping the cleanup of {f}, since its backup failed.')
+                    continue
                 cmd = self.build_duplicity_cleanup_command(f)
                 self.logger.info(f"Running: {' '.join(cmd)}")
 

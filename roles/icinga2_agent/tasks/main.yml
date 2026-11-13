@@ -261,12 +261,13 @@
       validate_certs: '{{ icinga2_agent__validate_certs }}'
     register: '__icinga2_agent__director_host_result'
     # The Director answers 422 "Trying to recreate icinga_host" for a host it already has, which
-    # is the expected answer on every run after the first one.
-    changed_when: '__icinga2_agent__director_host_result["status"] == 201'
+    # is the expected answer on every run after the first one. Every other answer is an error
+    # (wrong login, Director or IcingaWeb2 down, another 422), and without a response there is
+    # neither a status nor a JSON body.
+    changed_when: '__icinga2_agent__director_host_result["status"] | d(0) == 201'
     failed_when:
-      - '__icinga2_agent__director_host_result["status"] != 201'
-      - '"Trying to recreate" not in __icinga2_agent__director_host_result["json"]["error"] | d("")'
-    ignore_errors: true
+      - '__icinga2_agent__director_host_result["status"] | d(0) != 201'
+      - '"Trying to recreate" not in (__icinga2_agent__director_host_result["json"] | d({}))["error"] | d("")'
     when:
       - 'icinga2_agent__icingaweb2_user_login is defined and icinga2_agent__icingaweb2_user_login | length > 0'
 

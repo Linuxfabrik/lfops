@@ -6,3 +6,12 @@ mount__mounts__group_var:
     fstype: 'xfs'
     opts: 'loop'
     state: 'mounted'
+  # owner, group and mode from the inventory reach the root of the mounted filesystem
+  - path: '/srv/lfops-molecule-owned'
+    src: '/var/tmp/lfops-molecule-owned.img'
+    fstype: 'xfs'
+    opts: 'loop'
+    owner: 'nobody'
+    group: 'daemon'
+    mode: '0750'
+    state: 'mounted'

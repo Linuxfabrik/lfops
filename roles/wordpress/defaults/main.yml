@@ -54,8 +54,15 @@ wordpress__php__modules__dependent_var:
     state: 'present'
   - name: 'php-intl'
     state: 'present'
-  - name: 'php-mysql'
+  # Not `php-mysql`: with a Remi module stream that name resolves to php-pecl-mysql, the obsolete
+  # ext/mysql, which only pulls in php-mysqlnd as a dependency. WordPress uses mysqli from
+  # php-mysqlnd.
+  - name: 'php-mysqlnd'
     state: 'present'
+  # Migration: hosts installed with `php-mysql` still carry it. The php role marks php-mysqlnd as
+  # user-installed before it removes this one, so `dnf autoremove` leaves php-mysqlnd alone.
+  - name: 'php-pecl-mysql'
+    state: 'absent'
   - name: 'php-zip'
     state: 'present'
 

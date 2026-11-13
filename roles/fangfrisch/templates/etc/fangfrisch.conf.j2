@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025012201
+# 2026111201
 
 [DEFAULT]
 # Other sections inherit values from DEFAULT and may also overwrite values.
@@ -12,11 +12,16 @@ on_update_timeout = 42
 [sanesecurity]
 enabled = true
 
-[urlhaus]
-enabled = true
-
-{% if fangfrisch__securiteinfo_customer_id is defined and fangfrisch__securiteinfo_customer_id | length %}
+{% if fangfrisch__securiteinfo_customer_id is defined and fangfrisch__securiteinfo_customer_id | length > 0 %}
 [securiteinfo]
 enabled = true
 customer_id = {{ fangfrisch__securiteinfo_customer_id }}
+
+{% endif %}
+{# abuse.ch only serves the URLhaus signatures with an auth key. Without one, Fangfrisch requests
+   them with its placeholder key, and every refresh logs a 401 for this source. #}
+{% if fangfrisch__urlhaus_auth_key is defined and fangfrisch__urlhaus_auth_key | length > 0 %}
+[urlhaus]
+enabled = true
+auth_key = {{ fangfrisch__urlhaus_auth_key }}
 {% endif %}
