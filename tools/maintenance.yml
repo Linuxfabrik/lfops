@@ -139,6 +139,24 @@
   last_result: >
     Unchanged: toggle still registered (experimental) on grafana main.
 
+- id: 'grav-opcache-filelist-touch'
+  what: >
+    `setup_grav` excludes `cache/compiled/*/filelist-*.php` from OPcache, since Grav
+    touches these PHP files on nearly every request, so OPcache recompiles them and runs
+    full of wasted memory.
+  where:
+    - 'playbooks/setup_grav.yml'
+    - 'roles/grav/defaults/main.yml'
+  done_when: >
+    A Grav release no longer changes the mtime of an unchanged filelist cache file
+    (`@touch($cacheFile)` in `ConfigServiceProvider::loadCachedFileList()`, added in commit
+    b8942d177, first in Grav 2.0.7), and LFOps no longer supports Grav releases that do.
+  check: >
+    `git grep --line-number 'touch(' <tag> -- system/src/Grav/Common/Service/ConfigServiceProvider.php`
+    in a clone of https://github.com/getgrav/grav for the latest release tag.
+  action: 'Drop `grav__php__opcache_blacklist__dependent_var` and its use in `setup_grav`.'
+  interval: 'quarterly'
+
 - id: 'hetzner-private-static-ip'
   what: >
     `hetzner_vm` cannot create a server with only a private network and a fixed IP

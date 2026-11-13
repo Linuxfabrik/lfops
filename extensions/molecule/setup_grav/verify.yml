@@ -113,6 +113,57 @@
       changed_when: false
       failed_when: '__molecule__grav_log_result["rc"] == 0'
 
+    # Grav touches its filelist cache files on nearly every request, which would make OPcache
+    # compile them again and again. The request above may have written them first, and OPcache
+    # never caches a file younger than opcache.file_update_protection (2 seconds). So wait, and
+    # let a second request include them: without the blacklist, they would now be cached.
+    - name: 'sleep 3'
+      ansible.builtin.wait_for:
+        timeout: 3
+
+    - name: 'curl --header "Host: {{ grav__url }}" http://127.0.0.1/ # again'
+      ansible.builtin.uri:
+        url: 'http://127.0.0.1/'
+        headers:
+          Host: '{{ grav__url }}'
+
+    - name: 'find {{ __molecule__grav_dir }}/cache/compiled -name "filelist-*.php"'
+      ansible.builtin.command: 'find {{ __molecule__grav_dir }}/cache/compiled -name "filelist-*.php"'
+      register: '__molecule__grav_filelist_result'
+      changed_when: false
+      failed_when: '__molecule__grav_filelist_result["stdout_lines"] | length == 0'
+
+    - name: 'Make sure cgi-fcgi is installed'
+      ansible.builtin.package:
+        name: 'fcgi'
+        state: 'present'
+
+    - name: 'Deploy a script that lists the scripts in OPcache'
+      ansible.builtin.copy:
+        content: "<?php echo implode(\"\\n\", array_keys(opcache_get_status(true)['scripts'])), \"\\n\";\n"
+        dest: '/var/www/html/molecule-opcache-scripts.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: 'httpd_sys_content_t'
+
+    - name: 'Run the script through the www pool socket'
+      ansible.builtin.command: 'cgi-fcgi -bind -connect /run/php-fpm/www.sock'
+      environment:
+        QUERY_STRING: ''
+        REQUEST_METHOD: 'GET'
+        SCRIPT_FILENAME: '/var/www/html/molecule-opcache-scripts.php'
+        SCRIPT_NAME: '/molecule-opcache-scripts.php'
+      register: '__molecule__grav_opcache_result'
+      changed_when: false
+
+    - name: 'Assert OPcache holds Grav, but none of its filelist cache files'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__grav_opcache_result["stdout_lines"] | select("search", "^" ~ (__molecule__grav_dir | regex_escape) ~ "/system/") | list | length > 0'
+          - '__molecule__grav_opcache_result["stdout_lines"] | select("search", "/cache/compiled/[^/]+/filelist-") | list | length == 0'
+        fail_msg: '{{ __molecule__grav_opcache_result["stdout_lines"] | select("search", "^/var/www/html/") | list | to_json }}'
+
     # owners, modes and SELinux types
 
     - name: 'find {{ __molecule__grav_dir }} ... ! -user root -o ! -group root # code not owned by root'
