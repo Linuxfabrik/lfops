@@ -282,6 +282,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:wordpress, playbook:setup_wordpress**: New installations get `php-mysqlnd` instead of `php-pecl-mysql`, the obsolete `mysql_*` extension that WordPress does not use. Hosts that already have `php-pecl-mysql` keep it.
 * **role:icinga2_agent**: The run fails if the host cannot be added to the Icinga Director, for example because of a wrong login, instead of continuing as if it had been added.
 * **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.
 * **role:gitlab_ce**: `gitlab-dump.service` fails when the backup fails, so `systemctl --failed` and the monitoring notice it, instead of always reporting success.
