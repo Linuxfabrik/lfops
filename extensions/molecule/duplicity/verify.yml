@@ -160,13 +160,14 @@
         - '/var/tmp/molecule-restore-latest'
         - '/var/tmp/molecule-restore-old'
 
-    - name: 'mkdir /srv/duba-molecule/plain /srv/duba-molecule/divided/alice/files'
+    - name: 'mkdir /srv/duba-molecule/plain /srv/duba-molecule/divided/{alice/files,excluded}'
       ansible.builtin.file:
         path: '{{ item }}'
         state: 'directory'
         mode: 0o755
       loop:
         - '/srv/duba-molecule/divided/alice/files'
+        - '/srv/duba-molecule/divided/excluded'
         - '/srv/duba-molecule/plain'
 
     - name: 'Create the test data, plain/file.txt in v1'
@@ -340,6 +341,32 @@
           - '"/mnt/duba-molecule-tmp has" in __molecule__duba_restore_small_tmp_result["stderr"]'
           - '"will abort with exit code 35" in __molecule__duba_restore_small_tmp_result["stderr"]'
         fail_msg: '{{ __molecule__duba_restore_small_tmp_result | to_json }}'
+
+    # The backups running at the same time share the temp dir, and each one needs 860 MB there
+    # (660 MB with duplicity 3.0.0, 460 MB before), else it aborts with exit code 35. 900 MB fit
+    # exactly one with every duplicity version, so duba runs the backups one after the other.
+    - name: 'mount -t tmpfs -o size=900M tmpfs /mnt/duba-molecule-tmp'
+      ansible.builtin.command: 'mount -t tmpfs -o size=900M tmpfs /mnt/duba-molecule-tmp'
+      changed_when: false
+
+    - name: 'TMPDIR=/mnt/duba-molecule-tmp duba'
+      ansible.builtin.command: '/usr/local/bin/duba'
+      environment:
+        TMPDIR: '/mnt/duba-molecule-tmp'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_backup_small_tmp_result'
+
+    - name: 'umount /mnt/duba-molecule-tmp'
+      ansible.builtin.command: 'umount /mnt/duba-molecule-tmp'
+      changed_when: false
+
+    - name: 'Assert that duba throttled the backups to one at a time, and all of them succeeded'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_backup_small_tmp_result["rc"] == 0'
+          - '"Throttled to 1 instead of" in __molecule__duba_backup_small_tmp_result["stderr"]'
+        fail_msg: '{{ __molecule__duba_backup_small_tmp_result | to_json }}'
 
     # a divided source is one backup per entry, duba refuses to restore it as a whole (212)
     - name: 'duba restore /srv/duba-molecule/divided'
