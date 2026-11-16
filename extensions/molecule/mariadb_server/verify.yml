@@ -143,15 +143,17 @@
       ansible.builtin.command: 'grep --fixed-strings molecule-logrotate /var/log/mariadb/mariadb.log'
       changed_when: false
 
-    # ask the running server, the cnf file alone proves nothing
-    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation, @@skip_name_resolve"'
-      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_snapshot_isolation, @@skip_name_resolve"'
+    # ask the running server, the cnf file alone proves nothing. innodb_linux_aio is the role
+    # default per OS family, and innodb_use_native_aio shows that InnoDB did not fall back to
+    # simulated AIO.
+    - name: 'mariadb --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_use_native_aio, @@innodb_snapshot_isolation, @@skip_name_resolve"'
+      ansible.builtin.command: 'mariadb --user=mariadb-admin --password=linuxfabrik --host=127.0.0.1 --batch --skip-column-names --execute="SELECT @@table_definition_cache, @@innodb_linux_aio, @@innodb_use_native_aio, @@innodb_snapshot_isolation, @@skip_name_resolve"'
       register: '__molecule__mariadb_variables_result'
       changed_when: false
 
     - name: 'Assert that the server uses the configured values'
       ansible.builtin.assert:
-        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", "aio", "1", "1"]'
+        that: '__molecule__mariadb_variables_result["stdout"].split() == ["600", ("aio" if ansible_facts["os_family"] == "RedHat" else "auto"), "1", "1", "1"]'
         fail_msg: '{{ __molecule__mariadb_variables_result["stdout"] }}'
 
     # With skip_name_resolve, MariaDB warns about every grant bound to a host name whenever it
