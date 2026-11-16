@@ -367,6 +367,24 @@ aide__rules__role_var:
   # secrets
   - path: '/etc/pkcs11'
     attributes: 'NORMAL'
+  # Not in the shipped list. Server certificates are renewed in place, by acme.sh every 60 days
+  # (`cat "$CERT_PATH" >"$_real_cert"` in _installcert(), verified against acme.sh 3.1.6), with
+  # the same owner, mode and SELinux context, so PERMS still reports anything but the new
+  # content. Their keys below /etc/pki/tls/private and /etc/ssl/private keep NORMAL, since
+  # acme.sh reuses the key on a renewal. The trust bundles in the same directories (symlinks on
+  # the Red Hat family, a file written by update-ca-certificates on Debian and Ubuntu) keep
+  # NORMAL and have to come first, aide applies the first matching rule of a directory.
+  # /etc/ssl/certs is a symlink to /etc/pki/tls/certs on the Red Hat family, which aide does not
+  # follow. Verified with aide 0.16 to 0.19.2 on Rocky 8, 9 and 10, Debian 12 and 13 and Ubuntu
+  # 22.04, 24.04 and 26.04.
+  - path: '/etc/pki/tls/certs/ca-bundle(\.trust)?\.crt$'
+    attributes: 'NORMAL'
+  - path: '/etc/pki/tls/certs/[^/]+\.crt$'
+    attributes: 'PERMS'
+  - path: '/etc/ssl/certs/ca-certificates\.crt$'
+    attributes: 'NORMAL'
+  - path: '/etc/ssl/certs/[^/]+\.crt$'
+    attributes: 'PERMS'
   - path: '/etc/pki'
     attributes: 'NORMAL'
   - path: '/etc/ssl'

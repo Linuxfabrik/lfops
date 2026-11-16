@@ -133,6 +133,7 @@ This role is compatible with the following aide versions:
     * `/boot/efi` is checked without the inode (`DATAONLY`), since the kernel assigns new inode numbers on the vfat EFI system partition at runtime.
     * `/etc/aliases.db` is checked for permissions only (`PERMS`), since postfix on the Red Hat family rebuilds it on its start.
     * `/etc/resolv.conf` is checked for permissions only (`PERMS`), since DHCP clients and NetworkManager rewrite it at runtime.
+    * The certificates `*.crt` in `/etc/pki/tls/certs` and `/etc/ssl/certs` are checked for permissions only (`PERMS`), since acme.sh and other tools renew them in place. The trust bundles `ca-bundle.crt`, `ca-bundle.trust.crt` and `ca-certificates.crt` and the private keys stay fully checked, so a replaced key or a new trusted CA is still reported.
     * `/etc/fwupd/fwupd.conf` is checked without its mode, since fwupd sets the file to 0640 whenever its daemon starts.
     * `/var/log` itself is checked without its link count, which follows its subdirectories.
     * `/etc/lvm/archive` allows added and removed files, since LVM archives the metadata of a VG before every change and removes old archives itself.
