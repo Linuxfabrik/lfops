@@ -16,6 +16,7 @@ import os
 import re
 import subprocess  # nosec B404
 import sys
+import threading
 import time
 from collections import Counter
 
@@ -44,7 +45,7 @@ DOCUMENTATION = r"""
   version_added: "10.0.0"
   short_description: Fixed full-screen view of a run, details at the end
   description:
-    - Shows the run on one fixed screen that is updated in place instead of scrolling. At the top the playbook, the number of hosts and the elapsed time, the current role and task, a progress bar of the play with the estimated remaining time, then counters of the results of the current task and of the whole run. The ok counter of the task is followed by the number of hosts still at work on the task and the number of hosts, for example C(ok 13/22/35).
+    - Shows the run on one fixed screen that is updated in place instead of scrolling, at least once a second. At the top the playbook, the number of hosts and the elapsed time, the current role and task, a progress bar of the play with the estimated remaining time, then counters of the results of the current task and of the whole run. The ok counter of the task is followed by the number of hosts still at work on the task and the number of hosts, for example C(ok 13/22/35).
     - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path, shortened to the initials of its parent directories, when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
     - The progress bar counts the tasks of the play that are known when it starts, after C(--tags) and C(--skip-tags) are applied. A task included with C(include_tasks) or C(include_role) is one step, the bar stands still while the tasks it includes run. Tasks in C(rescue) sections and handlers are not counted. The bar counts tasks, not time, and starts over with every batch of C(serial). The estimated remaining time assumes that the steps left take as long on average as the steps so far.
     - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counts of fatal (F), warning (W), changed (C) and ok (O) results and their last notable result (LAST WORST), or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
@@ -256,6 +257,9 @@ class CallbackModule(Compact):
     # at most this many redraws per second, the last state is always drawn at the
     # end of a task
     _REDRAW_INTERVAL = 0.1
+    # without events, the screen is redrawn after this many seconds, so the elapsed
+    # time and the ETA keep moving during a long task
+    _TICK_INTERVAL = 1.0
 
     def __init__(self):
         super().__init__()
@@ -291,6 +295,10 @@ class CallbackModule(Compact):
         self._capture = []
         self._details = []
         self._details_section = None
+        # the screen is drawn by the main thread on events and by a ticker thread
+        # in between, see _tick()
+        self._screen_lock = threading.RLock()
+        self._ticker_stop = threading.Event()
 
     # -- screen ------------------------------------------------------------------
 
@@ -327,12 +335,29 @@ class CallbackModule(Compact):
         self._tui = True
         # leave the screen and print the details also on Ctrl+C or a crash
         atexit.register(self._end_tui)
+        threading.Thread(
+            target=self._tick, name='lfops-dashboard-ticker', daemon=True
+        ).start()
+
+    def _tick(self):
+        """Redraw the screen when no event did so for _TICK_INTERVAL seconds."""
+        # checked four times as often, so a redraw is at most a quarter late
+        while not self._ticker_stop.wait(self._TICK_INTERVAL / 4):
+            if time.monotonic() - self._last_draw < self._TICK_INTERVAL:
+                continue
+            try:
+                self._draw(force=True)
+            except Exception:  # the main thread changed the state, next tick
+                pass
 
     def _end_tui(self):
-        if not self._tui:
-            return
-        self._tui = False
-        self._tui_done = True
+        self._ticker_stop.set()
+        # wait for a draw of the ticker thread in progress
+        with self._screen_lock:
+            if not self._tui:
+                return
+            self._tui = False
+            self._tui_done = True
         sys.stdout.write(_SCREEN_OFF)
         sys.stdout.flush()
         if self._termios_saved is not None:
@@ -405,8 +430,11 @@ class CallbackModule(Compact):
         ]
 
     def _draw(self, force=False):
-        if not self._tui:
-            return
+        with self._screen_lock:
+            if self._tui:
+                self._render(force)
+
+    def _render(self, force):
         now = time.monotonic()
         if not force and now - self._last_draw < self._REDRAW_INTERVAL:
             return
@@ -583,8 +611,18 @@ class CallbackModule(Compact):
         for row in range(len(screen) + 1, lines + 1):
             out.append(f'\033[{row};1H\033[K')
         out.append(f'\033[{lines};1H')
-        sys.stdout.write(''.join(out))
-        sys.stdout.flush()
+        # Straight to the file descriptor, past the buffer of sys.stdout: Ansible
+        # forks its workers while the ticker thread may be drawing, and a fork
+        # while that thread holds the lock of the buffer leaves the worker hanging
+        # on it when it flushes its streams at exit. Verified against the CPython
+        # source: Modules/_io/bufferedio.c does not reset that lock after a fork,
+        # and multiprocessing/process.py calls _flush_std_streams() at the end of
+        # a worker.
+        if threading.current_thread() is threading.main_thread():
+            sys.stdout.flush()
+        data = ''.join(out).encode('utf-8', 'replace')
+        while data:
+            data = data[os.write(sys.stdout.fileno(), data) :]
 
     # -- output of the run -------------------------------------------------------
 
