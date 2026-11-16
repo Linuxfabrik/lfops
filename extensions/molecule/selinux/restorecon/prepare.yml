@@ -1,0 +1,58 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# Label files the way they end up on a real host, before the selinux playbook runs:
+# * type-wrong: a wrong type, as after `mv` from another directory
+# * user-only: the right type, but the SELinux user of an admin shell (unconfined_u)
+# * customized: a type an admin set on purpose, listed in
+#   /etc/selinux/targeted/contexts/customizable_types
+- name: 'Label files wrongly for restorecon'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'mkdir /srv/lfops-molecule-restorecon /srv/lfops-molecule-restorecon-forced'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+      loop:
+        - '/srv/lfops-molecule-restorecon'
+        - '/srv/lfops-molecule-restorecon-forced'
+
+    - name: 'touch ...'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'touch'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        modification_time: 'preserve'
+        access_time: 'preserve'
+      loop:
+        - '/srv/lfops-molecule-restorecon-forced/customized'
+        - '/srv/lfops-molecule-restorecon/customized'
+        - '/srv/lfops-molecule-restorecon/type-wrong'
+        - '/srv/lfops-molecule-restorecon/user-only'
+
+    - name: 'chcon --user unconfined_u --type ... ...'
+      ansible.builtin.command:
+        argv:
+          - 'chcon'
+          - '--user=unconfined_u'
+          - '--type={{ item["type"] }}'
+          - '{{ item["path"] }}'
+      changed_when: true # prepare runs once per scenario
+      loop:
+        - path: '/srv/lfops-molecule-restorecon-forced/customized'
+          type: 'httpd_user_content_t'
+        - path: '/srv/lfops-molecule-restorecon/customized'
+          type: 'httpd_user_content_t'
+        - path: '/srv/lfops-molecule-restorecon/type-wrong'
+          type: 'tmp_t'
+        - path: '/srv/lfops-molecule-restorecon/user-only'
+          type: 'httpd_sys_content_t'

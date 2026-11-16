@@ -1,0 +1,38 @@
+# The SELinux context of a file is the end state restorecon produces, so read it from the file
+# itself. prepare.yml set every file to the SELinux user unconfined_u.
+- name: 'Verify restorecon relabeled the files as configured'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'stat --format %C ...'
+      ansible.builtin.command:
+        argv:
+          - 'stat'
+          - '--format=%C'
+          - '{{ item["path"] }}'
+      changed_when: false
+      register: '__molecule__restorecon_stat_result'
+      loop:
+        # force: true resets the customized type, and the SELinux user with it.
+        - path: '/srv/lfops-molecule-restorecon-forced/customized'
+          context: 'system_u:object_r:httpd_sys_content_t:s0'
+        # Without force, a type an admin customized stays.
+        - path: '/srv/lfops-molecule-restorecon/customized'
+          context: 'unconfined_u:object_r:httpd_user_content_t:s0'
+        # Without force, the wrong type is corrected, and the SELinux user stays.
+        - path: '/srv/lfops-molecule-restorecon/type-wrong'
+          context: 'unconfined_u:object_r:httpd_sys_content_t:s0'
+        # Without force, a file with the right type is left alone.
+        - path: '/srv/lfops-molecule-restorecon/user-only'
+          context: 'unconfined_u:object_r:httpd_sys_content_t:s0'
+
+    - name: 'Assert that each file carries the expected SELinux context'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout"] == item["item"]["context"]'
+        fail_msg: '{{ item["item"]["path"] }}: {{ item["stdout"] }}, expected {{ item["item"]["context"] }}'
+        quiet: true
+      loop: '{{ __molecule__restorecon_stat_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["path"] }}'
