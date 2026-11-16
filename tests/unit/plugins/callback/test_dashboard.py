@@ -268,6 +268,29 @@ class TestProgress(unittest.TestCase):
         self.assertEqual(_module.eta(21, 21, 0, 200, 900), 0)
 
 
+class TestTicker(unittest.TestCase):
+    def test_screen_redrawn_during_a_long_task(self):
+        # no event for 3 seconds, the elapsed time still moves on
+        playbook = _PLAYBOOK.replace(
+            "    - name: 'Some changes'\n",
+            "    - name: 'Sleep'\n"
+            "      ansible.builtin.command: 'sleep 3'\n"
+            '      changed_when: false\n'
+            '\n'
+            "    - name: 'Some changes'\n",
+        )
+        returncode, raw = _run(columns=100, playbook=playbook)
+        self.assertEqual(returncode, 0, raw)
+        screen = raw[raw.index(_SCREEN_ON) : raw.rindex(_SCREEN_OFF)]
+        # every frame starts in the top left corner
+        frames = [f for f in screen.split('\x1b[1;1H') if 'Task: Sleep' in f]
+        elapsed = {re.search(r'hosts   (\d\d:\d\d:\d\d)', f).group(1) for f in frames}
+        # drawn at the start of the task, and at least twice while it sleeps
+        self.assertGreaterEqual(len(elapsed), 3, elapsed)
+        # no warning about forking a multi-threaded process (Python 3.12+)
+        self.assertNotIn('multi-threaded', raw)
+
+
 class TestCounterRows(unittest.TestCase):
     def test_columns_aligned_and_apart_for_long_numbers(self):
         rows = _module.CallbackModule._counter_rows(
