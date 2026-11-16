@@ -692,7 +692,7 @@
         name: 'linuxfabrik.lfops.aide'
         tasks_from: 'update-db-if-clean.yml'
 
-    - name: 'Wait for the check update-db-if-clean started (after cleaning up)'
+    - name: 'Wait for the aide units to be idle (after cleaning up)'
       ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
 
     - name: 'systemctl show --property=Result aidecheck.service (after cleaning up)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
@@ -718,6 +718,11 @@
         path: '/etc/aide.conf'
         line: '# lfops-molecule'
 
+    - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (before the run after a clean check)' # noqa command-instead-of-module (no module reads the start time of a unit)
+      ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+      register: '__molecule__aide_start_before_clean_run_result'
+      changed_when: false
+
     - name: 'Reset the end-of-play messages (run after a clean check)'
       ansible.builtin.set_fact:
         __shared__end_of_play_messages: []
@@ -732,18 +737,31 @@
         checksum_algorithm: 'sha256'
       register: '__molecule__aide_db_after_clean_run_result'
 
-    - name: 'Wait for the check the handler started'
+    - name: 'Wait for the aide units to be idle (after the run after a clean check)'
       ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    # `aide --update` compares like a check, so the update runs no second check against the
+    # database it just wrote
+    - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (no module reads the start time of a unit)
+      ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+      register: '__molecule__aide_start_after_clean_run_result'
+      changed_when: false
+
+    - name: 'systemctl start --wait aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
 
     - name: 'systemctl show --property=Result aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
       ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
       register: '__molecule__aide_clean_run_result'
       changed_when: false
 
-    - name: 'Assert that the handler updated the database without telling the operator anything'
+    - name: 'Assert that the handler updated the database without a second check and without telling the operator anything'
       ansible.builtin.assert:
         that:
           - '__molecule__aide_db_after_clean_run_result["stat"]["checksum"] != __molecule__aide_db_before_clean_run_result["stat"]["checksum"]'
+          - '__molecule__aide_start_after_clean_run_result["stdout"] == __molecule__aide_start_before_clean_run_result["stdout"]'
           - '__molecule__aide_clean_run_result["stdout"] == "success"'
           - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 0'
 
@@ -852,12 +870,30 @@
       - name: 'Reset the logs of unattended-upgrades and the hook (clean host)'
         ansible.builtin.include_tasks: 'tasks/reset-uu-logs.yml'
 
+      - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (before the unattended upgrade on a clean host)' # noqa command-instead-of-module (no module reads the start time of a unit)
+        ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+        register: '__molecule__aide_uu_clean_start_before_result'
+        changed_when: false
+
       - name: 'systemctl start apt-daily-upgrade.service (clean host)' # noqa command-instead-of-module (runs the unattended upgrade and waits for it)
         ansible.builtin.command: 'systemctl start apt-daily-upgrade.service'
         changed_when: true
 
       - name: 'Wait for the units to finish (clean host)'
         ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      # the hook checks directly, and `aide --update` compares like a check, so the upgrade
+      # starts no check through the unit
+      - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (after the unattended upgrade on a clean host)' # noqa command-instead-of-module (no module reads the start time of a unit)
+        ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+        register: '__molecule__aide_uu_clean_start_after_result'
+        changed_when: false
+
+      # confirms the re-baselined database
+      - name: 'systemctl start --wait aidecheck.service (after the unattended upgrade on a clean host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+        ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+        changed_when: false
+        failed_when: false
 
       - name: 'Collect the results (clean host)'
         ansible.builtin.include_tasks: 'tasks/collect-uu-results.yml'
@@ -870,6 +906,7 @@
             - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "aide --check") | list | length == 1'
             - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "re-baselined") | list | length == 1'
             - '__molecule__aide_uu_update_runs_result["stdout"] | int == 1'
+            - '__molecule__aide_uu_clean_start_after_result["stdout"] == __molecule__aide_uu_clean_start_before_result["stdout"]'
             - '__molecule__aide_uu_check_result["stdout"] == "success"'
           fail_msg: '{{ __molecule__aide_uu_hook_result["stdout_lines"] + __molecule__aide_uu_log_result["stdout_lines"] }}'
 

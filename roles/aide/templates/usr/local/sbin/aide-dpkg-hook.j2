@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026110201
+# 2026111601
 
 # Keeps the AIDE database in step with the packages unattended-upgrades installs. Called by apt
 # before and after every dpkg run (DPkg::Pre-Invoke / DPkg::Post-Invoke in
@@ -13,7 +13,7 @@
 # * post: after a dpkg run of that process, queue aide-dpkg-update.service if the check was
 #   clean, otherwise a check. Both are ordered after apt-daily-upgrade.service and therefore
 #   start once unattended-upgrades has finished.
-# * update: update the database and start a check against it.
+# * update: update the database if the check of `pre` was clean, otherwise start a check.
 #
 # unattended-upgrades installs in package sets and runs dpkg once per set (MinimalSteps, on by
 # default, upgrade_in_minimal_steps() in unattended-upgrade), so apt calls pre and post once per
@@ -118,10 +118,18 @@ case "$1" in
             else
                 mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
                 log 're-baselined the AIDE database after an unattended upgrade'
+                # no check against the new database: `aide --update` already compared the
+                # whole file system and wrote that report, and a check right after it scans
+                # everything again only to find no differences. aide-logfile reports an
+                # accepted update as OK. reset-failed, since the clean check of `pre` ran
+                # outside aidecheck.service, whose last run may still have failed on drift
+                # that has been reverted since.
+                systemctl reset-failed "${UNIT}.service" 2> /dev/null
+                exit 0
             fi
         fi
-        # `aide --update` wrote its own report. a check against the new database replaces it, so
-        # that the report and the state of the unit reflect the host again.
+        # a check through the unit after a failed update, or when the unit was started by hand,
+        # so that the report and the state of the unit reflect the host again
         systemctl restart --no-block "${UNIT}.service"
         ;;
 esac
