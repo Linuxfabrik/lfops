@@ -20,6 +20,7 @@ import fcntl
 import importlib.util
 import os
 import pty
+import re
 import shutil
 import struct
 import subprocess  # nosec B404
@@ -49,6 +50,7 @@ _spec = importlib.util.spec_from_file_location('dashboard', _PLUGIN_PATH)
 _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)
 lfops_origin = _module.lfops_origin
+progress_bar = _module.progress_bar
 shorten_path = _module.shorten_path
 
 _SCREEN_ON = '\x1b[?1049h'
@@ -69,9 +71,10 @@ _PLAYBOOK = """
 """
 
 
-def _run(columns=None, playbook=_PLAYBOOK):
-    """Run the playbook, on a pseudo-terminal with `columns` if given. Return the
-    exit code and the output.
+def _run(columns=None, playbook=_PLAYBOOK, files=None):
+    """Run the playbook, on a pseudo-terminal with `columns` if given, with the
+    additional `files` (name -> content) next to it. Return the exit code and the
+    output.
     """
     assert _ANSIBLE_PLAYBOOK, 'ansible-playbook not found'  # nosec B101
     tmp = tempfile.mkdtemp(prefix='lfops_dashboard_')
@@ -86,6 +89,7 @@ def _run(columns=None, playbook=_PLAYBOOK):
                 + f"    ansible_python_interpreter: '{sys.executable}'\n"
             ),
             'playbook.yml': playbook,
+            **(files or {}),
         }
         for name, content in files.items():
             with open(os.path.join(tmp, name), 'w') as f:
@@ -149,20 +153,25 @@ class TestDashboardOnTerminal(unittest.TestCase):
         self.assertIn('HOST', screen)
         self.assertIn('Task   ok', screen)
         self.assertIn('Run    ok', screen)
-        self.assertIn('pending', screen)
+        # the ok results of the task, the hosts still at work on it, all hosts
+        self.assertRegex(screen, r'Task   ok \d/\d/4 +changed ')
+        self.assertIn('Task   ok 0/4/4 ', screen)
         self.assertIn('ansible-core ', screen)
         self.assertIn('LFOps ', screen)
         self.assertIn('t-h01', screen)
-        self.assertIn('F   W   C  LAST', screen)
+        self.assertIn('F   W   C    O  LAST WORST', screen)
         # the last notable result with the letter of its kind, the playbook
         # "linuxfabrik.lfops.test" shortened to "test"
         self.assertIn('C test - Some changes', screen)
         # hosts with only ok results are listed with their last ok result
         self.assertIn('O test - Some changes', screen)
+        # F, W, C and O counts: one changed and one ok, or two ok results
+        self.assertRegex(screen, r't-h01\s+0\s+0\s+1\s+1  C test - Some changes')
+        self.assertRegex(screen, r't-h03\s+0\s+0\s+0\s+2  O test - Some changes')
 
     def test_hosts_sorted_by_severity_then_name(self):
         # the last drawn host list, rows start with the host name
-        screen = self.raw[self.raw.rindex('LAST') : self.raw.rindex(_SCREEN_OFF)]
+        screen = self.raw[self.raw.rindex('LAST WORST') : self.raw.rindex(_SCREEN_OFF)]
         order = sorted(
             ('t-h01', 't-h02', 't-h03', 't-h04'), key=lambda host: screen.index(host)
         )
@@ -189,6 +198,99 @@ class TestSerial(unittest.TestCase):
         self.assertEqual(returncode, 0, raw)
         self.assertIn('4 hosts', raw)
         self.assertNotIn('1 host ', raw)
+
+
+class TestProgress(unittest.TestCase):
+    def test_includes_are_one_step_rescue_not_counted(self):
+        playbook = _PLAYBOOK.replace(
+            "    - name: 'Some changes'\n",
+            "    - name: 'Include'\n"
+            "      ansible.builtin.include_tasks: 'included.yml'\n"
+            '\n'
+            '    - block:\n'
+            "        - name: 'In a block'\n"
+            "          ansible.builtin.command: 'true'\n"
+            '          changed_when: false\n'
+            '      rescue:\n'
+            "        - name: 'Rescue'\n"
+            "          ansible.builtin.command: 'true'\n"
+            '\n'
+            "    - name: 'Some changes'\n",
+        )
+        included = (
+            "- name: 'Included 1'\n"
+            "  ansible.builtin.command: 'true'\n"
+            '  changed_when: false\n'
+            "- name: 'Included 2'\n"
+            "  ansible.builtin.command: 'true'\n"
+            '  changed_when: false\n'
+        )
+        returncode, raw = _run(
+            columns=100, playbook=playbook, files={'included.yml': included}
+        )
+        self.assertEqual(returncode, 0, raw)
+        screen = raw[raw.index(_SCREEN_ON) : raw.rindex(_SCREEN_OFF)]
+        steps = list(dict.fromkeys(re.findall(r'step (\d+)/(\d+)', screen)))
+        # All ok, Include (with its two tasks), In a block, Some changes
+        self.assertEqual(
+            steps, [('0', '4'), ('1', '4'), ('2', '4'), ('3', '4'), ('4', '4')]
+        )
+        self.assertIn(' step 4/4 (100%) ', screen)
+
+    def test_bar_without_color(self):
+        bar = progress_bar(7, 21, 80, color=False)
+        self.assertEqual(bar, ' step 7/21 (33%) ' + '#' * 9 + ' ' * 54)
+
+    def test_bar_with_color_reverses_the_done_part(self):
+        bar = progress_bar(7, 21, 40, color=True)
+        self.assertTrue(bar.startswith('\033[7m'))
+        self.assertEqual(
+            bar.replace('\033[7m', '').replace('\033[0m', ''),
+            ' step 7/21 (33%) '.ljust(40),
+        )
+
+    def test_bar_with_remaining_time(self):
+        bar = progress_bar(7, 21, 60, color=False, remaining=3725)
+        self.assertTrue(bar.startswith(' step 7/21 (33%)   ETA 01:02:05 '))
+
+    def test_bar_cut_to_width(self):
+        self.assertEqual(len(progress_bar(1, 3, 10, color=False)), 10)
+
+    def test_eta_from_the_finished_steps(self):
+        # 6 steps done in 60 s, 15 left at 10 s each, 4 s into step 7
+        self.assertEqual(_module.eta(7, 21, 100, 160, 164), 146)
+        # no step done yet
+        self.assertIsNone(_module.eta(1, 21, 100, 100, 130))
+        # a step that takes longer than estimated does not go below zero
+        self.assertEqual(_module.eta(21, 21, 0, 200, 900), 0)
+
+
+class TestCounterRows(unittest.TestCase):
+    def test_columns_aligned_and_apart_for_long_numbers(self):
+        rows = _module.CallbackModule._counter_rows(
+            [
+                (
+                    'Task',
+                    [
+                        (
+                            'ok',
+                            [
+                                ('3', None, True),
+                                ('/2', None, False),
+                                ('/32', None, True),
+                            ],
+                        )
+                    ],
+                ),
+                (
+                    'Run',
+                    [('ok', [('11044', None, True)]), ('changed', [('5', None, True)])],
+                ),
+            ]
+        )
+        task, run = (''.join(text for text, _, _ in row) for row in rows)
+        self.assertEqual(run, 'Run    ok 11044  changed 5    ')
+        self.assertEqual(task, 'Task   ok 3/2/32 ')
 
 
 class TestShortenPath(unittest.TestCase):

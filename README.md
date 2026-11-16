@@ -382,23 +382,26 @@ Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg
 
 The goal of the `linuxfabrik.lfops.dashboard` stdout callback is a live view of a run, similar to how glances shows the load of a system: always visible, without scrolling, and adapting to the size of the terminal.
 
-It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and the hosts, sorted by their most severe result (fatal, warning, changed, ignored, ok) and then by name, each with its counts of fatal (F), warning (W) and changed (C) results and its last notable result, marked with the letter of its kind. A host with only ok results shows its last ok result, hosts with only skipped results are counted, not listed:
+It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, a progress bar of the play, counters of the results of the current task and of the whole run, with the ok results of the task followed by the hosts still at work on it and the number of hosts (`ok 20/5/35`), and the hosts, sorted by their most severe result (fatal, warning, changed, ignored, ok) and then by name. Each host comes with its counts of fatal (F), warning (W), changed (C) and ok (O) results and its last notable result (LAST WORST), marked with the letter of its kind. A rising O count shows that a host is still at work while LAST WORST stays the same. A host with only ok results shows its last ok result, hosts with only skipped results are counted, not listed:
 
 ```text
 linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
 LFOps main@3e8a7b75, 2 uncommitted   ansible-core 2.16.19   mounted from /h/u/lfops
 Role: linuxfabrik.lfops.firewall
 Task: Deploy the firewall rules
+ step 140/421 (33%)   ETA 00:15:12
 ──────────────────────────────────────────────────────────────────────────────────
-Task   ok 20   changed 3    skipped 5    fatal 1    unreachable 0    pending 6
-Run    ok 1840 changed 61   warning 12   fatal 1    unreachable 0
+Task   ok 20/5/35 changed 3    skipped 5    fatal 1    unreachable 0    ignored 0
+Run    ok 1840    changed 61   warning 12   fatal 1    unreachable 0
 ──────────────────────────────────────────────────────────────────────────────────
-HOST      F   W   C  LAST
-web-02    1   0   2  F firewall - Deploy the firewall rules: ...
-web-01    0   2   5  W lvm - pvcreate / pvresize: Rescan path does not exist ...
-db-01     0   0   7  C firewall - Deploy the firewall rules
-app-01    0   0   0  O firewall - Deploy the firewall rules
+HOST      F   W   C    O  LAST WORST
+web-02    1   0   2   48  F firewall - Deploy the firewall rules: ...
+web-01    0   2   5   61  W lvm - pvcreate / pvresize: Rescan path does not exist ...
+db-01     0   0   7   59  C firewall - Deploy the firewall rules
+app-01    0   0   0   66  O firewall - Deploy the firewall rules
 ```
+
+The progress bar counts the tasks of the play that are known when it starts, after `--tags` and `--skip-tags` are applied, and is drawn in reverse video on a color terminal. The estimated remaining time (ETA) assumes that the steps left take as long on average as the steps so far, so it gets more accurate towards the end of the play. A task included with `include_tasks` or `include_role` is one step, so the bar stands still while the tasks it includes run. Handlers and `rescue` sections are not counted. The bar measures tasks, not time, and starts over with every batch of `serial`.
 
 At the end of the run, the details follow in the format of the [compact output](#compact-output), but only for the tasks with changes, warnings or failures, then the recap and the report. Without a terminal (log file, pipe, CI), with `--verbose`, or on a terminal smaller than 65 columns and 12 lines, it behaves exactly like `linuxfabrik.lfops.compact`. Enable it like the compact output, with `linuxfabrik.lfops.dashboard` as the stdout callback. See `ansible-doc --type callback linuxfabrik.lfops.dashboard` for details.
 
