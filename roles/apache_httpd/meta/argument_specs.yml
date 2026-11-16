@@ -124,7 +124,7 @@ argument_specs:
       apache_httpd__conf_log_level:
         type: 'str'
         required: false
-        default: 'warn'
+        default: 'notice core:info'
         description: >-
           Verbosity of the error log, optionally per module, for example
           `notice core:info` (`LogLevel`).

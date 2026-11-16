@@ -175,6 +175,7 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 * See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
 * Type: String.
 * Default: `'syslog:local1'`
+* Deviates from the upstream default `logs/error_log` on RHEL and `${APACHE_LOG_DIR}/error.log` on Debian / Ubuntu: the CIS Benchmark wants the server's own log in syslog, where it is processed and monitored along with the system logs, while each vHost keeps its own log file.
 
 `apache_httpd__conf_graceful_shutdown_timeout`
 
@@ -236,7 +237,8 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 
 * See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel).
 * Type: String.
-* Default: `'warn'`
+* Default: `'notice core:info'`
+* Deviates from the upstream default `warn`, as the CIS Benchmark recommends: through syslog the level also applies to the lines Apache writes when it starts, reloads and stops, which `warn` drops, and `core:info` logs requests for files that do not exist.
 
 `apache_httpd__conf_max_keep_alive_requests`
 
@@ -279,7 +281,7 @@ apache_httpd__conf_limit_request_body: 102400
 apache_httpd__conf_limit_request_field_size: 8190
 apache_httpd__conf_limit_request_fields: 100
 apache_httpd__conf_limit_request_line: 8190
-apache_httpd__conf_log_level: 'warn'
+apache_httpd__conf_log_level: 'notice core:info'
 apache_httpd__conf_max_keep_alive_requests: 500
 apache_httpd__conf_server_name: 'localhost'
 apache_httpd__conf_timeout: 10

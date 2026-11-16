@@ -193,12 +193,19 @@
         + (apache_httpd__placeholder_certificates__combined_var | map(attribute="key_path") | product(["0700"]) | list))
         | unique }}'
 
-  # openssl writes the key with mode 0600 (verified with OpenSSL 1.1.1 on RHEL 8)
-  - name: 'openssl req -x509 -newkey ec -subj /CN=... -keyout <name>.key -out <name>.crt'
+  # openssl writes the key with mode 0600 (verified with OpenSSL 1.1.1 on RHEL 8). By default
+  # `req -x509` applies the `v3_ca` section of openssl.cnf, which marks the certificate
+  # `CA:TRUE`, and mod_ssl warns on every start that the server certificate is a CA certificate
+  # (AH01906, `ssl_check_public_cert()` in ssl_engine_init.c). `-extensions v3_req` gives
+  # `CA:FALSE` on every supported platform, verified with OpenSSL 1.1.1k on Rocky 8 up to 3.5 on
+  # Rocky 10, Debian 13 and Ubuntu 26.04. `-addext 'basicConstraints=critical,CA:FALSE'` does not:
+  # OpenSSL 1.1.1 adds it next to the one from `v3_ca`, so the certificate carries both.
+  - name: 'openssl req -x509 -newkey ec -subj /CN=... -extensions v3_req -keyout <name>.key -out <name>.crt'
     ansible.builtin.command:
       cmd: >-
         openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 -nodes -days 365
         -subj '/CN={{ item["name"] }}'
+        -extensions 'v3_req'
         -keyout '{{ item["key_path"] }}/{{ item["name"] }}.key'
         -out '{{ item["cert_path"] }}/{{ item["name"] }}.crt'
       creates: '{{ item["cert_path"] }}/{{ item["name"] }}.crt'
