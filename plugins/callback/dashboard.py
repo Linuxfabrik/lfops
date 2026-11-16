@@ -195,14 +195,17 @@ def hms(seconds):
 
 def eta(step, total, play_start, step_start, now):
     """The remaining time of a play, or None before the first step is done. The
-    time the finished steps took per step, times the steps left, less the time the
-    running step already took. It gets more accurate towards the end of the play.
+    time the finished steps took per step, times the steps after the running one,
+    plus what is left of that step's share. A step that runs longer than the
+    average, like an include_tasks with dozens of tasks, does not eat into the
+    estimate for the steps after it. It gets more accurate towards the end of the
+    play.
     """
     done = step - 1
     if done < 1:
         return None
     per_step = (step_start - play_start) / done
-    return max(per_step * (total - done) - (now - step_start), 0)
+    return per_step * (total - step) + max(per_step - (now - step_start), 0)
 
 
 def progress_bar(step, total, width, color=True, remaining=None):
