@@ -8,6 +8,7 @@ This role creates and manages instances (virtual machines) on [Infomaniak](https
 
 ## Known Limitations
 
+* Changing `infomaniak_vm__flavor` does not resize an existing instance, the role reports `ok` and keeps the old flavor (`openstack.cloud.server` only uses the flavor when creating the instance). Resize it manually, which reboots the instance: `openstack server resize --flavor <flavor> --wait <name>`, then `openstack server resize confirm <name>`.
 * Resizing the separate boot volume currently does not seem to work (it should, according to the documentation). Resizing via the WebGUI works without reboot / downtime.
 
 
@@ -57,6 +58,7 @@ Manual steps:
 `infomaniak_vm__flavor`
 
 * The flavor for the instance. This defines the amount of CPU cores, RAM and disk space. The possible options can be obtained using `openstack flavor list`.
+* Only applied when the instance is created, see [Known Limitations](#known-limitations).
 * Type: String.
 
 `infomaniak_vm__image`
