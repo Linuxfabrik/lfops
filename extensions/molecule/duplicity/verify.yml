@@ -160,13 +160,14 @@
         - '/var/tmp/molecule-restore-latest'
         - '/var/tmp/molecule-restore-old'
 
-    - name: 'mkdir /srv/duba-molecule/plain /srv/duba-molecule/divided/alice/files'
+    - name: 'mkdir /srv/duba-molecule/plain /srv/duba-molecule/divided/{alice/files,excluded}'
       ansible.builtin.file:
         path: '{{ item }}'
         state: 'directory'
         mode: 0o755
       loop:
         - '/srv/duba-molecule/divided/alice/files'
+        - '/srv/duba-molecule/divided/excluded'
         - '/srv/duba-molecule/plain'
 
     - name: 'Create the test data, plain/file.txt in v1'

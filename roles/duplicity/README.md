@@ -186,7 +186,7 @@ duplicity__swift_login:
 
     * `excludes`:
 
-        * Optional. List of patterns that should not be included in the backup for this `path`.
+        * Optional. List of patterns that should not be included in the backup for this `path`. With `divide: true`, each first-level entry gets only the absolute patterns that can match below it, so `/data/archive` excludes the entry `archive` without breaking the backups of the other entries.
         * Type: List of strings.
         * Default: `[]`
 
