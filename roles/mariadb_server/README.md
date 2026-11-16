@@ -659,9 +659,10 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 
 `mariadb_server__cnf_innodb_linux_aio__group_var` / `mariadb_server__cnf_innodb_linux_aio__host_var`
 
-* [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_linux_aio). Set it to `'aio'` where `kernel.io_uring_disabled` keeps `auto` from using io_uring, otherwise MariaDB logs a warning on every start before it falls back to libaio. Needs MariaDB 10.11.14, 11.4.8 or 11.8.3 or newer in the respective series; older releases ignore it with a warning in the MariaDB error log. The role does not write it for MariaDB 10.6.
+* [mariadb.com](https://mariadb.com/docs/server/server-usage/storage-engines/innodb/innodb-system-variables#innodb_linux_aio). `auto` uses io_uring where the kernel allows it and falls back to libaio otherwise, `io_uring` turns native AIO off entirely where the kernel blocks io_uring. Needs MariaDB 10.11.14, 11.4.8 or 11.8.3 or newer in the respective series; older releases ignore it with a warning in the MariaDB error log. The role does not write it for MariaDB 10.6.
 * Type: String. One of `auto`, `aio`, `io_uring`.
-* Default: `'auto'`
+* Default: `'aio'` on RHEL, `'auto'` on Debian / Ubuntu
+* Deviates from the upstream default `auto` on RHEL: the RHEL 9 and 10 kernels block io_uring (`kernel.io_uring_disabled = 2`), so a MariaDB from the MariaDB repository logs a warning on every start before it falls back to libaio, which `aio` uses right away. Set it to `'auto'` on a host where io_uring is enabled on purpose.
 
 `mariadb_server__cnf_innodb_log_buffer_size__group_var` / `mariadb_server__cnf_innodb_log_buffer_size__host_var`
 

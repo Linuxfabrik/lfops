@@ -254,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:mariadb_server**: MariaDB from the MariaDB repository no longer warns `io_uring_queue_init() failed with EPERM` on every start on RHEL 9 and 10.
 * **role:apache_httpd**: Apache no longer warns `server certificate is a CA certificate` (AH01906) while it runs on a self-signed placeholder certificate.
 * **role:infomaniak_vm**: Ports with a `fixed_ip` no longer show up as changed on every run.
 * **role:duplicity**: An exclude of a source with `divide: true` no longer fails the backups of all its other entries with exit status 14.
