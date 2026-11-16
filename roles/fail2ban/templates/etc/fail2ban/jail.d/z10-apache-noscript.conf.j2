@@ -1,10 +1,9 @@
 # {{ ansible_managed }}
-# 2026090901
+# 2026111601
 
+# The jail from jail.conf, with its port, maxretry, findtime and bantime. Only
+# the log path is set: jail.conf reads /var/log/httpd/*error_log, while the
+# virtual hosts of the apache_httpd role log to /var/log/httpd/<name>-error.log.
 [apache-noscript]
-bantime  = 1d
-enabled  = true
-findtime = 1m
-logpath  = /var/log/httpd/*access?log
-maxretry = 1
-port     = http,https
+enabled = true
+logpath = /var/log/httpd/*error?log

@@ -34,7 +34,30 @@ fail2ban__filters__group_var:
       failregex = ^.*molecule-fail2ban-probe from <HOST>$
       journalmatch = _SYSTEMD_UNIT=sshd.service
 
+# The jails fail2ban ships for Apache, which the role only points at the log files of the
+# apache_httpd role. prepare.yml creates such a pair of log files.
 fail2ban__jails__group_var:
+  - filename: 'z10-apache-auth'
+    state: 'present'
+    template: 'apache-auth'
+  - filename: 'z10-apache-badbots'
+    state: 'present'
+    template: 'apache-badbots'
+  - filename: 'z10-apache-botsearch'
+    state: 'present'
+    template: 'apache-botsearch'
+  - filename: 'z10-apache-fakegooglebot'
+    state: 'present'
+    template: 'apache-fakegooglebot'
+  - filename: 'z10-apache-nohome'
+    state: 'present'
+    template: 'apache-nohome'
+  - filename: 'z10-apache-noscript'
+    state: 'present'
+    template: 'apache-noscript'
+  - filename: 'z10-apache-overflows'
+    state: 'present'
+    template: 'apache-overflows'
   - filename: 'z20-molecule-journal'
     state: 'present'
     template: 'raw'
