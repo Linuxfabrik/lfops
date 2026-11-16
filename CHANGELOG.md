@@ -252,6 +252,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:infomaniak_vm**: Ports with a `fixed_ip` no longer show up as changed on every run.
 * **role:duplicity**: An exclude of a source with `divide: true` no longer fails the backups of all its other entries with exit status 14.
 * **role:duplicity**: `duba` runs fewer backups at the same time when the temp dir is too small for all of them, instead of failing with exit status 35 on hosts with a small `/tmp`.
 * **role:lynis**: The daily audit no longer empties the AIDE report on RHEL 8, which made the aide-logfile monitoring plugin warn every morning until the next AIDE check.

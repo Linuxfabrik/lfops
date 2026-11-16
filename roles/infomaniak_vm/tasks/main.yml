@@ -72,6 +72,7 @@
       ansible_become: false # noqa var-naming[pattern]
     loop: '{{ infomaniak_vm__networks }}'
     when: 'infomaniak_vm__state != "absent"'
+    register: 'infomaniak_vm__networks_result'
 
   - name: 'Manage the subnets for the VM'
     openstack.cloud.subnet:
@@ -98,6 +99,44 @@
       - 'infomaniak_vm__state != "absent"'
       - 'item["cidr"] is defined'
 
+  # Neutron reports every fixed IP of a port together with its `subnet_id`, and the
+  # port module compares `fixed_ips` literally, so a port given only an `ip_address`
+  # is updated (and reported as changed) on every run. Look up the subnet of each
+  # fixed IP to pass the complete specification.
+  - name: 'Get the subnets of the networks with a fixed IP'
+    openstack.cloud.subnets_info:
+      auth:
+        auth_url: 'https://api.pub1.infomaniak.cloud/identity/v3'
+        username: '{{ infomaniak_vm__api_username }}'
+        password: '{{ infomaniak_vm__api_password }}'
+        project_id: '{{ infomaniak_vm__api_project_id }}'
+        project_name: '{{ infomaniak_vm__api_username }}'
+        user_domain_name: 'default'
+      region_name: '{{ infomaniak_vm__region_name }}'
+      filters:
+        network_id: '{{ item["id"] }}'
+    delegate_to: 'localhost'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+    loop: '{{ infomaniak_vm__networks_result["results"] | d([]) }}'
+    loop_control:
+      label: 'name={{ item["item"]["name"] }}'
+    when:
+      - 'infomaniak_vm__state != "absent"'
+      # the network module does not support check mode, so there is no id then
+      - 'item["id"] is defined'
+      - 'item["item"]["fixed_ip"] is defined'
+    register: 'infomaniak_vm__subnets_result'
+
+  - name: 'Map the networks to the subnet containing their fixed IP'
+    ansible.builtin.set_fact:
+      infomaniak_vm__fixed_ip_subnet_ids: '{{ infomaniak_vm__fixed_ip_subnet_ids | d({}) | combine({item[0]["item"]["item"]["name"]: item[1]["id"]}) }}'
+    loop: '{{ infomaniak_vm__subnets_result["results"] | d([]) | subelements("subnets", skip_missing=true) }}'
+    loop_control:
+      label: 'name={{ item[0]["item"]["item"]["name"] }}, subnet={{ item[1]["cidr"] }}'
+    when: 'item[1]["cidr"] | ansible.utils.network_in_network(item[0]["item"]["item"]["fixed_ip"])'
+
   - name: 'Manage the ports for the VM'
     openstack.cloud.port:
       auth:
@@ -110,7 +149,7 @@
       region_name: '{{ infomaniak_vm__region_name }}'
       name: '{{ item["port_name"] | d(infomaniak_vm__name ~ "--" ~ item["name"] ~ "--port") }}'
       network: '{{ item["name"] }}'
-      fixed_ips: '{{ [{"ip_address": item["fixed_ip"]}] if item["fixed_ip"] is defined else omit }}'
+      fixed_ips: '{{ [{"ip_address": item["fixed_ip"]} | combine({"subnet_id": infomaniak_vm__fixed_ip_subnet_ids[item["name"]]} if item["name"] in infomaniak_vm__fixed_ip_subnet_ids | d({}) else {})] if item["fixed_ip"] is defined else omit }}'
       # Infomaniak's Neutron policy forbids setting `port_security_enabled` on the public `ext-net1` network, so omit it there and let the cloud default apply. On every other network, disable port security — this is a sensible default for internal networks
       port_security_enabled: '{{ omit if item["name"] == "ext-net1" else false }}'
       # When a VM boots against a pre-created port, Neutron enforces the port's security groups, not the ones passed to `openstack.cloud.server`. Assign them here so `ext-net1` traffic is filtered. On internal networks port security is disabled, so security groups don't apply — omit to keep Neutron quiet.
