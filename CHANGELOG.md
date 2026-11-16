@@ -167,6 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd**: The server log uses `LogLevel notice core:info` instead of `warn`, as the CIS Benchmark recommends, so the start, reload and stop of Apache show up in syslog.
 * **role:aide, role:librenms, role:system_update**: Re-baselining AIDE after an update no longer starts an extra check against the new database, which only repeated the scan the re-baseline had just done. This halves the AIDE I/O load after each nightly update, while the update is still scanned and accepted right away.
 * **role:collabora**: The service account `cool` has `/sbin/nologin` as its shell instead of `/bin/bash`, so no one logs in as `cool`, which also satisfies the Lynis check HOME-9304. Use `sudo -u cool <command>` to run a command as `cool`.
 * **role:postfix**: Postfix no longer answers the SMTP `VRFY` command, so a client cannot probe for valid recipient addresses, which satisfies the Lynis check MAIL-8820. Configurable with `postfix__disable_vrfy_command`.
@@ -252,6 +253,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: Apache no longer warns `server certificate is a CA certificate` (AH01906) while it runs on a self-signed placeholder certificate.
 * **role:infomaniak_vm**: Ports with a `fixed_ip` no longer show up as changed on every run.
 * **role:duplicity**: An exclude of a source with `divide: true` no longer fails the backups of all its other entries with exit status 14.
 * **role:duplicity**: `duba` runs fewer backups at the same time when the temp dir is too small for all of them, instead of failing with exit status 35 on hosts with a small `/tmp`.

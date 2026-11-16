@@ -12,6 +12,7 @@
 # And the OWASP Core Rule Set: by an attack that the running Apache blocks, not by the rule files.
 # And the PHP handler and mod_remoteip: by the status of a request for a missing PHP file and by the
 # client address Apache logs for it.
+# And the LogLevel and the placeholder certificates: by what the running Apache wrote to the journal.
 - name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -92,6 +93,26 @@
       loop_control:
         index_var: '__molecule__index'
         label: '{{ item["name"] }}'
+
+    # The server's own log goes to syslog, where LogLevel also applies to the `notice` line Apache
+    # writes once it is up (AH00489, "resuming normal operations"); with `warn` that line is missing
+    # from the journal. Its presence also proves that the absence of AH01906 below means something:
+    # mod_ssl warns on every start about a server certificate marked as a CA, which the placeholders
+    # must not be.
+    - name: 'journalctl --unit <service> --boot'
+      ansible.builtin.command:
+        cmd: 'journalctl --unit {{ __molecule__service }} --boot --no-pager --output cat'
+      register: '__molecule__apache_httpd_journal_result'
+      changed_when: false
+      vars:
+        __molecule__service: '{{ (ansible_facts["os_family"] == "Debian") | ternary("apache2.service", "httpd.service") }}'
+
+    - name: 'Assert Apache logs its start to the journal and does not take a placeholder for a CA certificate'
+      ansible.builtin.assert:
+        that:
+          - '"AH00489" in __molecule__apache_httpd_journal_result["stdout"]'
+          - '"AH01906" not in __molecule__apache_httpd_journal_result["stdout"]'
+        fail_msg: '{{ __molecule__apache_httpd_journal_result["stdout_lines"] | select("search", "AH00489|AH01906") | list }}'
 
     # The role creates the document root, but nothing puts a file in it, and a request that ends in
     # 403 says nothing about which protocol carried it. DirectoryIndex resolves index.html first.
