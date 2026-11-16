@@ -6,8 +6,9 @@
 # (fail2ban__selinux__booleans__dependent_var) is consumed by the selinux role, not
 # passed into this role, so it is not declared here.
 #
-# fail2ban__service_state carries no `default` here, because its default in
-# defaults/main.yml is a Jinja2 expression, which argument_specs cannot evaluate.
+# fail2ban__jail_portscan_allowed_ports, fail2ban__jail_sshd_port and
+# fail2ban__service_state carry no `default` here, because their defaults in
+# defaults/main.yml are Jinja2 expressions, which argument_specs cannot evaluate.
 #
 # fail2ban__jail_portscan_server_ips is not declared at all. argument_specs templates
 # every declared option at role entry, and its default reads the gathered fact
@@ -93,8 +94,6 @@ argument_specs:
       fail2ban__jail_portscan_allowed_ports:
         type: 'list'
         required: false
-        default:
-          - 22
         description: 'Ports on which a connection attempt the firewall denies does not lead to a ban in the portscan jail.'
 
       fail2ban__jail_portscan_bantime:
@@ -108,6 +107,11 @@ argument_specs:
         required: false
         default: '7d'
         description: 'The ban duration for the sshd jail.'
+
+      fail2ban__jail_sshd_port:
+        type: 'str'
+        required: false
+        description: 'The port or comma-separated ports the sshd jail bans on.'
 
       fail2ban__jail_wordpress_login_bantime:
         type: 'str'

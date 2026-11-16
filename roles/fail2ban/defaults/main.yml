@@ -33,11 +33,13 @@ fail2ban__jail_default_action: |-
 fail2ban__jail_default_banaction: 'iptables-multiport'
 fail2ban__jail_default_ignoreip: []
 fail2ban__jail_default_rocketchat_hook: ''
-fail2ban__jail_portscan_allowed_ports:
-  - 22
+# sshd__port: d() covers plays without the sshd role, whose defaults are only loaded when
+# it is part of the play. the same applies to fail2ban__jail_sshd_port.
+fail2ban__jail_portscan_allowed_ports: '{{ [sshd__port | d(22)] }}'
 fail2ban__jail_portscan_bantime: '8h'
 fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
 fail2ban__jail_sshd_bantime: '7d'
+fail2ban__jail_sshd_port: '{{ sshd__port | d(22) }}'  # upstream default: ssh
 fail2ban__jail_wordpress_login_bantime: '8h'
 fail2ban__jail_wordpress_login_findtime: '10m'
 fail2ban__jail_wordpress_login_maxretry: 5
