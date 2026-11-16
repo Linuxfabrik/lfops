@@ -33,12 +33,9 @@
   changed_when: true
 
 # the database now describes the host as it is, so the finding of the last check no longer
-# applies, and the report `aide --update` wrote to /var/log/aide/aide.log is replaced by a check
-# against the new database. --no-block: the run does not wait for the check.
+# applies. no check against the new database: `aide --update` already compared the whole file
+# system and wrote that report to /var/log/aide/aide.log, and a check right after it scans
+# everything again only to find no differences. aide-logfile reports an accepted update as OK.
 - name: 'systemctl reset-failed aidecheck.service' # noqa command-instead-of-module (no module resets a failed unit)
   ansible.builtin.command: 'systemctl reset-failed aidecheck.service'
-  changed_when: true
-
-- name: 'systemctl start --no-block aidecheck.service' # noqa command-instead-of-module (the service module cannot start without waiting)
-  ansible.builtin.command: 'systemctl start --no-block aidecheck.service'
   changed_when: true

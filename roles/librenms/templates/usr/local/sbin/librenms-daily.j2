@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026110901
+# 2026111601
 
 # Runs the daily maintenance script of LibreNMS, which also updates its code (git, composer and
 # pip below /opt/librenms), and keeps the AIDE database in step with that update, the way
@@ -67,10 +67,18 @@ else
         log "aide --update exited with ${update_rc}; the database was not re-baselined"
     else
         mv "$AIDE_DB_NEW" "$AIDE_DB"
+        # no check against the new database: `aide --update` already compared the whole file
+        # system and wrote that report, and a check right after it scans everything again
+        # only to find no differences. aide-logfile reports an accepted update as OK.
+        # reset-failed, since the clean check above ran outside aidecheck.service, whose last
+        # run may still have failed on drift that has been reverted since.
+        systemctl reset-failed "${AIDE_UNIT}.service" 2> /dev/null
+        exit 0
     fi
 fi
 
-# a check against the current database, so that the report and the state of the unit reflect
-# the host again. --no-block, since it waits for the lock this script holds until it exits.
+# a check through aidecheck.service after a finding or a failed update, so that the state of
+# the unit reflects the host again. --no-block, since it waits for the lock this script holds
+# until it exits.
 systemctl restart --no-block "${AIDE_UNIT}.service"
 exit 0
