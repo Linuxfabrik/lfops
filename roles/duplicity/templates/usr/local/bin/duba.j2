@@ -20,7 +20,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026102905'
+__version__ = '2026111601'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -50,6 +50,9 @@ COMMANDS = ['backup', 'exec', 'restore']
 # The size of a backup volume in MB. It is also the default of duplicity, which a restore
 # uses for its check of the temp dir, see warn_on_low_space().
 VOLSIZE_MB = 200
+
+# The number of volumes a duplicity 3.x backup builds and uploads at the same time.
+BACKUP_CONCURRENCY = 2
 
 # The secret environment variables (SWIFT_PASSWORD, FTP_PASSWORD) are not in the config file,
 # but in this systemd credential, see load_credential().
@@ -265,7 +268,7 @@ class Duba:
             cmd += ['backup']
 
         if self.duplicity_version >= (3, 0, 0):
-            cmd += ['--concurrency', '2']
+            cmd += ['--concurrency', f'{BACKUP_CONCURRENCY}']
         else:
             cmd += ['--asynchronous-upload']
         cmd += self.archive_dir_options()
@@ -324,8 +327,8 @@ class Duba:
 
     def run_cmd_in_background(self, cmd, env, running_procs, max_procs, failed_retcs):
         # start duplicity in the background
-        # * start n processes: start up to (cpu-cores + 1) nice processes to backup as
-        #   much as possible
+        # * start n processes: start up to max_procs nice processes (cpu-cores + 1, fewer for
+        #   a backup if the temp dir lacks space) to backup as much as possible
         # * be as nice as possible: only when the machine is busy, the script is slower
         # * be asynchronous: uploading volumes while packaging new ones saves a lot of time
         # * use compression: saves money on external storages; bottleneck is always your uplink
@@ -342,11 +345,11 @@ class Duba:
             self.logger.exception(f'Unknown error "{e}" while calling command "{cmd}"')
             sys.exit(207)
 
-        # don't start more than max cpu processes
+        # don't start more than max_procs processes
         while True:
             time.sleep(0.5)
             self.reap_finished_procs(running_procs, failed_retcs)
-            if len(running_procs) <= max_procs:
+            if len(running_procs) < max_procs:
                 # allow launching of another process
                 break
 
@@ -384,6 +387,62 @@ class Duba:
         return filelist
 
 
+    def temp_dir(self, env):
+        # duplicity builds its volumes in the temp dir of its own environment, which
+        # Python's tempfile takes from TMPDIR, TEMP or TMP, else /tmp
+        for name in ('TMPDIR', 'TEMP', 'TMP'):
+            if env.get(name):
+                return env[name]
+        return '/tmp'
+
+
+    def free_mb(self, path):
+        stat = os.statvfs(path)
+        return stat.f_bavail * stat.f_frsize // 2**20
+
+
+    def backup_procs_fitting_temp_dir(self, env, max_procs):
+        """Return how many backups may run at the same time, at most `max_procs`.
+
+        On start, every duplicity backup checks the free space in its temp dir and aborts
+        with exit code 35 if it has less than (concurrency + 2) volumes plus 30% of one,
+        (concurrency + 1) before duplicity 3.0.1. --asynchronous-upload counts as a
+        concurrency of 1. The backups running at the same time share the temp dir, so a
+        backup that starts later finds less space than the first one. Verified against the
+        duplicity source, rel.0.8.23 to rel.3.2.3.dev2 (check_resources()).
+        """
+        if self.duplicity_version >= (3, 0, 1):
+            volumes = BACKUP_CONCURRENCY + 2
+        elif self.duplicity_version >= (3, 0, 0):
+            volumes = BACKUP_CONCURRENCY + 1
+        else:
+            volumes = 1 + 1
+        need_mb = int((volumes + 0.3) * VOLSIZE_MB)
+        tempdir = self.temp_dir(env)
+        try:
+            free_mb = self.free_mb(tempdir)
+        except OSError as e:
+            # duplicity reports this itself
+            self.logger.warning(f'Cannot get the free space of {tempdir}: {e}')
+            return max_procs
+        fitting = free_mb // need_mb
+        if fitting >= max_procs:
+            return max_procs
+        if fitting == 0:
+            self.logger.error(
+                f'{tempdir} has {free_mb} MB free, a duplicity backup needs {need_mb} MB'
+                f' there and aborts with exit code 35. Free up space, or set TMPDIR in'
+                f' the env of the config file to another dir.'
+            )
+            return 1
+        # the backups take longer, but succeed, so nothing to act on
+        self.logger.info(
+            f'Throttled to {fitting} instead of {max_procs} backups at the same time:'
+            f' {tempdir} has {free_mb} MB free, a duplicity backup needs {need_mb} MB there'
+        )
+        return fitting
+
+
     def do_backup(self):
         """Do a massive parallel backup using duplicity and swift as backend. After that, delete
            all backups older than the given retention time.
@@ -394,6 +453,7 @@ class Duba:
         # count the number of logical processors to limit number of processes (code taken from psutil)
         cpu_count = min(os.sysconf('SC_NPROCESSORS_ONLN'), 6)
         env = self.set_env(self.config.get('env', {}))
+        backup_procs = self.backup_procs_fitting_temp_dir(env, cpu_count + 1)
         backup_failed_retcs = []
         cleanup_failed_retcs = []
 
@@ -417,7 +477,7 @@ class Duba:
                 self.logger.info(f"Running: {' '.join(cmd)}")
 
                 self.run_cmd_in_background(
-                    cmd, env, running_procs, cpu_count, backup_failed_retcs
+                    cmd, env, running_procs, backup_procs, backup_failed_retcs
                 )
 
         # wait here for all processes to finish
@@ -443,7 +503,7 @@ class Duba:
                 self.logger.info(f"Running: {' '.join(cmd)}")
 
                 self.run_cmd_in_background(
-                    cmd, env, running_procs, cpu_count, cleanup_failed_retcs
+                    cmd, env, running_procs, cpu_count + 1, cleanup_failed_retcs
                 )
 
 
@@ -507,7 +567,7 @@ class Duba:
         return source, os.path.join(source.get('path'), entry), rest
 
 
-    def warn_on_low_space(self, path, target):
+    def warn_on_low_space(self, path, target, env):
         # Only warnings: the restore goes into its own directory, so running out of space
         # does not harm the live data. The local copy, if there still is one, is the only size
         # estimate there is, since the duplicity metadata does not hold the file sizes.
@@ -535,12 +595,11 @@ class Duba:
         # Verified against the duplicity source, rel.0.8.23 to rel.3.2.1 (check_resources()).
         volumes = 2 if self.duplicity_version >= (3, 0, 1) else 1
         need_mb = int((volumes + 0.3) * VOLSIZE_MB)
-        tempdir = tempfile.gettempdir()
-        stat = os.statvfs(tempdir)
-        free = stat.f_bavail * stat.f_frsize
-        if free < need_mb * 2**20:
+        tempdir = self.temp_dir(env)
+        free_mb = self.free_mb(tempdir)
+        if free_mb < need_mb:
             self.logger.warning(
-                f'{tempdir} has {free // 2**20} MB free, duplicity needs {need_mb} MB there'
+                f'{tempdir} has {free_mb} MB free, duplicity needs {need_mb} MB there'
                 f' and will abort with exit code 35 (set TMPDIR to use another dir)'
             )
 
@@ -588,9 +647,9 @@ class Duba:
             sys.exit(0)
 
         os.makedirs(os.path.dirname(restore_path), exist_ok=True)
-        self.warn_on_low_space(path, os.path.dirname(restore_path))
-        self.logger.info(f"Running: {' '.join(cmd)}")
         env = self.set_env(self.config.get('env', {}))
+        self.warn_on_low_space(path, os.path.dirname(restore_path), env)
+        self.logger.info(f"Running: {' '.join(cmd)}")
         try:
             retc = subprocess.run(cmd, env=env).returncode
         except OSError as e:
