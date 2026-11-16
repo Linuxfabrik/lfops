@@ -261,7 +261,10 @@ class TestProgress(unittest.TestCase):
         self.assertEqual(_module.eta(7, 21, 100, 160, 164), 146)
         # no step done yet
         self.assertIsNone(_module.eta(1, 21, 100, 100, 130))
-        # a step that takes longer than estimated does not go below zero
+        # a step that takes longer than the average, like a large include, keeps
+        # the estimate for the 14 steps after it
+        self.assertEqual(_module.eta(7, 21, 100, 160, 460), 140)
+        # and the last step does not go below zero
         self.assertEqual(_module.eta(21, 21, 0, 200, 900), 0)
 
 
