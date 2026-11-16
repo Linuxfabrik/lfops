@@ -141,7 +141,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Ports on which a connection attempt that the firewall denies does not lead to a ban in the portscan jail. The jail only sees packets the firewall denied, so a port that is open to everyone never triggers it, whether it is listed or not. List the ports that the firewall opens to some sources only, such as SSH restricted to an admin network, so that others trying them are blocked without being banned. The ports are matched exactly and apply to TCP and UDP alike, so `22` exempts port 22 and not 2222. An empty list exempts no port.
 * Type: List of numbers.
-* Default: `[22]`
+* Default: `'{{ [sshd__port | d(22)] }}'`, the port the [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd) role configures
 
 `fail2ban__jail_portscan_bantime`
 
@@ -160,6 +160,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * The ban duration for the sshd jail.
 * Type: String.
 * Default: `'7d'`
+
+`fail2ban__jail_sshd_port`
+
+* The port the sshd jail bans on, or several as a comma-separated list such as `'22,2222'`. Takes the port the [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd) role configures.
+* Type: String.
+* Default: `'{{ sshd__port | d(22) }}'`
+* Deviates from the upstream default `ssh` (port 22): a ban only blocks the ports listed here, so on a host where sshd listens on another port it would have no effect.
 
 `fail2ban__jail_wordpress_login_bantime`
 
@@ -245,12 +252,13 @@ fail2ban__jail_default_ignoreip:
   - '192.0.2.1/32' # ansible deployment host
 fail2ban__jail_default_rocketchat_hook: ''
 fail2ban__jail_portscan_allowed_ports:
-  - 22
+  - 22532
 fail2ban__jail_portscan_bantime: '8h'
 fail2ban__jail_portscan_server_ips:
   - '192.0.2.5'
   - '198.51.100.100'
 fail2ban__jail_sshd_bantime: '7d'
+fail2ban__jail_sshd_port: '22532'
 fail2ban__jail_wordpress_login_bantime: '8h'
 fail2ban__jail_wordpress_login_findtime: '10m'
 fail2ban__jail_wordpress_login_maxretry: 5

@@ -99,9 +99,9 @@
 
     # Same approach for the portscan filter, whose jail reads the kernel log of a firewall this
     # host does not run. The filter gets its ports and addresses from the jail, so the sample
-    # lines are fed with the same parameters the role default produces (allowed port 22) unless a
-    # case sets its own. What is asserted is which packet counts as a scan: one that opens a
-    # connection, on a port that is not allowed. Reply traffic of a TCP connection the firewall no
+    # lines are fed with allowed port 22, what the role default gives on a host with sshd on port
+    # 22, unless a case sets its own. What is asserted is which packet counts as a scan: one that
+    # opens a connection, on a port that is not allowed. Reply traffic of a TCP connection the firewall no
     # longer tracks and ICMP errors must not match, otherwise the jail bans the servers a local
     # proxy talks to.
     - name: 'fail2ban-regex against a {{ item["label"] }}'
@@ -181,6 +181,35 @@
       ansible.builtin.assert:
         that: '__molecule__fail2ban_sshd_bantime_result["stdout"] | int == __molecule__fail2ban_sshd_bantime_seconds'
         fail_msg: 'the sshd bantime is {{ __molecule__fail2ban_sshd_bantime_result["stdout"] }}s, expected {{ __molecule__fail2ban_sshd_bantime_seconds }}s ({{ fail2ban__jail_sshd_bantime }})'
+
+    # The port is what the banaction later puts into the iptables rule. The rule itself only
+    # appears with the first ban (iptables.conf has family-conditional sections, so fail2ban sets
+    # actionstart_on_demand), so the port is read from the running action instead. Without the
+    # port line in the jail, the action falls back to the `ssh` of jail.conf, which is port 22.
+    # sshd__port is set in install/inventory, and fail2ban__jail_sshd_port derives from it.
+    - name: 'fail2ban-client get sshd action {{ fail2ban__jail_default_banaction }} port'
+      ansible.builtin.command: 'fail2ban-client get sshd action {{ fail2ban__jail_default_banaction }} port'
+      register: '__molecule__fail2ban_sshd_port_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the sshd jail bans on the configured port'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_sshd_port_result["stdout"] | trim == sshd__port | string'
+        fail_msg: 'the sshd jail bans on {{ __molecule__fail2ban_sshd_port_result["stdout"] }}, expected {{ sshd__port }}'
+
+    # The allowed ports end up in the failregex of the running portscan jail, as the negative
+    # lookahead `DPT=(?!(?:<ports>)\b)`, so a port sshd listens on is never counted as a scan.
+    - name: 'fail2ban-client get portscan failregex'
+      ansible.builtin.command: 'fail2ban-client get portscan failregex'
+      register: '__molecule__fail2ban_portscan_failregex_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the portscan jail exempts the sshd port'
+      ansible.builtin.assert:
+        that: '("DPT=(?!(?:" ~ sshd__port ~ ")\\b)") in __molecule__fail2ban_portscan_failregex_result["stdout"]'
+        fail_msg: 'the portscan jail does not exempt port {{ sshd__port }}: {{ __molecule__fail2ban_portscan_failregex_result["stdout"] }}'
 
     # fail2ban reads jail.d alphabetically, so the role's z00-defaults.conf has to win over the
     # 00-firewalld.conf that the fail2ban-firewalld package ships, otherwise every jail would ban

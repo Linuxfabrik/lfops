@@ -14,6 +14,13 @@ fail2ban__jail_default_banaction: 'iptables-multiport'
 # the inventory asked for" apart from "the running server happens to use the default".
 fail2ban__jail_sshd_bantime: '3h'
 
+# The sshd and portscan jails take their port from sshd__port by default. Deliberately not 22, so
+# verify.yml can tell "the jails follow sshd__port" apart from "the jails use a hard-coded 22".
+# The sshd role is skipped, otherwise it would move sshd away from the port Molecule connects
+# to; the jails do not care whether sshd actually listens on the port they are given.
+fail2ban__skip_sshd: true
+sshd__port: 2222
+
 # A filter and a jail defined entirely from the inventory, which exercises the raw template and
 # the combine_lod merge over the role defaults. Both read the journal instead of a log file, so
 # the jail loads on a host that has neither Apache nor a logging firewall - the two things the

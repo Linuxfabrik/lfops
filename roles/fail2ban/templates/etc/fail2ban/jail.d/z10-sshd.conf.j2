@@ -1,8 +1,9 @@
 # {{ ansible_managed }}
-# 2022070401
+# 2026111601
 
 [sshd]
 bantime  = {{ fail2ban__jail_sshd_bantime }}
 enabled  = true
 findtime = 15m
 maxretry = 3
+port     = {{ fail2ban__jail_sshd_port }}
