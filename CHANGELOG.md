@@ -251,6 +251,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:lynis**: The daily audit no longer empties the AIDE report on RHEL 8, which made the aide-logfile monitoring plugin warn every morning until the next AIDE check.
+* **role:aide**: The check no longer reports renewed certificates in `/etc/pki/tls/certs` and `/etc/ssl/certs`, such as those of acme.sh every 60 days, while their permissions, the private keys and the trust bundles stay fully checked.
 * **role:grav, playbook:setup_grav**: OPcache no longer fills up with recompiled copies of Grav's file list caches and no longer throws away its whole cache every few days.
 * **role:repo_epel**: On Rocky 10 and RHEL 10, EPEL follows the minor release of the host, so the daily system update no longer fails on EPEL packages built for a RHEL minor release the host does not have yet.
 * **role:mariadb_server**: With `skip_name_resolve`, the `proxies_priv` warning in the MariaDB error log also goes away on servers that carry the entry for `root` instead of `mysql`.

@@ -108,6 +108,27 @@
         mode: 0o644
 
 
+# Two certificates that the database has to contain from the start, so that verify.yml can renew
+# one of them, which the default rule '<certificate directory>/[^/]+\.crt$ PERMS' does not
+# report, and change the mode of the other, which it does. The content is no real certificate,
+# aide does not parse it.
+- name: 'Deploy the probe certificates'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Deploy the probe certificates'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("/etc/pki/tls/certs", "/etc/ssl/certs") }}/{{ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop:
+        - 'lfops-molecule.crt'
+        - 'lfops-molecule-chain.crt'
+
+
 # A file on the EFI system partition that the database has to contain from the start, so that
 # verify.yml can show that the default rule '/boot/efi DATAONLY' ignores the inode numbers vfat
 # hands out anew, but still reports a changed content. No owner, group or mode: vfat has none
