@@ -258,6 +258,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: The `raw` and `redirect` vHost templates write an error and an access log like the other templates, unless the `raw` content sets its own, so fail2ban also sees requests to them, for example scanner probes against a catch-all vHost for unknown host names.
 * **role:fail2ban**: The `apache-botsearch`, `apache-nohome`, `apache-noscript` and `apache-overflows` jails read the Apache error logs. They read the access logs, which their filters never match, so they never banned.
 * **role:mariadb_server**: MariaDB from the MariaDB repository no longer warns `io_uring_queue_init() failed with EPERM` on every start on RHEL 9 and 10.
 * **role:apache_httpd**: Apache no longer warns `server certificate is a CA certificate` (AH01906) while it runs on a self-signed placeholder certificate.
