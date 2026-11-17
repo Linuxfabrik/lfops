@@ -161,6 +161,20 @@ _PLAYBOOK = """
       loop: ['x']
       when: inventory_hostname == 't-h01'
 
+    - name: 'Debug message'
+      ansible.builtin.debug:
+        msg: "linuxfabrik-{{{{ 'a' if inventory_hostname == 't-h01' else 'b' }}}}"
+
+    - name: 'Debug variable'
+      ansible.builtin.debug:
+        var: 'inventory_hostname'
+      when: inventory_hostname == 't-h01'
+
+    - name: 'Debug loop'
+      ansible.builtin.debug:
+        msg: 'linuxfabrik-{{{{ item }}}}'
+      loop: ['x', 'y']
+
     - name: 'Final failure'
       ansible.builtin.fail:
         msg: 'linuxfabrik-final'
@@ -373,6 +387,109 @@ class TestCompactOutput(unittest.TestCase):
         self.assertEqual(
             self._block('Delegated task')[-1], 'ok: all 4 hosts > localhost'
         )
+
+    def test_debug_message_is_shown_grouped_by_text(self):
+        block = self._block('Debug message')
+        self.assertEqual(block[0], '****')
+        # in the order of the host that finished first
+        self.assertEqual(
+            sorted(zip(block[1::2], block[2::2])),
+            [
+                ('ok: t-h01', '  linuxfabrik-a'),
+                ('ok: t-{h02,h03,h04}', '  linuxfabrik-b'),
+            ],
+        )
+
+    def test_debug_variable_is_shown_as_dumped_result(self):
+        self.assertEqual(
+            self._block('Debug variable')[1:],
+            [
+                'ok: t-h01',
+                '=> {',
+                '    "inventory_hostname": "t-h01"',
+                '}',
+                'skipped: t-{h02,h03,h04}',
+            ],
+        )
+
+    def test_debug_loop_is_shown_per_item(self):
+        # no "ok" line without output for the final result of the loop
+        self.assertEqual(
+            self._block('Debug loop')[1:],
+            [
+                'ok: all 4 hosts (item=x)',
+                '  linuxfabrik-x',
+                'ok: all 4 hosts (item=y)',
+                '  linuxfabrik-y',
+            ],
+        )
+
+
+class TestCompactWithoutDebugOutput(unittest.TestCase):
+    """With `display_debug_output` disabled, a debug task is a task like any other."""
+
+    @classmethod
+    def setUpClass(cls):
+        assert _ANSIBLE_PLAYBOOK, 'ansible-playbook not found'  # nosec B101
+        cls.tmp = tempfile.mkdtemp(prefix='lfops_compact_nodebug_')
+        tmp = cls.tmp
+        files = {
+            'inventory.yml': textwrap.dedent(_INVENTORY.format(python=sys.executable)),
+            'playbook.yml': (
+                "- hosts: 'all'\n  gather_facts: false\n  tasks:\n"
+                "    - name: 'Debug message'\n      ansible.builtin.debug:\n"
+                "        msg: 'linuxfabrik'\n"
+                "    - name: 'Debug loop'\n      ansible.builtin.debug:\n"
+                "        msg: 'linuxfabrik-{{ item }}'\n"
+                "      loop: ['x', 'y']\n"
+            ),
+            'ansible.cfg': '[defaults]\n',
+        }
+        for name, content in files.items():
+            with open(os.path.join(tmp, name), 'w') as f:
+                f.write(content)
+        env = dict(os.environ)
+        env.update(
+            {
+                'ANSIBLE_CALLBACK_COMPACT_DISPLAY_DEBUG_OUTPUT': 'false',
+                'ANSIBLE_CONFIG': os.path.join(tmp, 'ansible.cfg'),
+                'ANSIBLE_HOME': os.path.join(tmp, '.ansible'),
+                'ANSIBLE_LOCAL_TEMP': os.path.join(tmp, '.ansible', 'tmp'),
+                'ANSIBLE_NOCOLOR': '1',
+                'ANSIBLE_STDOUT_CALLBACK': 'linuxfabrik.lfops.compact',
+            }
+        )
+        proc = subprocess.run(  # nosec B603
+            [
+                _ANSIBLE_PLAYBOOK,
+                '--inventory',
+                os.path.join(tmp, 'inventory.yml'),
+                os.path.join(tmp, 'playbook.yml'),
+            ],
+            capture_output=True,
+            check=False,
+            cwd=tmp,
+            env=env,
+            text=True,
+        )
+        cls.output = proc.stdout + proc.stderr
+        cls.lines = proc.stdout.splitlines()
+        cls.returncode = proc.returncode
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_run_succeeds(self):
+        self.assertEqual(self.returncode, 0, self.output)
+
+    def test_debug_hosts_are_one_ok_line(self):
+        for task_name in ('Debug message', 'Debug loop'):
+            i = self.lines.index(f'Task: {task_name}')
+            self.assertEqual(
+                self.lines[i + 1 : i + 3], ['****', 'ok: all 4 hosts'], task_name
+            )
+        self.assertNotIn('linuxfabrik', self.output)
 
 
 _TERMINAL_HOSTS = 50
