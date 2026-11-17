@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **playbook:fail2ban**: Deploys the Linuxfabrik repository on RHEL 8 to 10, which serves fail2ban built from the latest upstream release, so the filters recognize attacks the EPEL build lets through, such as the path traversal attempts behind `AH10244: invalid URI path`. Skip it with `fail2ban__skip_repo_linuxfabrik`.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
 * **plugin:bitwarden_item, module:bitwarden_item**: Reach `bw serve` through a Unix socket instead of the loopback port, so its file permissions decide which local users get at the vault. Needs bw CLI 2025.9.0 or newer. Set `LFOPS_BITWARDEN_UNIX_SOCKET` to the path of the socket.
@@ -170,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.
 * **role:apache_httpd**: The server log uses `LogLevel notice core:info` instead of `warn`, as the CIS Benchmark recommends, so the start, reload and stop of Apache show up in syslog.
 * **role:aide, role:librenms, role:system_update**: Re-baselining AIDE after an update no longer starts an extra check against the new database, which only repeated the scan the re-baseline had just done. This halves the AIDE I/O load after each nightly update, while the update is still scanned and accepted right away.
 * **role:collabora**: The service account `cool` has `/sbin/nologin` as its shell instead of `/bin/bash`, so no one logs in as `cool`, which also satisfies the Lynis check HOME-9304. Use `sudo -u cool <command>` to run a command as `cool`.
@@ -256,6 +258,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:fail2ban**: The `apache-botsearch`, `apache-nohome`, `apache-noscript` and `apache-overflows` jails read the Apache error logs. They read the access logs, which their filters never match, so they never banned.
 * **role:mariadb_server**: MariaDB from the MariaDB repository no longer warns `io_uring_queue_init() failed with EPERM` on every start on RHEL 9 and 10.
 * **role:apache_httpd**: Apache no longer warns `server certificate is a CA certificate` (AH01906) while it runs on a self-signed placeholder certificate.
 * **role:infomaniak_vm**: Ports with a `fixed_ip` no longer show up as changed on every run.

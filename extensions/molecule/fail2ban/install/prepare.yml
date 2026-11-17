@@ -1,0 +1,34 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# Stands in for an Apache virtual host of the apache_httpd role, which logs to
+# /var/log/httpd/<name>-error.log and <name>-access.log. The apache-* jails only start when their
+# logpath matches a file, and the scenario does not need Apache itself: verify.yml writes the log
+# lines the jails are meant to ban on.
+- name: 'Create the log files of an Apache virtual host'
+  hosts: 'systems_under_test'
+  become: true
+  gather_facts: false
+  tasks:
+
+    - name: 'mkdir -p /var/log/httpd'
+      ansible.builtin.file:
+        path: '/var/log/httpd'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o700
+
+    - name: 'touch /var/log/httpd/molecule.example.com-{error,access}.log'
+      ansible.builtin.copy:
+        content: ''
+        dest: '/var/log/httpd/molecule.example.com-{{ item }}.log'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        force: false
+      loop:
+        - 'error'
+        - 'access'
