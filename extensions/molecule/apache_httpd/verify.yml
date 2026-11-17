@@ -13,6 +13,7 @@
 # And the PHP handler and mod_remoteip: by the status of a request for a missing PHP file and by the
 # client address Apache logs for it.
 # And the LogLevel and the placeholder certificates: by what the running Apache wrote to the journal.
+# And the logs of the raw and redirect templates: by the lines a request leaves in them.
 - name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -21,8 +22,11 @@
     # the vHost that carries one basic-auth location per htpasswd file, see group_vars
     __molecule__auth_server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
     # the vHosts that are served. group_vars also removes one, which has no document root.
-    __molecule__served_vhosts: '{{ apache_httpd__vhosts__group_var | rejectattr("state", "defined") | list
-        + (apache_httpd__vhosts__group_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list) }}'
+    # The vHosts on port 80 have no document root and no certificate.
+    __molecule__served_vhosts: '{{ (apache_httpd__vhosts__group_var | rejectattr("state", "defined") | list
+        + (apache_httpd__vhosts__group_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list))
+        | selectattr("virtualhost_port", "eq", 443) | list }}'
+    __molecule__log_dir: '{{ (ansible_facts["os_family"] == "Debian") | ternary("/var/log/apache2", "/var/log/httpd") }}'
   tasks:
 
     - name: 'Get the service facts'
@@ -446,3 +450,76 @@
           {{ __molecule__apache_httpd_curl_missing_php_result["stdout"] }},
           "{{ __molecule__apache_httpd_missing_php_log_result["stdout"] }}" and
           "{{ __molecule__apache_httpd_missing_php_access_result["stdout"] }}"
+
+    # Every request carries a marker of this run, because verify.yml runs twice and the logs keep the
+    # lines of the first run. ansible_facts["date_time"] is no marker: the facts come from the cache
+    # and stay the same in both runs.
+    - name: 'Set a marker for the requests of this run'
+      ansible.builtin.set_fact:
+        __molecule__run_marker: 'molecule={{ now(utc=true, fmt="%s%f") }}'
+
+    - name: 'curl --header "Host: <vhost>" http://127.0.0.1/<path>' # noqa command-instead-of-module (ansible.builtin.uri cannot send a path as is)
+      ansible.builtin.command: >-
+        curl --silent --path-as-is
+        --header 'Host: {{ item["host"] }}'
+        --output /dev/null
+        --write-out '%{http_code}'
+        'http://127.0.0.1{{ item["path"] }}?{{ __molecule__run_marker }}'
+      register: '__molecule__apache_httpd_curl_port80_result'
+      changed_when: false
+      loop:
+        - host: 'raw.example.com'
+          path: '/%2e%2e/%2e%2e/etc/passwd'
+          expected: '400'
+          access_log: 'raw.example.com-access.log'
+        - host: 'raw-own-log.example.com'
+          path: '/molecule-own-log'
+          expected: '301'
+          access_log: 'raw-own-log.example.com-access.log'
+        - host: 'h1.example.com'
+          path: '/molecule-redirect'
+          expected: '301'
+          access_log: 'h1.example.com.80-access.log'
+      loop_control:
+        label: '{{ item["host"] }}'
+
+    - name: 'grep --count <marker> <vhost>-access.log'
+      ansible.builtin.command: >-
+        grep --count --fixed-strings
+        '{{ __molecule__run_marker }}'
+        {{ __molecule__log_dir }}/{{ item["item"]["access_log"] }}
+      register: '__molecule__apache_httpd_port80_access_result'
+      changed_when: false
+      failed_when: false
+      loop: '{{ __molecule__apache_httpd_curl_port80_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["access_log"] }}'
+
+    - name: 'Assert every request is answered and logged exactly once in the access log of its vHost'
+      ansible.builtin.assert:
+        that:
+          - 'item["item"]["stdout"] == item["item"]["item"]["expected"]'
+          - 'item["stdout"] == "1"'
+        fail_msg: >-
+          Host: {{ item["item"]["item"]["host"] }} answered {{ item["item"]["stdout"] }}
+          (expected {{ item["item"]["item"]["expected"] }}) and left {{ item["stdout"] }} lines
+          in {{ item["item"]["item"]["access_log"] }}, expected 1
+      loop: '{{ __molecule__apache_httpd_port80_access_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["item"]["host"] }}'
+
+    # fail2ban's apache-overflows jail reads the error logs for these lines. httpd 2.4.37 (RHEL 8)
+    # logs the probe as AH00126, later releases as AH10244.
+    - name: 'grep <marker> raw.example.com-error.log'
+      ansible.builtin.command: >-
+        grep --fixed-strings '{{ __molecule__run_marker }}'
+        {{ __molecule__log_dir }}/raw.example.com-error.log
+      register: '__molecule__apache_httpd_raw_error_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the raw vHost logs the path traversal probe to its own error log'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_raw_error_result["stdout"] is search("AH00126: Invalid URI in request|AH10244: invalid URI path")'
+        fail_msg: 'expected AH00126 or AH10244 in raw.example.com-error.log, got "{{ __molecule__apache_httpd_raw_error_result["stdout"] }}"'
