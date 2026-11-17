@@ -54,7 +54,7 @@ This role deploys the BaseOS repositories, which can be used to set a custom mir
 
 `repo_baseos__security_repo_use_upstream`
 
-* Whether the Rocky Linux `security` repository always points at the upstream mirrorlist, even when `repo_baseos__mirror_url` is set. This keeps critical CVE fixes coming straight from upstream instead of a potentially lagging custom mirror. Set to `false` to make the `security` repository follow `repo_baseos__mirror_url` like the other repositories.
+* Whether the Rocky Linux `security` repository always points at upstream, even when `repo_baseos__mirror_url` is set. Upstream is `dl.rockylinux.org` itself, not the mirrorlist: the mirrors sync with a delay and every host is handed its own, so a hot-fix would reach part of the hosts hours later than the rest. This keeps critical CVE fixes coming straight from upstream instead of a potentially lagging mirror. Hosts need outbound HTTPS access to `dl.rockylinux.org`. Set to `false` to make the `security` repository follow `repo_baseos__mirror_url` like the other repositories; without a `repo_baseos__mirror_url`, it stays on `dl.rockylinux.org`.
 * Type: Bool.
 * Default: `true`
 
