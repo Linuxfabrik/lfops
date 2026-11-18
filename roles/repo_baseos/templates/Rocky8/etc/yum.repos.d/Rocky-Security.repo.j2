@@ -1,17 +1,15 @@
 # {{ ansible_managed }}
-# 2026100101
+# 2026111701
 
 # Rocky-Security.repo
 #
-# The mirrorlist system uses the connecting IP address of the client and the
-# update status of each mirror to pick current mirrors that are geographically
-# close to the client.  You should use this for Rocky updates unless you are
-# manually picking other mirrors.
+# Unlike the upstream file, the security repositories use dl.rockylinux.org instead of
+# the mirrorlist. The mirrors sync with a delay and every host is handed its own, so a
+# hot-fix would reach part of the hosts hours later than the rest. dl.rockylinux.org
+# answers with `Cache-Control: no-cache`, its caches revalidate every request against
+# the origin. The upstream mirrorlist URL is kept as a comment.
 #
-# If the mirrorlist does not work for you, you can try the commented out
-# baseurl line instead.
-#
-# Unlike the upstream file, the mirrorlist URLs carry no `$rltype`: it is empty on Rocky 8,
+# Unlike the upstream file, the commented mirrorlist URLs carry no `$rltype`: it is empty on Rocky 8,
 # and Rocky 8 releases before 8.5 do not define it, so dnf would pass it on literally and the
 # mirrorlist answers 404. Verified with rocky-repos 8.10-1.14 and on Rocky 8.3.
 
@@ -20,9 +18,9 @@ name=Rocky Linux $releasever - Security
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/8/security/x86_64/os/
 {% else %}
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever
+baseurl=https://dl.rockylinux.org/pub/rocky/8/security/$basearch/os/
 {% endif %}
-#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/security/$basearch/os/
+#mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever
 gpgcheck=1
 enabled={{ repo_baseos__security_repo_enabled__combined_var | bool | ternary(1, 0) }}
 countme=1
@@ -38,9 +36,9 @@ name=Rocky Linux $releasever - Security Debug
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/8/security/x86_64/debug/tree/
 {% else %}
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-debug
+baseurl=https://dl.rockylinux.org/pub/rocky/8/security/$basearch/debug/tree/
 {% endif %}
-#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/security/$basearch/debug/tree/
+#mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-debug
 gpgcheck=1
 enabled=0
 metadata_expire=6h
@@ -55,9 +53,9 @@ name=Rocky Linux $releasever - Security Source
 {% if repo_baseos__mirror_url is defined and repo_baseos__mirror_url | length and not (repo_baseos__security_repo_use_upstream | bool) %}
 baseurl={{ repo_baseos__mirror_url }}/rocky/8/security/source/tree/
 {% else %}
-mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-source
+baseurl=https://dl.rockylinux.org/pub/rocky/8/security/source/tree/
 {% endif %}
-#baseurl=http://dl.rockylinux.org/$contentdir/$releasever/security/source/tree/
+#mirrorlist=https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=security-$releasever-source
 gpgcheck=1
 enabled=0
 metadata_expire=6h

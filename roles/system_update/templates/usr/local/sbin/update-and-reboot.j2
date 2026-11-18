@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026111601
+# 2026111701
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -396,6 +396,7 @@ if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
     systemctl reset-failed "${AIDE_UNIT}.service" 2> /dev/null
 fi
 
+{% if system_update__mail_new_configfiles_enabled | bool %}
 # after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
 # *.dpkg-dist / *.ucf-dist on Debian). one mail per file, sent via sendmail.
 # 2> /dev/null hides messages like 'find: '/proc/26144': No such file or directory'.
@@ -418,6 +419,7 @@ find / -mount \( -name '*.rpmnew' -o -name '*.rpmsave' -o -name '*.dpkg-dist' -o
         printf '\n%s\n' "$configfile"
     } | sendmail -oi -t -f "$MAIL_FROM"
 done
+{% endif %}
 
 # any restarts needed? if so, request a reboot via the spool (do not reboot here)
 {% if ansible_facts['os_family'] == 'RedHat' %}

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:repo_baseos**: The Rocky Linux `security` repository downloads from `dl.rockylinux.org` instead of a mirror from the mirrorlist, so hot-fixes reach all hosts at the same time instead of whenever their mirror has synced. Hosts behind an egress filter need HTTPS access to `dl.rockylinux.org`.
+* **role:system_update**: The regular update lane no longer sends a mail for every config-file stub (`*.rpmnew`, `*.rpmsave`, `*.dpkg-dist`, `*.ucf-dist`) it finds. Set `system_update__mail_new_configfiles_enabled: true` to keep these mails.
 * **role:fail2ban**: The sshd jail bans on the port sshd listens on (`sshd__port`) instead of port 22, configurable with `fail2ban__jail_sshd_port`, and the portscan jail exempts that port instead of port 22 (`fail2ban__jail_portscan_allowed_ports`). On hosts where sshd listens on another port, sshd bans used to have no effect and now lock clients out, including admins who fail to log in three times within 15 minutes, and a denied connection attempt to port 22 now leads to a portscan ban. Add trusted networks to `fail2ban__jail_default_ignoreip` before updating, and list port 22 in `fail2ban__jail_portscan_allowed_ports` if it should stay exempt.
 * **role:sshd, playbook:setup_basic**: sshd turns new connections away earlier while many logins are pending (`MaxStartups 10:30:60` instead of the OpenSSH default `10:30:100`), as the CIS Benchmarks require, and `MaxStartups` is configurable with `sshd__max_startups__host_var` / `sshd__max_startups__group_var`. A `MaxStartups` set through `sshd__raw` no longer takes effect, move it to the variable. Hosts with many simultaneous SSH logins need a higher value, for example `'100:30:200'` on GitLab hosts ([#723](https://github.com/Linuxfabrik/lfops/issues/723)).
 * **role:grav, playbook:setup_grav**: The code of Grav, its configuration, pages, plugins and themes belong to `root`, so a hole in Grav or a plugin can no longer plant code in the site. The web server only writes `assets`, `backup`, `cache`, `images`, `logs`, `tmp`, `user/accounts` and `user/data`, and only these keep the SELinux type `httpd_sys_rw_content_t`. Grav, its plugins and themes are updated as `root` by `grav-selfupgrade-<instance>.timer` and `grav-update-<instance>.timer`, which replace `grav-selfupgrade.timer` and `grav-update.timer`, so several Grav sites on one host are each updated. Run other `bin/gpm` commands with `grav-gpm <installation directory> <arguments>` instead of `sudo -u apache bin/gpm`, which now fails, and deploy content below `user/` as `root`. The role no longer installs the Admin Panel, which could not save anything anymore, and drops `grav__skip_admin` and `grav__users`; it lists the Admin Panel plugins still installed at the end of the play, for you to remove. The vHost no longer accepts `POST`, and `setup_grav` no longer sets the SELinux boolean `httpd_can_network_connect`, which keeps its current value.
@@ -83,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **playbook:fail2ban**: Deploys the Linuxfabrik repository on RHEL 8 to 10, which serves fail2ban built from the latest upstream release, so the filters recognize attacks the EPEL build lets through, such as the path traversal attempts behind `AH10244: invalid URI path`. Skip it with `fail2ban__skip_repo_linuxfabrik`.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.
 * **plugin:bitwarden_item, module:bitwarden_item**: Reach `bw serve` through a Unix socket instead of the loopback port, so its file permissions decide which local users get at the vault. Needs bw CLI 2025.9.0 or newer. Set `LFOPS_BITWARDEN_UNIX_SOCKET` to the path of the socket.
@@ -168,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.
 * **role:monitoring_plugins**: The source install prepares the plugins, the library and the Python dependencies on the controller once per release, or for `dev` once per commit, instead of once per host, keeps them in `/var/tmp/lfops` for later runs, and copies them to the hosts in parallel also under Mitogen, so runs against many hosts finish much faster. With ansible-navigator, mount `/var/tmp/lfops` into the execution environment to keep them between runs.
 * **role:apache_httpd**: The server log uses `LogLevel notice core:info` instead of `warn`, as the CIS Benchmark recommends, so the start, reload and stop of Apache show up in syslog.
 * **role:aide, role:librenms, role:system_update**: Re-baselining AIDE after an update no longer starts an extra check against the new database, which only repeated the scan the re-baseline had just done. This halves the AIDE I/O load after each nightly update, while the update is still scanned and accepted right away.
@@ -218,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:apache_solr**: Downloads Solr from the Apache CDN, which is much faster than the Apache archive, and falls back to the archive for releases the CDN no longer carries.
 * **role:apache_solr**: The run aborts for a user whose password equals the username, since Solr 9.11 and newer reject such logins.
 * **role:apache_solr**: A role holding the `all` permission is allowed every request, also one that a more specific permission of another role matches first.
-* **role:apache_solr**: The Solr program files belong to `root`, as with Solr's own installation script, and files that Solr creates are no longer readable by other users.
+* **role:apache_solr**: The Solr program files belong to `root`, as with Solr's own installation script, and files that Solr creates, as well as existing log files, are no longer readable by other users.
 * **role:apache_httpd**: Bump the OWASP Core Rule Set to 4.30.0.
 * **role:apache_httpd**: The OWASP Core Rule Set is downloaded on the Ansible controller, so the target no longer needs access to GitHub.
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
@@ -255,6 +259,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:apache_httpd**: The `raw` and `redirect` vHost templates write an error and an access log like the other templates, unless the `raw` content sets its own, so fail2ban also sees requests to them, for example scanner probes against a catch-all vHost for unknown host names.
+* **role:fail2ban**: The `apache-botsearch`, `apache-nohome`, `apache-noscript` and `apache-overflows` jails read the Apache error logs. They read the access logs, which their filters never match, so they never banned.
 * **role:monitoring_plugins**: The source install also removes the Python packages that the former `pip --user` install left in `~/.local` of root and the Icinga user on Debian 12+ and Ubuntu 24.04+, where they stayed so far.
 * **role:monitoring_plugins**: With the source install, hosts with different `monitoring_plugins__version` in one play each get their own release, instead of all of them getting the release of the last host.
 * **role:mariadb_server**: MariaDB from the MariaDB repository no longer warns `io_uring_queue_init() failed with EPERM` on every start on RHEL 9 and 10.

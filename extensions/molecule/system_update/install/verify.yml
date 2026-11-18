@@ -756,6 +756,15 @@
         path: '/var/mail/root'
         state: 'absent'
 
+    # A config-file stub for the second run to find, so the assertion below that it
+    # sends no stub mail (system_update__mail_new_configfiles_enabled defaults to false)
+    # does not depend on whether the first run's updates happened to leave one behind.
+    - name: 'touch /etc/molecule-system_update.conf.rpmnew'
+      ansible.builtin.file:
+        path: '/etc/molecule-system_update.conf.rpmnew'
+        state: 'touch'
+        mode: 0o644
+
     - name: 'systemctl start update-and-reboot.service (second run, nothing left to update)' # noqa command-instead-of-module (need to run the oneshot and read its Result)
       ansible.builtin.command: 'systemctl start update-and-reboot.service'
       changed_when: false
@@ -790,9 +799,8 @@
           - '"Broken pipe" not in __molecule__update_and_reboot_journal_result["stdout"]'
           - 'not __molecule__update_request_stat_result["stat"]["exists"]'
 
-    # The config-file stub notification may still mail about the *.rpmnew / *.dpkg-dist
-    # files the first run created, so assert on the subject instead of on an empty
-    # mailbox.
+    # Assert on the subjects instead of on an empty mailbox, so the assertions do not
+    # depend on what else lands in root's mailbox.
     - name: 'stat /var/mail/root'
       ansible.builtin.stat:
         path: '/var/mail/root'
@@ -810,3 +818,15 @@
       vars:
         __molecule__updated_subject: 'System updated without Reboot'
       when: '__molecule__root_mailbox_stat_result["stat"]["exists"]'
+
+    - name: 'Assert the second run sent no config-file stub mail'
+      ansible.builtin.assert:
+        that: '__molecule__stub_subject not in (__molecule__root_mailbox_result["content"] | ansible.builtin.b64decode)'
+      vars:
+        __molecule__stub_subject: 'config-file stub found'
+      when: '__molecule__root_mailbox_stat_result["stat"]["exists"]'
+
+    - name: 'rm /etc/molecule-system_update.conf.rpmnew'
+      ansible.builtin.file:
+        path: '/etc/molecule-system_update.conf.rpmnew'
+        state: 'absent'

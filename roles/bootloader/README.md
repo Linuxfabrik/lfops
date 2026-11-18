@@ -18,6 +18,7 @@ On the Red Hat family the boot entries are written with `grubby`. Debian and Ubu
 * The change only takes effect on the next boot. When the [schedule_reboot](https://github.com/Linuxfabrik/lfops/tree/main/roles/schedule_reboot) mechanism is deployed, a changed command line requests a reboot at the next maintenance window (spool entry `bootloader`). Without it, the role only prints a message and leaves the reboot to the operator.
 * `lfops__reboot_now` makes the role apply the change in the same run instead of waiting for the window. The reboot still goes through the same mechanism, so the notification mail, the Icinga downtime and the grace period all apply, and a reboot another role requested earlier in the run is carried out together with this one. The role then waits for the host to come back before the play continues. Set it as `--extra-vars` for a single change, or in the inventory for a host group whose reboots need no window. Have a look at the [README](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__reboot_now). With the variable set on a host where the `schedule_reboot` mechanism is missing, the run aborts rather than reporting a reboot it cannot perform.
 * On the Red Hat family a kernel installed later inherits the command line from the running kernel. `kernel-install` builds the boot entry of a new kernel from `/etc/kernel/cmdline`, from `/usr/lib/kernel/cmdline`, or, when neither exists, from `/proc/cmdline` of the running kernel (verified against `/usr/lib/kernel/install.d/20-grub.install` on Rocky 9). A kernel installed between the change and the reboot therefore still comes up without the new options; run the role again afterwards. On the Debian family this cannot happen, because installing a kernel regenerates `/boot/grub/grub.cfg` from the drop-in.
+* Red Hat family 8: on a host that boots in BIOS mode, the role replaces a `/boot/grub2/grubenv` that is a symlink into the EFI System Partition with a regular copy of its target, and reports the task as changed. Boot entries there reference the command line as `options $kernelopts` and keep the value in that file, and from a BIOS boot GRUB cannot follow the symlink into the ESP, so without the copy the option would be written and never reach the kernel. Images built to boot both ways, such as the Rocky 8 GenericCloud image, have the symlink; an installed host does not. The copy keeps the current command line and survives package updates. Hosts booting in UEFI mode, and Red Hat family 9 and later, are not touched.
 * The role manages the kernel command line only. It does not add, remove or reorder boot entries, does not change the boot loader timeout, and does not manage the GRUB password.
 
 
@@ -26,7 +27,6 @@ On the Red Hat family the boot entries are written with `grubby`. Debian and Ubu
 * GRUB 2 only. Hosts booted by zipl or systemd-boot are not supported.
 * Debian family: `state: 'absent'` only drops an option from the command line this role writes. An option that comes from `/etc/default/grub` or from another drop-in stays, because the role never edits files it does not own. On the Red Hat family the same option is removed with `grubby --remove-args`.
 * the `root` option cannot be managed. `grubby` reports it on a line of its own rather than as part of the kernel command line, so the role would never see it as applied and would set it again on every run. It is rejected with an error instead. This does not apply to `initrd`, which stays on the command line.
-* Red Hat family 8: a host that boots in BIOS mode and has `/boot/grub2/grubenv` as a symlink into the EFI System Partition is rejected with an error. Boot entries there reference the command line as `options $kernelopts` and keep the value in that environment block; from a BIOS boot GRUB reads it on `/boot` and cannot follow the symlink into the ESP, so it falls back to the command line compiled into `grub.cfg` and the option never reaches the kernel. `grubby` reports the option as applied either way, so the role would otherwise report a converged run that does nothing. The combination comes from images built to boot both ways. An installed host does not have it: booted BIOS it has a regular file there, booted UEFI it reads the copy in the ESP directly. Red Hat family 9 and later put the options in the boot entry itself and are unaffected.
 
 
 ## Dependent Roles
@@ -96,16 +96,6 @@ bootloader__cmdline_options__group_var:
 **The run aborts with `Could not find or access '<family>.yml'`**
 
 * The host runs an operating system family this role ships no tasks for. It manages the kernel command line through `grubby` on the Red Hat family and through a GRUB drop-in on the Debian family; there is no third path. The role aborts rather than skipping the host, so a kernel parameter never goes silently unapplied.
-
-**The run aborts with `/boot/grub2/grubenv is a symlink onto the EFI System Partition`**
-
-* The host is a Red Hat family 8 machine that boots in BIOS mode from an image that also carries a UEFI boot path (see "Known Limitations"). The boot loader cannot read the file the kernel command line is stored in, so the option would be written and never applied. Replace the symlink with a regular copy of its target, which is what an installed BIOS host has:
-
-    ```bash
-    cp --remove-destination "$(readlink --canonicalize /boot/grub2/grubenv)" /boot/grub2/grubenv
-    ```
-
-    The next run then applies the options normally. Hosts booting in UEFI mode are not affected and are not checked.
 
 **The run aborts with `grubby reports root outside the kernel command line`**
 

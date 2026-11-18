@@ -554,7 +554,7 @@ Types of vHosts:
     ```
 
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out). Forward to the backend with `ProxyPass` in `raw`, not with `RewriteRule ... [proxy]`: mod_rewrite passes the path on decoded, so a `?` in a path segment, such as in a file name, reaches the backend as the start of the query string. See the [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud) role for an example.
-* **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
+* **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>`, `</VirtualHost>` and the logs completely from scratch. Like every other template it logs to its own error and access log, so requests to a raw vHost, for example a catch-all for unknown host names, reach fail2ban.
 * **redirect**: A vHost that redirects every request to `https://` on the same host, keeping the requested hostname and path. Set `virtualhost_port: 80` to redirect the plain HTTP port. Requests below `/.well-known/acme-challenge/` are excluded, so ACME/Let's Encrypt HTTP-01 challenges keep working. The `raw` variable replaces the redirect rule instead of extending it.
 * **wordpress**: A hardened vHost for a WordPress instance, adding WordPress-specific rules on top of the app-vHost hardening: hotlink protection, blocked access to `wp-config.php`, `xmlrpc.php` and the other WordPress metadata files, blocked direct access to `wp-includes`, no PHP execution below `wp-content/uploads`, blocked author scans, comment-spam mitigation, and the `Referrer-Policy` and `X-Content-Type-Options` headers. The rules also cover WordPress installations in sub-paths of the document root, such as `/blog`. It is usually injected by the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role; define it by hand only when running WordPress without that role, and then set `wordpress_url`.
 
@@ -657,10 +657,10 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_custom_log`
 
-* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
-* Applies to: app, localhost, proxy, wordpress.
+* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog). The raw and redirect templates leave it out if their `raw` content sets a `CustomLog` or `TransferLog` itself.
+* Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
-* Default: `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`
+* Default: `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-access.log linuxfabrikio'`, because it usually shares its name with the HTTPS vHost
 
 `conf_directory_index`
 
@@ -678,10 +678,10 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_error_log`
 
-* See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
-* Applies to: app, localhost, proxy, wordpress.
+* See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog). The raw and redirect templates leave it out if their `raw` content sets an `ErrorLog` itself.
+* Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
-* Default: `'logs/{{ conf_server_name }}-error.log'`
+* Default: `'logs/{{ conf_server_name }}-error.log'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-error.log'`
 
 `conf_keep_alive_timeout`
 
@@ -693,8 +693,8 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_log_level`
 
-* See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel).
-* Applies to: app, localhost, proxy, wordpress.
+* See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel). The raw and redirect templates leave it out if their `raw` content sets a `LogLevel` itself.
+* Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
 * Default: `'notice core:info'`
 

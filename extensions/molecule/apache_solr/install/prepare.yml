@@ -1,0 +1,20 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# Stands in for a host on which Solr wrote its logs before solr.service got its UMask, so they
+# are world-readable.
+- name: 'Create a world-readable Solr log file'
+  hosts: 'systems_under_test'
+  become: true
+  gather_facts: false
+  tasks:
+
+    - name: 'install --mode=0644 /dev/null /var/log/solr/solr.log.1'
+      ansible.builtin.shell: |
+        install --directory --mode=0755 /var/log/solr
+        install --mode=0644 /dev/null /var/log/solr/solr.log.1
+      args:
+        executable: '/bin/bash'
+        creates: '/var/log/solr/solr.log.1'
