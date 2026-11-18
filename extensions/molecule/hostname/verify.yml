@@ -1,0 +1,63 @@
+- name: 'Verify the hostname and its local name resolution'
+  hosts: 'systems_under_test'
+  gather_facts: false
+
+  vars:
+    __molecule__fqdn: '{{ inventory_hostname ~ "." ~ hostname__domain_part }}'
+
+  tasks:
+
+    - name: 'Gather the network facts'
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+          - 'network'
+
+    - name: 'hostname --fqdn'
+      ansible.builtin.command: 'hostname --fqdn'
+      changed_when: false
+      register: '__molecule__hostname_result'
+
+    - name: 'Assert that the system uses the configured FQDN'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__hostname_result["stdout"] == __molecule__fqdn'
+        fail_msg: '{{ __molecule__hostname_result["stdout"] }}'
+
+    # What NAME-4406 is about: the FQDN and the short name resolve to the IP of the interface
+    # only, no longer to a loopback address that cloud-init or the installer mapped them to.
+    - name: 'getent ahosts <FQDN> and <short name>'
+      ansible.builtin.command: 'getent ahosts {{ item }}'
+      changed_when: false
+      register: '__molecule__getent_result'
+      loop:
+        - '{{ __molecule__fqdn }}'
+        - '{{ inventory_hostname }}'
+
+    - name: 'Assert that the hostname resolves to {{ ansible_facts["default_ipv4"]["address"] }} only'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout_lines"] | map("split") | map("first") | unique == [ansible_facts["default_ipv4"]["address"]]'
+        fail_msg: '{{ item["stdout"] }}'
+      loop: '{{ __molecule__getent_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
+
+    # The role must not take away what others need: localhost keeps its loopback address, and
+    # a loopback line for a name that only starts with the hostname (see prepare.yml) stays.
+    - name: 'getent ahostsv4 localhost and <short name>-alias'
+      ansible.builtin.command: 'getent ahostsv4 {{ item }}'
+      changed_when: false
+      register: '__molecule__getent_loopback_result'
+      loop:
+        - 'localhost'
+        - '{{ inventory_hostname }}-alias'
+
+    - name: 'Assert that localhost and <short name>-alias still resolve to a loopback address'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout_lines"][0] is match("127[.]")'
+        fail_msg: '{{ item["stdout"] }}'
+      loop: '{{ __molecule__getent_loopback_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

@@ -1,0 +1,41 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# Map the hostname to the loopback addresses ahead of the localhost entries, as cloud-init does
+# with manage_etc_hosts (templates/hosts.redhat.tmpl: 127.0.0.1 and ::1, Hetzner images) and as
+# the Debian installer and templates/hosts.debian.tmpl do (127.0.1.1). The test images do not get
+# these lines from cloud-init, so without this the role would have nothing to clean up and
+# verify.yml would pass on a host that was never in that state. The last line maps a name that
+# only starts with the hostname and has to survive.
+- name: 'Map the hostname to the loopback addresses'
+  hosts: 'systems_under_test'
+
+  vars:
+    __molecule__fqdn: '{{ inventory_hostname ~ "." ~ hostname__domain_part }}'
+
+  tasks:
+
+    - name: 'Add the loopback entries to /etc/hosts'
+      ansible.builtin.lineinfile:
+        path: '/etc/hosts'
+        line: '{{ item }}'
+        insertbefore: 'BOF'
+      loop:
+        - '127.0.0.1 {{ __molecule__fqdn }} {{ inventory_hostname }}'
+        - '::1 {{ __molecule__fqdn }} {{ inventory_hostname }}'
+        # The Debian installer takes the domain from DHCP, which may differ from the inventory.
+        - "127.0.1.1\t{{ inventory_hostname }}.example\t{{ inventory_hostname }} # Debian installer"
+        - '127.0.0.2 {{ inventory_hostname }}-alias'
+
+    - name: 'getent ahosts {{ inventory_hostname }}'
+      ansible.builtin.command: 'getent ahosts {{ inventory_hostname }}'
+      changed_when: false
+      register: '__molecule__getent_result'
+
+    - name: 'Assert that the hostname resolves to a loopback address before the role runs'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__getent_result["stdout_lines"][0] is match("(127[.]|::1)")'
+        fail_msg: '{{ __molecule__getent_result["stdout"] }}'
