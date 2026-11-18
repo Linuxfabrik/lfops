@@ -61,6 +61,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 * Clones the [Linuxfabrik Python Libraries](https://github.com/Linuxfabrik/lib) to `/tmp/ansible.lib-repo` on the Ansible controller (`delegate_to: localhost`, serialized with `throttle: 1`, `--check`-safe). Includes a rescue path that wipes the directory and retries on failure (e.g. when an existing checkout is on a different ref).
 * Parameters:
 
+    * `shared__lib_repo_dest`: Optional. A directory of its own for the state to check out, named after a tag or a resolved commit of `main`, e.g. `/var/tmp/lfops/<role>/lib-v1.2.3`. A checkout found there is used as it is and never fetched again, so further hosts find it without asking GitHub. Default: `/tmp/ansible.lib-repo`, shared by all versions and updated on every call.
     * `shared__lib_version`: Mandatory. The git ref to check out. Accepts `'dev'` (resolved to `main`), a tag like `'v1.2.3'`, or a bare version like `'1.2.3'` (auto-prefixed with `v`).
 
 `clone-monitoring-plugins-repo.yml`
@@ -68,6 +69,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 * Same as `clone-lib-repo.yml` but for the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins). Target on the controller: `/tmp/ansible.monitoring-plugins-repo`.
 * Parameters:
 
+    * `shared__monitoring_plugins_repo_dest`: Optional. Same semantics as `shared__lib_repo_dest`. Default: `/tmp/ansible.monitoring-plugins-repo`.
     * `shared__monitoring_plugins_version`: Mandatory. Same semantics as `shared__lib_version`.
 
 `remove-rpmnew-rpmsave.yml`

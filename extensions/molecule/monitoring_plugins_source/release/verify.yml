@@ -1,0 +1,109 @@
+- name: 'Verify the source install of two releases'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    # --version runs the plugin under the venv interpreter and imports the library, so a host
+    # that got the tree of the other release, or a broken one, fails here. The plugins answer
+    # --version with UNKNOWN (3), as they do for every argument error, so the assertion goes by
+    # the output.
+    - name: '/usr/lib64/nagios/plugins/cpu-usage --version'
+      ansible.builtin.command: '/usr/lib64/nagios/plugins/cpu-usage --version'
+      register: '__molecule__cpu_usage_version'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the plugins are those of the release of this host'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__cpu_usage_version["stdout"] is search("v" ~ molecule__expected_plugin_version ~ " ")'
+        fail_msg: >-
+          cpu-usage answered "{{ __molecule__cpu_usage_version["stdout"] }}", but
+          monitoring-plugins {{ monitoring_plugins__version }} ships
+          v{{ molecule__expected_plugin_version }}
+
+    # The plugins import the library from their own directory, so ask the interpreter they run
+    # under, from there.
+    - name: 'Read the version of the deployed Linuxfabrik library'
+      ansible.builtin.command:
+        argv:
+          - '/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python'
+          - '-c'
+          - 'import lib.base; print(lib.base.__version__)'
+        chdir: '/usr/lib64/nagios/plugins'
+      register: '__molecule__lib_base_version'
+      changed_when: false
+
+    - name: 'Assert the library is the one the lockfiles of this release pin'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lib_base_version["stdout"] == molecule__expected_lib_base_version'
+        fail_msg: >-
+          lib/base.py is {{ __molecule__lib_base_version["stdout"] }}, but the lockfiles of
+          monitoring-plugins {{ monitoring_plugins__version }} pin the library release with
+          {{ molecule__expected_lib_base_version }}
+
+    # Each host gets the icons of its own release: aide-logfile.svg ships with v8.1.0 and later
+    # only, xml.svg with both.
+    - name: 'Stat the icons of the aide-logfile and the xml plugin'
+      ansible.builtin.stat:
+        path: '/usr/share/icingaweb2/public/img/icons/{{ item }}'
+      loop:
+        - 'aide-logfile.svg'
+        - 'xml.svg'
+      register: '__molecule__icons'
+
+    - name: 'Assert the icons are those of the release of this host'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__icons["results"][0]["stat"]["exists"] == molecule__expected_aide_logfile_icon'
+          - '__molecule__icons["results"][1]["stat"]["exists"]'
+        fail_msg: >-
+          aide-logfile.svg {{ "is" if __molecule__icons["results"][0]["stat"]["exists"] else "is not" }}
+          deployed and xml.svg {{ "is" if __molecule__icons["results"][1]["stat"]["exists"] else "is not" }},
+          which does not match monitoring-plugins {{ monitoring_plugins__version }}
+
+
+- name: 'Verify the removal of the former pip --user dependencies'
+  hosts: 'debian13-vm:rocky9-vm'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'pip3 list --user --format=freeze'
+      ansible.builtin.command: 'pip3 list --user --format=freeze'
+      register: '__molecule__pip_user'
+      changed_when: false
+
+    - name: 'Assert psutil, which the lockfile names, is gone and six is kept'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__pip_user["stdout"] is not search("(?im)^psutil==")'
+          - '__molecule__pip_user["stdout"] is search("(?im)^six==")'
+        fail_msg: >-
+          pip3 lists "{{ __molecule__pip_user["stdout_lines"] | join(", ") }}" in ~/.local of
+          root; psutil should have been removed, six should not
+
+
+- name: 'Verify the controller cache'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'Stat the outdated cache entry and the cache directory'
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      loop:
+        - '/var/tmp/lfops/monitoring_plugins/repo-v0.0.0-molecule'
+        - '/var/tmp/lfops/monitoring_plugins'
+      register: '__molecule__cache'
+
+    - name: 'Assert the outdated entry is gone and the cache is private'
+      ansible.builtin.assert:
+        that:
+          - 'not __molecule__cache["results"][0]["stat"]["exists"]'
+          - '__molecule__cache["results"][1]["stat"]["mode"] == "0700"'
+        fail_msg: >-
+          the outdated cache entry {{ "still exists" if __molecule__cache["results"][0]["stat"]["exists"] else "is gone" }},
+          and the cache directory has mode {{ __molecule__cache["results"][1]["stat"]["mode"] }} instead of 0700

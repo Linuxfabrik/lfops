@@ -1,0 +1,9 @@
+monitoring_plugins__version: '8.0.0'
+
+# `__version__` of cpu-usage in monitoring-plugins v8.0.0, and of lib/base.py in linuxfabrik-lib
+# v8.2.0, which the lockfiles of v8.0.0 pin
+molecule__expected_lib_base_version: '2026092101'
+molecule__expected_plugin_version: '2026082601'
+
+# the icon of the aide-logfile plugin, which v8.1.0 is the first release to ship
+molecule__expected_aide_logfile_icon: false

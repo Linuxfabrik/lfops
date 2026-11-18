@@ -70,9 +70,76 @@
 
 - block:
 
-  - name: 'Make sure sudo is installed (sometimes missing on Debian)'
+  # The cache holds what is deployed as root to every host, so it must not be writable for
+  # other users of the controller. Below the world-writable /var/tmp, another user could create
+  # the directory first; the mode then cannot be set, and the run aborts instead of deploying
+  # what that user placed there.
+  - name: 'mkdir -p {{ __monitoring_plugins__cache_dir }}'
+    ansible.builtin.file:
+      path: '{{ item }}'
+      state: 'directory'
+      mode: 0o700
+    loop:
+      - '{{ __monitoring_plugins__cache_dir | dirname }}'
+      - '{{ __monitoring_plugins__cache_dir }}'
+    delegate_to: 'localhost'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    changed_when: false # no change on the remote host
+    check_mode: false # run task even if `--check` is specified
+
+  # see `__monitoring_plugins__cache_max_age_days`
+  - name: 'Remove cache entries older than {{ __monitoring_plugins__cache_max_age_days }} days from {{ __monitoring_plugins__cache_dir }}'
+    ansible.builtin.command:
+      argv:
+        - 'find'
+        - '{{ __monitoring_plugins__cache_dir }}'
+        - '-mindepth'
+        - '1'
+        - '-maxdepth'
+        - '1'
+        - '-mtime'
+        - '+{{ __monitoring_plugins__cache_max_age_days }}'
+        - '-exec'
+        - 'rm'
+        - '-rf'
+        - '--'
+        - '{}'
+        - '+'
+    delegate_to: 'localhost'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
+    changed_when: false # no change on the remote host
+    check_mode: false # run task even if `--check` is specified
+
+  - name: 'Check if /usr/share/icingaweb2/public/img/icons exists'
+    ansible.builtin.stat:
+      path: '/usr/share/icingaweb2/public/img/icons'
+    register: '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
+
+  # Everything the host needs in one run of the package manager, since every run loads the
+  # repository metadata first, which took 2 s per host and up to 7 s:
+  # * sudo, which the plugins run under (sometimes missing on Debian)
+  # * rsync, for the transfers of the source install and of the icons
+  # * the Python interpreter and venv support of the source install. On RHEL 8 the system
+  #   python3 is 3.6, too old for the plugins, so the role installs python3.9 (package
+  #   `python39`) and uses it; every other supported platform already ships python3 >= 3.9.
+  - name: 'Install the packages the plugins need on the host'
     ansible.builtin.package:
-      name: 'sudo'
+      name: '{{
+          ["sudo"]
+          + (["rsync"]
+             if monitoring_plugins__install_method == "source"
+                or __monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]
+             else [])
+          + ((__monitoring_plugins__source_python_packages | d([]))
+             if monitoring_plugins__install_method == "source"
+             else [])
+        }}'
       state: 'present'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
@@ -84,6 +151,32 @@
     ansible.builtin.include_tasks: 'linux-package.yml'
     when:
       - 'monitoring_plugins__install_method == "package"'
+
+  # The commit names the checkouts and staging trees of `dev` on the controller, so that the
+  # first host prepares a commit and every further host finds it done, see
+  # `__monitoring_plugins__checkout_id`. Read-only, so unlike the preparation itself it runs for
+  # all hosts in parallel. A host that resolves main after a push gets the newer commit.
+  - name: 'git ls-remote https://github.com/Linuxfabrik/monitoring-plugins.git refs/heads/main'
+    ansible.builtin.command:
+      argv:
+        - 'git'
+        - 'ls-remote'
+        - 'https://github.com/Linuxfabrik/monitoring-plugins.git'
+        - 'refs/heads/main'
+    register: '__monitoring_plugins__main_commit_result'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
+    delegate_to: 'localhost'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
+    changed_when: false # read-only
+    failed_when: '__monitoring_plugins__main_commit_result["rc"] != 0 or __monitoring_plugins__main_commit_result["stdout"] | length == 0'
+    check_mode: false # run task even if `--check` is specified
+    when:
+      - 'monitoring_plugins__install_method == "source"'
+      - 'monitoring_plugins__version == "dev"'
 
   - name: 'Install Linuxfabrik Monitoring Plugins from source'
     ansible.builtin.include_tasks: 'linux-source.yml'
@@ -161,11 +254,6 @@
     when:
       - 'monitoring_plugins__stat_var_www_html_localhost_result["stat"]["exists"]'
 
-  - name: 'Check if /usr/share/icingaweb2/public/img/icons exists'
-    ansible.builtin.stat:
-      path: '/usr/share/icingaweb2/public/img/icons'
-    register: '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result'
-
   - block:
 
     - name: 'Clone the monitoring-plugins repo'
@@ -173,28 +261,35 @@
         name: 'shared'
         tasks_from: 'clone-monitoring-plugins-repo.yml'
       vars:
+        shared__monitoring_plugins_repo_dest: '{{ __monitoring_plugins__repo_dir }}'
         shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
+    # Built in a temporary directory and moved into place, so a run that aborts halfway leaves
+    # no tree behind that a later host would take for complete. A tree that exists is final, see
+    # `__monitoring_plugins__checkout_id`.
     - name: 'Flatten icon files from plugin directories'
-      ansible.builtin.shell: |
-        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/icons
-        find /tmp/ansible.monitoring-plugins-repo/check-plugins -name '*.svg' -exec cp {} /tmp/ansible.monitoring-plugins-repo-flattened/icons/ \;
-        cp -- /tmp/ansible.monitoring-plugins-repo/assets/icons/*.svg /tmp/ansible.monitoring-plugins-repo-flattened/icons/
-      args:
+      ansible.builtin.shell:
+        cmd: |
+          set -e -o pipefail
+          dest='{{ __monitoring_plugins__icons_dir }}'
+          if [ -d "$dest" ]; then
+            exit 0
+          fi
+          tmp="$(mktemp --directory "$dest.XXXXXX")"
+          trap 'rm -rf -- "$tmp"' EXIT
+          find check-plugins -name '*.svg' -exec cp -- {} "$tmp/" \;
+          cp -- assets/icons/*.svg "$tmp/"
+          rm -rf -- "$dest"
+          mv -- "$tmp" "$dest"
+        chdir: '{{ __monitoring_plugins__repo_dir }}'
         executable: '/bin/bash'
       delegate_to: 'localhost'
       become: false
       vars:
         ansible_become: false # noqa var-naming[pattern]
+      throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
       check_mode: false # run task even if `--check` is specified
       changed_when: false # no change on the remote host
-
-    - name: 'Make sure rsync is installed'
-      ansible.builtin.package:
-        name: 'rsync'
-        state: 'present'
-      retries: 3 # ride out a brief outage of the package repository
-      delay: 10
 
     # --checksum and --no-times for the reasons given at the plugin transfer in linux-source.yml:
     # without them, every run rewrote all icons, under a new inode that file integrity checks
@@ -203,7 +298,7 @@
     # root the icons earlier runs left with the numeric owner of the controller user.
     - name: 'rsync icons to IcingaWeb2'
       ansible.posix.synchronize:
-        src: '/tmp/ansible.monitoring-plugins-repo-flattened/icons/'
+        src: '{{ __monitoring_plugins__icons_dir }}/'
         dest: '/usr/share/icingaweb2/public/img/icons'
         mode: 'push'
         rsync_opts:
@@ -211,6 +306,8 @@
           - '--chmod=D755,F644'
           - '--chown=root:root'
           - '--no-times'
+      vars:
+        mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
 
     when:
       - '__monitoring_plugins__stat_usr_share_icingaweb2_public_img_icons_result["stat"]["exists"]'

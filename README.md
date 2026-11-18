@@ -205,14 +205,23 @@ ansible-navigator:
     enabled: true
     environment-variables:
       set:
+        ANSIBLE_CACHE_PLUGIN_CONNECTION: '/var/tmp/lfops/ansible-facts'
         ANSIBLE_STDOUT_CALLBACK: 'linuxfabrik.lfops.compact'
     image: ghcr.io/linuxfabrik/lfops_ee:latest
     pull:
       policy: missing
+    volume-mounts:
+      - src: '/var/tmp/lfops'
+        dest: '/var/tmp/lfops'
+        options: 'z'
   mode: stdout
 ```
 
 `ANSIBLE_STDOUT_CALLBACK` selects the [compact output](#compact-output). ansible-navigator runs the playbook through ansible-runner, which replaces the stdout callback with its own wrapper. That wrapper only builds on the `ANSIBLE_STDOUT_CALLBACK` environment variable and ignores `stdout_callback` in the `ansible.cfg`.
+
+The volume mount keeps the controller-side caches of LFOps roles (for example the source install of `monitoring_plugins`) and the fact cache across runs; without it, the EE starts every run with an empty cache. Create the directory once with `mkdir --parents --mode=0700 /var/tmp/lfops`. `z` instead of `Z` lets runs in parallel share it.
+
+`ANSIBLE_CACHE_PLUGIN_CONNECTION` is needed because ansible-runner points the fact cache at the artifact directory of the run, which overrides `fact_caching_connection` in the `ansible.cfg`, so every run would gather the facts anew.
 
 Then run playbooks using `ansible-navigator` instead of `ansible-playbook`:
 
@@ -335,7 +344,7 @@ Place an `ansible.cfg` in your inventory/project directory:
 forks = 30
 gathering = smart
 fact_caching = jsonfile
-fact_caching_connection = ~/.ansible_cache
+fact_caching_connection = /var/tmp/lfops/ansible-facts  ; shared with ansible-navigator, see "Using ansible-navigator"
 fact_caching_timeout = 86400
 host_key_checking = False
 inventory_ignore_extensions = ~, .orig, .bak, .ini, .cfg, .retry, .pyc, .pyo, .csv, .md
