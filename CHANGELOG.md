@@ -172,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:apache_httpd, role:moodle, role:nextcloud**: vHosts log in the Apache standard format `combined` instead of `linuxfabrikio`, which fail2ban and log analysers read without further setup.
 * **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.
 * **plugin:bitwarden_item**: Lookups are about ten times faster, which shortens runs against many hosts with credentials from Bitwarden, also with `--tags`, since every role validates its variables.
 * **role:monitoring_plugins**: The source install prepares the plugins, the library and the Python dependencies on the controller once per release, or for `dev` once per commit, instead of once per host, keeps them in `/var/tmp/lfops` for later runs, and copies them to the hosts in parallel also under Mitogen, so runs against many hosts finish much faster. With ansible-navigator, mount `/var/tmp/lfops` into the execution environment to keep them between runs.
