@@ -221,7 +221,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **role:apache_solr**: Downloads Solr from the Apache CDN, which is much faster than the Apache archive, and falls back to the archive for releases the CDN no longer carries.
 * **role:apache_solr**: The run aborts for a user whose password equals the username, since Solr 9.11 and newer reject such logins.
 * **role:apache_solr**: A role holding the `all` permission is allowed every request, also one that a more specific permission of another role matches first.
-* **role:apache_solr**: The Solr program files belong to `root`, as with Solr's own installation script, and files that Solr creates are no longer readable by other users.
+* **role:apache_solr**: The Solr program files belong to `root`, as with Solr's own installation script, and files that Solr creates, as well as existing log files, are no longer readable by other users.
 * **role:apache_httpd**: Bump the OWASP Core Rule Set to 4.30.0.
 * **role:apache_httpd**: The OWASP Core Rule Set is downloaded on the Ansible controller, so the target no longer needs access to GitHub.
 * Downloads from the Internet, such as release tarballs, GPG keys, git clones, GitHub release lookups and package installations, are retried up to three times, so a brief outage of a download source or package repository no longer aborts the run (all roles).
