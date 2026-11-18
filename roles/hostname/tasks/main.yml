@@ -1,13 +1,13 @@
 - block:
 
-  - name: 'hostnamectl set-hostname {{ hostname__full_hostname }}'
+  - name: 'hostnamectl set-hostname <hostname>'
     ansible.builtin.hostname:
       name: '{{ hostname__full_hostname }}'
 
   # Only our own marker block instead of templating the whole file, so entries written by others
   # (cloud-init, the installer, the admin) stay. Mapping the FQDN (and short name) to the real
   # interface IP gives proper local name resolution.
-  - name: 'Map {{ hostname__full_hostname }} to {{ hostname__etc_hosts_ip }} in /etc/hosts'
+  - name: 'Map <hostname> to <ip> in /etc/hosts'
     ansible.builtin.blockinfile:
       path: '/etc/hosts'
       marker: '# {mark} ANSIBLE MANAGED BLOCK linuxfabrik.lfops.hostname'
@@ -24,7 +24,7 @@
   # debian13" on Debian 13 with the domain from DHCP. A loopback line with other names stays.
   # Verified against cloud-init 26.2 (templates/hosts.*.tmpl, cc_update_etc_hosts.py), Hetzner
   # Rocky 9 images, Debian 13 and Rocky 9.4 with Lynis 3.1.7.
-  - name: 'Remove the loopback entries of {{ hostname__full_hostname }} from /etc/hosts'
+  - name: 'Remove the loopback entries of <hostname> from /etc/hosts'
     ansible.builtin.lineinfile:
       path: '/etc/hosts'
       regexp: '^\s*(127(\.[0-9]{1,3}){3}|::1)(\s+{{ __hostname__short_name }}(\.[^\s#]+)?)+\s*(#.*)?$'
