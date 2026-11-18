@@ -282,7 +282,9 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
 * Avoid `run_once: true`: it evaluates `when` (also that of an enclosing block or include) against the first host only, and if that host skips, every host skips. Let controller-side tasks run per host:
     * `ansible.builtin.get_url` writing a single file is race-safe (temp file plus atomic rename); with a version-pinned `dest` only the first host downloads.
     * Tasks mutating a shared controller path in place (`ansible.builtin.git` into a shared working dir, `command` / `shell` building files under `/tmp`) get `throttle: 1` with a comment `# serialize: ...`.
+    * Where hosts write to different directories depending on their facts (interpreter, architecture), a `flock` per directory instead of `throttle: 1` lets the directories be built in parallel, while the hosts sharing one wait for the first. Reference: the dependency download in `roles/monitoring_plugins`.
     * `run_once` stays only for a single read-only lookup shared to all hosts, e.g. a GitHub release API query stored with `set_fact`.
+* Set `vars: mitogen_task_isolation: 'fork' # noqa var-naming[pattern]` on controller-side tasks that take time per host: `ansible.posix.synchronize` (which runs `rsync` on the controller), downloads, `git ls-remote`. Under the Mitogen strategy, all tasks that run on the controller go to the one Mitogen context of the controller, which runs one call at a time, so these tasks run one host after the other: ten hosts delegating a two-second command to localhost take 20.9 s, 3.4 s with `fork` (Mitogen 0.3.44, ansible-core 2.16.19). Other strategies ignore the variable. Tasks with `throttle: 1` and quick ones (`stat`, `set_fact`) gain nothing.
 * Download on the controller (`delegate_to: 'localhost'`) and copy to the target: release artifacts, Git checkouts, language packages. Only the controller needs outbound access; say who needs what in "How the Role Behaves". See `roles/example` and "Python dependencies for air-gapped targets".
 * Retry every download with `retries: 3` and `delay: 10`: `get_url`, `git`, `rpm_key` with a URL, `uri` lookups such as the GitHub release API, and every `package`, `apt`, `dnf` and `pip` task that installs or updates (not `state: 'absent'`). Since ansible-core 2.16 `retries` without `until` repeats until success. Never retry calls that change something, such as an API `POST`.
 * Always give `command` and `shell` tasks `changed_when`, `creates` or `removes`; `changed_when: false` when read-only, and `changed_when: true # <reason>` when a command always runs and its effect cannot be detected.
@@ -294,6 +296,17 @@ The "Changelog" rules above apply, except that entries are sorted newest first, 
 * Optionally add `ansible.builtin.debug` tasks for `__combined_var` variables.
 * Split service `enabled` and `state` into separate tasks, see "Handlers".
 * Check `ansible_facts["selinux"]["status"] != "disabled"` before managing SELinux ports, file contexts or booleans.
+
+
+#### Controller-side Caches
+
+What a role prepares on the controller for every host (Git checkouts, staging trees, downloaded packages) is cached, so that the first host prepares it and every further host and later run finds it done. Reference: `roles/monitoring_plugins`.
+
+* Keep the cache below `/var/tmp/lfops/<role>/`, which outlives a reboot. `/var/tmp/lfops` is the one directory the [README](./README.md#using-ansible-navigator) asks ansible-navigator users to mount into the EE, whose own `/var/tmp` starts empty with every run.
+* Create both directories with `mode: 0o700`. The cache holds what is deployed to every host as root; below the world-writable `/var/tmp`, another user could create the directory first, and setting the mode then fails, so the run aborts instead of deploying that user's content.
+* Name each entry after the state it holds, a release tag or a resolved commit (`git ls-remote`), never after a branch, so that an entry found there is final and needs no update. Hosts with different versions in one play then never share an entry.
+* Build an entry in a temporary directory next to it and move it into place, or mark it complete with a file inside it as the last step, so that a run that aborts halfway leaves nothing a later host takes for complete.
+* Remove entries older than 7 days at the start of the role (`find <cache> -mindepth 1 -maxdepth 1 -mtime +7 -exec rm -rf -- {} +`). systemd-tmpfiles ages out files below `/var/tmp` after 30 days one by one, which could leave an entry that looks complete with files missing; this also takes away versions no longer in use.
 
 
 #### Handlers

@@ -5,6 +5,9 @@
          else shared__lib_version if shared__lib_version.startswith('v')
          else 'v' ~ shared__lib_version
       }}
+    __shared__lib_repo_dest: '{{ shared__lib_repo_dest | d("/tmp/ansible.lib-repo") }}'
+    # see clone-monitoring-plugins-repo.yml
+    __shared__lib_repo_update: '{{ shared__lib_repo_dest is not defined }}'
 
 
 - block:
@@ -12,9 +15,10 @@
   - name: 'Clone the lib git repo to localhost (version: {{ __shared__lib_version }})'
     ansible.builtin.git:
       repo: 'https://github.com/Linuxfabrik/lib.git'
-      dest: '/tmp/ansible.lib-repo'
+      dest: '{{ __shared__lib_repo_dest }}'
       version: '{{ __shared__lib_version }}'
       depth: 1
+      update: '{{ __shared__lib_repo_update | bool }}'
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -28,7 +32,7 @@
 
     - name: 'Remove the old repo and clone again'
       ansible.builtin.file:
-        path: '/tmp/ansible.lib-repo'
+        path: '{{ __shared__lib_repo_dest }}'
         state: 'absent'
       delegate_to: 'localhost'
       become: false
@@ -40,7 +44,7 @@
     - name: 'Clone the lib git repo to localhost (version: {{ __shared__lib_version }})'
       ansible.builtin.git:
         repo: 'https://github.com/Linuxfabrik/lib.git'
-        dest: '/tmp/ansible.lib-repo'
+        dest: '{{ __shared__lib_repo_dest }}'
         version: '{{ __shared__lib_version }}'
         depth: 1
       retries: 3 # ride out a brief outage of the download source

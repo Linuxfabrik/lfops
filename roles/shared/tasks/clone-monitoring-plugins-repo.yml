@@ -5,6 +5,11 @@
          else shared__monitoring_plugins_version if shared__monitoring_plugins_version.startswith('v')
          else 'v' ~ shared__monitoring_plugins_version
       }}
+    __shared__monitoring_plugins_repo_dest: '{{ shared__monitoring_plugins_repo_dest | d("/tmp/ansible.monitoring-plugins-repo") }}'
+    # A caller that passes a directory of its own names it after the state it wants, a tag or a
+    # resolved commit of main, so a checkout found there is final, and every further host uses
+    # it without asking GitHub. The shared default directory is brought up to date on every call.
+    __shared__monitoring_plugins_repo_update: '{{ shared__monitoring_plugins_repo_dest is not defined }}'
 
 
 - block:
@@ -12,9 +17,10 @@
   - name: 'Clone the monitoring plugins git repo to localhost (version: {{ __shared__monitoring_plugins_version }})'
     ansible.builtin.git:
       repo: 'https://github.com/Linuxfabrik/monitoring-plugins.git'
-      dest: '/tmp/ansible.monitoring-plugins-repo'
+      dest: '{{ __shared__monitoring_plugins_repo_dest }}'
       version: '{{ __shared__monitoring_plugins_version }}'
       depth: 1
+      update: '{{ __shared__monitoring_plugins_repo_update | bool }}'
     retries: 3 # ride out a brief outage of the download source
     delay: 10
     delegate_to: 'localhost'
@@ -28,7 +34,7 @@
 
     - name: 'Remove the old repo and clone again'
       ansible.builtin.file:
-        path: '/tmp/ansible.monitoring-plugins-repo'
+        path: '{{ __shared__monitoring_plugins_repo_dest }}'
         state: 'absent'
       delegate_to: 'localhost'
       become: false
@@ -40,7 +46,7 @@
     - name: 'Clone the monitoring plugins git repo to localhost (version: {{ __shared__monitoring_plugins_version }})'
       ansible.builtin.git:
         repo: 'https://github.com/Linuxfabrik/monitoring-plugins.git'
-        dest: '/tmp/ansible.monitoring-plugins-repo'
+        dest: '{{ __shared__monitoring_plugins_repo_dest }}'
         version: '{{ __shared__monitoring_plugins_version }}'
         depth: 1
       retries: 3 # ride out a brief outage of the download source
