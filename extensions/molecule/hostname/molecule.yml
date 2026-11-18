@@ -1,0 +1,10 @@
+# Molecule scenario marker for the 'hostname' scenario, run with
+# `molecule test --scenario-name hostname`.
+#
+# The prepare playbook is overridden to map the hostname to the loopback addresses the way
+# cloud-init and the Debian installer do, which the hostname role cleans up; see the
+# scenario-local prepare.yml. It imports the shared vm-prepare.yml first, so the systems under
+# test are still waited for and their facts still gathered.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

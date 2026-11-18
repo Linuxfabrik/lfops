@@ -4,15 +4,33 @@
     ansible.builtin.hostname:
       name: '{{ hostname__full_hostname }}'
 
-  # /etc/hosts is co-managed by cloud-init (the localhost entries), so we manage
-  # only our own marker block here instead of templating the whole file. Mapping
-  # the FQDN (and short name) to the real interface IP gives proper local name
-  # resolution and avoids mapping the hostname to a loopback address.
+  # Only our own marker block instead of templating the whole file, so entries written by others
+  # (cloud-init, the installer, the admin) stay. Mapping the FQDN (and short name) to the real
+  # interface IP gives proper local name resolution.
   - name: 'Map {{ hostname__full_hostname }} to {{ hostname__etc_hosts_ip }} in /etc/hosts'
     ansible.builtin.blockinfile:
       path: '/etc/hosts'
       marker: '# {mark} ANSIBLE MANAGED BLOCK linuxfabrik.lfops.hostname'
       block: '{{ hostname__etc_hosts_ip }} {{ ([hostname__full_hostname, hostname__full_hostname.split(".")[0]] | unique) | join(" ") }}'
+    when:
+      - 'hostname__manage_etc_hosts | bool'
+      - 'hostname__etc_hosts_ip | length > 0'
+
+  # cloud-init (manage_etc_hosts) and the Debian installer map the hostname to 127.0.0.1,
+  # 127.0.1.1 or ::1 as well. glibc returns the /etc/hosts lines in file order, so the hostname
+  # resolves to the loopback address instead of the IP mapped above, and Lynis reports NAME-4406.
+  # Only lines that carry nothing but the short name, alone or with any domain, are removed. The
+  # domain may differ from ours, e.g. the Debian installer writes "127.0.1.1 debian13.network
+  # debian13" on Debian 13 with the domain from DHCP. A loopback line with other names stays.
+  # Verified against cloud-init 26.2 (templates/hosts.*.tmpl, cc_update_etc_hosts.py), Hetzner
+  # Rocky 9 images, Debian 13 and Rocky 9.4 with Lynis 3.1.7.
+  - name: 'Remove the loopback entries of {{ hostname__full_hostname }} from /etc/hosts'
+    ansible.builtin.lineinfile:
+      path: '/etc/hosts'
+      regexp: '^\s*(127(\.[0-9]{1,3}){3}|::1)(\s+{{ __hostname__short_name }}(\.[^\s#]+)?)+\s*(#.*)?$'
+      state: 'absent'
+    vars:
+      __hostname__short_name: '{{ hostname__full_hostname.split(".")[0] | regex_escape }}'
     when:
       - 'hostname__manage_etc_hosts | bool'
       - 'hostname__etc_hosts_ip | length > 0'
