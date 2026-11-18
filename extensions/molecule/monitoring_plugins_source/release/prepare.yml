@@ -1,0 +1,70 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# The role deploys the plugin icons only where IcingaWeb2 keeps its icons. The directory stands
+# in for an IcingaWeb2 installation, which the role needs nothing else of.
+- name: 'Create the icon directory of IcingaWeb2'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'mkdir -p /usr/share/icingaweb2/public/img/icons'
+      ansible.builtin.file:
+        path: '/usr/share/icingaweb2/public/img/icons'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+
+
+# The former source install put the dependencies into ~/.local with `pip --user`, on hosts with
+# an externally managed python3 (PEP 668) with --break-system-packages. Converge has to remove
+# what the lockfile names (psutil) and keep the rest (six). Rocky 9 and Debian 13 each have a
+# lockfile for their system python3, and only Debian 13 is externally managed.
+- name: 'Install dependencies the way the former source install did'
+  hosts: 'debian13-vm:rocky9-vm'
+  become: true
+  tasks:
+
+    - name: 'Install pip'
+      ansible.builtin.package:
+        name: 'python3-pip'
+        state: 'present'
+
+    # --ignore-installed, since the cloud image of Rocky 9 ships python3-six, and pip would
+    # leave ~/.local without six otherwise
+    - name: 'pip3 install --user --ignore-installed psutil six'
+      ansible.builtin.command:
+        argv: '{{
+            ["pip3", "install", "--user", "--ignore-installed", "psutil", "six"]
+            + (["--break-system-packages"] if ansible_facts["os_family"] == "Debian" else [])
+          }}'
+      changed_when: true # installs on every run
+
+
+# A cache entry older than the role keeps entries, which converge has to remove.
+- name: 'Place an outdated entry into the controller cache'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'mkdir -p /var/tmp/lfops/monitoring_plugins/repo-v0.0.0-molecule'
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: 'directory'
+        mode: 0o700
+      loop:
+        - '/var/tmp/lfops'
+        - '/var/tmp/lfops/monitoring_plugins'
+        - '/var/tmp/lfops/monitoring_plugins/repo-v0.0.0-molecule'
+
+    - name: 'touch --date="8 days ago" /var/tmp/lfops/monitoring_plugins/repo-v0.0.0-molecule'
+      ansible.builtin.command:
+        argv:
+          - 'touch'
+          - '--date=8 days ago'
+          - '/var/tmp/lfops/monitoring_plugins/repo-v0.0.0-molecule'
+      changed_when: true # sets the modification time on every run
