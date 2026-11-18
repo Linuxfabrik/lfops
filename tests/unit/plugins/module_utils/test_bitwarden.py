@@ -638,5 +638,128 @@ class TestMutex(unittest.TestCase):
             self.assertEqual(second._cache['items'], [_LOGIN_ITEM])
 
 
+def _status(status):
+    return {
+        'success': True,
+        'data': {'object': 'template', 'template': {'status': status}},
+    }
+
+
+def _not_unlocked_error(url, message):
+    """The HTTP 400 that `bw serve` answers with while it cannot read the vault."""
+    return HTTPError(
+        url,
+        400,
+        'Bad Request',
+        {},
+        io.BytesIO(json.dumps({'success': False, 'message': message}).encode()),
+    )
+
+
+class TestStatusOncePerRun(unittest.TestCase):
+    """Each status request makes `bw serve` unlock the vault anew, so ask once per run."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bw = _make_bitwarden(os.path.join(self._tmp.name, 'cache.json'))
+        self._orig_open_url = bitwarden.open_url
+
+    def tearDown(self):
+        bitwarden.open_url = self._orig_open_url
+        self._tmp.cleanup()
+
+    def test_unlocked_vault_is_asked_once_per_run(self):
+        bitwarden.open_url, calls = _serve_in_order(_status('unlocked'))
+        self.assertEqual(self.bw.get_status(run_id='1:1'), 'unlocked')
+        self.assertEqual(self.bw.get_status(run_id='1:1'), 'unlocked')
+        self.assertEqual(len(calls), 1)
+
+    def test_the_next_process_of_the_run_does_not_ask_again(self):
+        # Ansible evaluates a lookup in one worker process per host, each with a
+        # Bitwarden() of its own, so the answer has to come from the cache file
+        bitwarden.open_url, calls = _serve_in_order(_status('unlocked'))
+        self.bw.get_status(run_id='1:1')
+        other = _make_bitwarden(bitwarden.CACHE_FILE)
+        self.assertEqual(other.get_status(run_id='1:1'), 'unlocked')
+        self.assertEqual(len(calls), 1)
+
+    def test_another_run_asks_again(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _status('unlocked'), _status('locked')
+        )
+        self.bw.get_status(run_id='1:1')
+        self.assertEqual(self.bw.get_status(run_id='2:2'), 'locked')
+        self.assertEqual(len(calls), 2)
+
+    def test_a_vault_that_is_not_unlocked_is_asked_again(self):
+        # the operator unlocks it and runs again, which must not need a new run ID
+        bitwarden.open_url, calls = _serve_in_order(
+            _status('locked'), _status('unlocked')
+        )
+        self.assertEqual(self.bw.get_status(run_id='1:1'), 'locked')
+        self.assertEqual(self.bw.get_status(run_id='1:1'), 'unlocked')
+        self.assertEqual(len(calls), 2)
+
+    def test_without_a_run_id_every_call_asks(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _status('unlocked'), _status('unlocked')
+        )
+        self.bw.get_status()
+        self.bw.get_status()
+        self.assertEqual(len(calls), 2)
+
+
+class TestVaultLockedDuringTheRun(unittest.TestCase):
+    """A vault locked after the status check fails with the advice of the status check."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.bw = _make_bitwarden(os.path.join(self._tmp.name, 'cache.json'))
+        self._orig_open_url = bitwarden.open_url
+        self._sleep = unittest.mock.patch.object(bitwarden.time, 'sleep')
+        self.sleep = self._sleep.start()
+
+    def tearDown(self):
+        self._sleep.stop()
+        bitwarden.open_url = self._orig_open_url
+        self._tmp.cleanup()
+
+    def test_messages_map_to_the_status(self):
+        for message, status in (
+            ('Vault is locked.', 'locked'),
+            ('You are not logged in.', 'unauthenticated'),
+        ):
+            with self.subTest(message=message):
+                bitwarden.open_url, _ = _serve_in_order(
+                    _not_unlocked_error(
+                        'http://127.0.0.1:8087/list/object/items', message
+                    )
+                )
+                with self.assertRaises(bitwarden.BitwardenNotUnlockedException) as ctx:
+                    self.bw._api_call('list/object/items')
+                self.assertIn(f'"{status}"', str(ctx.exception))
+                self.assertIn('restart', str(ctx.exception))
+
+    def test_other_bad_requests_stay_generic(self):
+        bitwarden.open_url, _ = _serve_in_order(
+            _not_unlocked_error('http://127.0.0.1:8087/sync', 'Something else.')
+        )
+        with self.assertRaises(bitwarden.BitwardenException) as ctx:
+            self.bw._api_call('sync', method='POST')
+        self.assertNotIsInstance(ctx.exception, bitwarden.BitwardenNotUnlockedException)
+
+    def test_sync_is_not_retried_on_a_locked_vault(self):
+        bitwarden.open_url, calls = _serve_in_order(
+            _SYNCED,
+            _not_unlocked_error(
+                'http://127.0.0.1:8087/list/object/items', 'Vault is locked.'
+            ),
+        )
+        with self.assertRaises(bitwarden.BitwardenNotUnlockedException):
+            self.bw.sync(force=True)
+        self.assertEqual(len(calls), 2)
+        self.sleep.assert_not_called()
+
+
 if __name__ == '__main__':
     unittest.main()

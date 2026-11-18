@@ -172,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.
+* **plugin:bitwarden_item**: Lookups are about ten times faster, which shortens runs against many hosts with credentials from Bitwarden, also with `--tags`, since every role validates its variables.
 * **role:monitoring_plugins**: The source install prepares the plugins, the library and the Python dependencies on the controller once per release, or for `dev` once per commit, instead of once per host, keeps them in `/var/tmp/lfops` for later runs, and copies them to the hosts in parallel also under Mitogen, so runs against many hosts finish much faster. With ansible-navigator, mount `/var/tmp/lfops` into the execution environment to keep them between runs.
 * **role:apache_httpd**: The server log uses `LogLevel notice core:info` instead of `warn`, as the CIS Benchmark recommends, so the start, reload and stop of Apache show up in syslog.
 * **role:aide, role:librenms, role:system_update**: Re-baselining AIDE after an update no longer starts an extra check against the new database, which only repeated the scan the re-baseline had just done. This halves the AIDE I/O load after each nightly update, while the update is still scanned and accepted right away.
@@ -261,6 +262,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * **role:apache_httpd**: The `raw` and `redirect` vHost templates write an error and an access log like the other templates, unless the `raw` content sets its own, so fail2ban also sees requests to them, for example scanner probes against a catch-all vHost for unknown host names.
 * **role:fail2ban**: The `apache-botsearch`, `apache-nohome`, `apache-noscript` and `apache-overflows` jails read the Apache error logs. They read the access logs, which their filters never match, so they never banned.
+* **plugin:bitwarden_item, module:bitwarden_item**: A vault that gets locked during a run fails with the advice to unlock it and restart `bw serve`, instead of `HTTP Error 400: Bad Request`, and without retrying the sync.
 * **role:monitoring_plugins**: The source install also removes the Python packages that the former `pip --user` install left in `~/.local` of root and the Icinga user on Debian 12+ and Ubuntu 24.04+, where they stayed so far.
 * **role:monitoring_plugins**: With the source install, hosts with different `monitoring_plugins__version` in one play each get their own release, instead of all of them getting the release of the last host.
 * **role:mariadb_server**: MariaDB from the MariaDB repository no longer warns `io_uring_queue_init() failed with EPERM` on every start on RHEL 9 and 10.
