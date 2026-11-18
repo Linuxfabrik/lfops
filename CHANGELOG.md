@@ -168,6 +168,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **plugin:bitwarden_item**: Lookups are about ten times faster, which shortens runs against many hosts with credentials from Bitwarden, also with `--tags`, since every role validates its variables.
 * **role:apache_httpd**: The server log uses `LogLevel notice core:info` instead of `warn`, as the CIS Benchmark recommends, so the start, reload and stop of Apache show up in syslog.
 * **role:aide, role:librenms, role:system_update**: Re-baselining AIDE after an update no longer starts an extra check against the new database, which only repeated the scan the re-baseline had just done. This halves the AIDE I/O load after each nightly update, while the update is still scanned and accepted right away.
 * **role:collabora**: The service account `cool` has `/sbin/nologin` as its shell instead of `/bin/bash`, so no one logs in as `cool`, which also satisfies the Lynis check HOME-9304. Use `sudo -u cool <command>` to run a command as `cool`.
@@ -254,6 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **plugin:bitwarden_item, module:bitwarden_item**: A vault that gets locked during a run fails with the advice to unlock it and restart `bw serve`, instead of `HTTP Error 400: Bad Request`, and without retrying the sync.
 * **role:mariadb_server**: MariaDB from the MariaDB repository no longer warns `io_uring_queue_init() failed with EPERM` on every start on RHEL 9 and 10.
 * **role:apache_httpd**: Apache no longer warns `server certificate is a CA certificate` (AH01906) while it runs on a self-signed placeholder certificate.
 * **role:infomaniak_vm**: Ports with a `fixed_ip` no longer show up as changed on every run.
