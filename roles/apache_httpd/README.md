@@ -660,7 +660,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 * The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog). The raw and redirect templates leave it out if their `raw` content sets a `CustomLog` or `TransferLog` itself.
 * Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
-* Default: `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-access.log linuxfabrikio'`, because it usually shares its name with the HTTPS vHost
+* Default: `'logs/{{ conf_server_name }}-access.log combined'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-access.log combined'`, because it usually shares its name with the HTTPS vHost
 
 `conf_directory_index`
 
@@ -925,8 +925,8 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 * The proxies as IP addresses or CIDR ranges (IPv4 and IPv6). Every address listed here can claim any client address, `127.0.0.1` included, which passes `Require local`. List the proxies only, never a whole client network.
 * The client address replaces the peer address of the request, so an application run by this Apache (PHP-FPM) no longer sees the proxy as the sender of `X-Forwarded-Proto` and `X-Forwarded-Host` and ignores them. What to do per application, when a proxy in front terminates TLS:
 
-    * Nextcloud: set `overwriteprotocol` to `https` in `nextcloud__sysconfig__host_var`, otherwise Nextcloud considers the request `http`. Alternatively leave this variable empty and list the proxy as `trusted_proxies 0` in `nextcloud__sysconfig__host_var`; Nextcloud then reads the client address and the protocol from the headers itself, and Apache logs the proxy.
-    * LibreNMS: leave this variable empty and list the proxy in `librenms__config_app_trusted_proxies`. With both set, LibreNMS ignores `X-Forwarded-Proto` and redirects to `http://`, and `librenms__url` does not change that.
+    * Nextcloud: set `overwriteprotocol` to `https` in `nextcloud__sysconfig__host_var`, otherwise Nextcloud considers the request `http`. Alternatively leave this variable empty and list the proxy as `trusted_proxies 0` in `nextcloud__sysconfig__host_var`; Nextcloud then reads the client address and the protocol from the headers itself, and Apache logs the proxy, so set `fail2ban__jails_apache_enabled: false` on this host to keep the [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban) role from enabling its Apache jails, which would ban the proxy.
+    * LibreNMS: leave this variable empty and list the proxy in `librenms__config_app_trusted_proxies`. With both set, LibreNMS ignores `X-Forwarded-Proto` and redirects to `http://`, and `librenms__url` does not change that. Apache then logs the proxy, so set `fail2ban__jails_apache_enabled: false` on this host as well.
     * WordPress: nothing to do for the protocol, `wp-config.php` believes `X-Forwarded-Proto` from anyone. Leave `wordpress__trusted_proxies` empty while this variable is set, since WordPress then sees the client as the peer anyway; it only matters with this variable empty.
     * Applications behind `ProxyPass`, for example Graylog and GitLab: the application sees this Apache as its peer either way, with the client in `X-Forwarded-For`, so this variable changes nothing for them. They need this Apache as their trusted proxy (for example `127.0.0.1`): `graylog_server__trusted_proxies` for Graylog, `trusted_proxies` in `gitlab.rb` for GitLab.
 

@@ -108,6 +108,17 @@ argument_specs:
         default: '7d'
         description: 'The ban duration for the sshd jail.'
 
+      fail2ban__jail_sshd_mode:
+        type: 'str'
+        required: false
+        default: 'aggressive'
+        choices:
+          - 'aggressive'
+          - 'ddos'
+          - 'extra'
+          - 'normal'
+        description: 'The mode of the sshd filter, which decides which log lines count as a failure.'
+
       fail2ban__jail_sshd_port:
         type: 'str'
         required: false
@@ -151,6 +162,11 @@ argument_specs:
         required: false
         default: []
         description: 'The fail2ban jail definitions. Host-level override.'
+
+      fail2ban__jails_apache_enabled:
+        type: 'bool'
+        required: false
+        description: 'Enables the Apache jails on hosts with logs below /var/log/httpd. Defaults to true unless apache_httpd__mod_remoteip_internal_proxy lists a proxy.'
 
       fail2ban__service_enabled:
         type: 'bool'

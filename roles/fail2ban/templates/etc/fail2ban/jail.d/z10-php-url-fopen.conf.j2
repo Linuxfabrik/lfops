@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# 2026111801
+
+# The jail from jail.conf, with its port, maxretry, findtime and bantime. Only
+# the log path is set: jail.conf reads /var/log/httpd/*access_log (and the nginx
+# logs), while the virtual hosts of the apache_httpd role log to
+# /var/log/httpd/<name>-access.log.
+[php-url-fopen]
+enabled = true
+logpath = /var/log/httpd/*access?log

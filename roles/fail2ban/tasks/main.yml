@@ -68,6 +68,11 @@
     notify:
       - 'fail2ban: restart fail2ban'
 
+  - name: 'stat /var/log/httpd'
+    ansible.builtin.stat:
+      path: '/var/log/httpd'
+    register: '__fail2ban__apache_log_dir_result'
+
   - name: 'Combined Jails'
     ansible.builtin.debug:
       var: 'fail2ban__jails__combined_var'

@@ -34,30 +34,16 @@ fail2ban__filters__group_var:
       failregex = ^.*molecule-fail2ban-probe from <HOST>$
       journalmatch = _SYSTEMD_UNIT=sshd.service
 
-# The jails fail2ban ships for Apache, which the role only points at the log files of the
-# apache_httpd role. prepare.yml creates such a pair of log files.
+# The Apache jails the role enables by itself need no entry here. apache-badbots and
+# apache-botsearch are opt-in, so they are listed to prove their templates still load. A jail
+# whose logpath matches no file proves that skip_if_nologs keeps fail2ban running without it.
 fail2ban__jails__group_var:
-  - filename: 'z10-apache-auth'
-    state: 'present'
-    template: 'apache-auth'
   - filename: 'z10-apache-badbots'
     state: 'present'
     template: 'apache-badbots'
   - filename: 'z10-apache-botsearch'
     state: 'present'
     template: 'apache-botsearch'
-  - filename: 'z10-apache-fakegooglebot'
-    state: 'present'
-    template: 'apache-fakegooglebot'
-  - filename: 'z10-apache-nohome'
-    state: 'present'
-    template: 'apache-nohome'
-  - filename: 'z10-apache-noscript'
-    state: 'present'
-    template: 'apache-noscript'
-  - filename: 'z10-apache-overflows'
-    state: 'present'
-    template: 'apache-overflows'
   - filename: 'z20-molecule-journal'
     state: 'present'
     template: 'raw'
@@ -69,3 +55,11 @@ fail2ban__jails__group_var:
       findtime = 1m
       maxretry = 3
       port     = 0:65535
+  - filename: 'z20-molecule-nolog'
+    state: 'present'
+    template: 'raw'
+    raw: |-
+      [molecule-nolog]
+      enabled = true
+      filter  = apache-auth
+      logpath = /var/log/molecule-does-not-exist/*.log
