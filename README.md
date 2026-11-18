@@ -219,7 +219,7 @@ ansible-navigator:
 
 `ANSIBLE_STDOUT_CALLBACK` selects the [compact output](#compact-output). ansible-navigator runs the playbook through ansible-runner, which replaces the stdout callback with its own wrapper. That wrapper only builds on the `ANSIBLE_STDOUT_CALLBACK` environment variable and ignores `stdout_callback` in the `ansible.cfg`.
 
-The volume mount keeps the controller-side caches of LFOps roles (for example the source install of `monitoring_plugins`) and the fact cache across runs; without it, the EE starts every run with an empty cache. Create the directory once with `mkdir --parents --mode=0700 /var/tmp/lfops`. `z` instead of `Z` lets runs in parallel share it.
+The volume mount keeps the controller-side caches of LFOps roles (for example the source install of `monitoring_plugins`), the fact cache and the durations the [dashboard](#dashboard) learns across runs; without it, the EE starts every run with an empty cache. Create the directory once with `mkdir --parents --mode=0700 /var/tmp/lfops`. `z` instead of `Z` lets runs in parallel share it.
 
 `ANSIBLE_CACHE_PLUGIN_CONNECTION` is needed because ansible-runner points the fact cache at the artifact directory of the run, which overrides `fact_caching_connection` in the `ansible.cfg`, so every run would gather the facts anew.
 
@@ -410,7 +410,7 @@ db-01     0   0   7   59  C firewall - Deploy the firewall rules
 app-01    0   0   0   66  O firewall - Deploy the firewall rules
 ```
 
-The progress bar counts the tasks of the play that are known when it starts, after `--tags` and `--skip-tags` are applied, and is drawn in reverse video on a color terminal. The estimated remaining time (ETA) assumes that the steps left take as long on average as the steps so far, so it gets more accurate towards the end of the play. A task included with `include_tasks` or `include_role` is one step, so the bar stands still while the tasks it includes run. Handlers and `rescue` sections are not counted. The bar measures tasks, not time, and starts over with every batch of `serial`.
+The progress bar counts the tasks of the play that are known when it starts, after `--tags` and `--skip-tags` are applied, and is drawn in reverse video on a color terminal. The estimated remaining time (ETA) adds up how long each step left took the last time it ran, until the slowest host was done. The dashboard learns these durations from every run and keeps them in `/var/tmp/lfops/dashboard`, so the ETA of a playbook is accurate from its second run on. A step that never ran before counts with the average of the steps of the play so far. A task included with `include_tasks` or `include_role` is one step, so the bar stands still while the tasks it includes run. Handlers and `rescue` sections are not counted. The bar measures tasks, not time, and starts over with every batch of `serial`.
 
 At the end of the run, the details follow in the format of the [compact output](#compact-output), but only for the tasks with changes, warnings or failures, then the recap and the report. Without a terminal (log file, pipe, CI), with `--verbose`, or on a terminal smaller than 65 columns and 12 lines, it behaves exactly like `linuxfabrik.lfops.compact`. Enable it like the compact output, with `linuxfabrik.lfops.dashboard` as the stdout callback. See `ansible-doc --type callback linuxfabrik.lfops.dashboard` for details.
 

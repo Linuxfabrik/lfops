@@ -18,6 +18,7 @@ __metaclass__ = type
 
 import fcntl
 import importlib.util
+import json
 import os
 import pty
 import re
@@ -71,13 +72,14 @@ _PLAYBOOK = """
 """
 
 
-def _run(columns=None, playbook=_PLAYBOOK, files=None):
+def _run(columns=None, playbook=_PLAYBOOK, files=None, workdir=None):
     """Run the playbook, on a pseudo-terminal with `columns` if given, with the
-    additional `files` (name -> content) next to it. Return the exit code and the
-    output.
+    additional `files` (name -> content) next to it. Everything, including the
+    durations for the ETA, goes to `workdir`, by default a directory of its own
+    that is removed afterwards. Return the exit code and the output.
     """
     assert _ANSIBLE_PLAYBOOK, 'ansible-playbook not found'  # nosec B101
-    tmp = tempfile.mkdtemp(prefix='lfops_dashboard_')
+    tmp = workdir or tempfile.mkdtemp(prefix='lfops_dashboard_')
     try:
         hosts = ''.join(f'    t-h{i:02d}:\n' for i in range(1, 5))
         files = {
@@ -97,6 +99,7 @@ def _run(columns=None, playbook=_PLAYBOOK, files=None):
         env = dict(os.environ)
         env.update(
             {
+                'ANSIBLE_CALLBACK_DASHBOARD_ETA_CACHE_DIR': os.path.join(tmp, 'eta'),
                 'ANSIBLE_CONFIG': os.path.join(tmp, 'ansible.cfg'),
                 'ANSIBLE_HOME': os.path.join(tmp, '.ansible'),
                 'ANSIBLE_LOCAL_TEMP': os.path.join(tmp, '.ansible', 'tmp'),
@@ -133,7 +136,8 @@ def _run(columns=None, playbook=_PLAYBOOK, files=None):
         os.close(master)
         return proc.wait(), b''.join(chunks).decode('utf-8', 'replace')
     finally:
-        shutil.rmtree(tmp, ignore_errors=True)
+        if not workdir:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 class TestDashboardOnTerminal(unittest.TestCase):
@@ -257,15 +261,178 @@ class TestProgress(unittest.TestCase):
         self.assertEqual(len(progress_bar(1, 3, 10, color=False)), 10)
 
     def test_eta_from_the_finished_steps(self):
+        unknown = [None] * 21
         # 6 steps done in 60 s, 15 left at 10 s each, 4 s into step 7
-        self.assertEqual(_module.eta(7, 21, 100, 160, 164), 146)
+        self.assertEqual(_module.eta(7, unknown, 100, 160, 164), 146)
         # no step done yet
-        self.assertIsNone(_module.eta(1, 21, 100, 100, 130))
+        self.assertIsNone(_module.eta(1, unknown, 100, 100, 130))
         # a step that takes longer than the average, like a large include, keeps
         # the estimate for the 14 steps after it
-        self.assertEqual(_module.eta(7, 21, 100, 160, 460), 140)
+        self.assertEqual(_module.eta(7, unknown, 100, 160, 460), 140)
         # and the last step does not go below zero
-        self.assertEqual(_module.eta(21, 21, 0, 200, 900), 0)
+        self.assertEqual(_module.eta(21, unknown, 0, 200, 900), 0)
+        # before the first step
+        self.assertIsNone(_module.eta(0, [5.0] * 21, 100, 100, 100))
+
+    def test_eta_from_the_durations_of_earlier_runs(self):
+        # all known: available from the first step on, 2 s into step 1 of 3
+        self.assertEqual(_module.eta(1, [10.0, 20.0, 300.0], 100, 100, 102), 328)
+        # a known slow step after average ones: 2 steps done in 20 s, the unknown
+        # step 3 at 10 s, the include of step 4 took 300 s last time
+        durations = [None, None, None, 300.0]
+        self.assertEqual(_module.eta(3, durations, 100, 120, 124), 306)
+        # a known step running longer than last time does not go below zero
+        self.assertEqual(_module.eta(4, durations, 100, 130, 500), 0)
+
+
+class TestDurations(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix='lfops_dashboard_')
+        self.directory = os.path.join(self.tmp, 'lfops', 'dashboard')
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_saved_and_loaded(self):
+        _module.save_durations(self.directory, {'roles/a/tasks/main.yml:3': 12.34})
+        self.assertEqual(
+            _module.load_durations(self.directory),
+            {'roles/a/tasks/main.yml:3': 12.3},
+        )
+        # directory and parent private
+        for path in (self.directory, os.path.dirname(self.directory)):
+            self.assertEqual(os.stat(path).st_mode & 0o777, 0o700)
+
+    def test_last_duration_wins_and_others_are_kept(self):
+        _module.save_durations(self.directory, {'a:1': 50.0, 'b:1': 5.0})
+        _module.save_durations(self.directory, {'a:1': 10.0})
+        self.assertEqual(
+            _module.load_durations(self.directory), {'a:1': 10.0, 'b:1': 5.0}
+        )
+
+    def test_old_entries_are_dropped(self):
+        now = 1_800_000_000
+        _module.save_durations(self.directory, {'old:1': 5.0}, now=now)
+        _module.save_durations(
+            self.directory, {'new:1': 7.0}, now=now + _module._DURATIONS_MAX_AGE + 1
+        )
+        self.assertEqual(_module.load_durations(self.directory), {'new:1': 7.0})
+
+    def test_broken_file_is_ignored_and_replaced(self):
+        os.makedirs(self.directory)
+        with open(os.path.join(self.directory, 'durations.json'), 'w') as f:
+            f.write('{"a:1": {"seconds": 1')
+        self.assertEqual(_module.load_durations(self.directory), {})
+        _module.save_durations(self.directory, {'b:1': 2.0})
+        self.assertEqual(_module.load_durations(self.directory), {'b:1': 2.0})
+
+    def test_symlinked_directory_is_not_used(self):
+        target = os.path.join(self.tmp, 'elsewhere')
+        os.makedirs(target)
+        os.makedirs(os.path.dirname(self.directory))
+        os.symlink(target, self.directory)
+        _module.save_durations(self.directory, {'a:1': 1.0})
+        self.assertEqual(os.listdir(target), [])
+        self.assertEqual(_module.load_durations(self.directory), {})
+
+    def test_disabled_with_an_empty_value(self):
+        _module.save_durations('', {'a:1': 1.0})
+        self.assertEqual(_module.load_durations(''), {})
+
+    def test_task_key_relative_to_the_collection(self):
+        class Role:
+            def __init__(self, name):
+                self.name = name
+
+            def get_name(self):
+                return self.name
+
+        class Task:
+            action = 'ansible.builtin.gather_facts'
+
+            def __init__(self, path, roles=()):
+                self.path = path
+                self.roles = [Role(name) for name in roles]
+
+            def get_dep_chain(self):
+                return self.roles or None
+
+            def get_path(self):
+                return self.path
+
+            def get_name(self):
+                return 'Gathering Facts'
+
+        self.assertEqual(
+            _module.step_key(Task('/x/lfops/roles/a/tasks/main.yml:3'), '/x/lfops'),
+            'roles/a/tasks/main.yml:3',
+        )
+        self.assertEqual(
+            _module.step_key(Task('/x/lfops2/roles/a/tasks/main.yml:3'), '/x/lfops'),
+            '/x/lfops2/roles/a/tasks/main.yml:3',
+        )
+        self.assertEqual(
+            _module.step_key(Task(''), '/x/lfops'),
+            'ansible.builtin.gather_facts Gathering Facts',
+        )
+        # a role imported by another one, by the chain of roles
+        self.assertEqual(
+            _module.step_key(
+                Task(
+                    '/x/lfops/roles/shared/tasks/x.yml:11', ['l.l.aide', 'l.l.shared']
+                ),
+                '/x/lfops',
+            ),
+            'roles/shared/tasks/x.yml:11 [l.l.aide > l.l.shared]',
+        )
+
+
+class TestLearnedEta(unittest.TestCase):
+    def test_durations_learned_and_used_by_the_next_run(self):
+        # the include sleeps in its second task, so the step only knows it from
+        # an earlier run
+        playbook = _PLAYBOOK.replace(
+            "    - name: 'Some changes'\n",
+            "    - name: 'Include'\n"
+            "      ansible.builtin.include_tasks: 'included.yml'\n"
+            '\n'
+            "    - name: 'Some changes'\n",
+        )
+        included = (
+            "- name: 'Included 1'\n"
+            "  ansible.builtin.command: 'true'\n"
+            '  changed_when: false\n'
+            "- name: 'Sleep on one host'\n"
+            "  ansible.builtin.command: 'sleep 3'\n"
+            '  changed_when: false\n'
+            "  when: inventory_hostname == 't-h04'\n"
+        )
+        tmp = tempfile.mkdtemp(prefix='lfops_dashboard_eta_')
+        try:
+            for _ in range(2):
+                returncode, raw = _run(
+                    columns=100,
+                    playbook=playbook,
+                    files={'included.yml': included},
+                    workdir=tmp,
+                )
+                self.assertEqual(returncode, 0, raw)
+            with open(os.path.join(tmp, 'eta', 'durations.json')) as f:
+                durations = json.load(f)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        # the three steps by file and line of the playbook, outside the collection
+        self.assertEqual(len(durations), 3, durations)
+        self.assertTrue(all('playbook.yml:' in key for key in durations), durations)
+        # the include with its tasks, until the slowest host was done
+        slowest = max(durations.values(), key=lambda value: value['seconds'])
+        self.assertGreaterEqual(slowest['seconds'], 3, durations)
+        # in the second run, the ETA is known from the first step on and counts
+        # the sleep of the include
+        screen = raw[raw.index(_SCREEN_ON) : raw.rindex(_SCREEN_OFF)]
+        first = re.search(r'step 1/3 \(33%\)   ETA 00:00:(\d\d)', screen)
+        self.assertIsNotNone(first, screen)
+        self.assertGreaterEqual(int(first.group(1)), 3)
 
 
 class TestTicker(unittest.TestCase):
