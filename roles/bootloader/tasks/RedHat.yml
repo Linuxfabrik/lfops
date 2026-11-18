@@ -1,14 +1,27 @@
 # Red Hat family 8 keeps the kernel command line in the GRUB environment block and lets the boot
-# entries reference it as `options $kernelopts`. grubby writes it there and reads it back expanded,
-# so it reports success whether or not the boot loader can read the file: only the next boot shows
-# the difference. The grub2-efi-x64 package ships /boot/grub2/grubenv as a symlink to the copy on
-# the EFI System Partition. Booted UEFI that is where GRUB looks anyway, but booted BIOS GRUB reads
-# $prefix/grubenv on /boot and cannot follow the link into the vfat ESP: load_env fails, $kernelopts
-# stays empty and the command line compiled into grub.cfg is used instead. The role would report a
-# converged, idempotent run while the option never reaches the kernel, so the combination is
-# rejected rather than reported as done. An installed host does not have it, only an image carrying
-# both boot paths. Red Hat family 9 and later put the options in the boot entry itself.
-# Verified against grubby 8.40-51.el8_10 and grub2-efi-x64 2.02-170 on Rocky 8.
+# entries reference it as `options $kernelopts`. grubby-bls writes it with
+# `grub2-editenv /boot/grub2/grubenv set kernelopts=...` and reads it back the same way, so it
+# reports success whether or not the boot loader can read the file: only the next boot shows the
+# difference. grub2-efi-x64 ships /boot/grub2/grubenv as the relative symlink
+# ../efi/EFI/<vendor>/grubenv. grub2-editenv follows it into the ESP (Red Hat patch "Make editenv
+# chase symlinks including those across devices"), but GRUB resolves a symlink within the
+# filesystem it is on (grub-core/fs/fshelp.c), where /boot/efi is only an empty mount point. Booted
+# UEFI that does not matter, GRUB reads the copy in the ESP directly. Booted BIOS, the
+# `[ -f ${config_directory}/grubenv ]` test in grub.cfg fails, load_env is never called, and the
+# fallback `set kernelopts="root=... ro ${args}"` compiled into grub.cfg (10_linux) is used, so a
+# changed option never reaches the kernel.
+#
+# On a BIOS boot the symlink is therefore replaced with a regular copy of its target, which is what
+# an installed BIOS host has. The copy keeps the current kernelopts, and grub2-editenv writes to it
+# from then on: it writes grubenv.new with mode 0644 and renames it over the resolved target. The
+# copy in the ESP goes stale, which only a UEFI boot would read. The replacement survives package
+# updates: /boot/grub2/grubenv is %config(noreplace) in grub2-common and grub2-efi-x64, so that
+# grub2-efi does not overwrite an existing file (rhbz#1680572), and no scriptlet touches it. Images
+# carrying both boot paths, such as the Rocky 8 GenericCloud image, have the symlink. Red Hat family
+# 9 and later put the options in the boot entry itself.
+#
+# Verified against the sources of grub2-2.02-170.el8_10.3 and grubby-8.40-51.el8_10 on Rocky 8, and
+# empirically: an upgrade of grub2-efi-x64 from 2.02-170.el8_10.2 to .3 keeps the regular file.
 - name: 'stat /sys/firmware/efi'
   ansible.builtin.stat:
     path: '/sys/firmware/efi'
@@ -24,15 +37,23 @@
   when:
     - 'ansible_facts["distribution_major_version"] | int == 8'
 
-- name: 'Assert that the boot loader can read the GRUB environment block'
-  ansible.builtin.assert:
-    that:
-      - 'not (__bootloader__grubenv_stat_result["stat"]["islnk"] | d(false) | bool)'
-    quiet: true
-    fail_msg: '/boot/grub2/grubenv is a symlink onto the EFI System Partition, but this host boots in BIOS mode, so the boot loader cannot read it and the kernel command line would never take effect. Replace the symlink with a regular file: cp --remove-destination "$(readlink --canonicalize /boot/grub2/grubenv)" /boot/grub2/grubenv'
+# Only while the symlink is there: once it is a regular file, grubby writes kernelopts to it, and a
+# copy from the stale ESP file would revert the command line. With follow: false the copy module
+# replaces a symlink at dest instead of writing through it (verified against the source of
+# ansible.builtin.copy in ansible-core 2.16). 0644 is the mode grub2-editenv leaves on every write.
+- name: 'cp --remove-destination "$(readlink --canonicalize /boot/grub2/grubenv)" /boot/grub2/grubenv'
+  ansible.builtin.copy:
+    remote_src: true
+    src: '{{ __bootloader__grubenv_stat_result["stat"]["lnk_source"] }}'
+    dest: '/boot/grub2/grubenv'
+    follow: false
+    owner: 'root'
+    group: 'root'
+    mode: 0o644
   when:
     - 'ansible_facts["distribution_major_version"] | int == 8'
     - 'not __bootloader__efi_stat_result["stat"]["exists"] | bool'
+    - '__bootloader__grubenv_stat_result["stat"]["islnk"] | d(false) | bool'
 
 
 # grubby writes the boot entries on the Red Hat family, so the role calls it directly instead of

@@ -18,6 +18,7 @@ Reboots are not performed by the update scripts themselves. They are delegated t
 * **"Security" means the `security` repository, not security errata.** The security lane covers the hot-fixes of the `security` repository only. Security errata (RLSA) from BaseOS and AppStream are installed by the regular lane. With a `system_update__update_day` other than daily, they stay pending until the next regular run, and the `rpm-updates` check of the [Linuxfabrik Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) reports them as security updates in the meantime.
 * **The security lane is enabled by default, but a no-op without the `security` repository.** That repository is provided by the [repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos) role. On hosts where it is not present, the security lane installs nothing and requests no reboot. Turn the lane off entirely with `system_update__security_enabled: false`.
 * **The update hooks run in both lanes, but only around a real transaction.** `system_update__pre_update_code` and `system_update__post_update_code` are run by the regular lane and, by default, by the security lane too. The security lane fires four times a day and exits on most runs without installing anything, so it reaches the hooks only once the `security` repository actually has hot-fixes pending. Code that aborts the update or reports a failed pre-condition therefore stays quiet on the runs there is nothing to install. Where a hot-fix does not warrant what a full update does, `system_update__security_pre_update_code` and `system_update__security_post_update_code` override the security lane's half, `''` included.
+* **Config-file stubs are not mailed by default.** The `*.rpmnew`, `*.rpmsave`, `*.dpkg-dist` and `*.ucf-dist` files an update leaves next to a locally changed configuration file are reported only with `system_update__mail_new_configfiles_enabled: true`, one mail per file and run.
 * **The reboot notification says why.** The notification sent when the host reboots lists what asked for the reboot: the `needs-restarting` hint on Rocky, and on Debian and Ubuntu the packages from `/run/reboot-required.pkgs` and the `needrestart` summary. This also holds for a reboot carried over from an earlier window.
 * **Unused kernels are removed before the update on Debian and Ubuntu.** `apt-get upgrade` installs every new kernel but never removes one, so the regular lane first removes the kernel packages apt lists as auto-removable, the same way unattended-upgrades does with `Remove-Unused-Kernel-Packages`. apt keeps the running and the newest kernel; held packages, the packages of the running kernel and anything other than versioned kernel packages are never removed. If the removal would remove or install anything beyond that, it is skipped. The update mail lists the removed packages. On Rocky, dnf's `installonly_limit` does the same within the transaction.
 * **Packages the update leaves unused are removed on Debian and Ubuntu.** After the upgrade, the regular lane removes the packages that became auto-removable in this run, typically libraries replaced by a renamed package, like unattended-upgrades does with `Remove-New-Unused-Dependencies`, and with the same checks as the kernel removal. Packages that were unused before the run stay installed; remove them with `apt autoremove` if they are not needed.
@@ -64,9 +65,15 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `'{{ mailto_root__from }}'`
 
+`system_update__mail_new_configfiles_enabled`
+
+* Whether the regular lane sends a mail for every config-file stub (`*.rpmnew` / `*.rpmsave` / `*.dpkg-dist` / `*.ucf-dist`) it finds on the local filesystems after the update, to `system_update__mail_recipients_new_configfiles`. The lane looks for them on every run, so a stub that is left in place is mailed again each time.
+* Type: Bool.
+* Default: `false`
+
 `system_update__mail_recipients_new_configfiles`
 
-* A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`).
+* A list of email recipients to notify if there is a new version of a config file (`rpmnew` / `rpmsave` / `dpkg-dist` / `ucf-dist`), if enabled by `system_update__mail_new_configfiles_enabled`.
 * Type: List of strings.
 * Default: `'{{ mailto_root__to }}'`
 
@@ -177,6 +184,7 @@ Example:
 # optional
 system_update__cache_only: true
 system_update__mail_from: 'noreply@example.com'
+system_update__mail_new_configfiles_enabled: true
 system_update__mail_recipients_new_configfiles:
   - 'info@example.com'
   - 'support@example.com'

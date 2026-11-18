@@ -22,6 +22,15 @@ The role deploys its `[DEFAULT]` section as `jail.d/z00-defaults.conf`. fail2ban
 
 Jails are read from a `z10-<template>.conf.j2` source but written to `jail.d/<filename>.conf`, so the destination name, and with it the order in which fail2ban reads the jail, is chosen freely per entry. Filters have no such prefix and are written to `filter.d/<filename>.conf`.
 
+The `apache-auth`, `apache-badbots`, `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome`, `apache-noscript` and `apache-overflows` templates enable the jail of the same name that fail2ban ships in `jail.conf`, with its filter and its `port`, `maxretry`, `findtime` and `bantime`. They only set `logpath`, to the error or access logs below `/var/log/httpd/` in the naming of the [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role (`<name>-error.log`, `<name>-access.log`), which the `*error_log` and `*access_log` of `jail.conf` do not match. Such a jail refuses to start when no file matches its `logpath`, and fail2ban with it, so enable them on Apache hosts only.
+
+On the Red Hat family, the playbook deploys the Linuxfabrik repository, which serves fail2ban built from the latest upstream release. EPEL lags behind and does not recognize every attack its filters are meant for, for example the `invalid URI path` (`AH10244`) of a path traversal attempt in `apache-overflows`.
+
+
+## Known Limitations
+
+* The `apache-badbots` filter only matches access log lines that end with the user agent, as in the `combined` format. The `linuxfabrikio` format of the apache_httpd role appends the bytes received and sent, so the jail never bans there.
+
 
 ## Dependent Roles
 
@@ -30,6 +39,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * On Rocky 9 and newer, the CRB repository must be enabled, since EPEL builds against it (role: [linuxfabrik.lfops.repo_baseos](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_baseos)).
 * The `python3-policycoreutils` module must be installed (required for the SELinux Ansible tasks) (role: [linuxfabrik.lfops.policycoreutils](https://github.com/Linuxfabrik/lfops/tree/main/roles/policycoreutils)).
 * On RHEL-compatible systems, the EPEL repository must be enabled (role: [linuxfabrik.lfops.repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel)).
+* On RHEL-compatible systems, the Linuxfabrik repository serves fail2ban (role: [linuxfabrik.lfops.repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik)).
 * On RHEL-compatible systems, the `nis_enabled` SELinux boolean must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 * sshd must log at `VERBOSE` level, otherwise the sshd jail does not see the failed logins (role: [linuxfabrik.lfops.sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd)).
 * The firewall must be one the `iptables-multiport` banaction can insert its chains into (role: [linuxfabrik.lfops.firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall)).

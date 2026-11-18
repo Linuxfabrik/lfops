@@ -140,3 +140,20 @@
           - '__molecule__apache_solr_pid_result["stat"]["pw_name"] == "solr"'
           - '__molecule__apache_solr_pid_result["stat"]["mode"] == "0640"'
         fail_msg: 'The PID file is {{ __molecule__apache_solr_pid_result["stat"] | d("missing") }}'
+
+    # Covers the log files Solr wrote before solr.service got its UMask (see prepare.yml), and the
+    # ones it writes now.
+    - name: 'find /var/log/solr -type f'
+      ansible.builtin.find:
+        paths: '/var/log/solr'
+      register: '__molecule__apache_solr_logs_result'
+
+    - name: 'Assert the Solr log files are not world-readable'
+      ansible.builtin.assert:
+        that:
+          - '"/var/log/solr/solr.log.1" in __molecule__apache_solr_logs_result["files"] | map(attribute="path")'
+          - '__molecule__apache_solr_logs_result["files"] | rejectattr("mode", "eq", "0640") | list | length == 0'
+        fail_msg: >-
+          {{ __molecule__apache_solr_logs_result["files"] | map(attribute="path")
+            | zip(__molecule__apache_solr_logs_result["files"] | map(attribute="mode"))
+            | map("join", " ") | join(", ") }}

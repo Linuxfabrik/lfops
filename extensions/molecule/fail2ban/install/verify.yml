@@ -61,6 +61,103 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # The apache-* jails are the ones fail2ban ships in jail.conf; the role only sets their
+    # logpath. The file list of the running jail shows the server reads the log of the virtual
+    # host that prepare.yml created, which the *error_log / *access_log of jail.conf would miss.
+    - name: 'fail2ban-client status {{ item["jail"] }}'
+      ansible.builtin.command: 'fail2ban-client status {{ item["jail"] }}'
+      register: '__molecule__fail2ban_apache_status_result'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      loop:
+        - jail: 'apache-auth'
+          log: 'error'
+        - jail: 'apache-badbots'
+          log: 'access'
+        - jail: 'apache-botsearch'
+          log: 'error'
+        - jail: 'apache-fakegooglebot'
+          log: 'access'
+        - jail: 'apache-nohome'
+          log: 'error'
+        - jail: 'apache-noscript'
+          log: 'error'
+        - jail: 'apache-overflows'
+          log: 'error'
+      loop_control:
+        label: '{{ item["jail"] }}'
+
+    - name: 'Assert the apache-* jails run and read the log of the virtual host'
+      ansible.builtin.assert:
+        that:
+          - 'item["rc"] == 0'
+          - 'item["stdout"] is search("/var/log/httpd/molecule\\.example\\.com-" ~ item["item"]["log"] ~ "\\.log")'
+        fail_msg: 'the {{ item["item"]["jail"] }} jail: {{ item["stdout"] | d("") }}{{ item["stderr"] | d("") }}'
+      loop: '{{ __molecule__fail2ban_apache_status_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["jail"] }}'
+
+    # The role sets no maxretry or bantime for these jails, so the server has to run with the
+    # values of jail.conf: maxretry 2 for apache-overflows, bantime 48h for apache-badbots.
+    # Anything else means a template still overrides what fail2ban ships.
+    - name: 'fail2ban-client get {{ item["jail"] }} {{ item["option"] }}'
+      ansible.builtin.command: 'fail2ban-client get {{ item["jail"] }} {{ item["option"] }}'
+      register: '__molecule__fail2ban_apache_option_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - jail: 'apache-badbots'
+          option: 'bantime'
+          expected: 172800
+        - jail: 'apache-overflows'
+          option: 'maxretry'
+          expected: 2
+      loop_control:
+        label: '{{ item["jail"] }} {{ item["option"] }}'
+
+    - name: 'Assert the apache-* jails use the values of jail.conf'
+      ansible.builtin.assert:
+        that: 'item["stdout"] | int == item["item"]["expected"]'
+        fail_msg: '{{ item["item"]["jail"] }} {{ item["item"]["option"] }} is {{ item["stdout"] }}, expected {{ item["item"]["expected"] }} from jail.conf'
+      loop: '{{ __molecule__fail2ban_apache_option_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["jail"] }} {{ item["item"]["option"] }}'
+
+    # A path traversal attempt that Apache rejects with `AH10244: invalid URI path`, written to the
+    # log of the virtual host twice, the maxretry of jail.conf. apache-overflows only knows AH10244
+    # in the fail2ban the Linuxfabrik repository serves; the EPEL build lets it through. So the ban
+    # proves both that the jail reads the right file and that the host got that fail2ban.
+    - name: 'Append two AH10244 lines from 198.51.100.20 to the error log of the virtual host'
+      ansible.builtin.shell: |-
+        now="$(date '+%a %b %d %H:%M:%S.%6N %Y')"
+        for path in '/%2e%2e/.env' '/%2e%2e/%2e%2e/etc/passwd'; do
+            printf '[%s] [core:error] [pid 1234:tid 1234] [client 198.51.100.20:51234] AH10244: invalid URI path (%s)\n' "$now" "$path"
+        done >> /var/log/httpd/molecule.example.com-error.log
+      changed_when: false
+      check_mode: false
+
+    - name: 'fail2ban-client status apache-overflows'
+      ansible.builtin.command: 'fail2ban-client status apache-overflows'
+      register: '__molecule__fail2ban_overflows_status_result'
+      changed_when: false
+      check_mode: false
+      until: '"198.51.100.20" in __molecule__fail2ban_overflows_status_result["stdout"]'
+      retries: 10
+      delay: 3
+      failed_when: false
+
+    - name: 'Assert apache-overflows banned the source of the path traversal attempts'
+      ansible.builtin.assert:
+        that: '"198.51.100.20" in __molecule__fail2ban_overflows_status_result["stdout"]'
+        fail_msg: 'apache-overflows did not ban 198.51.100.20: {{ __molecule__fail2ban_overflows_status_result["stdout"] }}'
+
+    # verify.yml runs twice, and the second run has to see the ban happen again.
+    - name: 'fail2ban-client set apache-overflows unbanip 198.51.100.20'
+      ansible.builtin.command: 'fail2ban-client set apache-overflows unbanip 198.51.100.20'
+      changed_when: false
+      check_mode: false
+
     # The wordpress-login filter ships with the role defaults, but its jail reads Apache logs this
     # host does not have. So the deployed filter is fed sample lines through fail2ban-regex, which
     # proves it parses and matches with the fail2ban version the role installed.

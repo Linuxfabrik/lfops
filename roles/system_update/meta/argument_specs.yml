@@ -32,13 +32,22 @@ argument_specs:
         required: false
         description: 'Sender address for all notifications. Defaults to mailto_root__from.'
 
+      system_update__mail_new_configfiles_enabled:
+        type: 'bool'
+        required: false
+        default: false
+        description: >-
+          Whether the regular lane sends a mail for every config-file stub
+          (rpmnew / rpmsave / dpkg-dist / ucf-dist) it finds after the update.
+
       system_update__mail_recipients_new_configfiles:
         type: 'list'
         elements: 'str'
         required: false
         description: >-
           Recipients notified about a new version of a config file (rpmnew /
-          rpmsave / dpkg-dist / ucf-dist). Defaults to mailto_root__to.
+          rpmsave / dpkg-dist / ucf-dist), if enabled by
+          system_update__mail_new_configfiles_enabled. Defaults to mailto_root__to.
 
       system_update__mail_recipients_updates:
         type: 'list'

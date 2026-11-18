@@ -139,6 +139,30 @@ apache_httpd__vhosts__group_var:
     state: 'absent'
     virtualhost_port: 80
 
+  # The raw and redirect templates on port 80. verify.yml sends a request to each and expects it in
+  # the log the template writes, also a path traversal probe that Apache rejects with AH10244 before
+  # the Redirect of the vHost applies, the way scanners hit a catch-all vHost for unknown host names.
+  - comment: |-
+      Sets no log of its own, so the template adds the error and the access log.
+    template: 'raw'
+    virtualhost_port: 80
+    conf_server_name: 'raw.example.com'
+    raw: |-
+      Redirect 301 / https://h1.example.com/
+
+  - comment: |-
+      Sets its own access log, so the template must not add a second one.
+    template: 'raw'
+    virtualhost_port: 80
+    conf_server_name: 'raw-own-log.example.com'
+    raw: |-
+      CustomLog logs/raw-own-log.example.com-access.log combined
+      Redirect 301 / https://h1.example.com/
+
+  - template: 'redirect'
+    virtualhost_port: 80
+    conf_server_name: 'h1.example.com'
+
 # verify.yml sends its requests from the host itself and sets X-Forwarded-For, so trusting the
 # loopback address as the proxy shows whether Apache logs the forwarded client instead of the peer.
 apache_httpd__mod_remoteip_internal_proxy:
