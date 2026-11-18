@@ -11,7 +11,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import atexit
-import fcntl
+import hashlib
 import json
 import os
 import re
@@ -51,7 +51,7 @@ DOCUMENTATION = r"""
     - Shows the run on one fixed screen that is updated in place instead of scrolling, at least once a second. At the top the playbook, the number of hosts and the elapsed time, the current role and task, a progress bar of the play with the estimated remaining time, then counters of the results of the current task and of the whole run. The ok counter of the task is followed by the number of hosts still at work on the task and the number of hosts, for example C(ok 13/22/35).
     - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path, shortened to the initials of its parent directories, when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
     - The progress bar counts the tasks of the play that are known when it starts, after C(--tags) and C(--skip-tags) are applied. A task included with C(include_tasks) or C(include_role) is one step, the bar stands still while the tasks it includes run. Tasks in C(rescue) sections and handlers are not counted. The bar counts tasks, not time, and starts over with every batch of C(serial).
-    - The estimated remaining time (ETA) adds up how long each step left took the last time it ran, an include with all its tasks, until the slowest host was done. The durations are kept in O(eta_cache_dir) for the next runs. A step that never ran before is assumed to take as long as the steps of this play so far did on average.
+    - The estimated remaining time (ETA) adds up how long each step left took the last time it ran, an include with all its tasks, until the slowest host was done. The durations are kept in O(eta_cache_dir) for the next runs, one file per step, so that runs in parallel, like several ansible-navigator sessions, do not wait for each other. A step that never ran before is assumed to take as long as the steps of this play so far did on average.
     - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counts of fatal (F), warning (W), changed (C) and ok (O) results and their last notable result (LAST WORST), or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
     - At the end of the run, the screen is left and the details follow in the format of C(linuxfabrik.lfops.compact), but only for the tasks with changes, warnings or failures. Then the recap and the report of the distinct messages by severity.
     - Without a terminal (log file, pipe, CI) or with C(--verbose), the plugin behaves exactly like C(linuxfabrik.lfops.compact).
@@ -115,10 +115,7 @@ _MIN_LINES = 12
 # collection root: plugins/callback/dashboard.py -> ../../..
 _COLLECTION_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
-# durations of steps that did not run for so long are dropped from the cache, e.g.
-# those of a task whose line moved
-_DURATIONS_MAX_AGE = 90 * 24 * 3600
-_DURATIONS_FILE = 'durations.json'
+_DURATION_SUFFIX = '.json'
 
 
 def _git(root, *args):
@@ -297,71 +294,62 @@ def _private_dir(directory):
     return True
 
 
-def _read_durations(path):
-    """The cache file: key -> {"seconds": float, "time": epoch}, {} if unusable."""
+def _duration_file(directory, key):
+    """The file of a step: the key hashed, since it contains slashes and spaces."""
+    name = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    return os.path.join(directory, name + _DURATION_SUFFIX)
+
+
+def _read_duration(path, key):
+    """The seconds in the file of the step `key`, None if unusable."""
     try:
         with open(path, encoding='utf-8') as f:
             data = json.load(f)
     except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get('key') != key:
+        return None
+    seconds = data.get('seconds')
+    return seconds if isinstance(seconds, (int, float)) else None
+
+
+def load_durations(directory, keys):
+    """The durations of the steps `keys` from earlier runs, key -> seconds, for
+    those that are known.
+    """
+    if not directory or not keys or not _private_dir(directory):
         return {}
-    if not isinstance(data, dict):
-        return {}
-    return {
-        key: value
-        for key, value in data.items()
-        if isinstance(value, dict)
-        and isinstance(value.get('seconds'), (int, float))
-        and isinstance(value.get('time'), (int, float))
-    }
+    durations = {}
+    for key in keys:
+        seconds = _read_duration(_duration_file(directory, key), key)
+        if seconds is not None:
+            durations[key] = seconds
+    return durations
 
 
-def load_durations(directory):
-    """The durations of the steps of earlier runs, key -> seconds."""
-    if not directory or not _private_dir(directory):
-        return {}
-    durations = _read_durations(os.path.join(directory, _DURATIONS_FILE))
-    return {key: value['seconds'] for key, value in durations.items()}
-
-
-def save_durations(directory, measured, now=None):
-    """Merge the `measured` durations (key -> seconds) into the cache file, the
-    last one wins. Entries not updated for _DURATIONS_MAX_AGE are dropped. Runs in
-    parallel take turns with a lock and see each other's results.
+def save_durations(directory, measured):
+    """Write the `measured` durations (key -> seconds), one file per step, so
+    that runs in parallel, e.g. several ansible-navigator sessions, need no lock:
+    each file is replaced as a whole, the last run wins.
     """
     if not directory or not measured or not _private_dir(directory):
         return
-    now = time.time() if now is None else now
-    path = os.path.join(directory, _DURATIONS_FILE)
-    try:
-        lock = os.open(
-            os.path.join(directory, 'durations.lock'),
-            os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW,
-            0o600,
-        )
-    except OSError:
-        return
-    try:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        durations = {
-            key: value
-            for key, value in _read_durations(path).items()
-            if now - value['time'] < _DURATIONS_MAX_AGE
-        }
-        for key, seconds in measured.items():
-            durations[key] = {'seconds': round(seconds, 1), 'time': int(now)}
+    for key, seconds in measured.items():
         # a new file moved into place, so that a run that aborts while writing
-        # leaves the old one
-        fd, tmp = tempfile.mkstemp(dir=directory, prefix='.durations.')
+        # leaves the old one, and another run never reads half a file
+        try:
+            fd, tmp = tempfile.mkstemp(dir=directory, prefix='.tmp.')
+        except OSError:
+            return
         try:
             with os.fdopen(fd, 'w', encoding='utf-8') as f:
-                json.dump(durations, f, indent=0, sort_keys=True)
-            os.replace(tmp, path)
+                json.dump({'key': key, 'seconds': round(seconds, 1)}, f)
+            os.replace(tmp, _duration_file(directory, key))
         except OSError:
-            os.unlink(tmp)
-    except OSError:
-        pass
-    finally:
-        os.close(lock)
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def progress_bar(step, total, width, color=True, remaining=None):
@@ -446,9 +434,9 @@ class CallbackModule(Compact):
         self._step = 0
         self._play_start = time.monotonic()
         self._step_start = self._play_start
-        # key -> seconds: the durations of the steps from earlier runs (None until
-        # the first play starts), and those measured in this run, see _learn()
-        self._durations = None
+        # key -> seconds: the durations of the steps of the running play from
+        # earlier runs, and those measured in this run, see _learn()
+        self._durations = {}
         self._measured = {}
         # where the plugin, and with it LFOps, comes from, see lfops_origin()
         self._origin = None
@@ -951,12 +939,12 @@ class CallbackModule(Compact):
         self._play_start = time.monotonic()
         self._step_start = self._play_start
         if self._tui:
-            if self._durations is None:
-                self._durations = load_durations(self._eta_cache_dir())
             try:
                 self._steps, self._step_keys = play_steps(play)
             except Exception:  # only for the progress bar, which is then left out
                 pass
+            # per play, to see what runs in parallel learned meanwhile
+            self._durations = load_durations(self._eta_cache_dir(), self._step_keys)
         # the play line is part of the screen header, not of the details, and was
         # printed above the screen already
         self._capture = []

@@ -294,12 +294,13 @@ class TestDurations(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_saved_and_loaded(self):
-        _module.save_durations(self.directory, {'roles/a/tasks/main.yml:3': 12.34})
+        key = 'roles/a/tasks/main.yml:3 [l.l.a > l.l.b]'
+        _module.save_durations(self.directory, {key: 12.34})
         self.assertEqual(
-            _module.load_durations(self.directory),
-            {'roles/a/tasks/main.yml:3': 12.3},
+            _module.load_durations(self.directory, [key, 'unknown:1']), {key: 12.3}
         )
-        # directory and parent private
+        # one file per step, directory and parent private
+        self.assertEqual(len(os.listdir(self.directory)), 1)
         for path in (self.directory, os.path.dirname(self.directory)):
             self.assertEqual(os.stat(path).st_mode & 0o777, 0o700)
 
@@ -307,24 +308,26 @@ class TestDurations(unittest.TestCase):
         _module.save_durations(self.directory, {'a:1': 50.0, 'b:1': 5.0})
         _module.save_durations(self.directory, {'a:1': 10.0})
         self.assertEqual(
-            _module.load_durations(self.directory), {'a:1': 10.0, 'b:1': 5.0}
+            _module.load_durations(self.directory, ['a:1', 'b:1']),
+            {'a:1': 10.0, 'b:1': 5.0},
         )
-
-    def test_old_entries_are_dropped(self):
-        now = 1_800_000_000
-        _module.save_durations(self.directory, {'old:1': 5.0}, now=now)
-        _module.save_durations(
-            self.directory, {'new:1': 7.0}, now=now + _module._DURATIONS_MAX_AGE + 1
-        )
-        self.assertEqual(_module.load_durations(self.directory), {'new:1': 7.0})
+        # no temporary files left
+        self.assertEqual(len(os.listdir(self.directory)), 2)
 
     def test_broken_file_is_ignored_and_replaced(self):
         os.makedirs(self.directory)
-        with open(os.path.join(self.directory, 'durations.json'), 'w') as f:
-            f.write('{"a:1": {"seconds": 1')
-        self.assertEqual(_module.load_durations(self.directory), {})
-        _module.save_durations(self.directory, {'b:1': 2.0})
-        self.assertEqual(_module.load_durations(self.directory), {'b:1': 2.0})
+        path = _module._duration_file(self.directory, 'a:1')
+        with open(path, 'w') as f:
+            f.write('{"key": "a:1", "seconds": 1')
+        self.assertEqual(_module.load_durations(self.directory, ['a:1']), {})
+        _module.save_durations(self.directory, {'a:1': 2.0})
+        self.assertEqual(_module.load_durations(self.directory, ['a:1']), {'a:1': 2.0})
+
+    def test_file_of_another_key_is_ignored(self):
+        os.makedirs(self.directory)
+        with open(_module._duration_file(self.directory, 'a:1'), 'w') as f:
+            f.write('{"key": "b:1", "seconds": 1}')
+        self.assertEqual(_module.load_durations(self.directory, ['a:1']), {})
 
     def test_symlinked_directory_is_not_used(self):
         target = os.path.join(self.tmp, 'elsewhere')
@@ -333,11 +336,32 @@ class TestDurations(unittest.TestCase):
         os.symlink(target, self.directory)
         _module.save_durations(self.directory, {'a:1': 1.0})
         self.assertEqual(os.listdir(target), [])
-        self.assertEqual(_module.load_durations(self.directory), {})
+        self.assertEqual(_module.load_durations(self.directory, ['a:1']), {})
 
     def test_disabled_with_an_empty_value(self):
         _module.save_durations('', {'a:1': 1.0})
-        self.assertEqual(_module.load_durations(''), {})
+        self.assertEqual(_module.load_durations('', ['a:1']), {})
+
+    def test_parallel_runs_keep_each_others_durations(self):
+        # many processes write at the same time, none loses its steps
+        keys = [[f'p{p}:{i}' for i in range(50)] + ['shared:1'] for p in range(8)]
+        pids = []
+        for p, own in enumerate(keys):
+            pid = os.fork()
+            if pid == 0:
+                try:
+                    _module.save_durations(
+                        self.directory, {key: float(p) for key in own}
+                    )
+                finally:
+                    os._exit(0)
+            pids.append(pid)
+        for pid in pids:
+            os.waitpid(pid, 0)
+        everything = sorted({key for own in keys for key in own})
+        loaded = _module.load_durations(self.directory, everything)
+        self.assertEqual(sorted(loaded), everything)
+        self.assertEqual(len(os.listdir(self.directory)), len(everything))
 
     def test_task_key_relative_to_the_collection(self):
         class Role:
@@ -417,16 +441,18 @@ class TestLearnedEta(unittest.TestCase):
                     workdir=tmp,
                 )
                 self.assertEqual(returncode, 0, raw)
-            with open(os.path.join(tmp, 'eta', 'durations.json')) as f:
-                durations = json.load(f)
+            durations = {}
+            for name in os.listdir(os.path.join(tmp, 'eta')):
+                with open(os.path.join(tmp, 'eta', name)) as f:
+                    data = json.load(f)
+                durations[data['key']] = data['seconds']
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
         # the three steps by file and line of the playbook, outside the collection
         self.assertEqual(len(durations), 3, durations)
         self.assertTrue(all('playbook.yml:' in key for key in durations), durations)
         # the include with its tasks, until the slowest host was done
-        slowest = max(durations.values(), key=lambda value: value['seconds'])
-        self.assertGreaterEqual(slowest['seconds'], 3, durations)
+        self.assertGreaterEqual(max(durations.values()), 3, durations)
         # in the second run, the ETA is known from the first step on and counts
         # the sleep of the include
         screen = raw[raw.index(_SCREEN_ON) : raw.rindex(_SCREEN_OFF)]
