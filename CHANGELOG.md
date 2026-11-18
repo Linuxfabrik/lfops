@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:fail2ban**: On hosts with Apache logs below `/var/log/httpd`, the role enables the Apache jails fail2ban ships (`apache-auth`, `apache-fakegooglebot`, `apache-modsecurity`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `php-url-fopen`), unless `apache_httpd__mod_remoteip_internal_proxy` lists a proxy. On a host behind a reverse proxy that Apache logs as the client, such as LibreNMS behind a proxy, set `fail2ban__jails_apache_enabled: false`, otherwise the jails ban the proxy.
+* **role:fail2ban**: The sshd jail also bans clients that connect without trying to log in, such as scanners (filter mode `aggressive`). Set `fail2ban__jail_sshd_mode: 'normal'` to keep the previous behaviour.
 * **role:repo_baseos**: The Rocky Linux `security` repository downloads from `dl.rockylinux.org` instead of a mirror from the mirrorlist, so hot-fixes reach all hosts at the same time instead of whenever their mirror has synced. Hosts behind an egress filter need HTTPS access to `dl.rockylinux.org`.
 * **role:system_update**: The regular update lane no longer sends a mail for every config-file stub (`*.rpmnew`, `*.rpmsave`, `*.dpkg-dist`, `*.ucf-dist`) it finds. Set `system_update__mail_new_configfiles_enabled: true` to keep these mails.
 * **role:fail2ban**: The sshd jail bans on the port sshd listens on (`sshd__port`) instead of port 22, configurable with `fail2ban__jail_sshd_port`, and the portscan jail exempts that port instead of port 22 (`fail2ban__jail_portscan_allowed_ports`). On hosts where sshd listens on another port, sshd bans used to have no effect and now lock clients out, including admins who fail to log in three times within 15 minutes, and a denied connection attempt to port 22 now leads to a portscan ban. Add trusted networks to `fail2ban__jail_default_ignoreip` before updating, and list port 22 in `fail2ban__jail_portscan_allowed_ports` if it should stay exempt.
@@ -172,6 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:fail2ban**: A jail whose log file does not exist is skipped instead of keeping fail2ban from starting with all other jails (fail2ban 1.1.1 or newer).
 * **role:apache_httpd, role:moodle, role:nextcloud**: vHosts log in the Apache standard format `combined` instead of `linuxfabrikio`, which fail2ban and log analysers read without further setup.
 * **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.
 * **plugin:bitwarden_item**: Lookups are about ten times faster, which shortens runs against many hosts with credentials from Bitwarden, also with `--tags`, since every role validates its variables.

@@ -22,14 +22,36 @@ The role deploys its `[DEFAULT]` section as `jail.d/z00-defaults.conf`. fail2ban
 
 Jails are read from a `z10-<template>.conf.j2` source but written to `jail.d/<filename>.conf`, so the destination name, and with it the order in which fail2ban reads the jail, is chosen freely per entry. Filters have no such prefix and are written to `filter.d/<filename>.conf`.
 
-The `apache-auth`, `apache-badbots`, `apache-botsearch`, `apache-fakegooglebot`, `apache-nohome`, `apache-noscript` and `apache-overflows` templates enable the jail of the same name that fail2ban ships in `jail.conf`, with its filter and its `port`, `maxretry`, `findtime` and `bantime`. They only set `logpath`, to the error or access logs below `/var/log/httpd/` in the naming of the [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role (`<name>-error.log`, `<name>-access.log`), which the `*error_log` and `*access_log` of `jail.conf` do not match. Such a jail refuses to start when no file matches its `logpath`, and fail2ban with it, so enable them on Apache hosts only.
+The `apache-*` and `php-url-fopen` templates enable the jail of the same name that fail2ban ships in `jail.conf`, with its filter and its `port`, `maxretry`, `findtime` and `bantime`. They only set `logpath`, to the error or access logs below `/var/log/httpd/` in the naming of the [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role (`<name>-error.log`, `<name>-access.log`), which the `*error_log` and `*access_log` of `jail.conf` do not match.
+
+On a host with `/var/log/httpd`, the role enables these jails without further inventory:
+
+* `apache-auth`: failed logins (`mod_auth_basic`, `mod_auth_digest`), requests denied by `Require`, and SNI mismatches.
+* `apache-fakegooglebot`: clients that claim to be Googlebot, but whose address does not resolve to Google.
+* `apache-modsecurity`: requests that ModSecurity denied.
+* `apache-nohome`: probes for home directories (`/~root/`).
+* `apache-noscript`: probes for scripts that do not exist (`.php`, `.asp`, `.pl`, `cgi-bin`).
+* `apache-overflows`: path traversal attempts.
+* `php-url-fopen`: attempts to pass a remote URL to a PHP script (remote file inclusion).
+
+They belong on the host the clients connect to. Behind a reverse proxy, a ban on the client address does nothing, since the packets come from the proxy, and where Apache logs the proxy as the client, the jails would ban the proxy itself. The role therefore leaves them out where `apache_httpd__mod_remoteip_internal_proxy` lists a proxy; for a host behind a proxy without `mod_remoteip`, set `fail2ban__jails_apache_enabled` to `false`. Hosts without `/var/log/httpd`, or with the jails disabled, get them removed.
+
+The `apache-badbots` and `apache-botsearch` templates are not enabled by default: they match against lists of user agents (2013) and paths (2017) that fail2ban no longer maintains.
+
+The role deploys `skip_if_nologs = true`, so a jail whose `logpath` matches no file is skipped instead of keeping fail2ban from starting with all its other jails, for example on an Apache host before the first vHost is deployed. This needs fail2ban 1.1.1 or newer; older releases ignore the option, and there such a jail still keeps fail2ban from starting.
+
+The sshd jail runs the filter in `aggressive` mode, which also bans clients that connect and leave without trying to log in, such as scanners and clients sending a broken protocol banner.
 
 On the Red Hat family, the playbook deploys the Linuxfabrik repository, which serves fail2ban built from the latest upstream release. EPEL lags behind and does not recognize every attack its filters are meant for, for example the `invalid URI path` (`AH10244`) of a path traversal attempt in `apache-overflows`.
 
 
 ## Known Limitations
 
-* The `apache-badbots` filter only matches access log lines that end with the user agent, as in the `combined` format. The `linuxfabrikio` format of the apache_httpd role appends the bytes received and sent, so the jail never bans there.
+* The Apache jails are enabled when fail2ban is deployed after Apache. On a host that gets Apache later, run the fail2ban playbook again.
+* `apache-badbots` only matches access log lines that end with the user agent, as in the `combined` format, not the `linuxfabrikio` format of the apache_httpd role.
+* `apache-modsecurity` bans every client ModSecurity denies twice within 10 minutes, so a false positive of the Core Rule Set becomes a ban.
+* `apache-overflows` only recognizes path traversal attempts. Apache 2.4 answers overlong request lines, invalid methods and invalid characters in the URI with a `400` without an error log line the filter could match.
+* `php-url-fopen` only matches access logs that start with the client address (`combined`, `common`), not the `matomo` and `vhost_common` formats, which start with the server name.
 
 
 ## Dependent Roles
@@ -171,6 +193,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: String.
 * Default: `'7d'`
 
+`fail2ban__jail_sshd_mode`
+
+* The mode of the sshd filter. `normal` bans failed logins, `ddos` clients that connect and leave without trying to log in, `extra` further failures of the authentication, and `aggressive` all of them.
+* Type: String. One of `aggressive`, `ddos`, `extra`, `normal`.
+* Default: `'aggressive'`
+* Deviates from the upstream default `normal`, which leaves scanners alone that only probe the protocol banner.
+
 `fail2ban__jail_sshd_port`
 
 * The port the sshd jail bans on, or several as a comma-separated list such as `'22,2222'`. Takes the port the [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd) role configures.
@@ -200,7 +229,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The fail2ban jail definition. For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
 * Type: List of dictionaries.
-* Default: `z10-portscan`, `z10-sshd`
+* Default: `z10-portscan`, `z10-sshd`, and on Apache hosts `z10-apache-auth`, `z10-apache-fakegooglebot`, `z10-apache-modsecurity`, `z10-apache-nohome`, `z10-apache-noscript`, `z10-apache-overflows`, `z10-php-url-fopen` (see `fail2ban__jails_apache_enabled`)
 * Subkeys:
 
     * `filename`:
@@ -223,6 +252,12 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
         * Mandatory. Name of the Jinja template source file to use. Have a look at the possible options [here](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban/templates/etc/fail2ban/jail.d), or `raw`.
         * Type: String.
+
+`fail2ban__jails_apache_enabled`
+
+* Enables the Apache jails (see "How the Role Behaves") on a host with `/var/log/httpd`. Set it to `false` on a host behind a reverse proxy that logs the proxy as the client, such as LibreNMS behind a proxy.
+* Type: Bool.
+* Default: `true`, unless `apache_httpd__mod_remoteip_internal_proxy` lists a proxy
 
 `fail2ban__service_enabled`
 
@@ -268,6 +303,7 @@ fail2ban__jail_portscan_server_ips:
   - '192.0.2.5'
   - '198.51.100.100'
 fail2ban__jail_sshd_bantime: '7d'
+fail2ban__jail_sshd_mode: 'aggressive'
 fail2ban__jail_sshd_port: '22532'
 fail2ban__jail_wordpress_login_bantime: '8h'
 fail2ban__jail_wordpress_login_findtime: '10m'
@@ -290,6 +326,7 @@ fail2ban__jails__host_var:
       logpath  = /var/log/httpd/*access?log
       maxretry = 600
       port     = http,https
+fail2ban__jails_apache_enabled: true
 fail2ban__service_enabled: true
 fail2ban__service_state: 'started'
 ```

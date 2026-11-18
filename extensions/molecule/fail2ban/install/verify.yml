@@ -17,6 +17,11 @@
     # server reports back.
     __molecule__fail2ban_sshd_bantime_seconds: 10800
 
+    # The role enables its Apache jails on a host with /var/log/httpd unless
+    # apache_httpd__mod_remoteip_internal_proxy lists a proxy, which install/inventory does for
+    # rocky8-vm only.
+    __molecule__fail2ban_apache_jails_expected: '{{ apache_httpd__mod_remoteip_internal_proxy | d([]) | length == 0 }}'
+
   tasks:
 
     # Floor check. On its own this would still pass with a dead server, so it is the start of the
@@ -61,9 +66,26 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # The molecule-nolog jail of install/inventory reads a log file that does not exist. With
+    # skip_if_nologs from z00-defaults.conf the server skips it and runs everything else, which the
+    # running service above already shows; here the jail itself has to be absent.
+    - name: 'fail2ban-client status molecule-nolog'
+      ansible.builtin.command: 'fail2ban-client status molecule-nolog'
+      register: '__molecule__fail2ban_nolog_status_result'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: 'Assert the server skipped the jail without a log file'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_nolog_status_result["rc"] != 0'
+        fail_msg: 'the molecule-nolog jail runs: {{ __molecule__fail2ban_nolog_status_result["stdout"] }}'
+
     # The apache-* jails are the ones fail2ban ships in jail.conf; the role only sets their
     # logpath. The file list of the running jail shows the server reads the log of the virtual
     # host that prepare.yml created, which the *error_log / *access_log of jail.conf would miss.
+    # apache-badbots and apache-botsearch come from install/inventory and run everywhere, the
+    # others only where the role enables its Apache jails.
     - name: 'fail2ban-client status {{ item["jail"] }}'
       ansible.builtin.command: 'fail2ban-client status {{ item["jail"] }}'
       register: '__molecule__fail2ban_apache_status_result'
@@ -75,16 +97,22 @@
           log: 'error'
         - jail: 'apache-badbots'
           log: 'access'
+          inventory: true
         - jail: 'apache-botsearch'
           log: 'error'
+          inventory: true
         - jail: 'apache-fakegooglebot'
           log: 'access'
+        - jail: 'apache-modsecurity'
+          log: 'error'
         - jail: 'apache-nohome'
           log: 'error'
         - jail: 'apache-noscript'
           log: 'error'
         - jail: 'apache-overflows'
           log: 'error'
+        - jail: 'php-url-fopen'
+          log: 'access'
       loop_control:
         label: '{{ item["jail"] }}'
 
@@ -97,6 +125,19 @@
       loop: '{{ __molecule__fail2ban_apache_status_result["results"] }}'
       loop_control:
         label: '{{ item["item"]["jail"] }}'
+      when:
+        - 'item["item"]["inventory"] | d(false) or __molecule__fail2ban_apache_jails_expected | bool'
+
+    - name: 'Assert the Apache jails are left out behind a reverse proxy'
+      ansible.builtin.assert:
+        that: 'item["rc"] != 0'
+        fail_msg: 'the {{ item["item"]["jail"] }} jail runs, although apache_httpd__mod_remoteip_internal_proxy lists a proxy'
+      loop: '{{ __molecule__fail2ban_apache_status_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["jail"] }}'
+      when:
+        - 'not item["item"]["inventory"] | d(false)'
+        - 'not __molecule__fail2ban_apache_jails_expected | bool'
 
     # The role sets no maxretry or bantime for these jails, so the server has to run with the
     # values of jail.conf: maxretry 2 for apache-overflows, bantime 48h for apache-badbots.
@@ -115,6 +156,8 @@
           expected: 2
       loop_control:
         label: '{{ item["jail"] }} {{ item["option"] }}'
+      when:
+        - 'item["jail"] == "apache-badbots" or __molecule__fail2ban_apache_jails_expected | bool'
 
     - name: 'Assert the apache-* jails use the values of jail.conf'
       ansible.builtin.assert:
@@ -123,6 +166,8 @@
       loop: '{{ __molecule__fail2ban_apache_option_result["results"] }}'
       loop_control:
         label: '{{ item["item"]["jail"] }} {{ item["item"]["option"] }}'
+      when:
+        - 'item["skipped"] is not defined'
 
     # A path traversal attempt that Apache rejects with `AH10244: invalid URI path`, written to the
     # log of the virtual host twice, the maxretry of jail.conf. apache-overflows only knows AH10244
@@ -136,6 +181,8 @@
         done >> /var/log/httpd/molecule.example.com-error.log
       changed_when: false
       check_mode: false
+      when:
+        - '__molecule__fail2ban_apache_jails_expected | bool'
 
     - name: 'fail2ban-client status apache-overflows'
       ansible.builtin.command: 'fail2ban-client status apache-overflows'
@@ -146,17 +193,23 @@
       retries: 10
       delay: 3
       failed_when: false
+      when:
+        - '__molecule__fail2ban_apache_jails_expected | bool'
 
     - name: 'Assert apache-overflows banned the source of the path traversal attempts'
       ansible.builtin.assert:
         that: '"198.51.100.20" in __molecule__fail2ban_overflows_status_result["stdout"]'
         fail_msg: 'apache-overflows did not ban 198.51.100.20: {{ __molecule__fail2ban_overflows_status_result["stdout"] }}'
+      when:
+        - '__molecule__fail2ban_apache_jails_expected | bool'
 
     # verify.yml runs twice, and the second run has to see the ban happen again.
     - name: 'fail2ban-client set apache-overflows unbanip 198.51.100.20'
       ansible.builtin.command: 'fail2ban-client set apache-overflows unbanip 198.51.100.20'
       changed_when: false
       check_mode: false
+      when:
+        - '__molecule__fail2ban_apache_jails_expected | bool'
 
     # The wordpress-login filter ships with the role defaults, but its jail reads Apache logs this
     # host does not have. So the deployed filter is fed sample lines through fail2ban-regex, which
@@ -193,6 +246,95 @@
       loop: '{{ __molecule__fail2ban_wordpress_regex_result["results"] }}'
       loop_control:
         label: '{{ item["item"]["label"] }}'
+
+    # The filters of the Apache jails, fed the lines Apache 2.4 writes for the requests they are
+    # meant for. Measured on Rocky 8, 9 and 10 (httpd 2.4.37, 2.4.62, 2.4.63, mod_security 2.9)
+    # against real requests and rewritten with documentation addresses. A filter that no longer
+    # matches the current wording of Apache fails here, independent of the jails this host runs.
+    - name: 'fail2ban-regex {{ item["filter"] }} against {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'fail2ban-regex'
+          - '{{ item["line"] }}'
+          - '/etc/fail2ban/filter.d/{{ item["filter"] }}.conf'
+      register: '__molecule__fail2ban_apache_regex_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - label: 'an unknown user (AH01618)'
+          filter: 'apache-auth'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [auth_basic:error] [pid 1234:tid 1234] [client 198.51.100.30:51234] AH01618: user bob not found: /protected/'
+          matched: 1
+        - label: 'a wrong password (AH01617)'
+          filter: 'apache-auth'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [auth_basic:error] [pid 1234:tid 1234] [client 198.51.100.30:51234] AH01617: user alice: authentication failure for "/protected/": Password Mismatch'
+          matched: 1
+        - label: 'a request denied by Require (AH01630)'
+          filter: 'apache-auth'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [authz_core:error] [pid 1234:tid 1234] [client 198.51.100.30:51234] AH01630: client denied by server configuration: /var/www/html/denied'
+          matched: 1
+        - label: 'a request ModSecurity denied (Rocky 10)'
+          filter: 'apache-modsecurity'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [security2:error] [pid 1234:tid 1234] [client 198.51.100.31:51234] ModSecurity: Access denied with code 403 (phase 2). Operator GE matched 5 at TX:blocking_inbound_anomaly_score. [file "/etc/httpd/modsecurity.d/activated_rules/REQUEST-949-BLOCKING-EVALUATION.conf"] [line "222"] [id "949110"] [msg "Inbound Anomaly Score Exceeded (Total Score: 5)"] [hostname "192.0.2.5"] [uri "/"] [unique_id "aW1vbGVjdWxl"]'
+          matched: 1
+        - label: 'a request ModSecurity denied (Rocky 8 and 9)'
+          filter: 'apache-modsecurity'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [:error] [pid 1234:tid 1234] [client 198.51.100.31:51234] [client 198.51.100.31] ModSecurity: Access denied with code 403 (phase 2). Operator GE matched 5 at TX:anomaly_score. [file "/etc/httpd/modsecurity.d/activated_rules/REQUEST-949-BLOCKING-EVALUATION.conf"] [line "80"] [id "949110"] [msg "Inbound Anomaly Score Exceeded (Total Score: 5)"] [hostname "192.0.2.5"] [uri "/"] [unique_id "aW1vbGVjdWxl"]'
+          matched: 1
+        - label: 'a probe for a home directory'
+          filter: 'apache-nohome'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [core:info] [pid 1234:tid 1234] [client 198.51.100.32:51234] AH00128: File does not exist: /var/www/html/~root/'
+          matched: 1
+        - label: 'a missing favicon'
+          filter: 'apache-nohome'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [core:info] [pid 1234:tid 1234] [client 198.51.100.40:51234] AH00128: File does not exist: /var/www/html/favicon.ico'
+          matched: 0
+        - label: 'a missing PHP script (AH01071)'
+          filter: 'apache-noscript'
+          line: "[Wed Nov 18 12:30:05.123456 2026] [proxy_fcgi:error] [pid 1234:tid 1234] [client 198.51.100.33:51234] AH01071: Got error 'Primary script unknown'"
+          matched: 1
+        - label: 'a missing ASP script (AH00128)'
+          filter: 'apache-noscript'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [core:info] [pid 1234:tid 1234] [client 198.51.100.33:51234] AH00128: File does not exist: /var/www/html/missing.asp'
+          matched: 1
+        - label: 'a missing CGI script (AH01264, Rocky 9)'
+          filter: 'apache-noscript'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [cgid:error] [pid 1234:tid 1234] [client 198.51.100.33:51234] AH01264: stderr from /var/www/html/cgi-bin/missing.sh: script not found or unable to stat'
+          matched: 1
+        - label: 'a missing favicon'
+          filter: 'apache-noscript'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [core:info] [pid 1234:tid 1234] [client 198.51.100.40:51234] AH00128: File does not exist: /var/www/html/favicon.ico'
+          matched: 0
+        - label: 'a path traversal attempt (AH00126, Rocky 8)'
+          filter: 'apache-overflows'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [core:error] [pid 1234:tid 1234] [client 198.51.100.34:51234] AH00126: Invalid URI in request GET /../../../etc/passwd HTTP/1.1'
+          matched: 1
+        - label: 'a path traversal attempt (AH10244, Rocky 9 and 10)'
+          filter: 'apache-overflows'
+          line: '[Wed Nov 18 12:30:05.123456 2026] [core:error] [pid 1234:tid 1234] [client 198.51.100.34:51234] AH10244: invalid URI path (/%2e%2e/%2e%2e/etc/passwd)'
+          matched: 1
+        - label: 'a remote URL passed to a PHP script'
+          filter: 'php-url-fopen'
+          line: '198.51.100.35 - - [18/Nov/2026:12:30:05 +0100] "GET /index.php?file=http://www.example.com/x.txt HTTP/1.1" 404 196 "-" "curl/8"'
+          matched: 1
+        - label: 'an encoded redirect URL'
+          filter: 'php-url-fopen'
+          line: '198.51.100.40 - - [18/Nov/2026:12:30:05 +0100] "GET /?redirect_uri=https%3A%2F%2Fwww.example.com%2Fcb HTTP/1.1" 200 3 "-" "curl/8"'
+          matched: 0
+        - label: 'a client claiming to be Googlebot'
+          filter: 'apache-fakegooglebot'
+          line: '198.51.100.36 - - [18/Nov/2026:12:30:05 +0100] "GET / HTTP/1.1" 200 3 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"'
+          matched: 1
+      loop_control:
+        label: '{{ item["filter"] }}: {{ item["label"] }}'
+
+    - name: 'Assert the filters of the Apache jails match what Apache logs'
+      ansible.builtin.assert:
+        that: 'item["stdout"] is search("Lines: 1 lines, 0 ignored, " ~ item["item"]["matched"] ~ " matched")'
+        fail_msg: '{{ item["item"]["filter"] }}, {{ item["item"]["label"] }}: {{ item["stdout"] }}'
+      loop: '{{ __molecule__fail2ban_apache_regex_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["filter"] }}: {{ item["item"]["label"] }}'
 
     # Same approach for the portscan filter, whose jail reads the kernel log of a firewall this
     # host does not run. The filter gets its ports and addresses from the jail, so the sample
@@ -278,6 +420,21 @@
       ansible.builtin.assert:
         that: '__molecule__fail2ban_sshd_bantime_result["stdout"] | int == __molecule__fail2ban_sshd_bantime_seconds'
         fail_msg: 'the sshd bantime is {{ __molecule__fail2ban_sshd_bantime_result["stdout"] }}s, expected {{ __molecule__fail2ban_sshd_bantime_seconds }}s ({{ fail2ban__jail_sshd_bantime }})'
+
+    # The aggressive mode adds the regexes of the ddos and extra modes, for example scanners that
+    # break off the key exchange. Neither appears in the failregex of the default normal mode.
+    - name: 'fail2ban-client get sshd failregex'
+      ansible.builtin.command: 'fail2ban-client get sshd failregex'
+      register: '__molecule__fail2ban_sshd_failregex_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the sshd jail runs the filter in aggressive mode'
+      ansible.builtin.assert:
+        that:
+          - '"kex_exchange_identification" in __molecule__fail2ban_sshd_failregex_result["stdout"]'
+          - '"authentication methods available" in __molecule__fail2ban_sshd_failregex_result["stdout"]'
+        fail_msg: 'the sshd jail does not run in aggressive mode: {{ __molecule__fail2ban_sshd_failregex_result["stdout"] }}'
 
     # The port is what the banaction later puts into the iptables rule. The rule itself only
     # appears with the first ban (iptables.conf has family-conditional sections, so fail2ban sets
