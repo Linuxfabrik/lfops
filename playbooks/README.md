@@ -59,6 +59,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `apache_solr__skip_kernel_settings`
 * [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)
 * [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr)
 
