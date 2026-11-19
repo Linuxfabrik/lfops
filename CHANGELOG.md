@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **role:mariadb_server**: MariaDB may open at least 65536 files instead of 32768 (`mariadb_server__service_limit_nofile`), enough for 16 table cache instances, and a lower value no longer takes effect; a higher limit that the MariaDB package or systemd set is kept. The next run restarts MariaDB.
 * **role:fail2ban**: On hosts with Apache logs below `/var/log/httpd`, the role enables the Apache jails fail2ban ships (`apache-auth`, `apache-fakegooglebot`, `apache-modsecurity`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `php-url-fopen`), unless `apache_httpd__mod_remoteip_internal_proxy` lists a proxy. On a host behind a reverse proxy that Apache logs as the client, such as LibreNMS behind a proxy, set `fail2ban__jails_apache_enabled: false`, otherwise the jails ban the proxy.
 * **role:fail2ban**: The sshd jail also bans clients that connect without trying to log in, such as scanners (filter mode `aggressive`). Set `fail2ban__jail_sshd_mode: 'normal'` to keep the previous behaviour.
 * **role:repo_baseos**: The Rocky Linux `security` repository downloads from `dl.rockylinux.org` instead of a mirror from the mirrorlist, so hot-fixes reach all hosts at the same time instead of whenever their mirror has synced. Hosts behind an egress filter need HTTPS access to `dl.rockylinux.org`.
@@ -88,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.
 * **tool:lfops**: `tools/lfops` assembles and starts an `ansible-navigator run` in a terminal UI: pick the playbook, its tags (read from the role READMEs), the inventories below `$LF_GITLAB` and the hosts, groups or a glob as limit. The entries used last are listed first, further arguments such as `--check --diff` are passed on to ansible-navigator. With `eval "$(command lfops --shell-init)"` in `~/.bashrc`, the command lands on the Bash prompt and in the shell history instead of running right away.
 * **playbook:fail2ban**: Deploys the Linuxfabrik repository on RHEL 8 to 10, which serves fail2ban built from the latest upstream release, so the filters recognize attacks the EPEL build lets through, such as the path traversal attempts behind `AH10244: invalid URI path`. Skip it with `fail2ban__skip_repo_linuxfabrik`.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
