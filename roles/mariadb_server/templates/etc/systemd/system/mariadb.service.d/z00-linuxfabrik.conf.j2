@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025010801
+# 2026111901
 
 [Service]
 
@@ -10,7 +10,14 @@
 TimeoutStartSec={{ mariadb_server__service_timeout_start_sec }}
 TimeoutStopSec={{ mariadb_server__service_timeout_stop_sec }}
 
+{# Never below 65536, which 16 table cache instances need, and never below what the unit gets
+   without this drop-in. Where that is already the highest, the line is left out. #}
+{% set __os = (__mariadb_server__service_limit_nofile_os | string) or '0' %}
+{% set __limits = [mariadb_server__service_limit_nofile | string, '65536', __os] %}
+{% set __nofile = 'infinity' if 'infinity' in __limits else __limits | map('int') | max | string %}
+{% if __nofile != __os %}
 # Number of files limit. previously [mysqld_safe] open-files-limit
-LimitNOFILE={{ mariadb_server__service_limit_nofile }}
+LimitNOFILE={{ __nofile }}
+{% endif %}
 # For liburing and io_uring_setup()
 LimitMEMLOCK={{ mariadb_server__service_limit_memlock }}
