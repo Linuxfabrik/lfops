@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **tool:lfops**: `tools/lfops` assembles and starts an `ansible-navigator run` in a terminal UI: pick the playbook, its tags (read from the role READMEs), the inventories below `$LF_GITLAB` and the hosts, groups or a glob as limit. The entries used last are listed first, further arguments such as `--check --diff` are passed on to ansible-navigator. With `eval "$(command lfops --shell-init)"` in `~/.bashrc`, the command lands on the Bash prompt and in the shell history instead of running right away.
 * **playbook:fail2ban**: Deploys the Linuxfabrik repository on RHEL 8 to 10, which serves fail2ban built from the latest upstream release, so the filters recognize attacks the EPEL build lets through, such as the path traversal attempts behind `AH10244: invalid URI path`. Skip it with `fail2ban__skip_repo_linuxfabrik`.
 * **role:php**: `php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var` exclude files from OPcache, and the role creates the blacklist file that `opcache.blacklist_filename` already pointed to.
 * **role:libreoffice**: `libreoffice__client_apache: true` also works on Debian and Ubuntu.

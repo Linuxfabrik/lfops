@@ -1,0 +1,980 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8; py-indent-offset: 4 -*-
+#
+# Author:  Linuxfabrik GmbH, Zurich, Switzerland
+# Contact: info (at) linuxfabrik (dot) ch
+#          https://www.linuxfabrik.ch/
+# License: The Unlicense, see LICENSE file.
+
+"""Terminal UI that assembles and starts an `ansible-navigator run` of an LFOps playbook.
+
+Steps: playbook > tags > inventories > limit > confirm. The tool finds everything on its
+own:
+
+* Playbooks: `playbooks/*.yml` of the LFOps checkout that ansible-navigator mounts into
+  the execution environment (`$LFOPS_DIR`, else `$LF_GITHUB/lfops`) that have hosts in
+  at least one inventory.
+* Tags: the roles a playbook runs (including imported playbooks, `import_role`,
+  `include_role` and role dependencies), and for each role the tags documented in the
+  "Tags" section of its README.
+* Inventories: the ones of `$LF_GITLAB/*/ans/hosts.yml` (or of the glob in
+  `$LFOPS_INVENTORIES`) with hosts in the groups the playbook targets (`hosts:` of its
+  plays). An inventory without such hosts is offered if another playbook runs the role
+  there, with the role as tag. Selecting it switches to that playbook, for example
+  from `monitoring_plugins` to `setup_basic --tags=monitoring_plugins`.
+* Limit: the hosts of the selected inventories in the groups the playbook targets,
+  plus the groups these hosts are in. A typed glob such as `060-t-*` can be taken over
+  as a pattern.
+
+Playbooks, inventories, tags and limits used last are listed first. The history is kept
+in `$XDG_STATE_HOME/lfops/history.json`.
+
+Typing filters the list: entries containing the text come first, then the ones
+containing its letters in order (`setbas` finds `setup_basic`), then the ones with the
+text in their description.
+
+Keys: type to filter, Up/Down/PgUp/PgDn to move, Space or Tab to (de)select, Ctrl-A to
+(de)select all visible entries, Enter to continue, Esc to go back, Ctrl-C to quit.
+
+Any further argument is passed on to ansible-navigator, for example
+`lfops --check --diff`.
+
+To get the command onto the Bash prompt instead of running it right away, and into the
+shell history, load the `lfops` shell function in `~/.bashrc`:
+
+    eval "$(command lfops --shell-init)"
+
+The function puts the assembled command on an editable line: Enter runs it, Ctrl-C
+drops it. Either way, it replaces `lfops` in the history.
+"""
+
+import argparse
+import curses
+import fnmatch
+import glob
+import json
+import os
+import re
+import shlex
+import sys
+import time
+
+import yaml
+
+__version__ = '2026111901'
+
+HISTORY_SIZE = 50
+STATE_DIR = os.path.join(
+    os.environ.get('XDG_STATE_HOME', os.path.expanduser('~/.local/state')),
+    'lfops',
+)
+HISTORY_FILE = os.path.join(STATE_DIR, 'history.json')
+
+# `history -s` replaces the history entry of the `lfops` call itself. `${PS1@P}`
+# expands the prompt (bash >= 4.4), `read -e` keeps the readline key bindings.
+SHELL_INIT = r"""lfops() {
+    local cmd line
+    cmd="$(command lfops --print-only "$@")" || return
+    [ -n "$cmd" ] || return 0
+    history -s "$cmd"
+    read -e -r -i "$cmd" -p "${PS1@P}" line || { echo; return 130; }
+    [ -n "$line" ] || return 0
+    [ "$line" = "$cmd" ] || history -s "$line"
+    eval "$line"
+}
+"""
+
+ROLE_PREFIX = 'linuxfabrik.lfops.'
+IMPORT_PLAYBOOK_KEYS = ('ansible.builtin.import_playbook', 'import_playbook')
+ROLE_TASK_KEYS = (
+    'ansible.builtin.import_role',
+    'ansible.builtin.include_role',
+    'import_role',
+    'include_role',
+)
+# task keys that hold further tasks
+BLOCK_KEYS = ('always', 'block', 'rescue')
+
+
+# --- helpers ---------------------------------------------------------------------------
+
+
+class _AnyTagLoader(getattr(yaml, 'CSafeLoader', yaml.SafeLoader)):
+    """SafeLoader that accepts `!vault`, `!unsafe` and other tags without resolving
+    them. Only keys and structure of the files are of interest here."""
+
+
+_AnyTagLoader.add_multi_constructor('!', lambda _loader, _suffix, _node: None)
+
+
+def load_yaml(path):
+    try:
+        with open(path, encoding='utf-8') as f:
+            # a SafeLoader, see _AnyTagLoader
+            return yaml.load(f, Loader=_AnyTagLoader)  # nosec B506
+    except (OSError, yaml.YAMLError):
+        return None
+
+
+def find_lfops_dir():
+    """The checkout ansible-navigator mounts as the collection, see
+    ~/.ansible-navigator.yml. Falls back to the installed collection."""
+    candidates = [os.environ.get('LFOPS_DIR', '')]
+    if os.environ.get('LF_GITHUB'):
+        candidates.append(os.path.join(os.environ['LF_GITHUB'], 'lfops'))
+    candidates.append(
+        os.path.expanduser(
+            '~/.ansible/collections/ansible_collections/linuxfabrik/lfops'
+        )
+    )
+    for candidate in candidates:
+        if candidate and os.path.isdir(os.path.join(candidate, 'playbooks')):
+            return candidate
+    return None
+
+
+def inventory_glob():
+    default = os.path.join(os.environ.get('LF_GITLAB', '.'), '*', 'ans', 'hosts.yml')
+    return os.environ.get('LFOPS_INVENTORIES', default)
+
+
+def plural(count, word):
+    return f'{count} {word}' if count == 1 else f'{count} {word}s'
+
+
+def by_recency(values, used):
+    """Sort `values`: the ones in `used` (value -> timestamp) newest first, then the
+    rest in their given order."""
+    recent = sorted((v for v in values if v in used), key=lambda v: -used[v])
+    return recent + [v for v in values if v not in used]
+
+
+# --- history ---------------------------------------------------------------------------
+
+
+def load_history():
+    try:
+        with open(HISTORY_FILE, encoding='utf-8') as f:
+            history = json.load(f)
+    except (OSError, ValueError):
+        history = {}
+    for key in ('inventories', 'limits', 'playbooks', 'tags'):
+        history.setdefault(key, {})
+    return history
+
+
+def _touch(mapping, values, now):
+    for value in values:
+        mapping[value] = now
+    # keep the newest entries only
+    for value in sorted(mapping, key=lambda v: mapping[v])[:-HISTORY_SIZE]:
+        del mapping[value]
+
+
+def save_history(history, playbook, tags, inventories, limits):
+    now = time.time()
+    _touch(history['playbooks'], [playbook], now)
+    _touch(history['tags'].setdefault(playbook, {}), tags, now)
+    _touch(history['inventories'], inventories, now)
+    for inventory in inventories:
+        _touch(history['limits'].setdefault(inventory, {}), limits, now)
+    try:
+        os.makedirs(STATE_DIR, exist_ok=True)
+        tmp = HISTORY_FILE + '.tmp'
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(history, f, indent=2, sort_keys=True)
+        os.replace(tmp, HISTORY_FILE)
+    except OSError as e:
+        print(f'lfops: could not save the history: {e}', file=sys.stderr)
+
+
+# --- playbooks, roles and tags ---------------------------------------------------------
+
+
+def list_playbooks(lfops_dir):
+    paths = glob.glob(os.path.join(lfops_dir, 'playbooks', '*.yml'))
+    return sorted(os.path.splitext(os.path.basename(p))[0] for p in paths)
+
+
+def _role_name(name):
+    """'linuxfabrik.lfops.aide' -> 'aide'. Roles of other collections -> None."""
+    if not isinstance(name, str) or '{' in name:
+        return None
+    if name.startswith(ROLE_PREFIX):
+        return name[len(ROLE_PREFIX) :]
+    if '.' in name:
+        return None
+    return name
+
+
+SKIP_CONDITION = re.compile(
+    r'^not\s+([A-Za-z_]\w*)\s*\|\s*(?:d|default)\(\s*(?:false|False)\s*\)$'
+)
+
+
+def _skip_vars(when, inherited=frozenset()):
+    """The variables of `when` conditions like `not setup_basic__skip_aide | d(false)`,
+    with which an inventory can skip a role. Other conditions are ignored."""
+    conditions = when if isinstance(when, list) else [when]
+    found = {
+        m.group(1)
+        for c in conditions
+        if isinstance(c, str) and (m := SKIP_CONDITION.match(c.strip()))
+    }
+    return frozenset(inherited | found)
+
+
+def _roles_from_tasks(tasks, inherited=frozenset()):
+    """Returns [(role, skip variables)] of the import_role and include_role tasks."""
+    roles = []
+    for task in tasks if isinstance(tasks, list) else []:
+        if not isinstance(task, dict):
+            continue
+        skip = _skip_vars(task.get('when'), inherited)
+        for key in ROLE_TASK_KEYS:
+            if isinstance(task.get(key), dict):
+                roles.append((_role_name(task[key].get('name')), skip))
+        for key in BLOCK_KEYS:
+            roles.extend(_roles_from_tasks(task.get(key), skip))
+    return roles
+
+
+def playbook_plays(lfops_dir, playbook, seen=None):
+    """Returns the plays of a playbook, imported playbooks resolved, in play order, as
+    a list of (target groups, roles, {role: [skip variables per occurrence]})."""
+    seen = set() if seen is None else seen
+    if playbook in seen:
+        return []
+    seen.add(playbook)
+    plays = load_yaml(os.path.join(lfops_dir, 'playbooks', f'{playbook}.yml'))
+    result = []
+    for play in plays if isinstance(plays, list) else []:
+        if not isinstance(play, dict):
+            continue
+        imported = next((play[k] for k in IMPORT_PLAYBOOK_KEYS if k in play), None)
+        if isinstance(imported, str):
+            name = os.path.splitext(os.path.basename(imported))[0]
+            name = name[len(ROLE_PREFIX) :] if name.startswith(ROLE_PREFIX) else name
+            result.extend(playbook_plays(lfops_dir, name, seen))
+            continue
+        hosts = play.get('hosts', [])
+        if isinstance(hosts, str):
+            hosts = [h.strip() for h in hosts.split(',')]
+        hosts = [h for h in hosts if isinstance(h, str) and '{' not in h]
+        # execution order of a play
+        found = _roles_from_tasks(play.get('pre_tasks'))
+        for role in play.get('roles') or []:
+            if isinstance(role, dict):
+                name = _role_name(role.get('role', role.get('name')))
+                found.append((name, _skip_vars(role.get('when'))))
+            else:
+                found.append((_role_name(role), frozenset()))
+        for key in ('tasks', 'post_tasks', 'handlers'):
+            found.extend(_roles_from_tasks(play.get(key)))
+        found = [(r, skip) for r, skip in found if r]
+        skips = {}
+        for role, skip in found:
+            skips.setdefault(role, []).append(skip)
+        roles = _with_dependencies(lfops_dir, [r for r, _ in found])
+        result.append((hosts, list(dict.fromkeys(roles)), skips))
+    return result
+
+
+def playbook_info(lfops_dir, playbook):
+    """Returns (roles, target groups) of a playbook, in play order."""
+    roles, hosts = [], []
+    for play_hosts, play_roles, _ in playbook_plays(lfops_dir, playbook):
+        hosts.extend(play_hosts)
+        roles.extend(play_roles)
+    return list(dict.fromkeys(roles)), list(dict.fromkeys(hosts))
+
+
+def _with_dependencies(lfops_dir, roles, seen=None):
+    seen = set() if seen is None else seen
+    result = []
+    for role in roles:
+        if role in seen:
+            continue
+        seen.add(role)
+        meta = load_yaml(os.path.join(lfops_dir, 'roles', role, 'meta', 'main.yml'))
+        deps = meta.get('dependencies') if isinstance(meta, dict) else None
+        dep_names = [
+            _role_name(d.get('role', d.get('name')) if isinstance(d, dict) else d)
+            for d in deps or []
+        ]
+        result.extend(_with_dependencies(lfops_dir, [d for d in dep_names if d], seen))
+        result.append(role)
+    return result
+
+
+TAG_LINE = re.compile(r'^`([^`\s]+)`\s*$')
+
+
+def role_tags(lfops_dir, role):
+    """Returns [(tag, description)] from the "## Tags" section of the role README.
+
+    The format is the one of roles/example/README.md: a line with the tag in backticks,
+    followed by a bullet list."""
+    try:
+        with open(
+            os.path.join(lfops_dir, 'roles', role, 'README.md'), encoding='utf-8'
+        ) as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return []
+    tags, in_section = [], False
+    for line in lines:
+        if line.startswith('## '):
+            in_section = line.strip() == '## Tags'
+            continue
+        if not in_section:
+            continue
+        match = TAG_LINE.match(line)
+        if match:
+            tags.append([match.group(1), '', False])
+        elif tags and line.startswith(('* ', '- ')):
+            bullet = line[2:].strip()
+            if bullet.startswith('Not run by default'):
+                tags[-1][2] = True
+            elif not tags[-1][1]:
+                tags[-1][1] = bullet
+    return [
+        (tag, f'[only if given] {desc}' if never else desc) for tag, desc, never in tags
+    ]
+
+
+# --- inventories -----------------------------------------------------------------------
+
+
+def list_inventories():
+    # empty files define no hosts
+    return sorted(p for p in glob.glob(inventory_glob()) if os.path.getsize(p))
+
+
+class Inventory:
+    """Groups and hosts of a YAML inventory, plus the lookup of single variables in its
+    group_vars and host_vars."""
+
+    def __init__(self, path):
+        self.path = path
+        self.dir = os.path.dirname(path)
+        direct, self.children = {}, {}
+        self.inline_group_vars, self.inline_host_vars = {}, {}
+
+        def walk(group, node):
+            direct.setdefault(group, set())
+            self.children.setdefault(group, set())
+            if not isinstance(node, dict):
+                return
+            if isinstance(node.get('vars'), dict):
+                self.inline_group_vars.setdefault(group, {}).update(node['vars'])
+            if isinstance(node.get('hosts'), dict):
+                for host, host_vars in node['hosts'].items():
+                    direct[group].add(str(host))
+                    if isinstance(host_vars, dict):
+                        self.inline_host_vars.setdefault(str(host), {}).update(
+                            host_vars
+                        )
+            if isinstance(node.get('children'), dict):
+                for child, child_node in node['children'].items():
+                    self.children[group].add(str(child))
+                    walk(str(child), child_node)
+
+        data = load_yaml(path)
+        if isinstance(data, dict):
+            for group, node in data.items():
+                walk(str(group), node)
+
+        def members(group, seen):
+            if group in seen:
+                return set()
+            seen.add(group)
+            result = set(direct.get(group, ()))
+            for child in self.children.get(group, ()):
+                result |= members(child, seen)
+            return result
+
+        self.groups = {group: members(group, set()) for group in direct}
+        self.groups.setdefault('all', set()).update(*self.groups.values())
+        self._files = {}
+
+    def _depth(self, group, seen=()):
+        parents = [g for g, c in self.children.items() if group in c and g not in seen]
+        return 1 + max((self._depth(p, (*seen, group)) for p in parents), default=-1)
+
+    def _from_files(self, kind, name, var):
+        """Value of `var` in group_vars/<name> or host_vars/<name>, or KeyError."""
+        key = (kind, name)
+        if key not in self._files:
+            base = os.path.join(self.dir, kind, name)
+            paths = [f'{base}{ext}' for ext in ('', '.yml', '.yaml')]
+            paths += sorted(glob.glob(os.path.join(glob.escape(base), '*.y*ml')))
+            self._files[key] = [p for p in paths if os.path.isfile(p)]
+        value = KeyError
+        for path in self._files[key]:
+            try:
+                with open(path, encoding='utf-8') as f:
+                    if var not in f.read():  # avoid parsing files without the variable
+                        continue
+            except (OSError, UnicodeDecodeError):
+                continue
+            data = load_yaml(path)
+            if isinstance(data, dict) and var in data:
+                value = data[var]
+        if value is KeyError:
+            raise KeyError(var)
+        return value
+
+    def value(self, host, var):
+        """Value of `var` for `host`, following the precedence of Ansible: host_vars,
+        then the group_vars of the deepest group (by name on equal depth), `all` last.
+        KeyError if the variable is not set."""
+        if var in self.inline_host_vars.get(host, {}):
+            return self.inline_host_vars[host][var]
+        try:
+            return self._from_files('host_vars', host, var)
+        except KeyError:
+            pass
+        groups = [g for g, h in self.groups.items() if host in h and g != 'all']
+        groups.sort(key=lambda g: (self._depth(g), g), reverse=True)
+        for group in [*groups, 'all']:
+            try:
+                return self._from_files('group_vars', group, var)
+            except KeyError:
+                pass
+            if var in self.inline_group_vars.get(group, {}):
+                return self.inline_group_vars[group][var]
+        raise KeyError(var)
+
+
+# --- terminal UI -----------------------------------------------------------------------
+
+
+class Back(Exception):
+    pass
+
+
+class Item:
+    def __init__(self, value, label=None, desc='', marker=''):
+        self.value = value
+        self.label = label if label is not None else value
+        self.desc = desc
+        self.marker = marker
+
+
+def _is_subsequence(query, text):
+    """True if the characters of `query` appear in `text` in that order, for example
+    `setbas` in `setup_basic`."""
+    chars = iter(text)
+    return all(c in chars for c in query)
+
+
+def _filter(items, query):
+    """Entries whose label contains the query (or matches it as a glob) come first,
+    followed by the ones that contain its characters in order, and the ones that
+    contain it in their description only."""
+    query = query.lower()
+    if not query:
+        return list(items)
+    if any(c in query for c in '*?['):
+        return [i for i in items if fnmatch.fnmatch(i.label.lower(), query)]
+    exact = [i for i in items if query == i.label.lower()]
+    in_label = [i for i in items if query in i.label.lower() and i not in exact]
+    fuzzy = [
+        i
+        for i in items
+        if query not in i.label.lower() and _is_subsequence(query, i.label.lower())
+    ]
+    in_desc = [
+        i
+        for i in items
+        if not _is_subsequence(query, i.label.lower()) and query in i.desc.lower()
+    ]
+    return exact + in_label + fuzzy + in_desc
+
+
+def _addstr(win, y, x, text, attr=0):
+    height, width = win.getmaxyx()
+    if y >= height or x >= width:
+        return
+    try:
+        win.addnstr(y, x, text, width - x - 1, attr)
+    except curses.error:
+        pass
+
+
+def pick(
+    stdscr,
+    title,
+    items,
+    multi,
+    context='',
+    pattern=False,
+    preselect=(),
+    context_first=False,
+):
+    """Shows a filterable list. Returns the list of selected values; raises Back on Esc.
+
+    The bold title and the dim context take the first two lines, the context on top
+    with `context_first`. Without context, the title takes one line.
+
+    Without a selection, Enter takes the highlighted entry. The entry with the value
+    None ("no --tags", "no --limit") excludes all others. With `pattern`, a typed filter
+    is offered as an entry of its own (for `--limit`)."""
+    query, cursor, top = '', 0, 0
+    selected = list(preselect)  # values, in the order they were selected
+    while True:
+        visible = _filter(items, query)
+        if pattern and query:
+            visible.insert(
+                0,
+                Item(
+                    query, f'{query}', 'use the typed text as pattern', marker='pattern'
+                ),
+            )
+        height, width = stdscr.getmaxyx()
+        header = [(title, curses.A_BOLD)]
+        if context:
+            header.insert(0 if context_first else 1, (context, curses.A_DIM))
+        query_row = len(header)
+        rows = max(1, height - query_row - 4)
+        cursor = max(0, min(cursor, len(visible) - 1))
+        top = min(max(top, cursor - rows + 1), cursor)
+
+        stdscr.erase()
+        for y, (text, attr) in enumerate(header):
+            _addstr(stdscr, y, 0, text, attr)
+        _addstr(stdscr, query_row, 0, f'> {query}')
+        label_width = min(
+            max([len(i.label) + len(i.marker) + 3 for i in visible] + [10]) + 2,
+            max(20, width // 2),
+        )
+        for row, item in enumerate(visible[top : top + rows]):
+            index = top + row
+            attr = curses.A_REVERSE if index == cursor else 0
+            check = ''
+            if multi:
+                check = '[x] ' if item.value in selected else '[ ] '
+            marker = f'({item.marker}) ' if item.marker else ''
+            line = f'{check}{marker}{item.label}'.ljust(label_width + len(check))
+            _addstr(stdscr, query_row + 1 + row, 0, f'{line} {item.desc}', attr)
+        status = f'{len(visible)}/{len(items)}'
+        if multi:
+            status += f', {len(selected)} selected'
+        keys = 'Enter: continue   Esc: back   Ctrl-C: quit'
+        if multi:
+            keys = 'Space: select   Ctrl-A: all visible   ' + keys
+        _addstr(stdscr, height - 2, 0, status, curses.A_DIM)
+        _addstr(stdscr, height - 1, 0, keys, curses.A_DIM)
+        stdscr.move(query_row, min(2 + len(query), width - 1))
+        stdscr.refresh()
+
+        key = stdscr.get_wch()
+        if key == curses.KEY_RESIZE:
+            continue
+        if key in ('\x1b',):
+            raise Back
+        if key in ('\n', '\r', curses.KEY_ENTER):
+            if selected:
+                return selected
+            if visible:
+                return [visible[cursor].value]
+            continue
+        if key == curses.KEY_UP:
+            cursor -= 1
+        elif key == curses.KEY_DOWN:
+            cursor += 1
+        elif key == curses.KEY_PPAGE:
+            cursor -= rows
+        elif key == curses.KEY_NPAGE:
+            cursor += rows
+        elif key == curses.KEY_HOME:
+            cursor = 0
+        elif key == curses.KEY_END:
+            cursor = len(visible) - 1
+        elif key in (curses.KEY_BACKSPACE, '\x7f', '\b'):
+            query, cursor = query[:-1], 0
+        elif key == '\x15':  # Ctrl-U
+            query, cursor = '', 0
+        elif multi and key in (' ', '\t') and visible:
+            value = visible[cursor].value
+            if value in selected:
+                selected.remove(value)
+            elif value is None:
+                selected = [None]
+            else:
+                selected = [v for v in selected if v is not None] + [value]
+            cursor += 1
+        elif multi and key == '\x01':  # Ctrl-A
+            values = [i.value for i in visible if i.value is not None]
+            selected = [v for v in selected if v is not None]
+            if all(v in selected for v in values):
+                selected = [v for v in selected if v not in values]
+            else:
+                selected += [v for v in values if v not in selected]
+        elif isinstance(key, str) and key.isprintable() and key != ' ':
+            query, cursor = query + key, 0
+
+
+def confirm(stdscr, title, command, note=''):
+    while True:
+        height, _ = stdscr.getmaxyx()
+        stdscr.erase()
+        _addstr(stdscr, 0, 0, title, curses.A_BOLD)
+        _addstr(stdscr, 1, 0, note, curses.A_DIM)
+        for row, part in enumerate(command):
+            text = f'    {shlex.quote(part)}' if row else shlex.quote(part)
+            _addstr(
+                stdscr, 3 + row, 0, text + (' \\' if row < len(command) - 1 else '')
+            )
+        _addstr(
+            stdscr, height - 1, 0, 'Enter: run   Esc: back   Ctrl-C: quit', curses.A_DIM
+        )
+        stdscr.refresh()
+        key = stdscr.get_wch()
+        if key in ('\n', '\r', curses.KEY_ENTER):
+            return
+        if key == '\x1b':
+            raise Back
+
+
+# --- steps -----------------------------------------------------------------------------
+
+
+def build_command(state, extra_args):
+    command = ['ansible-navigator', 'run', f'linuxfabrik.lfops.{state["playbook"]}']
+    command += [f'--inventory={inventory}' for inventory in state['inventories']]
+    if state['tags']:
+        command.append(f'--tags={",".join(state["tags"])}')
+    if state['limits']:
+        command.append(f'--limit={",".join(state["limits"])}')
+    return command + extra_args
+
+
+def tag_items(lfops_dir, playbook, history):
+    roles, _ = playbook_info(lfops_dir, playbook)
+    tags = {}
+    for role in roles:
+        for tag, desc in role_tags(lfops_dir, role):
+            tags.setdefault(tag, desc)
+    tags.setdefault(
+        'all', 'all tasks that run by default, combine with an explicit tag'
+    )
+    used = history['tags'].get(playbook, {})
+    order = by_recency(list(tags), used)
+    items = [Item(None, '(no --tags)', 'run the whole playbook')]
+    return items + [
+        Item(tag, tag, tags[tag], 'recent' if tag in used else '') for tag in order
+    ]
+
+
+class Discovery:
+    """Playbooks and inventories, parsed once per run."""
+
+    def __init__(self, lfops_dir):
+        self.lfops_dir = lfops_dir
+        self.plays = {
+            p: playbook_plays(lfops_dir, p) for p in list_playbooks(lfops_dir)
+        }
+        self.playbooks = {p: playbook_info(lfops_dir, p) for p in self.plays}
+        self.inventories = {i: Inventory(i) for i in list_inventories()}
+        self._tags = {}
+
+    def hosts(self, playbook, inventory):
+        """The hosts of an inventory that a playbook runs against."""
+        groups = self.inventories[inventory].groups
+        result = set()
+        for target in self.playbooks[playbook][1]:
+            result |= groups.get(target, set())
+        return result
+
+    def role_hosts(self, playbook, role, inventory):
+        """The hosts of an inventory on which a playbook runs a role. In `all`, for
+        example, the squid role only runs on the hosts of `lfops_squid`, and in
+        `setup_basic`, `setup_basic__skip_aide: true` skips the aide role."""
+        inv = self.inventories[inventory]
+        result = set()
+        for targets, roles, skips in self.plays[playbook]:
+            if role not in roles:
+                continue
+            for target in targets:
+                for host in inv.groups.get(target, set()):
+                    if not self._skipped(inv, host, skips.get(role, [frozenset()])):
+                        result.add(host)
+        return result
+
+    @staticmethod
+    def _skipped(inv, host, occurrences):
+        """True if every occurrence of the role is skipped on the host. Only a literal
+        `true` counts, a Jinja expression is taken as not skipping."""
+
+        def is_true(var):
+            try:
+                return inv.value(host, var) is True
+            except KeyError:
+                return False
+
+        return all(any(is_true(var) for var in skip) for skip in occurrences)
+
+    def has_tag(self, role, tag):
+        if role not in self._tags:
+            self._tags[role] = {t for t, _ in role_tags(self.lfops_dir, role)}
+        return tag in self._tags[role]
+
+    def parent(self, playbook, inventories, history):
+        """A playbook that runs the role of `playbook` on hosts of all `inventories`,
+        with the role name as tag. For example `monitoring_plugins`, which runs as part
+        of `setup_basic` on most hosts. Prefers the one used last, then the one with the
+        fewest roles."""
+        if not self.has_tag(playbook, playbook):
+            return None
+        candidates = [
+            p
+            for p, (roles, _) in self.playbooks.items()
+            if p != playbook
+            and playbook in roles
+            and all(self.role_hosts(p, playbook, i) for i in inventories)
+        ]
+        candidates.sort(key=lambda p: len(self.playbooks[p][0]))
+        return next(iter(by_recency(candidates, history['playbooks'])), None)
+
+
+def playbook_items(discovery, history):
+    runnable = []
+    for playbook in discovery.playbooks:
+        counts = [len(discovery.hosts(playbook, i)) for i in discovery.inventories]
+        inventories = sum(1 for c in counts if c)
+        if inventories:
+            desc = (
+                f'{plural(sum(counts), "host")} in '
+                f'{inventories} inventor{"y" if inventories == 1 else "ies"}'
+            )
+            runnable.append(Item(playbook, playbook, desc))
+    for item in runnable:
+        if item.value in history['playbooks']:
+            item.marker = 'recent'
+    order = by_recency([i.value for i in runnable], history['playbooks'])
+    by_value = {i.value: i for i in runnable}
+    return [by_value[v] for v in order]
+
+
+def inventory_items(discovery, playbook, history):
+    base = os.environ.get('LF_GITLAB', '')
+    runnable, other = [], []
+    for inventory in by_recency(list(discovery.inventories), history['inventories']):
+        label = os.path.relpath(inventory, base) if base else inventory
+        hosts = discovery.hosts(playbook, inventory)
+        if hosts:
+            marker = 'recent' if inventory in history['inventories'] else ''
+            runnable.append(Item(inventory, label, plural(len(hosts), 'host'), marker))
+            continue
+        parent = discovery.parent(playbook, [inventory], history)
+        if parent:
+            desc = f'no hosts for {playbook}, runs {parent} --tags={playbook}'
+            other.append(Item(inventory, label, desc, f'via {parent}'))
+    return runnable + other
+
+
+def limit_items(discovery, state, history):
+    groups = {}
+    for inventory in state['inventories']:
+        for group, hosts in discovery.inventories[inventory].groups.items():
+            groups.setdefault(group, set()).update(hosts)
+    relevant = set()
+    for inventory in state['inventories']:
+        if state['role']:
+            relevant |= discovery.role_hosts(
+                state['playbook'], state['role'], inventory
+            )
+        else:
+            relevant |= discovery.hosts(state['playbook'], inventory)
+    targets = discovery.playbooks[state['playbook']][1]
+    hint = f'hosts of {", ".join(targets)}'
+    used = {}
+    for inventory in state['inventories']:
+        used.update(history['limits'].get(inventory, {}))
+    group_names = sorted(g for g, h in groups.items() if h & relevant and g != 'all')
+    values = sorted(relevant) + group_names
+    recent = [v for v in by_recency(values, used) if v in used]
+    recent += sorted(v for v in used if v not in values)  # patterns used before
+    items = [Item(None, '(no --limit)', f'all {plural(len(relevant), "host")}')]
+    items += [Item(v, v, '', 'recent') for v in recent]
+    items += [Item(h, h) for h in sorted(relevant)]
+    items += [
+        Item(g, g, plural(len(groups[g] & relevant), 'host'), 'group')
+        for g in group_names
+    ]
+    return items, hint
+
+
+def run_ui(stdscr, lfops_dir, history, extra_args):
+    # keep the colors of the terminal instead of the curses defaults
+    try:
+        curses.use_default_colors()
+    except curses.error:
+        pass
+    curses.curs_set(1)
+    stdscr.keypad(True)
+    discovery = Discovery(lfops_dir)
+    if not discovery.inventories:
+        raise SystemExit(f'lfops: no inventory matches {inventory_glob()}')
+    state = {
+        'inventories': [],
+        'limits': [],
+        'note': '',
+        'playbook': None,
+        'role': None,  # set when running the role as part of another playbook
+        'tags': [],
+    }
+    requested = None  # (playbook, tags) as selected, before a switch to a parent
+    step = 0
+
+    def heading(text):
+        return f'Step {step + 1}/5: {text}'
+
+    while True:
+        try:
+            if step == 0:
+                items = playbook_items(discovery, history)
+                if not items:
+                    raise SystemExit('lfops: no playbook has hosts in any inventory')
+                state['playbook'] = pick(
+                    stdscr,
+                    heading('Choose a Playbook'),
+                    items,
+                    multi=False,
+                    context=lfops_dir,
+                    context_first=True,
+                )[0]
+            elif step == 1:
+                tags = pick(
+                    stdscr,
+                    heading(f'Choose tags for linuxfabrik.lfops.{state["playbook"]}'),
+                    tag_items(lfops_dir, state['playbook'], history),
+                    multi=True,
+                )
+                state['tags'] = [t for t in tags if t is not None]
+            elif step == 2:
+                if requested:
+                    state['playbook'], state['tags'] = requested
+                    requested, state['note'], state['role'] = None, '', None
+                playbook = state['playbook']
+                items = inventory_items(discovery, playbook, history)
+                if not items:
+                    raise SystemExit(f'lfops: no inventory has hosts for {playbook}')
+                context = f'inventories with hosts for {playbook}'
+                while True:
+                    inventories = pick(
+                        stdscr,
+                        heading('Choose inventories'),
+                        items,
+                        multi=True,
+                        context=context,
+                    )
+                    if all(discovery.hosts(playbook, i) for i in inventories):
+                        break
+                    parent = discovery.parent(playbook, inventories, history)
+                    if parent:
+                        requested = (playbook, state['tags'])
+                        state['playbook'], state['role'] = parent, playbook
+                        state['tags'] = state['tags'] or [playbook]
+                        state['note'] = (
+                            f'{playbook} has no hosts in all selected inventories, '
+                            f'running it as part of {parent}'
+                        )
+                        break
+                    context = (
+                        f'no playbook runs {playbook} on all selected inventories, '
+                        'select fewer'
+                    )
+                state['inventories'] = inventories
+            elif step == 3:
+                items, hint = limit_items(discovery, state, history)
+                limits = pick(
+                    stdscr,
+                    heading('Choose a limit'),
+                    items,
+                    multi=True,
+                    context=state['note']
+                    or hint + ' - type a glob like 060-t-* to use it as pattern',
+                    pattern=True,
+                    preselect=[None],
+                )
+                state['limits'] = [li for li in limits if li is not None]
+            else:
+                command = build_command(state, extra_args)
+                confirm(stdscr, heading('Run this command?'), command, state['note'])
+                return state, command
+            step += 1
+        except Back:
+            if step == 0:
+                return None, None
+            step -= 1
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__.split('\n\n', 1)[0],
+        epilog='Further arguments are passed on to ansible-navigator.',
+    )
+    parser.add_argument(
+        '--print-only',
+        action='store_true',
+        help='Print the command instead of running it. The terminal UI uses the '
+        'terminal, so the output can be captured with `$(lfops --print-only)`.',
+    )
+    parser.add_argument(
+        '--shell-init',
+        action='store_true',
+        help='Print the Bash function that puts the command on the prompt and into '
+        'the history, for `eval "$(command lfops --shell-init)"` in ~/.bashrc.',
+    )
+    parser.add_argument('--version', action='version', version=__version__)
+    args, extra_args = parser.parse_known_args()
+    if args.shell_init:
+        print(SHELL_INIT, end='')
+        return
+
+    lfops_dir = find_lfops_dir()
+    if not lfops_dir:
+        sys.exit('lfops: LFOps not found, set LF_GITHUB or LFOPS_DIR')
+    history = load_history()
+
+    os.environ.setdefault('ESCDELAY', '25')
+    # curses draws on stdout. With stdout captured by `$(lfops --print-only)`, draw on
+    # the terminal and keep stdout for the command.
+    stdout = None
+    if not os.isatty(sys.stdout.fileno()):
+        try:
+            tty = os.open('/dev/tty', os.O_RDWR)
+        except OSError:
+            sys.exit('lfops: needs a terminal')
+        sys.stdout.flush()
+        stdout = os.dup(sys.stdout.fileno())
+        os.dup2(tty, sys.stdout.fileno())
+        os.close(tty)
+    try:
+        state, command = curses.wrapper(run_ui, lfops_dir, history, extra_args)
+    except KeyboardInterrupt:
+        sys.exit(130)
+    finally:
+        if stdout is not None:
+            os.dup2(stdout, sys.stdout.fileno())
+            os.close(stdout)
+    if not command:
+        sys.exit(0)
+
+    save_history(
+        history, state['playbook'], state['tags'], state['inventories'], state['limits']
+    )
+    print(shlex.join(command), flush=True)
+    if args.print_only:
+        return
+    # ansible-navigator is a shell function in /etc/profile.d/alias.sh (pulls the
+    # execution environment once a day), so start it through a login shell. Without
+    # that function, the shell runs the ansible-navigator binary.
+    os.execvp('bash', ['bash', '-lc', '"$@"', 'lfops', *command])  # nosec B606 B607
+
+
+if __name__ == '__main__':
+    main()
