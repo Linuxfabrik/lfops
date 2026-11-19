@@ -41,6 +41,7 @@ Solr 8 is EOL and only covered where existing installations still run it.
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * The tools that Solr's start script and the role need, such as `lsof` and `tar`, must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+* `vm.swappiness` must be set to 1, so that the kernel keeps the Java heap in RAM, as the [Solr Reference Guide](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#avoid-swapping-nix-operating-systems) recommends (role: [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings)).
 
 
 ## Tags

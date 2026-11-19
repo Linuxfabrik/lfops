@@ -157,3 +157,20 @@
           {{ __molecule__apache_solr_logs_result["files"] | map(attribute="path")
             | zip(__molecule__apache_solr_logs_result["files"] | map(attribute="mode"))
             | map("join", " ") | join(", ") }}
+
+    # The playbook hands vm.swappiness to the kernel_settings role, as the Solr
+    # Reference Guide recommends, so that the kernel keeps the Java heap in RAM.
+    - name: 'cat /proc/sys/vm/swappiness'
+      ansible.builtin.slurp:
+        src: '/proc/sys/vm/swappiness'
+      register: '__molecule__apache_solr_swappiness_result'
+
+    - name: 'Assert vm.swappiness is 1'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_solr_swappiness == "1"'
+        fail_msg: 'vm.swappiness is {{ __molecule__apache_solr_swappiness }}'
+      vars:
+        __molecule__apache_solr_swappiness: '{{
+            __molecule__apache_solr_swappiness_result["content"] | b64decode | trim
+          }}'

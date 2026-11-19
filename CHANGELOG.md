@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+* **playbook:apache_solr**: The playbook runs the kernel_settings role and sets `vm.swappiness` to 1, as the Solr Reference Guide recommends, so the kernel no longer swaps out the Java heap while memory is still available. On hosts that do not run kernel_settings yet, this also installs TuneD and applies its sysctl hardening baseline. Set `apache_solr__skip_kernel_settings: true` to leave the kernel settings alone.
 * **role:mariadb_server**: MariaDB may open at least 65536 files instead of 32768 (`mariadb_server__service_limit_nofile`), enough for 16 table cache instances, and a lower value no longer takes effect; a higher limit that the MariaDB package or systemd set is kept. The next run restarts MariaDB.
 * **role:fail2ban**: On hosts with Apache logs below `/var/log/httpd`, the role enables the Apache jails fail2ban ships (`apache-auth`, `apache-fakegooglebot`, `apache-modsecurity`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `php-url-fopen`), unless `apache_httpd__mod_remoteip_internal_proxy` lists a proxy. On a host behind a reverse proxy that Apache logs as the client, such as LibreNMS behind a proxy, set `fail2ban__jails_apache_enabled: false`, otherwise the jails ban the proxy.
 * **role:fail2ban**: The sshd jail also bans clients that connect without trying to log in, such as scanners (filter mode `aggressive`). Set `fail2ban__jail_sshd_mode: 'normal'` to keep the previous behaviour.
