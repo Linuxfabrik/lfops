@@ -539,7 +539,7 @@ Types of vHosts:
 * **localhost**: A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Can be extended by using the `raw` variable. The following URLs are pre-configured and only accessible from localhost:
 
     * `/fpm-ping` - PHP-FPM health check of the `www` pool
-    * `/fpm-status` - PHP-FPM status page of the `www` pool
+    * `/fpm-status` - PHP-FPM status page of the `www` pool, without its HTML view
     * `/monitoring.php` - Linuxfabrik monitoring endpoint
     * `/server-info` - Apache server info (`mod_info` required, disabled by default)
     * `/server-status` - Apache server status (`mod_status` required)
@@ -550,8 +550,13 @@ Types of vHosts:
     <Location "/app1-fpm-status">
         Require local
         ProxyPass unix:/run/php-fpm/app1.sock|fcgi://localhost/fpm-status
+        <If "%{QUERY_STRING} !~ /^((full|json|openmetrics|xml)(&|$))*$/">
+            Require all denied
+        </If>
     </Location>
     ```
+
+    The `<If>` block answers every query other than the `full`, `json`, `openmetrics` and `xml` flags with `403`. It keeps out the HTML view (`?html`), which prints request fields that any client of the pool controls unescaped, so they run script in the browser of whoever opens the page ([GHSA-3mg3-cr28-46gc](https://github.com/php/php-src/security/advisories/GHSA-3mg3-cr28-46gc)). The check works on the raw query string, because PHP-FPM decodes the query and also shows the HTML view for `?%68tml`. The `php-fpm-status` check asks for `?json&full` and is not affected.
 
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out). Forward to the backend with `ProxyPass` in `raw`, not with `RewriteRule ... [proxy]`: mod_rewrite passes the path on decoded, so a `?` in a path segment, such as in a file name, reaches the backend as the start of the query string. See the [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud) role for an example.
 * **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>`, `</VirtualHost>` and the logs completely from scratch. Like every other template it logs to its own error and access log, so requests to a raw vHost, for example a catch-all for unknown host names, reach fail2ban.
