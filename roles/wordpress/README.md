@@ -197,7 +197,7 @@ wordpress__url: 'https://wordpress.example.com'
 
 * When `wordpress-core-minor-update-<instance>.timer` installs the latest minor release of the WordPress core (systemd timer notation).
 * Type: String.
-* Default: `'04:{{ 59 | random(seed=inventory_hostname) }}'`
+* Default: `'*:{{ 59 | random(seed=inventory_hostname) }}'`
 
 `wordpress__plugins`
 

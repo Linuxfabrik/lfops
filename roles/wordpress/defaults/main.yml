@@ -3,7 +3,7 @@ wordpress__database_host: 'localhost'
 wordpress__database_name: 'wordpress'
 wordpress__disallow_file_edit: true
 wordpress__install_dir: '/var/www/html/{{ __wordpress__host }}{{ __wordpress__path }}'
-wordpress__on_calendar_core_minor_update: '04:{{ 59 | random(seed=inventory_hostname) }}'
+wordpress__on_calendar_core_minor_update: '*:{{ 59 | random(seed=inventory_hostname) }}'
 wordpress__plugins: []
 wordpress__timer_core_minor_update_enabled: true
 wordpress__trusted_proxies: []
