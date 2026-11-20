@@ -6,6 +6,12 @@ This role deploys the [RPM Fusion](https://rpmfusion.org/RPM%20Fusion) free and 
 *Available since LFOps `3.0.0`.*
 
 
+## How the Role Behaves
+
+* The role deploys the repositories and GPG keys of the host's EL major release, on RHEL 8, 9 and 10 and their rebuilds.
+* The `rpmfusion-free-updates` and `rpmfusion-nonfree-updates` repositories are enabled. The testing, debug and source repositories are deployed, but disabled.
+
+
 ## Dependent Roles
 
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
@@ -54,6 +60,13 @@ repo_rpmfusion__basic_auth_login:
   password: 'linuxfabrik'
 repo_rpmfusion__mirror_url: 'https://mirror.example.com'
 ```
+
+
+## Troubleshooting
+
+**`repo_rpmfusion does not support <distribution> <release>`**
+
+* The role ships repository files for RHEL 8, 9 and 10 and their rebuilds only. Fedora has its own RPM Fusion release packages, which this role does not deploy.
 
 
 ## License
