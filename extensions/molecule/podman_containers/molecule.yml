@@ -1,0 +1,9 @@
+# Molecule scenario marker for the 'podman_containers' scenario, run with
+# `molecule test --scenario-name podman_containers`.
+#
+# It overrides the prepare step (see prepare.yml): it creates the user for the rootless containers
+# and, on Rocky 9, puts iptables-legacy in place, the state in which rootless containers on a
+# network of their own failed with the iptables firewall driver.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

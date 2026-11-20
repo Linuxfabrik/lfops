@@ -22,13 +22,11 @@ Manual steps:
 
 * Optional: set `Storage=presistent` in `/etc/systemd/journald.conf` to allow the user to use `journalctl --user` by running the [systemd_journald](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/systemd_journald.yml) playbook (role: [linuxfabrik.lfops.systemd_journald](https://github.com/Linuxfabrik/lfops/tree/main/roles/systemd_journald)).
 * Optional: if the host should act as a Postfix MTA, make it listen on the IP address so that the container can reach it by running the [postfix](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/postfix.yml) playbook (role: [linuxfabrik.lfops.postfix](https://github.com/Linuxfabrik/lfops/tree/main/roles/postfix)).
-* Make sure the container can access the MongoDB instance:
+* Make sure the container can access the MongoDB instance. The container reaches the host as `host.containers.internal`, and MongoDB sees the connection coming from the host's IP address:
 ```yaml
 mongodb__conf_net_bind_ip:
   - 'localhost'
   - 'fqdn.example.com' # allow access from container. make sure the DNS entry (or /etc/hosts) points to the correct ip (not 127.)
-mongodb__repl_set_members:
-  - 'fqdn.example.com' # else the client gets redirected to localhost, which does not work from inside the container
 ```
 
 
@@ -77,6 +75,12 @@ rocketchat__root_url: 'https://rocketchat.example.com'
 * Type: String.
 * Default: `'started'`
 
+`rocketchat__mongodb_direct_connection`
+
+* Connect to `rocketchat__mongodb_host` only (`directConnection=true`), instead of discovering the members of the replica set by the names in its configuration (`replicaSet`, see `rocketchat__mongodb_repl_set_name`). Under pasta, the default rootless network of Podman 5, a container cannot reach the IP address of its own host, which these names usually resolve to. Set it to `false` for a replica set with members on other hosts.
+* Type: Bool.
+* Default: `true`
+
 `rocketchat__mongodb_host`
 
 * The host on which MongoDB is reachable.
@@ -91,7 +95,7 @@ rocketchat__root_url: 'https://rocketchat.example.com'
 
 `rocketchat__mongodb_repl_set_name`
 
-* The name of the MongoDB replica set for Rocket.Chat.
+* The name of the MongoDB replica set for Rocket.Chat. Rocket.Chat needs a replica set for its change streams, also with a single member. Only passed to Rocket.Chat if `rocketchat__mongodb_direct_connection` is `false`.
 * Type: String.
 * Default: `'rs01'`
 
@@ -119,7 +123,8 @@ Example:
 # optional
 rocketchat__container_enabled: true
 rocketchat__container_state: 'started'
-rocketchat__mongodb_host: 'localhost'
+rocketchat__mongodb_direct_connection: true
+rocketchat__mongodb_host: 'host.containers.internal'
 rocketchat__mongodb_port: 27017
 rocketchat__mongodb_repl_set_name: 'rs01'
 rocketchat__port: 3000

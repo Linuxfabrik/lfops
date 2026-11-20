@@ -172,14 +172,33 @@
 
 - block:
 
-  - name: 'Make sure iptables and nftables are installed (required for fwb)'
+  # What a FirewallFabrik nftables script (fwf-nft) calls: `nft`, and `ip` for the interface
+  # addresses and routing rules. iptables-based scripts are not supported.
+  - name: 'Make sure nftables and iproute are installed (required for FirewallFabrik)'
     ansible.builtin.package:
       name:
-        - 'iptables'
         - 'nftables'
+        - '{{ (ansible_facts["os_family"] == "Debian") | ternary("iproute2", "iproute") }}'
       state: 'present'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
+
+  # Not needed by the firewall. Podman (netavark) and docker-ce require `iptables`, and on RHEL 9
+  # with EPEL, dnf satisfies that with iptables-legacy. Its rules live in the legacy xtables
+  # tables, beside the nftables ruleset, and rootless Podman containers then need the ip_tables
+  # kernel module, which a rootless user may not load. With iptables-nft installed first, the
+  # requirement is met. On a host that already has iptables-legacy, `iptables` keeps pointing to
+  # it (alternatives priority) until `dnf swap iptables-legacy iptables-nft`. Verified with
+  # Rocky 9.9; EPEL 8 and EPEL 10 have no iptables-legacy.
+  - name: 'dnf install iptables-nft'
+    ansible.builtin.package:
+      name: 'iptables-nft'
+      state: 'present'
+    retries: 3 # ride out a brief outage of the package repository
+    delay: 10
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - 'ansible_facts["distribution_major_version"] == "9"'
 
   # You can't enable and start fwb.service at the same time - `/etc/fwb.sh start`
   # always hangs on the first run (only than) on a brand-new machine, and then Ansible also hangs.

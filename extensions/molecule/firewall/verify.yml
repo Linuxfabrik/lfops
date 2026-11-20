@@ -1,6 +1,6 @@
-- name: 'Verify the switch from fwbuilder to nftables, and the abort on a repository without a compiled firewall'
+- name: 'Verify the switch from fwbuilder to nftables, the packages for FirewallFabrik, and the abort on a repository without a compiled firewall'
   hosts: 'systems_under_test'
-  gather_facts: false
+  gather_facts: true
 
   tasks:
 
@@ -26,6 +26,33 @@
           - '__molecule__is_active_result["stdout_lines"] == ["inactive", "active"]'
           - '__molecule__fwb_is_enabled_result["stdout"] == "masked"'
         fail_msg: '{{ __molecule__is_active_result["stdout_lines"] + [__molecule__fwb_is_enabled_result["stdout"]] }}'
+
+    # prepare.yml enabled EPEL and installed netavark after the firewall role, so with only
+    # `iptables` as a requirement, dnf would have picked iptables-legacy.
+    - name: 'iptables --version'
+      ansible.builtin.command: 'iptables --version'
+      changed_when: false
+      register: '__molecule__iptables_version_result'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] == "9"'
+
+    - name: 'Assert that iptables is iptables-nft on RHEL 9'
+      ansible.builtin.assert:
+        that:
+          - '"nf_tables" in __molecule__iptables_version_result["stdout"]'
+        fail_msg: '{{ __molecule__iptables_version_result["stdout"] }}'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] == "9"'
+
+    # The binaries a FirewallFabrik nftables script calls.
+    - name: '{{ item }}'
+      ansible.builtin.command: '{{ item }}'
+      changed_when: false
+      loop:
+        - 'ip -V'
+        - 'nft --version'
 
     # A Firewall Builder repository without a compiled firewall for the host must abort the run
     # before the role stops the firewall that is running, here nftables.

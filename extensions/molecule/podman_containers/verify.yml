@@ -1,0 +1,107 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state: both containers run and answer on their published ports, and their rules live in
+# nftables, on the host for the rootful one and inside the user's network namespace for the
+# rootless one.
+- name: 'Verify the containers'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+    __molecule__user: 'podtest'
+    __molecule__uid: '{{ ansible_facts["getent_passwd"][__molecule__user][1] }}'
+    __molecule__user_environment:
+      DBUS_SESSION_BUS_ADDRESS: 'unix:path=/run/user/{{ __molecule__uid }}/bus'
+      XDG_RUNTIME_DIR: '/run/user/{{ __molecule__uid }}'
+
+  tasks:
+
+    - name: 'Get user UIDs'
+      ansible.builtin.getent:
+        database: 'passwd'
+
+    # The precondition of the regression test: on Rocky 9, `iptables` must be iptables-legacy,
+    # otherwise the rootless container would also start with the iptables driver.
+    - name: 'iptables --version'
+      ansible.builtin.command: 'iptables --version'
+      register: '__molecule__iptables_version_result'
+      changed_when: false
+      when:
+        - 'ansible_facts["distribution_major_version"] == "9"'
+
+    - name: 'Assert that iptables is iptables-legacy on Rocky 9'
+      ansible.builtin.assert:
+        that:
+          - '"legacy" in __molecule__iptables_version_result["stdout"]'
+        fail_msg: '{{ __molecule__iptables_version_result["stdout"] }}'
+      when:
+        - 'ansible_facts["distribution_major_version"] == "9"'
+
+    - name: 'systemctl is-active rootful-container.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl is-active rootful-container.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__rootful_is_active_result'
+
+    - name: 'Assert that the rootful container unit is active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rootful_is_active_result["stdout"] == "active"'
+        fail_msg: 'rootful-container.service is {{ __molecule__rootful_is_active_result["stdout"] }}'
+
+    - name: 'systemctl --user is-active rootless-container.service' # noqa command-instead-of-module (read-only state query)
+      ansible.builtin.command: 'systemctl --user is-active rootless-container.service'
+      become: true
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_environment }}'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__rootless_is_active_result'
+
+    - name: 'Assert that the rootless container unit is active'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__rootless_is_active_result["stdout"] == "active"'
+        fail_msg: 'rootless-container.service is {{ __molecule__rootless_is_active_result["stdout"] }}'
+
+    # Reached over the host's address, not 127.0.0.1.
+    - name: 'curl http://<host>:{{ item }}'
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_facts["default_ipv4"]["address"] }}:{{ item }}/'
+        return_content: false
+      register: '__molecule__curl_result'
+      retries: 6
+      delay: 5
+      until: '__molecule__curl_result["status"] == 200'
+      loop:
+        - 8080 # rootless
+        - 8081 # rootful
+
+    - name: 'nft list table inet netavark'
+      ansible.builtin.command: 'nft list table inet netavark'
+      changed_when: false
+      register: '__molecule__rootful_nft_result'
+
+    - name: 'Assert that the rootful port forwarding lives in nftables'
+      ansible.builtin.assert:
+        that:
+          - '"8081" in __molecule__rootful_nft_result["stdout"]'
+        fail_msg: '{{ __molecule__rootful_nft_result["stdout"] }}'
+
+    # Read back from the running network namespace of the user: the file the role deploys says
+    # nothing about whether netavark used it.
+    - name: 'podman unshare --rootless-netns nft list table inet netavark'
+      ansible.builtin.command: 'podman unshare --rootless-netns nft list table inet netavark'
+      args:
+        chdir: '/tmp'
+      become: true
+      become_user: '{{ __molecule__user }}'
+      environment: '{{ __molecule__user_environment }}'
+      changed_when: false
+      register: '__molecule__rootless_nft_result'
+
+    - name: 'Assert that the rootless port forwarding lives in nftables'
+      ansible.builtin.assert:
+        that:
+          - '"8080" in __molecule__rootless_nft_result["stdout"]'
+        fail_msg: '{{ __molecule__rootless_nft_result["stdout"] }}'
