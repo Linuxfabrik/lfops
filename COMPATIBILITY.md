@@ -125,7 +125,7 @@ Which Ansible role is proven to run on which OS?
 | opensearch                            |        |        |   x    |   x    |    x    |           |           |           | OpenSearch 2.x not on RHEL 10                |
 | openvpn_server                        |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | php                                   |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
+| podman_containers                     |        |        |  (x)   |   x    |    x    |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | postfix                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | postgresql_server                     |        |        |   x    |   x    |    x    |           |           |           |                                              |

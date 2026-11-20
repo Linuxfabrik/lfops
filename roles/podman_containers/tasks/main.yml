@@ -9,6 +9,25 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  - name: 'mkdir -p /etc/containers/containers.conf.d/'
+    ansible.builtin.file:
+      path: '/etc/containers/containers.conf.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Deployed before any container starts: netavark reads the firewall driver when it sets up the
+  # rules of a network.
+  - name: 'Deploy /etc/containers/containers.conf.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/containers/containers.conf.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/containers/containers.conf.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
   tags:
     - 'podman_containers'
 

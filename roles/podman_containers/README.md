@@ -32,7 +32,7 @@ kernel_modules__modules__host_var:
 
 `podman_containers`
 
-* Installs Podman, deploys Quadlets and manages their state.
+* Installs Podman, deploys `/etc/containers/containers.conf.d/z00-linuxfabrik.conf`, deploys Quadlets and manages their state.
 * Triggers: none.
 
 `podman_containers:auto_update`
@@ -146,6 +146,13 @@ kernel_modules__modules__host_var:
         * Optional. Unit for the `WantedBy` directive. Only effective if `enabled: true` is set.
         * Type: String.
         * Default: `'default.target'`
+
+`podman_containers__firewall_driver`
+
+* Firewall driver netavark uses to set up the rules of Podman networks, for rootful and rootless containers. Set as `firewall_driver` in `/etc/containers/containers.conf.d/z00-linuxfabrik.conf`; a user's own `~/.config/containers/containers.conf.d/` takes precedence. Possible options: `'firewalld'` (experimental upstream), `'iptables'` (netavark 1 only, netavark 2 on RHEL 10 rejects it), `'nftables'`, `'none'` (no firewall rules, so no port forwarding), or `''` to leave it to netavark. With `'iptables'`, netavark calls whatever `iptables` points to. If that is iptables-legacy (as on RHEL 9 hosts that got the `iptables-legacy` package from EPEL), a rootless container on a network of its own only starts if something else loaded the `ip_tables` kernel module before, which a rootless user may not do. `'nftables'` does not depend on the iptables backend. Takes effect when a network is set up, so restart the containers (or reboot) after changing it. Has no effect with the CNI network backend (Podman 4 on RHEL 8).
+* Type: String.
+* Default: `'nftables'`
+* Deviates from the upstream default `''`, with which netavark picks `'iptables'` on RHEL 9 and `'nftables'` on RHEL 10: with `'iptables'`, rootless containers fail to start where `iptables` is iptables-legacy.
 
 `podman_containers__networks__host_var` / `podman_containers__networks__group_var`
 
@@ -298,6 +305,7 @@ podman_containers__containers__host_var:
     raw_service: |
       Restart=always
     user: 'rocketuser'
+podman_containers__firewall_driver: 'nftables'
 podman_containers__networks__host_var:
   - name: 'rocketchat'
     user: 'rocketuser'

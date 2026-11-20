@@ -1,0 +1,28 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# The user for the rootless containers, with lingering, as the README asks for.
+- name: 'Create the user for the rootless containers'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.login'
+
+
+# On Rocky 9, the firewall role's `iptables` package resolves to iptables-legacy from EPEL, and
+# netavark's default iptables driver then needs the ip_tables kernel module, which a rootless user
+# may not load. Nothing else loads it here, so with the iptables driver the rootless container
+# fails right away. Rocky 10 has no iptables-legacy (not in EPEL 10).
+- name: 'Enable EPEL'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.repo_epel'
+
+- name: 'Put iptables-legacy in place on Rocky 9'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'Install iptables-legacy'
+      ansible.builtin.package:
+        name: 'iptables-legacy'
+        state: 'present'
+      when:
+        - 'ansible_facts["distribution_major_version"] == "9"'

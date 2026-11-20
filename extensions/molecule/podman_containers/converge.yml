@@ -1,0 +1,2 @@
+- name: 'Converge podman_containers playbook'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.podman_containers'
