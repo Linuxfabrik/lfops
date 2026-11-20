@@ -269,6 +269,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **playbook:setup_rocketchat**: The playbook no longer aborts with "MongoDB users are defined in the inventory but mongodb__conf_security_authorization is disabled" when MongoDB runs without authentication and `rocketchat__mongodb_login` is not set.
 * **role:rocketchat**: Rocket.Chat connects to MongoDB on its own host also with pasta, the default rootless network of Podman 5 and the only one on RHEL 10, instead of failing with "Topology is closed". A `default_rootless_network_cmd = "slirp4netns"` workaround is no longer needed, and `mongodb__repl_set_members` no longer has to name the host's FQDN. For a replica set with members on other hosts, set `rocketchat__mongodb_direct_connection: false`.
 * **role:podman_containers**: Rootful containers, networks and volumes (without `user`) no longer fail with `'dict object' has no attribute` when their Quadlets are deployed or removed.
 * **role:podman_containers**: Runs with rootless containers no longer warn that the user's `~/.ansible/tmp` was created with a mode of 0700.

@@ -17,16 +17,18 @@ rocketchat__login__users__dependent_var:
     linger: true
 
 rocketchat__mongodb__conf_replication_repl_set_name__dependent_var: '{{ rocketchat__mongodb_repl_set_name }}'
-rocketchat__mongodb__users__dependent_var:
-  - username: '{{ rocketchat__mongodb_login["username"] | d(omit) }}'
-    password: '{{ rocketchat__mongodb_login["password"] | d(omit) }}'
-    database: 'rocketchat'
-    roles:
-      - db: 'rocketchat'
-        role: 'readWrite'
-      - db: 'rocketchat'
-        role: 'dbAdmin'
-    state: '{{ (rocketchat__mongodb_login is defined and rocketchat__mongodb_login | length) | ternary("present", "skip") }}'
+# Empty without a login: the mongodb role refuses any user while authorization is disabled.
+# An inline `if`, since ternary() would also template the user, and with it the missing login.
+rocketchat__mongodb__users__dependent_var: '{{ [__rocketchat__mongodb_user] if rocketchat__mongodb_login | d({}) | length else [] }}'
+__rocketchat__mongodb_user:
+  username: '{{ rocketchat__mongodb_login["username"] }}'
+  password: '{{ rocketchat__mongodb_login["password"] }}'
+  database: 'rocketchat'
+  roles:
+    - db: 'rocketchat'
+      role: 'readWrite'
+    - db: 'rocketchat'
+      role: 'dbAdmin'
 
 rocketchat__podman_containers__containers__dependent_var:
   - name: 'rocketchat'
