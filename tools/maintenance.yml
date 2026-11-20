@@ -247,6 +247,29 @@
   last_result: >
     Not checked: needs a VM, see check.
 
+- id: 'mongodb-70-el10-database-tools'
+  what: >
+    repo_mongodb refuses MongoDB versions before 8.0 on RHEL 10, since the upstream 7.0
+    repository for RHEL 10 lacks mongodb-database-tools, which mongodb-org-tools requires.
+  where:
+    - 'roles/repo_mongodb/tasks/RedHat.yml'
+    - 'roles/repo_mongodb/README.md'
+  done_when: >
+    https://repo.mongodb.org/yum/redhat/10/mongodb-org/7.0/x86_64/ offers
+    mongodb-database-tools, or MongoDB 7.0 reached its end of life (2027-08-31).
+  check: >
+    In a quay.io/rockylinux/rockylinux:10 container, add the 7.0 repository (baseurl
+    https://repo.mongodb.org/yum/redhat/10/mongodb-org/7.0/x86_64/, gpgcheck=0) and run
+    `dnf --assumeno install mongodb-org`; it must not report "nothing provides
+    mongodb-database-tools".
+  action: >
+    If upstream fixed the repository: allow 7.0 in the assert. After the end of life: keep
+    the assert and remove this entry.
+  interval: 'quarterly'
+  last_checked: '2026-11-20'
+  last_result: >
+    7.0.48 has mongodb-org-server, but no mongodb-database-tools.
+
 - id: 'molecule-latest-ansible-core'
   what: >
     The README recommends the latest ansible-core for hosts without RHEL 8, but Molecule

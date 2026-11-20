@@ -270,6 +270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **playbook:docker**: The playbook no longer fails at the kernel_settings role on new hosts, since Docker no longer loads the `br_netfilter` kernel module by default. It no longer sets `net.bridge.bridge-nf-call-iptables` and `net.bridge.bridge-nf-call-ip6tables`; dockerd sets them itself when it needs the module (`icc=false`, or the userland proxy disabled).
+* **role:repo_mongodb**: On RHEL 10, the role aborts with a clear message for MongoDB versions before 8.0, instead of the mongodb role failing at the package installation with "nothing provides mongodb-database-tools". The upstream 7.0 repository for RHEL 10 lacks that package.
 * **role:monitoring_plugins**: On Windows, `--tags monitoring_plugins:remove` also uninstalls the MSI packages of upcoming monitoring plugins releases, which no longer share one product code.
 * **role:hostname**: The task names no longer show the hostname of the first host of the play for every host, which made the `dashboard` callback list the wrong hostname in its LAST WORST column.
 * **role:apache_httpd**: The `raw` and `redirect` vHost templates write an error and an access log like the other templates, unless the `raw` content sets its own, so fail2ban also sees requests to them, for example scanner probes against a catch-all vHost for unknown host names.
@@ -508,6 +509,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:apache_httpd**: The `localhost` vHost refuses the HTML view of the PHP-FPM status page (`/fpm-status?html`), in which any client of the pool can plant script for whoever opens the page ([GHSA-3mg3-cr28-46gc](https://github.com/php/php-src/security/advisories/GHSA-3mg3-cr28-46gc)), while the other views and the `php-fpm-status` check keep working.
 * **role:acme_sh**: The ACME challenge directory and its `index.html` belong to root instead of the web server user, which only reads them.
 * **role:monitoring_plugins**: `/var/www/html/localhost/monitoring.php` belongs to root instead of the web server user, which only executes it.
 * **role:icinga_kubernetes_web, role:icingaweb2_module_\*, role:icingaweb2_theme_linuxfabrik**: The module code below `/usr/share/icingaweb2/modules` belongs to root instead of the web server user, so a compromised web server can no longer change code that the module daemons and `icingacli` run as root. The module configuration below `/etc/icingaweb2/modules` belongs to `root:icingaweb2` as in the Icinga packages; the web server still writes it through the `icingaweb2` group. The Jira and Grafana configurations and the Grafana JWT key are no longer world-readable.
