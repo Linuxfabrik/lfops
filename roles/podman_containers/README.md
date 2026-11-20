@@ -25,6 +25,8 @@ kernel_modules__modules__host_var:
     enabled: true
 ```
 
+* Optional: when running rootful containers on a network of their own with a FirewallFabrik nftables script, disable "Flush entire ruleset" in the firewall settings. Otherwise every start of the firewall deletes the rules netavark set up, and the published ports of these containers stop answering until `podman network reload --all`. The policy also has to accept the forwarded traffic to and from the container networks, see [Coexistence with Docker, CrowdSec, fail2ban and Other Tools](https://linuxfabrik.github.io/firewallfabrik/user-guide/12%20-%20Integration%20with%20OS%20Running%20on%20the%20Firewall%20Machine/#coexistence-with-docker-crowdsec-fail2ban-and-other-tools) in the FirewallFabrik user guide. Rootless containers are not affected, their rules live in the network namespace of their user.
+
 
 ## Tags
 

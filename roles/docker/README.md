@@ -13,6 +13,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * The official [docker repository](https://docs.docker.com/engine/install/centos/#install-using-the-repository) must be enabled (role: [linuxfabrik.lfops.repo_docker](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_docker)).
 
 
+## Requirements
+
+Manual steps:
+
+* With a FirewallFabrik nftables script (role: [linuxfabrik.lfops.firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall)), disable "Flush entire ruleset" in the firewall settings. Otherwise every start of the firewall, including the one at boot, deletes the rules dockerd set up, and the containers lose their access to the outside world. The policy also has to accept the forwarded traffic to and from the container networks, see [Coexistence with Docker, CrowdSec, fail2ban and Other Tools](https://linuxfabrik.github.io/firewallfabrik/user-guide/12%20-%20Integration%20with%20OS%20Running%20on%20the%20Firewall%20Machine/#coexistence-with-docker-crowdsec-fail2ban-and-other-tools) in the FirewallFabrik user guide.
+
+
 ## Tags
 
 `docker`
