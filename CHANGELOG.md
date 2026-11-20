@@ -269,6 +269,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* **role:repo_mongodb**: On RHEL 10, the role aborts with a clear message for MongoDB versions before 8.0, instead of the mongodb role failing at the package installation with "nothing provides mongodb-database-tools". The upstream 7.0 repository for RHEL 10 lacks that package.
 * **role:monitoring_plugins**: On Windows, `--tags monitoring_plugins:remove` also uninstalls the MSI packages of upcoming monitoring plugins releases, which no longer share one product code.
 * **role:hostname**: The task names no longer show the hostname of the first host of the play for every host, which made the `dashboard` callback list the wrong hostname in its LAST WORST column.
 * **role:apache_httpd**: The `raw` and `redirect` vHost templates write an error and an access log like the other templates, unless the `raw` content sets its own, so fail2ban also sees requests to them, for example scanner probes against a catch-all vHost for unknown host names.
