@@ -1,5 +1,6 @@
 rocketchat__container_enabled: true
 rocketchat__container_state: 'started'
+rocketchat__mongodb_direct_connection: true
 rocketchat__mongodb_host: 'host.containers.internal'
 rocketchat__mongodb_port: 27017
 rocketchat__mongodb_repl_set_name: 'rs01'

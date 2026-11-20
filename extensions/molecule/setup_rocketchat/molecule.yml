@@ -1,0 +1,3 @@
+# Molecule scenario marker for the 'setup_rocketchat' scenario, run with
+# `molecule test --scenario-name setup_rocketchat`. The shared config.yml provisions libvirt/KVM
+# VMs: MongoDB and the rootless Podman container run under systemd.
