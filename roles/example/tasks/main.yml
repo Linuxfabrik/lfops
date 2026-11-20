@@ -293,7 +293,7 @@
     notify: 'example: validate config; restart example'
 
   # os-specific template selection using first_found, with the group taken from the
-  # LFOps-wide shared variables (see CONTRIBUTING.md "LFOps-wide Shared Variables" for details).
+  # LFOps-wide shared variables (see docs/developer-guide/variables.md "LFOps-wide Shared Variables" for details).
   # the web server only reads the file, so it gets read access through the group, while root
   # keeps the ownership.
   - name: 'Deploy /etc/example/platform.conf'
@@ -398,7 +398,7 @@
 - block:
 
   # demonstrates a feature gated behind a "recommended" variable: the task only acts when the
-  # user provides a target. tagged :dump per the controlled tag vocabulary in CONTRIBUTING.md.
+  # user provides a target. tagged :dump per the controlled tag vocabulary in docs/developer-guide/roles.md.
   - name: 'Deploy /etc/cron.d/example-backup'
     ansible.builtin.template:
       backup: true

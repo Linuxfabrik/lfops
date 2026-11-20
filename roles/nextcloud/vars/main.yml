@@ -35,7 +35,7 @@ __nextcloud__apps_enforced:
 # vars/main.yml is auto-loaded at play parse and is visible to every role in the play. The OS
 # selection happens here, so consumers reference the public variable directly. Internal
 # (`__`-prefixed) dict first, public variable second, both non-overridable from inventory.
-# See "OS-specific Dependent Variables" in CONTRIBUTING.md.
+# See "OS-specific Dependent Variables" in docs/developer-guide/variables.md.
 
 # PHP modules installed by the linuxfabrik.lfops.php role via
 # nextcloud__php__modules__dependent_var. 'present' are the modules Nextcloud 35 requires or
