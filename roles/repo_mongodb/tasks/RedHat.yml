@@ -1,5 +1,21 @@
 - block:
 
+  # The upstream repository for RHEL 10 has no series before 7.0, and the 7.0 one lacks
+  # mongodb-database-tools, which mongodb-org-tools requires, so `dnf install mongodb-org` fails
+  # with "nothing provides mongodb-database-tools". Verified with 7.0.48 on 2026-11-20.
+  # See maintenance.yml, id 'mongodb-70-el10-database-tools'.
+  - name: 'Assert that the MongoDB version can be installed on RHEL 10'
+    ansible.builtin.assert:
+      that:
+        - 'repo_mongodb__version is version("8.0", ">=")'
+      quiet: true
+      fail_msg: >-
+        MongoDB {{ repo_mongodb__version }} cannot be installed on RHEL 10 from the upstream
+        repositories, the 7.0 repository lacks mongodb-database-tools. Set repo_mongodb__version
+        to 8.0 or newer.
+    when:
+      - 'ansible_facts["distribution_major_version"] == "10"'
+
   - name: 'curl {{ __repo_mongodb__gpg_key_url }} --output /tmp/ansible.RPM-GPG-KEY-MONGODB-{{ repo_mongodb__version }}.asc'
     ansible.builtin.get_url:
       url: '{{ __repo_mongodb__gpg_key_url }}'
