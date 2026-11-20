@@ -288,6 +288,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:podman_containers**: Rootful containers, networks and volumes (without `user`) no longer fail with `'dict object' has no attribute` when their Quadlets are deployed or removed.
+* **role:podman_containers**: Runs with rootless containers no longer warn that the user's `~/.ansible/tmp` was created with a mode of 0700.
 * **playbook:mongodb, playbook:setup_graylog_datanode, playbook:setup_graylog_server, playbook:setup_rocketchat**: Hosts with MongoDB 8.0 or newer get the transparent hugepages settings it needs (`always`, defrag `defer+madvise`, `khugepaged/max_ptes_none` 0), instead of `never`, which made mongod log startup warnings and lose performance. MongoDB 7.0 keeps `never`. When upgrading from 7.0, add the `kernel_settings` tag: `--tags repo_mongodb,kernel_settings,mongodb:upgrade` ([#703](https://github.com/Linuxfabrik/lfops/issues/703)).
 * **playbook:setup_graylog_datanode, playbook:setup_graylog_server, playbook:setup_rocketchat**: Set `vm.swappiness` to 1 for MongoDB, as the `mongodb` playbook does.
 * **role:php**: On the Red Hat family, PHP modules from the inventory that are already installed as a dependency of another package are marked as user-installed, so `dnf autoremove` no longer removes them once that package is gone.
