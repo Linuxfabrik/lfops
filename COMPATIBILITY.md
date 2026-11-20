@@ -159,7 +159,7 @@ Which Ansible role is proven to run on which OS?
 | repo_proxysql                         |  (x)   |  (x)   |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    | RHEL 10: ProxySQL 3.0 only                   |
 | repo_redis                            |   x    |   x    |        |        |         |    (x)    |    (x)    |    (x)    |                                              |
 | repo_remi                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
-| repo_rpmfusion                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| repo_rpmfusion                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
 | rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |
 | rpm                                   |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
