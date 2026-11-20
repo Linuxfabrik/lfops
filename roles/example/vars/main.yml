@@ -9,7 +9,7 @@ __example__supported_versions:
 
 # OS-specific dependent_var, published by this role and consumed by an earlier role in
 # the play via the `__dependent_var` slot of the consumer (see "OS-specific Dependent
-# Variables" in CONTRIBUTING.md).
+# Variables" in docs/developer-guide/variables.md).
 #
 # `vars/<os>.yml` cannot serve this case because those files are loaded only when this
 # role's own tasks run, which is too late for a role that runs earlier. `vars/main.yml`

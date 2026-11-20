@@ -174,7 +174,7 @@
   # handful of policy keys, so we edit those lines in place with lineinfile instead of
   # templating the whole distro-owned file (which would mean maintaining one verbatim copy
   # per OS release for four settings). This is a deliberate exception to the
-  # template-over-lineinfile preference in CONTRIBUTING.
+  # template-over-lineinfile preference in docs/developer-guide/tasks.md.
   #
   # Note: login.defs applies to newly created accounts and the next password change only; it
   # does not retroactively re-age existing accounts (the role does not run chage on them).

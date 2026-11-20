@@ -282,7 +282,7 @@
     Compare the latest ansible-core release on https://pypi.org/pypi/ansible-core/json
     with `last_result`. If it is newer, run the `setup_basic` scenario and one setup
     playbook scenario (e.g. `setup_nextcloud`) with that release, as described in
-    CONTRIBUTING.md "Testing". Leave out `rocky8-vm` (`--limit '!rocky8-vm'`): ansible-core
+    docs/developer-guide/testing.md "Testing". Leave out `rocky8-vm` (`--limit '!rocky8-vm'`): ansible-core
     2.17 and newer cannot manage RHEL 8, which stays on 2.16.
   action: 'Fix what breaks, or document the limitation in the README.'
   interval: 'monthly'
@@ -327,7 +327,7 @@
     `shared/tasks/reload-changed-timers.yml` unloads changed calendar timers, so a moved
     schedule does not fire immediately.
   where:
-    - 'CONTRIBUTING.md'
+    - 'docs/developer-guide/systemd.md'
     - 'roles/shared/tasks/reload-changed-timers.yml'
   upstream:
     - 'https://github.com/systemd/systemd/issues/16732'
@@ -405,7 +405,7 @@
     The ipa* modules are vendored from ansible-freeipa with the `--diff` support of an
     unmerged pull request.
   where:
-    - 'CONTRIBUTING.md'
+    - 'docs/developer-guide/upstream.md'
     - 'plugins/module_utils/ipa_diff.py'
     - 'plugins/modules/ipa*.py'
     - 'roles/freeipa_server/tasks/main.yml'
@@ -429,7 +429,7 @@
   check: >
     Compare `__version__` in the copy with
     https://pypi.org/pypi/python-gnupg/json (`info.version`).
-  action: 'Re-sync unmodified, see CONTRIBUTING.md "Vendored Plugins".'
+  action: 'Re-sync unmodified, see docs/developer-guide/upstream.md "Vendored Plugins".'
   interval: 'quarterly'
   last_checked: '2026-11-10'
   last_result: >
@@ -441,7 +441,7 @@
     `rescan_device()` from 6f22759f) with local patches, since the upstream module needs
     a newer ansible-core and Python 3.7+.
   where:
-    - 'CONTRIBUTING.md'
+    - 'docs/developer-guide/upstream.md'
     - 'plugins/modules/lvm_pv.py'
     - 'roles/lvm'
   upstream:

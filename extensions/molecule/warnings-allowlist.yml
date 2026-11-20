@@ -1,6 +1,6 @@
 # Warnings that do not fail a Molecule run, for all scenarios. A scenario can accept more in a
 # warnings-allowlist.yml of its own, next to its molecule.yml. See "Warnings fail a scenario" in
-# CONTRIBUTING.md.
+# docs/developer-guide/testing.md.
 #
 # Each entry is a dictionary:
 # * pattern: Python regular expression, searched in the warning text with all whitespace

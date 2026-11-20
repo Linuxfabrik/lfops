@@ -10,6 +10,8 @@
 for the Linuxfabrik LFOps documentation site.
 
 For roles, the existing README.md is symlinked into docs/roles/<role>.md.
+The files in docs/developer-guide/ are part of the repository. They are listed in
+the nav under 'Developer Guide', titled by their first heading.
 For Ansible plugins (modules, callback, lookup, filter), the embedded DOCUMENTATION /
 EXAMPLES / RETURN blocks are extracted and rendered into Markdown under
 docs/modules/<name>.md, docs/callback/<name>.md, docs/lookup/<name>.md,
@@ -26,7 +28,7 @@ import sys
 import yaml
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026042901'
+__version__ = '2026112001'
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DOCS_DIR = os.path.join(REPO_ROOT, 'docs')
@@ -63,6 +65,36 @@ def create_symlink(source, target):
     if os.path.islink(target) or os.path.exists(target):
         os.unlink(target)
     os.symlink(rel_source, target)
+
+
+def write_contributing(source, target):
+    """Copy CONTRIBUTING.md into docs/, with its links into docs/developer-guide/ made
+    relative to docs/, so they also work on the documentation site."""
+    with open(source, encoding='utf-8') as fh:
+        content = fh.read()
+    if os.path.islink(target) or os.path.exists(target):
+        os.unlink(target)
+    with open(target, 'w', encoding='utf-8') as fh:
+        fh.write(content.replace('](docs/developer-guide/', '](developer-guide/'))
+
+
+def scan_developer_guide():
+    """Return (title, path) of each file in docs/developer-guide/, by file name."""
+    guide_dir = os.path.join(DOCS_DIR, 'developer-guide')
+    if not os.path.isdir(guide_dir):
+        return []
+    pages = []
+    for entry in sorted(os.listdir(guide_dir)):
+        if not entry.endswith('.md'):
+            continue
+        title = entry[:-3]
+        with open(os.path.join(guide_dir, entry), encoding='utf-8') as fh:
+            for line in fh:
+                if line.startswith('# '):
+                    title = line[2:].strip()
+                    break
+        pages.append((title, f'developer-guide/{entry}'))
+    return pages
 
 
 def scan_roles():
@@ -476,7 +508,7 @@ def write_plugin_pages(plugins):
     return written
 
 
-def generate_mkdocs_yml(roles, plugin_pages):
+def generate_mkdocs_yml(roles, plugin_pages, guide_pages):
     """Generate the mkdocs.yml content."""
     lines = []
     lines.append(
@@ -557,6 +589,10 @@ def generate_mkdocs_yml(roles, plugin_pages):
     lines.append("  - 'Changelog': 'CHANGELOG.md'")
     lines.append("  - 'Security': 'security.md'")
     lines.append("  - 'Contributing': 'contributing.md'")
+    if guide_pages:
+        lines.append("  - 'Developer Guide':")
+        for title, path in guide_pages:
+            lines.append(f"      - '{title}': '{path}'")
     lines.append("  - 'Roles':")
     for role in roles:
         lines.append(f"      - '{role}': 'roles/{role}.md'")
@@ -595,10 +631,12 @@ def main():
     for source_name, target_name, _ in TOP_LEVEL_DOCS:
         source = os.path.join(REPO_ROOT, source_name)
         target = os.path.join(DOCS_DIR, target_name)
-        if os.path.isfile(source):
-            create_symlink(source, target)
-        else:
+        if not os.path.isfile(source):
             print(f'WARNING: {source_name} not found, skipping.')
+        elif source_name == 'CONTRIBUTING.md':
+            write_contributing(source, target)
+        else:
+            create_symlink(source, target)
 
     # Create symlink for playbooks README
     source_name, target_name, _ = PLAYBOOKS_README
@@ -630,7 +668,7 @@ def main():
     plugin_pages = write_plugin_pages(plugins)
 
     # Generate mkdocs.yml
-    mkdocs_content = generate_mkdocs_yml(roles, plugin_pages)
+    mkdocs_content = generate_mkdocs_yml(roles, plugin_pages, scan_developer_guide())
     mkdocs_path = os.path.join(REPO_ROOT, 'mkdocs.yml')
     with open(mkdocs_path, 'w', encoding='utf-8') as fh:
         fh.write(mkdocs_content)

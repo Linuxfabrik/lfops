@@ -8,7 +8,7 @@ __molecule__hypervisor: 'hypervisor'
 # 'debian13-vm' and so on. Two Molecule runs started side by side (two checkouts, two worktrees,
 # two branches) therefore address the very same domain, container and boot disk, and the first
 # 'destroy' takes the other run's instances with it. Set LFOPS_TEST_ID to a short token per run
-# to give each one its own names; see "Running scenarios in parallel" in CONTRIBUTING.md.
+# to give each one its own names; see "Running scenarios in parallel" in docs/developer-guide/testing.md.
 # Unset - the normal single-run case - the names stay exactly what they were.
 __molecule__test_id: '{{ lookup("env", "LFOPS_TEST_ID") | d("", true) | trim }}'
 
@@ -20,7 +20,7 @@ __molecule__instance_name: >-
   lfops-molecule-{{ (__molecule__test_id ~ "-") if __molecule__test_id else "" }}{{ inventory_hostname }}
 
 # The libvirt storage pool the base images and per-VM boot disks are written to. Defaults to the
-# dedicated 'lfops-molecule' pool that CONTRIBUTING.md has you create, not to the distribution's
+# dedicated 'lfops-molecule' pool that docs/developer-guide/testing.md has you create, not to the distribution's
 # 'default' pool: the latter's directory is owned by a package, so every upgrade of it restores
 # the packaged directory mode, and a chmod on a directory carrying an ACL rewrites the ACL mask.
 # A setfacl grant that lets the pool be written unprivileged therefore decays to '#effective:--x'
