@@ -507,6 +507,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+* **role:apache_httpd**: The `localhost` vHost refuses the HTML view of the PHP-FPM status page (`/fpm-status?html`), in which any client of the pool can plant script for whoever opens the page ([GHSA-3mg3-cr28-46gc](https://github.com/php/php-src/security/advisories/GHSA-3mg3-cr28-46gc)), while the other views and the `php-fpm-status` check keep working.
 * **role:acme_sh**: The ACME challenge directory and its `index.html` belong to root instead of the web server user, which only reads them.
 * **role:monitoring_plugins**: `/var/www/html/localhost/monitoring.php` belongs to root instead of the web server user, which only executes it.
 * **role:icinga_kubernetes_web, role:icingaweb2_module_\*, role:icingaweb2_theme_linuxfabrik**: The module code below `/usr/share/icingaweb2/modules` belongs to root instead of the web server user, so a compromised web server can no longer change code that the module daemons and `icingacli` run as root. The module configuration below `/etc/icingaweb2/modules` belongs to `root:icingaweb2` as in the Icinga packages; the web server still writes it through the `icingaweb2` group. The Jira and Grafana configurations and the Grafana JWT key are no longer world-readable.

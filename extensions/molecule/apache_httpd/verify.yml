@@ -14,6 +14,8 @@
 # client address Apache logs for it.
 # And the LogLevel and the placeholder certificates: by what the running Apache wrote to the journal.
 # And the logs of the raw and redirect templates: by the lines a request leaves in them.
+# And the guard against the HTML view of the PHP-FPM status page: by the status code of requests
+# for it.
 - name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -523,3 +525,48 @@
         that:
           - '__molecule__apache_httpd_raw_error_result["stdout"] is search("AH00126: Invalid URI in request|AH10244: invalid URI path")'
         fail_msg: 'expected AH00126 or AH10244 in raw.example.com-error.log, got "{{ __molecule__apache_httpd_raw_error_result["stdout"] }}"'
+
+    # The localhost vHost refuses the HTML view of the PHP-FPM status page (GHSA-3mg3-cr28-46gc)
+    # and passes the flags of the other views. No PHP-FPM runs in this scenario, so a request that
+    # passes ends at the missing pool socket (503) and only a refused one is answered with 403.
+    # php-fpm decodes the query before it looks for `html`, so the encoded variants have to be
+    # refused as well.
+    - name: 'curl http://localhost/fpm-status?<query>' # noqa command-instead-of-module (ansible.builtin.uri cannot send a query as is)
+      ansible.builtin.command: >-
+        curl --silent
+        --output /dev/null
+        --write-out '%{http_code}'
+        'http://localhost/fpm-status{{ item["query"] }}'
+      register: '__molecule__apache_httpd_fpm_status_result'
+      changed_when: false
+      loop:
+        - query: ''
+          refused: false
+        - query: '?json&full'
+          refused: false
+        - query: '?openmetrics'
+          refused: false
+        - query: '?xml&full'
+          refused: false
+        - query: '?full&html'
+          refused: true
+        - query: '?%68tml'
+          refused: true
+        - query: '?+html'
+          refused: true
+        - query: '?html%00'
+          refused: true
+        - query: '?json&%zz&html'
+          refused: true
+      loop_control:
+        label: '{{ item["query"] }}'
+
+    - name: 'Assert the localhost vHost refuses the HTML view of the PHP-FPM status page only'
+      ansible.builtin.assert:
+        that: '(item["stdout"] == "403") == item["item"]["refused"]'
+        fail_msg: >-
+          /fpm-status{{ item["item"]["query"] }} answered {{ item["stdout"] }},
+          expected {{ item["item"]["refused"] | ternary("403", "anything but 403") }}
+      loop: '{{ __molecule__apache_httpd_fpm_status_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["query"] }}'
