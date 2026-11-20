@@ -37,7 +37,7 @@ Which Ansible role is proven to run on which OS?
 | dnf                                   |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | dnf_makecache                         |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | dnf_versionlock                       |   -    |   -    |   x    |   x    |   (x)   |     -     |     -     |     -     |                                              |
-| docker                                |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| docker                                |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | duplicity                             |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |
 | elastic_agent                         |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | elastic_agent_fleet_server            |  (x)   |  (x)   |  (x)   |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
@@ -139,7 +139,7 @@ Which Ansible role is proven to run on which OS?
 | repo_collabora                        |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
 | repo_collabora_code                   |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_debian_base                      |  (x)   |  (x)   |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
-| repo_docker                           |        |        |   x    |  (x)   |   (x)   |           |           |           |                                              |
+| repo_docker                           |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_elasticsearch                    |  (x)   |  (x)   |   x    |   x    |   (x)   |    (x)    |     x     |    (x)    |                                              |
 | repo_epel                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_gitlab_ce                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
