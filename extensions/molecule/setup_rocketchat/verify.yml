@@ -7,11 +7,13 @@
   become: true
 
   vars:
-    __molecule__mongosh: >-
-      mongosh --quiet
-      --username {{ mongodb__admin_user["username"] | quote }}
-      --password {{ mongodb__admin_user["password"] | quote }}
-      --authenticationDatabase admin
+    __molecule__mongodb_auth: '{{
+        ("--username " ~ (mongodb__admin_user["username"] | quote)
+        ~ " --password " ~ (mongodb__admin_user["password"] | quote)
+        ~ " --authenticationDatabase admin")
+        if mongodb__conf_security_authorization | d(false) | bool
+        else ""
+      }}'
 
   tasks:
 
@@ -27,12 +29,11 @@
 
     # Without a change stream, Rocket.Chat would not see the changes of other instances, and its
     # own clients would not be updated.
-    - name: 'Count the change streams of the user rocketchat'
+    - name: 'Count the change streams on the rocketchat database'
       ansible.builtin.command: >-
-        {{ __molecule__mongosh }} --eval
-        'db.currentOp({"$all": true}).inprog.filter(o => o.effectiveUsers
-        && o.effectiveUsers.some(e => e.user == "rocketchat")
-        && JSON.stringify(o).includes("$changeStream")).length'
+        mongosh --quiet {{ __molecule__mongodb_auth }} --eval
+        'db.currentOp({"$all": true}).inprog.filter(o => JSON.stringify(o).includes("$changeStream")
+        && JSON.stringify(o).includes("rocketchat")).length'
       changed_when: false
       register: '__molecule__change_streams_result'
       retries: 12
@@ -49,10 +50,7 @@
     # --oplog only works on a replica set member.
     - name: 'mongodump --oplog'
       ansible.builtin.command: >-
-        mongodump --quiet --oplog
-        --username {{ mongodb__admin_user["username"] | quote }}
-        --password {{ mongodb__admin_user["password"] | quote }}
-        --authenticationDatabase admin
+        mongodump --quiet --oplog {{ __molecule__mongodb_auth }}
         --out {{ __molecule__dump_dir_result["path"] | quote }}
       changed_when: false
 

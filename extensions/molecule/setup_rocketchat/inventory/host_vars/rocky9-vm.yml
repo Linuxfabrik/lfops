@@ -1,0 +1,12 @@
+# With authentication: an admin user, the login of Rocket.Chat, and the keyfile a replica set
+# with authentication needs. rocky10-vm runs without, where Rocket.Chat needs no login.
+mongodb__admin_user:
+  username: 'mongodb-admin'
+  password: 'linuxfabrik'
+mongodb__conf_security_authorization: true
+# any base64 string of 6 or more characters
+mongodb__keyfile_content: 'linuxfabrik'
+
+rocketchat__mongodb_login:
+  username: 'rocketchat'
+  password: 'linuxfabrik'
