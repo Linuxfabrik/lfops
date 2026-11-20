@@ -1,0 +1,63 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state: Rocket.Chat runs in its rootless container and answers, it follows MongoDB with a
+# change stream, and MongoDB is still a replica set that can be dumped with its oplog.
+- name: 'Verify Rocket.Chat'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  vars:
+    __molecule__mongosh: >-
+      mongosh --quiet
+      --username {{ mongodb__admin_user["username"] | quote }}
+      --password {{ mongodb__admin_user["password"] | quote }}
+      --authenticationDatabase admin
+
+  tasks:
+
+    # Rocket.Chat takes a while to set up its database on the first start.
+    - name: 'curl http://<host>:3000/health'
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_facts["default_ipv4"]["address"] }}:3000/health'
+        return_content: false
+      register: '__molecule__curl_result'
+      retries: 36
+      delay: 5
+      until: '__molecule__curl_result["status"] | d(0) == 200'
+
+    # Without a change stream, Rocket.Chat would not see the changes of other instances, and its
+    # own clients would not be updated.
+    - name: 'Count the change streams of the user rocketchat'
+      ansible.builtin.command: >-
+        {{ __molecule__mongosh }} --eval
+        'db.currentOp({"$all": true}).inprog.filter(o => o.effectiveUsers
+        && o.effectiveUsers.some(e => e.user == "rocketchat")
+        && JSON.stringify(o).includes("$changeStream")).length'
+      changed_when: false
+      register: '__molecule__change_streams_result'
+      retries: 12
+      delay: 5
+      until: '__molecule__change_streams_result["stdout"] | int > 0'
+
+    - name: 'mktemp -d'
+      ansible.builtin.tempfile:
+        state: 'directory'
+        prefix: 'lfops-molecule-mongodump.'
+      register: '__molecule__dump_dir_result'
+      changed_when: false
+
+    # --oplog only works on a replica set member.
+    - name: 'mongodump --oplog'
+      ansible.builtin.command: >-
+        mongodump --quiet --oplog
+        --username {{ mongodb__admin_user["username"] | quote }}
+        --password {{ mongodb__admin_user["password"] | quote }}
+        --authenticationDatabase admin
+        --out {{ __molecule__dump_dir_result["path"] | quote }}
+      changed_when: false
+
+    - name: 'rm -rf the dump directory'
+      ansible.builtin.file:
+        path: '{{ __molecule__dump_dir_result["path"] }}'
+        state: 'absent'
+      changed_when: false
