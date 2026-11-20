@@ -178,6 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:blocky**: The sample configuration serves the Prometheus metrics on `http://127.0.0.1:4000/metrics`, so blocky can be monitored out of the box. A configuration given in `blocky__config_yml` is not affected.
 * **role:fail2ban**: A jail whose log file does not exist is skipped instead of keeping fail2ban from starting with all other jails (fail2ban 1.1.1 or newer).
 * **role:apache_httpd, role:moodle, role:nextcloud**: vHosts log in the Apache standard format `combined` instead of `linuxfabrikio`, which fail2ban and log analysers read without further setup.
 * **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.

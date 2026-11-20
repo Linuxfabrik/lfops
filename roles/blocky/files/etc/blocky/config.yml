@@ -1,11 +1,21 @@
 # This file is managed by Ansible - do not edit
-# 2024091902
+# 2026112001
 
 # See https://0xerr0r.github.io/blocky/latest/configuration for details
 
 # This is just a SAMPLE configuration to get blocky up and running. Due to the flexibility of the
 # blocky/config.yml file, we do not press it into a configurable Jinja template - you need to write
 # it from scratch for your use case and put it in your host_files directory.
+
+# The HTTP port serves the REST API and the Prometheus metrics, which the blocky-stats
+# check of the Linuxfabrik Monitoring Plugins reads. The API has no authentication and
+# can disable blocking, so it listens on localhost only.
+ports:
+  dns: 53
+  http: '127.0.0.1:4000'
+
+prometheus:
+  enable: true
 
 # upstreams configuration
 upstreams:
