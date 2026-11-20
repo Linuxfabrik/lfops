@@ -89,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
 * **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.
 * **tool:lfops**: `tools/lfops` assembles and starts an `ansible-navigator run` in a terminal UI: pick the playbook, its tags (read from the role READMEs), the inventories below `$LF_GITLAB` and the hosts, groups or a glob as limit. The entries used last are listed first, further arguments such as `--check --diff` are passed on to ansible-navigator. With `eval "$(command lfops --shell-init)"` in `~/.bashrc`, the command lands on the Bash prompt and in the shell history instead of running right away.
 * **playbook:fail2ban**: Deploys the Linuxfabrik repository on RHEL 8 to 10, which serves fail2ban built from the latest upstream release, so the filters recognize attacks the EPEL build lets through, such as the path traversal attempts behind `AH10244: invalid URI path`. Skip it with `fail2ban__skip_repo_linuxfabrik`.
