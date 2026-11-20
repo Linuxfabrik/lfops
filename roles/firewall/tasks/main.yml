@@ -1,3 +1,14 @@
+- block:
+
+  - name: 'Set platform/version specific variables'
+    ansible.builtin.import_role:
+      name: 'shared'
+      tasks_from: 'platform-variables.yml'
+
+  tags:
+    - 'always'
+
+
 - name: 'Run the preflight checks'
   ansible.builtin.import_tasks: 'preflight.yml'
 
@@ -229,11 +240,10 @@
 
 - block:
 
-  - name: 'Make sure iptables and nftables are installed (required for fwb)'
+  # The package list per platform is explained in vars/<platform>.yml.
+  - name: 'Make sure the packages required for FirewallFabrik are installed'
     ansible.builtin.package:
-      name:
-        - 'iptables'
-        - 'nftables'
+      name: '{{ __firewall__fwbuilder_packages }}'
       state: 'present'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10

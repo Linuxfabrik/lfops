@@ -10,7 +10,7 @@ This role configures a firewall on the system. For the currently supported firew
 
 Manual steps:
 
-* When using `firewall__firewall == fwbuilder`, either manually deploy a Firewall Builder file to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically. Without either, or if the repository has no compiled file for the host, the run aborts before the role stops any firewall.
+* When using `firewall__firewall == fwbuilder`, the script has to be a FirewallFabrik nftables script (fwf-nft); the role installs only what that needs. Either manually deploy it to `/etc/fwb.sh` or use the ``firewall__fwbuilder_repo_url`` variable to clone the Firewall Builder files automatically. Without either, or if the repository has no compiled file for the host, the run aborts before the role stops any firewall.
 * When using `firewall__firewall == iptables` or `firewall__firewall == nftables`, set the ruleset in `firewall__iptables_ruleset` or `firewall__nftables_ruleset`. Without it, the run aborts before the role stops any firewall.
 
 

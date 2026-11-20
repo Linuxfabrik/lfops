@@ -1,0 +1,5 @@
+# What a FirewallFabrik nftables script (fwf-nft) calls: `nft`, and `ip` for the interface
+# addresses and routing rules. iptables-based scripts are not supported.
+__firewall__fwbuilder_packages:
+  - 'iproute2'
+  - 'nftables'
