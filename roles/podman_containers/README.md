@@ -145,6 +145,12 @@ kernel_modules__modules__host_var:
         * Type: String.
         * Default: `'default.target'`
 
+`podman_containers__firewall_driver`
+
+* Firewall driver netavark uses to set up the rules of Podman networks, for rootful and rootless containers. Set as `firewall_driver` in `/etc/containers/containers.conf.d/z00-linuxfabrik.conf`; a user's own `~/.config/containers/containers.conf.d/` takes precedence. Possible options: `'nftables'`, `'iptables'` (netavark 1 only, netavark 2 on RHEL 10 rejects it), or `''` to leave it to Podman. With `'iptables'`, netavark calls whatever `iptables` points to. If that is iptables-legacy (as on RHEL 9 hosts that got the `iptables-legacy` package from EPEL), a rootless container on a network of its own only starts if something else loaded the `ip_tables` kernel module before, which a rootless user may not do. `'nftables'` does not depend on the iptables backend. Takes effect when a network is set up, so restart the containers (or reboot) after changing it. Has no effect with the CNI network backend (Podman 4 on RHEL 8).
+* Type: String.
+* Default: `'nftables'`
+
 `podman_containers__networks__host_var` / `podman_containers__networks__group_var`
 
 * List of dictionaries describing the Podman networks.
@@ -296,6 +302,7 @@ podman_containers__containers__host_var:
     raw_service: |
       Restart=always
     user: 'rocketuser'
+podman_containers__firewall_driver: 'nftables'
 podman_containers__networks__host_var:
   - name: 'rocketchat'
     user: 'rocketuser'

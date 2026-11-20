@@ -1,0 +1,30 @@
+login__users__host_var:
+  - name: 'podtest'
+    home: '/home/podtest'
+    state: 'present'
+    linger: true
+
+# A rootful and a rootless container, each on a network of its own and with a published port, so
+# that netavark has to set up NAT rules on the host and in the user's network namespace.
+podman_containers__containers__host_var:
+  - name: 'rootful'
+    raw_container: |
+      ContainerName=rootful
+      Image=quay.io/libpod/banner:latest
+      Network=rootful.network
+      PublishPort=8081:80/tcp
+    raw_service: |
+      Restart=always
+  - name: 'rootless'
+    raw_container: |
+      ContainerName=rootless
+      Image=quay.io/libpod/banner:latest
+      Network=rootless.network
+      PublishPort=8080:80/tcp
+    raw_service: |
+      Restart=always
+    user: 'podtest'
+podman_containers__networks__host_var:
+  - name: 'rootful'
+  - name: 'rootless'
+    user: 'podtest'
