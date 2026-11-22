@@ -195,7 +195,7 @@ Commit scopes:
 A new role delivers:
 
 * The role itself.
-* `roles/<role-name>/README.md`, following `roles/example/README.md` and [README](docs/developer-guide/roles.md#readme) below.
+* `roles/<role-name>/README.md`, following `roles/example/README.md` and [README](docs/developer-guide/roles.md#readme).
 * `roles/<role-name>/meta/argument_specs.yml` declaring all user-facing variables.
 * Updates to `playbooks/README.md`, `playbooks/all.yml`, `COMPATIBILITY.md` and `CHANGELOG.md`.
 * For a role that stores data outside of the default backup sources: the directory in `duplicity__backup_sources__role_var` and in `roles/duplicity/README.md`, see [Playbooks](docs/developer-guide/playbooks.md#playbooks).
