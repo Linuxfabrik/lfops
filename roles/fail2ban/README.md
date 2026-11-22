@@ -44,6 +44,8 @@ The role deploys `skip_if_nologs = true`, so a jail whose `logpath` matches no f
 
 The sshd jail runs the filter in `aggressive` mode, which also bans clients that connect and leave without trying to log in, such as scanners and clients sending a broken protocol banner.
 
+The `iptables-*` banactions need the `xt_multiport` kernel module, which RHEL 10 ships in `kernel-modules-extra`. On a host whose running kernel lacks it, such as one installed from a cloud image, the role installs `kernel-modules-extra` for that kernel, so bans take effect without a reboot, and `kernel-modules-extra-matched`, so later kernels bring the module along. Without the module, iptables rejects every ban while fail2ban still lists the address as banned.
+
 On the Red Hat family, the playbook deploys the Linuxfabrik repository, which serves fail2ban built from the latest upstream release. EPEL lags behind and does not recognize every attack its filters are meant for, for example the `invalid URI path` (`AH10244`) of a path traversal attempt in `apache-overflows`.
 
 
