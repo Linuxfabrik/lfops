@@ -178,6 +178,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+* **role:tools**: The Bash prompt is green on hosts in any group whose name contains `test`, such as `env_test`, and yellow for `stage`, where only groups named exactly `test` and `stage` counted.
 * **role:fail2ban**: The `apache-dos` jail only blocks new connections, so a ban no longer exhausts the Apache workers, and it bans repeat offenders longer each time.
 * **role:blocky**: The sample configuration serves the Prometheus metrics on `http://127.0.0.1:4000/metrics`, so blocky can be monitored out of the box. A configuration given in `blocky__config_yml` is not affected.
 * **role:fail2ban**: A jail whose log file does not exist is skipped instead of keeping fail2ban from starting with all other jails (fail2ban 1.1.1 or newer).
