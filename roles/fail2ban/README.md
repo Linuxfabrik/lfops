@@ -36,6 +36,8 @@ On a host with `/var/log/httpd`, the role enables these jails without further in
 
 They belong on the host the clients connect to. Behind a reverse proxy, a ban on the client address does nothing, since the packets come from the proxy, and where Apache logs the proxy as the client, the jails would ban the proxy itself. The role therefore leaves them out where `apache_httpd__mod_remoteip_internal_proxy` lists a proxy; for a host behind a proxy without `mod_remoteip`, set `fail2ban__jails_apache_enabled` to `false`. Hosts without `/var/log/httpd`, or with the jails disabled, get them removed.
 
+The `apache-dos` template is not enabled by default. It bans a client that sends more than 600 requests within 10 seconds for 5 minutes, and doubles the duration with each further ban of the same address, up to one day. The ban only blocks new connections, so requests already under way are answered: blocking open connections as well would leave every httpd worker that is reading from the client waiting until `Timeout` expires, and the ban itself would exhaust `MaxRequestWorkers`. A banned client can therefore keep sending requests on a connection it holds open, over HTTP/2 until the connection goes idle; limit the connections per client in the firewall. The template sets its own `action`, so `fail2ban__jail_default_action` does not apply to it, and blocking only new connections needs one of the `iptables-*` banactions. To change a single value, keep `z10-apache-dos` and add a jail file that is read after it with only that value (see the example below).
+
 The `apache-badbots` and `apache-botsearch` templates are not enabled by default: they match against lists of user agents (2013) and paths (2017) that fail2ban no longer maintains.
 
 The role deploys `skip_if_nologs = true`, so a jail whose `logpath` matches no file is skipped instead of keeping fail2ban from starting with all its other jails, for example on an Apache host before the first vHost is deployed. This needs fail2ban 1.1.1 or newer; older releases ignore the option, and there such a jail still keeps fail2ban from starting.
@@ -310,7 +312,7 @@ fail2ban__jail_wordpress_login_findtime: '10m'
 fail2ban__jail_wordpress_login_maxretry: 5
 fail2ban__jails__host_var:
   - filename: 'z10-apache-dos'
-    state: 'absent'
+    state: 'present'
     template: 'apache-dos'
   - filename: 'z10-wordpress-login'
     state: 'present'
@@ -320,12 +322,7 @@ fail2ban__jails__host_var:
     template: 'raw'
     raw: |-
       [apache-dos]
-      bantime  = 5m
-      enabled  = true
-      findtime = 10s
-      logpath  = /var/log/httpd/*access?log
-      maxretry = 600
-      port     = http,https
+      maxretry = 1200
 fail2ban__jails_apache_enabled: true
 fail2ban__service_enabled: true
 fail2ban__service_state: 'started'

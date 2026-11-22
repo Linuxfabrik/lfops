@@ -1,8 +1,21 @@
 # {{ ansible_managed }}
-# 2022070601
+# 2026112201
 
 [apache-dos]
+# The ban only applies to new connections (pre-rule). Banning established ones
+# as well keeps every httpd worker that is reading a request from the banned
+# client, such as one in the middle of a TLS handshake, waiting for packets that
+# never arrive until Timeout expires, so the ban itself exhausts
+# MaxRequestWorkers. A reject with tcp-reset frees none of them, since the RST
+# only goes to the client. Verified with fail2ban 1.1.1 and httpd 2.4.63
+# (event MPM) on Rocky 10.
+action   = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s", pre-rule="-m state --state NEW<sp>"]
 bantime  = 5m
+# Each further ban of the same address doubles the bantime, since a scanner
+# usually comes back right after the ban expires. fail2ban forgets an address
+# after dbpurgeage (1d).
+bantime.increment = true
+bantime.maxtime   = 1d
 enabled  = true
 findtime = 10s
 logpath  = /var/log/httpd/*access?log

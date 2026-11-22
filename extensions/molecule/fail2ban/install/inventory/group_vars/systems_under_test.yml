@@ -34,9 +34,10 @@ fail2ban__filters__group_var:
       failregex = ^.*molecule-fail2ban-probe from <HOST>$
       journalmatch = _SYSTEMD_UNIT=sshd.service
 
-# The Apache jails the role enables by itself need no entry here. apache-badbots and
-# apache-botsearch are opt-in, so they are listed to prove their templates still load. A jail
-# whose logpath matches no file proves that skip_if_nologs keeps fail2ban running without it.
+# The Apache jails the role enables by itself need no entry here. apache-badbots,
+# apache-botsearch and apache-dos are opt-in, so they are listed to prove their templates still
+# load. A jail whose logpath matches no file proves that skip_if_nologs keeps fail2ban running
+# without it.
 fail2ban__jails__group_var:
   - filename: 'z10-apache-badbots'
     state: 'present'
@@ -44,6 +45,9 @@ fail2ban__jails__group_var:
   - filename: 'z10-apache-botsearch'
     state: 'present'
     template: 'apache-botsearch'
+  - filename: 'z10-apache-dos'
+    state: 'present'
+    template: 'apache-dos'
   - filename: 'z20-molecule-journal'
     state: 'present'
     template: 'raw'
