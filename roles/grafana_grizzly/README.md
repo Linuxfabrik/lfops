@@ -2,7 +2,7 @@
 
 This role installs [grizzly](https://github.com/grafana/grizzly), a tool for the management of Grafana dashboards.
 
-Additionally, this role allows you to apply Grafana resources which are saved as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/grafana_grizzly/*.yml`.
+Additionally, this role allows you to apply Grafana resources which are saved as `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/grafana_grizzly/*.yml`.
 
 
 *Available since LFOps `3.0.0`.*

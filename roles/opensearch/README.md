@@ -98,25 +98,25 @@ opensearch__plugins_security_nodes_dns:
   - 'CN=node3.example.com,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
 # TLS certificates (example using file lookups)
 opensearch__plugins_security_root_ca: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/root-ca.pem")
+    "{{ inventory_dir }}/group_files/my_opensearch_cluster_group/etc/opensearch/root-ca.pem")
   }}'
 opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.pem")
+    "{{ inventory_dir }}/group_files/my_opensearch_cluster_group/etc/opensearch/admin.pem")
   }}'
 opensearch__plugins_security_admin_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.key")
+    "{{ inventory_dir }}/group_files/my_opensearch_cluster_group/etc/opensearch/admin.key")
   }}'
 opensearch__plugins_security_http_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.pem")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_http.pem")
   }}'
 opensearch__plugins_security_http_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.key")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_http.key")
   }}'
 opensearch__plugins_security_transport_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.pem")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_transport.pem")
   }}'
 opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.key")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_transport.key")
   }}'
 ```
 
@@ -474,29 +474,29 @@ opensearch__path_data__host_var: '/var/lib/opensearch'
 opensearch__path_repo:
   - '/mnt/opensearch-snapshots'
 opensearch__plugins_security_admin_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.pem")
+    "{{ inventory_dir }}/group_files/my_opensearch_cluster_group/etc/opensearch/admin.pem")
   }}'
 opensearch__plugins_security_admin_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/admin.key")
+    "{{ inventory_dir }}/group_files/my_opensearch_cluster_group/etc/opensearch/admin.key")
   }}'
 opensearch__plugins_security_allow_unsafe_democertificates: false
 opensearch__plugins_security_authcz_admin_dns:
   - 'CN=OpenSearch Admin,OU=Secure Services,O=ACME,ST=Zurich,C=CH'
 opensearch__plugins_security_disabled: false
 opensearch__plugins_security_http_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.pem")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_http.pem")
   }}'
 opensearch__plugins_security_http_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_http.key")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_http.key")
   }}'
 opensearch__plugins_security_root_ca: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/group_vars/my_opensearch_cluster_group/files/etc/opensearch/root-ca.pem")
+    "{{ inventory_dir }}/group_files/my_opensearch_cluster_group/etc/opensearch/root-ca.pem")
   }}'
 opensearch__plugins_security_transport_certificate: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.pem")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_transport.pem")
   }}'
 opensearch__plugins_security_transport_certificate_key: '{{ lookup("ansible.builtin.file",
-    "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/opensearch/node_transport.key")
+    "{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/opensearch/node_transport.key")
   }}'
 opensearch__plugins_security_transport_enforce_hostname_verification: false
 opensearch__plugins_security_transport_resolve_hostname: true

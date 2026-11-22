@@ -144,6 +144,16 @@
       vars:
         shared__disk_space_requirements: '{{ setup_icinga2_master__disk_space__internal_var | rejectattr("skip") | list }}'
 
+    - name: 'Run the preflight checks of the grafana_grizzly role'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.grafana_grizzly'
+        tasks_from: 'preflight.yml'
+      when:
+        - 'not setup_icinga2_master__grafana_grizzly__skip_role__internal_var'
+      tags:
+        - 'grafana_grizzly'
+        - 'grafana_grizzly:apply'
+
 
   roles:
 
