@@ -1,3 +1,7 @@
+- name: 'Run the preflight checks'
+  ansible.builtin.import_tasks: 'preflight.yml'
+
+
 - name: 'Set platform/version specific variables'
   ansible.builtin.import_role:
     name: 'shared'
@@ -111,7 +115,7 @@
 
   - name: 'Deploy /etc/openvpn/server/server.p12'
     ansible.builtin.copy:
-      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__pkcs12 }}'
+      src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ openvpn_server__pkcs12 }}'
       dest: '{{ openvpn_server__pkcs12 }}'
       mode: 0o400
       owner: 'root'
@@ -154,7 +158,7 @@
   # takes effect on the next connection attempt. Verified against OpenVPN 2.6.
   - name: 'Deploy /etc/openvpn/server/crl.pem'
     ansible.builtin.copy:
-      src: '{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__crl_verify }}'
+      src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ openvpn_server__crl_verify }}'
       dest: '{{ openvpn_server__crl_verify }}'
       mode: 0o600
       owner: 'openvpn'

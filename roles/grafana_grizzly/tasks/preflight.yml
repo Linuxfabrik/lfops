@@ -1,0 +1,22 @@
+# Checks that need nothing changed on the host. Imported at the top of tasks/main.yml, and included
+# by playbooks that run many roles (e.g. setup_icinga2_master) in their pre_tasks.
+#
+# The resources used to live in host_vars/<host>/files/grafana_grizzly/. The role reads the
+# directory with a fileglob, which finds nothing there anymore, so without this check the run
+# would succeed and apply no resource at all.
+- block:
+
+  - name: 'Assert that there are no grizzly resources left in the old location'
+    ansible.builtin.assert:
+      that:
+        - '(inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files/grafana_grizzly") is not exists'
+      quiet: true
+      fail_msg: >-
+        grafana_grizzly reads the resources from {{ inventory_dir }}/host_files/{{ inventory_hostname }}/grafana_grizzly/.
+        Move them there:
+        mkdir -p {{ inventory_dir }}/host_files/{{ inventory_hostname }} &&
+        mv {{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/grafana_grizzly {{ inventory_dir }}/host_files/{{ inventory_hostname }}/
+
+  tags:
+    - 'grafana_grizzly'
+    - 'grafana_grizzly:apply'

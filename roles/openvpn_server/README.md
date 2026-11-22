@@ -41,8 +41,8 @@ kernel_modules__modules__host_var:
     enabled: true
 ```
 * Issue client certificates with an RSA key of at least 2048 bits (or an EC key of at least 224 bits), a SHA-256 or stronger signature and the TLS Web Client Authentication extended key usage. The server refuses other certificates. RSA 2048 or ECDSA P-256 are enough; larger keys slow down every handshake without a security gain that matters here.
-* Create a certificate for the OpenVPN server and save it on the ansible control node as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/server.p12`.
-* Generate a certificate revocation list and save it on the ansible control node as `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files/etc/openvpn/server/crl.pem`.
+* Create a certificate for the OpenVPN server and save it on the ansible control node as `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/openvpn/server/server.p12`.
+* Generate a certificate revocation list and save it on the ansible control node as `{{ inventory_dir }}/host_files/{{ inventory_hostname }}/etc/openvpn/server/crl.pem`.
 
 
 ## Tags
@@ -120,7 +120,7 @@ For details see `man openvpn`.
 
 `openvpn_server__crl_verify_skip_deploy`
 
-* If false (the default), it expects the file `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__crl_verify }}` on the Ansible control node and will copy that file to the remote host. If true, it expects this file to already exist on the remote host in the specified location.
+* If false (the default), it expects the file `{{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ openvpn_server__crl_verify }}` on the Ansible control node and will copy that file to the remote host. If true, it expects this file to already exist on the remote host in the specified location.
 * Type: Bool.
 * Default: `false`
 
@@ -138,7 +138,7 @@ For details see `man openvpn`.
 
 `openvpn_server__pkcs12_skip_deploy`
 
-* If false (the default), it expects the file `{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ openvpn_server__pkcs12 }}` on the Ansible control node and will copy that file to the remote host. If true, it expects this file to already exist on the remote host in the specified location.
+* If false (the default), it expects the file `{{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ openvpn_server__pkcs12 }}` on the Ansible control node and will copy that file to the remote host. If true, it expects this file to already exist on the remote host in the specified location.
 * Type: Bool.
 * Default: `false`
 
