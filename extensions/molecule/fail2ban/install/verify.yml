@@ -101,6 +101,9 @@
         - jail: 'apache-botsearch'
           log: 'error'
           inventory: true
+        - jail: 'apache-dos'
+          log: 'access'
+          inventory: true
         - jail: 'apache-fakegooglebot'
           log: 'access'
         - jail: 'apache-modsecurity'
@@ -210,6 +213,44 @@
       check_mode: false
       when:
         - '__molecule__fail2ban_apache_jails_expected | bool'
+
+    # A ban of apache-dos must only block new connections, otherwise every httpd worker reading
+    # from the banned client waits until Timeout and the ban exhausts MaxRequestWorkers. The
+    # actionstart the running server resolved is the rule its first ban inserts into INPUT; it is
+    # read back instead of the rule itself, because iptables cannot insert the rule on a VM whose
+    # running kernel lacks xt_multiport until the reboot into the kernel converge installed.
+    - name: 'fail2ban-client get apache-dos action {{ fail2ban__jail_default_banaction }} actionstart'
+      ansible.builtin.command: 'fail2ban-client get apache-dos action {{ fail2ban__jail_default_banaction }} actionstart'
+      register: '__molecule__fail2ban_dos_actionstart_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the apache-dos jail only bans new connections'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_dos_actionstart_result["stdout"] is search("-m state --state NEW")'
+        fail_msg: 'apache-dos would also ban established connections: {{ __molecule__fail2ban_dos_actionstart_result["stdout"] }}'
+
+    # A scanner comes back right after a ban expires, so each further ban doubles the bantime.
+    - name: 'fail2ban-client get apache-dos {{ item["option"] }}'
+      ansible.builtin.command: 'fail2ban-client get apache-dos {{ item["option"] }}'
+      register: '__molecule__fail2ban_dos_option_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - option: 'bantime.increment'
+          expected: 'True'
+        - option: 'bantime.maxtime'
+          expected: '86400'
+      loop_control:
+        label: '{{ item["option"] }}'
+
+    - name: 'Assert the apache-dos jail increments the bantime of repeat offenders'
+      ansible.builtin.assert:
+        that: 'item["stdout"] == item["item"]["expected"]'
+        fail_msg: 'apache-dos {{ item["item"]["option"] }} is {{ item["stdout"] }}, expected {{ item["item"]["expected"] }}'
+      loop: '{{ __molecule__fail2ban_dos_option_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["option"] }}'
 
     # The wordpress-login filter ships with the role defaults, but its jail reads Apache logs this
     # host does not have. So the deployed filter is fed sample lines through fail2ban-regex, which
