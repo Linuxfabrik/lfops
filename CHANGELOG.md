@@ -270,6 +270,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:fail2ban**: Bans block the client on RHEL 10 hosts whose running kernel lacked `xt_multiport`, such as hosts fresh from a cloud image, where they had no effect until a reboot.
 * **role:repo_mongodb**: On RHEL 10, the role aborts with a clear message for MongoDB versions before 8.0, instead of the mongodb role failing at the package installation with "nothing provides mongodb-database-tools". The upstream 7.0 repository for RHEL 10 lacks that package.
 * **role:monitoring_plugins**: On Windows, `--tags monitoring_plugins:remove` also uninstalls the MSI packages of upcoming monitoring plugins releases, which no longer share one product code.
 * **role:hostname**: The task names no longer show the hostname of the first host of the play for every host, which made the `dashboard` callback list the wrong hostname in its LAST WORST column.

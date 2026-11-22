@@ -206,6 +206,25 @@
       when:
         - '__molecule__fail2ban_apache_jails_expected | bool'
 
+    # fail2ban lists an address as banned even when the banaction failed, for example because
+    # iptables rejects the multiport match on a kernel without xt_multiport. Only the rule in the
+    # firewall proves the ban blocks anything.
+    - name: 'iptables --list-rules f2b-apache-overflows'
+      ansible.builtin.command: 'iptables --list-rules f2b-apache-overflows'
+      register: '__molecule__fail2ban_overflows_rules_result'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      when:
+        - '__molecule__fail2ban_apache_jails_expected | bool'
+
+    - name: 'Assert the ban of apache-overflows is in the firewall'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_overflows_rules_result["stdout"] is search("-s 198\\.51\\.100\\.20/32 .*-j REJECT")'
+        fail_msg: 'no firewall rule for the ban of 198.51.100.20: {{ __molecule__fail2ban_overflows_rules_result["stdout"] }}{{ __molecule__fail2ban_overflows_rules_result["stderr"] }}'
+      when:
+        - '__molecule__fail2ban_apache_jails_expected | bool'
+
     # verify.yml runs twice, and the second run has to see the ban happen again.
     - name: 'fail2ban-client set apache-overflows unbanip 198.51.100.20'
       ansible.builtin.command: 'fail2ban-client set apache-overflows unbanip 198.51.100.20'
@@ -216,9 +235,8 @@
 
     # A ban of apache-dos must only block new connections, otherwise every httpd worker reading
     # from the banned client waits until Timeout and the ban exhausts MaxRequestWorkers. The
-    # actionstart the running server resolved is the rule its first ban inserts into INPUT; it is
-    # read back instead of the rule itself, because iptables cannot insert the rule on a VM whose
-    # running kernel lacks xt_multiport until the reboot into the kernel converge installed.
+    # actionstart the running server resolved is the rule its first ban inserts into INPUT, which
+    # this scenario never triggers for apache-dos.
     - name: 'fail2ban-client get apache-dos action {{ fail2ban__jail_default_banaction }} actionstart'
       ansible.builtin.command: 'fail2ban-client get apache-dos action {{ fail2ban__jail_default_banaction }} actionstart'
       register: '__molecule__fail2ban_dos_actionstart_result'
