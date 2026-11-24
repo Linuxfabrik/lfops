@@ -2,16 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
 ## [Unreleased]
 
-**Highlights:** Apache Solr runs on Debian, Ubuntu and RHEL 10 and supports Solr 9.11. Hosts that deploy the OWASP Core Rule Set with apache_httpd need `apache_httpd__mod_security_coreruleset_version` in their inventory, since the role no longer picks a release on its own and verifies the download against a checksum. The `systemd_unit` role also manages socket units, so a host can forward a TCP port with `systemd-socket-proxyd` without installing a proxy server. Hosts set up with `setup_basic` follow more of the CIS Benchmarks out of the box: root can no longer log in over SSH, USB storage is blocked, a sysctl hardening baseline is applied, and the cron configuration is readable by root only. Before updating, make sure Ansible logs in with an unprivileged user, and allow USB storage on hosts that need it. Nextcloud keeps the apps and app settings that the admin changed in the web interface, and JPEG previews work again. Large runs are easier to follow with the `linuxfabrik.lfops.compact` stdout callback, which shows one block per task, a progress bar per host, and only what changed. The `linuxfabrik.lfops.dashboard` stdout callback shows a run on one fixed screen, with a progress bar, the estimated remaining time and the hosts sorted by severity. `duba` backups no longer fail on a small `/tmp`, `duba` throttles itself instead. fail2ban follows the SSH port configured for sshd; on hosts with a non-standard port, add trusted networks to `fail2ban__jail_default_ignoreip` before updating. Source installs of the monitoring plugins and Bitwarden lookups are much faster, which shortens runs against many hosts.
+**Highlights:** Hosts set up with `setup_basic` follow more of the CIS Benchmarks: root can no longer log in over SSH and USB storage is blocked, so before updating make sure Ansible logs in with an unprivileged user, and allow USB storage on hosts that need it. apache_httpd needs `apache_httpd__mod_security_coreruleset_version` for the OWASP Core Rule Set, and grafana_grizzly and openvpn_server read their files from `host_files/<host>/`. fail2ban follows the sshd port; on hosts with a non-standard port, add trusted networks to `fail2ban__jail_default_ignoreip` first. Apache Solr runs on Debian, Ubuntu and RHEL 10, Nextcloud keeps the apps changed in its web interface, and the `compact` and `dashboard` stdout callbacks make large runs easier to follow.
 
 ### Breaking Changes
 
+* **role:grafana_grizzly, role:openvpn_server**: The roles read their files from `host_files/<host>/` like all other roles, instead of `host_vars/<host>/files/`, where Ansible also loaded the grizzly resources as host variables. The run aborts before it changes anything while files are left in the old location. Move them with `mkdir -p host_files/<host> && cp -a host_vars/<host>/files/. host_files/<host>/ && rm -r host_vars/<host>/files` ([#701](https://github.com/Linuxfabrik/lfops/issues/701)).
 * **playbook:apache_solr**: The playbook runs the kernel_settings role and sets `vm.swappiness` to 1, as the Solr Reference Guide recommends, so the kernel no longer swaps out the Java heap while memory is still available. On hosts that do not run kernel_settings yet, this also installs TuneD and applies its sysctl hardening baseline. Set `apache_solr__skip_kernel_settings: true` to leave the kernel settings alone.
 * **role:mariadb_server**: MariaDB may open at least 65536 files instead of 32768 (`mariadb_server__service_limit_nofile`), enough for 16 table cache instances, and a lower value no longer takes effect; a higher limit that the MariaDB package or systemd set is kept. The next run restarts MariaDB.
 * **role:fail2ban**: On hosts with Apache logs below `/var/log/httpd`, the role enables the Apache jails fail2ban ships (`apache-auth`, `apache-fakegooglebot`, `apache-modsecurity`, `apache-nohome`, `apache-noscript`, `apache-overflows`, `php-url-fopen`), unless `apache_httpd__mod_remoteip_internal_proxy` lists a proxy. On a host behind a reverse proxy that Apache logs as the client, such as LibreNMS behind a proxy, set `fail2ban__jails_apache_enabled: false`, otherwise the jails ban the proxy.
@@ -89,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
 * **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.
 * **tool:lfops**: `tools/lfops` assembles and starts an `ansible-navigator run` in a terminal UI: pick the playbook, its tags (read from the role READMEs), the inventories below `$LF_GITLAB` and the hosts, groups or a glob as limit. The entries used last are listed first, further arguments such as `--check --diff` are passed on to ansible-navigator. With `eval "$(command lfops --shell-init)"` in `~/.bashrc`, the command lands on the Bash prompt and in the shell history instead of running right away.
@@ -178,6 +179,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* **role:tools**: The Bash prompt is green on hosts in any group whose name contains `test`, such as `env_test`, and yellow for `stage`, where only groups named exactly `test` and `stage` counted.
+* **role:fail2ban**: The `apache-dos` jail only blocks new connections, so a ban no longer exhausts the Apache workers, and it bans repeat offenders longer each time.
+* **role:blocky**: The sample configuration serves the Prometheus metrics on `http://127.0.0.1:4000/metrics`, so blocky can be monitored out of the box. A configuration given in `blocky__config_yml` is not affected.
 * **role:fail2ban**: A jail whose log file does not exist is skipped instead of keeping fail2ban from starting with all other jails (fail2ban 1.1.1 or newer).
 * **role:apache_httpd, role:moodle, role:nextcloud**: vHosts log in the Apache standard format `combined` instead of `linuxfabrikio`, which fail2ban and log analysers read without further setup.
 * **role:fail2ban**: The `apache-*` jails run with the values fail2ban ships for them (`maxretry`, `findtime`, `bantime`) instead of their own, and only point `logpath` at the logs of the apache_httpd role. For example, `apache-overflows` bans after 2 attempts for 10 minutes instead of after 1 for a day, and `apache-auth` after 5 failures instead of 3.
@@ -270,6 +274,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * **playbook:docker**: The playbook no longer fails at the kernel_settings role on new hosts, since Docker no longer loads the `br_netfilter` kernel module by default. It no longer sets `net.bridge.bridge-nf-call-iptables` and `net.bridge.bridge-nf-call-ip6tables`; dockerd sets them itself when it needs the module (`icc=false`, or the userland proxy disabled).
+* **role:fail2ban**: Bans block the client on RHEL 10 hosts whose running kernel lacked `xt_multiport`, such as hosts fresh from a cloud image, where they had no effect until a reboot.
 * **role:repo_mongodb**: On RHEL 10, the role aborts with a clear message for MongoDB versions before 8.0, instead of the mongodb role failing at the package installation with "nothing provides mongodb-database-tools". The upstream 7.0 repository for RHEL 10 lacks that package.
 * **role:monitoring_plugins**: On Windows, `--tags monitoring_plugins:remove` also uninstalls the MSI packages of upcoming monitoring plugins releases, which no longer share one product code.
 * **role:hostname**: The task names no longer show the hostname of the first host of the play for every host, which made the `dashboard` callback list the wrong hostname in its LAST WORST column.

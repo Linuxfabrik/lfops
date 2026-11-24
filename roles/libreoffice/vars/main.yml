@@ -1,5 +1,5 @@
 # Published for the `selinux` role, which the playbook runs before this role, so it has to live
-# here instead of in `vars/<os>.yml` (see "OS-specific Dependent Variables" in CONTRIBUTING.md).
+# here instead of in `vars/<os>.yml` (see "OS-specific Dependent Variables" in docs/developer-guide/variables.md).
 # LibreOffice started from the web server (for example by PHP) runs in the `httpd_t` domain.
 #
 # What the rules buy an attacker who controls the web server, on top of the DAC gates:

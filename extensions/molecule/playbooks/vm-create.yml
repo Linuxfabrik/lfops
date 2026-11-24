@@ -33,7 +33,7 @@
         fail_msg: >-
           The libvirt storage pool "{{ kvm_vm__pool }}" does not exist on
           {{ __molecule__hypervisor }}. Available: {{ __molecule__pool_result["pools"] | list | join(", ") }}.
-          See "Preparing the controller" in CONTRIBUTING.md for how to create it, or set
+          See "Preparing the controller" in docs/developer-guide/testing.md for how to create it, or set
           LFOPS_TEST_POOL to a pool you can write.
 
     - name: 'Ensure the ephemeral inventory directory exists'
@@ -48,7 +48,7 @@
 # calls go through the invoking user's 'libvirt' group membership, and the pool writes below (the
 # image download, and the role's qemu-img / virt-customize) are plain filesystem I/O into the
 # directory of the pool named by kvm_vm__pool, which that user has to be able to write. See
-# LFOPS_TEST_POOL in CONTRIBUTING.md for why that should not be the distribution's 'default' pool.
+# LFOPS_TEST_POOL in docs/developer-guide/testing.md for why that should not be the distribution's 'default' pool.
 - name: 'Create VM instances using the kvm_vm role'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -78,7 +78,7 @@
     # the old inode through its open descriptor and survives; the damage surfaces on its next
     # boot, or on the next qemu-img / virt-customize touching that disk.
     # The guard is pool-wide on purpose, not "does *this* VM's boot disk exist": with
-    # LFOPS_TEST_ID (see "Running scenarios in parallel" in CONTRIBUTING.md) concurrent runs share
+    # LFOPS_TEST_ID (see "Running scenarios in parallel" in docs/developer-guide/testing.md) concurrent runs share
     # the pool under different instance names, so a per-VM guard would happily replace the image
     # another run's VM is sitting on. Blocking on any boot disk is coarser than needed - it also
     # defers a Rocky 10 refresh while only a Rocky 9 VM exists - but the refresh is an
@@ -91,7 +91,7 @@
       delegate_to: '{{ __molecule__hypervisor }}'
 
     # mode 0664, not 0644: the pool directory carries a default ACL granting the invoking
-    # user rw (see "Preparing the controller" in CONTRIBUTING.md), and a file's ACL mask is
+    # user rw (see "Preparing the controller" in docs/developer-guide/testing.md), and a file's ACL mask is
     # taken from the group bits of its creation mode. At 0644 the mask comes out r--, leaving
     # that ACL entry ineffective from birth, and the next refresh then fails with
     # "Destination ... is not writable" once libvirt has chowned the image to qemu, which it

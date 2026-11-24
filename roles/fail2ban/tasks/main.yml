@@ -8,6 +8,59 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  # The iptables actions match ports with xt_multiport. RHEL 10 ships it in kernel-modules-extra,
+  # which iptables-nft only recommends; dnf resolves that with the package of the newest kernel,
+  # so the running kernel lacks the module until the next reboot. Until then iptables rejects
+  # every ban, while fail2ban still lists the address as banned. RHEL 8 and 9 ship the module in
+  # kernel-core and kernel-modules-core. Verified with iptables-nft 1.8.11 on Rocky 10.3.
+  - name: 'modinfo --field filename xt_multiport'
+    ansible.builtin.command: 'modinfo --field filename xt_multiport'
+    register: '__fail2ban__xt_multiport_result'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    when:
+      - 'fail2ban__jail_default_banaction is match("iptables")'
+
+  - block:
+
+    # ansible.builtin.dnf instead of package for allow_downgrade: the dnf module compares by name
+    # only and treats the package as installed when the one of a newer kernel is
+    # (_is_newer_version_installed(), ansible-core 2.16). kernel-modules-extra is installonly,
+    # so this installs it next to the newer one and downgrades nothing.
+    # no host fact in the task name: Ansible renders it with the facts of the first host
+    - name: 'dnf install kernel-modules-extra-$(uname -r)'
+      ansible.builtin.dnf:
+        name: 'kernel-modules-extra-{{ ansible_facts["kernel"] }}'
+        state: 'present'
+        allow_downgrade: true
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+    # Every later kernel package requires its own kernel-modules-extra while
+    # kernel-modules-extra-matched is installed, in any version, so the module survives the next
+    # kernel update. Unversioned, since it is no installonly package.
+    - name: 'dnf install kernel-modules-extra-matched'
+      ansible.builtin.package:
+        name: 'kernel-modules-extra-matched'
+        state: 'present'
+      retries: 3 # ride out a brief outage of the package repository
+      delay: 10
+
+    rescue:
+
+    - name: 'Fail if the running kernel cannot get xt_multiport'
+      ansible.builtin.fail:
+        msg: >-
+          The running kernel {{ ansible_facts["kernel"] }} has no xt_multiport module, so the
+          {{ fail2ban__jail_default_banaction }} banaction cannot block anything, and installing
+          kernel-modules-extra for this kernel failed: {{ ansible_failed_result["msg"] | d("") }}.
+          If the repositories no longer offer it, reboot into the newest installed kernel and run
+          the playbook again.
+
+    when:
+      - '__fail2ban__xt_multiport_result["rc"] | d(0) != 0'
+
   tags:
     - 'fail2ban'
 

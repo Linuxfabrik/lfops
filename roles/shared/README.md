@@ -16,7 +16,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 `print-messages.yml`
 
 * Prints the messages roles collected in `__shared__end_of_play_messages` as one block, so the operator sees every manual step in one place directly above the `PLAY RECAP` instead of scattered over a long run. Skipped when nothing was collected, and clears the list afterwards so the next play of a `playbooks/all.yml` run does not repeat it. Used as `post_tasks` in every LFOps playbook, next to `log-end.yml`.
-* Parameters: none. Reads `__shared__end_of_play_messages`, see the "Reporting a Manual Step to the Operator" section of the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md).
+* Parameters: none. Reads `__shared__end_of_play_messages`, see the "Reporting a Manual Step to the Operator" section of the [docs/developer-guide/roles.md](https://github.com/Linuxfabrik/lfops/blob/main/docs/developer-guide/roles.md#reporting-a-manual-step-to-the-operator).
 
 `platform-variables.yml`
 
@@ -30,7 +30,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 
 `assert-reboot-possible.yml` and `request-reboot.yml`
 
-* The two halves of the reboot pattern, see the "Reboots" section of the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). `assert-reboot-possible.yml` belongs in the calling role's validation block: it refuses `lfops__reboot_now` on a host without `/usr/local/sbin/schedule-reboot` before the role writes anything, and registers the stat result the other file reads. `request-reboot.yml` files the reboot request, performs the reboot right away when `lfops__reboot_now` is set, or reports the pending reboot to the operator when the mechanism is not deployed. Include it gated on the calling role's own "a reboot is needed" condition.
+* The two halves of the reboot pattern, see the "Reboots" section of the [docs/developer-guide/roles.md](https://github.com/Linuxfabrik/lfops/blob/main/docs/developer-guide/roles.md#reboots). `assert-reboot-possible.yml` belongs in the calling role's validation block: it refuses `lfops__reboot_now` on a host without `/usr/local/sbin/schedule-reboot` before the role writes anything, and registers the stat result the other file reads. `request-reboot.yml` files the reboot request, performs the reboot right away when `lfops__reboot_now` is set, or reports the pending reboot to the operator when the mechanism is not deployed. Include it gated on the calling role's own "a reboot is needed" condition.
 * Parameters of `assert-reboot-possible.yml`: none.
 * Parameters of `request-reboot.yml`:
 
@@ -39,7 +39,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 
 `assert-disk-space.yml`
 
-* Aborts the run if a filesystem has less free space than the given requirements need, see "Preflight Checks" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Requirements that end up on the same filesystem are added up, and a requirement whose software is already installed is dropped. Skipped with [`lfops__skip_disk_space_check`](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__skip_disk_space_check).
+* Aborts the run if a filesystem has less free space than the given requirements need, see "Preflight Checks" in the [docs/developer-guide/roles.md](https://github.com/Linuxfabrik/lfops/blob/main/docs/developer-guide/roles.md#preflight-checks). Requirements that end up on the same filesystem are added up, and a requirement whose software is already installed is dropped. Skipped with [`lfops__skip_disk_space_check`](https://github.com/Linuxfabrik/lfops/blob/main/README.md#lfops__skip_disk_space_check).
 * Parameters:
 
     * `shared__disk_space_requirements`: Mandatory. List of dictionaries with these subkeys:
@@ -51,7 +51,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 
 `validate-role-arguments.yml`
 
-* Validates the variables of several roles against their `meta/argument_specs.yml` at once, see "Preflight Checks" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Import it in the `pre_tasks` of a playbook that runs many roles, tagged `always`, so that a missing or wrongly typed variable of a late role aborts the run before the first role changes the host. Roles without `meta/argument_specs.yml` are skipped.
+* Validates the variables of several roles against their `meta/argument_specs.yml` at once, see "Preflight Checks" in the [docs/developer-guide/roles.md](https://github.com/Linuxfabrik/lfops/blob/main/docs/developer-guide/roles.md#preflight-checks). Import it in the `pre_tasks` of a playbook that runs many roles, tagged `always`, so that a missing or wrongly typed variable of a late role aborts the run before the first role changes the host. Roles without `meta/argument_specs.yml` are skipped.
 * Parameters:
 
     * `shared__validate_role_arguments_roles`: Mandatory. List of role names, without the collection prefix.
@@ -81,7 +81,7 @@ This role bundles helper tasks reused across other LFOps roles and playbooks. It
 
 `reload-changed-timers.yml`
 
-* Reloads systemd after the unit file or a drop-in of calendar timers changed, without letting a timer run at once because of its new schedule. systemd computes the next run of a calendar timer from its last run, so a schedule moved to a point between the last run and now, for example from weekly to daily, fires as soon as the manager loads it. The task stops and disables the given timers, runs `systemctl daemon-reload`, which unloads them together with their last run, sets the stamp file of a `Persistent=true` timer to now (systemd reads the last run back from it on start), and then enables and starts each one again if it was before. Include it right after the role deployed its units and before anything else reloads systemd, see "Calendar Timers" in the [CONTRIBUTING.md](https://github.com/Linuxfabrik/lfops/blob/main/CONTRIBUTING.md). Does nothing if the list is empty.
+* Reloads systemd after the unit file or a drop-in of calendar timers changed, without letting a timer run at once because of its new schedule. systemd computes the next run of a calendar timer from its last run, so a schedule moved to a point between the last run and now, for example from weekly to daily, fires as soon as the manager loads it. The task stops and disables the given timers, runs `systemctl daemon-reload`, which unloads them together with their last run, sets the stamp file of a `Persistent=true` timer to now (systemd reads the last run back from it on start), and then enables and starts each one again if it was before. Include it right after the role deployed its units and before anything else reloads systemd, see "Calendar Timers" in the [docs/developer-guide/systemd.md](https://github.com/Linuxfabrik/lfops/blob/main/docs/developer-guide/systemd.md#calendar-timers). Does nothing if the list is empty.
 * Parameters:
 
     * `shared__reload_changed_timers`: Mandatory. List of the timer units whose unit file or drop-in changed in this run, e.g. `['update-and-reboot.timer']`.

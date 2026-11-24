@@ -11,7 +11,7 @@
 Every play sets `force_handlers: true`. Without it, a failing task drops the
 handlers notified so far, and since every later run reports the deployed file
 unchanged, the running service never picks up the new config (see
-"Playbooks" in CONTRIBUTING.md).
+"Playbooks" in docs/developer-guide/playbooks.md).
 
 Files that only import other playbooks contain no play and are skipped.
 """
