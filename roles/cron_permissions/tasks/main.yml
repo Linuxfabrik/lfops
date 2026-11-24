@@ -1,3 +1,11 @@
+- name: 'Set platform/version specific variables'
+  ansible.builtin.import_role:
+    name: 'shared'
+    tasks_from: 'platform-variables.yml'
+  tags:
+    - 'always'
+
+
 - block:
 
   # The role neither installs nor starts cron: LFOps schedules its jobs with systemd timers, and
@@ -25,6 +33,27 @@
       - 'item["path"] in __cron_permissions__existing_paths'
     vars:
       __cron_permissions__existing_paths: '{{ __cron_permissions__paths_stat_result["results"] | selectattr("stat.exists") | map(attribute="item.path") | list }}'
+
+  # Both cronie and Debian's cron install crontab(1) as /usr/bin/crontab. Without it, there is
+  # nobody to restrict, and on Debian and Ubuntu the group crontab does not exist yet.
+  - name: 'stat /usr/bin/crontab'
+    ansible.builtin.stat:
+      path: '/usr/bin/crontab'
+    register: '__cron_permissions__crontab_stat_result'
+
+  # With /etc/cron.allow in place, crontab(1) ignores /etc/cron.deny and only lets root and the
+  # listed users manage a personal crontab (CIS 2.4.1.9). crond does not check the file, so
+  # crontabs installed before still run.
+  - name: 'Deploy /etc/cron.allow'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/cron.allow.j2'
+      dest: '/etc/cron.allow'
+      owner: 'root'
+      group: '{{ __cron_permissions__allow_group }}'
+      mode: '{{ __cron_permissions__allow_mode }}'
+    when:
+      - '__cron_permissions__crontab_stat_result["stat"]["exists"]'
 
   tags:
     - 'cron_permissions'

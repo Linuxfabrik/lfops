@@ -1,0 +1,5 @@
+# crontab(1) of cronie is setuid root, so /etc/cron.allow only needs to be readable by root. The
+# CIS Red Hat Enterprise Linux 10 Benchmark v1.0.1 (2.4.1.9) asks for 0640 or stricter, Lynis
+# (FILE-7524) for 0600, as for /etc/cron.deny. Verified with cronie on Rocky 8, 9 and 10.
+__cron_permissions__allow_group: 'root'
+__cron_permissions__allow_mode: 0o600

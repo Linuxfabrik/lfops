@@ -18,3 +18,24 @@
       loop: '{{ __molecule__atd_state_result["results"] }}'
       loop_control:
         label: '{{ item["item"] }}'
+
+    # at(1) checks /etc/at.allow before every action, atq included, so atq tells who may use at
+    # without queueing a job. root is always allowed, the users come from prepare.yml.
+    - name: 'runuser --user {{ item }} -- atq'
+      ansible.builtin.command: 'runuser --user {{ item }} -- atq'
+      loop:
+        - 'lfops-at-allowed'
+        - 'lfops-at-denied'
+        - 'root'
+      register: '__molecule__atq_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert that only root and the listed user may use at'
+      ansible.builtin.assert:
+        that: >-
+          (item["rc"] == 0) == (item["item"] in ["lfops-at-allowed", "root"])
+        fail_msg: '{{ item["item"] }}: rc {{ item["rc"] }}, {{ item["stderr"] }}'
+      loop: '{{ __molecule__atq_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'

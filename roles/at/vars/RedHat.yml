@@ -1,6 +1,8 @@
-# at(1) is setuid root on the Red Hat family, so /etc/at.deny only needs to be readable by root.
-# The CIS Red Hat Enterprise Linux 10 Benchmark v1.0.1 (2.4.2.1) asks for 0640 or stricter,
-# Lynis (FILE-7524) for 0600. Verified with at on Rocky 8, 9 and 10.
+# at(1) is setuid root on the Red Hat family, so /etc/at.allow and /etc/at.deny only need to be
+# readable by root. The CIS Red Hat Enterprise Linux 10 Benchmark v1.0.1 (2.4.2.1) asks for 0640
+# or stricter, Lynis (FILE-7524) for 0600. Verified with at on Rocky 8, 9 and 10.
+__at__allow_group: 'root'
+__at__allow_mode: 0o600
 __at__paths:
   - path: '/etc/at.deny'
     mode: 0o600  # upstream default: 0o644

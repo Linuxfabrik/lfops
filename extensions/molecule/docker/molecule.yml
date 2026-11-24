@@ -1,0 +1,3 @@
+# Molecule scenario marker for the 'docker' scenario, run with
+# `molecule test --scenario-name docker`. The shared config.yml provisions libvirt/KVM VMs, which
+# this scenario needs: dockerd sets up netfilter rules and bridges in the kernel.

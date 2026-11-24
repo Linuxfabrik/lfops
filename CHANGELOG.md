@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Breaking Changes
 
 * **role:fail2ban**: On RedHat hosts with SELinux, the role installs the `lfops_fail2ban_ss_kill` policy module, which grants fail2ban the `net_admin` capability, so that the HTTP jails can close the connections of a banned client. The capability also lets fail2ban reconfigure network interfaces.
+* **role:at**: Only root may use `at`, `atq` and `atrm`, as the CIS Benchmarks require, and jobs queued before still run. List other users that need `at` in `at__allow_users__host_var` / `at__allow_users__group_var`.
 * **role:grafana_grizzly, role:openvpn_server**: The roles read their files from `host_files/<host>/` like all other roles, instead of `host_vars/<host>/files/`, where Ansible also loaded the grizzly resources as host variables. The run aborts before it changes anything while files are left in the old location. Move them with `mkdir -p host_files/<host> && cp -a host_vars/<host>/files/. host_files/<host>/ && rm -r host_vars/<host>/files` ([#701](https://github.com/Linuxfabrik/lfops/issues/701)).
 * **playbook:apache_solr**: The playbook runs the kernel_settings role and sets `vm.swappiness` to 1, as the Solr Reference Guide recommends, so the kernel no longer swaps out the Java heap while memory is still available. On hosts that do not run kernel_settings yet, this also installs TuneD and applies its sysctl hardening baseline. Set `apache_solr__skip_kernel_settings: true` to leave the kernel settings alone.
 * **role:mariadb_server**: MariaDB may open at least 65536 files instead of 32768 (`mariadb_server__service_limit_nofile`), enough for 16 table cache instances, and a lower value no longer takes effect; a higher limit that the MariaDB package or systemd set is kept. The next run restarts MariaDB.
@@ -90,6 +91,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
 * **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.
 * **tool:lfops**: `tools/lfops` assembles and starts an `ansible-navigator run` in a terminal UI: pick the playbook, its tags (read from the role READMEs), the inventories below `$LF_GITLAB` and the hosts, groups or a glob as limit. The entries used last are listed first, further arguments such as `--check --diff` are passed on to ansible-navigator. With `eval "$(command lfops --shell-init)"` in `~/.bashrc`, the command lands on the Bash prompt and in the shell history instead of running right away.
@@ -117,7 +119,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 * **role:php**: `php__ini_apc_enable_cli` and `php__ini_apc_shm_size` configure APCu.
 * **role:mariadb_server**: `mariadb_server__cnf_innodb_linux_aio` selects the Linux AIO implementation, for hosts where the kernel blocks io_uring.
 * **role:cron, playbook:cron, playbook:setup_basic**: Add a role and playbook that keep the cron daemon running and make `/etc/crontab`, `/etc/cron.deny` and the `/etc/cron.*` directories readable by root only, as the CIS Benchmarks require.
-* **role:cron_permissions, playbook:cron_permissions, playbook:setup_basic**: Add a role and playbook that make `/etc/crontab`, `/etc/cron.deny` and the `/etc/cron.*` directories readable by root only on hosts with cron, as the CIS Benchmarks require.
+* **role:cron_permissions, playbook:cron_permissions, playbook:setup_basic**: Add a role and playbook that, on hosts with cron, make `/etc/crontab`, `/etc/cron.deny` and the `/etc/cron.*` directories readable by root only and let only root and listed users use `crontab`, as the CIS Benchmarks require.
 * **role:nextcloud**: A fresh installation enforces two-factor authentication, has TOTP enabled and no mimetype migrations pending. `nextcloud-update` runs the mimetype migrations after each update. Existing installations keep their enforcement state.
 * **role:nextcloud**: Nextcloud sends mail through the relay host of the `postfix` role by default, unless a mail server is already configured.
 * **role:duplicity**: `duba restore <path>` restores a file or directory by its path on the host, optionally as of an older `--time`, into a separate directory. It finds the right backup on its own, also for sources with `divide: true`, and warns about low disk space.
@@ -273,6 +275,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:apache_httpd**: The error pages keep their layout behind applications that restrict external resources, such as Matomo, and no longer load fonts and styles from Google Fonts and unpkg.com.
+* **playbook:docker**: The playbook no longer fails at the kernel_settings role on new hosts, since Docker no longer loads the `br_netfilter` kernel module by default. It no longer sets `net.bridge.bridge-nf-call-iptables` and `net.bridge.bridge-nf-call-ip6tables`; dockerd sets them itself when it needs the module (`icc=false`, or the userland proxy disabled).
 * **role:fail2ban**: Bans block the client on RHEL 10 hosts whose running kernel lacked `xt_multiport`, such as hosts fresh from a cloud image, where they had no effect until a reboot.
 * **role:repo_mongodb**: On RHEL 10, the role aborts with a clear message for MongoDB versions before 8.0, instead of the mongodb role failing at the package installation with "nothing provides mongodb-database-tools". The upstream 7.0 repository for RHEL 10 lacks that package.
 * **role:monitoring_plugins**: On Windows, `--tags monitoring_plugins:remove` also uninstalls the MSI packages of upcoming monitoring plugins releases, which no longer share one product code.
