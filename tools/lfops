@@ -28,15 +28,17 @@ import curses
 import fnmatch
 import glob
 import json
+import locale
 import os
 import re
 import shlex
+import subprocess  # nosec B404 - runs git with fixed arguments for the header
 import sys
 import time
 
 import yaml
 
-__version__ = '2026112412'
+__version__ = '2026112413'
 
 HISTORY_SIZE = 50
 # the confirm page lists this many of the targeted hosts by name
@@ -161,6 +163,54 @@ def find_lfops_dir():
 def inventory_glob():
     default = os.path.join(os.environ.get('LF_GITLAB', '.'), '*', 'ans', 'hosts.yml')
     return os.path.expanduser(os.environ.get('LFOPS_INVENTORIES', default))
+
+
+def shorten_path(path):
+    """Reduce every component of a path except the last one to its first character,
+    like the zsh prompt does: "/home/user/git/lfops" -> "/h/u/g/lfops". The same as
+    shorten_path() in the dashboard callback."""
+    if not path or '/' not in path:
+        return path
+    head, _, tail = path.rpartition('/')
+    return '/'.join(part[:1] for part in head.split('/')) + f'/{tail}'
+
+
+def lfops_origin(lfops_dir):
+    """The LFOps checkout as the dashboard callback names it, e.g. "LFOps
+    main@3e8a7b75, 2 uncommitted", or without git its version, e.g. "LFOps 6.1.0",
+    followed by its shortened path."""
+    version = None
+    try:
+        with open(os.path.join(lfops_dir, 'MANIFEST.json'), encoding='utf-8') as f:
+            version = json.load(f)['collection_info']['version']
+    except (OSError, ValueError, KeyError):
+        galaxy = load_yaml(os.path.join(lfops_dir, 'galaxy.yml'))
+        if isinstance(galaxy, dict):
+            version = galaxy.get('version')
+    origin = f'LFOps {version or "unknown"}'
+
+    def git(*args):
+        try:
+            proc = subprocess.run(  # nosec B603 B607
+                ['git', '-C', lfops_dir, *args],
+                capture_output=True,
+                check=False,
+                text=True,
+                timeout=5,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return proc.stdout.strip() if proc.returncode == 0 else None
+
+    if os.path.exists(os.path.join(lfops_dir, '.git')):
+        branch = git('rev-parse', '--abbrev-ref', 'HEAD')
+        commit = git('rev-parse', '--short=8', 'HEAD')
+        if branch and commit:
+            origin = f'LFOps {branch}@{commit}'
+            changed = git('status', '--porcelain', '--untracked-files=no')
+            if changed:
+                origin += f', {len(changed.splitlines())} uncommitted'
+    return f'{origin}   {shorten_path(os.path.abspath(lfops_dir))}'
 
 
 def plural(count, word):
@@ -695,21 +745,162 @@ def _addstr(win, y, x, text, attr=0):
         pass
 
 
+def _addruns(win, y, runs, attr=0):
+    """Draws (text, attr) runs side by side on line `y`, `attr` added to each."""
+    x = 0
+    for text, run_attr in runs:
+        _addstr(win, y, x, text, run_attr | attr)
+        x += len(text)
+
+
+# set by init_colors(), in the colors of the dashboard callback
+ACCENT = curses.A_BOLD  # what the current page sets in the command
+ALERT = curses.A_REVERSE  # a command that runs on no host
+LABEL = 0  # markers such as "recent" and "group"
+RULE = '─' if 'utf' in locale.getpreferredencoding(False).lower() else '-'
+STEPS = ('playbook', 'tags', 'inventories', 'limit', 'confirm')
+
+
+def init_colors():
+    global ACCENT, ALERT, LABEL
+    try:
+        curses.use_default_colors()
+        background = -1  # keep the colors of the terminal
+    except curses.error:
+        background = curses.COLOR_BLACK
+    if not curses.has_colors():
+        return
+    try:
+        curses.init_pair(1, curses.COLOR_GREEN, background)
+        curses.init_pair(2, curses.COLOR_BLUE, background)
+        curses.init_pair(3, curses.COLOR_RED, background)
+    except curses.error:
+        return
+    ACCENT = curses.color_pair(1) | curses.A_BOLD
+    LABEL = curses.color_pair(2)
+    ALERT = curses.color_pair(3) | curses.A_BOLD
+
+
+def display_arg(arg):
+    """An argument as the pages show it: shell-quoted, an inventory below $LF_GITLAB
+    relative to it, as the inventory step lists it. Both are the same to bash."""
+    base = os.environ.get('LF_GITLAB', '')
+    if base and arg.startswith(f'--inventory={base.rstrip("/")}/'):
+        path = os.path.relpath(arg[len('--inventory=') :], base)
+        if shlex.quote(path) == path:
+            return f'--inventory=$LF_GITLAB/{path}'
+    return shlex.quote(arg)
+
+
+def command_lines(parts, part, width):
+    """The command as lines of at most `width` characters, continued with ` \\`, each a
+    list of (text, attr) runs. The arguments that `part` sets are highlighted."""
+    lines, line, used = [], [('$ ', curses.A_DIM)], 2
+    for arg, key in parts:
+        text = display_arg(arg)
+        if len(line) > 1 and used + 1 + len(text) + 2 > width:
+            lines.append([*line, (' \\', curses.A_DIM)])
+            line, used = [('    ', 0)], 4
+        elif len(line) > 1:
+            line.append((' ', 0))
+            used += 1
+        line.append((text, ACCENT if part and key == part else 0))
+        used += len(text)
+    return [*lines, line]
+
+
+class Header:
+    """The frame of a page, in the style of the dashboard callback. On top the bold
+    title with the number of targeted hosts on the right, the LFOps checkout, the steps
+    as a bar and a rule. At the bottom, above the two lines of status and keys, a rule
+    and the command as it stands with the selection of the page. The command sits at
+    the bottom so that the list does not move when it grows by a line.
+
+    `preview` turns the values Enter would take into the state they lead to, `part` is
+    the EMPTY_STATE key the page sets, `hosts` returns the right side for a state.
+    The command takes up to 1/`room` of the lines. With `top`, it follows the upper
+    rule instead, for a page whose content is the command."""
+
+    def __init__(
+        self,
+        title,
+        origin,
+        step=None,
+        preview=None,
+        part=None,
+        hosts=None,
+        room=3,
+        top=False,
+    ):
+        self.hosts = hosts
+        self.origin = origin
+        self.part = part
+        self.preview = preview
+        self.room = room
+        self.step = step
+        self.title = title
+        self.top = top
+
+    def draw(self, win, values=()):
+        """Draws the frame. Returns the first and the last line free between the
+        rules."""
+        height, width = win.getmaxyx()
+        width -= 1
+        state = self.preview(values) if self.preview else None
+        right = self.hosts(state) if self.hosts and state else ''
+        gap = ' ' * max(width - len(self.title) - len(right), 1)
+        _addruns(win, 0, [(self.title, curses.A_BOLD), (gap + right, 0)])
+        _addstr(win, 1, 0, self.origin, curses.A_DIM)
+        top = 2
+        if self.step is not None:
+            label = f' step {self.step + 1}/{len(STEPS)}   ' + ' > '.join(STEPS)
+            line = label.ljust(width)[:width]
+            done = width * (self.step + 1) // len(STEPS)
+            _addruns(win, top, [(line[:done], curses.A_REVERSE), (line[done:], 0)])
+            top += 1
+        _addstr(win, top, 0, RULE * width, curses.A_DIM)
+        lines = []
+        if state:
+            lines = command_lines(command_parts(state), self.part, width)
+            room = max(1, height // self.room)
+            if len(lines) > room:
+                lines = [*lines[: room - 1], [('    ...', curses.A_DIM)]]
+        if self.top:
+            for row, line in enumerate(lines, start=top + 1):
+                _addruns(win, row, line)
+            top += len(lines) + 1  # and a blank line
+            lines = []
+        bottom = height - 3 - len(lines)  # the lower rule
+        _addstr(win, bottom, 0, RULE * width, curses.A_DIM)
+        for row, line in enumerate(lines, start=bottom + 1):
+            _addruns(win, row, line)
+        return top + 1, bottom - 1
+
+
+def _chosen(selected, visible, cursor, query, typed):
+    """The values Enter takes: the selection, plus the typed text on the entry of its
+    own, else the highlighted entry."""
+    if typed and query and cursor == 0 and query not in selected:
+        return [v for v in selected if v is not None] + [query]
+    if selected:
+        return selected
+    if visible:
+        return [visible[cursor].value]
+    return []
+
+
 def pick(
     stdscr,
-    title,
+    header,
     items,
     multi,
     context='',
     typed=None,
     preselect=(),
-    context_first=False,
     recall=True,
 ):
-    """Shows a filterable list. Returns the list of selected values; raises Back on Esc.
-
-    The bold title and the dim context take the first two lines, the context on top
-    with `context_first`. Without context, the title takes one line.
+    """Shows a filterable list below the Header `header`. Returns the list of selected
+    values; raises Back on Esc. The dim context follows the header.
 
     Without a selection, Enter takes the highlighted entry. Without `multi`, Space and
     Tab do the same. The entry with the value None ("no --tags", "no --limit") excludes
@@ -724,17 +915,17 @@ def pick(
         if typed and query:
             visible.insert(0, Item(query, query, typed[1], marker=typed[0]))
         height, width = stdscr.getmaxyx()
-        header = [(title, curses.A_BOLD)]
-        if context:
-            header.insert(0 if context_first else 1, (context, curses.A_DIM))
-        query_row = len(header)
-        rows = max(1, height - query_row - 4)
         cursor = max(0, min(cursor, len(visible) - 1))
-        top = min(max(top, cursor - rows + 1), cursor)
 
         stdscr.erase()
-        for y, (text, attr) in enumerate(header):
-            _addstr(stdscr, y, 0, text, attr)
+        query_row, last = header.draw(
+            stdscr, _chosen(selected, visible, cursor, query, typed)
+        )
+        if context:
+            _addstr(stdscr, query_row, 0, context, curses.A_DIM)
+            query_row += 1
+        rows = max(1, last - query_row)
+        top = min(max(top, cursor - rows + 1), cursor)
         _addstr(stdscr, query_row, 0, f'> {query}')
         label_width = min(
             max([len(i.label) + len(i.marker) + 3 for i in visible] + [10]) + 2,
@@ -747,8 +938,11 @@ def pick(
             if multi:
                 check = '[x] ' if item.value in selected else '[ ] '
             marker = f'({item.marker}) ' if item.marker else ''
-            line = f'{check}{marker}{item.label}'.ljust(label_width + len(check))
-            _addstr(stdscr, query_row + 1 + row, 0, f'{line} {item.desc}', attr)
+            label = item.label.ljust(label_width - len(marker))
+            runs = [(check, 0), (marker, LABEL), (label, 0), (f' {item.desc}', 0)]
+            if index != cursor:
+                runs[-1] = (runs[-1][0], curses.A_DIM)
+            _addruns(stdscr, query_row + 1 + row, runs, attr)
         status = f'{len(visible)}/{len(items)}'
         if multi:
             status += f', {len(selected)} selected'
@@ -771,12 +965,9 @@ def pick(
             raise Back
         if key in ('\n', '\r', curses.KEY_ENTER) or (not multi and key in (' ', '\t')):
             # typed text is meant to be used, even next to a selection
-            if typed and query and cursor == 0 and query not in selected:
-                selected = [v for v in selected if v is not None] + [query]
-            if selected:
-                return selected
-            if visible:
-                return [visible[cursor].value]
+            chosen = _chosen(selected, visible, cursor, query, typed)
+            if chosen:
+                return chosen
             continue
         if key == curses.KEY_UP:
             cursor -= 1
@@ -829,7 +1020,7 @@ def target_lines(targets):
         ]
     if not targets:
         return [
-            ('0 hosts targeted, Ansible would run nothing', curses.A_REVERSE),
+            ('0 hosts targeted, Ansible would run nothing', ALERT),
             ('the limit matches none of the hosts of the playbook', curses.A_DIM),
         ]
     hosts = sorted(targets)
@@ -840,32 +1031,22 @@ def target_lines(targets):
     return lines
 
 
-def confirm(stdscr, title, command, note='', targets=None):
-    """Shows the command and the hosts it targets (a set, None if unknown). Returns
-    'run' on Enter, the option to switch on `c` and `d`, 'options' on `f` and 'recall'
-    on Ctrl-R; raises Back on Esc."""
+def confirm(stdscr, header, note='', targets=None):
+    """Shows the Header `header` with the command, and the hosts it targets (a set,
+    None if unknown). Returns 'run' on Enter, the option to switch on `c` and `d`,
+    'options' on `f` and 'recall' on Ctrl-R; raises Back on Esc."""
     keys = {'c': '--check', 'd': '--diff', 'f': 'options', '\x12': 'recall'}
-    command_lines = [
-        (f'    {shlex.quote(part)}' if row else shlex.quote(part))
-        + (' \\' if row < len(command) - 1 else '')
-        for row, part in enumerate(command)
-    ]
     target_rows = target_lines(targets)
     while True:
         height, _ = stdscr.getmaxyx()
         stdscr.erase()
-        _addstr(stdscr, 0, 0, title, curses.A_BOLD)
-        _addstr(stdscr, 1, 0, note, curses.A_DIM)
-        # rows 3 to height - 3 hold the command, a blank line and the targeted hosts,
-        # height - 2 the Ctrl-R hint. On a short terminal, the host list is cut first,
-        # then the command, so that the line with the number of hosts stays visible.
-        shown = command_lines[: max(0, height - 7)]
-        if 0 < len(shown) < len(command_lines):
-            shown[-1:] = ['    ...']
-        for row, text in enumerate(shown):
-            _addstr(stdscr, 3 + row, 0, text)
-        start = 4 + len(shown)
-        rows = target_rows[: max(0, height - 2 - start)]
+        start, last = header.draw(stdscr)
+        if note:
+            _addstr(stdscr, start, 0, note, curses.A_DIM)
+            start += 1
+        # on a short terminal the host list is cut, so that the line with the number
+        # of hosts stays visible
+        rows = target_rows[: max(1, last + 1 - start)]
         if 1 < len(rows) < len(target_rows):
             rows[-1] = ('  ...', curses.A_DIM)
         for row, (text, attr) in enumerate(rows, start=start):
@@ -892,14 +1073,23 @@ def confirm(stdscr, title, command, note='', targets=None):
 # --- steps -----------------------------------------------------------------------------
 
 
-def build_command(state):
-    command = ['ansible-navigator', 'run', f'linuxfabrik.lfops.{state["playbook"]}']
-    command += [f'--inventory={inventory}' for inventory in state['inventories']]
+def command_parts(state):
+    """The arguments of the command as (argument, key) pairs, the key being the
+    EMPTY_STATE entry the argument comes from. Without a playbook, the command ends
+    after `run`."""
+    parts = [('ansible-navigator', None), ('run', None)]
+    if state['playbook']:
+        parts.append((f'linuxfabrik.lfops.{state["playbook"]}', 'playbook'))
+    parts += [(f'--inventory={i}', 'inventories') for i in state['inventories']]
     if state['tags']:
-        command.append(f'--tags={",".join(state["tags"])}')
+        parts.append((f'--tags={",".join(state["tags"])}', 'tags'))
     if state['limits']:
-        command.append(f'--limit={",".join(state["limits"])}')
-    return command + state['options']
+        parts.append((f'--limit={",".join(state["limits"])}', 'limits'))
+    return parts + [(option, 'options') for option in state['options']]
+
+
+def build_command(state):
+    return [arg for arg, _ in command_parts(state)]
 
 
 # short options of ansible-navigator run whose long form `c`, `d` and `f` know
@@ -1143,23 +1333,68 @@ def limit_items(discovery, state, history):
     return items, hint
 
 
+def via_parent(discovery, state, inventories, history):
+    """The state that runs the role of the playbook as part of a parent playbook, if
+    the playbook has no hosts in all `inventories` and a parent has, else None."""
+    playbook = state['playbook']
+    if all(discovery.hosts(playbook, [i]) for i in inventories):
+        return None
+    parent = discovery.parent(playbook, inventories, history)
+    if not parent:
+        return None
+    return {
+        **state,
+        'inventories': inventories,
+        'note': f'{playbook} has no hosts in all selected inventories, '
+        f'running it as part of {parent}',
+        'playbook': parent,
+        'requested': [playbook, state['tags']],
+        'role': playbook,
+        'tags': state['tags'] or [playbook],
+    }
+
+
 def run_ui(stdscr, lfops_dir, history, extra_args):
-    # keep the colors of the terminal instead of the curses defaults
-    try:
-        curses.use_default_colors()
-    except curses.error:
-        pass
+    init_colors()
     curses.curs_set(1)
     stdscr.keypad(True)
     discovery = Discovery(lfops_dir)
     if not discovery.inventories:
         raise SystemExit(f'lfops: no inventory matches {inventory_glob()}')
+    origin = lfops_origin(lfops_dir)
     state = {**copy.deepcopy(EMPTY_STATE), 'options': tool_options(extra_args)}
     given_options = list(state['options'])  # arguments given to the tool itself
     step = 0
 
-    def heading(text):
-        return f'Step {step + 1}/5: {text}'
+    def hosts(preview):
+        """The right side of the header: the number of hosts the command targets."""
+        if not preview['playbook'] or not preview['inventories']:
+            return ''
+        targets = targeted_hosts(discovery, preview)
+        return 'hosts unknown' if targets is None else plural(len(targets), 'host')
+
+    def header(title, part=None, preview=None, room=3, top=False):
+        return Header(title, origin, step, preview, part, hosts, room, top)
+
+    def with_playbook(values):
+        if not values or values[0] == state['playbook']:
+            return {**state, 'playbook': values[0] if values else state['playbook']}
+        # the selections of the later steps belong to the playbook
+        return {**EMPTY_STATE, 'options': state['options'], 'playbook': values[0]}
+
+    def with_inventories(values):
+        if not values:
+            return state
+        # limits of other inventories would stay selected unseen
+        limits = state['limits'] if set(values) == set(state['inventories']) else []
+        preview = {**state, 'limits': limits}
+        return via_parent(discovery, preview, values, history) or {
+            **preview,
+            'inventories': values,
+        }
+
+    def without_none(key):
+        return lambda values: {**state, key: [v for v in values if v is not None]}
 
     while True:
         try:
@@ -1169,21 +1404,20 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                     raise SystemExit('lfops: no playbook has hosts in any inventory')
                 playbook = pick(
                     stdscr,
-                    heading('Choose a Playbook'),
+                    header('Choose a playbook', 'playbook', with_playbook),
                     items,
                     multi=False,
-                    context=lfops_dir,
-                    context_first=True,
                 )[0]
-                # the selections of the later steps belong to the playbook
-                if playbook != state['playbook']:
-                    state = {**copy.deepcopy(EMPTY_STATE), 'options': state['options']}
-                state['playbook'] = playbook
+                state = with_playbook([playbook])
             elif step == 1:
                 items = tag_items(lfops_dir, state['playbook'], history)
                 tags = pick(
                     stdscr,
-                    heading(f'Choose tags for linuxfabrik.lfops.{state["playbook"]}'),
+                    header(
+                        f'Choose tags for linuxfabrik.lfops.{state["playbook"]}',
+                        'tags',
+                        without_none('tags'),
+                    ),
                     items,
                     multi=True,
                     preselect=_known(state['tags'], items),
@@ -1202,38 +1436,27 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                 while True:
                     inventories = pick(
                         stdscr,
-                        heading('Choose inventories'),
+                        header('Choose inventories', 'inventories', with_inventories),
                         items,
                         multi=True,
                         context=context,
                         preselect=_known(attempt, items),
                     )
-                    if all(discovery.hosts(playbook, [i]) for i in inventories):
+                    if all(
+                        discovery.hosts(playbook, [i]) for i in inventories
+                    ) or via_parent(discovery, state, inventories, history):
+                        state = with_inventories(inventories)
                         break
                     attempt = inventories
-                    parent = discovery.parent(playbook, inventories, history)
-                    if parent:
-                        state['requested'] = [playbook, state['tags']]
-                        state['playbook'], state['role'] = parent, playbook
-                        state['tags'] = state['tags'] or [playbook]
-                        state['note'] = (
-                            f'{playbook} has no hosts in all selected inventories, '
-                            f'running it as part of {parent}'
-                        )
-                        break
                     context = (
                         f'no playbook runs {playbook} on all selected inventories, '
                         'select fewer'
                     )
-                # limits of other inventories would stay selected unseen
-                if set(inventories) != set(state['inventories']):
-                    state['limits'] = []
-                state['inventories'] = inventories
             elif step == 3:
                 items, hint = limit_items(discovery, state, history)
                 limits = pick(
                     stdscr,
-                    heading('Choose a limit'),
+                    header('Choose a limit', 'limits', without_none('limits')),
                     items,
                     multi=True,
                     context=state['note']
@@ -1243,23 +1466,31 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                 )
                 state['limits'] = [li for li in limits if li is not None]
             else:
-                command = build_command(state)
                 action = confirm(
                     stdscr,
-                    heading('Run this command?'),
-                    command,
+                    header(
+                        'Run this command?',
+                        'options',
+                        lambda _, run=state: run,
+                        room=2,
+                        top=True,
+                    ),
                     state['note'],
                     targeted_hosts(discovery, state),
                 )
                 if action == 'run':
-                    return state, command
+                    return state, build_command(state)
                 if action == 'recall':
                     raise Recall
                 if action == 'options':
                     try:
                         options = pick(
                             stdscr,
-                            'Choose further options for ansible-navigator',
+                            header(
+                                'Choose further options for ansible-navigator',
+                                'options',
+                                without_none('options'),
+                            ),
                             option_items(state['options'], history),
                             recall=False,
                             multi=True,
@@ -1284,7 +1515,15 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
             try:
                 index = pick(
                     stdscr,
-                    'Choose a past run',
+                    Header(
+                        'Choose a past run',
+                        origin,
+                        preview=lambda values: {
+                            **EMPTY_STATE,
+                            **(history['runs'][values[0]] if values else {}),
+                        },
+                        hosts=hosts,
+                    ),
                     items,
                     multi=False,
                     context='fills in all steps and shows the confirm page'
