@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2026112401
+{# crontab(1) compares each whole line with the user name, so these comment lines never match a user. #}
+{% for item in cron_permissions__allow_users__combined_var if item['state'] | d('present') != 'absent' %}
+{{ item['name'] }}
+{% endfor %}

@@ -1,0 +1,12 @@
+cron_permissions__allow_users__combined_var: '{{ (
+      cron_permissions__allow_users__role_var +
+      cron_permissions__allow_users__dependent_var +
+      cron_permissions__allow_users__group_var +
+      cron_permissions__allow_users__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+cron_permissions__allow_users__dependent_var: []
+cron_permissions__allow_users__group_var: []
+cron_permissions__allow_users__host_var: []
+# upstream default: no /etc/cron.allow, so every user not listed in /etc/cron.deny may use crontab
+cron_permissions__allow_users__role_var: []
