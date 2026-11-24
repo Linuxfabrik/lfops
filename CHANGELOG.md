@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:at**: Only root may use `at`, `atq` and `atrm`, as the CIS Benchmarks require, and jobs queued before still run. List other users that need `at` in `at__allow_users__host_var` / `at__allow_users__group_var`.
 * **role:grafana_grizzly, role:openvpn_server**: The roles read their files from `host_files/<host>/` like all other roles, instead of `host_vars/<host>/files/`, where Ansible also loaded the grizzly resources as host variables. The run aborts before it changes anything while files are left in the old location. Move them with `mkdir -p host_files/<host> && cp -a host_vars/<host>/files/. host_files/<host>/ && rm -r host_vars/<host>/files` ([#701](https://github.com/Linuxfabrik/lfops/issues/701)).
 * **playbook:apache_solr**: The playbook runs the kernel_settings role and sets `vm.swappiness` to 1, as the Solr Reference Guide recommends, so the kernel no longer swaps out the Java heap while memory is still available. On hosts that do not run kernel_settings yet, this also installs TuneD and applies its sysctl hardening baseline. Set `apache_solr__skip_kernel_settings: true` to leave the kernel settings alone.
 * **role:mariadb_server**: MariaDB may open at least 65536 files instead of 32768 (`mariadb_server__service_limit_nofile`), enough for 16 table cache instances, and a lower value no longer takes effect; a higher limit that the MariaDB package or systemd set is kept. The next run restarts MariaDB.

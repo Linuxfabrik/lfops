@@ -1,2 +1,14 @@
+at__allow_users__combined_var: '{{ (
+      at__allow_users__role_var +
+      at__allow_users__dependent_var +
+      at__allow_users__group_var +
+      at__allow_users__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
+at__allow_users__dependent_var: []
+at__allow_users__group_var: []
+at__allow_users__host_var: []
+# upstream default: no /etc/at.allow, so every user not listed in /etc/at.deny may use at
+at__allow_users__role_var: []
 at__service_enabled: true
 at__service_state: '{{ "started" if (at__service_enabled | bool) else "stopped" }}'
