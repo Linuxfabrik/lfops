@@ -72,7 +72,7 @@ HISTORY_SIZE = 50
 OPTIONS = {
     '--check': 'change nothing, report what would change',
     '--diff': 'show the changes to files and templates',
-    '--verbose': 'more output, repeat for even more',
+    '--verbose': 'more output, type -vvv for even more',
 }
 STATE_DIR = os.path.join(
     os.environ.get('XDG_STATE_HOME', os.path.expanduser('~/.local/state')),
@@ -193,7 +193,9 @@ def save_history(history, state):
     try:
         os.makedirs(STATE_DIR, exist_ok=True)
         tmp = HISTORY_FILE + '.tmp'
-        with open(tmp, 'w', encoding='utf-8') as f:
+        # typed options such as --extra-vars may hold secrets
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with open(fd, 'w', encoding='utf-8') as f:
             json.dump(history, f, indent=2, sort_keys=True)
         os.replace(tmp, HISTORY_FILE)
     except OSError as e:
@@ -675,6 +677,25 @@ def build_command(state):
     return command + state['options']
 
 
+# short options of ansible-navigator run whose long form `c`, `d` and `f` know
+OPTION_ALIASES = {'-C': '--check', '-D': '--diff', '-e': '--extra-vars'}
+
+
+def tool_options(args):
+    """The arguments given to the tool itself, one entry per option: `-C` becomes
+    `--check`, `--extra-vars x=y` and `-e x=y` become `--extra-vars=x=y`, so `c`, `d`
+    and `f` switch them as a whole."""
+    options = []
+    for arg in args:
+        last = options[-1] if options else ''
+        takes_value = last.startswith('--') and '=' not in last and last not in OPTIONS
+        if takes_value and not arg.startswith('-'):
+            options[-1] = f'{last}={arg}'
+        else:
+            options.append(OPTION_ALIASES.get(arg, arg))
+    return options
+
+
 def toggle(values, value):
     """`values` with `value` removed if it is in there, else appended."""
     if value in values:
@@ -868,7 +889,7 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
         'inventories': [],
         'limits': [],
         'note': '',
-        'options': list(extra_args),
+        'options': tool_options(extra_args),
         'playbook': None,
         'role': None,  # set when running the role as part of another playbook
         'tags': [],
@@ -962,7 +983,7 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                             option_items(state['options'], history),
                             multi=True,
                             context='type an argument such as --extra-vars=x=y '
-                            'to use it as is',
+                            'to use it as is, without spaces',
                             typed=('argument', 'pass the typed text on as is'),
                             preselect=state['options'],
                         )
