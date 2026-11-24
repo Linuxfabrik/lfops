@@ -9,3 +9,4 @@ __redis__supported_versions:
   - '8.2'
   - '8.8'
   - '8.10'
+  - '8.12'
