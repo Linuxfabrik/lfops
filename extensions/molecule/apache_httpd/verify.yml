@@ -16,6 +16,8 @@
 # And the logs of the raw and redirect templates: by the lines a request leaves in them.
 # And the guard against the HTML view of the PHP-FPM status page: by the status code of requests
 # for it.
+# And the error pages: by the page Apache sends for a missing file, which must not pull anything
+# from another host, since a Content-Security-Policy of the proxied application blocks that.
 - name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -452,6 +454,29 @@
           {{ __molecule__apache_httpd_curl_missing_php_result["stdout"] }},
           "{{ __molecule__apache_httpd_missing_php_log_result["stdout"] }}" and
           "{{ __molecule__apache_httpd_missing_php_access_result["stdout"] }}"
+
+    # The server-wide ErrorDocument pages are what a client sees for every error of a proxied
+    # application (ProxyErrorOverride). They have to bring their styles along: an application whose
+    # Content-Security-Policy only allows its own origin, such as Matomo, makes the browser block any
+    # stylesheet or font from another host, and the page loses its layout.
+    - name: 'curl https://<vhost>/molecule-missing.html' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --write-out '\n%{http_code}'
+        https://{{ __molecule__server_name }}/molecule-missing.html
+      register: '__molecule__apache_httpd_curl_error_page_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[1]["conf_server_name"] }}'
+
+    - name: 'Assert the error page is the self-contained Linuxfabrik page'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_curl_error_page_result["stdout_lines"][-1] == "404"'
+          - '"Linuxfabrik Application Gateway" in __molecule__apache_httpd_curl_error_page_result["stdout"]'
+          - '__molecule__apache_httpd_curl_error_page_result["stdout"] is not search("(src|href)=\"(https?:)?//")'
+        fail_msg: '{{ __molecule__apache_httpd_curl_error_page_result["stdout"] }}'
 
     # Every request carries a marker of this run, because verify.yml runs twice and the logs keep the
     # lines of the first run. ansible_facts["date_time"] is no marker: the facts come from the cache
