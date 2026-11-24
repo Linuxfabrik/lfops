@@ -1,0 +1,72 @@
+argument_specs:
+  main:
+    options:
+
+      rocketchat__container_enabled:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Enables or disables the service.'
+
+      rocketchat__container_state:
+        type: 'str'
+        required: false
+        default: 'started'
+        choices:
+          - 'reloaded'
+          - 'restarted'
+          - 'started'
+          - 'stopped'
+        description: 'Desired state of the Rocket.Chat container.'
+
+      rocketchat__mongodb_direct_connection:
+        type: 'bool'
+        required: false
+        default: true
+        description: 'Connect to rocketchat__mongodb_host only, instead of discovering the members of the replica set.'
+
+      rocketchat__mongodb_host:
+        type: 'str'
+        required: false
+        default: 'host.containers.internal'
+        description: 'The host on which MongoDB is reachable.'
+
+      rocketchat__mongodb_login:
+        type: 'dict'
+        required: false
+        description: 'The user account for accessing the MongoDB database (keys: username, password).'
+
+      rocketchat__mongodb_port:
+        type: 'int'
+        required: false
+        default: 27017
+        description: 'The port on which MongoDB is reachable.'
+
+      rocketchat__mongodb_repl_set_name:
+        type: 'str'
+        required: false
+        default: 'rs01'
+        description: 'The name of the MongoDB replica set for Rocket.Chat.'
+
+      rocketchat__port:
+        type: 'int'
+        required: false
+        default: 3000
+        description: 'The port on which the Rocket.Chat server will be available.'
+
+      rocketchat__root_url:
+        type: 'str'
+        required: true
+        description: 'The URL on which the Rocket.Chat server will be available.'
+
+      rocketchat__user_home_directory:
+        type: 'str'
+        required: false
+        default: '/opt/rocketchat'
+        description: 'The home directory of the user running Rocket.Chat.'
+
+      rocketchat__version:
+        type: 'str'
+        required: false
+        default: 'latest'
+        description: 'Which Rocket.Chat version to install.'

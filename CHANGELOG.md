@@ -101,6 +101,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:rocketchat**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:podman_containers**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:mongodb**: Upgrade MongoDB to the next series with the `mongodb:upgrade` tag, which refuses to skip a release or to upgrade while the featureCompatibilityVersion is not that of the installed series. Raise the featureCompatibilityVersion with `mongodb__feature_compatibility_version`; the role reminds you at the end of the play while it lags behind the installed series.
 * **role:fangfrisch**: `fangfrisch__urlhaus_auth_key` sets the abuse.ch Auth-Key and enables the URLhaus signatures.
