@@ -231,7 +231,7 @@ ansible-navigator run linuxfabrik.lfops.setup_basic \
   --limit myhost
 ```
 
-In a clone of the repository, `tools/lfops` assembles this command in a terminal UI: playbook, tags, inventories and limit are picked from lists, and the command can land on the shell prompt for editing. See [tools/README.md](https://github.com/Linuxfabrik/lfops/blob/main/tools/README.md).
+In a clone of the repository, `tools/lfops` assembles this command in a terminal UI: playbook, tags, inventories and limit are picked from lists, and the command can land on the shell prompt for editing. See [Tools](https://linuxfabrik.github.io/lfops/tools/).
 
 The EE is based on Rocky Linux 9 with ansible-core 2.16, Python 3.11, and includes Mitogen for accelerated execution. See [`execution-environment.yml`](execution-environment.yml) for the full build definition. Public container images are available on [GitHub Container Registry](https://github.com/Linuxfabrik/lfops/pkgs/container/lfops_ee).
 

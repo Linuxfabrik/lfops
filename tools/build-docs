@@ -42,7 +42,15 @@ TOP_LEVEL_DOCS = [
     ('COMPATIBILITY.md', 'compatibility.md', 'Compatibility'),
     ('CONTRIBUTING.md', 'contributing.md', 'Contributing'),
     ('SECURITY.md', 'security.md', 'Security'),
+    ('tools/README.md', 'tools.md', 'Tools'),
 ]
+
+# Files whose links into docs/developer-guide/ are rewritten relative to docs/, so
+# they also work on the documentation site: {source filename: link prefix in it}
+DEVELOPER_GUIDE_LINKS = {
+    'CONTRIBUTING.md': '](docs/developer-guide/',
+    'tools/README.md': '](../docs/developer-guide/',
+}
 
 # Playbooks README
 PLAYBOOKS_README = ('playbooks/README.md', 'playbooks.md', 'Playbooks')
@@ -67,15 +75,16 @@ def create_symlink(source, target):
     os.symlink(rel_source, target)
 
 
-def write_contributing(source, target):
-    """Copy CONTRIBUTING.md into docs/, with its links into docs/developer-guide/ made
-    relative to docs/, so they also work on the documentation site."""
+def write_with_guide_links(source, target, prefix):
+    """Copy a markdown file into docs/, with its links into docs/developer-guide/
+    (starting with `prefix`) made relative to docs/, so they also work on the
+    documentation site."""
     with open(source, encoding='utf-8') as fh:
         content = fh.read()
     if os.path.islink(target) or os.path.exists(target):
         os.unlink(target)
     with open(target, 'w', encoding='utf-8') as fh:
-        fh.write(content.replace('](docs/developer-guide/', '](developer-guide/'))
+        fh.write(content.replace(prefix, '](developer-guide/'))
 
 
 def scan_developer_guide():
@@ -586,6 +595,7 @@ def generate_mkdocs_yml(roles, plugin_pages, guide_pages):
     lines.append("  - 'Home': 'index.md'")
     lines.append("  - 'Compatibility': 'compatibility.md'")
     lines.append("  - 'Playbooks': 'playbooks.md'")
+    lines.append("  - 'Tools': 'tools.md'")
     lines.append("  - 'Changelog': 'CHANGELOG.md'")
     lines.append("  - 'Security': 'security.md'")
     lines.append("  - 'Contributing': 'contributing.md'")
@@ -633,8 +643,8 @@ def main():
         target = os.path.join(DOCS_DIR, target_name)
         if not os.path.isfile(source):
             print(f'WARNING: {source_name} not found, skipping.')
-        elif source_name == 'CONTRIBUTING.md':
-            write_contributing(source, target)
+        elif source_name in DEVELOPER_GUIDE_LINKS:
+            write_with_guide_links(source, target, DEVELOPER_GUIDE_LINKS[source_name])
         else:
             create_symlink(source, target)
 

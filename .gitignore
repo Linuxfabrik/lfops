@@ -25,5 +25,6 @@ extensions/molecule/**/*.retry
 /docs/playbooks.md
 /docs/roles/
 /docs/security.md
+/docs/tools.md
 /mkdocs.yml
 /site
