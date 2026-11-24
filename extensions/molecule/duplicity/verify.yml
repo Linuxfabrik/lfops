@@ -149,13 +149,16 @@
       when: '__molecule__systemctl_version_result["stdout_lines"][0].split()[1] | int >= 251'
 
     # A real backup and restore to the file:// backend. The first backup holds v1 of plain/file.txt,
-    # the second one v2, so a restore as of a time between them has to bring back v1. Everything
-    # is reset first, so that the play also passes the second verify run.
-    - name: 'rm -rf /var/tmp/molecule-restore-*'
+    # the second one v2, the third one v3, so a restore as of a time between the first two has to
+    # bring back v1. Everything is reset first, so that the play also passes the second verify run.
+    # the backup sets counted below have to start from scratch, too
+    - name: 'rm -rf /var/backups/duba-molecule /var/cache/duba-molecule /var/tmp/molecule-restore-*'
       ansible.builtin.file:
         path: '{{ item }}'
         state: 'absent'
       loop:
+        - '/var/backups/duba-molecule'
+        - '/var/cache/duba-molecule'
         - '/var/tmp/molecule-restore-divided'
         - '/var/tmp/molecule-restore-latest'
         - '/var/tmp/molecule-restore-old'
@@ -237,13 +240,51 @@
         that: '__molecule__duba_service_result["rc"] == 0'
         fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] | d([]) }}'
 
+    - name: 'sleep 2'
+      ansible.builtin.pause:
+        seconds: 2
+
+    - name: 'Change plain/file.txt to v3'
+      ansible.builtin.copy:
+        dest: '/srv/duba-molecule/plain/file.txt'
+        content: 'plain v3'
+        mode: 0o644
+
+    - name: 'systemctl start duba.service # third backup' # noqa command-instead-of-module (a oneshot run, not a state)
+      ansible.builtin.command: 'systemctl start duba.service'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_service_result'
+
+    - name: 'journalctl --unit=duba.service --lines=60'
+      ansible.builtin.command: 'journalctl --unit=duba.service --no-pager --lines=60'
+      changed_when: false
+      register: '__molecule__duba_journal_result'
+      when: '__molecule__duba_service_result["rc"] != 0'
+
+    - name: 'Assert that the third backup succeeded'
+      ansible.builtin.assert:
+        that: '__molecule__duba_service_result["rc"] == 0'
+        fail_msg: '{{ __molecule__duba_journal_result["stdout_lines"] | d([]) }}'
+
     - name: 'duba restore --target=/var/tmp/molecule-restore-latest /srv/duba-molecule/plain/file.txt'
       ansible.builtin.command: '/usr/local/bin/duba restore --target=/var/tmp/molecule-restore-latest /srv/duba-molecule/plain/file.txt'
       changed_when: false
+      register: '__molecule__duba_restore_latest_result'
 
-    - name: 'duba restore --time=<between the backups> --target=/var/tmp/molecule-restore-old /srv/duba-molecule/plain/file.txt'
+    - name: 'duba restore --time=<between the first two backups> --target=/var/tmp/molecule-restore-old /srv/duba-molecule/plain/file.txt'
       ansible.builtin.command: '/usr/local/bin/duba restore --time={{ __molecule__between_backups_result["stdout"] }} --target=/var/tmp/molecule-restore-old /srv/duba-molecule/plain/file.txt'
       changed_when: false
+      register: '__molecule__duba_restore_old_result'
+
+    # duba reports the backup the restored state comes from and how many backup sets it read
+    - name: 'Assert that duba names the backup and the number of backup sets of each restore'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_restore_latest_result["stdout_lines"] | select("match", "^From backup: .*, the newest of 3 backup set\\(s\\) read") | list | length == 1'
+          - '__molecule__duba_restore_old_result["stdout_lines"] | select("match", "^From backup: .*, the newest of 1 backup set\\(s\\) read") | list | length == 1'
+          - '"from the backup of" in __molecule__duba_restore_old_result["stderr"]'
+        fail_msg: '{{ [__molecule__duba_restore_latest_result["stdout_lines"], __molecule__duba_restore_old_result["stdout_lines"], __molecule__duba_restore_old_result["stderr_lines"]] | to_json }}'
 
     - name: 'duba restore --target=/var/tmp/molecule-restore-divided /srv/duba-molecule/divided/alice/files/x.txt'
       ansible.builtin.command: '/usr/local/bin/duba restore --target=/var/tmp/molecule-restore-divided /srv/duba-molecule/divided/alice/files/x.txt'
@@ -260,7 +301,7 @@
 
     - name: 'Assert that the restores brought back the right versions'
       ansible.builtin.assert:
-        that: '__molecule__restored_files_result["results"] | map(attribute="content") | map("b64decode") | list == ["alice v1", "plain v2", "plain v1"]'
+        that: '__molecule__restored_files_result["results"] | map(attribute="content") | map("b64decode") | list == ["alice v1", "plain v3", "plain v1"]'
         fail_msg: '{{ __molecule__restored_files_result["results"] | map(attribute="content") | map("b64decode") | list }}'
 
     - name: 'duba restore --dry-run /srv/duba-molecule/divided/alice/files/x.txt'
@@ -305,8 +346,9 @@
         path: '{{ __molecule__default_target_stat_result["results"][0]["stat"]["path"] }}'
         state: 'absent'
 
-    # duplicity aborts a restore with exit code 35 if the temp dir is too small, duba warns
-    # beforehand. 100 MB is below what any duplicity version requires.
+    # duplicity aborts a restore with exit code 35 if the temp dir is too small to start, which
+    # duba's dry run before the restore already hits. 100 MB is below what any duplicity version
+    # requires.
     - name: 'mkdir /mnt/duba-molecule-tmp'
       ansible.builtin.file:
         path: '/mnt/duba-molecule-tmp'
@@ -334,13 +376,58 @@
         path: '/var/tmp/molecule-restore-small-tmp'
         state: 'absent'
 
-    - name: 'Assert that duba warned about the small temp dir, and duplicity aborted with 35'
+    - name: 'Assert that duplicity aborted with 35, and duba named the temp dir'
       ansible.builtin.assert:
         that:
           - '__molecule__duba_restore_small_tmp_result["rc"] == 35'
-          - '"/mnt/duba-molecule-tmp has" in __molecule__duba_restore_small_tmp_result["stderr"]'
-          - '"will abort with exit code 35" in __molecule__duba_restore_small_tmp_result["stderr"]'
+          - '"/mnt/duba-molecule-tmp is too small for duplicity to start a restore" in __molecule__duba_restore_small_tmp_result["stderr"]'
         fail_msg: '{{ __molecule__duba_restore_small_tmp_result | to_json }}'
+
+    # A restore keeps one volume of every backup set it reads in the temp dir, about 210 MB each.
+    # The latest plain/file.txt reads three sets, 630 MB, so duba aborts with 213 before the
+    # download on a 550 MB temp dir, which is large enough for duplicity to start (460 MB).
+    - name: 'mount -t tmpfs -o size=550M tmpfs /mnt/duba-molecule-tmp'
+      ansible.builtin.command: 'mount -t tmpfs -o size=550M tmpfs /mnt/duba-molecule-tmp'
+      changed_when: false
+
+    - name: 'TMPDIR=/mnt/duba-molecule-tmp duba restore --target=/var/tmp/molecule-restore-small-tmp /srv/duba-molecule/plain/file.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --target=/var/tmp/molecule-restore-small-tmp /srv/duba-molecule/plain/file.txt'
+      environment:
+        TMPDIR: '/mnt/duba-molecule-tmp'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_restore_estimate_result'
+
+    - name: 'TMPDIR=/mnt/duba-molecule-tmp duba restore --ignore-space --target=/var/tmp/molecule-restore-ignore-space /srv/duba-molecule/plain/file.txt'
+      ansible.builtin.command: '/usr/local/bin/duba restore --ignore-space --target=/var/tmp/molecule-restore-ignore-space /srv/duba-molecule/plain/file.txt'
+      environment:
+        TMPDIR: '/mnt/duba-molecule-tmp'
+      changed_when: false
+      failed_when: false
+      register: '__molecule__duba_restore_ignore_space_result'
+
+    - name: 'umount /mnt/duba-molecule-tmp'
+      ansible.builtin.command: 'umount /mnt/duba-molecule-tmp'
+      changed_when: false
+
+    - name: 'stat /var/tmp/molecule-restore-small-tmp'
+      ansible.builtin.stat:
+        path: '/var/tmp/molecule-restore-small-tmp'
+      register: '__molecule__restore_small_tmp_stat_result'
+
+    - name: 'rm -rf /var/tmp/molecule-restore-ignore-space'
+      ansible.builtin.file:
+        path: '/var/tmp/molecule-restore-ignore-space'
+        state: 'absent'
+
+    - name: 'Assert that duba aborted on the estimate without touching the target, and --ignore-space restored'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__duba_restore_estimate_result["rc"] == 213'
+          - '"the restore needs up to 630 MB there" in __molecule__duba_restore_estimate_result["stderr"]'
+          - 'not __molecule__restore_small_tmp_stat_result["stat"]["exists"]'
+          - '__molecule__duba_restore_ignore_space_result["rc"] == 0'
+        fail_msg: '{{ [__molecule__duba_restore_estimate_result, __molecule__duba_restore_ignore_space_result] | to_json }}'
 
     # The backups running at the same time share the temp dir, and each one needs 860 MB there
     # (660 MB with duplicity 3.0.0, 460 MB before), else it aborts with exit code 35. 900 MB fit
