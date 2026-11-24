@@ -1,0 +1,99 @@
+argument_specs:
+  main:
+    options:
+
+      podman_containers__auto_update__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Settings for podman-auto-update.timer. Dependent-role injection.'
+
+      podman_containers__auto_update__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Settings for podman-auto-update.timer. Group-level override.'
+
+      podman_containers__auto_update__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Settings for podman-auto-update.timer. Host-level override.'
+
+      podman_containers__containers__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman containers. Dependent-role injection.'
+
+      podman_containers__containers__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman containers. Group-level override.'
+
+      podman_containers__containers__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman containers. Host-level override.'
+
+      podman_containers__firewall_driver:
+        type: 'str'
+        required: false
+        default: 'nftables'
+        choices:
+          - ''
+          - 'firewalld'
+          - 'iptables'
+          - 'nftables'
+          - 'none'
+        description: 'Firewall driver netavark uses for the rules of Podman networks. Empty leaves it to Podman.'
+
+      podman_containers__networks__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman networks. Dependent-role injection.'
+
+      podman_containers__networks__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman networks. Group-level override.'
+
+      podman_containers__networks__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman networks. Host-level override.'
+
+      podman_containers__volumes__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman volumes. Dependent-role injection.'
+
+      podman_containers__volumes__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman volumes. Group-level override.'
+
+      podman_containers__volumes__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Podman volumes. Host-level override.'
