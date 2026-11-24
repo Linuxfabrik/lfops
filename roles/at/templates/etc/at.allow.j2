@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# 2026112301
+{# at(1) compares each whole line with the user name, so these comment lines never match a user. #}
+{% for item in at__allow_users__combined_var if item['state'] | d('present') != 'absent' %}
+{{ item['name'] }}
+{% endfor %}

@@ -1,0 +1,18 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# One user listed in at__allow_users__group_var and one that is not, so verify.yml can check
+# that /etc/at.allow decides who may use at.
+- name: 'Create the users that verify.yml runs at as'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'useradd {{ item }}'
+      ansible.builtin.user:
+        name: '{{ item }}'
+      loop:
+        - 'lfops-at-allowed'
+        - 'lfops-at-denied'

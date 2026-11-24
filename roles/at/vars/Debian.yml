@@ -1,4 +1,9 @@
-# at(1) is setuid and setgid daemon on Debian and Ubuntu and reads /etc/at.deny as group daemon,
-# so the root:daemon 0640 the package ships stays. The CIS Debian Linux 12 Benchmark v1.0.1
-# (2.4.2.1) accepts it. Verified with at on Debian 12 and 13 and Ubuntu 22.04, 24.04 and 26.04.
+# at(1) is setuid and setgid daemon on Debian and Ubuntu and reads /etc/at.allow and /etc/at.deny
+# as group daemon. If it cannot read /etc/at.allow, it falls back to /etc/at.deny (perm.c), so a
+# root:root /etc/at.allow lets every user not listed in /etc/at.deny use at. Hence root:daemon
+# 0640, which the CIS Debian Linux 13 Benchmark v1.1.0 (2.4.2.1) accepts, and the package's
+# root:daemon 0640 of /etc/at.deny stays. Verified with at on Debian 12 and 13 and Ubuntu 22.04,
+# 24.04 and 26.04.
+__at__allow_group: 'daemon'
+__at__allow_mode: 0o640
 __at__paths: []

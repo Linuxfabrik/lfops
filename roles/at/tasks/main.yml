@@ -18,6 +18,17 @@
 
 - block:
 
+  # With /etc/at.allow in place, at(1) ignores /etc/at.deny and only lets root and the listed
+  # users submit jobs (CIS 2.4.2.1). atd does not check the file, so jobs queued before still run.
+  - name: 'Deploy /etc/at.allow'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/at.allow.j2'
+      dest: '/etc/at.allow'
+      owner: 'root'
+      group: '{{ __at__allow_group }}'
+      mode: '{{ __at__allow_mode }}'
+
   - name: 'stat {{ item["path"] }}'
     ansible.builtin.stat:
       path: '{{ item["path"] }}'
