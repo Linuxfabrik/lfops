@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:fail2ban**: On RedHat hosts with SELinux, the role installs the `lfops_fail2ban_ss_kill` policy module, which grants fail2ban the `net_admin` capability, so that the HTTP jails can close the connections of a banned client. The capability also lets fail2ban reconfigure network interfaces.
 * **role:grafana_grizzly, role:openvpn_server**: The roles read their files from `host_files/<host>/` like all other roles, instead of `host_vars/<host>/files/`, where Ansible also loaded the grizzly resources as host variables. The run aborts before it changes anything while files are left in the old location. Move them with `mkdir -p host_files/<host> && cp -a host_vars/<host>/files/. host_files/<host>/ && rm -r host_vars/<host>/files` ([#701](https://github.com/Linuxfabrik/lfops/issues/701)).
 * **playbook:apache_solr**: The playbook runs the kernel_settings role and sets `vm.swappiness` to 1, as the Solr Reference Guide recommends, so the kernel no longer swaps out the Java heap while memory is still available. On hosts that do not run kernel_settings yet, this also installs TuneD and applies its sysctl hardening baseline. Set `apache_solr__skip_kernel_settings: true` to leave the kernel settings alone.
 * **role:mariadb_server**: MariaDB may open at least 65536 files instead of 32768 (`mariadb_server__service_limit_nofile`), enough for 16 table cache instances, and a lower value no longer takes effect; a higher limit that the MariaDB package or systemd set is kept. The next run restarts MariaDB.
@@ -178,8 +179,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+* **role:fail2ban**: A ban of an HTTP jail (`apache-*`, `php-url-fopen`, `wordpress-login`) also closes the connections the client holds, so a banned client neither goes on over an open HTTP/2 connection nor keeps Apache workers busy, and `apache-dos` bans repeat offenders longer each time.
 * **role:tools**: The Bash prompt is green on hosts in any group whose name contains `test`, such as `env_test`, and yellow for `stage`, where only groups named exactly `test` and `stage` counted.
-* **role:fail2ban**: The `apache-dos` jail only blocks new connections, so a ban no longer exhausts the Apache workers, and it bans repeat offenders longer each time.
 * **role:blocky**: The sample configuration serves the Prometheus metrics on `http://127.0.0.1:4000/metrics`, so blocky can be monitored out of the box. A configuration given in `blocky__config_yml` is not affected.
 * **role:fail2ban**: A jail whose log file does not exist is skipped instead of keeping fail2ban from starting with all other jails (fail2ban 1.1.1 or newer).
 * **role:apache_httpd, role:moodle, role:nextcloud**: vHosts log in the Apache standard format `combined` instead of `linuxfabrikio`, which fail2ban and log analysers read without further setup.

@@ -1,8 +1,13 @@
 # {{ ansible_managed }}
-# 2026111801
+# 2026112301
 
 [DEFAULT]
 action     = {{ fail2ban__jail_default_action | indent(width=13, first=false) }}
+# The action of the HTTP jails: the default action, plus closing the established
+# connections of the banned client (action.d/ss-kill.conf). default/action
+# instead of action, which would resolve to the action of the jail itself.
+action_kill = %(default/action)s
+              ss-kill[port="%(port)s"]
 banaction  = {{ fail2ban__jail_default_banaction }}
 chain      = INPUT
 ignoreip   = {{ fail2ban__jail_default_ignoreip | join(' ') }}

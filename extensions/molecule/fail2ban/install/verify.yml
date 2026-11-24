@@ -270,6 +270,60 @@
       loop_control:
         label: '{{ item["item"]["option"] }}'
 
+    # A ban has to close the connections the client already holds. Otherwise a client that keeps
+    # one HTTP/2 connection busy goes on after a ban of new connections, and with a ban of all its
+    # packets every one of its connections holds an httpd worker until Timeout. The script holds a
+    # connection from 203.0.113.30, an address on lo, to port 80, bans that address in apache-dos
+    # (banip bypasses ignoreself) and prints how many of the server's connections to it are still
+    # established. Without the ss-kill action, or with SELinux denying it, the count stays at 1.
+    # It runs with the interpreter of Ansible, since RHEL 8 has no python3 command, and therefore
+    # sticks to Python 3.6.
+    - name: 'Ban 203.0.113.30 in apache-dos while it holds a connection to port 80'
+      ansible.builtin.shell:
+        cmd: |-
+          set -o errexit -o nounset -o pipefail
+          ip address add 203.0.113.30/32 dev lo
+          trap 'ip address del 203.0.113.30/32 dev lo' EXIT
+          {{ ansible_facts["python"]["executable"] }} -I - <<'EOF'
+          import socket
+          import subprocess
+          import time
+
+          def established():
+              return subprocess.check_output(
+                  ['ss', '--tcp', '--no-header', 'state', 'established',
+                   'dst', '203.0.113.30', '( sport = :80 )'],
+                  universal_newlines=True,
+              ).count('\n')
+
+          server = socket.socket()
+          server.bind(('203.0.113.30', 80))
+          server.listen()
+          client = socket.socket()
+          client.bind(('203.0.113.30', 0))
+          client.connect(('203.0.113.30', 80))
+          connection, _ = server.accept()
+          print(f'before: {established()}')
+          subprocess.check_output(
+              ['fail2ban-client', 'set', 'apache-dos', 'banip', '203.0.113.30'])
+          for _ in range(10):
+              if established() == 0:
+                  break
+              time.sleep(1)
+          print(f'after: {established()}')
+          subprocess.check_output(
+              ['fail2ban-client', 'set', 'apache-dos', 'unbanip', '203.0.113.30'])
+          EOF
+        executable: '/bin/bash'
+      register: '__molecule__fail2ban_dos_kill_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the ban of apache-dos closed the established connection'
+      ansible.builtin.assert:
+        that: '__molecule__fail2ban_dos_kill_result["stdout_lines"] == ["before: 1", "after: 0"]'
+        fail_msg: 'the connection of the banned address stays open: {{ __molecule__fail2ban_dos_kill_result["stdout"] }}'
+
     # The wordpress-login filter ships with the role defaults, but its jail reads Apache logs this
     # host does not have. So the deployed filter is fed sample lines through fail2ban-regex, which
     # proves it parses and matches with the fail2ban version the role installed.

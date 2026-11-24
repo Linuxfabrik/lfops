@@ -1,15 +1,19 @@
 # {{ ansible_managed }}
-# 2026112201
+# 2026112301
 
 [apache-dos]
-# The ban only applies to new connections (pre-rule). Banning established ones
-# as well keeps every httpd worker that is reading a request from the banned
+# The ban rule only applies to new connections (pre-rule), and ss-kill closes
+# the established ones. Rejecting the packets of established connections
+# instead keeps every httpd worker that is reading a request from the banned
 # client, such as one in the middle of a TLS handshake, waiting for packets that
 # never arrive until Timeout expires, so the ban itself exhausts
 # MaxRequestWorkers. A reject with tcp-reset frees none of them, since the RST
-# only goes to the client. Verified with fail2ban 1.1.1 and httpd 2.4.63
-# (event MPM) on Rocky 10.
+# only goes to the client. Without ss-kill, a client keeps sending requests
+# over an HTTP/2 connection it keeps busy, since mod_http2 ignores
+# MaxKeepAliveRequests. Verified with fail2ban 1.1.1 and httpd 2.4.63 (event
+# MPM) on Rocky 10.
 action   = %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s", pre-rule="-m state --state NEW<sp>"]
+           ss-kill[port="%(port)s"]
 bantime  = 5m
 # Each further ban of the same address doubles the bantime, since a scanner
 # usually comes back right after the ban expires. fail2ban forgets an address

@@ -1,0 +1,28 @@
+; {{ ansible_managed }}
+; 2026112301
+
+; Lets the ss-kill action close the connections of a banned client (SOCK_DESTROY
+; on a sock_diag netlink socket, which needs CAP_NET_ADMIN). The policy grants
+; fail2ban_t neither, so ss reports "Cannot open netlink socket: Permission
+; denied", falls back to /proc/net/tcp and kills nothing. Verified with
+; selinux-policy 42.1.27 on Rocky 10; the module loads and the kill works on
+; Rocky 8, 9 and 10 (Molecule scenario fail2ban/install).
+;
+; What the rules add for an attacker who controls fail2ban-server, recorded so it
+; does not have to be redone: fail2ban-server runs as root with the full
+; capability set, so SELinux is the only gate. Measured on Rocky 10:
+;
+; * Closing any TCP socket of the host is new, but fail2ban_t may already run
+;   iptables in iptables_t, which holds net_admin and drops any traffic of the
+;   host.
+; * net_admin is not limited to sock_diag. fail2ban_t may ioctl its UDP sockets
+;   without an xperm restriction, so it can reconfigure interfaces with the
+;   legacy ioctls: with the module, a fail2ban action changed the MTU of an
+;   interface (SIOCSIFMTU), without it the ioctl failed with EPERM. Routes and
+;   interfaces over netlink stay out of reach, since fail2ban_t holds
+;   netlink_route_socket without nlmsg_write.
+; * Verdict: small, an attacker in fail2ban_t can already cut the host off the
+;   network. It is a CHANGELOG "Breaking Changes" entry all the same, because
+;   the capability is wider than the feature needs.
+(allow fail2ban_t self (capability (net_admin)))
+(allow fail2ban_t self (netlink_tcpdiag_socket (bind create getattr nlmsg_read nlmsg_write read setopt write)))

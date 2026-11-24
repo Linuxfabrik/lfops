@@ -181,6 +181,7 @@ Unusual techniques and the role to read before reusing them; all other roles fol
 
 * `selinux`: compiles inventory-defined `.te` source (`checkmodule`, `semodule_package`, `semodule --install`) and applies modules → booleans / file contexts / ports → restorecon → setenforce, so new types are usable in the same run.
 * `php`: publishes `php__selinux__modules__dependent_var` from `vars/main.yml` (several playbooks run `selinux` before `php`), with the source inline in `content_te`, since a role has no controller directory for `src`.
+* `fail2ban`: templates a CIL module and loads it with `semodule --install` right after its package, because the module needs `fail2ban_t`, which RHEL 10 only gets from the package's `fail2ban-selinux` dependency, after the `selinux` role has run. CIL needs no policy compiler on the host.
 
 Before adding an `allow` rule, work out what it buys an attacker **on top of** the DAC gates and record it next to the rule: `ptrace_may_access()` and similar run DAC and capability checks before the LSM hook. Example: `lfops_php_fpm_slowlog` in `roles/php/vars/main.yml`.
 

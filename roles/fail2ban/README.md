@@ -36,7 +36,9 @@ On a host with `/var/log/httpd`, the role enables these jails without further in
 
 They belong on the host the clients connect to. Behind a reverse proxy, a ban on the client address does nothing, since the packets come from the proxy, and where Apache logs the proxy as the client, the jails would ban the proxy itself. The role therefore leaves them out where `apache_httpd__mod_remoteip_internal_proxy` lists a proxy; for a host behind a proxy without `mod_remoteip`, set `fail2ban__jails_apache_enabled` to `false`. Hosts without `/var/log/httpd`, or with the jails disabled, get them removed.
 
-The `apache-dos` template is not enabled by default. It bans a client that sends more than 600 requests within 10 seconds for 5 minutes, and doubles the duration with each further ban of the same address, up to one day. The ban only blocks new connections, so requests already under way are answered: blocking open connections as well would leave every httpd worker that is reading from the client waiting until `Timeout` expires, and the ban itself would exhaust `MaxRequestWorkers`. A banned client can therefore keep sending requests on a connection it holds open, over HTTP/2 until the connection goes idle; limit the connections per client in the firewall. The template sets its own `action`, so `fail2ban__jail_default_action` does not apply to it, and blocking only new connections needs one of the `iptables-*` banactions. To change a single value, keep `z10-apache-dos` and add a jail file that is read after it with only that value (see the example below).
+A ban of an HTTP jail (`apache-*`, `php-url-fopen`, `wordpress-login`) also closes the connections the client already holds on the ports of the jail, with `ss --kill` (`action.d/ss-kill.conf`). A firewall rule alone does not stop a client that keeps one HTTP/2 connection busy, and it leaves the server side of each open connection waiting until `Timeout`, holding an httpd worker. On the Red Hat family, SELinux only allows this with the `lfops_fail2ban_ss_kill` policy module, which the role installs unless SELinux is disabled. It grants fail2ban the `net_admin` capability, which also lets it reconfigure network interfaces. If `ss --kill` leaves a connection open, `/var/log/fail2ban.log` shows an `ERROR` for the `ss-kill` action. The other jails, such as `sshd`, leave established connections open.
+
+The `apache-dos` template is not enabled by default. It bans a client that sends more than 600 requests within 10 seconds for 5 minutes, and doubles the duration with each further ban of the same address, up to one day. Its firewall rule only blocks new connections, so that a flood of connections does not keep the httpd workers waiting until `Timeout` even if `ss --kill` fails. The template sets its own `action`, so `fail2ban__jail_default_action` does not apply to it, and blocking only new connections needs one of the `iptables-*` banactions. To change a single value, keep `z10-apache-dos` and add a jail file that is read after it with only that value (see the example below).
 
 The `apache-badbots` and `apache-botsearch` templates are not enabled by default: they match against lists of user agents (2013) and paths (2017) that fail2ban no longer maintains.
 
@@ -86,7 +88,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban:configure`
 
-* Deploys the actions, filters and jails without touching the packages.
+* Deploys the actions, filters, jails and the SELinux policy module without touching the packages.
 * Triggers: fail2ban.service restart.
 
 `fail2ban:state`
@@ -151,7 +153,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 `fail2ban__jail_default_action`
 
-* The default action. This will be used in all jails which do not overwrite it.
+* The default action. This will be used in all jails which do not overwrite it. The HTTP jails run it followed by `ss-kill` (see "How the Role Behaves"); `apache-dos` sets its own action.
 * Type: String.
 * Default: `'%(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]'`
 
