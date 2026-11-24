@@ -25,6 +25,11 @@ own:
 * Limit: the hosts of the selected inventories in the groups the playbook targets,
   plus the groups these hosts are in. A typed glob such as `060-t-*` can be taken over
   as a pattern.
+* Confirm: the command, the number of hosts it targets and the first 10 of them.
+  The limit is resolved like Ansible does, for host and group names, globs, `&` and
+  `!`. Other patterns (`~regex`, `@file`, `group[0:2]`, `host:port`, IPv6 addresses)
+  show the number as unknown. It is an estimate: `when` conditions other than the skip
+  variables of a role, `group_by` and `add_host` are not evaluated.
 
 Playbooks, inventories, tags and limits used last are listed first. Ctrl-R lists the
 complete runs, used last first: choosing one fills in all steps and shows the confirm
@@ -69,9 +74,11 @@ import time
 
 import yaml
 
-__version__ = '2026112410'
+__version__ = '2026112411'
 
 HISTORY_SIZE = 50
+# the confirm page lists this many of the targeted hosts by name
+HOST_LIST_MAX = 10
 # what the steps fill in, and what the history keeps of a run
 EMPTY_STATE = {
     'inventories': [],
@@ -420,16 +427,17 @@ def list_inventories():
 
 class Inventory:
     """Groups and hosts of a YAML inventory, plus the lookup of single variables in its
-    group_vars and host_vars."""
+    group_vars and host_vars. `direct` and `children` hold the group structure as
+    written, `groups` the resolved members, see merged_groups()."""
 
     def __init__(self, path):
         self.path = path
         self.dir = os.path.dirname(path)
-        direct, self.children = {}, {}
+        self.direct, self.children = {}, {}
         self.inline_group_vars, self.inline_host_vars = {}, {}
 
         def walk(group, node):
-            direct.setdefault(group, set())
+            self.direct.setdefault(group, set())
             self.children.setdefault(group, set())
             if not isinstance(node, dict):
                 return
@@ -437,7 +445,7 @@ class Inventory:
                 self.inline_group_vars.setdefault(group, {}).update(node['vars'])
             if isinstance(node.get('hosts'), dict):
                 for host, host_vars in node['hosts'].items():
-                    direct[group].add(str(host))
+                    self.direct[group].add(str(host))
                     if isinstance(host_vars, dict):
                         self.inline_host_vars.setdefault(str(host), {}).update(
                             host_vars
@@ -452,17 +460,7 @@ class Inventory:
             for group, node in data.items():
                 walk(str(group), node)
 
-        def members(group, seen):
-            if group in seen:
-                return set()
-            seen.add(group)
-            result = set(direct.get(group, ()))
-            for child in self.children.get(group, ()):
-                result |= members(child, seen)
-            return result
-
-        self.groups = {group: members(group, set()) for group in direct}
-        self.groups.setdefault('all', set()).update(*self.groups.values())
+        self.groups = merged_groups([self])
         self._files = {}
 
     def _depth(self, group, seen=()):
@@ -512,6 +510,131 @@ class Inventory:
             if var in self.inline_group_vars.get(group, {}):
                 return self.inline_group_vars[group][var]
         raise KeyError(var)
+
+
+def merged_groups(inventories):
+    """{group: hosts} over several Inventory objects. Like Ansible, the group structure
+    (direct hosts and children) of all inventories is merged first and the members are
+    resolved after, so a group of one inventory can get hosts from a child group defined
+    in another. A group of the same name in several inventories is one group."""
+    direct, children = {}, {}
+    for inventory in inventories:
+        for group, hosts in inventory.direct.items():
+            direct.setdefault(group, set()).update(hosts)
+        for group, child_groups in inventory.children.items():
+            children.setdefault(group, set()).update(child_groups)
+
+    def members(group, seen):
+        if group in seen:
+            return set()
+        seen.add(group)
+        result = set(direct.get(group, ()))
+        for child in children.get(group, ()):
+            result |= members(child, seen)
+        return result
+
+    groups = {group: members(group, set()) for group in direct}
+    all_hosts = set().union(*groups.values())
+    # like InventoryData.reconcile_inventory(): a host is in `ungrouped` if it is in no
+    # group other than `all`, even if an inventory lists it there explicitly
+    grouped = set().union(
+        *(h for g, h in groups.items() if g not in ('all', 'ungrouped'))
+    )
+    groups['all'] = all_hosts
+    groups['ungrouped'] = all_hosts - grouped
+    return groups
+
+
+# --- limit patterns --------------------------------------------------------------------
+
+# Resolves `--limit` the way ansible-core does in lib/ansible/inventory/manager.py
+# (split_host_pattern(), subset(), order_patterns(), _evaluate_patterns(),
+# _match_one_pattern(), _enumerate_matches()). Verified against the ansible-core
+# 2.22.0.dev0 source and with ansible-core 2.16.19 (same logic) by comparing with
+# `ansible all --list-hosts --limit=<pattern>` on a test inventory.
+#
+# Pattern forms:
+# * `host`, `group`: supported. A host name wins over a group of the same name, but
+#   not after `&` or `!`.
+# * fnmatch globs (`web*`, `db?`, `[ab]*`): supported, they match group and host names.
+# * `a,b` and `a:b`: supported, as union. Colons only separate if there is no comma.
+# * `&pattern`, `!pattern`: supported, applied after all others (& first, then !). A
+#   limit of only `&` and `!` entries starts from `all`.
+# * `all`, `ungrouped`: supported.
+# * `~regex`: not supported, kept out for simplicity, rarely used in a limit.
+# * `@file`: not supported, Ansible reads the file inside the execution environment.
+# * `group[0]`, `group[0:2]`: not supported, they depend on the order of the hosts in
+#   the inventory, which the sets here do not keep.
+# * `host:port`, IPv6 addresses: not supported. Without a comma, Ansible takes what
+#   parse_address() accepts as one pattern instead of splitting at the colons. That
+#   includes some strings with `::` that are no address (`db::web`), so a limit with
+#   `::` and without a comma counts as not supported.
+# * `{{ ... }}`: taken as text like Ansible does, it does not template the limit.
+LIMIT_COLON_SPLIT = re.compile(r'(?:[^\s:\[\]]|\[[^\]]*\])+')
+LIMIT_HOSTPORT = re.compile(r'^(?:(?:[^:\[\]]|\[[^\]]*\])*|\[.+\]):[0-9]+$')
+LIMIT_IPV6 = re.compile(r'^[0-9a-fA-F:.\[\]]+$')
+LIMIT_SUBSCRIPT = re.compile(r'^(.+)\[(?:-?[0-9]+|[0-9]+[:-][0-9]*)\]$')
+
+
+def split_limit(limit):
+    """Splits a `--limit` value into single patterns like split_host_pattern(). None if
+    Ansible may take it as one address (`host:22`, IPv6, `::`) instead."""
+    if ',' in limit:
+        patterns = limit.split(',')
+    elif (
+        '::' in limit
+        or LIMIT_HOSTPORT.match(limit)
+        # uncompressed, also with an IPv4 part (`0:0:0:0:0:ffff:192.0.2.1`)
+        or (LIMIT_IPV6.match(limit) and limit.count(':') >= 6)
+    ):
+        return None
+    else:
+        patterns = LIMIT_COLON_SPLIT.findall(limit)
+    return [p.strip() for p in patterns if p.strip()]
+
+
+def _match_pattern(pattern, groups):
+    """The hosts of the groups matching the pattern, plus the hosts matching it if no
+    group does or if it is a glob, like _enumerate_matches(). None if not supported."""
+    if not pattern or pattern[0] in '@~' or LIMIT_SUBSCRIPT.match(pattern):
+        return None
+    regex = re.compile(fnmatch.translate(pattern))
+    matching = [g for g in groups if regex.match(g)]
+    result = set().union(*(groups[g] for g in matching))
+    if not matching or any(c in pattern for c in '.?*['):
+        result |= {h for h in groups['all'] if regex.match(h)}
+    return result
+
+
+def resolve_limit(limit, groups):
+    """The hosts of `groups` (as merged_groups() returns them) that the `--limit` value
+    selects, or None if the limit uses a pattern that is not supported."""
+    patterns = split_limit(limit)
+    if patterns is None:
+        return None
+    all_hosts = groups.get('all', set())
+    # order_patterns(): the plain patterns first (`all` if there are none), then the
+    # `&` ones, then the `!` ones
+    ordered = [p for p in patterns if p[0] not in '&!'] or ['all']
+    ordered += [p for p in patterns if p[0] == '&']
+    ordered += [p for p in patterns if p[0] == '!']
+    result = set()
+    for pattern in ordered:
+        # a plain host name is taken as is, even if a group has the same name
+        if pattern in all_hosts:
+            result.add(pattern)
+            continue
+        expr = pattern[1:] if pattern[0] in '&!' else pattern
+        matched = _match_pattern(expr, groups)
+        if matched is None:
+            return None
+        if pattern[0] == '&':
+            result &= matched
+        elif pattern[0] == '!':
+            result -= matched
+        else:
+            result |= matched
+    return result
 
 
 # --- terminal UI -----------------------------------------------------------------------
@@ -701,20 +824,60 @@ def pick(
             query, cursor = query + key, 0
 
 
-def confirm(stdscr, title, command, note=''):
-    """Shows the command. Returns 'run' on Enter, the option to switch on `c` and `d`,
-    'options' on `f` and 'recall' on Ctrl-R; raises Back on Esc."""
+def target_lines(targets):
+    """The lines about the targeted hosts on the confirm page, as (text, attr)."""
+    if targets is None:
+        return [
+            ('Hosts targeted: unknown', curses.A_BOLD),
+            (
+                'the limit uses a pattern this tool does not resolve '
+                '(~regex, @file, [subscript], host:port, IPv6, ::)',
+                curses.A_DIM,
+            ),
+        ]
+    if not targets:
+        return [
+            ('0 hosts targeted, Ansible would run nothing', curses.A_REVERSE),
+            ('the limit matches none of the hosts of the playbook', curses.A_DIM),
+        ]
+    hosts = sorted(targets)
+    lines = [(f'Hosts targeted (estimate): {len(hosts)}', curses.A_BOLD)]
+    lines += [(f'  {host}', 0) for host in hosts[:HOST_LIST_MAX]]
+    if len(hosts) > HOST_LIST_MAX:
+        lines.append(('  ...', curses.A_DIM))
+    return lines
+
+
+def confirm(stdscr, title, command, note='', targets=None):
+    """Shows the command and the hosts it targets (a set, None if unknown). Returns
+    'run' on Enter, the option to switch on `c` and `d`, 'options' on `f` and 'recall'
+    on Ctrl-R; raises Back on Esc."""
     keys = {'c': '--check', 'd': '--diff', 'f': 'options', '\x12': 'recall'}
+    command_lines = [
+        (f'    {shlex.quote(part)}' if row else shlex.quote(part))
+        + (' \\' if row < len(command) - 1 else '')
+        for row, part in enumerate(command)
+    ]
+    target_rows = target_lines(targets)
     while True:
         height, _ = stdscr.getmaxyx()
         stdscr.erase()
         _addstr(stdscr, 0, 0, title, curses.A_BOLD)
         _addstr(stdscr, 1, 0, note, curses.A_DIM)
-        for row, part in enumerate(command):
-            text = f'    {shlex.quote(part)}' if row else shlex.quote(part)
-            _addstr(
-                stdscr, 3 + row, 0, text + (' \\' if row < len(command) - 1 else '')
-            )
+        # rows 3 to height - 3 hold the command, a blank line and the targeted hosts,
+        # height - 2 the Ctrl-R hint. On a short terminal, the host list is cut first,
+        # then the command, so that the line with the number of hosts stays visible.
+        shown = command_lines[: max(0, height - 7)]
+        if 0 < len(shown) < len(command_lines):
+            shown[-1:] = ['    ...']
+        for row, text in enumerate(shown):
+            _addstr(stdscr, 3 + row, 0, text)
+        start = 4 + len(shown)
+        rows = target_rows[: max(0, height - 2 - start)]
+        if 1 < len(rows) < len(target_rows):
+            rows[-1] = ('  ...', curses.A_DIM)
+        for row, (text, attr) in enumerate(rows, start=start):
+            _addstr(stdscr, row, 0, text, attr)
         _addstr(stdscr, height - 2, 0, 'Ctrl-R: past runs', curses.A_DIM)
         _addstr(
             stdscr,
@@ -829,41 +992,54 @@ class Discovery:
         }
         self.playbooks = {p: playbook_info(lfops_dir, p) for p in self.plays}
         self.inventories = {i: Inventory(i) for i in list_inventories()}
+        self._groups = {}
         self._tags = {}
 
-    def hosts(self, playbook, inventory):
-        """The hosts of an inventory that a playbook runs against."""
-        groups = self.inventories[inventory].groups
+    def groups(self, inventories):
+        """merged_groups() of the inventories (paths), cached."""
+        key = tuple(inventories)
+        if key not in self._groups:
+            self._groups[key] = merged_groups(self.inventories[i] for i in key)
+        return self._groups[key]
+
+    def hosts(self, playbook, inventories):
+        """The hosts of the inventories that a playbook runs against."""
+        groups = self.groups(inventories)
         result = set()
         for target in self.playbooks[playbook][1]:
             result |= groups.get(target, set())
         return result
 
-    def role_hosts(self, playbook, role, inventory):
-        """The hosts of an inventory on which a playbook runs a role. In `all`, for
+    def role_hosts(self, playbook, role, inventories):
+        """The hosts of the inventories on which a playbook runs a role. In `all`, for
         example, the squid role only runs on the hosts of `lfops_squid`, and in
         `setup_basic`, `setup_basic__skip_aide: true` skips the aide role."""
-        inv = self.inventories[inventory]
+        groups = self.groups(inventories)
+        invs = [self.inventories[i] for i in inventories]
         result = set()
         for targets, roles, skips in self.plays[playbook]:
             if role not in roles:
                 continue
             for target in targets:
-                for host in inv.groups.get(target, set()):
-                    if not self._skipped(inv, host, skips.get(role, [frozenset()])):
+                for host in groups.get(target, set()):
+                    if not self._skipped(invs, host, skips.get(role, [frozenset()])):
                         result.add(host)
         return result
 
     @staticmethod
-    def _skipped(inv, host, occurrences):
-        """True if every occurrence of the role is skipped on the host. Only a literal
-        `true` counts, a Jinja expression is taken as not skipping."""
+    def _skipped(invs, host, occurrences):
+        """True if every occurrence of the role is skipped on the host. The value of a
+        skip variable comes from the last inventory that sets it, each inventory looked
+        up on its own. Only a literal `true` counts, a Jinja expression is taken as not
+        skipping."""
 
         def is_true(var):
-            try:
-                return inv.value(host, var) is True
-            except KeyError:
-                return False
+            for inv in reversed(invs):
+                try:
+                    return inv.value(host, var) is True
+                except KeyError:
+                    pass
+            return False
 
         return all(any(is_true(var) for var in skip) for skip in occurrences)
 
@@ -884,7 +1060,7 @@ class Discovery:
             for p, (roles, _) in self.playbooks.items()
             if p != playbook
             and playbook in roles
-            and all(self.role_hosts(p, playbook, i) for i in inventories)
+            and all(self.role_hosts(p, playbook, [i]) for i in inventories)
         ]
         candidates.sort(key=lambda p: len(self.playbooks[p][0]))
         return next(iter(by_recency(candidates, history['playbooks'])), None)
@@ -893,7 +1069,7 @@ class Discovery:
 def playbook_items(discovery, history):
     runnable = []
     for playbook in discovery.playbooks:
-        counts = [len(discovery.hosts(playbook, i)) for i in discovery.inventories]
+        counts = [len(discovery.hosts(playbook, [i])) for i in discovery.inventories]
         inventories = sum(1 for c in counts if c)
         if inventories:
             desc = (
@@ -914,7 +1090,7 @@ def inventory_items(discovery, playbook, history):
     runnable, other = [], []
     for inventory in by_recency(list(discovery.inventories), history['inventories']):
         label = os.path.relpath(inventory, base) if base else inventory
-        hosts = discovery.hosts(playbook, inventory)
+        hosts = discovery.hosts(playbook, [inventory])
         if hosts:
             marker = 'recent' if inventory in history['inventories'] else ''
             runnable.append(Item(inventory, label, plural(len(hosts), 'host'), marker))
@@ -926,19 +1102,32 @@ def inventory_items(discovery, playbook, history):
     return runnable + other
 
 
+def relevant_hosts(discovery, state):
+    """The hosts of the selected inventories that the playbook runs against, or, when
+    running a role via a parent playbook, the hosts it runs the role on. Computed on
+    the merged group structure of the inventories, like Ansible does."""
+    if state['role']:
+        return discovery.role_hosts(
+            state['playbook'], state['role'], state['inventories']
+        )
+    return discovery.hosts(state['playbook'], state['inventories'])
+
+
+def targeted_hosts(discovery, state):
+    """The relevant hosts the limit selects, None if the limit cannot be resolved.
+    An estimate, see resolve_limit()."""
+    relevant = relevant_hosts(discovery, state)
+    if not state['limits']:
+        return relevant
+    groups = discovery.groups(state['inventories'])
+    # one --limit value, as build_command() passes it
+    selected = resolve_limit(','.join(state['limits']), groups)
+    return None if selected is None else relevant & selected
+
+
 def limit_items(discovery, state, history):
-    groups = {}
-    for inventory in state['inventories']:
-        for group, hosts in discovery.inventories[inventory].groups.items():
-            groups.setdefault(group, set()).update(hosts)
-    relevant = set()
-    for inventory in state['inventories']:
-        if state['role']:
-            relevant |= discovery.role_hosts(
-                state['playbook'], state['role'], inventory
-            )
-        else:
-            relevant |= discovery.hosts(state['playbook'], inventory)
+    groups = discovery.groups(state['inventories'])
+    relevant = relevant_hosts(discovery, state)
     targets = discovery.playbooks[state['playbook']][1]
     hint = f'hosts of {", ".join(targets)}'
     used = {}
@@ -1027,7 +1216,7 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                         context=context,
                         preselect=_known(attempt, items),
                     )
-                    if all(discovery.hosts(playbook, i) for i in inventories):
+                    if all(discovery.hosts(playbook, [i]) for i in inventories):
                         break
                     attempt = inventories
                     parent = discovery.parent(playbook, inventories, history)
@@ -1064,7 +1253,11 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
             else:
                 command = build_command(state)
                 action = confirm(
-                    stdscr, heading('Run this command?'), command, state['note']
+                    stdscr,
+                    heading('Run this command?'),
+                    command,
+                    state['note'],
+                    targeted_hosts(discovery, state),
                 )
                 if action == 'run':
                     return state, command
