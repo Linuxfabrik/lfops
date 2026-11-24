@@ -1,0 +1,34 @@
+# {{ ansible_managed }}
+# 2026112301
+
+# Closes the established TCP connections of a banned address on the ports of
+# the jail. A ban rule only sees the client's packets: a rule for new
+# connections lets a client go on over a connection it keeps busy, such as one
+# HTTP/2 connection, which httpd never closes, and a rule for all packets leaves
+# the server side waiting for packets that never arrive, so each of these
+# connections holds an httpd worker until Timeout. ss --kill (SOCK_DESTROY)
+# aborts the server side socket, which frees the worker at once. Verified with
+# fail2ban 1.1.1, iproute 7.0.0 and httpd 2.4.63 (event MPM) on Rocky 10.
+#
+# Without SOCK_DESTROY (SELinux denies it to fail2ban_t without the module of
+# the role), ss falls back to /proc/net/tcp, kills nothing and still exits
+# with 0. The check afterwards fails the action instead, so the ban logs an
+# ERROR.
+#
+# <port> is a comma-separated list of port names or numbers, as in jail.conf.
+[Definition]
+# restored bans have no connections left to close
+norestored = true
+
+actionstart =
+actionstop =
+actioncheck =
+
+actionban = sports="$(echo '<port>' | sed --expression='s/,/ or sport = :/g' --expression='s/^/sport = :/')"
+            ss --kill --tcp state established dst "[<ip>]" "( ${sports} )" >/dev/null
+            if ss --tcp --no-header state established dst "[<ip>]" "( ${sports} )" | grep --quiet .; then
+                echo 'ss --kill left the established connections of <ip> open, see the README of the LFOps fail2ban role' >&2
+                exit 1
+            fi
+
+actionunban =

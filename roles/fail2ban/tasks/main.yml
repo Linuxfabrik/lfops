@@ -65,6 +65,43 @@
     - 'fail2ban'
 
 
+# The policy module that lets the ss-kill action close the connections of a banned client. It
+# needs the fail2ban_t type, which RHEL 10 only gets from fail2ban-selinux, a dependency of the
+# fail2ban package, so it is installed here and not by the selinux role, which the playbook runs
+# before this role. The module is CIL, which semodule loads without a policy compiler on the host.
+- block:
+
+  - name: 'Deploy /usr/share/selinux/packages/lfops_fail2ban_ss_kill.cil'
+    ansible.builtin.template:
+      backup: true
+      src: 'usr/share/selinux/packages/lfops_fail2ban_ss_kill.cil.j2'
+      dest: '/usr/share/selinux/packages/lfops_fail2ban_ss_kill.cil'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__fail2ban__selinux_module_result'
+
+  - name: 'semodule --list'
+    ansible.builtin.command: 'semodule --list'
+    register: '__fail2ban__semodule_list_result'
+    changed_when: false
+    check_mode: false
+
+  - name: 'semodule --install /usr/share/selinux/packages/lfops_fail2ban_ss_kill.cil'
+    ansible.builtin.command: 'semodule --install /usr/share/selinux/packages/lfops_fail2ban_ss_kill.cil'
+    changed_when: true # only runs when the module is missing or changed
+    when:
+      - '__fail2ban__selinux_module_result is changed
+         or "lfops_fail2ban_ss_kill" not in __fail2ban__semodule_list_result["stdout_lines"] | map("split") | map("first") | list'
+
+  when:
+    - 'ansible_facts["os_family"] == "RedHat"'
+    - 'ansible_facts["selinux"]["status"] != "disabled"'
+  tags:
+    - 'fail2ban'
+    - 'fail2ban:configure'
+
+
 - block:
 
   - name: 'Deploy /etc/fail2ban/action.d/rocketchat.conf'
@@ -72,6 +109,17 @@
       backup: true
       src: 'etc/fail2ban/action.d/rocketchat.conf.j2'
       dest: '/etc/fail2ban/action.d/rocketchat.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify:
+      - 'fail2ban: restart fail2ban'
+
+  - name: 'Deploy /etc/fail2ban/action.d/ss-kill.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/fail2ban/action.d/ss-kill.conf.j2'
+      dest: '/etc/fail2ban/action.d/ss-kill.conf'
       owner: 'root'
       group: 'root'
       mode: 0o644

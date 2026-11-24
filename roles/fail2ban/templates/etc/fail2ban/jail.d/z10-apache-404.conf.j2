@@ -1,7 +1,8 @@
 # {{ ansible_managed }}
-# 2026090401
+# 2026112301
 
 [apache-404]
+action   = %(action_kill)s
 bantime  = {{ fail2ban__jail_apache_404_bantime }}
 enabled  = true
 findtime = {{ fail2ban__jail_apache_404_findtime }}
