@@ -273,6 +273,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **playbook:docker**: The playbook no longer fails at the kernel_settings role on new hosts, since Docker no longer loads the `br_netfilter` kernel module by default. It no longer sets `net.bridge.bridge-nf-call-iptables` and `net.bridge.bridge-nf-call-ip6tables`; dockerd sets them itself when it needs the module (`icc=false`, or the userland proxy disabled).
 * **role:fail2ban**: Bans block the client on RHEL 10 hosts whose running kernel lacked `xt_multiport`, such as hosts fresh from a cloud image, where they had no effect until a reboot.
 * **role:repo_mongodb**: On RHEL 10, the role aborts with a clear message for MongoDB versions before 8.0, instead of the mongodb role failing at the package installation with "nothing provides mongodb-database-tools". The upstream 7.0 repository for RHEL 10 lacks that package.
 * **role:monitoring_plugins**: On Windows, `--tags monitoring_plugins:remove` also uninstalls the MSI packages of upcoming monitoring plugins releases, which no longer share one product code.
