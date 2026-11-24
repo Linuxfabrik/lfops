@@ -34,7 +34,9 @@ containing its letters in order (`setbas` finds `setup_basic`), then the ones wi
 text in their description.
 
 Keys: type to filter, Up/Down/PgUp/PgDn to move, Space or Tab to (de)select, Ctrl-A to
-(de)select all visible entries, Enter to continue, Esc to go back, Ctrl-C to quit.
+(de)select all visible entries, Enter to continue with the selected entries or, without
+a selection, with the highlighted one, Esc to go back, Ctrl-C to quit. In the playbook
+step, which takes a single entry, Space and Tab continue like Enter.
 
 Any further argument is passed on to ansible-navigator, for example
 `lfops --check --diff`.
@@ -61,7 +63,7 @@ import time
 
 import yaml
 
-__version__ = '2026111901'
+__version__ = '2026112408'
 
 HISTORY_SIZE = 50
 STATE_DIR = os.path.join(
@@ -510,7 +512,6 @@ def pick(
     multi,
     context='',
     pattern=False,
-    preselect=(),
     context_first=False,
 ):
     """Shows a filterable list. Returns the list of selected values; raises Back on Esc.
@@ -518,11 +519,12 @@ def pick(
     The bold title and the dim context take the first two lines, the context on top
     with `context_first`. Without context, the title takes one line.
 
-    Without a selection, Enter takes the highlighted entry. The entry with the value
-    None ("no --tags", "no --limit") excludes all others. With `pattern`, a typed filter
+    Without a selection, Enter takes the highlighted entry. Without `multi`, Space and
+    Tab do the same. The entry with the value None ("no --tags", "no --limit") excludes
+    all others. With `pattern`, a typed filter
     is offered as an entry of its own (for `--limit`)."""
     query, cursor, top = '', 0, 0
-    selected = list(preselect)  # values, in the order they were selected
+    selected = []  # values, in the order they were selected
     while True:
         visible = _filter(items, query)
         if pattern and query:
@@ -561,9 +563,11 @@ def pick(
         status = f'{len(visible)}/{len(items)}'
         if multi:
             status += f', {len(selected)} selected'
-        keys = 'Enter: continue   Esc: back   Ctrl-C: quit'
+        keys = 'Esc: back   Ctrl-C: quit'
         if multi:
-            keys = 'Space: select   Ctrl-A: all visible   ' + keys
+            keys = 'Space: select   Ctrl-A: all visible   Enter: continue   ' + keys
+        else:
+            keys = 'Enter/Space: continue   ' + keys
         _addstr(stdscr, height - 2, 0, status, curses.A_DIM)
         _addstr(stdscr, height - 1, 0, keys, curses.A_DIM)
         stdscr.move(query_row, min(2 + len(query), width - 1))
@@ -574,7 +578,7 @@ def pick(
             continue
         if key in ('\x1b',):
             raise Back
-        if key in ('\n', '\r', curses.KEY_ENTER):
+        if key in ('\n', '\r', curses.KEY_ENTER) or (not multi and key in (' ', '\t')):
             if selected:
                 return selected
             if visible:
@@ -797,13 +801,17 @@ def limit_items(discovery, state, history):
     values = sorted(relevant) + group_names
     recent = [v for v in by_recency(values, used) if v in used]
     recent += sorted(v for v in used if v not in values)  # patterns used before
+
+    def desc(value):
+        if value in group_names:
+            return plural(len(groups[value] & relevant), 'host')
+        return ''
+
+    # entries used before are listed once, on top
     items = [Item(None, '(no --limit)', f'all {plural(len(relevant), "host")}')]
-    items += [Item(v, v, '', 'recent') for v in recent]
-    items += [Item(h, h) for h in sorted(relevant)]
-    items += [
-        Item(g, g, plural(len(groups[g] & relevant), 'host'), 'group')
-        for g in group_names
-    ]
+    items += [Item(v, v, desc(v), 'recent') for v in recent]
+    items += [Item(h, h) for h in sorted(relevant) if h not in used]
+    items += [Item(g, g, desc(g), 'group') for g in group_names if g not in used]
     return items, hint
 
 
@@ -898,7 +906,6 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                     context=state['note']
                     or hint + ' - type a glob like 060-t-* to use it as pattern',
                     pattern=True,
-                    preselect=[None],
                 )
                 state['limits'] = [li for li in limits if li is not None]
             else:
