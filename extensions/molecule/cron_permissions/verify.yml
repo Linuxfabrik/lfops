@@ -41,19 +41,29 @@
           - '"Permission denied" in __molecule__cron_nobody_ls_result["stderr"]'
         fail_msg: '{{ __molecule__cron_nobody_ls_result | to_json }}'
 
-    # crontab(1) of an unprivileged user still has to work: it reads /etc/cron.deny, which is
-    # 0600 on the Red Hat family now.
-    - name: 'runuser --user nobody -- crontab -l'
-      ansible.builtin.command: 'runuser --user nobody -- crontab -l'
+    # Only root and the user listed in /etc/cron.allow may use crontab(1). The listed user also
+    # proves that crontab can read /etc/cron.allow: on Debian and Ubuntu, an unreadable file
+    # refuses every user but root.
+    - name: 'runuser --user {{ item }} -- crontab -l'
+      ansible.builtin.command: 'runuser --user {{ item }} -- crontab -l'
       changed_when: false
       failed_when: false
-      register: '__molecule__cron_nobody_crontab_result'
+      register: '__molecule__cron_crontab_result'
+      loop:
+        - 'lfops-cron-allowed'
+        - 'lfops-cron-denied'
+        - 'root'
 
-    - name: 'Assert that crontab answers an unprivileged user with "no crontab", not with a refusal'
+    - name: 'Assert that crontab answers root and the listed user with "no crontab", and refuses the other user'
       ansible.builtin.assert:
         that:
-          - '"no crontab for nobody" in __molecule__cron_nobody_crontab_result["stderr"]'
-        fail_msg: '{{ __molecule__cron_nobody_crontab_result | to_json }}'
+          - '("no crontab for " ~ item["item"]) in item["stderr"]
+            if item["item"] in ["lfops-cron-allowed", "root"] else
+            "not allowed to use this program" in item["stderr"]'
+        fail_msg: '{{ item | to_json }}'
+      loop: '{{ __molecule__cron_crontab_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"] }}'
 
     - name: 'stat /etc/crontab /etc/cron.d'
       ansible.builtin.stat:

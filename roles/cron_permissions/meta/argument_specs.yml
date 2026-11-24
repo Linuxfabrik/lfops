@@ -1,0 +1,24 @@
+argument_specs:
+  main:
+    options:
+
+      cron_permissions__allow_users__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users besides root that may use crontab. Dependent-role injection.'
+
+      cron_permissions__allow_users__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users besides root that may use crontab. Group-level override.'
+
+      cron_permissions__allow_users__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users besides root that may use crontab. Host-level override.'
