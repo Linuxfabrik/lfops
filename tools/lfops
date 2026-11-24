@@ -26,8 +26,10 @@ own:
   plus the groups these hosts are in. A typed glob such as `060-t-*` can be taken over
   as a pattern.
 
-Playbooks, inventories, tags and limits used last are listed first. The history is kept
-in `$XDG_STATE_HOME/lfops/history.json`.
+Playbooks, inventories, tags and limits used last are listed first. Ctrl-R lists the
+complete runs, used last first: choosing one fills in all steps and shows the confirm
+page, Esc goes back through the steps with its values selected. The history is kept in
+`$XDG_STATE_HOME/lfops/history.json`.
 
 Typing filters the list: entries containing the text come first, then the ones
 containing its letters in order (`setbas` finds `setup_basic`), then the ones with the
@@ -35,8 +37,9 @@ text in their description.
 
 Keys: type to filter, Up/Down/PgUp/PgDn to move, Space or Tab to (de)select, Ctrl-A to
 (de)select all visible entries, Enter to continue with the selected entries or, without
-a selection, with the highlighted one, Esc to go back, Ctrl-C to quit. In the playbook
-step, which takes a single entry, Space and Tab continue like Enter.
+a selection, with the highlighted one, Esc to go back (the selection is kept), Ctrl-R
+for a past run, Ctrl-C to quit. In the playbook step, which takes a single entry, Space
+and Tab continue like Enter.
 
 On the confirm page, `c` and `d` switch `--check` and `--diff` on and off, and `f` lists
 further options and takes typed text as an argument for ansible-navigator, for example
@@ -53,6 +56,7 @@ drops it. Either way, it replaces `lfops` in the history.
 """
 
 import argparse
+import copy
 import curses
 import fnmatch
 import glob
@@ -65,9 +69,21 @@ import time
 
 import yaml
 
-__version__ = '2026112409'
+__version__ = '2026112410'
 
 HISTORY_SIZE = 50
+# what the steps fill in, and what the history keeps of a run
+EMPTY_STATE = {
+    'inventories': [],
+    'limits': [],
+    'note': '',
+    'options': [],
+    'playbook': None,
+    # [playbook, tags] as selected, before the switch to a parent playbook
+    'requested': None,
+    'role': None,  # set when running the role as part of another playbook
+    'tags': [],
+}
 # offered by `f` on the confirm page, `c` and `d` switch the first two directly
 OPTIONS = {
     '--check': 'change nothing, report what would change',
@@ -170,7 +186,40 @@ def load_history():
         history = {}
     for key in ('inventories', 'limits', 'options', 'playbooks', 'tags'):
         history.setdefault(key, {})
+    runs = history.get('runs')
+    history['runs'] = (
+        [r for r in runs if _valid_run(r)] if isinstance(runs, list) else []
+    )
     return history
+
+
+def _valid_run(run):
+    """True if a run of the history file has the keys and types the UI expects, so a
+    hand-edited or broken file cannot crash the tool."""
+
+    def strings(value):
+        return isinstance(value, list) and all(isinstance(v, str) for v in value)
+
+    if not isinstance(run, dict) or not isinstance(run.get('time'), (int, float)):
+        return False
+    requested = run.get('requested')
+    return (
+        isinstance(run.get('playbook'), str)
+        and strings(run.get('inventories'))
+        and len(run['inventories']) > 0
+        and all(strings(run.get(k, [])) for k in ('limits', 'options', 'tags'))
+        and isinstance(run.get('note', ''), str)
+        and isinstance(run.get('role'), (str, type(None)))
+        and (
+            requested is None
+            or (
+                isinstance(requested, list)
+                and len(requested) == 2
+                and isinstance(requested[0], str)
+                and strings(requested[1])
+            )
+        )
+    )
 
 
 def _touch(mapping, values, now):
@@ -190,6 +239,10 @@ def save_history(history, state):
     _touch(history['inventories'], inventories, now)
     for inventory in inventories:
         _touch(history['limits'].setdefault(inventory, {}), state['limits'], now)
+    # the same run again moves to the top
+    run = {key: state[key] for key in EMPTY_STATE}
+    runs = [r for r in history['runs'] if {k: r.get(k) for k in EMPTY_STATE} != run]
+    history['runs'] = [{**run, 'time': now}, *runs][:HISTORY_SIZE]
     try:
         os.makedirs(STATE_DIR, exist_ok=True)
         tmp = HISTORY_FILE + '.tmp'
@@ -468,6 +521,10 @@ class Back(Exception):
     pass
 
 
+class Recall(Exception):
+    """Ctrl-R, to choose a past run."""
+
+
 class Item:
     def __init__(self, value, label=None, desc='', marker=''):
         self.value = value
@@ -507,6 +564,12 @@ def _filter(items, query):
     return exact + in_label + fuzzy + in_desc
 
 
+def _known(values, items):
+    """The values that are among the items, to preselect them."""
+    known = {i.value for i in items}
+    return [v for v in values if v in known]
+
+
 def _addstr(win, y, x, text, attr=0):
     height, width = win.getmaxyx()
     if y >= height or x >= width:
@@ -526,6 +589,7 @@ def pick(
     typed=None,
     preselect=(),
     context_first=False,
+    recall=True,
 ):
     """Shows a filterable list. Returns the list of selected values; raises Back on Esc.
 
@@ -536,7 +600,8 @@ def pick(
     Tab do the same. The entry with the value None ("no --tags", "no --limit") excludes
     all others. With `typed`, a (marker, description) pair, the typed filter is offered
     as an entry of its own, for example as pattern for `--limit`; Enter on it adds it to
-    the selection. `preselect` are the values selected at the start."""
+    the selection. `preselect` are the values selected at the start. Ctrl-R raises
+    Recall, unless `recall` is False."""
     query, cursor, top = '', 0, 0
     selected = list(preselect)  # values, in the order they were selected
     while True:
@@ -572,6 +637,8 @@ def pick(
         status = f'{len(visible)}/{len(items)}'
         if multi:
             status += f', {len(selected)} selected'
+        if recall:
+            status += '   Ctrl-R: past runs'
         keys = 'Esc: back   Ctrl-C: quit'
         if multi:
             keys = 'Space: select   Ctrl-A: all visible   Enter: continue   ' + keys
@@ -610,6 +677,8 @@ def pick(
             cursor = len(visible) - 1
         elif key in (curses.KEY_BACKSPACE, '\x7f', '\b'):
             query, cursor = query[:-1], 0
+        elif key == '\x12' and recall:  # Ctrl-R
+            raise Recall
         elif key == '\x15':  # Ctrl-U
             query, cursor = '', 0
         elif multi and key in (' ', '\t') and visible:
@@ -634,8 +703,8 @@ def pick(
 
 def confirm(stdscr, title, command, note=''):
     """Shows the command. Returns 'run' on Enter, the option to switch on `c` and `d`,
-    and 'options' on `f`; raises Back on Esc."""
-    keys = {'c': '--check', 'd': '--diff', 'f': 'options'}
+    'options' on `f` and 'recall' on Ctrl-R; raises Back on Esc."""
+    keys = {'c': '--check', 'd': '--diff', 'f': 'options', '\x12': 'recall'}
     while True:
         height, _ = stdscr.getmaxyx()
         stdscr.erase()
@@ -646,6 +715,7 @@ def confirm(stdscr, title, command, note=''):
             _addstr(
                 stdscr, 3 + row, 0, text + (' \\' if row < len(command) - 1 else '')
             )
+        _addstr(stdscr, height - 2, 0, 'Ctrl-R: past runs', curses.A_DIM)
         _addstr(
             stdscr,
             height - 1,
@@ -701,6 +771,24 @@ def toggle(values, value):
     if value in values:
         return [v for v in values if v != value]
     return [*values, value]
+
+
+def run_items(discovery, history):
+    """The past runs whose playbook and inventories still exist, used last first.
+    The value is the index in history['runs']."""
+    base = os.environ.get('LF_GITLAB', '')
+    items = []
+    for index, run in enumerate(history['runs']):
+        run = {**EMPTY_STATE, **run}
+        if run['playbook'] not in discovery.playbooks or not all(
+            i in discovery.inventories for i in run['inventories']
+        ):
+            continue
+        short = [os.path.relpath(i, base) if base else i for i in run['inventories']]
+        command = build_command({**run, 'inventories': short})
+        when = time.strftime('%Y-%m-%d %H:%M', time.localtime(run.get('time', 0)))
+        items.append(Item(index, f'{when}  {shlex.join(command[2:])}'))
+    return items
 
 
 def option_items(options, history):
@@ -885,16 +973,8 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
     discovery = Discovery(lfops_dir)
     if not discovery.inventories:
         raise SystemExit(f'lfops: no inventory matches {inventory_glob()}')
-    state = {
-        'inventories': [],
-        'limits': [],
-        'note': '',
-        'options': tool_options(extra_args),
-        'playbook': None,
-        'role': None,  # set when running the role as part of another playbook
-        'tags': [],
-    }
-    requested = None  # (playbook, tags) as selected, before a switch to a parent
+    state = {**copy.deepcopy(EMPTY_STATE), 'options': tool_options(extra_args)}
+    given_options = list(state['options'])  # arguments given to the tool itself
     step = 0
 
     def heading(text):
@@ -906,7 +986,7 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                 items = playbook_items(discovery, history)
                 if not items:
                     raise SystemExit('lfops: no playbook has hosts in any inventory')
-                state['playbook'] = pick(
+                playbook = pick(
                     stdscr,
                     heading('Choose a Playbook'),
                     items,
@@ -914,23 +994,30 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                     context=lfops_dir,
                     context_first=True,
                 )[0]
+                # the selections of the later steps belong to the playbook
+                if playbook != state['playbook']:
+                    state = {**copy.deepcopy(EMPTY_STATE), 'options': state['options']}
+                state['playbook'] = playbook
             elif step == 1:
+                items = tag_items(lfops_dir, state['playbook'], history)
                 tags = pick(
                     stdscr,
                     heading(f'Choose tags for linuxfabrik.lfops.{state["playbook"]}'),
-                    tag_items(lfops_dir, state['playbook'], history),
+                    items,
                     multi=True,
+                    preselect=_known(state['tags'], items),
                 )
                 state['tags'] = [t for t in tags if t is not None]
             elif step == 2:
-                if requested:
-                    state['playbook'], state['tags'] = requested
-                    requested, state['note'], state['role'] = None, '', None
+                if state['requested']:
+                    state['playbook'], state['tags'] = state['requested']
+                    state['requested'], state['note'], state['role'] = None, '', None
                 playbook = state['playbook']
                 items = inventory_items(discovery, playbook, history)
                 if not items:
                     raise SystemExit(f'lfops: no inventory has hosts for {playbook}')
                 context = f'inventories with hosts for {playbook}'
+                attempt = state['inventories']
                 while True:
                     inventories = pick(
                         stdscr,
@@ -938,12 +1025,14 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                         items,
                         multi=True,
                         context=context,
+                        preselect=_known(attempt, items),
                     )
                     if all(discovery.hosts(playbook, i) for i in inventories):
                         break
+                    attempt = inventories
                     parent = discovery.parent(playbook, inventories, history)
                     if parent:
-                        requested = (playbook, state['tags'])
+                        state['requested'] = [playbook, state['tags']]
                         state['playbook'], state['role'] = parent, playbook
                         state['tags'] = state['tags'] or [playbook]
                         state['note'] = (
@@ -955,6 +1044,9 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                         f'no playbook runs {playbook} on all selected inventories, '
                         'select fewer'
                     )
+                # limits of other inventories would stay selected unseen
+                if set(inventories) != set(state['inventories']):
+                    state['limits'] = []
                 state['inventories'] = inventories
             elif step == 3:
                 items, hint = limit_items(discovery, state, history)
@@ -966,6 +1058,7 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                     context=state['note']
                     or hint + ' - type a glob like 060-t-* to use it as pattern',
                     typed=('pattern', 'use the typed text as pattern'),
+                    preselect=state['limits'],  # may hold typed patterns
                 )
                 state['limits'] = [li for li in limits if li is not None]
             else:
@@ -975,12 +1068,15 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                 )
                 if action == 'run':
                     return state, command
+                if action == 'recall':
+                    raise Recall
                 if action == 'options':
                     try:
                         options = pick(
                             stdscr,
                             'Choose further options for ansible-navigator',
                             option_items(state['options'], history),
+                            recall=False,
                             multi=True,
                             context='type an argument such as --extra-vars=x=y '
                             'to use it as is, without spaces',
@@ -998,6 +1094,26 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
             if step == 0:
                 return None, None
             step -= 1
+        except Recall:
+            items = run_items(discovery, history)
+            try:
+                index = pick(
+                    stdscr,
+                    'Choose a past run',
+                    items,
+                    multi=False,
+                    context='fills in all steps and shows the confirm page'
+                    if items
+                    else 'no past runs yet',
+                    recall=False,
+                )[0]
+            except Back:
+                continue
+            run = copy.deepcopy({**EMPTY_STATE, **history['runs'][index]})
+            state = {key: run[key] for key in EMPTY_STATE}
+            # arguments given to the tool itself still apply
+            state['options'] += [o for o in given_options if o not in state['options']]
+            step = 4
 
 
 def main():
