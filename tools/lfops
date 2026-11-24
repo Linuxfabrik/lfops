@@ -38,8 +38,10 @@ Keys: type to filter, Up/Down/PgUp/PgDn to move, Space or Tab to (de)select, Ctr
 a selection, with the highlighted one, Esc to go back, Ctrl-C to quit. In the playbook
 step, which takes a single entry, Space and Tab continue like Enter.
 
-Any further argument is passed on to ansible-navigator, for example
-`lfops --check --diff`.
+On the confirm page, `c` and `d` switch `--check` and `--diff` on and off, and `f` lists
+further options and takes typed text as an argument for ansible-navigator, for example
+`--extra-vars=lfops__reboot_now=true`. Any further argument of the tool itself is passed
+on as well, for example `lfops --check --diff`.
 
 To get the command onto the Bash prompt instead of running it right away, and into the
 shell history, load the `lfops` shell function in `~/.bashrc`:
@@ -63,9 +65,15 @@ import time
 
 import yaml
 
-__version__ = '2026112408'
+__version__ = '2026112409'
 
 HISTORY_SIZE = 50
+# offered by `f` on the confirm page, `c` and `d` switch the first two directly
+OPTIONS = {
+    '--check': 'change nothing, report what would change',
+    '--diff': 'show the changes to files and templates',
+    '--verbose': 'more output, repeat for even more',
+}
 STATE_DIR = os.path.join(
     os.environ.get('XDG_STATE_HOME', os.path.expanduser('~/.local/state')),
     'lfops',
@@ -160,7 +168,7 @@ def load_history():
             history = json.load(f)
     except (OSError, ValueError):
         history = {}
-    for key in ('inventories', 'limits', 'playbooks', 'tags'):
+    for key in ('inventories', 'limits', 'options', 'playbooks', 'tags'):
         history.setdefault(key, {})
     return history
 
@@ -173,13 +181,15 @@ def _touch(mapping, values, now):
         del mapping[value]
 
 
-def save_history(history, playbook, tags, inventories, limits):
+def save_history(history, state):
+    playbook, inventories = state['playbook'], state['inventories']
     now = time.time()
+    _touch(history['options'], state['options'], now)
     _touch(history['playbooks'], [playbook], now)
-    _touch(history['tags'].setdefault(playbook, {}), tags, now)
+    _touch(history['tags'].setdefault(playbook, {}), state['tags'], now)
     _touch(history['inventories'], inventories, now)
     for inventory in inventories:
-        _touch(history['limits'].setdefault(inventory, {}), limits, now)
+        _touch(history['limits'].setdefault(inventory, {}), state['limits'], now)
     try:
         os.makedirs(STATE_DIR, exist_ok=True)
         tmp = HISTORY_FILE + '.tmp'
@@ -511,7 +521,8 @@ def pick(
     items,
     multi,
     context='',
-    pattern=False,
+    typed=None,
+    preselect=(),
     context_first=False,
 ):
     """Shows a filterable list. Returns the list of selected values; raises Back on Esc.
@@ -521,19 +532,15 @@ def pick(
 
     Without a selection, Enter takes the highlighted entry. Without `multi`, Space and
     Tab do the same. The entry with the value None ("no --tags", "no --limit") excludes
-    all others. With `pattern`, a typed filter
-    is offered as an entry of its own (for `--limit`)."""
+    all others. With `typed`, a (marker, description) pair, the typed filter is offered
+    as an entry of its own, for example as pattern for `--limit`; Enter on it adds it to
+    the selection. `preselect` are the values selected at the start."""
     query, cursor, top = '', 0, 0
-    selected = []  # values, in the order they were selected
+    selected = list(preselect)  # values, in the order they were selected
     while True:
         visible = _filter(items, query)
-        if pattern and query:
-            visible.insert(
-                0,
-                Item(
-                    query, f'{query}', 'use the typed text as pattern', marker='pattern'
-                ),
-            )
+        if typed and query:
+            visible.insert(0, Item(query, query, typed[1], marker=typed[0]))
         height, width = stdscr.getmaxyx()
         header = [(title, curses.A_BOLD)]
         if context:
@@ -579,6 +586,9 @@ def pick(
         if key in ('\x1b',):
             raise Back
         if key in ('\n', '\r', curses.KEY_ENTER) or (not multi and key in (' ', '\t')):
+            # typed text is meant to be used, even next to a selection
+            if typed and query and cursor == 0 and query not in selected:
+                selected = [v for v in selected if v is not None] + [query]
             if selected:
                 return selected
             if visible:
@@ -621,6 +631,9 @@ def pick(
 
 
 def confirm(stdscr, title, command, note=''):
+    """Shows the command. Returns 'run' on Enter, the option to switch on `c` and `d`,
+    and 'options' on `f`; raises Back on Esc."""
+    keys = {'c': '--check', 'd': '--diff', 'f': 'options'}
     while True:
         height, _ = stdscr.getmaxyx()
         stdscr.erase()
@@ -632,27 +645,52 @@ def confirm(stdscr, title, command, note=''):
                 stdscr, 3 + row, 0, text + (' \\' if row < len(command) - 1 else '')
             )
         _addstr(
-            stdscr, height - 1, 0, 'Enter: run   Esc: back   Ctrl-C: quit', curses.A_DIM
+            stdscr,
+            height - 1,
+            0,
+            'c: --check   d: --diff   f: options   '
+            'Enter: run   Esc: back   Ctrl-C: quit',
+            curses.A_DIM,
         )
         stdscr.refresh()
         key = stdscr.get_wch()
         if key in ('\n', '\r', curses.KEY_ENTER):
-            return
+            return 'run'
         if key == '\x1b':
             raise Back
+        if key in keys:
+            return keys[key]
 
 
 # --- steps -----------------------------------------------------------------------------
 
 
-def build_command(state, extra_args):
+def build_command(state):
     command = ['ansible-navigator', 'run', f'linuxfabrik.lfops.{state["playbook"]}']
     command += [f'--inventory={inventory}' for inventory in state['inventories']]
     if state['tags']:
         command.append(f'--tags={",".join(state["tags"])}')
     if state['limits']:
         command.append(f'--limit={",".join(state["limits"])}')
-    return command + extra_args
+    return command + state['options']
+
+
+def toggle(values, value):
+    """`values` with `value` removed if it is in there, else appended."""
+    if value in values:
+        return [v for v in values if v != value]
+    return [*values, value]
+
+
+def option_items(options, history):
+    """The known options, the ones used before and the selected ones, used last first."""
+    used = history['options']
+    values = list(dict.fromkeys([*OPTIONS, *options, *used]))
+    items = [Item(None, '(no further options)', 'run without options')]
+    return items + [
+        Item(v, v, OPTIONS.get(v, ''), 'recent' if v in used else '')
+        for v in by_recency(values, used)
+    ]
 
 
 def tag_items(lfops_dir, playbook, history):
@@ -830,6 +868,7 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
         'inventories': [],
         'limits': [],
         'note': '',
+        'options': list(extra_args),
         'playbook': None,
         'role': None,  # set when running the role as part of another playbook
         'tags': [],
@@ -905,13 +944,34 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                     multi=True,
                     context=state['note']
                     or hint + ' - type a glob like 060-t-* to use it as pattern',
-                    pattern=True,
+                    typed=('pattern', 'use the typed text as pattern'),
                 )
                 state['limits'] = [li for li in limits if li is not None]
             else:
-                command = build_command(state, extra_args)
-                confirm(stdscr, heading('Run this command?'), command, state['note'])
-                return state, command
+                command = build_command(state)
+                action = confirm(
+                    stdscr, heading('Run this command?'), command, state['note']
+                )
+                if action == 'run':
+                    return state, command
+                if action == 'options':
+                    try:
+                        options = pick(
+                            stdscr,
+                            'Choose further options for ansible-navigator',
+                            option_items(state['options'], history),
+                            multi=True,
+                            context='type an argument such as --extra-vars=x=y '
+                            'to use it as is',
+                            typed=('argument', 'pass the typed text on as is'),
+                            preselect=state['options'],
+                        )
+                        state['options'] = [o for o in options if o is not None]
+                    except Back:
+                        pass
+                else:
+                    state['options'] = toggle(state['options'], action)
+                continue
             step += 1
         except Back:
             if step == 0:
@@ -971,9 +1031,7 @@ def main():
     if not command:
         sys.exit(0)
 
-    save_history(
-        history, state['playbook'], state['tags'], state['inventories'], state['limits']
-    )
+    save_history(history, state)
     print(shlex.join(command), flush=True)
     if args.print_only:
         return
