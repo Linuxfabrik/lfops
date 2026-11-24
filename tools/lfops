@@ -41,8 +41,6 @@ import yaml
 __version__ = '2026112413'
 
 HISTORY_SIZE = 50
-# the confirm page lists this many of the targeted hosts by name
-HOST_LIST_MAX = 10
 # what the steps fill in, and what the history keeps of a run
 EMPTY_STATE = {
     'inventories': [],
@@ -55,7 +53,7 @@ EMPTY_STATE = {
     'role': None,  # set when running the role as part of another playbook
     'tags': [],
 }
-# offered by `f` on the confirm page, `c` and `d` switch the first two directly
+# offered by `o` on the confirm page, `c` and `d` switch the first two directly
 OPTIONS = {
     '--check': 'change nothing, report what would change',
     '--diff': 'show the changes to files and templates',
@@ -745,9 +743,9 @@ def _addstr(win, y, x, text, attr=0):
         pass
 
 
-def _addruns(win, y, runs, attr=0):
-    """Draws (text, attr) runs side by side on line `y`, `attr` added to each."""
-    x = 0
+def _addruns(win, y, runs, attr=0, x=0):
+    """Draws (text, attr) runs side by side on line `y` from column `x`, `attr` added
+    to each."""
     for text, run_attr in runs:
         _addstr(win, y, x, text, run_attr | attr)
         x += len(text)
@@ -756,13 +754,16 @@ def _addruns(win, y, runs, attr=0):
 # set by init_colors(), in the colors of the dashboard callback
 ACCENT = curses.A_BOLD  # what the current page sets in the command
 ALERT = curses.A_REVERSE  # a command that runs on no host
+CHECK = curses.A_BOLD  # the confirm page: a run with --check
 LABEL = 0  # markers such as "recent" and "group"
+LIVE = curses.A_BOLD | curses.A_REVERSE  # the confirm page: a run without --check
+WARN = curses.A_BOLD  # the confirm page: a selection worth a second look
 RULE = '─' if 'utf' in locale.getpreferredencoding(False).lower() else '-'
 STEPS = ('playbook', 'tags', 'inventories', 'limit', 'confirm')
 
 
 def init_colors():
-    global ACCENT, ALERT, LABEL
+    global ACCENT, ALERT, CHECK, LABEL, LIVE, WARN
     try:
         curses.use_default_colors()
         background = -1  # keep the colors of the terminal
@@ -774,11 +775,15 @@ def init_colors():
         curses.init_pair(1, curses.COLOR_GREEN, background)
         curses.init_pair(2, curses.COLOR_BLUE, background)
         curses.init_pair(3, curses.COLOR_RED, background)
+        curses.init_pair(4, curses.COLOR_YELLOW, background)
     except curses.error:
         return
     ACCENT = curses.color_pair(1) | curses.A_BOLD
     LABEL = curses.color_pair(2)
     ALERT = curses.color_pair(3) | curses.A_BOLD
+    CHECK = ACCENT
+    LIVE = ALERT | curses.A_REVERSE
+    WARN = curses.color_pair(4) | curses.A_BOLD
 
 
 def display_arg(arg):
@@ -818,8 +823,8 @@ class Header:
 
     `preview` turns the values Enter would take into the state they lead to, `part` is
     the EMPTY_STATE key the page sets, `hosts` returns the right side for a state.
-    The command takes up to 1/`room` of the lines. With `top`, it follows the upper
-    rule instead, for a page whose content is the command."""
+    The command takes up to 1/`room` of the lines. Without `command`, the header leaves
+    it out, for a page that shows the command itself."""
 
     def __init__(
         self,
@@ -830,7 +835,7 @@ class Header:
         part=None,
         hosts=None,
         room=3,
-        top=False,
+        command=True,
     ):
         self.hosts = hosts
         self.origin = origin
@@ -838,8 +843,8 @@ class Header:
         self.preview = preview
         self.room = room
         self.step = step
+        self.command = command
         self.title = title
-        self.top = top
 
     def draw(self, win, values=()):
         """Draws the frame. Returns the first and the last line free between the
@@ -860,16 +865,11 @@ class Header:
             top += 1
         _addstr(win, top, 0, RULE * width, curses.A_DIM)
         lines = []
-        if state:
+        if state and self.command:
             lines = command_lines(command_parts(state), self.part, width)
             room = max(1, height // self.room)
             if len(lines) > room:
                 lines = [*lines[: room - 1], [('    ...', curses.A_DIM)]]
-        if self.top:
-            for row, line in enumerate(lines, start=top + 1):
-                _addruns(win, row, line)
-            top += len(lines) + 1  # and a blank line
-            lines = []
         bottom = height - 3 - len(lines)  # the lower rule
         _addstr(win, bottom, 0, RULE * width, curses.A_DIM)
         for row, line in enumerate(lines, start=bottom + 1):
@@ -1007,67 +1007,313 @@ def pick(
             query, cursor = query + key, 0
 
 
-def target_lines(targets):
-    """The lines about the targeted hosts on the confirm page, as (text, attr)."""
-    if targets is None:
-        return [
-            ('Hosts targeted: unknown', curses.A_BOLD),
-            (
-                'the limit uses a pattern this tool does not resolve '
-                '(~regex, @file, [subscript], host:port, IPv6, ::)',
-                curses.A_DIM,
-            ),
-        ]
-    if not targets:
-        return [
-            ('0 hosts targeted, Ansible would run nothing', ALERT),
-            ('the limit matches none of the hosts of the playbook', curses.A_DIM),
-        ]
-    hosts = sorted(targets)
-    lines = [(f'Hosts targeted (estimate): {len(hosts)}', curses.A_BOLD)]
-    lines += [(f'  {host}', 0) for host in hosts[:HOST_LIST_MAX]]
-    if len(hosts) > HOST_LIST_MAX:
-        lines.append(('  ...', curses.A_DIM))
+def _addch(win, y, x, char):
+    try:
+        win.addch(y, x, char)
+    except curses.error:
+        pass  # the bottom right cell of a window, the character is drawn anyway
+
+
+def draw_box(win, y, x, size, box):
+    """Draws a box with a frame. `size` is (height, width), `box` a dict with `title`,
+    `lines` and optionally `title_attr` and a `footer` (text, attr) on the bottom frame.
+    A line is either a list of (text, attr) runs or a (text, attr, right text, right
+    attr) tuple, the right text aligned to the right edge."""
+    height, width = size
+    if height < 2 or width < 4:
+        return
+    bottom, right = y + height - 1, x + width - 1
+    win.hline(y, x + 1, curses.ACS_HLINE, width - 2)
+    win.hline(bottom, x + 1, curses.ACS_HLINE, width - 2)
+    if height > 2:
+        win.vline(y + 1, x, curses.ACS_VLINE, height - 2)
+        win.vline(y + 1, right, curses.ACS_VLINE, height - 2)
+    _addch(win, y, x, curses.ACS_ULCORNER)
+    _addch(win, y, right, curses.ACS_URCORNER)
+    _addch(win, bottom, x, curses.ACS_LLCORNER)
+    _addch(win, bottom, right, curses.ACS_LRCORNER)
+    win.addnstr(
+        y, x + 2, f' {box["title"]} ', max(0, width - 4), box.get('title_attr', 0)
+    )
+    if box.get('footer'):
+        text, attr = box['footer']
+        text = f' {text} '[: max(0, width - 4)]
+        win.addnstr(bottom, right - 1 - len(text), text, len(text), attr)
+    inner = width - 4
+    for row, line in enumerate(box['lines'][: height - 2], start=y + 1):
+        if isinstance(line, list):
+            _addruns(win, row, line, x=x + 2)
+            continue
+        text, attr, right_text, right_attr = line
+        room = inner
+        if right_text and len(right_text) < inner:
+            room = inner - len(right_text) - 1
+            win.addnstr(row, right - 1 - len(right_text), right_text, inner, right_attr)
+        if len(text) > room:
+            text = text[: max(0, room - 3)] + '...'
+        win.addnstr(row, x + 2, text, max(0, room), attr)
+
+
+def wrap_runs(lines, width):
+    """Lines of (text, attr) runs, a line longer than `width` wrapped onto further
+    lines instead of cut: the command is the authoritative part of the confirm page."""
+    indent = '        '
+
+    def wrap(line, room):
+        result, current, used = [], [], 0
+        for text, attr in line:
+            while used + len(text) > room:
+                take = max(1, room - used)
+                current.append((text[:take], attr))
+                result.append(current)
+                current, used = [(indent, 0)], len(indent)
+                text = text[take:]
+            current.append((text, attr))
+            used += len(text)
+        return [*result, current]
+
+    result = []
+    for line in lines:
+        # the ` \` at the end goes with the last characters, not on a line of its own
+        tail = line[-1:] if line and line[-1][0] == ' \\' else []
+        wrapped = wrap(line[: len(line) - len(tail)], width)
+        if tail and sum(len(t) for t, _ in wrapped[-1]) + len(tail[0][0]) > width:
+            wrapped[-1:] = wrap(wrapped[-1], width - len(tail[0][0]))
+        result += [*wrapped[:-1], wrapped[-1] + tail]
+    return result
+
+
+def host_columns(hosts, width, rows):
+    """`hosts` in columns across `width`, at most `rows` lines. If they do not fit,
+    the last line says how many are left out."""
+    if not hosts or rows < 1:
+        return []
+    column = max(len(h) for h in hosts) + 3
+    per_line = max(1, width // column)
+    needed = -(-len(hosts) // per_line)
+    shown = hosts if needed <= rows else hosts[: (rows - 1) * per_line]
+    lines = [
+        (''.join(h.ljust(column) for h in shown[i : i + per_line]), 0, '', 0)
+        for i in range(0, len(shown), per_line)
+    ]
+    if len(shown) < len(hosts):
+        lines.append((f'... and {len(hosts) - len(shown)} more', curses.A_DIM, '', 0))
     return lines
 
 
-def confirm(stdscr, header, note='', targets=None):
-    """Shows the Header `header` with the command, and the hosts it targets (a set,
-    None if unknown). Returns 'run' on Enter, the option to switch on `c` and `d`,
-    'options' on `f` and 'recall' on Ctrl-R; raises Back on Esc."""
-    keys = {'c': '--check', 'd': '--diff', 'f': 'options', '\x12': 'recall'}
-    target_rows = target_lines(targets)
+def inventory_label(inventory):
+    base = os.environ.get('LF_GITLAB', '')
+    return os.path.relpath(inventory, base) if base else inventory
+
+
+def unmatched(entry, groups, relevant):
+    """The patterns of one entry of the limit that match none of the relevant hosts,
+    for example a typo. With or without `&` and `!`, a pattern that matches nothing
+    does nothing. Patterns this tool does not resolve are not reported."""
+    result = []
+    for pattern in split_limit(entry) or []:
+        matched = resolve_limit(pattern.lstrip('&!'), groups)
+        if matched is not None and not matched & relevant:
+            result.append(pattern)
+    return result
+
+
+def summary(discovery, state):
+    """The boxes of the confirm page above the command, as dicts for draw_box()."""
+
+    def line(text, attr=0, right='', right_attr=0):
+        return (text, attr, right, right_attr)
+
+    relevant = relevant_hosts(discovery, state)
+    groups = discovery.groups(state['inventories'])
+    playbook = [line(f'linuxfabrik.lfops.{state["playbook"]}')]
+    if state['role']:
+        playbook.append(
+            line(f'selected {state["role"]}, runs as part of {state["playbook"]}', WARN)
+        )
+    inventories = []
+    for inventory in state['inventories']:
+        count = len(relevant_hosts(discovery, {**state, 'inventories': [inventory]}))
+        inventories.append(
+            line(
+                inventory_label(inventory),
+                right=plural(count, 'host'),
+                right_attr=0 if count else WARN,
+            )
+        )
+    limits = []
+    for entry in state['limits']:
+        missing = unmatched(entry, groups, relevant)
+        # name the pattern if the entry holds several, like `a,b`
+        hint = 'matches no host' if missing == [entry] else ''
+        if missing and not hint:
+            hint = f'{", ".join(missing)} matches no host'
+        limits.append(line(entry, 0, hint, WARN))
+    limits = limits or [line(f'(none, all {plural(len(relevant), "host")})', WARN)]
+    tags = [line(tag) for tag in state['tags']] or [
+        line('(none, whole playbook)', curses.A_DIM)
+    ]
+    options = [line(option) for option in state['options']] or [
+        line('(none)', curses.A_DIM)
+    ]
+
+    targets = targeted_hosts(discovery, state)
+    if targets is None:
+        hosts = {
+            'title': 'Hosts targeted: unknown',
+            'title_attr': WARN,
+            'notes': [
+                line(
+                    'the limit uses a pattern this tool does not resolve', curses.A_DIM
+                ),
+                line('(~regex, @file, [subscript], host:port, IPv6, ::)', curses.A_DIM),
+            ],
+        }
+    elif not targets:
+        hosts = {
+            'title': '0 hosts targeted, Ansible would run nothing',
+            'title_attr': ALERT,
+            'notes': [
+                line(
+                    'the limit matches none of the hosts of the playbook', curses.A_DIM
+                )
+            ],
+        }
+    else:
+        hosts = {
+            'title': f'Hosts targeted (estimate): {len(targets)}',
+            'title_attr': curses.A_BOLD,
+        }
+    hosts['hosts'] = sorted(targets or [])
+
+    def box(title, lines):
+        return {'title': title, 'title_attr': curses.A_BOLD, 'lines': lines}
+
+    return {
+        'hosts': hosts,
+        'inventories': box('Inventories', inventories),
+        'limit': box('Limit', limits),
+        'options': box('Options', options),
+        'playbook': box('Playbook', playbook),
+        'tags': box('Tags', tags),
+    }
+
+
+# side by side boxes need this many columns, below they are stacked
+SIDE_BY_SIDE_MIN_WIDTH = 72
+
+
+def confirm(stdscr, header, state, boxes):
+    """Shows the Header `header`, the boxes of summary() and, right below them, the
+    command of `state`. Returns 'run' on Enter, the option to switch on `c` and `d`,
+    'options' on `o` and 'recall' on Ctrl-R; raises Back on Esc.
+
+    The command is never cut. On a short terminal, it sticks to the bottom, the host
+    list shrinks first, after that the boxes above the command scroll."""
+    keys = {'c': '--check', 'd': '--diff', 'o': 'options', '\x12': 'recall'}
+    scroll = 0
     while True:
-        height, _ = stdscr.getmaxyx()
+        height, width = stdscr.getmaxyx()
+        width -= 1  # like the rules of the header
         stdscr.erase()
         start, last = header.draw(stdscr)
-        if note:
-            _addstr(stdscr, start, 0, note, curses.A_DIM)
-            start += 1
-        # on a short terminal the host list is cut, so that the line with the number
-        # of hosts stays visible
-        rows = target_rows[: max(1, last + 1 - start)]
-        if 1 < len(rows) < len(target_rows):
-            rows[-1] = ('  ...', curses.A_DIM)
-        for row, (text, attr) in enumerate(rows, start=start):
-            _addstr(stdscr, row, 0, text, attr)
-        _addstr(stdscr, height - 2, 0, 'Ctrl-R: past runs', curses.A_DIM)
+        command = wrap_runs(
+            command_lines(command_parts(state), 'options', width - 4), width - 4
+        )
+        # the lowest line the command box can start on and still fit completely
+        lowest_top = last + 1 - (len(command) + 2)
+        if lowest_top < start or width < 20:
+            stdscr.erase()
+            _addstr(stdscr, 0, 0, 'The terminal is too small to show the command.')
+            _addstr(stdscr, 1, 0, 'Enlarge it, or Esc: back   Ctrl-C: quit')
+            stdscr.refresh()
+            if stdscr.get_wch() == '\x1b':
+                raise Back
+            continue
+
+        rows = [[boxes['playbook']]]
+        pairs = [
+            [boxes['inventories'], boxes['limit']],
+            [boxes['tags'], boxes['options']],
+        ]
+        for pair in pairs:
+            rows += [pair] if width >= SIDE_BY_SIDE_MIN_WIDTH else [[b] for b in pair]
+        fixed = sum(max(len(b['lines']) for b in row) + 2 for row in rows)
+        middle = lowest_top - start  # lines the boxes can take without scrolling
+        hosts = boxes['hosts']
+        # once the boxes scroll anyway, a shorter host list gains nothing
+        host_rows = middle - fixed - 2
+        host_lines = hosts.get('notes', []) or host_columns(
+            hosts['hosts'],
+            width - 4,
+            host_rows if host_rows > 0 else len(hosts['hosts']),
+        )
+        total = fixed + len(host_lines) + 2
+        scroll = max(0, min(scroll, total - middle))
+        command_top = min(start + total, lowest_top)
+
+        pad = curses.newpad(total, width + 1)
+        y = 0
+        for row in rows:
+            box_height = max(len(b['lines']) for b in row) + 2
+            x = 0
+            for index, box in enumerate(row):
+                box_width = width // len(row)
+                if index == len(row) - 1:
+                    box_width = width - x
+                draw_box(pad, y, x, (box_height, box_width), box)
+                x += box_width
+            y += box_height
+        draw_box(
+            pad, y, 0, (len(host_lines) + 2, width), {**hosts, 'lines': host_lines}
+        )
+        draw_box(
+            stdscr,
+            command_top,
+            0,
+            (len(command) + 2, width),
+            {
+                'title': 'Command',
+                'title_attr': curses.A_BOLD,
+                'lines': command,
+                # on the command box, so it is always visible
+                'footer': ('CHECK MODE', CHECK)
+                if '--check' in state['options']
+                else ('LIVE RUN', LIVE),
+            },
+        )
+        hint = 'Ctrl-R: past runs'
+        if total > middle:
+            hint += '   Up/Down/PgUp/PgDn: scroll'
+        _addstr(stdscr, height - 2, 0, hint, curses.A_DIM)
         _addstr(
             stdscr,
             height - 1,
             0,
-            'c: --check   d: --diff   f: options   '
+            'c: --check   d: --diff   o: options   '
             'Enter: run   Esc: back   Ctrl-C: quit',
             curses.A_DIM,
         )
-        stdscr.refresh()
+        curses.curs_set(0)
+        stdscr.noutrefresh()
+        if middle > 0:
+            shown = min(middle, total - scroll)
+            pad.noutrefresh(scroll, 0, start, 0, start + shown - 1, width)
+        curses.doupdate()
         key = stdscr.get_wch()
+        curses.curs_set(1)
         if key in ('\n', '\r', curses.KEY_ENTER):
             return 'run'
         if key == '\x1b':
             raise Back
         if key in keys:
             return keys[key]
+        scroll += {
+            curses.KEY_DOWN: 1,
+            curses.KEY_NPAGE: max(1, middle),
+            curses.KEY_PPAGE: -max(1, middle),
+            curses.KEY_UP: -1,
+        }.get(key, 0)
 
 
 # --- steps -----------------------------------------------------------------------------
@@ -1092,14 +1338,14 @@ def build_command(state):
     return [arg for arg, _ in command_parts(state)]
 
 
-# short options of ansible-navigator run whose long form `c`, `d` and `f` know
+# short options of ansible-navigator run whose long form `c`, `d` and `o` know
 OPTION_ALIASES = {'-C': '--check', '-D': '--diff', '-e': '--extra-vars'}
 
 
 def tool_options(args):
     """The arguments given to the tool itself, one entry per option: `-C` becomes
     `--check`, `--extra-vars x=y` and `-e x=y` become `--extra-vars=x=y`, so `c`, `d`
-    and `f` switch them as a whole."""
+    and `o` switch them as a whole."""
     options = []
     for arg in args:
         last = options[-1] if options else ''
@@ -1268,10 +1514,9 @@ def playbook_items(discovery, history):
 
 
 def inventory_items(discovery, playbook, history):
-    base = os.environ.get('LF_GITLAB', '')
     runnable, other = [], []
     for inventory in by_recency(list(discovery.inventories), history['inventories']):
-        label = os.path.relpath(inventory, base) if base else inventory
+        label = inventory_label(inventory)
         hosts = discovery.hosts(playbook, [inventory])
         if hosts:
             marker = 'recent' if inventory in history['inventories'] else ''
@@ -1373,8 +1618,8 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
         targets = targeted_hosts(discovery, preview)
         return 'hosts unknown' if targets is None else plural(len(targets), 'host')
 
-    def header(title, part=None, preview=None, room=3, top=False):
-        return Header(title, origin, step, preview, part, hosts, room, top)
+    def header(title, part=None, preview=None, room=3, command=True):
+        return Header(title, origin, step, preview, part, hosts, room, command)
 
     def with_playbook(values):
         if not values or values[0] == state['playbook']:
@@ -1472,11 +1717,10 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
                         'Run this command?',
                         'options',
                         lambda _, run=state: run,
-                        room=2,
-                        top=True,
+                        command=False,
                     ),
-                    state['note'],
-                    targeted_hosts(discovery, state),
+                    state,
+                    summary(discovery, state),
                 )
                 if action == 'run':
                     return state, build_command(state)
