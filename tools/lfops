@@ -8,59 +8,21 @@
 
 """Terminal UI that assembles and starts an `ansible-navigator run` of an LFOps playbook.
 
-Steps: playbook > tags > inventories > limit > confirm. The tool finds everything on its
-own:
+Steps: playbook > tags > inventories > limit > confirm. Playbooks, tags, inventories and
+hosts are read from the LFOps checkout and the inventories, the entries used last are
+listed first. Further arguments are passed on to ansible-navigator, for example
+`lfops --check --diff`.
 
-* Playbooks: `playbooks/*.yml` of the LFOps checkout that ansible-navigator mounts into
-  the execution environment (`$LFOPS_DIR`, else `$LF_GITHUB/lfops`) that have hosts in
-  at least one inventory.
-* Tags: the roles a playbook runs (including imported playbooks, `import_role`,
-  `include_role` and role dependencies), and for each role the tags documented in the
-  "Tags" section of its README.
-* Inventories: the ones of `$LF_GITLAB/*/ans/hosts.yml` (or of the glob in
-  `$LFOPS_INVENTORIES`) with hosts in the groups the playbook targets (`hosts:` of its
-  plays). An inventory without such hosts is offered if another playbook runs the role
-  there, with the role as tag. Selecting it switches to that playbook, for example
-  from `monitoring_plugins` to `setup_basic --tags=monitoring_plugins`.
-* Limit: the hosts of the selected inventories in the groups the playbook targets,
-  plus the groups these hosts are in. A typed glob such as `060-t-*` can be taken over
-  as a pattern.
-* Confirm: the command, the number of hosts it targets and the first 10 of them.
-  The limit is resolved like Ansible does, for host and group names, globs, `&` and
-  `!`. Other patterns (`~regex`, `@file`, `group[0:2]`, `host:port`, IPv6 addresses)
-  show the number as unknown. It is an estimate: `when` conditions other than the skip
-  variables of a role, `group_by` and `add_host` are not evaluated.
+With `eval "$(command lfops --shell-init bash)"` in `~/.bashrc` (or `zsh` in
+`~/.zshrc`), the command lands on the shell prompt and in the history instead of running
+right away.
 
-Playbooks, inventories, tags and limits used last are listed first. Ctrl-R lists the
-complete runs, used last first: choosing one fills in all steps and shows the confirm
-page, Esc goes back through the steps with its values selected. The history is kept in
-`$XDG_STATE_HOME/lfops/history.json`.
-
-Typing filters the list: entries containing the text come first, then the ones
-containing its letters in order (`setbas` finds `setup_basic`), then the ones with the
-text in their description.
-
-Keys: type to filter, Up/Down/PgUp/PgDn to move, Space or Tab to (de)select, Ctrl-A to
-(de)select all visible entries, Enter to continue with the selected entries or, without
-a selection, with the highlighted one, Esc to go back (the selection is kept), Ctrl-R
-for a past run, Ctrl-C to quit. In the playbook step, which takes a single entry, Space
-and Tab continue like Enter.
-
-On the confirm page, `c` and `d` switch `--check` and `--diff` on and off, and `f` lists
-further options and takes typed text as an argument for ansible-navigator, for example
-`--extra-vars=lfops__reboot_now=true`. Any further argument of the tool itself is passed
-on as well, for example `lfops --check --diff`.
-
-To get the command onto the Bash prompt instead of running it right away, and into the
-shell history, load the `lfops` shell function in `~/.bashrc`:
-
-    eval "$(command lfops --shell-init)"
-
-The function puts the assembled command on an editable line: Enter runs it, Ctrl-C
-drops it. Either way, it replaces `lfops` in the history.
+Installation, environment variables, keys and the shell integration: see
+tools/README.md.
 """
 
 import argparse
+import contextlib
 import copy
 import curses
 import fnmatch
@@ -74,7 +36,7 @@ import time
 
 import yaml
 
-__version__ = '2026112411'
+__version__ = '2026112412'
 
 HISTORY_SIZE = 50
 # the confirm page lists this many of the targeted hosts by name
@@ -103,11 +65,17 @@ STATE_DIR = os.path.join(
 )
 HISTORY_FILE = os.path.join(STATE_DIR, 'history.json')
 
-# `history -s` replaces the history entry of the `lfops` call itself. `${PS1@P}`
-# expands the prompt (bash >= 4.4), `read -e` keeps the readline key bindings.
-SHELL_INIT = r"""lfops() {
+# Shell functions printed by `--shell-init`, `@NAME@` replaced by the name the tool
+# is called by. `function NAME {` instead of `NAME() {`, because an alias of the same
+# name would be expanded in the latter (bash: syntax error, zsh: "defining function
+# based on alias"). Verified with bash 5.1.8 and zsh 5.8 on Rocky 9, bash 5.3.9 and
+# zsh 5.9 on Fedora 44.
+SHELL_INIT = {
+    # `history -s` replaces the history entry of the call itself. `${PS1@P}` expands the
+    # prompt (bash >= 4.4), `read -e` keeps the readline key bindings.
+    'bash': r"""function @NAME@ {
     local cmd line
-    cmd="$(command lfops --print-only "$@")" || return
+    cmd="$(command @NAME@ --print-only "$@")" || return
     [ -n "$cmd" ] || return 0
     history -s "$cmd"
     read -e -r -i "$cmd" -p "${PS1@P}" line || { echo; return 130; }
@@ -115,7 +83,31 @@ SHELL_INIT = r"""lfops() {
     [ "$line" = "$cmd" ] || history -s "$line"
     eval "$line"
 }
-"""
+""",
+    # `print -z` pushes the command onto the line editor buffer: it shows up editable
+    # on the next prompt, Enter runs it and adds it to the history, Ctrl-C drops it.
+    # A zshaddhistory hook returning 1 keeps the call itself out of the history; it
+    # lingers until the next line runs, so the command replaces it as in bash.
+    # `emulate -L zsh` makes the functions independent of the options of the user (such
+    # as `emulate sh` or `emulate ksh`), and no parentheses in the hook keep it parsable
+    # with SH_GLOB set at eval time. `$1` is the line including the trailing newline.
+    'zsh': r"""function @NAME@ {
+    emulate -L zsh
+    local cmd
+    cmd="$(command @NAME@ --print-only "$@")" || return
+    [[ -n $cmd ]] || return 0
+    print -r -z -- "$cmd"
+}
+function _@NAME@_zshaddhistory {
+    emulate -L zsh
+    [[ ${1%%[[:space:]]*} != @NAME@ ]]
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook zshaddhistory _@NAME@_zshaddhistory
+""",
+}
+# a name that is safe as a shell function name and as a zsh pattern
+FUNCTION_NAME = re.compile(r'^[A-Za-z_][A-Za-z0-9_-]*$')
 
 ROLE_PREFIX = 'linuxfabrik.lfops.'
 IMPORT_PLAYBOOK_KEYS = ('ansible.builtin.import_playbook', 'import_playbook')
@@ -168,7 +160,7 @@ def find_lfops_dir():
 
 def inventory_glob():
     default = os.path.join(os.environ.get('LF_GITLAB', '.'), '*', 'ans', 'hosts.yml')
-    return os.environ.get('LFOPS_INVENTORIES', default)
+    return os.path.expanduser(os.environ.get('LFOPS_INVENTORIES', default))
 
 
 def plural(count, word):
@@ -1309,6 +1301,18 @@ def run_ui(stdscr, lfops_dir, history, extra_args):
             step = 4
 
 
+def print_shell_init(shell):
+    """Prints the shell function for `shell`. It is named after the tool, so a link
+    `lfo` to it defines `lfo`."""
+    name = os.path.basename(sys.argv[0])
+    if not FUNCTION_NAME.match(name):
+        sys.exit(
+            f'lfops: "{name}" is not usable as a shell function name, call the tool '
+            'by a name of letters, digits, "_" and "-"'
+        )
+    print(SHELL_INIT[shell].replace('@NAME@', name), end='')
+
+
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__.split('\n\n', 1)[0],
@@ -1322,15 +1326,24 @@ def main():
     )
     parser.add_argument(
         '--shell-init',
-        action='store_true',
-        help='Print the Bash function that puts the command on the prompt and into '
-        'the history, for `eval "$(command lfops --shell-init)"` in ~/.bashrc.',
+        choices=sorted(SHELL_INIT),
+        metavar='SHELL',
+        help='Print the shell function (bash or zsh) that '
+        'puts the command on the prompt and into the history, for '
+        '`eval "$(command lfops --shell-init bash)"` in ~/.bashrc or '
+        '`eval "$(command lfops --shell-init zsh)"` in ~/.zshrc. The function is '
+        'named after the tool, so a link `lfo` defines `lfo`.',
     )
     parser.add_argument('--version', action='version', version=__version__)
-    args, extra_args = parser.parse_known_args()
-    if args.shell_init:
-        print(SHELL_INIT, end='')
-        return
+    # With `--print-only`, standard output is the command line: the shell function puts
+    # it on the prompt. Help, version and shell function go to stderr there, so they
+    # show up on the terminal and the function gets nothing.
+    out = sys.stderr if '--print-only' in sys.argv[1:] else sys.stdout
+    with contextlib.redirect_stdout(out):
+        args, extra_args = parser.parse_known_args()
+        if args.shell_init:
+            print_shell_init(args.shell_init)
+            return
 
     lfops_dir = find_lfops_dir()
     if not lfops_dir:
