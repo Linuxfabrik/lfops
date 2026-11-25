@@ -1,18 +1,20 @@
 # {{ ansible_managed }}
-# 2026111301
+# 2026112501
 {# Deviates from epel-release, which asks for `epel-$releasever${stream:+s}`: Rocky and
    RHEL set $releasever to 10, and for `epel-10` MirrorManager hands out the EPEL of the
    newest RHEL minor release, whose packages may need packages the host does not have
-   yet. Rocky also sets $stream and would end up on `epel-10s`, which is built for
-   CentOS Stream. $releasever_minor comes from the `system-release(releasever_minor)`
-   provide of the release package (libdnf/dnf-context.cpp). CentOS Stream has none, so
+   yet. Rocky and AlmaLinux also set $stream and would end up on `epel-10s`, which is
+   built for CentOS Stream. $releasever_minor comes from the
+   `system-release(releasever_minor)` provide of the release package
+   (libdnf/dnf-context.cpp). CentOS Stream has none, so
    `${releasever_minor:+.}${releasever_minor:-s}` gives `.2` on Rocky 10.2 and `s` on
    CentOS Stream.
-   Verified against dnf 4.20 and libdnf 0.73 on Rocky 10.2, UBI 10.3 and CentOS Stream 10. #}
+   Verified against dnf 4.20 and libdnf 0.73 on Rocky 10.2, AlmaLinux 10.2, UBI 10.3
+   and CentOS Stream 10. #}
 
-# EPEL 10 has one repository per RHEL minor release, plus one for CentOS Stream.
-# Unless a mirror is configured, the repositories below follow the minor release of
-# this host, and on CentOS Stream they point to the one for CentOS Stream.
+# EPEL 10 has one repository per RHEL minor release, and CentOS Stream uses the newest
+# one (`10s`). Unless a mirror is configured, the repositories below follow the minor
+# release of this host, and on CentOS Stream they point to `10s`.
 
 [epel]
 name=Extra Packages for Enterprise Linux $releasever - $basearch
