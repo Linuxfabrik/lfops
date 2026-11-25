@@ -285,15 +285,23 @@
     ansible.builtin.debug:
       var: 'selinux__restorecons__combined_var'
 
+  # Without -F, restorecon only corrects the type and keeps the SELinux user, role and range
+  # of the file, and it leaves files with a customizable type alone, logging "not reset as
+  # customized by admin" for them under -v. Only "Relabeled" lines therefore mean a change.
+  # With -F, files created from an admin shell or a cron job (unconfined_u) are relabeled to
+  # system_u, so a tree that keeps getting such files reports a change on every run, although
+  # the policy compares the SELinux user of a file only on create and relabel.
+  # Verified against libselinux 2.9 to 3.9 (selinux_restorecon.c, restorecon_sb()) and
+  # selinux-policy-targeted 38.1 on Rocky 9.
   - name: 'restorecon -v ...'
     ansible.builtin.command:
-      cmd: 'restorecon -v{{ "F" if item["force"] | d(true) else "" }}{{ "r" if item["recursive"] | d(true) else "" }} {{ item["path"] }}'
+      cmd: 'restorecon -v{{ "F" if item["force"] | d(false) | bool else "" }}{{ "r" if item["recursive"] | d(true) | bool else "" }} {{ item["path"] }}'
     loop: '{{ selinux__restorecons__combined_var }}'
     when:
       - 'selinux__state != "disabled"'
       - 'item["state"] | d("present") == "present"'
     register: '__selinux__restorecons_result'
-    changed_when: '__selinux__restorecons_result["stdout"] | length > 0'
+    changed_when: '__selinux__restorecons_result["stdout_lines"] | select("match", "Relabeled ") | list | length > 0'
 
   tags:
     - 'selinux'

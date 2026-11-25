@@ -1,0 +1,9 @@
+# Molecule scenario marker for the 'restorecon' sub-scenario, run with
+# `molecule test --scenario-name selinux/restorecon`.
+#
+# Covers `selinux__restorecons__*_var`: prepare.yml labels files wrongly in the ways a host ends
+# up with (wrong type, SELinux user of an admin shell, a type an admin customized), and verify.yml
+# checks what restorecon made of them, with and without `force`.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

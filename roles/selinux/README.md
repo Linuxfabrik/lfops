@@ -206,9 +206,9 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
     * `force`:
 
-        * Optional. If `true`, forces complete context replacement (`-F` flag).
+        * Optional. If `true`, sets the complete context from the file context definitions, including SELinux user, role and range, and also resets files whose type an admin customized, for example `container_file_t` from a Podman volume mounted with `:Z`, or `httpd_user_content_t` (`-F` flag). If `false`, only a wrong type is corrected, and files with a customizable type are left alone. Use `true` only for a path whose files carry a customizable type but have to get the type of the file context.
         * Type: Bool.
-        * Default: `true`
+        * Default: `false`
 
     * `recursive`:
 
@@ -276,8 +276,8 @@ selinux__restorecons__host_var:
   - path: '/var/www/html/nextcloud'
   - path: '/opt/app/file.txt'
     recursive: false  # only restore this specific file, not recursively
-  - path: '/tmp/test'
-    force: false  # only update the type portion of the context
+  - path: '/srv/app/public'
+    force: true  # also reset customized types, and SELinux user, role and range
   - path: '/old/legacy/path'
     state: 'absent'  # skip this path
 selinux__state: 'enforcing'

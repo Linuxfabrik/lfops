@@ -1,0 +1,19 @@
+selinux__fcontexts__group_var:
+  - setype: 'httpd_sys_content_t'
+    target: '/srv/lfops-molecule-restorecon(/.*)?'
+  - setype: 'httpd_sys_content_t'
+    target: '/srv/lfops-molecule-restorecon-forced(/.*)?'
+
+# The default `force: false` on the first path, `force: true` on the second, against the same
+# starting labels (see prepare.yml).
+selinux__restorecons__group_var:
+  - path: '/srv/lfops-molecule-restorecon'
+  - path: '/srv/lfops-molecule-restorecon-forced'
+    force: true
+
+# None of them is needed to label files: the SELinux state stays as the image ships it
+# (enforcing), so no reboot is requested, and postfix and schedule_reboot would need a mail
+# configuration.
+selinux__skip_mailto_root: true
+selinux__skip_postfix: true
+selinux__skip_schedule_reboot: true
