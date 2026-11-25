@@ -22,6 +22,17 @@
     # rocky8-vm only.
     __molecule__fail2ban_apache_jails_expected: '{{ apache_httpd__mod_remoteip_internal_proxy | d([]) | length == 0 }}'
 
+    # install/inventory runs rocky9-vm with iptables-multiport and the others with
+    # nftables-multiport. A ban is an element of the jail's set in nftables, and a rule in the
+    # jail's chain in iptables.
+    __molecule__fail2ban_nftables: '{{ fail2ban__jail_default_banaction is match("nftables") }}'
+    __molecule__fail2ban_overflows_ban_regex: '{{ __molecule__fail2ban_nftables | bool
+      | ternary("elements = \{[^}]*\b198\.51\.100\.20\b", "-s 198\.51\.100\.20/32 .*-j REJECT") }}'
+    # nftables.conf has no pre-rule, so the apache-dos template matches new connections in the
+    # blocktype instead.
+    __molecule__fail2ban_dos_new_regex: '{{ __molecule__fail2ban_nftables | bool
+      | ternary("ct state new reject", "-m state --state NEW") }}'
+
   tasks:
 
     # Floor check. On its own this would still pass with a dead server, so it is the start of the
@@ -207,20 +218,23 @@
         - '__molecule__fail2ban_apache_jails_expected | bool'
 
     # fail2ban lists an address as banned even when the banaction failed, for example because
-    # iptables rejects the multiport match on a kernel without xt_multiport. Only the rule in the
-    # firewall proves the ban blocks anything.
-    - name: 'iptables --list-rules f2b-apache-overflows'
-      ansible.builtin.command: 'iptables --list-rules f2b-apache-overflows'
+    # iptables rejects the multiport match on a kernel without xt_multiport. Only the rule or the
+    # set element in the firewall proves the ban blocks anything.
+    - name: '{{ __molecule__fail2ban_overflows_firewall_cmd }}'
+      ansible.builtin.command: '{{ __molecule__fail2ban_overflows_firewall_cmd }}'
       register: '__molecule__fail2ban_overflows_rules_result'
       changed_when: false
       failed_when: false
       check_mode: false
+      vars:
+        __molecule__fail2ban_overflows_firewall_cmd: '{{ __molecule__fail2ban_nftables | bool
+          | ternary("nft list set inet f2b-table addr-set-apache-overflows", "iptables --list-rules f2b-apache-overflows") }}'
       when:
         - '__molecule__fail2ban_apache_jails_expected | bool'
 
     - name: 'Assert the ban of apache-overflows is in the firewall'
       ansible.builtin.assert:
-        that: '__molecule__fail2ban_overflows_rules_result["stdout"] is search("-s 198\\.51\\.100\\.20/32 .*-j REJECT")'
+        that: '__molecule__fail2ban_overflows_rules_result["stdout"] is search(__molecule__fail2ban_overflows_ban_regex)'
         fail_msg: 'no firewall rule for the ban of 198.51.100.20: {{ __molecule__fail2ban_overflows_rules_result["stdout"] }}{{ __molecule__fail2ban_overflows_rules_result["stderr"] }}'
       when:
         - '__molecule__fail2ban_apache_jails_expected | bool'
@@ -235,8 +249,8 @@
 
     # A ban of apache-dos must only block new connections, otherwise every httpd worker reading
     # from the banned client waits until Timeout and the ban exhausts MaxRequestWorkers. The
-    # actionstart the running server resolved is the rule its first ban inserts into INPUT, which
-    # this scenario never triggers for apache-dos.
+    # actionstart the running server resolved is the rule its first ban inserts, which this
+    # scenario never triggers for apache-dos.
     - name: 'fail2ban-client get apache-dos action {{ fail2ban__jail_default_banaction }} actionstart'
       ansible.builtin.command: 'fail2ban-client get apache-dos action {{ fail2ban__jail_default_banaction }} actionstart'
       register: '__molecule__fail2ban_dos_actionstart_result'
@@ -245,7 +259,7 @@
 
     - name: 'Assert the apache-dos jail only bans new connections'
       ansible.builtin.assert:
-        that: '__molecule__fail2ban_dos_actionstart_result["stdout"] is search("-m state --state NEW")'
+        that: '__molecule__fail2ban_dos_actionstart_result["stdout"] is search(__molecule__fail2ban_dos_new_regex)'
         fail_msg: 'apache-dos would also ban established connections: {{ __molecule__fail2ban_dos_actionstart_result["stdout"] }}'
 
     # A scanner comes back right after a ban expires, so each further ban doubles the bantime.
@@ -549,8 +563,8 @@
           - '"authentication methods available" in __molecule__fail2ban_sshd_failregex_result["stdout"]'
         fail_msg: 'the sshd jail does not run in aggressive mode: {{ __molecule__fail2ban_sshd_failregex_result["stdout"] }}'
 
-    # The port is what the banaction later puts into the iptables rule. The rule itself only
-    # appears with the first ban (iptables.conf has family-conditional sections, so fail2ban sets
+    # The port is what the banaction later puts into the firewall rule. The rule itself only
+    # appears with the first ban (the actions have family-conditional sections, so fail2ban sets
     # actionstart_on_demand), so the port is read from the running action instead. Without the
     # port line in the jail, the action falls back to the `ssh` of jail.conf, which is port 22.
     # sshd__port is set in install/inventory, and fail2ban__jail_sshd_port derives from it.

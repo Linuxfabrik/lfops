@@ -75,7 +75,7 @@ argument_specs:
       fail2ban__jail_default_banaction:
         type: 'str'
         required: false
-        default: 'iptables-multiport'
+        default: 'nftables-multiport'
         description: 'The default banaction, executed as defined in the default action.'
 
       fail2ban__jail_default_ignoreip:
