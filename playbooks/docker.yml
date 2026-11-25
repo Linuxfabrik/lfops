@@ -25,10 +25,11 @@
 
     - role: 'linuxfabrik.lfops.docker'
 
-    # kernel_settings needs to run after docker so that the bridge kernel module is loaded
-    # else the sysctl settings are not found
+    # No net.bridge.bridge-nf-call-ip{,6}tables here: dockerd loads br_netfilter only for
+    # icc=false or userland-proxy=false and then sets them itself (Docker 27.3+). Without the
+    # module, the keys do not exist and kernel_settings fails. Verified against the moby source
+    # (29.7) and with Docker 29.10 on Rocky 9 and 10.
     - role: 'linuxfabrik.lfops.kernel_settings'
-      kernel_settings__sysctl__dependent_var: '{{ docker__kernel_settings__sysctl__dependent_var | d([]) }}'
       when:
         - 'not docker__skip_kernel_settings | d(false)'
 

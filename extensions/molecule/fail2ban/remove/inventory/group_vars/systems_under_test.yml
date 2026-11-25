@@ -11,7 +11,7 @@
 # See the install group_vars for why the firewall role is skipped.
 fail2ban__skip_firewall: true
 
-fail2ban__jail_default_banaction: 'iptables-multiport'
+fail2ban__jail_default_banaction: 'nftables-multiport'
 fail2ban__jail_sshd_bantime: '3h'
 
 fail2ban__filters__group_var:

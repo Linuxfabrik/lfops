@@ -29,15 +29,18 @@ fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
 # jail.d is read in alphabetical order, so this file overrides the banaction that the
 # fail2ban-firewalld package sets in 00-firewalld.conf. Verified against fail2ban
-# 1.1.0-6.el9 on Rocky 9: `fail2ban-client get sshd actions` reports iptables-multiport.
-fail2ban__jail_default_banaction: 'iptables-multiport'
+# 1.1.0-6.el9 on Rocky 9: `fail2ban-client get sshd actions` reports the banaction set here.
+fail2ban__jail_default_banaction: 'nftables-multiport'  # upstream default: iptables-multiport, firewallcmd-rich-rules on RHEL
 fail2ban__jail_default_ignoreip: []
 fail2ban__jail_default_rocketchat_hook: ''
-fail2ban__jail_portscan_allowed_ports:
-  - 22
+# sshd__port: d() covers plays without the sshd role, whose defaults are only loaded when
+# it is part of the play. the same applies to fail2ban__jail_sshd_port.
+fail2ban__jail_portscan_allowed_ports: '{{ [sshd__port | d(22)] }}'
 fail2ban__jail_portscan_bantime: '8h'
 fail2ban__jail_portscan_server_ips: '{{ ansible_facts["all_ipv4_addresses"] }}'
 fail2ban__jail_sshd_bantime: '7d'
+fail2ban__jail_sshd_mode: 'aggressive'  # upstream default: normal
+fail2ban__jail_sshd_port: '{{ sshd__port | d(22) }}'  # upstream default: ssh
 fail2ban__jail_wordpress_login_bantime: '8h'
 fail2ban__jail_wordpress_login_findtime: '10m'
 fail2ban__jail_wordpress_login_maxretry: 5
@@ -52,12 +55,38 @@ fail2ban__jails__dependent_var: []
 fail2ban__jails__group_var: []
 fail2ban__jails__host_var: []
 fail2ban__jails__role_var:
+  - filename: 'z10-apache-auth'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'apache-auth'
+  - filename: 'z10-apache-fakegooglebot'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'apache-fakegooglebot'
+  - filename: 'z10-apache-modsecurity'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'apache-modsecurity'
+  - filename: 'z10-apache-nohome'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'apache-nohome'
+  - filename: 'z10-apache-noscript'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'apache-noscript'
+  - filename: 'z10-apache-overflows'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'apache-overflows'
+  - filename: 'z10-php-url-fopen'
+    state: '{{ __fail2ban__apache_jails_state }}'
+    template: 'php-url-fopen'
   - filename: 'z10-portscan'
     state: 'present'
     template: 'portscan'
   - filename: 'z10-sshd'
     state: 'present'
     template: 'sshd'
+# Behind a reverse proxy, Apache logs the proxy as the client unless mod_remoteip resolves the
+# visitor, and the jails would ban the proxy. Where mod_remoteip does resolve it, a ban is useless,
+# since the packets still come from the proxy. Either way the jails belong on the host the clients
+# connect to.
+fail2ban__jails_apache_enabled: '{{ apache_httpd__mod_remoteip_internal_proxy | d([]) | length == 0 }}'
 fail2ban__service_enabled: true
 fail2ban__service_state: '{{ fail2ban__service_enabled | bool | ternary("started", "stopped") }}'
 

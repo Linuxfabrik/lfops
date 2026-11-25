@@ -52,6 +52,7 @@ class _FakeBitwarden:
     item_by_id = None
     created_items: ClassVar[list] = []
     sync_calls: ClassVar[list] = []
+    status_calls: ClassVar[list] = []
     # what sync() reports, True for a sync that actually ran
     sync_result = False
     vault_status = 'unlocked'
@@ -73,6 +74,10 @@ class _FakeBitwarden:
 
     @property
     def status(self):
+        return type(self).vault_status
+
+    def get_status(self, run_id=None):
+        type(self).status_calls.append({'run_id': run_id})
         return type(self).vault_status
 
     def get_not_unlocked_message(self, status):
@@ -131,6 +136,7 @@ class _BitwardenLookupTestCase(unittest.TestCase):
         _FakeBitwarden.item_by_id = None
         _FakeBitwarden.created_items = []
         _FakeBitwarden.sync_calls = []
+        _FakeBitwarden.status_calls = []
         _FakeBitwarden.sync_result = False
         _FakeBitwarden.mutex_held = False
         _FakeBitwarden.vault_status = 'unlocked'
@@ -287,6 +293,13 @@ class TestRun(_BitwardenLookupTestCase):
         self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
         self.assertEqual(len(_FakeBitwarden.created_items), 1)
         self.assertEqual(len(_FakeBitwarden.sync_calls), 1)
+
+    def test_status_check_gets_the_run_id(self):
+        # the run ID lets the client ask `bw serve` once per run, see get_status()
+        self.lookup.run([{'name': 'host - db', 'username': 'dba'}])
+        self.assertEqual(
+            _FakeBitwarden.status_calls, [{'run_id': lookup_mod.get_run_id()}]
+        )
 
     def test_sync_gets_the_run_id(self):
         self.lookup.run([{'name': 'host - db', 'username': 'dba'}])

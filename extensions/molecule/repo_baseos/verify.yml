@@ -1,0 +1,37 @@
+# verify.yml runs after converge and again after the idempotence step. A repo file
+# that dnf cannot parse or a repository it cannot reach already fails every later dnf
+# call, so the checks ask dnf itself: is the repository enabled, where does dnf fetch
+# it from, and does it load its metadata.
+- name: 'Verify repo_baseos provides the BaseOS and security repositories'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'dnf --assumeyes --refresh repoinfo baseos'
+      ansible.builtin.command: 'dnf --assumeyes --refresh repoinfo baseos'
+      register: '__molecule__repoinfo_baseos_result'
+      changed_when: false
+
+    - name: 'Assert the baseos repository is enabled and has packages'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__repoinfo_baseos_result["stdout"] is search("Repo-status\s*:\s*enabled")'
+          - '__molecule__repoinfo_baseos_result["stdout"] is search("Repo-pkgs\s*:\s*[1-9]")'
+        fail_msg: '{{ __molecule__repoinfo_baseos_result["stdout"] }}'
+
+    - name: 'dnf --assumeyes --refresh repoinfo security'
+      ansible.builtin.command: 'dnf --assumeyes --refresh repoinfo security'
+      register: '__molecule__repoinfo_security_result'
+      changed_when: false
+
+    # The mirrors sync with a delay and every host is handed its own, so the security
+    # repository uses dl.rockylinux.org instead of the mirrorlist. dnf only prints
+    # Repo-mirrors for a repository with a mirrorlist (dnf/cli/commands/repolist.py).
+    - name: 'Assert the security repository is enabled and uses dl.rockylinux.org'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__repoinfo_security_result["stdout"] is search("Repo-status\s*:\s*enabled")'
+          - '__molecule__repoinfo_security_result["stdout"] is search("Repo-baseurl\s*:\s*https://dl\.rockylinux\.org/pub/rocky/")'
+          - '__molecule__repoinfo_security_result["stdout"] is not search("Repo-mirrors\s*:")'
+        fail_msg: '{{ __molecule__repoinfo_security_result["stdout"] }}'

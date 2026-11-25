@@ -17,6 +17,16 @@ sshd__log_level__host_var: ''
 sshd__log_level__role_var: 'VERBOSE'
 sshd__max_auth_tries: 3
 sshd__max_sessions: 10
+sshd__max_startups__combined_var: '{{
+    sshd__max_startups__host_var if (sshd__max_startups__host_var | string | length) else
+    sshd__max_startups__group_var if (sshd__max_startups__group_var | string | length) else
+    sshd__max_startups__dependent_var if (sshd__max_startups__dependent_var | string | length) else
+    sshd__max_startups__role_var
+  }}'
+sshd__max_startups__dependent_var: ''
+sshd__max_startups__group_var: ''
+sshd__max_startups__host_var: ''
+sshd__max_startups__role_var: '10:30:60'  # upstream default: 10:30:100
 sshd__password_authentication: false
 sshd__permit_root_login: 'no'  # upstream default: 'prohibit-password'
 sshd__port: 22

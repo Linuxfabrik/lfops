@@ -11,10 +11,22 @@
       - '__monitoring_plugins__icinga2_service_stop_result["failed"]'
       - 'not "is not installed" in __monitoring_plugins__icinga2_service_stop_result["msg"]'
 
+  # Every build of the MSI has its own ProductCode, all builds share the UpgradeCode
+  # (see https://github.com/Linuxfabrik/monitoring-plugins/blob/main/build/create-wxs.sh).
+  - name: 'Find the installed linuxfabrik-monitoring-plugins.msi by its UpgradeCode'
+    ansible.windows.win_powershell:
+      script: |
+        $Ansible.Changed = $false
+        $installer = New-Object -ComObject 'WindowsInstaller.Installer'
+        $Ansible.Result = @($installer.RelatedProducts('{bb340ae1-12a5-41d3-a27f-8677df3b8032}'))
+    register: '__monitoring_plugins__msi_product_codes'
+    check_mode: false # run task even if `--check` is specified, it only reads
+
   - name: 'uninstall linuxfabrik-monitoring-plugins.msi'
     ansible.windows.win_package:
-      product_id: '{7060a355-f73b-447d-aaa8-f4bf2db48032}' # taken from https://github.com/Linuxfabrik/monitoring-plugins/blob/main/build/create-wxs.sh
+      product_id: '{{ item }}'
       state: 'absent'
+    loop: '{{ __monitoring_plugins__msi_product_codes["result"] | default([]) }}'
 
   - name: 'Windows: Make sure the Linuxfabrik plugins are removed (old path)'
     ansible.windows.win_file:

@@ -1,0 +1,10 @@
+__repo_rpmfusion__gpg_keys:
+  - url: 'https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-el-8'
+    dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8'
+  - url: 'https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-el-8'
+    dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8'
+__repo_rpmfusion__repo_files:
+  - 'RedHat8/etc/yum.repos.d/rpmfusion-free-updates-testing.repo'
+  - 'RedHat8/etc/yum.repos.d/rpmfusion-free-updates.repo'
+  - 'RedHat8/etc/yum.repos.d/rpmfusion-nonfree-updates-testing.repo'
+  - 'RedHat8/etc/yum.repos.d/rpmfusion-nonfree-updates.repo'

@@ -1,6 +1,6 @@
 # Ansible Role linuxfabrik.lfops.sshd
 
-This role deploys `/etc/ssh/sshd_config` for [OpenSSH](https://www.openssh.com/) (the standard SSH server on Linux). It exposes the most commonly tuned options as variables (port, address family, password / GSSAPI / root login, log level, forwarding, session limits, sftp subsystem) plus a `sshd__raw` escape hatch for `Match` blocks etc.
+This role deploys `/etc/ssh/sshd_config` for [OpenSSH](https://www.openssh.com/) (the standard SSH server on Linux). It exposes the most commonly tuned options as variables (port, address family, password / GSSAPI / root login, log level, forwarding, session and connection limits, sftp subsystem) plus a `sshd__raw` escape hatch for `Match` blocks etc.
 
 Note that the role templates the full `sshd_config`, since not all options can be overwritten in `/etc/ssh/sshd_config.d/` (e.g. `Subsystem 'sftp' already defined`). The only exception is `00-linuxfabrik.conf` on RHEL 9 and newer, which sets `GSSAPIAuthentication` and `X11Forwarding`, as the `50-redhat.conf` of the package would win otherwise.
 
@@ -12,11 +12,13 @@ The option descriptions below are condensed from `sshd_config(5)`.
 
 ## How the Role Behaves
 
-The role ships hardened defaults for several options that differ from the OpenSSH (or distribution) defaults: root may not log in, `X11Forwarding`, agent forwarding and TCP keepalives are off, `MaxAuthTries` and `ClientAliveCountMax` are stricter, an unresponsive client is disconnected after `ClientAliveInterval` × `ClientAliveCountMax` seconds (30 by default), and `LogLevel` is `VERBOSE` (which logs the key fingerprint used for each login). These follow the CIS Benchmarks. Each is overridable via the variables below.
+The role ships hardened defaults for several options that differ from the OpenSSH (or distribution) defaults: root may not log in, `X11Forwarding`, agent forwarding and TCP keepalives are off, `MaxAuthTries`, `MaxStartups` and `ClientAliveCountMax` are stricter, an unresponsive client is disconnected after `ClientAliveInterval` × `ClientAliveCountMax` seconds (30 by default), and `LogLevel` is `VERBOSE` (which logs the key fingerprint used for each login). These follow the CIS Benchmarks. Each is overridable via the variables below.
 
 `PermitRootLogin` defaults to `no`. Before it deploys `sshd_config`, the role checks which user Ansible logs in as over SSH. If that is root and `sshd__permit_root_login` does not admit root logins with a key, the run aborts before anything is changed, since the reload would lock Ansible out of the host. Log in as an unprivileged user with sudo (see the [login](https://github.com/Linuxfabrik/lfops/tree/main/roles/login) role), or set `sshd__permit_root_login: 'prohibit-password'` for hosts that Ansible has to reach as root.
 
 `MaxAuthTries` defaults to `3`. Every public key an SSH agent offers counts as one attempt, so a client with more than three keys loaded in its agent may be rejected before the matching key is tried. In that case use `IdentitiesOnly yes` / an explicit `IdentityFile` on the client, or raise `sshd__max_auth_tries`.
+
+`MaxStartups` defaults to `10:30:60`. It limits the connections that have not authenticated yet, across all clients: from 10 such connections on, sshd refuses every new one with a probability of 30%, rising to 100% at 60. A host that many clients log in to at the same moment, such as a Git server with CI jobs, reaches this limit with legitimate logins, which then fail before authentication (`Connection closed by remote host` or `Not allowed at this time` on the client, `drop connection ... past MaxStartups` in the log of sshd). Raise `sshd__max_startups__host_var` / `sshd__max_startups__group_var` on such hosts. sshd uses the first value it reads, so a `MaxStartups` in `sshd__raw` has no effect.
 
 On Debian and Ubuntu the SSH daemon unit is `ssh.service` and OpenSSH ships socket activation (`ssh.socket`) enabled by default. The role manages the daemon through its service unit like on Red Hat, so on these systems it disables and stops `ssh.socket` and enables `ssh.service` instead. Red Hat-family systems for which no version-specific template exists (in particular Fedora) fall back to the generic `RedHat` template.
 
@@ -98,6 +100,13 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Type: Number.
 * Default: `10`
 
+`sshd__max_startups__host_var` / `sshd__max_startups__group_var`
+
+* Maximum number of concurrent connections that have not authenticated yet, as `start:rate:full`: from `start` such connections on, sshd refuses a new one with a probability of `rate` percent, which rises linearly to 100% at `full`. A single number refuses every connection above it. See "How the Role Behaves".
+* Type: String.
+* Default: `'10:30:60'`
+* Deviates from the upstream default `10:30:100`: fewer pending logins can keep sshd busy before it turns new ones away. The CIS Benchmarks require `10:30:60` or stricter.
+
 `sshd__password_authentication`
 
 * Specifies whether password authentication is allowed.
@@ -172,6 +181,7 @@ sshd__gssapi_authentication: false
 sshd__log_level__host_var: 'VERBOSE'
 sshd__max_auth_tries: 3
 sshd__max_sessions: 10
+sshd__max_startups__host_var: '100:30:200'
 sshd__password_authentication: false
 sshd__permit_root_login: 'prohibit-password'
 sshd__port: 22

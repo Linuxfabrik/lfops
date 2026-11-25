@@ -12,8 +12,10 @@
 # keyboxd or a new LVM metadata archive, while a new file next to the sockets is. A content
 # change of /root/.lfops-molecule is reported, which only its own rule does, not the default
 # '/root/\..* PERMS' of the same directory, and so is a content change of
-# /boot/efi/lfops-molecule. This only works if the rules and the raw part from the inventory are
-# in effect, since /srv is not monitored otherwise and /opt is by default.
+# /boot/efi/lfops-molecule. A certificate renewed in place is not reported, while a certificate
+# with a changed mode and a changed trust bundle in the same directory are. This only works if
+# the rules and the raw part from the inventory are in effect, since /srv is not monitored
+# otherwise and /opt is by default.
 # In between, the role is run again twice, each time after a change it has to revert, to
 # prove that its handler leaves the database alone in both cases where re-baselining would
 # accept unvetted changes: a database found without the role's check unit, and a last check
@@ -379,6 +381,47 @@
       when:
         - '__molecule__efi_fstype_result["stdout"] == "vfat"'
 
+    - name: 'Set the paths of the certificate directory and the trust bundle'
+      ansible.builtin.set_fact:
+        __molecule__aide_cert_dir: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("/etc/pki/tls/certs", "/etc/ssl/certs") }}'
+        __molecule__aide_trust_bundle: '{{ (ansible_facts["os_family"] == "RedHat") | ternary("/etc/pki/tls/certs/ca-bundle.crt", "/etc/ssl/certs/ca-certificates.crt") }}'
+
+    # in place, as acme.sh does on a renewal (`cat "$CERT_PATH" >"$_real_cert"`)
+    - name: 'echo lfops-molecule-renewed > lfops-molecule.crt (renew the probe certificate)'
+      ansible.builtin.shell:
+        cmd: 'echo lfops-molecule-renewed > {{ __molecule__aide_cert_dir }}/lfops-molecule.crt'
+        executable: '/bin/bash'
+      changed_when: true # the content changes on every run
+
+    - name: 'chmod 0600 lfops-molecule-chain.crt'
+      ansible.builtin.file:
+        path: '{{ __molecule__aide_cert_dir }}/lfops-molecule-chain.crt'
+        mode: 0o600
+
+    - name: 'stat the trust bundle'
+      ansible.builtin.stat:
+        path: '{{ __molecule__aide_trust_bundle }}'
+      register: '__molecule__aide_trust_bundle_result'
+
+    # a symlink on the Red Hat family. Pointing it to the same file by another path changes the
+    # link without breaking the trust store for the rest of the run.
+    - name: 'ln -sfn the trust bundle to the same file by another path'
+      ansible.builtin.file:
+        src: '{{ __molecule__aide_trust_bundle_result["stat"]["lnk_target"] | dirname }}/./{{ __molecule__aide_trust_bundle_result["stat"]["lnk_target"] | basename }}'
+        dest: '{{ __molecule__aide_trust_bundle }}'
+        state: 'link'
+        force: true
+      when:
+        - '__molecule__aide_trust_bundle_result["stat"]["islnk"]'
+
+    # a comment outside the PEM blocks, which OpenSSL skips
+    - name: 'Append a comment to the trust bundle'
+      ansible.builtin.lineinfile:
+        path: '{{ __molecule__aide_trust_bundle }}'
+        line: '# lfops-molecule'
+      when:
+        - 'not __molecule__aide_trust_bundle_result["stat"]["islnk"]'
+
     - name: 'systemctl start --wait aidecheck.service (changed host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
       ansible.builtin.command: 'systemctl start --wait aidecheck.service'
       changed_when: false
@@ -414,6 +457,9 @@
           - '"/root/.gnupg/public-keys.d/.#lk" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/root/.gnupg/public-keys.d/pubring.db.lock" not in __molecule__aide_changed_log_result["stdout"]'
           - '"/root/.gnupg/lfops-molecule-key" in __molecule__aide_changed_log_result["stdout"]'
+          - '(__molecule__aide_cert_dir ~ "/lfops-molecule.crt") not in __molecule__aide_changed_log_result["stdout"]'
+          - '(__molecule__aide_cert_dir ~ "/lfops-molecule-chain.crt") in __molecule__aide_changed_log_result["stdout"]'
+          - '__molecule__aide_trust_bundle in __molecule__aide_changed_log_result["stdout"]'
           - '__molecule__aide_changed_log_result["stdout"] is not search("/var/log\\s*(:|$)", multiline=True)'
         fail_msg: '{{ __molecule__aide_changed_log_result["stdout"] }}'
 
@@ -495,6 +541,34 @@
         dest: '/boot/efi/lfops-molecule'
       when:
         - '__molecule__efi_fstype_result["stdout"] == "vfat"'
+
+    - name: 'Restore the probe certificates'
+      ansible.builtin.copy:
+        content: 'lfops-molecule'
+        dest: '{{ __molecule__aide_cert_dir }}/{{ item }}'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+      loop:
+        - 'lfops-molecule.crt'
+        - 'lfops-molecule-chain.crt'
+
+    - name: 'ln -sfn the trust bundle back to its original path'
+      ansible.builtin.file:
+        src: '{{ __molecule__aide_trust_bundle_result["stat"]["lnk_target"] }}'
+        dest: '{{ __molecule__aide_trust_bundle }}'
+        state: 'link'
+        force: true
+      when:
+        - '__molecule__aide_trust_bundle_result["stat"]["islnk"]'
+
+    - name: 'Remove the comment from the trust bundle'
+      ansible.builtin.lineinfile:
+        path: '{{ __molecule__aide_trust_bundle }}'
+        line: '# lfops-molecule'
+        state: 'absent'
+      when:
+        - 'not __molecule__aide_trust_bundle_result["stat"]["islnk"]'
 
     # the last check failed, so the tasks `--tags aide:update_db` runs must leave the database
     # alone and say so
@@ -618,7 +692,7 @@
         name: 'linuxfabrik.lfops.aide'
         tasks_from: 'update-db-if-clean.yml'
 
-    - name: 'Wait for the check update-db-if-clean started (after cleaning up)'
+    - name: 'Wait for the aide units to be idle (after cleaning up)'
       ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
 
     - name: 'systemctl show --property=Result aidecheck.service (after cleaning up)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
@@ -644,6 +718,11 @@
         path: '/etc/aide.conf'
         line: '# lfops-molecule'
 
+    - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (before the run after a clean check)' # noqa command-instead-of-module (no module reads the start time of a unit)
+      ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+      register: '__molecule__aide_start_before_clean_run_result'
+      changed_when: false
+
     - name: 'Reset the end-of-play messages (run after a clean check)'
       ansible.builtin.set_fact:
         __shared__end_of_play_messages: []
@@ -658,18 +737,31 @@
         checksum_algorithm: 'sha256'
       register: '__molecule__aide_db_after_clean_run_result'
 
-    - name: 'Wait for the check the handler started'
+    - name: 'Wait for the aide units to be idle (after the run after a clean check)'
       ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+    # `aide --update` compares like a check, so the update runs no second check against the
+    # database it just wrote
+    - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (no module reads the start time of a unit)
+      ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+      register: '__molecule__aide_start_after_clean_run_result'
+      changed_when: false
+
+    - name: 'systemctl start --wait aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+      ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+      changed_when: false
+      failed_when: false
 
     - name: 'systemctl show --property=Result aidecheck.service (after the run after a clean check)' # noqa command-instead-of-module (no module reads the Result of a finished unit)
       ansible.builtin.command: 'systemctl show --property=Result --value aidecheck.service'
       register: '__molecule__aide_clean_run_result'
       changed_when: false
 
-    - name: 'Assert that the handler updated the database without telling the operator anything'
+    - name: 'Assert that the handler updated the database without a second check and without telling the operator anything'
       ansible.builtin.assert:
         that:
           - '__molecule__aide_db_after_clean_run_result["stat"]["checksum"] != __molecule__aide_db_before_clean_run_result["stat"]["checksum"]'
+          - '__molecule__aide_start_after_clean_run_result["stdout"] == __molecule__aide_start_before_clean_run_result["stdout"]'
           - '__molecule__aide_clean_run_result["stdout"] == "success"'
           - '__shared__end_of_play_messages | select("match", "aide: ") | list | length == 0'
 
@@ -778,12 +870,30 @@
       - name: 'Reset the logs of unattended-upgrades and the hook (clean host)'
         ansible.builtin.include_tasks: 'tasks/reset-uu-logs.yml'
 
+      - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (before the unattended upgrade on a clean host)' # noqa command-instead-of-module (no module reads the start time of a unit)
+        ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+        register: '__molecule__aide_uu_clean_start_before_result'
+        changed_when: false
+
       - name: 'systemctl start apt-daily-upgrade.service (clean host)' # noqa command-instead-of-module (runs the unattended upgrade and waits for it)
         ansible.builtin.command: 'systemctl start apt-daily-upgrade.service'
         changed_when: true
 
       - name: 'Wait for the units to finish (clean host)'
         ansible.builtin.include_tasks: 'tasks/wait-for-aide.yml'
+
+      # the hook checks directly, and `aide --update` compares like a check, so the upgrade
+      # starts no check through the unit
+      - name: 'systemctl show --property=ExecMainStartTimestampMonotonic aidecheck.service (after the unattended upgrade on a clean host)' # noqa command-instead-of-module (no module reads the start time of a unit)
+        ansible.builtin.command: 'systemctl show --property=ExecMainStartTimestampMonotonic --value aidecheck.service'
+        register: '__molecule__aide_uu_clean_start_after_result'
+        changed_when: false
+
+      # confirms the re-baselined database
+      - name: 'systemctl start --wait aidecheck.service (after the unattended upgrade on a clean host)' # noqa command-instead-of-module (wait for the check to finish and read its Result)
+        ansible.builtin.command: 'systemctl start --wait aidecheck.service'
+        changed_when: false
+        failed_when: false
 
       - name: 'Collect the results (clean host)'
         ansible.builtin.include_tasks: 'tasks/collect-uu-results.yml'
@@ -796,6 +906,7 @@
             - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "aide --check") | list | length == 1'
             - '__molecule__aide_uu_hook_result["stdout_lines"] | select("search", "re-baselined") | list | length == 1'
             - '__molecule__aide_uu_update_runs_result["stdout"] | int == 1'
+            - '__molecule__aide_uu_clean_start_after_result["stdout"] == __molecule__aide_uu_clean_start_before_result["stdout"]'
             - '__molecule__aide_uu_check_result["stdout"] == "success"'
           fail_msg: '{{ __molecule__aide_uu_hook_result["stdout_lines"] + __molecule__aide_uu_log_result["stdout_lines"] }}'
 

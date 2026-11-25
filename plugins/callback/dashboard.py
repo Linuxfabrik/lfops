@@ -11,15 +11,20 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import atexit
+import hashlib
 import json
 import os
 import re
+import stat
 import subprocess  # nosec B404
 import sys
+import tempfile
+import threading
 import time
 from collections import Counter
 
 from ansible import constants as C
+from ansible.playbook.block import Block
 from ansible.playbook.task_include import TaskInclude
 from ansible.release import __version__ as ANSIBLE_CORE_VERSION
 from ansible.utils.color import ANSIBLE_COLOR, stringc
@@ -43,9 +48,11 @@ DOCUMENTATION = r"""
   version_added: "10.0.0"
   short_description: Fixed full-screen view of a run, details at the end
   description:
-    - Shows the run on one fixed screen that is updated in place instead of scrolling. At the top the playbook, the number of hosts and the elapsed time, the current role and task, then counters of the results of the current task and of the whole run.
+    - Shows the run on one fixed screen that is updated in place instead of scrolling, at least once a second. At the top the playbook, the number of hosts and the elapsed time, the current role and task, a progress bar of the play with the estimated remaining time, then counters of the results of the current task and of the whole run. The ok counter of the task is followed by the number of hosts still at work on the task and the number of hosts, for example C(ok 13/22/35).
     - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path, shortened to the initials of its parent directories, when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
-    - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counters and their last notable result, or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
+    - The progress bar counts the tasks of the play that are known when it starts, after C(--tags) and C(--skip-tags) are applied. A task included with C(include_tasks) or C(include_role) is one step, the bar stands still while the tasks it includes run. Tasks in C(rescue) sections and handlers are not counted. The bar counts tasks, not time, and starts over with every batch of C(serial).
+    - The estimated remaining time (ETA) adds up how long each step left took the last time it ran, an include with all its tasks, until the slowest host was done. The durations are kept in O(eta_cache_dir) for the next runs, one file per step, so that runs in parallel, like several ansible-navigator sessions, do not wait for each other. A step that never ran before is assumed to take as long as the steps of this play so far did on average.
+    - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counts of fatal (F), warning (W), changed (C) and ok (O) results and their last notable result (LAST WORST), or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
     - At the end of the run, the screen is left and the details follow in the format of C(linuxfabrik.lfops.compact), but only for the tasks with changes, warnings or failures. Then the recap and the report of the distinct messages by severity.
     - Without a terminal (log file, pipe, CI) or with C(--verbose), the plugin behaves exactly like C(linuxfabrik.lfops.compact).
   author:
@@ -55,6 +62,29 @@ DOCUMENTATION = r"""
     - The terminal needs at least 65 columns and 12 lines, else the plugin behaves like C(linuxfabrik.lfops.compact). ansible-runner writes 64 characters wide invisible event markers, which the screen keeps on its last line.
     - Keyboard input is not echoed while the screen is shown, so that a pressed key does not move it. Prompts (C(vars_prompt), C(pause)) are not supported on the screen.
     - Made for the linear strategies (C(linear), C(mitogen_linear)).
+  options:
+    display_debug_output:
+      description:
+        - Show the output of C(ansible.builtin.debug) tasks, although their hosts are ok, grouped by identical output like the changes, with the other details at the end of the run.
+        - If disabled, the hosts of a C(ansible.builtin.debug) task are listed in the C(ok) line like those of any other task.
+      type: bool
+      default: true
+      env:
+        - name: ANSIBLE_CALLBACK_COMPACT_DISPLAY_DEBUG_OUTPUT
+      ini:
+        - section: callback_compact
+          key: display_debug_output
+    eta_cache_dir:
+      description:
+        - The directory where the durations of the steps are kept for the ETA of later runs, below C(/var/tmp/lfops), which the README asks ansible-navigator users to mount into the execution environment.
+        - The directory and its parent are created with mode C(0700) and must belong to the user running Ansible, else the ETA is estimated from the current play only. An empty value does the same.
+      type: path
+      default: /var/tmp/lfops/dashboard
+      env:
+        - name: ANSIBLE_CALLBACK_DASHBOARD_ETA_CACHE_DIR
+      ini:
+        - section: callback_dashboard
+          key: eta_cache_dir
   extends_documentation_fragment:
     - ansible.builtin.default_callback
     - ansible.builtin.result_format_callback
@@ -81,6 +111,11 @@ _SCREEN_OFF = '\033[?25h\033[?1049l'
 
 _MIN_COLUMNS = 65
 _MIN_LINES = 12
+
+# collection root: plugins/callback/dashboard.py -> ../../..
+_COLLECTION_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+_DURATION_SUFFIX = '.json'
 
 
 def _git(root, *args):
@@ -157,12 +192,189 @@ def lfops_origin(root, mountinfo='/proc/self/mountinfo'):
     return ', '.join(parts), source
 
 
+def step_key(task, root=_COLLECTION_ROOT):
+    """What identifies a task across runs and playbooks: its file and line,
+    relative to the collection root when it is part of LFOps, so that a checkout, a
+    worktree and an execution environment share it, followed by the chain of roles
+    that lead to it. A task of a role imported by many roles, like
+    shared/tasks/platform-variables.yml, gets a key per importing role. A task
+    without a file of its own, like the implicit fact gathering or the validation
+    of the role arguments, has the file and line of its play.
+    """
+    path = task.get_path()
+    if path.startswith(root.rstrip('/') + '/'):
+        path = path[len(root.rstrip('/')) + 1 :]
+    key = path or f'{task.action} {task.get_name()}'
+    roles = [role.get_name() for role in task.get_dep_chain() or []]
+    if roles:
+        key += f' [{" > ".join(roles)}]'
+    return key
+
+
+def play_steps(play, root=_COLLECTION_ROOT):
+    """Number the tasks of a play that ansible-core will start, the way its
+    PlayIterator sees them: play.compile() with --tags and --skip-tags applied.
+    Return a dict of task UUID -> step, starting at 1, and the list of the keys of
+    the steps, see step_key(). A role that runs twice in a play with other
+    parameters has the same key twice, the second occurrence gets a "#2".
+
+    Left out are the meta tasks, which never fire v2_playbook_on_task_start, and the
+    rescue sections, which only run on a failure. Included tasks are only known at
+    run time; the include itself is one step. A role listed twice with the same
+    parameters runs once, its tasks keep the step of their first occurrence.
+    Verified against ansible-core 2.16, 2.18 and 2.22 (executor/play_iterator.py,
+    plugins/strategy/linear.py).
+    """
+    all_vars = play.get_variable_manager().get_vars(play=play)
+    steps = {}
+    keys = []
+    seen = Counter()
+
+    def walk(tasks):
+        for task in tasks or []:
+            if isinstance(task, Block):
+                walk(task.block)
+                walk(task.always)
+            elif task.action not in C._ACTION_META and task._uuid not in steps:
+                steps[task._uuid] = len(steps) + 1
+                key = step_key(task, root)
+                seen[key] += 1
+                keys.append(key if seen[key] == 1 else f'{key}#{seen[key]}')
+
+    for block in play.compile():
+        walk([block.filter_tagged_tasks(all_vars)])
+    return steps, keys
+
+
+def hms(seconds):
+    """Seconds as "hh:mm:ss"."""
+    seconds = int(seconds)
+    return f'{seconds // 3600:02d}:{seconds % 3600 // 60:02d}:{seconds % 60:02d}'
+
+
+def eta(step, durations, play_start, step_start, now):
+    """The remaining time of a play: the sum of the `durations` (seconds, one per
+    step, None if unknown) of the steps after the running one, plus what is left of
+    the duration of that step. A step that runs longer than its duration does not
+    eat into the estimate for the steps after it. An unknown duration is the
+    average of the finished steps of this play; None if there is none yet.
+    """
+    if step < 1:
+        return None
+    done = step - 1
+    average = (step_start - play_start) / done if done else None
+    remaining = 0.0
+    for index in range(step - 1, len(durations)):
+        duration = durations[index] if durations[index] is not None else average
+        if duration is None:
+            return None
+        if index == step - 1:
+            duration = max(duration - (now - step_start), 0)
+        remaining += duration
+    return remaining
+
+
+def _private_dir(directory):
+    """Create `directory` and its parent with mode 0700, return whether both are
+    real directories of the effective user. Below the world-writable /var/tmp,
+    another user could create them first and swap the file for a symlink.
+    """
+    directory = directory.rstrip('/')
+    parent = os.path.dirname(directory)
+    try:
+        # the mode of makedirs() only applies to the last directory
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        os.makedirs(directory, mode=0o700, exist_ok=True)
+        for path in (parent, directory):
+            st = os.lstat(path)
+            if not stat.S_ISDIR(st.st_mode) or st.st_uid != os.geteuid():
+                return False
+    except OSError:
+        return False
+    return True
+
+
+def _duration_file(directory, key):
+    """The file of a step: the key hashed, since it contains slashes and spaces."""
+    name = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    return os.path.join(directory, name + _DURATION_SUFFIX)
+
+
+def _read_duration(path, key):
+    """The seconds in the file of the step `key`, None if unusable."""
+    try:
+        with open(path, encoding='utf-8') as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get('key') != key:
+        return None
+    seconds = data.get('seconds')
+    return seconds if isinstance(seconds, (int, float)) else None
+
+
+def load_durations(directory, keys):
+    """The durations of the steps `keys` from earlier runs, key -> seconds, for
+    those that are known.
+    """
+    if not directory or not keys or not _private_dir(directory):
+        return {}
+    durations = {}
+    for key in keys:
+        seconds = _read_duration(_duration_file(directory, key), key)
+        if seconds is not None:
+            durations[key] = seconds
+    return durations
+
+
+def save_durations(directory, measured):
+    """Write the `measured` durations (key -> seconds), one file per step, so
+    that runs in parallel, e.g. several ansible-navigator sessions, need no lock:
+    each file is replaced as a whole, the last run wins.
+    """
+    if not directory or not measured or not _private_dir(directory):
+        return
+    for key, seconds in measured.items():
+        # a new file moved into place, so that a run that aborts while writing
+        # leaves the old one, and another run never reads half a file
+        try:
+            fd, tmp = tempfile.mkstemp(dir=directory, prefix='.tmp.')
+        except OSError:
+            return
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                json.dump({'key': key, 'seconds': round(seconds, 1)}, f)
+            os.replace(tmp, _duration_file(directory, key))
+        except OSError:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+
+
+def progress_bar(step, total, width, color=True, remaining=None):
+    """A bar of `width` characters starting with "step 7/21 (33%)" and the
+    remaining time, if known. With color, the done part is shown in reverse video,
+    else filled with "#".
+    """
+    label = f' step {step}/{total} ({step * 100 // total}%)'
+    if remaining is not None:
+        label += f'   ETA {hms(remaining)}'
+    label += ' '
+    done = width * step // total
+    if not color:
+        bar = '#' * done + ' ' * (width - done)
+        return (label + bar[len(label) :])[:width]
+    line = label.ljust(width)[:width]
+    return f'\033[7m{line[:done]}\033[0m{line[done:]}'
+
+
 class CallbackModule(Compact):
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'stdout'
     CALLBACK_NAME = 'linuxfabrik.lfops.dashboard'
 
-    # kind -> letter and color in the LAST column of the host list
+    # kind -> letter and color in the LAST WORST column of the host list
     _KIND_LETTERS = {  # noqa: RUF012
         'changed': ('C', C.COLOR_CHANGED),
         'failed': ('F', C.COLOR_ERROR),
@@ -182,9 +394,15 @@ class CallbackModule(Compact):
         ('ok', C.COLOR_OK),
     )
 
+    # a mid gray of the 256 color palette, readable on dark and light backgrounds
+    _GRAY = 'gray12'
+
     # at most this many redraws per second, the last state is always drawn at the
     # end of a task
     _REDRAW_INTERVAL = 0.1
+    # without events, the screen is redrawn after this many seconds, so the elapsed
+    # time and the ETA keep moving during a long task
+    _TICK_INTERVAL = 1.0
 
     def __init__(self):
         super().__init__()
@@ -208,12 +426,28 @@ class CallbackModule(Compact):
         self._play_hosts = set()
         self._batch_hosts = set()
         self._dead_hosts = set()
+        # task UUID -> step of the running play and the keys of the steps, see
+        # play_steps(), the step of the running task, and when the play and that
+        # step started, for the ETA
+        self._steps = {}
+        self._step_keys = []
+        self._step = 0
+        self._play_start = time.monotonic()
+        self._step_start = self._play_start
+        # key -> seconds: the durations of the steps of the running play from
+        # earlier runs, and those measured in this run, see _learn()
+        self._durations = {}
+        self._measured = {}
         # where the plugin, and with it LFOps, comes from, see lfops_origin()
         self._origin = None
         # output of the running task and the details for the end of the run
         self._capture = []
         self._details = []
         self._details_section = None
+        # the screen is drawn by the main thread on events and by a ticker thread
+        # in between, see _tick()
+        self._screen_lock = threading.RLock()
+        self._ticker_stop = threading.Event()
 
     # -- screen ------------------------------------------------------------------
 
@@ -250,12 +484,29 @@ class CallbackModule(Compact):
         self._tui = True
         # leave the screen and print the details also on Ctrl+C or a crash
         atexit.register(self._end_tui)
+        threading.Thread(
+            target=self._tick, name='lfops-dashboard-ticker', daemon=True
+        ).start()
+
+    def _tick(self):
+        """Redraw the screen when no event did so for _TICK_INTERVAL seconds."""
+        # checked four times as often, so a redraw is at most a quarter late
+        while not self._ticker_stop.wait(self._TICK_INTERVAL / 4):
+            if time.monotonic() - self._last_draw < self._TICK_INTERVAL:
+                continue
+            try:
+                self._draw(force=True)
+            except Exception:  # the main thread changed the state, next tick
+                pass
 
     def _end_tui(self):
-        if not self._tui:
-            return
-        self._tui = False
-        self._tui_done = True
+        self._ticker_stop.set()
+        # wait for a draw of the ticker thread in progress
+        with self._screen_lock:
+            if not self._tui:
+                return
+            self._tui = False
+            self._tui_done = True
         sys.stdout.write(_SCREEN_OFF)
         sys.stdout.flush()
         if self._termios_saved is not None:
@@ -268,6 +519,21 @@ class CallbackModule(Compact):
         if self._capture:
             self._keep_capture()
         self._replay_details()
+        save_durations(self._eta_cache_dir(), self._measured)
+
+    def _eta_cache_dir(self):
+        try:
+            return self.get_option('eta_cache_dir')
+        except KeyError:  # options not set, e.g. in a unit test
+            return None
+
+    def _learn(self, now):
+        """Keep how long the running step took, until the next one starts or the
+        play ends, i.e. until its slowest host was done, with all tasks of an
+        include and the handlers notified meanwhile.
+        """
+        if 1 <= self._step <= len(self._step_keys):
+            self._measured[self._step_keys[self._step - 1]] = now - self._step_start
 
     @staticmethod
     def _fit(segments, width):
@@ -285,17 +551,54 @@ class CallbackModule(Compact):
             out.append(text)
         return ''.join(out)
 
-    def _counter_segments(self, label, counts, kinds):
-        segments = [(f'{label:<7}', None, True)]
-        for kind, color in kinds:
-            value = counts.get(kind, 0)
-            segments.append((f'{kind} ', None, False))
-            segments.append((f'{value:<5}', color if value else None, bool(value)))
-        return segments
+    @staticmethod
+    def _counter_rows(rows):
+        """Lay out rows of counters like "Task   ok 3/32 changed 0 ...". A row is a
+        label and a list of (kind, value) cells, a value a list of (text, color,
+        bold) segments. The values of a column are padded to the widest of them
+        plus one space, so the columns line up, also with numbers of any length.
+        """
+        widths = {}
+        for _, cells in rows:
+            for column, (_, value) in enumerate(cells):
+                length = sum(len(text) for text, _, _ in value)
+                widths[column] = max(widths.get(column, 4), length)
+        lines = []
+        for label, cells in rows:
+            segments = [(f'{label:<7}', None, True)]
+            for column, (kind, value) in enumerate(cells):
+                length = sum(len(text) for text, _, _ in value)
+                segments.append((f'{kind} ', None, False))
+                segments.extend(value)
+                segments.append((' ' * (widths[column] - length + 1), None, False))
+            lines.append(segments)
+        return lines
+
+    @staticmethod
+    def _counter_cells(counts, kinds):
+        """(kind, value) cells for _counter_rows(), a count in the color of its
+        kind and in bold, a zero plain.
+        """
+        return [
+            (
+                kind,
+                [
+                    (
+                        str(counts.get(kind, 0)),
+                        color if counts.get(kind) else None,
+                        bool(counts.get(kind)),
+                    )
+                ],
+            )
+            for kind, color in kinds
+        ]
 
     def _draw(self, force=False):
-        if not self._tui:
-            return
+        with self._screen_lock:
+            if self._tui:
+                self._render(force)
+
+    def _render(self, force):
         now = time.monotonic()
         if not force and now - self._last_draw < self._REDRAW_INTERVAL:
             return
@@ -307,8 +610,7 @@ class CallbackModule(Compact):
         width = columns - 1
         screen = []
 
-        elapsed = int(now - self._start)
-        elapsed = f'{elapsed // 3600:02d}:{elapsed % 3600 // 60:02d}:{elapsed % 60:02d}'
+        elapsed = hms(now - self._start)
         count = len(self._play_hosts)
         right = f'{count} host{"" if count == 1 else "s"}   {elapsed}'
         title = self._play_line.split(': ', 1)[-1]
@@ -323,9 +625,7 @@ class CallbackModule(Compact):
             )
         )
         if self._origin is None:
-            # collection root: plugins/callback/dashboard.py -> ../../..
-            root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            lfops, source = lfops_origin(root)
+            lfops, source = lfops_origin(_COLLECTION_ROOT)
             # the most important first, the path is cut on a narrow terminal
             self._origin = f'{lfops}   ansible-core {ANSIBLE_CORE_VERSION}'
             ee = os.environ.get('LFOPS_EE_VERSION')
@@ -355,47 +655,63 @@ class CallbackModule(Compact):
             )
         else:
             screen.append('')
+        if self._steps:
+            screen.append(
+                progress_bar(
+                    self._step,
+                    len(self._steps),
+                    width,
+                    ANSIBLE_COLOR,
+                    eta(
+                        self._step,
+                        [
+                            self._measured.get(key, (self._durations or {}).get(key))
+                            for key in self._step_keys
+                        ],
+                        self._play_start,
+                        self._step_start,
+                        now,
+                    ),
+                )
+            )
+        else:
+            screen.append('')
         screen.append('─' * width)
 
-        task_counts = Counter(self._task_counts)
+        task_cells = self._counter_cells(
+            self._task_counts,
+            (
+                ('ok', C.COLOR_OK),
+                ('changed', C.COLOR_CHANGED),
+                ('skipped', C.COLOR_SKIP),
+                ('fatal', C.COLOR_ERROR),
+                ('unreachable', C.COLOR_UNREACHABLE),
+                ('ignored', C.COLOR_WARN),
+            ),
+        )
         if self._batch_hosts:
+            # "ok 13/22/35": the ok results, the hosts still at work on the task,
+            # and the hosts of the play or of the batch with "serial"
             alive = len(self._batch_hosts - self._dead_hosts)
-            # hosts that are still at work on the task
-            task_counts['pending'] = max(alive - len(self._task_hosts), 0)
-        screen.append(
-            self._fit(
-                self._counter_segments(
-                    'Task',
-                    task_counts,
-                    (
-                        ('ok', C.COLOR_OK),
-                        ('changed', C.COLOR_CHANGED),
-                        ('skipped', C.COLOR_SKIP),
-                        ('fatal', C.COLOR_ERROR),
-                        ('unreachable', C.COLOR_UNREACHABLE),
-                        ('ignored', C.COLOR_WARN),
-                        ('pending', None),
-                    ),
-                ),
-                width,
+            pending = max(alive - len(self._task_hosts), 0)
+            task_cells[0][1].extend(
+                [
+                    (f'/{pending}', self._GRAY, False),
+                    (f'/{len(self._batch_hosts)}', self._GRAY, True),
+                ]
             )
+        run_cells = self._counter_cells(
+            self._run_counts,
+            (
+                ('ok', C.COLOR_OK),
+                ('changed', C.COLOR_CHANGED),
+                ('warning', C.COLOR_WARN),
+                ('fatal', C.COLOR_ERROR),
+                ('unreachable', C.COLOR_UNREACHABLE),
+            ),
         )
-        screen.append(
-            self._fit(
-                self._counter_segments(
-                    'Run',
-                    self._run_counts,
-                    (
-                        ('ok', C.COLOR_OK),
-                        ('changed', C.COLOR_CHANGED),
-                        ('warning', C.COLOR_WARN),
-                        ('fatal', C.COLOR_ERROR),
-                        ('unreachable', C.COLOR_UNREACHABLE),
-                    ),
-                ),
-                width,
-            )
-        )
+        for segments in self._counter_rows([('Task', task_cells), ('Run', run_cells)]):
+            screen.append(self._fit(segments, width))
         screen.append('─' * width)
 
         hosts = sorted(self._host_counts, key=lambda h: (self._host_severity(h), h))
@@ -404,7 +720,8 @@ class CallbackModule(Compact):
             self._fit(
                 [
                     (
-                        f'{"HOST":<{name_width}}  {"F":>3} {"W":>3} {"C":>3}  LAST',
+                        f'{"HOST":<{name_width}}  {"F":>3} {"W":>3} {"C":>3}'
+                        f' {"O":>4}  LAST WORST',
                         None,
                         True,
                     )
@@ -422,12 +739,21 @@ class CallbackModule(Compact):
             color = self._HOST_SEVERITY[self._host_severity(host)][1]
             # every count in the color of its own kind, zeros plain
             segments = [(f'{host[:name_width]:<{name_width}} ', color, bool(fatal))]
-            for value, value_color in (
-                (fatal, C.COLOR_ERROR),
-                (counts['warning'], C.COLOR_WARN),
-                (counts['changed'], C.COLOR_CHANGED),
+            # the ok count shows that a host is still at work while LAST WORST
+            # stays the same
+            for value, value_color, value_width in (
+                (fatal, C.COLOR_ERROR, 3),
+                (counts['warning'], C.COLOR_WARN, 3),
+                (counts['changed'], C.COLOR_CHANGED, 3),
+                (counts['ok'], C.COLOR_OK, 4),
             ):
-                segments.append((f' {value:>3}', value_color if value else None, False))
+                segments.append(
+                    (
+                        f' {value:>{value_width}}',
+                        value_color if value else None,
+                        False,
+                    )
+                )
             segments.append(('  ', None, False))
             kind, text = self._host_last.get(host) or self._host_last_ok.get(
                 host, (None, '')
@@ -450,8 +776,18 @@ class CallbackModule(Compact):
         for row in range(len(screen) + 1, lines + 1):
             out.append(f'\033[{row};1H\033[K')
         out.append(f'\033[{lines};1H')
-        sys.stdout.write(''.join(out))
-        sys.stdout.flush()
+        # Straight to the file descriptor, past the buffer of sys.stdout: Ansible
+        # forks its workers while the ticker thread may be drawing, and a fork
+        # while that thread holds the lock of the buffer leaves the worker hanging
+        # on it when it flushes its streams at exit. Verified against the CPython
+        # source: Modules/_io/bufferedio.c does not reset that lock after a fork,
+        # and multiprocessing/process.py calls _flush_std_streams() at the end of
+        # a worker.
+        if threading.current_thread() is threading.main_thread():
+            sys.stdout.flush()
+        data = ''.join(out).encode('utf-8', 'replace')
+        while data:
+            data = data[os.write(sys.stdout.fileno(), data) :]
 
     # -- output of the run -------------------------------------------------------
 
@@ -511,6 +847,20 @@ class CallbackModule(Compact):
             return
         self._header = self._banner_parts(task)
         self._last_task_banner = task._uuid
+        # a task of an include_tasks or include_role is found through its parents,
+        # which lead to the include; handlers are not found and keep the step
+        node = task
+        while node is not None:
+            step = self._steps.get(node._uuid)
+            if step:
+                # only forward, e.g. when a failure skips to an "always" section
+                if step > self._step:
+                    now = time.monotonic()
+                    self._learn(now)
+                    self._step = step
+                    self._step_start = now
+                break
+            node = getattr(node, '_parent', None)
         self._draw(force=True)
 
     def _flush_hosts(self):
@@ -536,7 +886,7 @@ class CallbackModule(Compact):
         return len(self._HOST_SEVERITY) - 1
 
     def _last_text(self, task, message=None):
-        """The LAST column of the host list: "<role> - <task>: <message>"."""
+        """The LAST WORST column of the host list: "<role> - <task>: <message>"."""
         source, name = self._source_and_name(task)
         # "namespace.collection.role" -> "role", the screen is narrow and the report
         # at the end names it in full
@@ -581,6 +931,20 @@ class CallbackModule(Compact):
             self._batch_hosts = set()
         self._dead_hosts = set()
         self._start_tui()
+        # the last step of the previous play, or batch with "serial", is done
+        self._learn(time.monotonic())
+        self._steps = {}
+        self._step_keys = []
+        self._step = 0
+        self._play_start = time.monotonic()
+        self._step_start = self._play_start
+        if self._tui:
+            try:
+                self._steps, self._step_keys = play_steps(play)
+            except Exception:  # only for the progress bar, which is then left out
+                pass
+            # per play, to see what runs in parallel learned meanwhile
+            self._durations = load_durations(self._eta_cache_dir(), self._step_keys)
         # the play line is part of the screen header, not of the details, and was
         # printed above the screen already
         self._capture = []
@@ -591,6 +955,9 @@ class CallbackModule(Compact):
     def v2_playbook_on_stats(self, stats):
         if self._tui:
             self._flush_hosts()
+            # a run that is aborted never gets here and keeps its running step out
+            # of the cache
+            self._learn(time.monotonic())
             self._end_tui()
         super().v2_playbook_on_stats(stats)
 

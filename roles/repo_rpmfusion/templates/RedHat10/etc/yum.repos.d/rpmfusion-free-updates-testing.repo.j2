@@ -1,41 +1,48 @@
 # {{ ansible_managed }}
-# 2026052201
+# 2026112001
 
 [rpmfusion-free-updates-testing]
-name=RPM Fusion for EL 8 - Free - Test Updates
+name=RPM Fusion for EL 10 - Free - Test Updates
 {% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length %}
-baseurl={{ repo_rpmfusion__mirror_url }}/rpmfusion/free-el-updates-testing-8/x86_64
+baseurl={{ repo_rpmfusion__mirror_url }}/rpmfusion/free-el-updates-testing-10/x86_64
+#metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-testing-10&arch=$basearch
 {% else %}
-mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-el-updates-testing-8&arch=$basearch
+#baseurl=http://download1.rpmfusion.org/free/el/updates/testing/10/$basearch/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-testing-10&arch=$basearch
 {% endif %}
 enabled=0
 type=rpm-md
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-10
 {% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
 username={{ repo_rpmfusion__basic_auth_login["username"] }}
 password={{ repo_rpmfusion__basic_auth_login["password"] }}
 {% endif %}
 
 [rpmfusion-free-updates-testing-debuginfo]
-name=RPM Fusion for EL 8 - Free - Test Updates Debug
-mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-el-updates-testing-debug-8&arch=$basearch
+name=RPM Fusion for EL 10 - Free - Test Updates Debug
+#baseurl=http://download1.rpmfusion.org/free/el/updates/testing/10/$basearch/debug/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-testing-debug-10&arch=$basearch
 enabled=0
 type=rpm-md
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-10
 {% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
 username={{ repo_rpmfusion__basic_auth_login["username"] }}
 password={{ repo_rpmfusion__basic_auth_login["password"] }}
 {% endif %}
 
 [rpmfusion-free-updates-testing-source]
-name=RPM Fusion for EL 8 - Free - Test Updates Source
-mirrorlist=http://mirrors.rpmfusion.org/mirrorlist?repo=free-el-updates-testing-source-8&arch=$basearch
+name=RPM Fusion for EL 10 - Free - Test Updates Source
+#baseurl=http://download1.rpmfusion.org/free/el/updates/testing/10/SRPMS/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-testing-source-10&arch=$basearch
 enabled=0
 type=rpm-md
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-10
 {% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
 username={{ repo_rpmfusion__basic_auth_login["username"] }}
 password={{ repo_rpmfusion__basic_auth_login["password"] }}

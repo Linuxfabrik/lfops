@@ -1,0 +1,2 @@
+# Molecule scenario marker for the 'sshd' scenario, run with
+# `molecule test --scenario-name sshd`.

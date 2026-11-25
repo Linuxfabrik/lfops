@@ -77,7 +77,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Set a custom primary prompt for bash. This is displayed before each command.
 * Type: String.
-* Default: green, if the host is in an Ansible group called `test`; yellow, if the host is in an Ansible group called `stage`; red, if neither condition above applies, assuming a productive machine.
+* Default: green, if the host is in an Ansible group whose name contains `test` (e.g. `test` or `env_test`); yellow, if a group name contains `stage`; red otherwise, assuming a productive machine.
 
 `tools__prompt_use_fqdn`
 

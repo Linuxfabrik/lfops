@@ -191,6 +191,19 @@
     loop: '{{ __php__conf_dest }}'
     notify: 'php: php-fpm --test; restart php-fpm'
 
+  # OPcache reads the blacklist once at startup, hence the restart
+  - name: 'Deploy {{ php__ini_opcache_blacklist_filename__combined_var }}'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/opcache.blacklist.j2'
+      dest: '{{ php__ini_opcache_blacklist_filename__combined_var }}'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'php: php-fpm --test; restart php-fpm'
+    when:
+      - 'php__ini_opcache_blacklist_filename__combined_var | length > 0'
+
   tags:
     - 'php'
     - 'php:ini'

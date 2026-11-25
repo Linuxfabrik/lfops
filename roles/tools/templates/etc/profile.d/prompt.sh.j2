@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2025031101
+# 2026112201
 
 RED="\[\033[1;31m\]"
 GREEN="\[\033[1;32m\]"
@@ -14,9 +14,9 @@ PSGREEN="[$GREEN\$(date +%H:%M:%S) \u@{{ tools__prompt_use_fqdn | ternary('\H', 
 {% if tools__prompt_ps1 is defined and tools__prompt_ps1 | length %}
 export PS1="{{ tools__prompt_ps1 }}"
 {% else %}
-{% if 'test' in group_names %}
+{% if 'test' in group_names | join(' ') %}
 export PS1=$PSGREEN
-{% elif 'stage' in group_names %}
+{% elif 'stage' in group_names | join(' ') %}
 export PS1=$PSYELLOW
 {% else %}
 export PS1=$PSRED

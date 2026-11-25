@@ -417,6 +417,68 @@
       loop_control:
         label: '{{ item["item"] }}'
 
+    # The OPcache blacklist is read once when php-fpm starts, so only a running worker shows
+    # whether the file arrived and php-fpm was restarted. The probe has OPcache compile a
+    # blacklisted script and a control script, then asks which of them landed in the cache.
+    - name: 'Deploy the OPcache blacklist test scripts'
+      ansible.builtin.copy:
+        content: "<?php return 1;\n"
+        dest: '/var/www/html/molecule-opcache-{{ item }}.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: '{{ "httpd_sys_content_t" if ansible_facts["os_family"] == "RedHat" else omit }}'
+      loop:
+        - 'blacklisted'
+        - 'cached'
+
+    # OPcache does not cache a file younger than opcache.file_update_protection (2 seconds), so
+    # a freshly copied control script would stay uncached and prove nothing. Not the epoch: OPcache
+    # takes an mtime of 0 for "no timestamp" and never caches such a file either.
+    - name: 'touch --date=2000-01-01 /var/www/html/molecule-opcache-{blacklisted,cached}.php'
+      ansible.builtin.file:
+        path: '/var/www/html/molecule-opcache-{{ item }}.php'
+        state: 'file'
+        modification_time: '200001010000.00'
+        access_time: 'preserve'
+      loop:
+        - 'blacklisted'
+        - 'cached'
+
+    - name: 'Deploy the OPcache probe script'
+      ansible.builtin.copy:
+        content: |
+          <?php
+          foreach (['blacklisted', 'cached'] as $name) {
+              $path = "/var/www/html/molecule-opcache-{$name}.php";
+              @opcache_compile_file($path);
+              echo "{$name}=" . (int) opcache_is_script_cached($path) . "\n";
+          }
+          echo 'blacklist=' . implode(',', opcache_get_configuration()['blacklist']) . "\n";
+        dest: '/var/www/html/molecule-opcache-probe.php'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: '{{ "httpd_sys_content_t" if ansible_facts["os_family"] == "RedHat" else omit }}'
+
+    - name: 'Run the OPcache probe script through the www pool socket'
+      ansible.builtin.command: 'cgi-fcgi -bind -connect {{ __molecule__runtime_path }}/www.sock'
+      environment:
+        QUERY_STRING: ''
+        REQUEST_METHOD: 'GET'
+        SCRIPT_FILENAME: '/var/www/html/molecule-opcache-probe.php'
+        SCRIPT_NAME: '/molecule-opcache-probe.php'
+      register: '__molecule__opcache_probe_result'
+      changed_when: false
+
+    - name: 'Assert php-fpm caches the control script but not the blacklisted one'
+      ansible.builtin.assert:
+        that:
+          - '"blacklisted=0" in __molecule__opcache_probe_result["stdout"]'
+          - '"cached=1" in __molecule__opcache_probe_result["stdout"]'
+          - '__molecule__opcache_probe_result["stdout"] is search("blacklist=/var/www/html/molecule-opcache-blacklisted(\r?\n|$)")'
+        fail_msg: '{{ __molecule__opcache_probe_result["stdout"] }}'
+
 
 # The [global] drop-in is the one part of the role whose correctness depends on how the packaged
 # php-fpm.conf orders its `include=` line, which differs per family. Reading the deployed file back

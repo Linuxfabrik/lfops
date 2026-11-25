@@ -18,7 +18,7 @@ This role deploys the package repository for [MongoDB](https://www.mongodb.com/)
 
 `repo_mongodb__version`
 
-* The MongoDB repo version to install. [Have a look at the MongoDB repository for the list of available releases](https://repo.mongodb.org/yum/redhat/8/mongodb-org/).
+* The MongoDB repo version to install. [Have a look at the MongoDB repository for the list of available releases](https://repo.mongodb.org/yum/redhat/8/mongodb-org/). On RHEL 10, it has to be 8.0 or newer: the upstream 7.0 repository for RHEL 10 lacks `mongodb-database-tools`, so MongoDB cannot be installed from it, and the role aborts.
 * Type: String.
 
 Example:

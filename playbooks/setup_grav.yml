@@ -62,6 +62,9 @@
       php__modules__dependent_var: '{{
           grav__php__modules__dependent_var
         }}'
+      php__opcache_blacklist__dependent_var: '{{
+          grav__php__opcache_blacklist__dependent_var
+        }}'
       when:
         - 'not grav__skip_php | d(false)'
 

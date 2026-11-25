@@ -175,6 +175,7 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 * See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
 * Type: String.
 * Default: `'syslog:local1'`
+* Deviates from the upstream default `logs/error_log` on RHEL and `${APACHE_LOG_DIR}/error.log` on Debian / Ubuntu: the CIS Benchmark wants the server's own log in syslog, where it is processed and monitored along with the system logs, while each vHost keeps its own log file.
 
 `apache_httpd__conf_graceful_shutdown_timeout`
 
@@ -236,7 +237,8 @@ apache_httpd__conf_server_admin: 'webmaster@example.com'
 
 * See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel).
 * Type: String.
-* Default: `'warn'`
+* Default: `'notice core:info'`
+* Deviates from the upstream default `warn`, as the CIS Benchmark recommends: through syslog the level also applies to the lines Apache writes when it starts, reloads and stops, which `warn` drops, and `core:info` logs requests for files that do not exist.
 
 `apache_httpd__conf_max_keep_alive_requests`
 
@@ -279,7 +281,7 @@ apache_httpd__conf_limit_request_body: 102400
 apache_httpd__conf_limit_request_field_size: 8190
 apache_httpd__conf_limit_request_fields: 100
 apache_httpd__conf_limit_request_line: 8190
-apache_httpd__conf_log_level: 'warn'
+apache_httpd__conf_log_level: 'notice core:info'
 apache_httpd__conf_max_keep_alive_requests: 500
 apache_httpd__conf_server_name: 'localhost'
 apache_httpd__conf_timeout: 10
@@ -537,7 +539,7 @@ Types of vHosts:
 * **localhost**: A hardened, pre-defined VirtualHost just listening on https://localhost, and only accessible from localhost. Due to its naming, it is the first defined vHost. Can be extended by using the `raw` variable. The following URLs are pre-configured and only accessible from localhost:
 
     * `/fpm-ping` - PHP-FPM health check of the `www` pool
-    * `/fpm-status` - PHP-FPM status page of the `www` pool
+    * `/fpm-status` - PHP-FPM status page of the `www` pool, without its HTML view
     * `/monitoring.php` - Linuxfabrik monitoring endpoint
     * `/server-info` - Apache server info (`mod_info` required, disabled by default)
     * `/server-status` - Apache server status (`mod_status` required)
@@ -548,11 +550,16 @@ Types of vHosts:
     <Location "/app1-fpm-status">
         Require local
         ProxyPass unix:/run/php-fpm/app1.sock|fcgi://localhost/fpm-status
+        <If "%{QUERY_STRING} !~ /^((full|json|openmetrics|xml)(&|$))*$/">
+            Require all denied
+        </If>
     </Location>
     ```
 
+    The `<If>` block answers every query other than the `full`, `json`, `openmetrics` and `xml` flags with `403`. It keeps out the HTML view (`?html`), which prints request fields that any client of the pool controls unescaped, so they run script in the browser of whoever opens the page ([GHSA-3mg3-cr28-46gc](https://github.com/php/php-src/security/advisories/GHSA-3mg3-cr28-46gc)). The check works on the raw query string, because PHP-FPM decodes the query and also shows the HTML view for `?%68tml`. The `php-fpm-status` check asks for `?json&full` and is not affected.
+
 * **proxy**: A typical hardened reverse proxy vHost. Can be extended by using the `raw` variable. This proxy vHost definition prevents Apache from functioning as a forward proxy server (inside > out). Forward to the backend with `ProxyPass` in `raw`, not with `RewriteRule ... [proxy]`: mod_rewrite passes the path on decoded, so a `?` in a path segment, such as in a file name, reaches the backend as the start of the query string. See the [nextcloud](https://github.com/Linuxfabrik/lfops/tree/main/roles/nextcloud) role for an example.
-* **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>` and `</VirtualHost>` completely from scratch.
+* **raw**: If none of the above vHost templates fit, use the `raw` one and define everything except `<VirtualHost>`, `</VirtualHost>` and the logs completely from scratch. Like every other template it logs to its own error and access log, so requests to a raw vHost, for example a catch-all for unknown host names, reach fail2ban.
 * **redirect**: A vHost that redirects every request to `https://` on the same host, keeping the requested hostname and path. Set `virtualhost_port: 80` to redirect the plain HTTP port. Requests below `/.well-known/acme-challenge/` are excluded, so ACME/Let's Encrypt HTTP-01 challenges keep working. The `raw` variable replaces the redirect rule instead of extending it.
 * **wordpress**: A hardened vHost for a WordPress instance, adding WordPress-specific rules on top of the app-vHost hardening: hotlink protection, blocked access to `wp-config.php`, `xmlrpc.php` and the other WordPress metadata files, blocked direct access to `wp-includes`, no PHP execution below `wp-content/uploads`, blocked author scans, comment-spam mitigation, and the `Referrer-Policy` and `X-Content-Type-Options` headers. The rules also cover WordPress installations in sub-paths of the document root, such as `/blog`. It is usually injected by the [wordpress](https://github.com/Linuxfabrik/lfops/tree/main/roles/wordpress) role; define it by hand only when running WordPress without that role, and then set `wordpress_url`.
 
@@ -655,10 +662,10 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_custom_log`
 
-* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
-* Applies to: app, localhost, proxy, wordpress.
+* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog). The raw and redirect templates leave it out if their `raw` content sets a `CustomLog` or `TransferLog` itself.
+* Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
-* Default: `'logs/{{ conf_server_name }}-access.log linuxfabrikio'`
+* Default: `'logs/{{ conf_server_name }}-access.log combined'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-access.log combined'`, because it usually shares its name with the HTTPS vHost
 
 `conf_directory_index`
 
@@ -676,10 +683,10 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_error_log`
 
-* See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog).
-* Applies to: app, localhost, proxy, wordpress.
+* See [ErrorLog](https://httpd.apache.org/docs/2.4/mod/core.html#errorlog). The raw and redirect templates leave it out if their `raw` content sets an `ErrorLog` itself.
+* Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
-* Default: `'logs/{{ conf_server_name }}-error.log'`
+* Default: `'logs/{{ conf_server_name }}-error.log'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-error.log'`
 
 `conf_keep_alive_timeout`
 
@@ -691,8 +698,8 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_log_level`
 
-* See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel).
-* Applies to: app, localhost, proxy, wordpress.
+* See [LogLevel](https://httpd.apache.org/docs/2.4/mod/core.html#loglevel). The raw and redirect templates leave it out if their `raw` content sets a `LogLevel` itself.
+* Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
 * Default: `'notice core:info'`
 
@@ -903,7 +910,7 @@ This module is for flexible logging of client requests. Logs are written in a cu
 
 `apache_httpd__mod_log_config_custom_log`
 
-* Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
+* Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
 * Type: String.
 * Default: unset
 
@@ -923,8 +930,8 @@ apache_httpd__mod_log_config_custom_log: 'logs/access.log combined'
 * The proxies as IP addresses or CIDR ranges (IPv4 and IPv6). Every address listed here can claim any client address, `127.0.0.1` included, which passes `Require local`. List the proxies only, never a whole client network.
 * The client address replaces the peer address of the request, so an application run by this Apache (PHP-FPM) no longer sees the proxy as the sender of `X-Forwarded-Proto` and `X-Forwarded-Host` and ignores them. What to do per application, when a proxy in front terminates TLS:
 
-    * Nextcloud: set `overwriteprotocol` to `https` in `nextcloud__sysconfig__host_var`, otherwise Nextcloud considers the request `http`. Alternatively leave this variable empty and list the proxy as `trusted_proxies 0` in `nextcloud__sysconfig__host_var`; Nextcloud then reads the client address and the protocol from the headers itself, and Apache logs the proxy.
-    * LibreNMS: leave this variable empty and list the proxy in `librenms__config_app_trusted_proxies`. With both set, LibreNMS ignores `X-Forwarded-Proto` and redirects to `http://`, and `librenms__url` does not change that.
+    * Nextcloud: set `overwriteprotocol` to `https` in `nextcloud__sysconfig__host_var`, otherwise Nextcloud considers the request `http`. Alternatively leave this variable empty and list the proxy as `trusted_proxies 0` in `nextcloud__sysconfig__host_var`; Nextcloud then reads the client address and the protocol from the headers itself, and Apache logs the proxy, so set `fail2ban__jails_apache_enabled: false` on this host to keep the [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban) role from enabling its Apache jails, which would ban the proxy.
+    * LibreNMS: leave this variable empty and list the proxy in `librenms__config_app_trusted_proxies`. With both set, LibreNMS ignores `X-Forwarded-Proto` and redirects to `http://`, and `librenms__url` does not change that. Apache then logs the proxy, so set `fail2ban__jails_apache_enabled: false` on this host as well.
     * WordPress: nothing to do for the protocol, `wp-config.php` believes `X-Forwarded-Proto` from anyone. Leave `wordpress__trusted_proxies` empty while this variable is set, since WordPress then sees the client as the peer anyway; it only matters with this variable empty.
     * Applications behind `ProxyPass`, for example Graylog and GitLab: the application sees this Apache as its peer either way, with the client in `X-Forwarded-For`, so this variable changes nothing for them. They need this Apache as their trusted proxy (for example `127.0.0.1`): `graylog_server__trusted_proxies` for Graylog, `trusted_proxies` in `gitlab.rb` for GitLab.
 

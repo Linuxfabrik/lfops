@@ -1,0 +1,6 @@
+# The Apache jails need the logs of the apache_httpd role below /var/log/httpd. Hosts without it
+# get the jails removed, see the stat task in tasks/main.yml.
+__fail2ban__apache_jails_state: '{{
+    (fail2ban__jails_apache_enabled | bool and __fail2ban__apache_log_dir_result["stat"]["exists"] | d(false))
+    | ternary("present", "absent")
+  }}'

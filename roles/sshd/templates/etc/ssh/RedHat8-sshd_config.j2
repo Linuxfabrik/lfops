@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026101601
+# 2026111301
 
 #	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
 
@@ -124,7 +124,7 @@ ClientAliveInterval {{ sshd__client_alive_interval }}
 ClientAliveCountMax {{ sshd__client_alive_count_max }}
 UseDNS {{ sshd__use_dns | bool | ternary("yes", "no") }}
 #PidFile /var/run/sshd.pid
-#MaxStartups 10:30:100
+MaxStartups {{ sshd__max_startups__combined_var }}
 #PermitTunnel no
 #ChrootDirectory none
 #VersionAddendum none

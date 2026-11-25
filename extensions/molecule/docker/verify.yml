@@ -1,0 +1,31 @@
+# verify.yml runs after converge and again after the idempotence step. It asserts the observable
+# end state: dockerd runs a container on the default bridge, the published port answers on the
+# host's address, and the container reaches the outside world.
+- name: 'Verify docker'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+
+  tasks:
+
+    - name: 'docker run --detach --publish 8080:80 quay.io/libpod/banner'
+      ansible.builtin.command: 'docker run --detach --rm --name molecule-banner --publish 8080:80 quay.io/libpod/banner:latest'
+      changed_when: false
+
+    - name: 'curl http://<host>:8080'
+      ansible.builtin.uri:
+        url: 'http://{{ ansible_facts["default_ipv4"]["address"] }}:8080/'
+        return_content: false
+      register: '__molecule__curl_result'
+      retries: 6
+      delay: 5
+      until: '__molecule__curl_result["status"] | d(0) == 200'
+
+    # Needs the masquerading rule dockerd set up for the bridge.
+    - name: 'docker run ubi9/ubi-minimal curl https://quay.io'
+      ansible.builtin.command: 'docker run --rm registry.access.redhat.com/ubi9/ubi-minimal:latest curl --silent --show-error --output /dev/null --max-time 10 https://quay.io/'
+      changed_when: false
+
+    - name: 'docker rm --force molecule-banner'
+      ansible.builtin.command: 'docker rm --force molecule-banner'
+      changed_when: false

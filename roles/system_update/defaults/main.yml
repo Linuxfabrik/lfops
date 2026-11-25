@@ -1,5 +1,6 @@
 system_update__cache_only: false
 system_update__mail_from: '{{ mailto_root__from }}'
+system_update__mail_new_configfiles_enabled: false
 system_update__mail_recipients_new_configfiles: '{{ mailto_root__to }}'
 system_update__mail_recipients_updates: '{{ mailto_root__to }}'
 system_update__mail_subject_hostname: '$(hostname --short)'

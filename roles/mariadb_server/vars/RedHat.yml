@@ -1,3 +1,11 @@
+# The RHEL 9 and 10 kernels block io_uring (kernel.io_uring_disabled = 2), and the RHEL 8 kernel
+# does not offer it. With 'auto', a MariaDB built with liburing (the MariaDB repository's EL9 and
+# EL10 packages) logs an EPERM warning on every start before it falls back to libaio, which
+# builds without liburing (the distribution packages, the MariaDB repository's EL8 packages)
+# use anyway. 'io_uring' would turn native AIO off entirely. Verified with mariadb-server
+# 10.11.18 from the distribution and MariaDB-server 11.4.13 from the MariaDB repository on
+# Rocky 8.10, 9.8 and 10.2 (the distribution's 11.8.8 on Rocky 9 links libaio only, too).
+__mariadb_server__cnf_innodb_linux_aio: 'aio'
 __mariadb_server__config_file_00: '/etc/my.cnf.d/z00-linuxfabrik.cnf'
 __mariadb_server__config_file_01: '/etc/my.cnf.d/z01-linuxfabrik.cnf'
 

@@ -205,14 +205,23 @@ ansible-navigator:
     enabled: true
     environment-variables:
       set:
+        ANSIBLE_CACHE_PLUGIN_CONNECTION: '/var/tmp/lfops/ansible-facts'
         ANSIBLE_STDOUT_CALLBACK: 'linuxfabrik.lfops.compact'
     image: ghcr.io/linuxfabrik/lfops_ee:latest
     pull:
       policy: missing
+    volume-mounts:
+      - src: '/var/tmp/lfops'
+        dest: '/var/tmp/lfops'
+        options: 'z'
   mode: stdout
 ```
 
 `ANSIBLE_STDOUT_CALLBACK` selects the [compact output](#compact-output). ansible-navigator runs the playbook through ansible-runner, which replaces the stdout callback with its own wrapper. That wrapper only builds on the `ANSIBLE_STDOUT_CALLBACK` environment variable and ignores `stdout_callback` in the `ansible.cfg`.
+
+The volume mount keeps the controller-side caches of LFOps roles (for example the source install of `monitoring_plugins`), the fact cache and the durations the [dashboard](#dashboard) learns across runs; without it, the EE starts every run with an empty cache. Create the directory once with `mkdir --parents --mode=0700 /var/tmp/lfops`. `z` instead of `Z` lets runs in parallel share it.
+
+`ANSIBLE_CACHE_PLUGIN_CONNECTION` is needed because ansible-runner points the fact cache at the artifact directory of the run, which overrides `fact_caching_connection` in the `ansible.cfg`, so every run would gather the facts anew.
 
 Then run playbooks using `ansible-navigator` instead of `ansible-playbook`:
 
@@ -221,6 +230,8 @@ ansible-navigator run linuxfabrik.lfops.setup_basic \
   --inventory path/to/inventory \
   --limit myhost
 ```
+
+In a clone of the repository, `tools/lfops` assembles this command in a terminal UI: playbook, tags, inventories and limit are picked from lists, and the command can land on the shell prompt for editing. See [Tools](https://linuxfabrik.github.io/lfops/tools/).
 
 The EE is based on Rocky Linux 9 with ansible-core 2.16, Python 3.11, and includes Mitogen for accelerated execution. See [`execution-environment.yml`](execution-environment.yml) for the full build definition. Public container images are available on [GitHub Container Registry](https://github.com/Linuxfabrik/lfops/pkgs/container/lfops_ee).
 
@@ -335,7 +346,7 @@ Place an `ansible.cfg` in your inventory/project directory:
 forks = 30
 gathering = smart
 fact_caching = jsonfile
-fact_caching_connection = ~/.ansible_cache
+fact_caching_connection = /var/tmp/lfops/ansible-facts  ; shared with ansible-navigator, see "Using ansible-navigator"
 fact_caching_timeout = 86400
 host_key_checking = False
 inventory_ignore_extensions = ~, .orig, .bak, .ini, .cfg, .retry, .pyc, .pyo, .csv, .md
@@ -356,7 +367,7 @@ ssh_args = -o ControlMaster=auto -o ControlPersist=60s
 
 The goal of the `linuxfabrik.lfops.compact` stdout callback is the most compact output without repetitions that still carries every detail a Linux system engineer needs from a run against hundreds or thousands of hosts, so that nobody has to scroll through endless walls of text. The details are the same as in the output of `ansible.posix.debug`: every changed, failed and unreachable host, every diff and every warning.
 
-The plugin keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module, and the warnings with the hosts they occurred on, both grouped by identical text, so a change or warning that affects many hosts appears once. Failures that a role accepts with `ignore_errors` are shown in one `ignored` line per message. At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED) and grouped by role or playbook:
+The plugin keeps the output of large runs readable. Every task is one block: the role and the task name on lines of their own, a progress bar with one asterisk per host result in the color of its status (green ok, yellow changed, cyan skipped, red failed), and one line each for the ok and the skipped hosts. Hosts with the same name prefix are merged in bash brace expansion syntax. Changed hosts are listed with their diff, or, without a diff, with the `msg`, `stdout` and `stderr` of the module, and the warnings with the hosts they occurred on, both grouped by identical text, so a change or warning that affects many hosts appears once. Failures that a role accepts with `ignore_errors` are shown in one `ignored` line per message. The output of `ansible.builtin.debug` tasks is shown although their hosts are ok, grouped like the changes; set `display_debug_output = false` in the `[callback_compact]` section of the `ansible.cfg`, or `ANSIBLE_CALLBACK_COMPACT_DISPLAY_DEBUG_OUTPUT=false`, to list those hosts in the `ok` line instead. At the end of the run, a report in Markdown lists each distinct message once with the hosts it occurred on, in sections by severity (FATAL, UNREACHABLE, WARNING, IGNORED, CHANGED) and grouped by role or playbook:
 
 ```text
 Playbook: linuxfabrik.lfops.setup_basic
@@ -382,23 +393,26 @@ Enable it with `stdout_callback = linuxfabrik.lfops.compact` in the `ansible.cfg
 
 The goal of the `linuxfabrik.lfops.dashboard` stdout callback is a live view of a run, similar to how glances shows the load of a system: always visible, without scrolling, and adapting to the size of the terminal.
 
-It shows the run on one fixed screen that is updated in place instead of scrolling: the current role and task, counters of the results of the current task and of the whole run, and the hosts, sorted by their most severe result (fatal, warning, changed, ignored, ok) and then by name, each with its counts of fatal (F), warning (W) and changed (C) results and its last notable result, marked with the letter of its kind. A host with only ok results shows its last ok result, hosts with only skipped results are counted, not listed:
+It shows the run on one fixed screen that is updated in place instead of scrolling, at least once a second: the current role and task, a progress bar of the play, counters of the results of the current task and of the whole run, with the ok results of the task followed by the hosts still at work on it and the number of hosts (`ok 20/5/35`), and the hosts, sorted by their most severe result (fatal, warning, changed, ignored, ok) and then by name. Each host comes with its counts of fatal (F), warning (W), changed (C) and ok (O) results and its last notable result (LAST WORST), marked with the letter of its kind. A rising O count shows that a host is still at work while LAST WORST stays the same. A host with only ok results shows its last ok result, hosts with only skipped results are counted, not listed:
 
 ```text
 linuxfabrik.lfops.setup_basic                                    35 hosts   00:12:34
 LFOps main@3e8a7b75, 2 uncommitted   ansible-core 2.16.19   mounted from /h/u/lfops
 Role: linuxfabrik.lfops.firewall
 Task: Deploy the firewall rules
+ step 140/421 (33%)   ETA 00:15:12
 ──────────────────────────────────────────────────────────────────────────────────
-Task   ok 20   changed 3    skipped 5    fatal 1    unreachable 0    pending 6
-Run    ok 1840 changed 61   warning 12   fatal 1    unreachable 0
+Task   ok 20/5/35 changed 3    skipped 5    fatal 1    unreachable 0    ignored 0
+Run    ok 1840    changed 61   warning 12   fatal 1    unreachable 0
 ──────────────────────────────────────────────────────────────────────────────────
-HOST      F   W   C  LAST
-web-02    1   0   2  F firewall - Deploy the firewall rules: ...
-web-01    0   2   5  W lvm - pvcreate / pvresize: Rescan path does not exist ...
-db-01     0   0   7  C firewall - Deploy the firewall rules
-app-01    0   0   0  O firewall - Deploy the firewall rules
+HOST      F   W   C    O  LAST WORST
+web-02    1   0   2   48  F firewall - Deploy the firewall rules: ...
+web-01    0   2   5   61  W lvm - pvcreate / pvresize: Rescan path does not exist ...
+db-01     0   0   7   59  C firewall - Deploy the firewall rules
+app-01    0   0   0   66  O firewall - Deploy the firewall rules
 ```
+
+The progress bar counts the tasks of the play that are known when it starts, after `--tags` and `--skip-tags` are applied, and is drawn in reverse video on a color terminal. The estimated remaining time (ETA) adds up how long each step left took the last time it ran, until the slowest host was done. The dashboard learns these durations from every run and keeps them in `/var/tmp/lfops/dashboard`, so the ETA of a playbook is accurate from its second run on. A step that never ran before counts with the average of the steps of the play so far. A task included with `include_tasks` or `include_role` is one step, so the bar stands still while the tasks it includes run. Handlers and `rescue` sections are not counted. The bar measures tasks, not time, and starts over with every batch of `serial`.
 
 At the end of the run, the details follow in the format of the [compact output](#compact-output), but only for the tasks with changes, warnings or failures, then the recap and the report. Without a terminal (log file, pipe, CI), with `--verbose`, or on a terminal smaller than 65 columns and 12 lines, it behaves exactly like `linuxfabrik.lfops.compact`. Enable it like the compact output, with `linuxfabrik.lfops.dashboard` as the stdout callback. See `ansible-doc --type callback linuxfabrik.lfops.dashboard` for details.
 

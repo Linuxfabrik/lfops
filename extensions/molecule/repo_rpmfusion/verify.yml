@@ -1,0 +1,92 @@
+# verify.yml runs after converge and again after the idempotence step. The checks ask
+# dnf whether the free and nonfree repositories of the host's EL release are usable, and
+# whether the GPG keys the role deployed sign the packages in them. A repository or key
+# of another EL release (the role used to deploy those of EL 8 everywhere) fails here.
+- name: 'Verify repo_rpmfusion provides usable RPM Fusion repositories'
+  hosts: 'systems_under_test'
+  gather_facts: true
+  become: true
+  tasks:
+
+    - name: 'dnf --assumeyes --refresh repoinfo rpmfusion-free-updates rpmfusion-nonfree-updates'
+      ansible.builtin.command: 'dnf --assumeyes --refresh repoinfo rpmfusion-free-updates rpmfusion-nonfree-updates'
+      register: '__molecule__repoinfo_result'
+      changed_when: false
+
+    - name: 'Assert both repositories are enabled, have packages and match the EL release of the host'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__repoinfo_result["stdout"] | regex_findall("Repo-status\s*:\s*enabled") | length == 2'
+          - '__molecule__repoinfo_result["stdout"] | regex_findall("Repo-pkgs\s*:\s*[1-9]") | length == 2'
+          - '__molecule__repoinfo_result["stdout"] | regex_findall("Repo-baseurl\s*:\s*\S+/el/updates/" ~ ansible_facts["distribution_major_version"] ~ "/") | length == 2'
+        fail_msg: '{{ __molecule__repoinfo_result["stdout"] }}'
+
+    # the RPM Fusion release packages for EL 9 and newer use a metalink, which lets dnf
+    # verify the repository metadata a mirror hands out; EL 8 still uses a mirrorlist.
+    - name: 'Assert the repositories use the mirror lookup of the RPM Fusion release package'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__repoinfo_result["stdout"] | regex_findall(__molecule__lookup ~ "\s*:\s*http://mirrors\.rpmfusion\.org/") | length == 2'
+        fail_msg: '{{ __molecule__repoinfo_result["stdout"] }}'
+      vars:
+        __molecule__lookup: '{{ "Repo-mirrors" if ansible_facts["distribution_major_version"] == "8" else "Repo-metalink" }}'
+
+    # x264-libs (free) and broadcom-wl (nonfree) exist for EL 8, 9 and 10. broadcom-wl
+    # cannot be installed without akmods, so the packages are only downloaded and checked
+    # against a temporary RPM database, which leaves the host's keyring untouched.
+    - name: 'dnf --assumeyes --quiet --disablerepo=* --enablerepo=rpmfusion-free-updates --enablerepo=rpmfusion-nonfree-updates repoquery --latest-limit 1 --location x264-libs broadcom-wl'
+      ansible.builtin.command: 'dnf --assumeyes --quiet --disablerepo=* --enablerepo=rpmfusion-free-updates --enablerepo=rpmfusion-nonfree-updates repoquery --latest-limit 1 --location x264-libs broadcom-wl'
+      register: '__molecule__location_result'
+      changed_when: false
+
+    - name: 'Assert a free and a nonfree package resolve'
+      ansible.builtin.assert:
+        that: '__molecule__location_result["stdout_lines"] | length == 2'
+        fail_msg: '{{ __molecule__location_result["stdout"] }} {{ __molecule__location_result["stderr"] }}'
+
+    - name: 'mktemp --directory'
+      ansible.builtin.tempfile:
+        state: 'directory'
+      register: '__molecule__tmpdir_result'
+
+    - name: 'curl --output {{ __molecule__tmpdir_result["path"] }}/<package>.rpm'
+      ansible.builtin.get_url:
+        url: '{{ item }}'
+        dest: '{{ __molecule__tmpdir_result["path"] }}/{{ item | basename }}'
+        mode: 0o644
+      loop: '{{ __molecule__location_result["stdout_lines"] }}'
+      retries: 3
+      delay: 10
+
+    - name: 'rpmkeys --dbpath {{ __molecule__tmpdir_result["path"] }}/rpmdb --import <the deployed RPM Fusion keys>'
+      ansible.builtin.command:
+        argv:
+          - 'rpmkeys'
+          - '--dbpath'
+          - '{{ __molecule__tmpdir_result["path"] }}/rpmdb'
+          - '--import'
+          - '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-{{ ansible_facts["distribution_major_version"] }}'
+          - '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-{{ ansible_facts["distribution_major_version"] }}'
+      changed_when: false
+
+    - name: 'rpmkeys --dbpath {{ __molecule__tmpdir_result["path"] }}/rpmdb --checksig <packages>'
+      ansible.builtin.command:
+        argv: '{{
+            ["rpmkeys", "--dbpath", __molecule__tmpdir_result["path"] ~ "/rpmdb", "--checksig"]
+            + (__molecule__location_result["stdout_lines"] | map("basename") | map("regex_replace", "^", __molecule__tmpdir_result["path"] ~ "/") | list)
+          }}'
+      register: '__molecule__checksig_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'rm -rf {{ __molecule__tmpdir_result["path"] }}'
+      ansible.builtin.file:
+        path: '{{ __molecule__tmpdir_result["path"] }}'
+        state: 'absent'
+
+    - name: 'Assert the deployed GPG keys sign the packages of both repositories'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__checksig_result["rc"] == 0'
+          - '__molecule__checksig_result["stdout"] | regex_findall("digests signatures OK") | length == 2'
+        fail_msg: '{{ __molecule__checksig_result["stdout"] }} {{ __molecule__checksig_result["stderr"] }}'

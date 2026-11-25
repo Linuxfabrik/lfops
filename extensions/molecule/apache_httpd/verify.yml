@@ -12,6 +12,12 @@
 # And the OWASP Core Rule Set: by an attack that the running Apache blocks, not by the rule files.
 # And the PHP handler and mod_remoteip: by the status of a request for a missing PHP file and by the
 # client address Apache logs for it.
+# And the LogLevel and the placeholder certificates: by what the running Apache wrote to the journal.
+# And the logs of the raw and redirect templates: by the lines a request leaves in them.
+# And the guard against the HTML view of the PHP-FPM status page: by the status code of requests
+# for it.
+# And the error pages: by the page Apache sends for a missing file, which must not pull anything
+# from another host, since a Content-Security-Policy of the proxied application blocks that.
 - name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
@@ -20,8 +26,11 @@
     # the vHost that carries one basic-auth location per htpasswd file, see group_vars
     __molecule__auth_server_name: '{{ apache_httpd__vhosts__group_var[0]["conf_server_name"] }}'
     # the vHosts that are served. group_vars also removes one, which has no document root.
-    __molecule__served_vhosts: '{{ apache_httpd__vhosts__group_var | rejectattr("state", "defined") | list
-        + (apache_httpd__vhosts__group_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list) }}'
+    # The vHosts on port 80 have no document root and no certificate.
+    __molecule__served_vhosts: '{{ (apache_httpd__vhosts__group_var | rejectattr("state", "defined") | list
+        + (apache_httpd__vhosts__group_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list))
+        | selectattr("virtualhost_port", "eq", 443) | list }}'
+    __molecule__log_dir: '{{ (ansible_facts["os_family"] == "Debian") | ternary("/var/log/apache2", "/var/log/httpd") }}'
   tasks:
 
     - name: 'Get the service facts'
@@ -92,6 +101,26 @@
       loop_control:
         index_var: '__molecule__index'
         label: '{{ item["name"] }}'
+
+    # The server's own log goes to syslog, where LogLevel also applies to the `notice` line Apache
+    # writes once it is up (AH00489, "resuming normal operations"); with `warn` that line is missing
+    # from the journal. Its presence also proves that the absence of AH01906 below means something:
+    # mod_ssl warns on every start about a server certificate marked as a CA, which the placeholders
+    # must not be.
+    - name: 'journalctl --unit <service> --boot'
+      ansible.builtin.command:
+        cmd: 'journalctl --unit {{ __molecule__service }} --boot --no-pager --output cat'
+      register: '__molecule__apache_httpd_journal_result'
+      changed_when: false
+      vars:
+        __molecule__service: '{{ (ansible_facts["os_family"] == "Debian") | ternary("apache2.service", "httpd.service") }}'
+
+    - name: 'Assert Apache logs its start to the journal and does not take a placeholder for a CA certificate'
+      ansible.builtin.assert:
+        that:
+          - '"AH00489" in __molecule__apache_httpd_journal_result["stdout"]'
+          - '"AH01906" not in __molecule__apache_httpd_journal_result["stdout"]'
+        fail_msg: '{{ __molecule__apache_httpd_journal_result["stdout_lines"] | select("search", "AH00489|AH01906") | list }}'
 
     # The role creates the document root, but nothing puts a file in it, and a request that ends in
     # 403 says nothing about which protocol carried it. DirectoryIndex resolves index.html first.
@@ -425,3 +454,144 @@
           {{ __molecule__apache_httpd_curl_missing_php_result["stdout"] }},
           "{{ __molecule__apache_httpd_missing_php_log_result["stdout"] }}" and
           "{{ __molecule__apache_httpd_missing_php_access_result["stdout"] }}"
+
+    # The server-wide ErrorDocument pages are what a client sees for every error of a proxied
+    # application (ProxyErrorOverride). They have to bring their styles along: an application whose
+    # Content-Security-Policy only allows its own origin, such as Matomo, makes the browser block any
+    # stylesheet or font from another host, and the page loses its layout.
+    - name: 'curl https://<vhost>/molecule-missing.html' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --resolve {{ __molecule__server_name }}:443:127.0.0.1
+        --write-out '\n%{http_code}'
+        https://{{ __molecule__server_name }}/molecule-missing.html
+      register: '__molecule__apache_httpd_curl_error_page_result'
+      changed_when: false
+      vars:
+        __molecule__server_name: '{{ apache_httpd__vhosts__group_var[1]["conf_server_name"] }}'
+
+    - name: 'Assert the error page is the self-contained Linuxfabrik page'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_curl_error_page_result["stdout_lines"][-1] == "404"'
+          - '"Linuxfabrik Application Gateway" in __molecule__apache_httpd_curl_error_page_result["stdout"]'
+          - '__molecule__apache_httpd_curl_error_page_result["stdout"] is not search("(src|href)=\"(https?:)?//")'
+        fail_msg: '{{ __molecule__apache_httpd_curl_error_page_result["stdout"] }}'
+
+    # Every request carries a marker of this run, because verify.yml runs twice and the logs keep the
+    # lines of the first run. ansible_facts["date_time"] is no marker: the facts come from the cache
+    # and stay the same in both runs.
+    - name: 'Set a marker for the requests of this run'
+      ansible.builtin.set_fact:
+        __molecule__run_marker: 'molecule={{ now(utc=true, fmt="%s%f") }}'
+
+    - name: 'curl --header "Host: <vhost>" http://127.0.0.1/<path>' # noqa command-instead-of-module (ansible.builtin.uri cannot send a path as is)
+      ansible.builtin.command: >-
+        curl --silent --path-as-is
+        --header 'Host: {{ item["host"] }}'
+        --output /dev/null
+        --write-out '%{http_code}'
+        'http://127.0.0.1{{ item["path"] }}?{{ __molecule__run_marker }}'
+      register: '__molecule__apache_httpd_curl_port80_result'
+      changed_when: false
+      loop:
+        - host: 'raw.example.com'
+          path: '/%2e%2e/%2e%2e/etc/passwd'
+          expected: '400'
+          access_log: 'raw.example.com-access.log'
+        - host: 'raw-own-log.example.com'
+          path: '/molecule-own-log'
+          expected: '301'
+          access_log: 'raw-own-log.example.com-access.log'
+        - host: 'h1.example.com'
+          path: '/molecule-redirect'
+          expected: '301'
+          access_log: 'h1.example.com.80-access.log'
+      loop_control:
+        label: '{{ item["host"] }}'
+
+    - name: 'grep --count <marker> <vhost>-access.log'
+      ansible.builtin.command: >-
+        grep --count --fixed-strings
+        '{{ __molecule__run_marker }}'
+        {{ __molecule__log_dir }}/{{ item["item"]["access_log"] }}
+      register: '__molecule__apache_httpd_port80_access_result'
+      changed_when: false
+      failed_when: false
+      loop: '{{ __molecule__apache_httpd_curl_port80_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["access_log"] }}'
+
+    - name: 'Assert every request is answered and logged exactly once in the access log of its vHost'
+      ansible.builtin.assert:
+        that:
+          - 'item["item"]["stdout"] == item["item"]["item"]["expected"]'
+          - 'item["stdout"] == "1"'
+        fail_msg: >-
+          Host: {{ item["item"]["item"]["host"] }} answered {{ item["item"]["stdout"] }}
+          (expected {{ item["item"]["item"]["expected"] }}) and left {{ item["stdout"] }} lines
+          in {{ item["item"]["item"]["access_log"] }}, expected 1
+      loop: '{{ __molecule__apache_httpd_port80_access_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["item"]["host"] }}'
+
+    # fail2ban's apache-overflows jail reads the error logs for these lines. httpd 2.4.37 (RHEL 8)
+    # logs the probe as AH00126, later releases as AH10244.
+    - name: 'grep <marker> raw.example.com-error.log'
+      ansible.builtin.command: >-
+        grep --fixed-strings '{{ __molecule__run_marker }}'
+        {{ __molecule__log_dir }}/raw.example.com-error.log
+      register: '__molecule__apache_httpd_raw_error_result'
+      changed_when: false
+      failed_when: false
+
+    - name: 'Assert the raw vHost logs the path traversal probe to its own error log'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_httpd_raw_error_result["stdout"] is search("AH00126: Invalid URI in request|AH10244: invalid URI path")'
+        fail_msg: 'expected AH00126 or AH10244 in raw.example.com-error.log, got "{{ __molecule__apache_httpd_raw_error_result["stdout"] }}"'
+
+    # The localhost vHost refuses the HTML view of the PHP-FPM status page (GHSA-3mg3-cr28-46gc)
+    # and passes the flags of the other views. No PHP-FPM runs in this scenario, so a request that
+    # passes ends at the missing pool socket (503) and only a refused one is answered with 403.
+    # php-fpm decodes the query before it looks for `html`, so the encoded variants have to be
+    # refused as well.
+    - name: 'curl http://localhost/fpm-status?<query>' # noqa command-instead-of-module (ansible.builtin.uri cannot send a query as is)
+      ansible.builtin.command: >-
+        curl --silent
+        --output /dev/null
+        --write-out '%{http_code}'
+        'http://localhost/fpm-status{{ item["query"] }}'
+      register: '__molecule__apache_httpd_fpm_status_result'
+      changed_when: false
+      loop:
+        - query: ''
+          refused: false
+        - query: '?json&full'
+          refused: false
+        - query: '?openmetrics'
+          refused: false
+        - query: '?xml&full'
+          refused: false
+        - query: '?full&html'
+          refused: true
+        - query: '?%68tml'
+          refused: true
+        - query: '?+html'
+          refused: true
+        - query: '?html%00'
+          refused: true
+        - query: '?json&%zz&html'
+          refused: true
+      loop_control:
+        label: '{{ item["query"] }}'
+
+    - name: 'Assert the localhost vHost refuses the HTML view of the PHP-FPM status page only'
+      ansible.builtin.assert:
+        that: '(item["stdout"] == "403") == item["item"]["refused"]'
+        fail_msg: >-
+          /fpm-status{{ item["item"]["query"] }} answered {{ item["stdout"] }},
+          expected {{ item["item"]["refused"] | ternary("403", "anything but 403") }}
+      loop: '{{ __molecule__apache_httpd_fpm_status_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["query"] }}'

@@ -19,6 +19,11 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.kernel_settings'
+      kernel_settings__sysctl__dependent_var: '{{ apache_solr__kernel_settings__sysctl__dependent_var | d([]) }}'
+      when:
+        - 'not apache_solr__skip_kernel_settings | d(false)'
+
     - role: 'linuxfabrik.lfops.apps'
       apps__apps__dependent_var: '{{
           apache_solr__apps__apps__dependent_var

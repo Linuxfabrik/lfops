@@ -1,0 +1,36 @@
+- name: 'Verify the sshd role configured sshd'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  tasks:
+
+    - name: 'Gather the distribution facts'
+      ansible.builtin.setup:
+        gather_subset:
+          - '!all'
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    # The daemon unit is ssh.service on Debian and Ubuntu, sshd.service on the Red Hat family.
+    - name: 'Assert that the sshd service is running and enabled'
+      ansible.builtin.assert:
+        that:
+          - 'ansible_facts["services"][__molecule__sshd_unit]["state"] == "running"'
+          - 'ansible_facts["services"][__molecule__sshd_unit]["status"] == "enabled"'
+        fail_msg: '{{ ansible_facts["services"][__molecule__sshd_unit] | to_json }}'
+      vars:
+        __molecule__sshd_unit: '{{ (ansible_facts["os_family"] == "Debian") | ternary("ssh.service", "sshd.service") }}'
+
+    # Ask sshd for its effective configuration instead of reading the file: sshd uses the first
+    # value it reads, so a drop-in of the distribution that sets the option would win over the
+    # deployed sshd_config and pass a file check.
+    - name: 'sshd -T'
+      ansible.builtin.command: 'sshd -T'
+      changed_when: false
+      register: '__molecule__sshd_effective_config_result'
+
+    - name: 'Assert that sshd uses the MaxStartups of the host variable'
+      ansible.builtin.assert:
+        that:
+          - '"maxstartups 100:30:200" in __molecule__sshd_effective_config_result["stdout_lines"]'
+        fail_msg: '{{ __molecule__sshd_effective_config_result["stdout_lines"] | select("search", "^maxstartups") | list }}'

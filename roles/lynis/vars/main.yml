@@ -30,6 +30,10 @@ __lynis__skip_tests__common:
     comment: 'The redis role binds to localhost with protected-mode; a password needs a secret from the inventory (redis__conf_requirepass).'
   - name: 'DBS-1886'
     comment: 'Renaming CONFIG breaks clients that use it; the redis role binds to localhost with protected-mode.'
+  # `aide --config-check` of aide 0.16 (RHEL 8) opens the report_url file for writing and empties
+  # it, verified with Lynis 3.1.7 and aide 0.16 on Rocky 8 (0.19.1 and 0.19.2 keep it).
+  - name: 'FINT-4315'
+    comment: 'Lynis runs aide --config-check, which empties the AIDE report with aide 0.16, so the aide-logfile monitoring plugin warns until the next check; the aide role validates aide.conf on every deployment.'
   - name: 'HRDN-7222'
     comment: 'Compilers restricted to root break builds by other users, such as pip installing source packages into a venv, and package updates restore the mode.'
   - name: 'HRDN-7230'

@@ -33,7 +33,7 @@
         fail_msg: >-
           The libvirt storage pool "{{ kvm_vm__pool }}" does not exist on
           {{ __molecule__hypervisor }}. Available: {{ __molecule__pool_result["pools"] | list | join(", ") }}.
-          See "Preparing the controller" in CONTRIBUTING.md for how to create it, or set
+          See "Preparing the controller" in docs/developer-guide/testing.md for how to create it, or set
           LFOPS_TEST_POOL to a pool you can write.
 
     - name: 'Ensure the ephemeral inventory directory exists'
@@ -48,7 +48,7 @@
 # calls go through the invoking user's 'libvirt' group membership, and the pool writes below (the
 # image download, and the role's qemu-img / virt-customize) are plain filesystem I/O into the
 # directory of the pool named by kvm_vm__pool, which that user has to be able to write. See
-# LFOPS_TEST_POOL in CONTRIBUTING.md for why that should not be the distribution's 'default' pool.
+# LFOPS_TEST_POOL in docs/developer-guide/testing.md for why that should not be the distribution's 'default' pool.
 - name: 'Create VM instances using the kvm_vm role'
   hosts: 'systems_under_test'
   gather_facts: false
@@ -78,7 +78,7 @@
     # the old inode through its open descriptor and survives; the damage surfaces on its next
     # boot, or on the next qemu-img / virt-customize touching that disk.
     # The guard is pool-wide on purpose, not "does *this* VM's boot disk exist": with
-    # LFOPS_TEST_ID (see "Running scenarios in parallel" in CONTRIBUTING.md) concurrent runs share
+    # LFOPS_TEST_ID (see "Running scenarios in parallel" in docs/developer-guide/testing.md) concurrent runs share
     # the pool under different instance names, so a per-VM guard would happily replace the image
     # another run's VM is sitting on. Blocking on any boot disk is coarser than needed - it also
     # defers a Rocky 10 refresh while only a Rocky 9 VM exists - but the refresh is an
@@ -91,7 +91,7 @@
       delegate_to: '{{ __molecule__hypervisor }}'
 
     # mode 0664, not 0644: the pool directory carries a default ACL granting the invoking
-    # user rw (see "Preparing the controller" in CONTRIBUTING.md), and a file's ACL mask is
+    # user rw (see "Preparing the controller" in docs/developer-guide/testing.md), and a file's ACL mask is
     # taken from the group bits of its creation mode. At 0644 the mask comes out r--, leaving
     # that ACL entry ineffective from birth, and the next refresh then fails with
     # "Destination ... is not writable" once libvirt has chowned the image to qemu, which it
@@ -121,7 +121,7 @@
     - role: 'linuxfabrik.lfops.kvm_vm'
 
 
-# Discover each VM's address via its libvirt DHCP lease and write it into Molecule's ephemeral
+# Discover each VM's address via the host's neighbour cache and write it into Molecule's ephemeral
 # inventory directory. Molecule includes that directory automatically, so converge and verify
 # reach the VMs over SSH. See the inventory-model note in config.yml for why this is hand-written
 # instead of using Molecule's instance_config.
@@ -132,8 +132,8 @@
     __molecule__ephemeral_dir: '{{ lookup("env", "MOLECULE_EPHEMERAL_DIRECTORY") }}'
   tasks:
 
-    # Use --source arp: libvirt reads the host's neighbour cache (ip neigh on the bridge), so it
-    # only ever reports addresses currently live on the network. We rejected the two alternatives:
+    # Use --source arp: libvirt reads the host's neighbour cache (ip neigh on the bridge) and needs
+    # nothing inside the guest. We rejected the two alternatives:
     #   --source lease reads libvirt's DHCP lease table, which keeps every still-unexpired lease.
     #     The VMs reuse a stable MAC across destroy/create cycles but regenerate their machine-id
     #     (hence DHCP client-id) on each rebuilt boot disk, so dnsmasq hands out a fresh IP every
@@ -142,34 +142,37 @@
     #   --source agent needs qemu-guest-agent running inside the guest, which only the Rocky cloud
     #     image ships preinstalled - the VMs install no extra packages (kvm_vm__packages is []), so
     #     on Debian/Ubuntu the agent never connects.
-    # --source arp sidesteps both: the neighbour cache holds only what is reachable now, so stale
-    # leases never appear, and it needs nothing inside the guest. The entry is populated once the
-    # VM emits traffic (its DHCP exchange does this within seconds), so the retry loop below covers
-    # the short boot window where it is not yet there.
-    - name: 'Wait for the VM to report a non-loopback IPv4 address via the host ARP table'
-      ansible.builtin.command:
-        cmd: 'virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") }} domifaddr {{ __molecule__instance_name }} --source arp'
+    # The neighbour cache can still list a dead address of the same MAC: libvirt passes NUD_STALE
+    # entries on besides NUD_REACHABLE ones (src/util/virarptable.c, libvirt 12.0 on Fedora 44).
+    # Seen twice with a Debian 13 VM recreated under the same LFOPS_TEST_ID, which keeps its MAC
+    # but gets a new IP: the first address was the one of the previous run, and prepare failed
+    # with "No route to host". So probe port 22 on every address listed for the MAC and take the
+    # one that answers, which Molecule needs anyway. An address since handed to another VM is
+    # listed with that VM's MAC, so it cannot be picked here. The retry loop covers the boot until
+    # sshd is up.
+    - name: 'Wait for the VM to accept SSH on one of its addresses in the host ARP table'
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          virsh --connect {{ kvm_vm__connect_url | d("qemu:///system") | quote }} domifaddr {{ __molecule__instance_name | quote }} --source arp \
+            | awk '$1 != "lo" && $3 == "ipv4" { sub("/.*", "", $4); print $4 }' \
+            | while read -r ip; do
+                if timeout 2 bash -c "</dev/tcp/${ip}/22" 2>/dev/null; then
+                  echo "${ip}"
+                  break
+                fi
+              done
+        executable: '/bin/bash'
       register: '__molecule__vm_ipaddr_result'
-      until: >-
-        __molecule__vm_ipaddr_result['stdout_lines']
-        | select('ansible.builtin.search', 'ipv4')
-        | reject('ansible.builtin.search', '^\s*lo\s')
-        | list | length > 0
-      retries: 15
+      until: '__molecule__vm_ipaddr_result["stdout"] | length > 0'
+      retries: 60
       delay: 2
       changed_when: false
       delegate_to: '{{ __molecule__hypervisor }}'
 
-    - name: 'Parse the VM IPv4 address'
+    - name: 'Set the VM IPv4 address'
       ansible.builtin.set_fact:
-        __molecule__vm_ipaddr: >-
-          {{
-            __molecule__vm_ipaddr_result['stdout_lines']
-            | select('ansible.builtin.search', 'ipv4')
-            | reject('ansible.builtin.search', '^\s*lo\s')
-            | first
-            | ansible.builtin.regex_search('([0-9]{1,3}\.){3}[0-9]{1,3}')
-          }}
+        __molecule__vm_ipaddr: '{{ __molecule__vm_ipaddr_result["stdout"] | trim }}'
 
     # a single write that loops over ansible_play_hosts to emit every host at once
     - name: 'Write the dynamic VM inventory' # noqa run-once[task] (the play uses the linear strategy, so every host has its address by now)

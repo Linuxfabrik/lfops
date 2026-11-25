@@ -51,6 +51,15 @@ grav__apps__apps__dependent_var:
 grav__php__modules__dependent_var:
   - name: 'php-gd'
     state: 'present'
+# Grav touches cache/compiled/{blueprints,config,languages}/filelist-*.php after validating them,
+# on nearly every request (ConfigServiceProvider::loadCachedFileList(), since Grav 2.0.7, commit
+# b8942d177). OPcache recompiles a touched file and keeps the old copy as wasted memory, so the
+# cache runs full and is thrown away every few days. Measured on Grav 2.2.23 / PHP 8.3 with the
+# OPcache settings of the php role: about 28 KB wasted per minute, a restart every 2.4 days.
+# see id grav-opcache-filelist-touch in tools/maintenance.yml
+grav__php__opcache_blacklist__dependent_var:
+  - path: '{{ grav__install_dir }}/cache/compiled/*/filelist-'
+    state: 'present'
 # The code is read-only for the web server, only the directories Grav writes to at runtime are
 # writable. The rules of the runtime directories come after the one of the installation
 # directory and take precedence, also on a host where an earlier version of the role added that

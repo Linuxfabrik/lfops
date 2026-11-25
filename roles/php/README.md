@@ -45,7 +45,7 @@ This role never exposes to the world that PHP is installed on the server, no mat
 * The role orders Apache after PHP-FPM at boot with the drop-in `/etc/systemd/system/httpd.service.d/z00-php.conf` (`apache2.service.d` on Debian). The RHEL package only makes httpd pull in php-fpm and Debian does not even that, so both otherwise start side by side, and the first requests after a reboot fail with `AH02454: FCGI: attempt to connect to Unix domain socket ... failed` until the PHP-FPM socket exists. On a host without Apache the ordering is ignored. It takes effect at the next boot, without a restart.
 * The pool sets `env[PATH]`, which upstream leaves unset: with `clear_env` at its default the worker environment is empty, so `getenv("PATH")` returns nothing, which trips applications that shell out and fails Nextcloud's "PHP getenv" setup check.
 * Every pool gets its own WSDL cache directory below `/var/lib/php/wsdlcache`, owned like its session directory. The SOAP extension caches parsed WSDL files there, so a `SoapClient` does not refetch and reparse the service description on every request. PHP's own default is `/tmp`, which on RedHat means the php-fpm unit's `PrivateTmp` namespace and therefore a cache thrown away on every restart, and on Debian the shared `/tmp`. Only relevant to applications using `SoapClient`: without the `soap` extension installed the setting is inert, and `ini_get('soap.wsdl_cache_dir')` returns an empty string.
-* Every pool answers on the same two FPM-internal endpoints, `/fpm-status` (the status page) and `/fpm-ping` (a liveness check returning `pong`). Which pool answers is decided by the socket the request arrives on, not by the path, so a second pool is published by giving it its own `Location` pointing at that pool's socket while keeping `/fpm-status` as the path sent to FPM. The `localhost` vHost of the [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role does this for the `www` pool, which is what the `php-fpm-status` and `php-fpm-ping` [Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) check by default; `php-fpm-status` accepts `--url` several times for the additional pools. Both endpoints are reachable for anyone who can reach the pool socket, so take care with a vHost that forwards its whole URI space to a pool, or with a reverse proxy that passes unknown paths through. Set `pm_status_path` and / or `ping_path` to an empty string to turn them off for a pool.
+* Every pool answers on the same two FPM-internal endpoints, `/fpm-status` (the status page) and `/fpm-ping` (a liveness check returning `pong`). Which pool answers is decided by the socket the request arrives on, not by the path, so a second pool is published by giving it its own `Location` pointing at that pool's socket while keeping `/fpm-status` as the path sent to FPM. The `localhost` vHost of the [apache_httpd](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_httpd) role does this for the `www` pool, which is what the `php-fpm-status` and `php-fpm-ping` [Monitoring Plugins](https://github.com/Linuxfabrik/monitoring-plugins) check by default; `php-fpm-status` accepts `--url` several times for the additional pools. Both endpoints are reachable for anyone who can reach the pool socket, so take care with a vHost that forwards its whole URI space to a pool, or with a reverse proxy that passes unknown paths through. The `localhost` vHost refuses the HTML view of the status page, which prints request fields unescaped ([GHSA-3mg3-cr28-46gc](https://github.com/php/php-src/security/advisories/GHSA-3mg3-cr28-46gc)); a `Location` of your own needs the same `<If>` block, see the apache_httpd README. Set `pm_status_path` and / or `ping_path` to an empty string to turn them off for a pool.
 
 
 ## Known Limitations
@@ -68,7 +68,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * Installs php, php-fpm and composer.
 * Installs and removes the configured PHP modules.
-* Deploys the `z00-linuxfabrik.ini` for every SAPI.
+* Deploys the `z00-linuxfabrik.ini` for every SAPI, and the OPcache blacklist.
 * Deploys and removes the PHP-FPM pools and the `[global]` drop-in, together with their session, opcache and log directories.
 * Deploys the systemd drop-in that orders Apache after PHP-FPM at boot.
 * Deploys the logrotate configuration for the per-pool logs (Debian only).
@@ -91,6 +91,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 `php:ini`
 
 * Deploys the `z00-linuxfabrik.ini`. RedHat has a single `/etc/php.d`, Debian one conf.d per SAPI (apache2, cli and fpm) below the declared version's tree.
+* Deploys the OPcache blacklist to `php__ini_opcache_blacklist_filename__*_var`.
 * Deploys the PHP-FPM pools, since they take over several `php__ini_*` values, such as `memory_limit`.
 * Triggers: php-fpm.service restart.
 
@@ -149,6 +150,27 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
         * Type: String.
         * Default: `'present'`
 
+`php__opcache_blacklist__host_var` / `php__opcache_blacklist__group_var`
+
+* List of dictionaries containing the paths that OPcache does not cache. The role writes them to the file named by `php__ini_opcache_blacklist_filename__*_var`, and php-fpm reads it once at startup.
+* Each path is a prefix of the real path of a script. `*` matches any characters but `/`, `**` any characters including `/`. [php.net](https://www.php.net/manual/en/opcache.configuration.php#ini.opcache.blacklist-filename)
+* Blacklist PHP files that an application rewrites or touches over and over. With `opcache.validate_timestamps`, OPcache compiles such a file again after every change and keeps the old copy as wasted memory, until the cache runs full and OPcache throws everything away.
+* For the usage in `host_vars` / `group_vars` (can only be used in one group at a time).
+* Type: List of dictionaries.
+* Default: `[]`
+* Subkeys:
+
+    * `path`:
+
+        * Mandatory. Path or pattern, for example `'/var/www/html/www.example.com/cache/compiled/*/filelist-'`.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. State of the entry. Possible options: `absent`, `present`.
+        * Type: String.
+        * Default: `'present'`
+
 `php__version`
 
 * Debian only. The PHP version this host runs, for example `'8.4'`. Makes the role install the versioned packages (`php8.4-cli`, `php8.4-fpm`, ...) instead of the unversioned metapackages, pin the `php` alternatives to it, and purge other versions on `php:update`. Empty adopts whatever version the configured repos provide, which is correct without the sury repo. Has no effect on RedHat, where the module stream pins the version at repo level.
@@ -168,6 +190,9 @@ php__fpm_pools__host_var:
       env[PATH] = /usr/local/bin:/usr/bin:/bin
 php__modules__host_var:
   - name: 'php-mysqlnd'
+    state: 'present'
+php__opcache_blacklist__host_var:
+  - path: '/var/www/html/www.example.com/cache/compiled/*/filelist-'
     state: 'present'
 php__version: '8.4'
 ```
@@ -264,6 +289,7 @@ Variables for `php.ini` directives and their default values, defined and support
 `php__ini_opcache_blacklist_filename__group_var` / `php__ini_opcache_blacklist_filename__host_var`
 
 * A blacklist file is a text file containing the names of files that should not be accelerated, one per line. Wildcards are allowed, and prefixes can also be provided. Lines starting with a semi-colon are ignored as comments. [php.net](https://www.php.net/manual/en/opcache.configuration.php)
+* The role deploys this file with the entries of `php__opcache_blacklist__*_var`.
 * Type: String.
 * Default: `'/etc/opcache.blacklist'`
 

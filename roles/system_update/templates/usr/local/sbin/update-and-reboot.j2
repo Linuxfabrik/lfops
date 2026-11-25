@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # {{ ansible_managed }}
-# 2026110201
+# 2026111701
 
 # Apply all available updates, then request a reboot if one is needed by dropping a
 # file into the /run/schedule-reboot spool. This script never reboots itself; the
@@ -388,12 +388,15 @@ if [ "$AIDE_WAS_CLEAN" -eq 1 ] && [ "$UPDATED" -eq 1 ]; then
     # /run/aide.lock serialises all aide runs of LFOps (aidecheck.service of the aide role)
     nice --adjustment=19 ionice --class idle flock /run/aide.lock aide --config="$AIDE_CONFIG" --update 1> /dev/null
     \mv "$AIDE_DB_NEW" "$AIDE_DB"
-    # --no-block: aidecheck.service is ordered after this script's service (After=), so a
-    # blocking restart would wait for this script to end, which waits for the restart. The
-    # check starts once this script has finished.
-    systemctl restart --no-block "${AIDE_UNIT}.service"
+    # no check against the new database: `aide --update` already compared the whole file
+    # system and wrote that report, and a check right after it scans everything again only to
+    # find no differences. aide-logfile reports an accepted update as OK. reset-failed, since
+    # the clean check above ran outside aidecheck.service, whose last run may still have
+    # failed on drift that has been reverted since.
+    systemctl reset-failed "${AIDE_UNIT}.service" 2> /dev/null
 fi
 
+{% if system_update__mail_new_configfiles_enabled | bool %}
 # after any update, notify about new config-file stubs (*.rpmnew / *.rpmsave on RHEL,
 # *.dpkg-dist / *.ucf-dist on Debian). one mail per file, sent via sendmail.
 # 2> /dev/null hides messages like 'find: '/proc/26144': No such file or directory'.
@@ -416,6 +419,7 @@ find / -mount \( -name '*.rpmnew' -o -name '*.rpmsave' -o -name '*.dpkg-dist' -o
         printf '\n%s\n' "$configfile"
     } | sendmail -oi -t -f "$MAIL_FROM"
 done
+{% endif %}
 
 # any restarts needed? if so, request a reboot via the spool (do not reboot here)
 {% if ansible_facts['os_family'] == 'RedHat' %}

@@ -507,4 +507,16 @@ php__modules__role_var:
   RedHat:
     - name: 'php-opcache'
       state: 'present'
+php__opcache_blacklist__combined_var: '{{ (
+      php__opcache_blacklist__role_var +
+      php__opcache_blacklist__dependent_var +
+      php__opcache_blacklist__group_var +
+      php__opcache_blacklist__host_var
+    ) | linuxfabrik.lfops.combine_lod(unique_key="path")
+  }}'
+
+php__opcache_blacklist__dependent_var: []
+php__opcache_blacklist__group_var: []
+php__opcache_blacklist__host_var: []
+php__opcache_blacklist__role_var: []
 php__version: ''

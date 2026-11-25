@@ -1,0 +1,8 @@
+; {{ ansible_managed }}
+; 2026111301
+;
+; Files that OPcache does not cache, one path per line. A line is a prefix of the real path,
+; `*` matches any characters but `/`, `**` any characters including `/`.
+{% for item in php__opcache_blacklist__combined_var if item['state'] | d('present') != 'absent' %}
+{{ item['path'] }}
+{% endfor %}

@@ -1,6 +1,6 @@
 # wait until neither a job is queued for nor a run is in progress of apt-daily-upgrade.service,
-# aide-dpkg-update.service or aidecheck.service: the hook, the units and the update-db tasks of
-# the role start the latter two with --no-block. units that do not exist report inactive.
+# aide-dpkg-update.service or aidecheck.service: the hook and the units start the latter two
+# with --no-block. units that do not exist report inactive.
 - name: 'systemctl list-jobs; systemctl is-active (wait until the aide units are idle)' # noqa command-instead-of-module (read-only state query in a retry loop)
   ansible.builtin.shell: |
     set -o pipefail

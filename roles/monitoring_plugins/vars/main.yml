@@ -5,7 +5,7 @@
 # 6.12.0-211.61.1.el10_2), Fedora 44, Debian 12 and 13 and Ubuntu 22.04, 24.04 and 26.04 track
 # pressure by default and need nothing.
 # Published here and not in defaults/, because setup_basic runs the bootloader role before this
-# role, see "OS-specific Dependent Variables" in CONTRIBUTING.md.
+# role, see "OS-specific Dependent Variables" in docs/developer-guide/variables.md.
 __monitoring_plugins__bootloader__cmdline_options__dependent_var:
   Fedora: []
   RedHat:
@@ -15,6 +15,30 @@ monitoring_plugins__bootloader__cmdline_options__dependent_var: '{{
     __monitoring_plugins__bootloader__cmdline_options__dependent_var
     | linuxfabrik.lfops.platform_select(ansible_facts, default=[])
   }}'
+
+# The checkouts and staging trees on the controller are named after the state they hold: the
+# release tag, or for `dev` the commit the main branch pointed to when the host resolved it
+# (`git ls-remote`, see tasks/install.yml). Neither moves, so the first host that needs a state
+# prepares it and every further host finds it done, and hosts with different versions in one
+# play never share a working directory.
+__monitoring_plugins__checkout_id: '{{
+    ("main-" ~ __monitoring_plugins__main_commit_result["stdout"].split()[0][:12])
+    if monitoring_plugins__version == "dev"
+    else ("v" ~ monitoring_plugins__version)
+  }}'
+
+# The controller keeps them below /var/tmp, so that they outlive a reboot and later runs reuse
+# them, see "Controller-side Caches" in docs/developer-guide/tasks.md. The LFOps-wide parent lets
+# ansible-navigator persist every such cache with one volume mount.
+__monitoring_plugins__cache_dir: '/var/tmp/lfops/monitoring_plugins'
+# systemd-tmpfiles removes what below /var/tmp has not been used for 30 days, file by file, so
+# a cache entry could lose a part of its files and still look complete. Entries are removed
+# whole once they are this old, and rebuilt by the next host that needs them, long before
+# systemd-tmpfiles gets to them. This also takes away the versions no longer in use.
+__monitoring_plugins__cache_max_age_days: 7
+__monitoring_plugins__flattened_dir: '{{ __monitoring_plugins__cache_dir }}/flattened-{{ __monitoring_plugins__checkout_id }}'
+__monitoring_plugins__icons_dir: '{{ __monitoring_plugins__cache_dir }}/icons-{{ __monitoring_plugins__checkout_id }}'
+__monitoring_plugins__repo_dir: '{{ __monitoring_plugins__cache_dir }}/repo-{{ __monitoring_plugins__checkout_id }}'
 
 # The paths an install manifest of a source install may list: everything below the locations a
 # source install or the one-line installer writes to. Entries outside of them are ignored, so a

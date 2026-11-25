@@ -1,10 +1,19 @@
 # {{ ansible_managed }}
-# 2022070401
+# 2026112401
 
 [DEFAULT]
 action     = {{ fail2ban__jail_default_action | indent(width=13, first=false) }}
+# The action of the HTTP jails: the default action, plus closing the established
+# connections of the banned client (action.d/ss-kill.conf). default/action
+# instead of action, which would resolve to the action of the jail itself.
+action_kill = %(default/action)s
+              ss-kill[port="%(port)s"]
 banaction  = {{ fail2ban__jail_default_banaction }}
-chain      = INPUT
 ignoreip   = {{ fail2ban__jail_default_ignoreip | join(' ') }}
 protocol   = tcp
 rocketchat-hook = {{ fail2ban__jail_default_rocketchat_hook }}
+# A jail whose logpath matches no file is skipped with an error instead of
+# keeping fail2ban from starting with all its other jails. Verified with
+# fail2ban 1.1.1 on Rocky 8, 9 and 10. Older releases only read the jail options
+# they know and ignore this one (fail2ban 1.0.2 source, client/jailreader.py).
+skip_if_nologs = true

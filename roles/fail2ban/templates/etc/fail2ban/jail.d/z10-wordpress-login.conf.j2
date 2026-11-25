@@ -1,7 +1,8 @@
 # {{ ansible_managed }}
-# 2026091501
+# 2026112301
 
 [wordpress-login]
+action   = %(action_kill)s
 bantime  = {{ fail2ban__jail_wordpress_login_bantime }}
 enabled  = true
 findtime = {{ fail2ban__jail_wordpress_login_findtime }}

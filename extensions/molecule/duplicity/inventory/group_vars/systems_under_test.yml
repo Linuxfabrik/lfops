@@ -73,8 +73,12 @@ duplicity__backup_sources__group_var:
     state: 'absent'
   - path: '/srv'
     state: 'absent'
+  # duplicity aborts a backup with an exclude outside of its root, so the exclude of the entry
+  # "excluded" must not reach the backup of "alice"
   - path: '/srv/duba-molecule/divided'
     divide: true
+    excludes:
+      - '/srv/duba-molecule/divided/excluded'
     state: 'present'
   - path: '/srv/duba-molecule/plain'
     divide: false

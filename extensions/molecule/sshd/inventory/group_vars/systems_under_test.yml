@@ -1,0 +1,5 @@
+# Neither the default of the role (10:30:60) nor the one of OpenSSH (10:30:100), so verify.yml
+# can prove that the value from the inventory reaches sshd. The host variable has to win over
+# the group variable.
+sshd__max_startups__group_var: '20:30:120'
+sshd__max_startups__host_var: '100:30:200'
