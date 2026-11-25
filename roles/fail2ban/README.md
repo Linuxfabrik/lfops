@@ -38,13 +38,15 @@ They belong on the host the clients connect to. Behind a reverse proxy, a ban on
 
 A ban of an HTTP jail (`apache-*`, `php-url-fopen`, `wordpress-login`) also closes the connections the client already holds on the ports of the jail, with `ss --kill` (`action.d/ss-kill.conf`). A firewall rule alone does not stop a client that keeps one HTTP/2 connection busy, and it leaves the server side of each open connection waiting until `Timeout`, holding an httpd worker. On the Red Hat family, SELinux only allows this with the `lfops_fail2ban_ss_kill` policy module, which the role installs unless SELinux is disabled. It grants fail2ban the `net_admin` capability, which also lets it reconfigure network interfaces. If `ss --kill` leaves a connection open, `/var/log/fail2ban.log` shows an `ERROR` for the `ss-kill` action. The other jails, such as `sshd`, leave established connections open.
 
-The `apache-dos` template is not enabled by default. It bans a client that sends more than 600 requests within 10 seconds for 5 minutes, and doubles the duration with each further ban of the same address, up to one day. Its firewall rule only blocks new connections, so that a flood of connections does not keep the httpd workers waiting until `Timeout` even if `ss --kill` fails. The template sets its own `action`, so `fail2ban__jail_default_action` does not apply to it, and blocking only new connections needs one of the `iptables-*` banactions. To change a single value, keep `z10-apache-dos` and add a jail file that is read after it with only that value (see the example below).
+The `apache-dos` template is not enabled by default. It bans a client that sends more than 600 requests within 10 seconds for 5 minutes, and doubles the duration with each further ban of the same address, up to one day. Its firewall rule only blocks new connections, so that a flood of connections does not keep the httpd workers waiting until `Timeout` even if `ss --kill` fails. The template sets its own `action`, so `fail2ban__jail_default_action` does not apply to it, and blocking only new connections needs an `nftables-*` or `iptables-*` banaction in `fail2ban__jail_default_banaction`. To change a single value, keep `z10-apache-dos` and add a jail file that is read after it with only that value (see the example below).
 
 The `apache-badbots` and `apache-botsearch` templates are not enabled by default: they match against lists of user agents (2013) and paths (2017) that fail2ban no longer maintains.
 
 The role deploys `skip_if_nologs = true`, so a jail whose `logpath` matches no file is skipped instead of keeping fail2ban from starting with all its other jails, for example on an Apache host before the first vHost is deployed. This needs fail2ban 1.1.1 or newer; older releases ignore the option, and there such a jail still keeps fail2ban from starting.
 
 The sshd jail runs the filter in `aggressive` mode, which also bans clients that connect and leave without trying to log in, such as scanners and clients sending a broken protocol banner.
+
+The bans go into the table `inet f2b-table` of nftables, next to the tables of the host's firewall, with one set of banned addresses per jail (`nft list set inet f2b-table addr-set-sshd`). A firewall reload that flushes the whole ruleset removes the table, and with it every ban: fail2ban rebuilds the table at its next ban, but bans an address it already lists as banned again only when that address shows up in the log once more. Restart fail2ban after such a reload.
 
 The `iptables-*` banactions need the `xt_multiport` kernel module, which RHEL 10 ships in `kernel-modules-extra`. On a host whose running kernel lacks it, such as one installed from a cloud image, the role installs `kernel-modules-extra` for that kernel, so bans take effect without a reboot, and `kernel-modules-extra-matched`, so later kernels bring the module along. Without the module, iptables rejects every ban while fail2ban still lists the address as banned.
 
@@ -70,7 +72,7 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * On RHEL-compatible systems, the Linuxfabrik repository serves fail2ban (role: [linuxfabrik.lfops.repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik)).
 * On RHEL-compatible systems, the `nis_enabled` SELinux boolean must be enabled (role: [linuxfabrik.lfops.selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux)).
 * sshd must log at `VERBOSE` level, otherwise the sshd jail does not see the failed logins (role: [linuxfabrik.lfops.sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd)).
-* The firewall must be one the `iptables-multiport` banaction can insert its chains into (role: [linuxfabrik.lfops.firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall)).
+* The firewall must leave the nftables table of fail2ban alone (role: [linuxfabrik.lfops.firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall)).
 
 
 ## Requirements
@@ -161,7 +163,8 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 
 * The default banaction, which will be executed as defined in `fail2ban__jail_default_action` (assuming the jail does not overwrite it).
 * Type: String.
-* Default: `'iptables-multiport'`
+* Default: `'nftables-multiport'`
+* Deviates from the upstream default `iptables-multiport` (`firewallcmd-rich-rules` with the `fail2ban-firewalld` package on RHEL): LFOps deploys nftables firewalls, and the bans then live in nftables as well instead of going through the iptables compatibility layer or firewalld.
 
 `fail2ban__jail_default_ignoreip`
 
@@ -298,7 +301,7 @@ fail2ban__jail_apache_404_maxretry: 10
 fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
   rocketchat[name=%(__name__)s, rocketchat-hook="%(rocketchat-hook)s"]
-fail2ban__jail_default_banaction: 'iptables-multiport'
+fail2ban__jail_default_banaction: 'nftables-multiport'
 fail2ban__jail_default_ignoreip:
   - '192.0.2.1/32' # ansible deployment host
 fail2ban__jail_default_rocketchat_hook: ''

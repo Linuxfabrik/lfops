@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:fail2ban**: fail2ban bans through nftables (`nftables-multiport`, table `inet f2b-table`) instead of iptables chains, matching the nftables firewalls LFOps deploys; restarting fail2ban moves the active bans over. Scripts that read bans with `iptables` find them with `nft list table inet f2b-table`, or set `fail2ban__jail_default_banaction: 'iptables-multiport'` to keep the iptables chains.
 * **role:fail2ban**: On RedHat hosts with SELinux, the role installs the `lfops_fail2ban_ss_kill` policy module, which grants fail2ban the `net_admin` capability, so that the HTTP jails can close the connections of a banned client. The capability also lets fail2ban reconfigure network interfaces.
 * **role:at**: Only root may use `at`, `atq` and `atrm`, as the CIS Benchmarks require, and jobs queued before still run. List other users that need `at` in `at__allow_users__host_var` / `at__allow_users__group_var`.
 * **role:grafana_grizzly, role:openvpn_server**: The roles read their files from `host_files/<host>/` like all other roles, instead of `host_vars/<host>/files/`, where Ansible also loaded the grizzly resources as host variables. The run aborts before it changes anything while files are left in the old location. Move them with `mkdir -p host_files/<host> && cp -a host_vars/<host>/files/. host_files/<host>/ && rm -r host_vars/<host>/files` ([#701](https://github.com/Linuxfabrik/lfops/issues/701)).
