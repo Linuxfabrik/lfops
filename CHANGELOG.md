@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:apache_httpd**: The role only defines the log formats Apache ships (`agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`) and drops `debug`, `fail2ban`, `gelf`, `linuxfabrikio` and `matomo`. Apache still starts with a `CustomLog` that names one of them, but writes just that name instead of the request; switch such a log to `combined`, or define the format in the vHost's `raw`.
+* **role:matomo_import_logs**: Sites without `log_format_name` are imported as `ncsa_extended`, which reads the `combined` access log of the apache_httpd role, instead of `common_complete`. Set `log_format_name: 'common_complete'` for a log that starts with the vHost name.
 * **role:fail2ban**: fail2ban bans through nftables (`nftables-multiport`, table `inet f2b-table`) instead of iptables chains, matching the nftables firewalls LFOps deploys; restarting fail2ban moves the active bans over. Scripts that read bans with `iptables` find them with `nft list table inet f2b-table`, or set `fail2ban__jail_default_banaction: 'iptables-multiport'` to keep the iptables chains.
 * **role:fail2ban**: On RedHat hosts with SELinux, the role installs the `lfops_fail2ban_ss_kill` policy module, which grants fail2ban the `net_admin` capability, so that the HTTP jails can close the connections of a banned client. The capability also lets fail2ban reconfigure network interfaces.
 * **role:at**: Only root may use `at`, `atq` and `atrm`, as the CIS Benchmarks require, and jobs queued before still run. List other users that need `at` in `at__allow_users__host_var` / `at__allow_users__group_var`.

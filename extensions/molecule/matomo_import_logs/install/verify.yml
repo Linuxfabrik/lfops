@@ -33,6 +33,16 @@
       ansible.builtin.command: 'systemd-analyze verify /etc/systemd/system/matomo-import-logs-{{ __molecule__site }}.service'
       changed_when: false
 
+    - name: 'systemctl show --property=ExecStart matomo-import-logs-{{ __molecule__site }}.service' # noqa command-instead-of-module (the test asserts on the unit systemd loaded)
+      ansible.builtin.command: 'systemctl show --property=ExecStart matomo-import-logs-{{ __molecule__site }}.service'
+      register: '__molecule__service_execstart'
+      changed_when: false
+
+    # the site sets no log_format_name, so the import reads the combined access log
+    - name: 'Assert that the import reads the combined LogFormat by default'
+      ansible.builtin.assert:
+        that: '"--log-format-name=ncsa_extended " in __molecule__service_execstart["stdout"]'
+
     - name: 'systemctl is-enabled the timer' # noqa command-instead-of-module (the test asserts on the output and exit status of systemctl)
       ansible.builtin.command: 'systemctl is-enabled matomo-import-logs-{{ __molecule__site }}.timer'
       register: '__molecule__timer_enabled'

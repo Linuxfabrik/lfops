@@ -662,7 +662,7 @@ The remaining subkeys configure the contents of the vHost and are only honoured 
 
 `conf_custom_log`
 
-* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog). The raw and redirect templates leave it out if their `raw` content sets a `CustomLog` or `TransferLog` itself.
+* The log format has to be one of: `agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`. Set it to an empty string to disable the access log. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog). The raw and redirect templates leave it out if their `raw` content sets a `CustomLog` or `TransferLog` itself.
 * Applies to: app, localhost, proxy, raw, redirect, wordpress.
 * Type: String.
 * Default: `'logs/{{ conf_server_name }}-access.log combined'`, for the redirect template `'logs/{{ conf_server_name }}.{{ virtualhost_port }}-access.log combined'`, because it usually shares its name with the HTTPS vHost
@@ -910,7 +910,7 @@ This module is for flexible logging of client requests. Logs are written in a cu
 
 `apache_httpd__mod_log_config_custom_log`
 
-* Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `debug`, `fail2ban`, `linuxfabrikio`, `matomo`, `referer`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
+* Global log directive that applies to requests not handled by any vHost. Each vHost defines its own log via `conf_custom_log`. One of: `agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`. See [CustomLog](https://httpd.apache.org/docs/2.4/mod/mod_log_config.html#customlog).
 * Type: String.
 * Default: unset
 
