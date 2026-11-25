@@ -360,6 +360,12 @@
         - label: 'failed login in the linuxfabrikio format'
           line: '192.0.2.10 198.51.100.3 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
           matched: 1
+        - label: 'failed login in the linuxfabrikio format behind two proxies'
+          line: '192.0.2.11 198.51.100.3, 198.51.100.4 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
+          matched: 1
+        - label: 'failed login in the linuxfabrikio format with a quoted X-Forwarded-For'
+          line: '192.0.2.12 "198.51.100.3, 198.51.100.4" - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
+          matched: 1
         - label: 'successful login'
           line: '198.51.100.2 - - [15/Sep/2026:10:00:01 +0200] "POST /wp-login.php HTTP/1.1" 302 0 "-" "Mozilla/5.0"'
           matched: 0
@@ -371,6 +377,49 @@
         that: 'item["stdout"] is search("Lines: 1 lines, 0 ignored, " ~ item["item"]["matched"] ~ " matched")'
         fail_msg: '{{ item["item"]["label"] }}: {{ item["stdout"] }}'
       loop: '{{ __molecule__fail2ban_wordpress_regex_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["label"] }}'
+
+    # The apache-404 filter reads the same LogFormats as apache-dos, but only the 404 responses.
+    # Asked for the address it found, as for apache-dos.
+    - name: 'fail2ban-regex --out ip apache-404 against {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'fail2ban-regex'
+          - '--out'
+          - 'ip'
+          - '{{ item["line"] }}'
+          - '/etc/fail2ban/filter.d/apache-404.conf'
+      register: '__molecule__fail2ban_404_regex_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - label: 'a 404 in the combined format'
+          line: '198.51.100.70 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8"'
+          ip: '198.51.100.70'
+        - label: 'a 200 in the combined format'
+          line: '198.51.100.71 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
+          ip: ''
+        - label: 'a 404 in the matomo format'
+          line: 'www.example.com 198.51.100.72 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8"'
+          ip: '198.51.100.72'
+        - label: 'a 404 in the linuxfabrikio format with an X-Forwarded-For address'
+          line: '198.51.100.73 203.0.113.73 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8" 346 3157'
+          ip: '198.51.100.73'
+        - label: 'a 404 in the linuxfabrikio format behind two proxies'
+          line: '198.51.100.74 203.0.113.73, 203.0.113.74 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8" 346 3157'
+          ip: '198.51.100.74'
+        - label: 'a 404 in the linuxfabrikio format with a quoted X-Forwarded-For'
+          line: '198.51.100.75 "203.0.113.73, 203.0.113.74" - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8" 346 3157'
+          ip: '198.51.100.75'
+      loop_control:
+        label: '{{ item["label"] }}'
+
+    - name: 'Assert the apache-404 filter takes the client address of the 404 responses only'
+      ansible.builtin.assert:
+        that: 'item["stdout_lines"] == ([item["item"]["ip"]] if item["item"]["ip"] | length > 0 else [])'
+        fail_msg: '{{ item["item"]["label"] }}: expected {{ item["item"]["ip"] | d("no match", true) }}, got {{ item["stdout_lines"] }}'
+      loop: '{{ __molecule__fail2ban_404_regex_result["results"] }}'
       loop_control:
         label: '{{ item["item"]["label"] }}'
 
