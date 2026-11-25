@@ -53,10 +53,15 @@
         - 'ansible_facts["distribution"] != "Fedora"'
         - 'not setup_nextcloud__skip_repo_epel | d(false)'
 
-    # serves the acme.sh package, so it only runs together with acme_sh
+    # serves the acme.sh package, and fail2ban on RHEL 8 to 10 built from the latest upstream
+    # release, so it only runs together with acme_sh or fail2ban
     - role: 'linuxfabrik.lfops.repo_linuxfabrik'
       when:
-        - 'not setup_nextcloud__skip_acme_sh | d(true)'
+        - >-
+          not setup_nextcloud__skip_acme_sh | d(true)
+          or (not setup_nextcloud__skip_fail2ban | d(true)
+            and ansible_facts["os_family"] == "RedHat"
+            and ansible_facts["distribution"] != "Fedora")
         - 'not setup_nextcloud__skip_repo_linuxfabrik | d(false)'
 
     - role: 'linuxfabrik.lfops.policycoreutils'
