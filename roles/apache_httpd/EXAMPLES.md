@@ -777,7 +777,7 @@ matomo_import_logs__sites__host_var:
     enabled: false
 ```
 
-Then add the piped `CustomLog` to the vHost you want to track, via its `raw` variable. It reuses the `matomo` LogFormat this role already ships. The piped program runs as the user that started httpd (`root`), which can read the `0600` auth file. Using `raw` keeps the vHost's regular file access log (`conf_custom_log`) and adds the Matomo pipe as a second `CustomLog`; set `conf_custom_log` to the pipe instead if you want it to be the only access log.
+Then add the piped `CustomLog` to the vHost you want to track, via its `raw` variable. It sends the `combined` LogFormat, which the import script reads as `ncsa_extended`, and passes `--idsite`, since that format has no vHost name. The piped program runs as the user that started httpd (`root`), which can read the `0600` auth file. Using `raw` keeps the vHost's regular file access log (`conf_custom_log`) and adds the Matomo pipe as a second `CustomLog`; set `conf_custom_log` to the pipe instead if you want it to be the only access log.
 
 ```yaml
 apache_httpd__vhosts__host_var:
@@ -787,15 +787,15 @@ apache_httpd__vhosts__host_var:
       # Matomo realtime logging
       CustomLog "|/usr/local/sbin/import_logs.py \
       --debug --enable-http-errors --enable-http-redirects --enable-bots \
-      --url=https://matomo.example.com --output=/var/log/matomo.log --recorders=1 \
-      --recorder-max-payload-size=1 --log-format-name=common_complete \
+      --idsite=1 --url=https://matomo.example.com --output=/var/log/matomo.log --recorders=1 \
+      --recorder-max-payload-size=1 --log-format-name=ncsa_extended \
       --auth-config=/etc/matomo-import-logs/www.example.com.conf \
-      -" matomo
+      -" combined
 ```
 
 ### GELF Realtime Tracking
 
-Pipe access logs to a Graylog GELF input via the vHost's `raw` variable. Define the `gelf` LogFormat (the fields Graylog should parse) and the piped `CustomLog`:
+Pipe access logs to a Graylog GELF input via the vHost's `raw` variable. Define a `gelf` LogFormat that writes each request as a GELF JSON message, and the piped `CustomLog`:
 
 ```yaml
 apache_httpd__vhosts__host_var:
@@ -803,6 +803,21 @@ apache_httpd__vhosts__host_var:
     conf_server_name: 'www.example.com'
     raw: !unsafe |-
       # GELF realtime logging
-      LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" gelf
+      LogFormat "{\n\
+        \"version\": \"1.1\",\n\
+        \"host\": \"%v\",\n\
+        \"short_message\": \"%r\",\n\
+        \"timestamp\": %{%s}t,\n\
+        \"level\": 6,\n\
+        \"_user_agent\": \"%{User-Agent}i\",\n\
+        \"_remote_hostname\": \"%a\",\n\
+        \"_duration_usec\": %D,\n\
+        \"_http_status\": %>s,\n\
+        \"_http_request_url\": \"%U\",\n\
+        \"_http_query\": \"%q\",\n\
+        \"_http_method\": \"%m\",\n\
+        \"_http_version\": \"%H\",\n\
+        \"_http_referer\": \"%{Referer}i\"\n\
+      }" gelf
       CustomLog "|/usr/bin/nc --udp graylog.example.com 12201" gelf
 ```
