@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026110601
+# 2026111901
 # 10.11
 
 [client]
@@ -117,6 +117,7 @@ ssl_key                                        = {{ mariadb_server__cnf_ssl_key_
 {% endif %}
 table_definition_cache                         = {{ mariadb_server__cnf_table_definition_cache__combined_var }}
 table_open_cache                               = {{ mariadb_server__cnf_table_open_cache__combined_var }}
+table_open_cache_instances                     = {{ mariadb_server__cnf_table_open_cache_instances__combined_var }}
 tls_version                                    = {{ mariadb_server__cnf_tls_version__combined_var }}
 tmp_table_size                                 = {{ mariadb_server__cnf_tmp_table_size__combined_var }}
 {% if mariadb_server__cnf_tmpdir__combined_var is defined and mariadb_server__cnf_tmpdir__combined_var | length %}

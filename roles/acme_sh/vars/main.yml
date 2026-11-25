@@ -1,7 +1,7 @@
 # Where certificates are installed to, and how the local web server is reloaded afterwards, per
 # platform. Kept here instead of in vars/<os>.yml, since the placeholder certificates below are
 # consumed by apache_httpd, which runs before this role (see "OS-specific Dependent Variables"
-# in CONTRIBUTING.md). `d("")` keeps them valid on platforms the role does not support.
+# in docs/developer-guide/variables.md). `d("")` keeps them valid on platforms the role does not support.
 __acme_sh__platform:
   Debian:
     cert_path: '/etc/ssl/certs'

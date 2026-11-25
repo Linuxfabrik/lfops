@@ -5,6 +5,7 @@
       name: 'shared'
       tasks_from: 'clone-monitoring-plugins-repo.yml'
     vars:
+      shared__monitoring_plugins_repo_dest: '{{ __monitoring_plugins__repo_dir }}'
       shared__monitoring_plugins_version: '{{ monitoring_plugins__version }}'
 
   # The lockfiles of a release resolve the dependencies of exactly the linuxfabrik-lib release
@@ -20,7 +21,7 @@
         { grep --no-filename --only-matching --extended-regexp \
             '^linuxfabrik-lib==[0-9][0-9.]*' lockfiles/*/requirements.txt || true; } \
           | cut --delimiter='=' --fields=3 | sort --unique
-      chdir: '/tmp/ansible.monitoring-plugins-repo'
+      chdir: '{{ __monitoring_plugins__repo_dir }}'
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
@@ -43,11 +44,46 @@
     when:
       - 'monitoring_plugins__version != "dev"'
 
+  # see the `git ls-remote` of the monitoring-plugins repo in install.yml
+  - name: 'git ls-remote https://github.com/Linuxfabrik/lib.git refs/heads/main'
+    ansible.builtin.command:
+      argv:
+        - 'git'
+        - 'ls-remote'
+        - 'https://github.com/Linuxfabrik/lib.git'
+        - 'refs/heads/main'
+    register: '__monitoring_plugins__lib_main_commit_result'
+    retries: 3 # ride out a brief outage of the download source
+    delay: 10
+    delegate_to: 'localhost'
+    become: false
+    vars:
+      ansible_become: false # noqa var-naming[pattern]
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
+    changed_when: false # read-only
+    failed_when: '__monitoring_plugins__lib_main_commit_result["rc"] != 0 or __monitoring_plugins__lib_main_commit_result["stdout"] | length == 0'
+    check_mode: false # run task even if `--check` is specified
+    when:
+      - 'monitoring_plugins__version == "dev"'
+
+  - name: 'Set the state of the lib checkout'
+    ansible.builtin.set_fact:
+      __monitoring_plugins__lib_checkout_id: '{{
+          ("main-" ~ __monitoring_plugins__lib_main_commit_result["stdout"].split()[0][:12])
+          if monitoring_plugins__version == "dev"
+          else ("v" ~ __monitoring_plugins__lib_pin_result["stdout_lines"][0])
+        }}'
+
+  - name: 'Set the controller path of the lib checkout'
+    ansible.builtin.set_fact:
+      __monitoring_plugins__lib_repo_dir: '{{ __monitoring_plugins__cache_dir }}/lib-{{ __monitoring_plugins__lib_checkout_id }}'
+
   - name: 'Clone the lib repo'
     ansible.builtin.import_role:
       name: 'shared'
       tasks_from: 'clone-lib-repo.yml'
     vars:
+      shared__lib_repo_dest: '{{ __monitoring_plugins__lib_repo_dir }}'
       shared__lib_version: '{{
           "dev" if monitoring_plugins__version == "dev"
           else __monitoring_plugins__lib_pin_result["stdout_lines"][0]
@@ -63,47 +99,56 @@
   # The shebangs are rewritten here, on the controller, instead of on the target: the plugin
   # directory is shared with the distribution's own Nagios plugins, and rewriting it in place
   # would have to walk that directory and could catch a foreign plugin.
+  #
+  # The tree is built in a temporary directory and moved into place, so a run that aborts
+  # halfway leaves nothing behind that a later host would take for complete. A tree that exists
+  # is final, so every further host only lists it, see `__monitoring_plugins__checkout_id`.
   - name: 'Flatten the plugins and their assets locally using shell'
     ansible.builtin.shell:
       cmd: |
         set -e -o pipefail
-        rm -rf /tmp/ansible.monitoring-plugins-repo-flattened
-        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/assets
-        mkdir -p /tmp/ansible.monitoring-plugins-repo-flattened/plugins
-        for tree in check-plugins event-plugins notification-plugins; do
-          [ -d "$tree" ] || continue
-          find "$tree" \
-            -maxdepth 2 \
-            -type f \
-            -not -name example \
-            -regextype posix-extended \
-            -regex '.*/([^/]+)/\1$' \
-            -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/plugins/ \;
-          find "$tree" \
-            -mindepth 3 \
-            -type f \
-            -path '*/assets/*' \
-            -not -path '*/example/assets/*' \
-            -exec cp -- {} /tmp/ansible.monitoring-plugins-repo-flattened/assets/ \;
-        done
-        # The snmp plugin reads its OID lists and MIBs from directories next to itself, so they
-        # keep their structure.
-        for dir in device-mibs device-oids; do
-          mkdir --parents "/tmp/ansible.monitoring-plugins-repo-flattened/$dir"
-          [ -d "check-plugins/snmp/$dir" ] || continue
-          cp --recursive -- "check-plugins/snmp/$dir/." "/tmp/ansible.monitoring-plugins-repo-flattened/$dir/"
-        done
-        # A checkout always carries plugins. None of them means the clone produced something
-        # unusable, and going on would report a successful run on a host that has no plugins.
-        if [ "$(ls -1 /tmp/ansible.monitoring-plugins-repo-flattened/plugins | wc -l)" -eq 0 ]; then
-          echo 'found no plugins in the checkout' >&2
-          exit 1
+        dest='{{ __monitoring_plugins__flattened_dir }}'
+        if [ ! -d "$dest" ]; then
+          tmp="$(mktemp --directory "$dest.XXXXXX")"
+          trap 'rm -rf -- "$tmp"' EXIT
+          mkdir -p "$tmp/assets" "$tmp/plugins"
+          for tree in check-plugins event-plugins notification-plugins; do
+            [ -d "$tree" ] || continue
+            find "$tree" \
+              -maxdepth 2 \
+              -type f \
+              -not -name example \
+              -regextype posix-extended \
+              -regex '.*/([^/]+)/\1$' \
+              -exec cp -- {} "$tmp/plugins/" \;
+            find "$tree" \
+              -mindepth 3 \
+              -type f \
+              -path '*/assets/*' \
+              -not -path '*/example/assets/*' \
+              -exec cp -- {} "$tmp/assets/" \;
+          done
+          # The snmp plugin reads its OID lists and MIBs from directories next to itself, so they
+          # keep their structure.
+          for dir in device-mibs device-oids; do
+            mkdir --parents "$tmp/$dir"
+            [ -d "check-plugins/snmp/$dir" ] || continue
+            cp --recursive -- "check-plugins/snmp/$dir/." "$tmp/$dir/"
+          done
+          # A checkout always carries plugins. None of them means the clone produced something
+          # unusable, and going on would report a successful run on a host that has no plugins.
+          if [ "$(ls -1 "$tmp/plugins" | wc -l)" -eq 0 ]; then
+            echo 'found no plugins in the checkout' >&2
+            exit 1
+          fi
+          sed -i '1s|^#!.*python.*|#!/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python|' \
+            "$tmp/plugins/"*
+          rm -rf -- "$dest"
+          mv -- "$tmp" "$dest"
         fi
-        sed -i '1s|^#!.*python.*|#!/usr/lib64/linuxfabrik-monitoring-plugins/venv/bin/python|' \
-          /tmp/ansible.monitoring-plugins-repo-flattened/plugins/*
         # the plugin names, for the install manifest
-        ls -1 /tmp/ansible.monitoring-plugins-repo-flattened/plugins
-      chdir: '/tmp/ansible.monitoring-plugins-repo'
+        ls -1 "$dest/plugins"
+      chdir: '{{ __monitoring_plugins__repo_dir }}'
       executable: '/bin/bash'
     delegate_to: 'localhost'
     become: false
@@ -120,7 +165,7 @@
   - name: 'find device-mibs device-oids -type f'
     ansible.builtin.command:
       cmd: 'find device-mibs device-oids -type f'
-      chdir: '/tmp/ansible.monitoring-plugins-repo-flattened'
+      chdir: '{{ __monitoring_plugins__flattened_dir }}'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -129,13 +174,6 @@
     register: '__monitoring_plugins__snmp_device_files'
     check_mode: false # run task even if `--check` is specified
     changed_when: false # read-only
-
-  - name: 'Make sure rsync is installed'
-    ansible.builtin.package:
-      name: 'rsync'
-      state: 'present'
-    retries: 3 # ride out a brief outage of the package repository
-    delay: 10
 
   tags:
     - 'monitoring_plugins'
@@ -155,7 +193,7 @@
 
   - name: 'Check whether a lockfile exists for the legacy interpreter'
     ansible.builtin.stat:
-      path: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
+      path: '{{ __monitoring_plugins__repo_dir }}/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -167,7 +205,7 @@
 
     - name: 'rsync the legacy dependency list to the remote host'
       ansible.posix.synchronize:
-        src: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
+        src: '{{ __monitoring_plugins__repo_dir }}/lockfiles/{{ __monitoring_plugins__legacy_py_tag }}/requirements.txt'
         dest: '/tmp/ansible.monitoring-plugins-legacy-requirements.txt'
         mode: 'push'
         # same reasoning as for the plugin transfers below: compare content, not the times and
@@ -178,27 +216,8 @@
           - '--no-group'
           - '--no-owner'
           - '--no-times'
-
-    - name: 'Uninstall the former `pip --user` dependencies from root'
-      ansible.builtin.shell:
-        cmd: |
-          set -o pipefail
-          command -v pip3 >/dev/null 2>&1 || exit 0
-          pkgs="$(grep -oE '^[A-Za-z0-9][A-Za-z0-9._-]*==' /tmp/ansible.monitoring-plugins-legacy-requirements.txt | sed 's/==$//')"
-          removed=''
-          for pkg in $pkgs; do
-            loc="$(pip3 show "$pkg" 2>/dev/null | awk -F': ' '/^Location:/ {print $2}')"
-            case "$loc" in
-              "$HOME/.local/"*)
-                pip3 uninstall --yes "$pkg" >/dev/null 2>&1 && removed="$removed $pkg"
-                ;;
-            esac
-          done
-          [ -n "$removed" ] && echo "removed:$removed"
-          exit 0
-        executable: '/bin/bash'
-      register: '__monitoring_plugins__legacy_cleanup_root'
-      changed_when: '"removed:" in __monitoring_plugins__legacy_cleanup_root["stdout"]'
+      vars:
+        mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
 
     - name: 'Check if user {{ monitoring_plugins__icinga_user }} exists'
       ansible.builtin.getent:
@@ -208,32 +227,47 @@
       changed_when: false
       failed_when: false
 
-    - name: 'Uninstall the former `pip --user` dependencies from {{ monitoring_plugins__icinga_user }}'
+    # `pip3 list --user` lists the packages below ~/.local in one call, so only those that the
+    # lockfile names get uninstalled. Asking `pip3 show` for every package of the lockfile
+    # instead took 0.3 s per package (31 for py39), up to 17 s per host. Both sides are
+    # normalized as in PEP 503, since pip reports e.g. "PyYAML" where the lockfile has "pyyaml".
+    - name: 'Uninstall the former `pip --user` dependencies from {{ item }}'
       ansible.builtin.shell:
         cmd: |
           set -o pipefail
           command -v pip3 >/dev/null 2>&1 || exit 0
-          pkgs="$(grep -oE '^[A-Za-z0-9][A-Za-z0-9._-]*==' /tmp/ansible.monitoring-plugins-legacy-requirements.txt | sed 's/==$//')"
+          normalize() {
+            grep --only-matching --extended-regexp '^[A-Za-z0-9][A-Za-z0-9._-]*==' \
+              | sed --regexp-extended 's/==$//; s/[-_.]+/-/g' \
+              | tr '[:upper:]' '[:lower:]' \
+              | sort --unique
+          }
+          installed="$(pip3 list --user --format=freeze 2>/dev/null | normalize)"
+          [ -n "$installed" ] || exit 0
+          locked="$(normalize < /tmp/ansible.monitoring-plugins-legacy-requirements.txt)"
           removed=''
-          for pkg in $pkgs; do
-            loc="$(pip3 show "$pkg" 2>/dev/null | awk -F': ' '/^Location:/ {print $2}')"
-            case "$loc" in
-              "$HOME/.local/"*)
-                pip3 uninstall --yes "$pkg" >/dev/null 2>&1 && removed="$removed $pkg"
-                ;;
-            esac
+          for pkg in $(comm -12 <(echo "$installed") <(echo "$locked")); do
+            # Where the system python3 is externally managed (PEP 668), the former install
+            # passed --break-system-packages, and pip refuses to uninstall without it as well.
+            # The user site comes first on sys.path, so pip removes the copy below ~/.local and
+            # leaves a distribution package of the same name alone.
+            { pip3 uninstall --yes "$pkg" \
+                || pip3 uninstall --yes --break-system-packages "$pkg"; } >/dev/null 2>&1 \
+              && removed="$removed $pkg"
           done
           [ -n "$removed" ] && echo "removed:$removed"
           exit 0
         executable: '/bin/bash'
       become: true
-      become_user: '{{ monitoring_plugins__icinga_user }}'
-      register: '__monitoring_plugins__legacy_cleanup_icinga'
-      changed_when: '"removed:" in __monitoring_plugins__legacy_cleanup_icinga["stdout"]'
-      when:
-        - '__monitoring_plugins__legacy_icinga_user_check["getent"] is defined'
-        - '__monitoring_plugins__legacy_icinga_user_check["getent"]["passwd"] is defined'
-        - '__monitoring_plugins__legacy_icinga_user_check["getent"]["passwd"][monitoring_plugins__icinga_user] is defined'
+      become_user: '{{ item }}'
+      register: '__monitoring_plugins__legacy_cleanup'
+      changed_when: '"removed:" in __monitoring_plugins__legacy_cleanup["stdout"]'
+      loop: '{{
+          ["root"]
+          + ([monitoring_plugins__icinga_user]
+             if monitoring_plugins__icinga_user in (__monitoring_plugins__legacy_icinga_user_check["getent"]["passwd"] | d({}))
+             else [])
+        }}'
 
     when:
       - '__monitoring_plugins__legacy_lockfile["stat"]["exists"] | bool'
@@ -242,20 +276,9 @@
     - 'monitoring_plugins'
 
 
-# Provision a suitable Python and build a self-contained venv, mirroring the rpm/deb
-# package. On RHEL 8 the system python3 is 3.6, too old for the plugins, so the role
-# installs python3.9 (package `python39`) and uses it; every other supported platform
-# already ships python3 >= 3.9.
+# Build a self-contained venv, mirroring the rpm/deb package, with the Python that install.yml
+# provisions.
 - block:
-
-  - name: 'Install the Python interpreter and venv support for the source install'
-    ansible.builtin.package:
-      name: '{{ __monitoring_plugins__source_python_packages }}'
-      state: 'present'
-    retries: 3 # ride out a brief outage of the package repository
-    delay: 10
-    when:
-      - '__monitoring_plugins__source_python_packages | length > 0'
 
   # The controller downloads the dependencies for this interpreter, so it needs the exact
   # version (cryptography, for one, excludes 3.9.0 and 3.9.1, and pip reads a bare `3.9` as
@@ -310,7 +333,7 @@
 
   - name: 'Check whether the checkout ships a lockfile for Python {{ __monitoring_plugins__source_python_version }}'
     ansible.builtin.stat:
-      path: '/tmp/ansible.monitoring-plugins-repo/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
+      path: '{{ __monitoring_plugins__repo_dir }}/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -329,7 +352,7 @@
 
   - name: 'Check whether the library ships a lockfile for Python {{ __monitoring_plugins__source_python_version }}'
     ansible.builtin.stat:
-      path: '/tmp/ansible.lib-repo/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
+      path: '{{ __monitoring_plugins__lib_repo_dir }}/lockfiles/{{ __monitoring_plugins__source_py_tag }}/requirements.txt'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -339,12 +362,14 @@
     check_mode: false # run task even if `--check` is specified
 
   # One directory per combination the downloads depend on, so hosts that differ in any of them
-  # never mix their wheels, and hosts that match share one download.
+  # never mix their wheels, and hosts that match share one download. The lockfiles come from both
+  # checkouts, so both name the directory.
   - name: 'Set the controller paths of the dependencies'
     ansible.builtin.set_fact:
       __monitoring_plugins__wheel_dir: '{{
-          "/tmp/ansible.monitoring-plugins-wheels/"
-          ~ monitoring_plugins__version
+          __monitoring_plugins__cache_dir ~ "/wheels-"
+          ~ __monitoring_plugins__checkout_id
+          ~ "-lib-" ~ __monitoring_plugins__lib_checkout_id
           ~ "-" ~ __monitoring_plugins__source_python_version
           ~ "-" ~ ansible_facts["architecture"]
           ~ "-glibc" ~ __monitoring_plugins__source_glibc_version
@@ -372,8 +397,8 @@
           [ansible_playbook_python, role_path ~ "/files/merge-lockfiles.py",
            "--exclude", "linuxfabrik-lib",
            "--output", __monitoring_plugins__wheel_dir ~ "/requirements.txt",
-           "/tmp/ansible.monitoring-plugins-repo/lockfiles/" ~ __monitoring_plugins__source_py_tag ~ "/requirements.txt"]
-          + (["/tmp/ansible.lib-repo/lockfiles/" ~ __monitoring_plugins__source_py_tag ~ "/requirements.txt"]
+           __monitoring_plugins__repo_dir ~ "/lockfiles/" ~ __monitoring_plugins__source_py_tag ~ "/requirements.txt"]
+          + ([__monitoring_plugins__lib_repo_dir ~ "/lockfiles/" ~ __monitoring_plugins__source_py_tag ~ "/requirements.txt"]
              if monitoring_plugins__version == "dev" and __monitoring_plugins__lib_lockfile_result["stat"]["exists"] | bool
              else [])
         }}'
@@ -385,60 +410,73 @@
     changed_when: false # no change on the remote host
     check_mode: false # run task even if `--check` is specified
 
-  # --platform takes no range, and pip does not widen a manylinux tag to the older ones on its
-  # own (cffi, for one, only publishes manylinux_2_17 wheels), so every tag from the oldest
-  # manylinux baseline up to the glibc of the target is listed. With --platform, pip only
+  # pip asks the package index about every requirement on each call, even when all files are
+  # already in the directory (6.6 s for the 31 packages of the py39 lockfile of monitoring-plugins
+  # v8.1.0, measured with pip 25.0 on Fedora 44). The directory is named after the checkouts the
+  # lockfiles come from, so its content is final: the first host downloads, marks it as
+  # complete, and every further host skips the task through `creates`. Both downloads share one
+  # task, since only the task that sets the marker can test for it: Ansible runs a task for all
+  # hosts before it starts the next one. The marker lives in the directory, so that the cache
+  # cleanup removes both together, and the transfer to the target leaves it out.
+  #
+  # A lock per directory instead of `throttle: 1`: hosts with another interpreter, architecture
+  # or glibc download into a directory of their own, and do so in parallel, while hosts that
+  # share a directory wait for the first one and then find the marker. `creates` spares them
+  # even the lock once the directory is complete. `mitogen_task_isolation: 'fork'` for the same
+  # reason as at the plugin transfer below.
+  #
+  # Dependencies: --platform takes no range, and pip does not widen a manylinux tag to the older
+  # ones on its own (cffi, for one, only publishes manylinux_2_17 wheels), so every tag from the
+  # oldest manylinux baseline up to the glibc of the target is listed. With --platform, pip only
   # accepts --no-deps or --only-binary=:all:. --no-deps is right here, the lockfile is complete,
   # and it lets pip fetch a pure-Python sdist that has no wheel (PySmbClient).
-  - name: 'Download the dependencies for the target on the controller'
-    ansible.builtin.command:
-      argv: '{{
-          [ansible_playbook_python, "-m", "pip", "download",
-           "--disable-pip-version-check", "--quiet",
-           "--no-deps", "--require-hashes",
-           "--implementation", "cp",
-           "--python-version", __monitoring_plugins__source_python_version,
-           "--dest", __monitoring_plugins__wheel_dir,
-           "--requirement", __monitoring_plugins__wheel_dir ~ "/requirements.txt"]
-          + __monitoring_plugins__platform_args
-        }}'
+  #
+  # Build backend: a package without a wheel is built on the target, and pip installs the build
+  # backend into an isolated environment of its own. With --no-index it looks for that backend
+  # in the same directory, so it has to be there. It resolves its own dependencies (wheel needs
+  # packaging), which pip only allows together with --only-binary=:all:.
+  - name: 'Download the dependencies and the build backend for the target on the controller'
+    ansible.builtin.shell:
+      cmd: |
+        set -e -o pipefail
+        exec 9>{{ (__monitoring_plugins__wheel_dir ~ '/.lfops-lock') | quote }}
+        flock 9
+        if [ -e {{ __monitoring_plugins__wheel_dir_complete | quote }} ]; then
+          exit 0
+        fi
+        {{ __monitoring_plugins__pip_download_dependencies | map("quote") | join(" ") }}
+        {{ __monitoring_plugins__pip_download_build_backend | map("quote") | join(" ") }}
+        touch {{ __monitoring_plugins__wheel_dir_complete | quote }}
+      creates: '{{ __monitoring_plugins__wheel_dir_complete }}'
+      executable: '/bin/bash'
     vars:
       ansible_become: false # noqa var-naming[pattern]
-      __monitoring_plugins__platform_args: '{{
-          (range(17, (__monitoring_plugins__source_glibc_version.split(".")[1] | int) + 1)
-            | map("string")
-            | map("regex_replace", "^", "--platform=manylinux_2_")
-            | map("regex_replace", "$", "_" ~ ansible_facts["architecture"])
-            | list)
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer below
+      __monitoring_plugins__pip_download: '{{
+          [ansible_playbook_python, "-m", "pip", "download",
+           "--disable-pip-version-check", "--quiet",
+           "--implementation", "cp",
+           "--python-version", __monitoring_plugins__source_python_version,
+           "--dest", __monitoring_plugins__wheel_dir]
+        }}'
+      __monitoring_plugins__pip_download_build_backend: '{{
+          __monitoring_plugins__pip_download
+          + ["--only-binary=:all:", "--platform=any", "setuptools", "wheel"]
+        }}'
+      __monitoring_plugins__pip_download_dependencies: '{{
+          __monitoring_plugins__pip_download
+          + ["--no-deps", "--require-hashes",
+             "--requirement", __monitoring_plugins__wheel_dir ~ "/requirements.txt"]
+          + (range(17, (__monitoring_plugins__source_glibc_version.split(".")[1] | int) + 1)
+             | map("string")
+             | map("regex_replace", "^", "--platform=manylinux_2_")
+             | map("regex_replace", "$", "_" ~ ansible_facts["architecture"])
+             | list)
           + ["--platform=manylinux2014_" ~ ansible_facts["architecture"]]
         }}'
+      __monitoring_plugins__wheel_dir_complete: '{{ __monitoring_plugins__wheel_dir }}/.lfops-complete'
     delegate_to: 'localhost'
     become: false
-    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
-    changed_when: false # no change on the remote host
-    check_mode: false # run task even if `--check` is specified
-
-  # A package without a wheel is built on the target, and pip installs the build backend into
-  # an isolated environment of its own. With --no-index it looks for that backend in the same
-  # directory, so it has to be there. It resolves its own dependencies (wheel needs packaging),
-  # which pip only allows together with --only-binary=:all:.
-  - name: 'Download the build backend for packages without a wheel on the controller'
-    ansible.builtin.command:
-      argv: '{{
-          [ansible_playbook_python, "-m", "pip", "download",
-           "--disable-pip-version-check", "--quiet",
-           "--only-binary=:all:",
-           "--implementation", "cp",
-           "--python-version", __monitoring_plugins__source_python_version,
-           "--platform=any",
-           "--dest", __monitoring_plugins__wheel_dir,
-           "setuptools", "wheel"]
-        }}'
-    delegate_to: 'localhost'
-    become: false
-    vars:
-      ansible_become: false # noqa var-naming[pattern]
-    throttle: 1 # serialize: shared dir on the controller, avoid races between hosts
     changed_when: false # no change on the remote host
     check_mode: false # run task even if `--check` is specified
 
@@ -465,9 +503,13 @@
       rsync_opts:
         - '--checksum'
         - '--chmod=D755,F644'
+        # the lock and the marker of the controller cache
+        - '--exclude=.lfops-*'
         - '--no-group'
         - '--no-owner'
         - '--no-times'
+    vars:
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
 
   tags:
     - 'monitoring_plugins'
@@ -497,17 +539,26 @@
   #                  controller. A hardened controller umask (027 or 077) leaves the git working
   #                  directory unreadable for everyone but its owner, and rsync would carry that
   #                  over and leave the monitoring user unable to read and execute the plugins.
-  # --checksum       compares content instead of size and modification time. The staging tree is
-  #                  rebuilt on every run, so its modification times are always new and rsync
-  #                  would re-transfer everything and report a change on an unchanged checkout.
+  # --checksum       compares content instead of size and modification time. The staging tree
+  #                  carries the modification times of the run that built it, so rsync would
+  #                  re-transfer everything and report a change on an unchanged checkout.
   # --no-times       keeps rsync from writing those modification times to the target, which would
   #                  itself count as a change on every run.
   # --no-owner       leaves ownership to the receiving side, which runs as root. Without it rsync
   # --no-group       pushes the numeric owner of the controller user, which the chown below then
   #                  corrects, so both tasks report a change on every run.
+  #
+  # `mitogen_task_isolation: 'fork'`: synchronize runs rsync on the controller. Under the Mitogen
+  # strategy, every task of every host that runs on the controller goes to the one Mitogen
+  # context of the controller, whose dispatcher handles one call at a time (`Dispatcher` in
+  # mitogen/core.py, `get_chain().call(run_module)` in ansible_mitogen/planner.py), so the
+  # transfers to all hosts ran one after the other: 34 hosts finished about 1.5 s apart, as in
+  # a single queue. Forking runs each task in a child of its own, in parallel. Measured with
+  # mitogen 0.3.44 and ansible-core 2.16.19: ten hosts delegating `sleep 2` to localhost take
+  # 20.9 s, 3.4 s with fork, 2.5 s without Mitogen. Other strategies ignore the variable.
   - name: 'rsync the flattened plugins to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo-flattened/plugins/'
+      src: '{{ __monitoring_plugins__flattened_dir }}/plugins/'
       dest: '/usr/lib64/nagios/plugins/'
       mode: 'push'
       rsync_opts:
@@ -516,12 +567,14 @@
         - '--no-group'
         - '--no-owner'
         - '--no-times'
+    vars:
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] run in parallel under Mitogen, see above
 
   # `delete` takes away an asset the checkout no longer carries. The directory belongs to the
   # monitoring plugins alone, unlike the plugin directory next to it, so nothing else is caught.
   - name: 'rsync the flattened plugin assets to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo-flattened/assets/'
+      src: '{{ __monitoring_plugins__flattened_dir }}/assets/'
       dest: '/usr/lib64/nagios/plugins/assets/'
       mode: 'push'
       delete: true
@@ -531,12 +584,14 @@
         - '--no-group'
         - '--no-owner'
         - '--no-times'
+    vars:
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
 
   # Without `delete`: these directories also hold the device definitions of the admin. A data
   # file the checkout no longer carries is removed below by way of the install manifest.
   - name: 'rsync the data files of the snmp plugin to remote host'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.monitoring-plugins-repo-flattened/{{ item }}/'
+      src: '{{ __monitoring_plugins__flattened_dir }}/{{ item }}/'
       dest: '/usr/lib64/nagios/plugins/{{ item }}/'
       mode: 'push'
       rsync_opts:
@@ -545,6 +600,8 @@
         - '--no-group'
         - '--no-owner'
         - '--no-times'
+    vars:
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
     loop:
       - 'device-mibs'
       - 'device-oids'
@@ -565,7 +622,7 @@
   # Verified with ansible.posix 2.1.0 and rsync 3.1.3 (Rocky 8) and 3.2.7 (Rocky 9).
   - name: 'rsync the Linuxfabrik library from GitHub to /usr/lib64/nagios/plugins/lib/'
     ansible.posix.synchronize:
-      src: '/tmp/ansible.lib-repo/'
+      src: '{{ __monitoring_plugins__lib_repo_dir }}/'
       dest: '/usr/lib64/nagios/plugins/lib/'
       mode: 'push'
       delete: true
@@ -580,6 +637,8 @@
         - '--include=*.py'
         - '--include=LICENSE'
         - '--exclude=*'
+    vars:
+      mitogen_task_isolation: 'fork' # noqa var-naming[pattern] see the plugin transfer in linux-source.yml
 
   - name: 'Make sure artifacts of earlier versions of this role are absent'
     ansible.builtin.file:
@@ -750,7 +809,7 @@
   # user out of sudo, not just the monitoring user.
   - name: 'Copy the /etc/sudoers.d/linuxfabrik-monitoring-plugins file to the server'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
+      src: '{{ __monitoring_plugins__repo_dir }}/assets/sudoers/{{ ansible_facts["os_family"] }}.sudoers'
       # same file name as the rpm/deb packages
       dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins'
       mode: 0o440
@@ -764,7 +823,7 @@
 
   - name: 'Check whether the checkout ships the logging sudoers file'
     ansible.builtin.stat:
-      path: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
+      path: '{{ __monitoring_plugins__repo_dir }}/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -779,7 +838,7 @@
   # of checks a minute. The name carries no dot: sudo skips a file in /etc/sudoers.d with one.
   - name: 'Copy the /etc/sudoers.d/linuxfabrik-monitoring-plugins-logging file to the server'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
+      src: '{{ __monitoring_plugins__repo_dir }}/assets/sudoers/{{ ansible_facts["os_family"] }}-logging.sudoers'
       dest: '/etc/sudoers.d/linuxfabrik-monitoring-plugins-logging'
       mode: 0o440
       validate: 'visudo -cf %s'
@@ -802,7 +861,7 @@
   # which this role deliberately does not pull onto a monitored host.
   - name: 'Check whether the checkout ships the bash completion'
     ansible.builtin.stat:
-      path: '/tmp/ansible.monitoring-plugins-repo/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
+      path: '{{ __monitoring_plugins__repo_dir }}/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -825,7 +884,7 @@
 
   - name: 'Copy the /etc/bash_completion.d/linuxfabrik-monitoring-plugins file to the server'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
+      src: '{{ __monitoring_plugins__repo_dir }}/assets/bash-completion/linuxfabrik-monitoring-plugins.bash'
       # same file name as the rpm/deb packages
       dest: '/etc/bash_completion.d/linuxfabrik-monitoring-plugins'
       mode: 0o644
@@ -856,7 +915,7 @@
 
   - name: 'Check whether the checkout ships the SELinux policy module'
     ansible.builtin.stat:
-      path: '/tmp/ansible.monitoring-plugins-repo/assets/selinux/linuxfabrik-monitoring-plugins.cil'
+      path: '{{ __monitoring_plugins__repo_dir }}/assets/selinux/linuxfabrik-monitoring-plugins.cil'
     delegate_to: 'localhost'
     become: false
     vars:
@@ -866,7 +925,7 @@
 
   - name: 'Copy the SELinux policy module to /usr/share/selinux/packages/'
     ansible.builtin.copy:
-      src: '/tmp/ansible.monitoring-plugins-repo/assets/selinux/linuxfabrik-monitoring-plugins.cil'
+      src: '{{ __monitoring_plugins__repo_dir }}/assets/selinux/linuxfabrik-monitoring-plugins.cil'
       # same path as the -selinux package
       dest: '/usr/share/selinux/packages/linuxfabrik-monitoring-plugins.cil'
       owner: 'root'

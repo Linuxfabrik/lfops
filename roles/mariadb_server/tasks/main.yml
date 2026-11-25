@@ -475,6 +475,39 @@
     register: 'mariadb_server__socket_selinux_workaround_result'
     notify: 'mariadb_server: systemctl restart mariadb'
 
+  # The drop-in never lowers the open files limit below what mariadb.service gets without it:
+  # the LimitNOFILE of the unit file the package ships, else the default of the service manager.
+  # A value of "soft:hard" counts by its hard limit.
+  - name: 'systemctl show mariadb.service --property=FragmentPath --value'
+    ansible.builtin.command: 'systemctl show mariadb.service --property=FragmentPath --value' # noqa command-instead-of-module
+    register: '__mariadb_server__unit_fragment_path_result'
+    changed_when: false
+    check_mode: false
+
+  - name: 'cat {{ __mariadb_server__unit_fragment_path_result["stdout"] }}'
+    ansible.builtin.slurp:
+      src: '{{ __mariadb_server__unit_fragment_path_result["stdout"] }}'
+    register: '__mariadb_server__unit_fragment_result'
+    when:
+      - '__mariadb_server__unit_fragment_path_result["stdout"] | length > 0'
+
+  - name: 'systemctl show --property=DefaultLimitNOFILE --value'
+    ansible.builtin.command: 'systemctl show --property=DefaultLimitNOFILE --value' # noqa command-instead-of-module
+    register: '__mariadb_server__default_limit_nofile_result'
+    changed_when: false
+    check_mode: false
+
+  - name: 'Determine the open files limit mariadb.service gets without the role'
+    ansible.builtin.set_fact:
+      __mariadb_server__service_limit_nofile_os: '{{
+          (__mariadb_server__unit_fragment_result["content"] | d("") | b64decode)
+            | regex_findall("(?m)^\s*LimitNOFILE\s*=\s*(\S+)")
+            | last
+            | d(__mariadb_server__default_limit_nofile_result["stdout"])
+            | split(":")
+            | last
+        }}'
+
   - name: 'Deploy /etc/systemd/system/mariadb.service.d/z00-linuxfabrik.conf'
     ansible.builtin.template:
       backup: true

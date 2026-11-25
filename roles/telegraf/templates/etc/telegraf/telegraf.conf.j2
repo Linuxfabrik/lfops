@@ -1,7 +1,7 @@
 #jinja2:variable_start_string:'[%', variable_end_string:'%]'
 # [% ansible_managed %]
-# 2026110402
-{# Based on telegraf 1.40.3 #}
+# 2026112501
+{# Based on telegraf 1.40.4 #}
 
 # Telegraf Configuration
 #
@@ -878,6 +878,10 @@
 #   ## Set http_proxy
 #   # use_system_proxy = false
 #   # http_proxy_url = "http://localhost:8888"
+#
+#   ## Local address to bind when connecting to the server
+#   ## If empty or not set, the local address is automatically chosen.
+#   # local_address = ""
 #
 #   ## Namespace for the CloudWatch MetricDatums
 #   namespace = "InfluxData/Telegraf"
@@ -2107,6 +2111,11 @@
 #   # net_read_timeout = "30s"
 #   # net_write_timeout = "30s"
 #   # producer_timeout = "10s"
+#
+#   ## Maximum time for delivering a batch
+#   ## On timeout the producer is replaced and messages without a result are sent
+#   ## again, possibly duplicating them. Set to "0s" to disable.
+#   # delivery_timeout = "5m"
 #
 #   ## Producer timestamp
 #   ## This option sets the timestamp of the kafka producer message, choose from:
@@ -13482,9 +13491,9 @@
 #   ## Event nodes support both 'id' string format and individual fields.
 #   # [[inputs.opcua_listener.events]]
 #   #   ## Polling interval for data collection
-#   #   # sampling_interval = "10s"
+#   #   # sampling_interval = "0s"
 #   #   ## Size of the notification queue
-#   #   # queue_size = 10
+#   #   # queue_size = 0
 #   #   ## Node parameter defaults for node definitions below (used when id is not specified)
 #   #   # namespace = ""
 #   #   # identifier_type = ""

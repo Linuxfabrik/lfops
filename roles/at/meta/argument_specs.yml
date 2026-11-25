@@ -2,6 +2,27 @@ argument_specs:
   main:
     options:
 
+      at__allow_users__dependent_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users besides root that may use at. Dependent-role injection.'
+
+      at__allow_users__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users besides root that may use at. Group-level override.'
+
+      at__allow_users__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'Users besides root that may use at. Host-level override.'
+
       at__service_enabled:
         type: 'bool'
         required: false

@@ -1,0 +1,2 @@
+cron_permissions__allow_users__group_var:
+  - name: 'lfops-cron-allowed'

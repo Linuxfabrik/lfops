@@ -1,1 +1,8 @@
-# Molecule scenario marker
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name apache_solr/install`.
+#
+# prepare.yml leaves a world-readable log file in /var/log/solr, as Solr wrote it before
+# solr.service got its UMask.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

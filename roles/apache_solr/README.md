@@ -29,7 +29,7 @@ Solr 8 is EOL and only covered where existing installations still run it.
 ## How the Role Behaves
 
 * The release tarball is downloaded on the Ansible controller and copied to the target, so the controller needs outbound access to `dlcdn.apache.org` and `archive.apache.org`, the target does not. The download comes from the Apache CDN, which only carries the current releases, and from the much slower Apache archive for every other version.
-* As with Solr's own `install_solr_service.sh`, the installation under `apache_solr__install_dir` belongs to `root`, so Solr cannot modify its own program files, while `apache_solr__var_dir` belongs to the Solr user and is not readable for other users.
+* As with Solr's own `install_solr_service.sh`, the installation under `apache_solr__install_dir` belongs to `root`, so Solr cannot modify its own program files, while `apache_solr__var_dir` belongs to the Solr user and is not readable for other users. The same applies to the log files in `apache_solr__logs_dir`, the role sets existing ones to `0640`.
 * Changing `apache_solr__version` installs the new version next to the old one, switches the `solr` symlink to it and restarts Solr. The old version is left in place. Solr 10 opens the indexes of Solr 9, but an index that Solr 8 ever wrote to has to be deleted and reindexed before upgrading to Solr 10, see [Reindexing](https://solr.apache.org/guide/solr/latest/indexing-guide/reindexing.html#upgrades).
 * `security.json` is fully templated from `apache_solr__users__*_var` and `apache_solr__roles__*_var`, so users or permissions added through the Solr API or the Admin UI are overwritten on the next run. The file is only deployed if at least one user is configured.
 * Solr applies only the first permission that matches a request. The role therefore writes one Solr permission per permission name, lists every role holding it, places `all` last and adds a role holding `all` to every permission, so such a role is never locked out by a more specific permission.
@@ -41,6 +41,7 @@ Solr 8 is EOL and only covered where existing installations still run it.
 Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/README.md) that installs this role runs these for you. Optional ones can be disabled via the playbook's skip variables.
 
 * The tools that Solr's start script and the role need, such as `lsof` and `tar`, must be installed (role: [linuxfabrik.lfops.apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)).
+* `vm.swappiness` must be set to 1, so that the kernel keeps the Java heap in RAM, as the [Solr Reference Guide](https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#avoid-swapping-nix-operating-systems) recommends (role: [linuxfabrik.lfops.kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings)).
 
 
 ## Tags

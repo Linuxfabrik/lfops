@@ -1,5 +1,8 @@
-__repo_rpmfusion__gpg_keys:
-  - url: 'https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-el-8'
-    dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-8'
-  - url: 'https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-el-8'
-    dest: '/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-8'
+# EL major releases this role ships `vars/RedHat<release>.yml` and `templates/RedHat<release>/`
+# for. The host's release is asserted against this list, so an unsupported one aborts naming
+# the supported releases instead of failing on an undefined variable. Extend it whenever a
+# release is added.
+__repo_rpmfusion__supported_versions:
+  - '8'
+  - '9'
+  - '10'

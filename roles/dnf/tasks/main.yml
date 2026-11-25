@@ -45,7 +45,7 @@
     - 'always'
 
 
-# ini_file instead of a template, a deliberate exception to CONTRIBUTING: the packaged
+# ini_file instead of a template, a deliberate exception to docs/developer-guide/tasks.md: the packaged
 # dnf.conf is fine as it is, and the role only sets a few options in [main]. A template would
 # replace the whole file and drop settings added by hand, such as `proxy=` or `exclude=`.
 # ini_file changes the listed options and leaves every other line alone.

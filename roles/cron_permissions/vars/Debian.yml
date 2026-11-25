@@ -1,0 +1,7 @@
+# crontab(1) is setgid crontab on Debian and Ubuntu and reads /etc/cron.allow as group crontab.
+# If /etc/cron.allow exists but cannot be read, it refuses every user but root, including the
+# listed ones (allowed() in misc.c of Debian's cron 3.0pl1), so a root:root /etc/cron.allow
+# locks them out. Hence root:crontab 0640, which the CIS Debian Linux 13 Benchmark v1.1.0
+# (2.4.1.9) accepts. Verified with cron on Debian 12 and 13 and Ubuntu 22.04, 24.04 and 26.04.
+__cron_permissions__allow_group: 'crontab'
+__cron_permissions__allow_mode: 0o640

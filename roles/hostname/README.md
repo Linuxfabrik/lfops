@@ -8,9 +8,16 @@ This role sets the system hostname (the name returned by `hostname` / `hostnamec
 
 ## How the Role Behaves
 
-The role adds a marker block to `/etc/hosts` that maps the FQDN (and the short name) to `hostname__etc_hosts_ip` (the host's primary IPv4 address by default). It does not template the whole file, because `/etc/hosts` is co-managed by cloud-init, which maintains the localhost entries.
+The role adds a marker block to `/etc/hosts` that maps the FQDN (and the short name) to `hostname__etc_hosts_ip` (the host's primary IPv4 address by default). It does not template the whole file, so entries written by others stay.
 
-If cloud-init is configured with `manage_etc_hosts: true`, it rewrites `/etc/hosts` on every boot and would drop this block. On the standard cloud images used with LFOps cloud-init only manages the localhost line, so the block persists. Set `hostname__manage_etc_hosts: false` to leave `/etc/hosts` untouched.
+cloud-init (with `manage_etc_hosts: true`) and the Debian installer also map the hostname to a loopback address (`127.0.0.1`, `127.0.1.1` or `::1`). Since glibc returns the `/etc/hosts` entries in file order, the hostname would resolve to the loopback address, and Lynis reports this as NAME-4406. The role therefore removes loopback lines that carry nothing but the short name, alone or with any domain (`myhost`, `myhost.example`, `myhost.example.com`). A loopback line that lists other names as well, such as `127.0.0.1 localhost myhost`, is left untouched.
+
+Set `hostname__manage_etc_hosts: false` to leave `/etc/hosts` untouched.
+
+
+## Known Limitations
+
+* As long as cloud-init is installed and `manage_etc_hosts` is `true`, cloud-init may render `/etc/hosts` from its template again at boot (on every boot with the upstream default, once per instance on Hetzner images). This drops the marker block and maps the hostname to the loopback address again, until the next run of the role. `setup_basic` removes cloud-init with the `cloud_init` role. To keep cloud-init, set `manage_etc_hosts: false` in the user-data. A file in `/etc/cloud/cloud.cfg.d/` does not help, since the vendor-data and user-data of the provider take precedence over it.
 
 
 ## Tags
@@ -49,7 +56,7 @@ If cloud-init is configured with `manage_etc_hosts: true`, it rewrites `/etc/hos
 
 `hostname__manage_etc_hosts`
 
-* Whether to maintain the `/etc/hosts` entry that maps the hostname to `hostname__etc_hosts_ip`. Set to `false` to leave `/etc/hosts` untouched.
+* Whether to maintain the `/etc/hosts` entry that maps the hostname to `hostname__etc_hosts_ip`, and to remove the loopback entries that carry nothing but the hostname. Set to `false` to leave `/etc/hosts` untouched.
 * Type: Bool.
 * Default: `true`
 

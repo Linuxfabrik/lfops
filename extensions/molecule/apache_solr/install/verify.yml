@@ -140,3 +140,37 @@
           - '__molecule__apache_solr_pid_result["stat"]["pw_name"] == "solr"'
           - '__molecule__apache_solr_pid_result["stat"]["mode"] == "0640"'
         fail_msg: 'The PID file is {{ __molecule__apache_solr_pid_result["stat"] | d("missing") }}'
+
+    # Covers the log files Solr wrote before solr.service got its UMask (see prepare.yml), and the
+    # ones it writes now.
+    - name: 'find /var/log/solr -type f'
+      ansible.builtin.find:
+        paths: '/var/log/solr'
+      register: '__molecule__apache_solr_logs_result'
+
+    - name: 'Assert the Solr log files are not world-readable'
+      ansible.builtin.assert:
+        that:
+          - '"/var/log/solr/solr.log.1" in __molecule__apache_solr_logs_result["files"] | map(attribute="path")'
+          - '__molecule__apache_solr_logs_result["files"] | rejectattr("mode", "eq", "0640") | list | length == 0'
+        fail_msg: >-
+          {{ __molecule__apache_solr_logs_result["files"] | map(attribute="path")
+            | zip(__molecule__apache_solr_logs_result["files"] | map(attribute="mode"))
+            | map("join", " ") | join(", ") }}
+
+    # The playbook hands vm.swappiness to the kernel_settings role, as the Solr
+    # Reference Guide recommends, so that the kernel keeps the Java heap in RAM.
+    - name: 'cat /proc/sys/vm/swappiness'
+      ansible.builtin.slurp:
+        src: '/proc/sys/vm/swappiness'
+      register: '__molecule__apache_solr_swappiness_result'
+
+    - name: 'Assert vm.swappiness is 1'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__apache_solr_swappiness == "1"'
+        fail_msg: 'vm.swappiness is {{ __molecule__apache_solr_swappiness }}'
+      vars:
+        __molecule__apache_solr_swappiness: '{{
+            __molecule__apache_solr_swappiness_result["content"] | b64decode | trim
+          }}'

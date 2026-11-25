@@ -50,7 +50,7 @@
 
   # include_tasks is required here because import_tasks cannot handle dynamic variables.
   #
-  # Deliberately not the first_found lookup from CONTRIBUTING.md ("OS-specific Tasks"). That
+  # Deliberately not the first_found lookup from docs/developer-guide/tasks.md ("OS-specific Tasks"). That
   # pattern ends in `skip: true`, which is right for a role whose platform file holds a few
   # extras on top of a common main.yml: a platform without one loses those extras and the rest
   # of the role still runs. Here the platform file IS the role, so skipping it would leave a run

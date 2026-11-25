@@ -1,14 +1,15 @@
 # Variables the playbook under test needs, applied to every system under test.
 #
 # The firewall role is skipped. It defaults to fwbuilder, which starts fwb.service from an
-# /etc/fwb.sh this scenario cannot supply. The iptables-multiport banaction is still exercised:
-# fail2ban-server depends on nftables and therefore brings the iptables command with it, so the
-# jails start their actions on a host the firewall role never touched.
+# /etc/fwb.sh this scenario cannot supply. The banactions are still exercised: fail2ban-server
+# depends on nftables and therefore brings the nft and iptables commands with it, so the jails
+# start their actions on a host the firewall role never touched.
 fail2ban__skip_firewall: true
 
 # Pinned by the scenario rather than left to the role default, because verify.yml reads it back
 # from the running server: verify.yml runs no roles, so a role default would be undefined there.
-fail2ban__jail_default_banaction: 'iptables-multiport'
+# rocky9-vm overrides it with iptables-multiport in hosts.yml, so both families are exercised.
+fail2ban__jail_default_banaction: 'nftables-multiport'
 
 # Deliberately not the role default of 7d, so verify.yml can tell "the running server uses what
 # the inventory asked for" apart from "the running server happens to use the default".
@@ -34,7 +35,20 @@ fail2ban__filters__group_var:
       failregex = ^.*molecule-fail2ban-probe from <HOST>$
       journalmatch = _SYSTEMD_UNIT=sshd.service
 
+# The Apache jails the role enables by itself need no entry here. apache-badbots,
+# apache-botsearch and apache-dos are opt-in, so they are listed to prove their templates still
+# load. A jail whose logpath matches no file proves that skip_if_nologs keeps fail2ban running
+# without it.
 fail2ban__jails__group_var:
+  - filename: 'z10-apache-badbots'
+    state: 'present'
+    template: 'apache-badbots'
+  - filename: 'z10-apache-botsearch'
+    state: 'present'
+    template: 'apache-botsearch'
+  - filename: 'z10-apache-dos'
+    state: 'present'
+    template: 'apache-dos'
   - filename: 'z20-molecule-journal'
     state: 'present'
     template: 'raw'
@@ -46,3 +60,11 @@ fail2ban__jails__group_var:
       findtime = 1m
       maxretry = 3
       port     = 0:65535
+  - filename: 'z20-molecule-nolog'
+    state: 'present'
+    template: 'raw'
+    raw: |-
+      [molecule-nolog]
+      enabled = true
+      filter  = apache-auth
+      logpath = /var/log/molecule-does-not-exist/*.log

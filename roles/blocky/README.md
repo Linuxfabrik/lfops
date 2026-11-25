@@ -2,7 +2,7 @@
 
 This role installs and configures blocky, a DNS proxy and ad-blocker for the local network written in Go.
 
-This Ansible role does not provide a way to template the blocky configuration file -- it is simply far too dynamic. Also it does not currently support multiple blocky instances synchronizing their caches and locking state via redis. If you have multiple instances, just deploy the same config.yml to a group of blocky instances, and you will be fine.
+This Ansible role does not provide a way to template the blocky configuration file -- it is simply far too dynamic. The sample configuration it deploys when `blocky__config_yml` is unset serves the Prometheus metrics on `http://127.0.0.1:4000/metrics`, which the [blocky-stats](https://linuxfabrik.github.io/monitoring-plugins/check-plugins/blocky-stats/) check reads. Keep `ports.http` and `prometheus.enable: true` in your own configuration to monitor blocky. The HTTP port also serves the REST API, which has no authentication and can disable blocking, so bind it to `127.0.0.1` unless clients need it. Also it does not currently support multiple blocky instances synchronizing their caches and locking state via redis. If you have multiple instances, just deploy the same config.yml to a group of blocky instances, and you will be fine.
 
 
 *Available since LFOps `3.0.0`.*

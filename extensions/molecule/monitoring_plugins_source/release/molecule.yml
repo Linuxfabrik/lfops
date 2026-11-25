@@ -1,0 +1,14 @@
+# Molecule scenario marker for the 'release' sub-scenario, run with
+# `molecule test --scenario-name monitoring_plugins_source/release`.
+#
+# Covers the source install of releases, which the controller prepares once per version: two
+# releases in one play, each on two hosts. Every host has to end up with the plugins and the
+# Linuxfabrik library of its own release, not with those of whichever host the controller
+# prepared last. rocky8-vm and rocky9-vm share the checkout of their release, but not the
+# dependencies, since their glibc differs. The 'install' sub-scenario covers `dev`.
+#
+# The prepare step (see prepare.yml) creates the icon directory of IcingaWeb2, so that the role
+# also deploys the icons of each release.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

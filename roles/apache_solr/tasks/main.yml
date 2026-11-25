@@ -213,6 +213,15 @@
     register: '__apache_solr__chmod_var_files_result'
     changed_when: '__apache_solr__chmod_var_files_result["stdout"] | length > 0'
 
+  # the UMask of solr.service does not cover log files written before solr.service had it.
+  # they keep 0644, and with every rollover log4j2 (DefaultRolloverStrategy, fileIndex
+  # "max") and the JVM's GC log rotation rename them to the next index, so the mode under a
+  # given name such as solr.log.7 changes, which AIDE reports.
+  - name: 'find {{ apache_solr__logs_dir }} -type f -exec chmod --changes 0640 {} +'
+    ansible.builtin.command: 'find {{ apache_solr__logs_dir | quote }} -type f -exec chmod --changes 0640 {} +'
+    register: '__apache_solr__chmod_logs_files_result'
+    changed_when: '__apache_solr__chmod_logs_files_result["stdout"] | length > 0'
+
   tags:
     - 'apache_solr'
 

@@ -1,5 +1,5 @@
 venv/*
-# ANSIBLE_HOME when the worktree carries its own collection path (see CONTRIBUTING.md,
+# ANSIBLE_HOME when the worktree carries its own collection path (see docs/developer-guide/testing.md,
 # "Running scenarios in parallel")
 /.ansible/
 **/.DS_Store
@@ -25,5 +25,6 @@ extensions/molecule/**/*.retry
 /docs/playbooks.md
 /docs/roles/
 /docs/security.md
+/docs/tools.md
 /mkdocs.yml
 /site

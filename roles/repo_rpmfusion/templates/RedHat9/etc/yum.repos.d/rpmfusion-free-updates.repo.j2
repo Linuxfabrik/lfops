@@ -1,0 +1,48 @@
+# {{ ansible_managed }}
+# 2026112001
+
+[rpmfusion-free-updates]
+name=RPM Fusion for EL 9 - Free - Updates
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length %}
+baseurl={{ repo_rpmfusion__mirror_url }}/rpmfusion/free-el-updates-released-9/x86_64
+#metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-released-9&arch=$basearch
+{% else %}
+#baseurl=http://download1.rpmfusion.org/free/el/updates/9/$basearch/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-released-9&arch=$basearch
+{% endif %}
+enabled=1
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-9
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
+
+[rpmfusion-free-updates-debuginfo]
+name=RPM Fusion for EL 9 - Free - Updates Debug
+#baseurl=http://download1.rpmfusion.org/free/el/updates/9/$basearch/debug/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-released-debug-9&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-9
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
+
+[rpmfusion-free-updates-source]
+name=RPM Fusion for EL 9 - Free - Updates Source
+#baseurl=http://download1.rpmfusion.org/free/el/updates/9/SRPMS/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=free-el-updates-released-source-9&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-el-9
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}

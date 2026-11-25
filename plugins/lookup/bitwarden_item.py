@@ -25,6 +25,7 @@ description:
     - Generated passwords use Python's C(secrets) module (cryptographically strong RNG), not the Bitwarden generator. This lifts the 128-character limit and allows arbitrary character sets, including hex.
     - Items are read from a local on-disk cache backed by C(bw serve). The cache is synced once per Ansible run, since listing all items takes C(bw serve) up to half a minute; where the run cannot be identified (no C(/proc) on the controller), at most every 60 seconds. An item missing from the cache is looked up again after a fresh sync before it is created, so an item created elsewhere during a long run is not created twice.
     - A failed sync is tried again after 10, 30 and 60 seconds before the lookup fails.
+    - Whether the vault is unlocked is asked once per Ansible run (on every lookup where the run cannot be identified), since C(bw serve) unlocks the vault anew on every status request, which takes it about 0.2 s. A vault locked later in the run fails the next request to C(bw serve) with the same advice, without further sync attempts.
     - Lookups on the same controller run one at a time, so hosts that are processed in parallel and need the same missing item create it only once.
     - Right after a sync, C(bw serve) can report an empty vault for a few seconds (U(https://github.com/bitwarden/clients/issues/23283)). The plugin then asks again for about ten seconds, counts a vault that stays empty as a failed sync, and fails after the last sync attempt rather than treat every item as missing. A vault that really is empty needs one item created by hand first.
 
@@ -371,12 +372,13 @@ class LookupModule(LookupBase):
             return self._run_under_mutex(bw, terms)
 
     def _run_under_mutex(self, bw, terms):
-        status = bw.status
+        run_id = get_run_id()
+        # once per run, see Bitwarden.get_status()
+        status = bw.get_status(run_id=run_id)
         if status != 'unlocked':
             raise AnsibleError(bw.get_not_unlocked_message(status))
         display.vvv('lfbwlp - run - bitwarden vault is unlocked')
 
-        run_id = get_run_id()
         synced = bw.sync(run_id=run_id)
 
         ret = []

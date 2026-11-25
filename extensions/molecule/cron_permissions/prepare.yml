@@ -1,0 +1,18 @@
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
+
+
+# One user listed in cron_permissions__allow_users__group_var and one that is not, so verify.yml
+# can check that /etc/cron.allow decides who may use crontab.
+- name: 'Create the users that verify.yml runs crontab as'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'useradd {{ item }}'
+      ansible.builtin.user:
+        name: '{{ item }}'
+      loop:
+        - 'lfops-cron-allowed'
+        - 'lfops-cron-denied'

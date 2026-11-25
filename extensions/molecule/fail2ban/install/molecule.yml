@@ -1,3 +1,9 @@
 # Molecule scenario marker. The shared config.yml already provisions libvirt/KVM VMs, so this
-# scenario needs no driver override: fail2ban reads the systemd journal and inserts iptables
+# scenario needs no driver override: fail2ban reads the systemd journal and inserts firewall
 # rules, neither of which a shared-kernel container represents faithfully.
+#
+# prepare.yml stands in for the log files of an Apache virtual host, which the apache-* jails of
+# the inventory need to start.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

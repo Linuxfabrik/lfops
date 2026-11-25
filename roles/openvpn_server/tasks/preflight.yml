@@ -1,0 +1,30 @@
+# Checks that need nothing changed on the host. Imported at the top of tasks/main.yml.
+#
+# The PKCS#12 file and the CRL used to live in host_vars/<host>/files/. Checked before anything is
+# deployed, so a run with the files still in the old location does not abort halfway, after the
+# server configuration has already changed.
+- block:
+
+  - name: 'Assert that there are no server files left in the old location'
+    ansible.builtin.assert:
+      that:
+        - '(inventory_dir ~ "/host_vars/" ~ inventory_hostname ~ "/files" ~ item["path"]) is not exists'
+      quiet: true
+      fail_msg: >-
+        openvpn_server reads {{ item["path"] }} from {{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ item["path"] }}.
+        Move it there:
+        mkdir -p {{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ item["path"] | dirname }} &&
+        mv {{ inventory_dir }}/host_vars/{{ inventory_hostname }}/files{{ item["path"] }} {{ inventory_dir }}/host_files/{{ inventory_hostname }}{{ item["path"] | dirname }}/
+    loop:
+      - path: '{{ openvpn_server__pkcs12 }}'
+        skip: '{{ openvpn_server__pkcs12_skip_deploy }}'
+      - path: '{{ openvpn_server__crl_verify }}'
+        skip: '{{ openvpn_server__crl_verify_skip_deploy }}'
+    loop_control:
+      label: '{{ item["path"] }}'
+    when:
+      - 'not item["skip"] | bool'
+
+  tags:
+    - 'openvpn_server'
+    - 'openvpn_server:crl'

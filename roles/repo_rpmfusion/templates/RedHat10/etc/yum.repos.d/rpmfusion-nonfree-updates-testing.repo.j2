@@ -1,0 +1,49 @@
+# {{ ansible_managed }}
+# 2026112001
+
+[rpmfusion-nonfree-updates-testing]
+name=RPM Fusion for EL 10 - Nonfree - Test Updates
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length %}
+baseurl={{ repo_rpmfusion__mirror_url }}/rpmfusion/nonfree-el-updates-testing-10/x86_64
+#metalink=http://mirrors.rpmfusion.org/metalink?repo=nonfree-el-updates-testing-10&arch=$basearch
+{% else %}
+#baseurl=http://download1.rpmfusion.org/nonfree/el/updates/testing/10/$basearch/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=nonfree-el-updates-testing-10&arch=$basearch
+{% endif %}
+enabled=0
+type=rpm-md
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-10
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
+
+[rpmfusion-nonfree-updates-testing-debuginfo]
+name=RPM Fusion for EL 10 - Nonfree - Test Updates Debug
+#baseurl=http://download1.rpmfusion.org/nonfree/el/updates/testing/10/$basearch/debug/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=nonfree-el-updates-testing-debug-10&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-10
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}
+
+[rpmfusion-nonfree-updates-testing-source]
+name=RPM Fusion for EL 10 - Nonfree - Test Updates Source
+#baseurl=http://download1.rpmfusion.org/nonfree/el/updates/testing/10/SRPMS/
+metalink=http://mirrors.rpmfusion.org/metalink?repo=nonfree-el-updates-testing-source-10&arch=$basearch
+enabled=0
+type=rpm-md
+gpgcheck=1
+repo_gpgcheck=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-el-10
+{% if repo_rpmfusion__mirror_url is defined and repo_rpmfusion__mirror_url | length and repo_rpmfusion__basic_auth_login is defined and repo_rpmfusion__basic_auth_login | length %}
+username={{ repo_rpmfusion__basic_auth_login["username"] }}
+password={{ repo_rpmfusion__basic_auth_login["password"] }}
+{% endif %}

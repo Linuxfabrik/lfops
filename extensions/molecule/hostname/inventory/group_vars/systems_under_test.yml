@@ -1,0 +1,2 @@
+# A domain part, so that the FQDN and the short name differ and both have to be handled.
+hostname__domain_part: 'example.com'

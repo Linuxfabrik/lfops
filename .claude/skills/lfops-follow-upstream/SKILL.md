@@ -57,12 +57,12 @@ The tool created `<series>-<file>.j2` from the latest older template and added t
 * Fix every line the tool lists as still mentioning the old series (e.g. a `go2docs.graylog.org/7-1/` link).
 * Check the role for other places that enumerate versions: README (`grep -n <old series> roles/<role>/README.md`), `meta/argument_specs.yml` choices, related `repo_*` roles.
 * Read the upgrade notes for breaking changes, required migration steps and dropped platforms. Report them; they may need tasks, preflight checks or a `Breaking Changes` entry.
-* Check whether a series has gone EOL upstream. Dropping a series is a separate decision for the user (CONTRIBUTING: "Do not support EOL software versions").
+* Check whether a series has gone EOL upstream. Dropping a series is a separate decision for the user (docs/developer-guide/roles.md: "Do not support EOL software versions").
 
 
 ## 5. Test
 
-* Run the Molecule scenario that covers the role if one exists (`grep -rl <role> extensions/molecule/*/converge.yml`), per CONTRIBUTING.md "Testing". Report it if there is none.
+* Run the Molecule scenario that covers the role if one exists (`grep -rl <role> extensions/molecule/*/converge.yml`), per docs/developer-guide/testing.md. Report it if there is none.
 * Check for leftover conflict markers: `grep -rn '^<<<<<<<\|^>>>>>>>' roles/<role>/templates`.
 
 

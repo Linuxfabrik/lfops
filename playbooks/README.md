@@ -59,6 +59,7 @@ Calls the following roles (in order):
 
 Calls the following roles (in order):
 
+* [kernel_settings](https://github.com/Linuxfabrik/lfops/tree/main/roles/kernel_settings): `apache_solr__skip_kernel_settings`
 * [apps](https://github.com/Linuxfabrik/lfops/tree/main/roles/apps)
 * [apache_solr](https://github.com/Linuxfabrik/lfops/tree/main/roles/apache_solr)
 
@@ -307,6 +308,7 @@ Calls the following roles (in order):
 * [selinux](https://github.com/Linuxfabrik/lfops/tree/main/roles/selinux): `fail2ban__skip_selinux`
 * [sshd](https://github.com/Linuxfabrik/lfops/tree/main/roles/sshd): `fail2ban__skip_sshd`
 * [repo_epel](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_epel): `fail2ban__skip_repo_epel`
+* [repo_linuxfabrik](https://github.com/Linuxfabrik/lfops/tree/main/roles/repo_linuxfabrik): `fail2ban__skip_repo_linuxfabrik`
 * [firewall](https://github.com/Linuxfabrik/lfops/tree/main/roles/firewall): `fail2ban__skip_firewall`
 * [fail2ban](https://github.com/Linuxfabrik/lfops/tree/main/roles/fail2ban)
 

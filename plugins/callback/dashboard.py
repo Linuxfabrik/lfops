@@ -11,11 +11,14 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import atexit
+import hashlib
 import json
 import os
 import re
+import stat
 import subprocess  # nosec B404
 import sys
+import tempfile
 import threading
 import time
 from collections import Counter
@@ -47,7 +50,8 @@ DOCUMENTATION = r"""
   description:
     - Shows the run on one fixed screen that is updated in place instead of scrolling, at least once a second. At the top the playbook, the number of hosts and the elapsed time, the current role and task, a progress bar of the play with the estimated remaining time, then counters of the results of the current task and of the whole run. The ok counter of the task is followed by the number of hosts still at work on the task and the number of hosts, for example C(ok 13/22/35).
     - Below the title, where LFOps comes from - its version, or for a git checkout the branch, the commit and the number of uncommitted files, and the source path, shortened to the initials of its parent directories, when the checkout is mounted into an execution environment - and the ansible-core version. An C(LFOPS_EE_VERSION) environment variable is shown as the EE version.
-    - The progress bar counts the tasks of the play that are known when it starts, after C(--tags) and C(--skip-tags) are applied. A task included with C(include_tasks) or C(include_role) is one step, the bar stands still while the tasks it includes run. Tasks in C(rescue) sections and handlers are not counted. The bar counts tasks, not time, and starts over with every batch of C(serial). The estimated remaining time assumes that the steps left take as long on average as the steps so far.
+    - The progress bar counts the tasks of the play that are known when it starts, after C(--tags) and C(--skip-tags) are applied. A task included with C(include_tasks) or C(include_role) is one step, the bar stands still while the tasks it includes run. Tasks in C(rescue) sections and handlers are not counted. The bar counts tasks, not time, and starts over with every batch of C(serial).
+    - The estimated remaining time (ETA) adds up how long each step left took the last time it ran, an include with all its tasks, until the slowest host was done. The durations are kept in O(eta_cache_dir) for the next runs, one file per step, so that runs in parallel, like several ansible-navigator sessions, do not wait for each other. A step that never ran before is assumed to take as long as the steps of this play so far did on average.
     - Below, the hosts are listed, sorted by their most severe result (fatal, warning, changed, ignored, ok), then by name, with their counts of fatal (F), warning (W), changed (C) and ok (O) results and their last notable result (LAST WORST), or the last ok result for a host without one. Hosts with only skipped results are counted, not listed.
     - At the end of the run, the screen is left and the details follow in the format of C(linuxfabrik.lfops.compact), but only for the tasks with changes, warnings or failures. Then the recap and the report of the distinct messages by severity.
     - Without a terminal (log file, pipe, CI) or with C(--verbose), the plugin behaves exactly like C(linuxfabrik.lfops.compact).
@@ -58,6 +62,29 @@ DOCUMENTATION = r"""
     - The terminal needs at least 65 columns and 12 lines, else the plugin behaves like C(linuxfabrik.lfops.compact). ansible-runner writes 64 characters wide invisible event markers, which the screen keeps on its last line.
     - Keyboard input is not echoed while the screen is shown, so that a pressed key does not move it. Prompts (C(vars_prompt), C(pause)) are not supported on the screen.
     - Made for the linear strategies (C(linear), C(mitogen_linear)).
+  options:
+    display_debug_output:
+      description:
+        - Show the output of C(ansible.builtin.debug) tasks, although their hosts are ok, grouped by identical output like the changes, with the other details at the end of the run.
+        - If disabled, the hosts of a C(ansible.builtin.debug) task are listed in the C(ok) line like those of any other task.
+      type: bool
+      default: true
+      env:
+        - name: ANSIBLE_CALLBACK_COMPACT_DISPLAY_DEBUG_OUTPUT
+      ini:
+        - section: callback_compact
+          key: display_debug_output
+    eta_cache_dir:
+      description:
+        - The directory where the durations of the steps are kept for the ETA of later runs, below C(/var/tmp/lfops), which the README asks ansible-navigator users to mount into the execution environment.
+        - The directory and its parent are created with mode C(0700) and must belong to the user running Ansible, else the ETA is estimated from the current play only. An empty value does the same.
+      type: path
+      default: /var/tmp/lfops/dashboard
+      env:
+        - name: ANSIBLE_CALLBACK_DASHBOARD_ETA_CACHE_DIR
+      ini:
+        - section: callback_dashboard
+          key: eta_cache_dir
   extends_documentation_fragment:
     - ansible.builtin.default_callback
     - ansible.builtin.result_format_callback
@@ -84,6 +111,11 @@ _SCREEN_OFF = '\033[?25h\033[?1049l'
 
 _MIN_COLUMNS = 65
 _MIN_LINES = 12
+
+# collection root: plugins/callback/dashboard.py -> ../../..
+_COLLECTION_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+
+_DURATION_SUFFIX = '.json'
 
 
 def _git(root, *args):
@@ -160,10 +192,31 @@ def lfops_origin(root, mountinfo='/proc/self/mountinfo'):
     return ', '.join(parts), source
 
 
-def play_steps(play):
+def step_key(task, root=_COLLECTION_ROOT):
+    """What identifies a task across runs and playbooks: its file and line,
+    relative to the collection root when it is part of LFOps, so that a checkout, a
+    worktree and an execution environment share it, followed by the chain of roles
+    that lead to it. A task of a role imported by many roles, like
+    shared/tasks/platform-variables.yml, gets a key per importing role. A task
+    without a file of its own, like the implicit fact gathering or the validation
+    of the role arguments, has the file and line of its play.
+    """
+    path = task.get_path()
+    if path.startswith(root.rstrip('/') + '/'):
+        path = path[len(root.rstrip('/')) + 1 :]
+    key = path or f'{task.action} {task.get_name()}'
+    roles = [role.get_name() for role in task.get_dep_chain() or []]
+    if roles:
+        key += f' [{" > ".join(roles)}]'
+    return key
+
+
+def play_steps(play, root=_COLLECTION_ROOT):
     """Number the tasks of a play that ansible-core will start, the way its
     PlayIterator sees them: play.compile() with --tags and --skip-tags applied.
-    Return a dict of task UUID -> step, starting at 1.
+    Return a dict of task UUID -> step, starting at 1, and the list of the keys of
+    the steps, see step_key(). A role that runs twice in a play with other
+    parameters has the same key twice, the second occurrence gets a "#2".
 
     Left out are the meta tasks, which never fire v2_playbook_on_task_start, and the
     rescue sections, which only run on a failure. Included tasks are only known at
@@ -174,18 +227,23 @@ def play_steps(play):
     """
     all_vars = play.get_variable_manager().get_vars(play=play)
     steps = {}
+    keys = []
+    seen = Counter()
 
     def walk(tasks):
         for task in tasks or []:
             if isinstance(task, Block):
                 walk(task.block)
                 walk(task.always)
-            elif task.action not in C._ACTION_META:
-                steps.setdefault(task._uuid, len(steps) + 1)
+            elif task.action not in C._ACTION_META and task._uuid not in steps:
+                steps[task._uuid] = len(steps) + 1
+                key = step_key(task, root)
+                seen[key] += 1
+                keys.append(key if seen[key] == 1 else f'{key}#{seen[key]}')
 
     for block in play.compile():
         walk([block.filter_tagged_tasks(all_vars)])
-    return steps
+    return steps, keys
 
 
 def hms(seconds):
@@ -194,19 +252,104 @@ def hms(seconds):
     return f'{seconds // 3600:02d}:{seconds % 3600 // 60:02d}:{seconds % 60:02d}'
 
 
-def eta(step, total, play_start, step_start, now):
-    """The remaining time of a play, or None before the first step is done. The
-    time the finished steps took per step, times the steps after the running one,
-    plus what is left of that step's share. A step that runs longer than the
-    average, like an include_tasks with dozens of tasks, does not eat into the
-    estimate for the steps after it. It gets more accurate towards the end of the
-    play.
+def eta(step, durations, play_start, step_start, now):
+    """The remaining time of a play: the sum of the `durations` (seconds, one per
+    step, None if unknown) of the steps after the running one, plus what is left of
+    the duration of that step. A step that runs longer than its duration does not
+    eat into the estimate for the steps after it. An unknown duration is the
+    average of the finished steps of this play; None if there is none yet.
     """
-    done = step - 1
-    if done < 1:
+    if step < 1:
         return None
-    per_step = (step_start - play_start) / done
-    return per_step * (total - step) + max(per_step - (now - step_start), 0)
+    done = step - 1
+    average = (step_start - play_start) / done if done else None
+    remaining = 0.0
+    for index in range(step - 1, len(durations)):
+        duration = durations[index] if durations[index] is not None else average
+        if duration is None:
+            return None
+        if index == step - 1:
+            duration = max(duration - (now - step_start), 0)
+        remaining += duration
+    return remaining
+
+
+def _private_dir(directory):
+    """Create `directory` and its parent with mode 0700, return whether both are
+    real directories of the effective user. Below the world-writable /var/tmp,
+    another user could create them first and swap the file for a symlink.
+    """
+    directory = directory.rstrip('/')
+    parent = os.path.dirname(directory)
+    try:
+        # the mode of makedirs() only applies to the last directory
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        os.makedirs(directory, mode=0o700, exist_ok=True)
+        for path in (parent, directory):
+            st = os.lstat(path)
+            if not stat.S_ISDIR(st.st_mode) or st.st_uid != os.geteuid():
+                return False
+    except OSError:
+        return False
+    return True
+
+
+def _duration_file(directory, key):
+    """The file of a step: the key hashed, since it contains slashes and spaces."""
+    name = hashlib.sha256(key.encode('utf-8')).hexdigest()
+    return os.path.join(directory, name + _DURATION_SUFFIX)
+
+
+def _read_duration(path, key):
+    """The seconds in the file of the step `key`, None if unusable."""
+    try:
+        with open(path, encoding='utf-8') as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict) or data.get('key') != key:
+        return None
+    seconds = data.get('seconds')
+    return seconds if isinstance(seconds, (int, float)) else None
+
+
+def load_durations(directory, keys):
+    """The durations of the steps `keys` from earlier runs, key -> seconds, for
+    those that are known.
+    """
+    if not directory or not keys or not _private_dir(directory):
+        return {}
+    durations = {}
+    for key in keys:
+        seconds = _read_duration(_duration_file(directory, key), key)
+        if seconds is not None:
+            durations[key] = seconds
+    return durations
+
+
+def save_durations(directory, measured):
+    """Write the `measured` durations (key -> seconds), one file per step, so
+    that runs in parallel, e.g. several ansible-navigator sessions, need no lock:
+    each file is replaced as a whole, the last run wins.
+    """
+    if not directory or not measured or not _private_dir(directory):
+        return
+    for key, seconds in measured.items():
+        # a new file moved into place, so that a run that aborts while writing
+        # leaves the old one, and another run never reads half a file
+        try:
+            fd, tmp = tempfile.mkstemp(dir=directory, prefix='.tmp.')
+        except OSError:
+            return
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                json.dump({'key': key, 'seconds': round(seconds, 1)}, f)
+            os.replace(tmp, _duration_file(directory, key))
+        except OSError:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 def progress_bar(step, total, width, color=True, remaining=None):
@@ -283,12 +426,18 @@ class CallbackModule(Compact):
         self._play_hosts = set()
         self._batch_hosts = set()
         self._dead_hosts = set()
-        # task UUID -> step of the running play, see play_steps(), the step of the
-        # running task, and when the play and that step started, for the ETA
+        # task UUID -> step of the running play and the keys of the steps, see
+        # play_steps(), the step of the running task, and when the play and that
+        # step started, for the ETA
         self._steps = {}
+        self._step_keys = []
         self._step = 0
         self._play_start = time.monotonic()
         self._step_start = self._play_start
+        # key -> seconds: the durations of the steps of the running play from
+        # earlier runs, and those measured in this run, see _learn()
+        self._durations = {}
+        self._measured = {}
         # where the plugin, and with it LFOps, comes from, see lfops_origin()
         self._origin = None
         # output of the running task and the details for the end of the run
@@ -370,6 +519,21 @@ class CallbackModule(Compact):
         if self._capture:
             self._keep_capture()
         self._replay_details()
+        save_durations(self._eta_cache_dir(), self._measured)
+
+    def _eta_cache_dir(self):
+        try:
+            return self.get_option('eta_cache_dir')
+        except KeyError:  # options not set, e.g. in a unit test
+            return None
+
+    def _learn(self, now):
+        """Keep how long the running step took, until the next one starts or the
+        play ends, i.e. until its slowest host was done, with all tasks of an
+        include and the handlers notified meanwhile.
+        """
+        if 1 <= self._step <= len(self._step_keys):
+            self._measured[self._step_keys[self._step - 1]] = now - self._step_start
 
     @staticmethod
     def _fit(segments, width):
@@ -461,9 +625,7 @@ class CallbackModule(Compact):
             )
         )
         if self._origin is None:
-            # collection root: plugins/callback/dashboard.py -> ../../..
-            root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            lfops, source = lfops_origin(root)
+            lfops, source = lfops_origin(_COLLECTION_ROOT)
             # the most important first, the path is cut on a narrow terminal
             self._origin = f'{lfops}   ansible-core {ANSIBLE_CORE_VERSION}'
             ee = os.environ.get('LFOPS_EE_VERSION')
@@ -502,7 +664,10 @@ class CallbackModule(Compact):
                     ANSIBLE_COLOR,
                     eta(
                         self._step,
-                        len(self._steps),
+                        [
+                            self._measured.get(key, (self._durations or {}).get(key))
+                            for key in self._step_keys
+                        ],
                         self._play_start,
                         self._step_start,
                         now,
@@ -690,8 +855,10 @@ class CallbackModule(Compact):
             if step:
                 # only forward, e.g. when a failure skips to an "always" section
                 if step > self._step:
+                    now = time.monotonic()
+                    self._learn(now)
                     self._step = step
-                    self._step_start = time.monotonic()
+                    self._step_start = now
                 break
             node = getattr(node, '_parent', None)
         self._draw(force=True)
@@ -764,15 +931,20 @@ class CallbackModule(Compact):
             self._batch_hosts = set()
         self._dead_hosts = set()
         self._start_tui()
+        # the last step of the previous play, or batch with "serial", is done
+        self._learn(time.monotonic())
         self._steps = {}
+        self._step_keys = []
         self._step = 0
         self._play_start = time.monotonic()
         self._step_start = self._play_start
         if self._tui:
             try:
-                self._steps = play_steps(play)
+                self._steps, self._step_keys = play_steps(play)
             except Exception:  # only for the progress bar, which is then left out
                 pass
+            # per play, to see what runs in parallel learned meanwhile
+            self._durations = load_durations(self._eta_cache_dir(), self._step_keys)
         # the play line is part of the screen header, not of the details, and was
         # printed above the screen already
         self._capture = []
@@ -783,6 +955,9 @@ class CallbackModule(Compact):
     def v2_playbook_on_stats(self, stats):
         if self._tui:
             self._flush_hosts()
+            # a run that is aborted never gets here and keeps its running step out
+            # of the cache
+            self._learn(time.monotonic())
             self._end_tui()
         super().v2_playbook_on_stats(stats)
 

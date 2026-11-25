@@ -75,7 +75,7 @@ argument_specs:
       fail2ban__jail_default_banaction:
         type: 'str'
         required: false
-        default: 'iptables-multiport'
+        default: 'nftables-multiport'
         description: 'The default banaction, executed as defined in the default action.'
 
       fail2ban__jail_default_ignoreip:
@@ -107,6 +107,17 @@ argument_specs:
         required: false
         default: '7d'
         description: 'The ban duration for the sshd jail.'
+
+      fail2ban__jail_sshd_mode:
+        type: 'str'
+        required: false
+        default: 'aggressive'
+        choices:
+          - 'aggressive'
+          - 'ddos'
+          - 'extra'
+          - 'normal'
+        description: 'The mode of the sshd filter, which decides which log lines count as a failure.'
 
       fail2ban__jail_sshd_port:
         type: 'str'
@@ -151,6 +162,11 @@ argument_specs:
         required: false
         default: []
         description: 'The fail2ban jail definitions. Host-level override.'
+
+      fail2ban__jails_apache_enabled:
+        type: 'bool'
+        required: false
+        description: 'Enables the Apache jails on hosts with logs below /var/log/httpd. Defaults to true unless apache_httpd__mod_remoteip_internal_proxy lists a proxy.'
 
       fail2ban__service_enabled:
         type: 'bool'

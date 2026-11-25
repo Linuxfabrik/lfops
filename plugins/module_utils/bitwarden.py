@@ -183,6 +183,19 @@ class BitwardenException(Exception):
     pass
 
 
+class BitwardenNotUnlockedException(BitwardenException):
+    """`bw serve` cannot read the vault. Trying again does not help."""
+
+
+# While it cannot read the vault, `bw serve` answers the routes that need it (list, get,
+# create, edit, ...) with HTTP 400 and one of these messages, see `errorIfLocked()` and
+# `processResponse()` in apps/cli/src/oss-serve-configurator.ts (bw 2026.10.0).
+NOT_UNLOCKED_MESSAGES = {
+    'Vault is locked.': 'locked',
+    'You are not logged in.': 'unauthenticated',
+}
+
+
 class Bitwarden:
     # https://bitwarden.com/help/vault-management-api
 
@@ -294,6 +307,11 @@ class Bitwarden:
                 unix_socket=self._unix_socket,
             )
         except HTTPError as e:
+            status = self._get_not_unlocked_status(e)
+            if status is not None:
+                raise BitwardenNotUnlockedException(
+                    self.get_not_unlocked_message(status)
+                ) from e
             raise BitwardenException(
                 f'Received HTTP error for {url}{via} : {to_native(e)}'
             ) from e
@@ -319,6 +337,19 @@ class Bitwarden:
             raise BitwardenException(f'API call failed: {result.get("data")}')
 
         return result
+
+    @staticmethod
+    def _get_not_unlocked_status(http_error):
+        """The vault status an HTTP error of `bw serve` stands for, or None."""
+        # an HTTPError without a body fails on read() with AttributeError, on Python 3.6
+        # with KeyError; neither stands for a vault that cannot be read
+        try:
+            body = json.loads(to_text(http_error.read()))
+        except Exception:
+            return None
+        if not isinstance(body, dict):
+            return None
+        return NOT_UNLOCKED_MESSAGES.get(body.get('message'))
 
     def _load_cache(self):
         """Load the cache from disk. If missing, unreadable, or invalid, start with an empty cache.
@@ -388,6 +419,32 @@ class Bitwarden:
         result = self._api_call('status')
         return result['data']['template']['status']
 
+    def get_status(self, run_id=None):
+        """Vault status, asking `bw serve` only once per Ansible run.
+
+        Every `GET /status` unlocks the vault anew, even when it is unlocked already
+        (`StatusCommand.status()` calls `unlockWithAutoUnlockKey()`), and `bw serve` keeps
+        its state in `data.json` without a cache in memory, so the call reads that file
+        17 times and writes it twice: about 0.2 s with a vault of 7.5 MB, and the time
+        grows with the vault. Measured with strace against bw 2026.9.1, source checked in
+        apps/cli/src/commands/status.command.ts and the `new LowdbStorageService(...,
+        false, true)` of apps/cli/src/service-container/service-container.ts (bw
+        2026.10.0). As every lookup holds the mutex while it asks, the lookups of a run
+        waited for each other at that pace.
+
+        With a `run_id`, a vault seen unlocked in this run is taken as unlocked. A vault
+        locked later in the run fails the next API call instead, see `_api_call()`.
+        Without one, `bw serve` is asked on every call.
+        """
+        if run_id is not None and self._cache.get('unlocked_run_id') == run_id:
+            display.vvv('lfbw - status check skipped, unlocked in this run')
+            return 'unlocked'
+        status = self.status
+        if status == 'unlocked' and run_id is not None:
+            self._cache['unlocked_run_id'] = run_id
+            self._save_cache()
+        return status
+
     def get_not_unlocked_message(self, status):
         """Error message for a `bw serve` whose vault cannot be read.
 
@@ -429,6 +486,8 @@ class Bitwarden:
                 self._api_call('sync', method='POST')
                 items = self._list_items()
                 break
+            except BitwardenNotUnlockedException:
+                raise
             except (BitwardenException, TimeoutError) as e:
                 # TimeoutError: open_url raises it unwrapped when `bw serve` accepts the
                 # connection but does not answer within the timeout

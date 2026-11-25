@@ -14,7 +14,8 @@ Note that this role does not support running with `--check`, as it first creates
 * To start a backup, call `duba` (or `duba --config=/etc/duba/duba.json --command=backup`). See `duba --help` for details.
 * The password of the backend (`duplicity__swift_login["password"]` or `duplicity__sftp_password`) is not in `/etc/duba/duba.json`, but stored as the systemd credential `duba-login.json`. With systemd 251 and newer (RHEL 9 and newer, Debian 12 and newer, Ubuntu 24.04 and newer), it is encrypted in `/etc/credstore.encrypted/` with the host key `/var/lib/systemd/credential.secret`, which the default backup does not include, and `duba.service` decrypts it to `/run/credentials/duba.service/` while it runs. On RHEL 8 and Ubuntu 22.04, it stays in plain text in `/etc/credstore/`, readable by root only. Started by hand, `duba` decrypts the credential itself, so it has to run as root. The password does not show up in the process list.
 * On a host with a TPM2 chip, the encrypted password is also bound to the Secure Boot state. After a firmware or Secure Boot update, `duba` fails until the role runs again.
-* To restore a file or directory, call `duba restore <path>` with the path as it was on the host. `duba` finds the backup that holds it from the backup sources, including the split of sources with `divide: true`, and restores it below `--target` (default: a new directory `/var/tmp/duba-restore-<random>`), never over the live data. The directories `duba` creates there are accessible by root only, since the restored files keep their owner and mode, but not the protection of their parent directories on the host. `--time` restores an older state (duplicity time format, e.g. `3D` or `2026-10-01`), `--dry-run` only shows which backup holds the path and the duplicity command. A source with `divide: true` cannot be restored as a whole, restore its entries one by one. `duba` warns if the target has less free space than the local copy of the path, or if the temp dir (`TMPDIR`, default `/tmp`) has less free space than duplicity requires to start a restore (460 MB, 260 MB before duplicity 3.0.1). Then duplicity aborts with exit code 35.
+* To restore a file or directory, call `duba restore <path>` with the path as it was on the host. `duba` finds the backup that holds it from the backup sources, including the split of sources with `divide: true`, and restores it below `--target` (default: a new directory `/var/tmp/duba-restore-<random>`), never over the live data. The directories `duba` creates there are accessible by root only, since the restored files keep their owner and mode, but not the protection of their parent directories on the host. `--time` restores an older state in the duplicity time format, e.g. `3D`, `2026-10-01` (00:00 local time) or `2026-10-01T12:00:00` (a time needs the seconds); the timestamps in the names of the backup files are UTC. A source with `divide: true` cannot be restored as a whole, restore its entries one by one.
+* Before it restores, `duba` asks duplicity which volumes the restore needs (`duplicity restore --dry-run`) and shows the backup the restored state comes from: the newest backup set that holds data of the path, not necessarily the newest backup before `--time`. A restore reads all backup sets of the chain up to `--time` at the same time and keeps one volume of each, up to about 210 MB, in the temp dir (`TMPDIR`, default `/tmp`), so a restore from a chain of 30 daily backups needs up to about 6.3 GB there. `duba` aborts with exit code 213 before the download if the temp dir has less free space than that; set `TMPDIR` to a dir with enough space, or pass `--ignore-space`. `--dry-run` shows all of this without restoring. `duba` warns if the target has less free space than the local copy of the path.
 * To run any other duplicity command (`collection-status`, `list-current-files`, `verify`, `restore`, ...), use `duba exec -- <duplicity arguments>`. It runs duplicity with the environment of the backup, including the password, without putting it into your shell. If `duplicity__archive_dir` is set, `duba exec` passes it to duplicity, so duplicity uses the local cache of the backup instead of downloading all manifests into a new one in `/root/.cache/duplicity`. Example: `duba exec -- restore --path-to-restore=hosts swift://<container>/etc /tmp/restore/hosts`.
 
 
@@ -302,6 +303,18 @@ duplicity__timer_enabled: true
 **`gpg: invalid armor header` in `stderr` during the `gpg --import /tmp/public-master-key` task**
 
 * Make sure your `duplicity__gpg_encrypt_master_key_block` is correct and has an empty line after the `-----BEGIN PGP PUBLIC KEY BLOCK-----`.
+
+**`AttributeError: 'ArgumentParser' object has no attribute 'parse_intermixed_args'` when calling `duba`**
+
+* The duplicity venv was built with Python 3.6, which RHEL 8 hosts set up by older versions of the role still have. Run the whole `duplicity` playbook, not only the role's templates: the `python_venv` role rebuilds the venv with Python 3.11.
+
+**`duba restore` aborts with exit code 213, or duplicity fails with `No space left on device` or exit code 35**
+
+* The temp dir is too small for the restore. Run `duba restore --dry-run <path>` to see the space needed, and set `TMPDIR` to a dir on a filesystem with enough free space, e.g. `mkdir --mode=0700 /root/duba-tmp && TMPDIR=/root/duba-tmp duba restore <path>`. A `--time` shortly after a full backup reads fewer backup sets and needs less space.
+
+**`CommandLineError: Bad time string` from `duba restore --time`**
+
+* A time needs the seconds: `--time=2026-10-01T12:00:00`, not `--time=2026-10-01T12:00`.
 
 ## License
 

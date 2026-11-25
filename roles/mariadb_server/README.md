@@ -340,7 +340,9 @@ mariadb_server__dump_user:
 
 * Systemd: Resource limit directive for the number of file descriptors.
 * Type: Number.
-* Default: `32768`
+* Default: `65536`
+* Deviates from the upstream default `32768`: MariaDB needs `table_open_cache` times `table_open_cache_instances` times 2 file handles plus `max_connections`, and 32768 leaves room for only 8 of the 16 table cache instances a host with many CPUs can use.
+* The role sets the highest of this value, `65536` and the limit `mariadb.service` gets without the role (the `LimitNOFILE` of the unit file the package ships, else the default of systemd), and leaves `LimitNOFILE` out of its drop-in when that limit is already the highest, so it never lowers the limit.
 
 `mariadb_server__service_timeout_start_sec`
 
@@ -450,7 +452,7 @@ mariadb_server__roles__host_var:
       - '*.*:SELECT'
     state: 'present'
 mariadb_server__service_limit_memlock: 524288
-mariadb_server__service_limit_nofile: 32768
+mariadb_server__service_limit_nofile: 131072
 mariadb_server__service_timeout_start_sec: '15min'
 mariadb_server__service_timeout_stop_sec: '15min'
 mariadb_server__skip_sys_schema: false
@@ -935,6 +937,13 @@ Variables for `z00-linuxfabrik.cnf` directives and their default values, defined
 * Type: Number.
 * Default: `2000`
 
+`mariadb_server__cnf_table_open_cache_instances__group_var` / `mariadb_server__cnf_table_open_cache_instances__host_var`
+
+* [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#table_open_cache_instances)
+* Type: Number.
+* Default: `8`
+* MariaDB lowers the value at startup to what the open files limit allows, without logging it: each instance needs `table_open_cache` times 2 file handles on top of `max_connections`. With `table_open_cache = 2000`, the open files limit the role sets fits 16 instances; for more, raise `mariadb_server__service_limit_nofile`.
+
 `mariadb_server__cnf_tls_version__group_var` / `mariadb_server__cnf_tls_version__host_var`
 
 * [mariadb.com](https://mariadb.com/docs/server/server-management/variables-and-modes/server-system-variables#tls_version)
@@ -1035,6 +1044,7 @@ mariadb_server__cnf_sort_buffer_size__host_var: '2M'
 mariadb_server__cnf_sql_mode__host_var: 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
 mariadb_server__cnf_table_definition_cache__host_var: 400
 mariadb_server__cnf_table_open_cache__host_var: 3000
+mariadb_server__cnf_table_open_cache_instances__host_var: 16
 mariadb_server__cnf_tls_version__host_var: 'TLSv1.2,TLSv1.3'
 mariadb_server__cnf_tmp_table_size__host_var: '16M'
 mariadb_server__cnf_tmpdir__host_var: '/data/tmpdir'

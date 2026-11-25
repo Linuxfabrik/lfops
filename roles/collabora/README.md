@@ -8,6 +8,7 @@ This role installs and configures either [Collabora Online Development Edition](
 
 ## How the Role Behaves
 
+* `/etc/coolwsd/coolwsd.xml` is deployed from one template per maintenance release, for Collabora CODE and Collabora Enterprise alike: the first three parts of the installed version pick it, so 26.04.6.1 and 26.04.6.2 share the `26.04.6` template. Collabora does not follow semantic versioning, and a build within a maintenance release may change defaults and behaviour. The template follows the newest build, so keep hosts on the newest build of their maintenance release.
 * The service account `cool`, which the `coolwsd` package creates with `/bin/bash`, gets `/sbin/nologin` as its shell, so no one logs in as `cool`, and Lynis does not report its application directory `/opt/cool` as a home directory with too open permissions (HOME-9304). To run a command as `cool`, use `sudo -u cool <command>` or `su --shell /bin/bash cool`.
 
 
@@ -114,7 +115,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 `collabora__coolwsd_lok_allow`
 
-* Allowed hosts as an external data source inside edited files. All allowed post_allow.host and storage.wopi entries are also considered to be allowed as a data source. Used for example in: PostMessage Action_InsertGraphics, =WEBSERVICE() function, external reference in the cell.
+* Allowed hosts as an external data source inside edited files, used for example by inserted graphics (PostMessage Action_InsertGraphic), the =WEBSERVICE() function and external cell references. Each entry is a network in CIDR notation, which only matches URLs with an IP address as host, or a regular expression matched against the host of the URL. The WOPI hosts and the host a document was loaded from are always allowed; every other host is denied. From Collabora Online 26.04.6 on, the post_allow hosts and private networks are not allowed implicitly.
 * Type: List of strings.
 * Default: `[]`
 

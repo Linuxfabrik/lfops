@@ -57,7 +57,7 @@ moodle__apache_httpd__vhosts__dependent_var:
       - 'OPTIONS'
       - 'POST'
     virtualhost_port: 80
-    conf_custom_log: 'logs/moodle-access.log linuxfabrikio'
+    conf_custom_log: 'logs/moodle-access.log combined'
     conf_directory_index: 'index.php index.html index.htm'
     conf_document_root: '{{ moodle__install_dir }}'
     conf_error_log: 'logs/moodle-error.log'

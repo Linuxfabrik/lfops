@@ -46,3 +46,10 @@ apache_solr__apps__apps__dependent_var:
   - name: 'bc'
   - name: 'lsof'
   - name: 'tar'
+
+# https://solr.apache.org/guide/solr/latest/deployment-guide/taking-solr-to-production.html#avoid-swapping-nix-operating-systems
+# the kernel honours vm.swappiness continuously, so solr.service needs no
+# z00-after-tuned.conf (see "systemd Drop-ins and Service Ordering" in docs/developer-guide/systemd.md)
+apache_solr__kernel_settings__sysctl__dependent_var:
+  - name: 'vm.swappiness'
+    value: 1

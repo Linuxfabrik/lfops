@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026090402
+# 2026112501
 
 # Fail2Ban filter that matches HTTP 404 responses in Apache access logs.
 #
@@ -24,9 +24,11 @@
 #         (?!\d+\.\d+\.\d+\.\d+\s) rejects IPv4 addresses
 #         [^\s:]+ rejects IPv6 addresses
 # Line 3: %h %{X-Forwarded-For}i %l %u %t (linuxfabrikio)
+#         X-Forwarded-For holds "-", one address or a list ("a, b"), quoted or not
+#         (verified with fail2ban 1.0.2 on Rocky 8 and 1.1.0 on Rocky 9 and 10)
 failregex = ^<HOST> \S+ \S+ \[[^"]*"[^"]*" 404\s
             ^(?!\d+\.\d+\.\d+\.\d+\s)[^\s:]+ <HOST> \S+ \S+ \[[^"]*"[^"]*" 404\s
-            ^<ADDR> \S+ \S+ \S+ \[[^"]*"[^"]*" 404\s
+            ^<ADDR> (?:"[^"]*"|\S+(?:, \S+)*) \S+ \S+ \[[^"]*"[^"]*" 404\s
 
 ignoreregex = {% if fail2ban__filter_apache_404_ignoreregex %}{{ fail2ban__filter_apache_404_ignoreregex | join('\n              ') }}{% endif %}
 

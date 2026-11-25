@@ -1,10 +1,13 @@
 # {{ ansible_managed }}
-# 2023010901
+# 2026112301
 
+# The jail from jail.conf, with its port, maxretry, findtime and bantime.
+# Besides the action, only the log path is set: jail.conf reads
+# /var/log/httpd/*access_log, while the virtual hosts of the apache_httpd role
+# log to /var/log/httpd/<name>-access.log.
+# action_kill (z00-defaults.conf) also closes the open connections of a banned
+# client.
 [apache-badbots]
-bantime  = 1d
-enabled  = true
-findtime = 1m
-logpath  = /var/log/httpd/*access?log
-maxretry = 1
-port     = http,https
+action  = %(action_kill)s
+enabled = true
+logpath = /var/log/httpd/*access?log
