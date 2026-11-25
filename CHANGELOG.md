@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:collabora**: From Collabora Online CODE 26.04.6 on, documents may only pull data (inserted graphics, `=WEBSERVICE()`, external cell references) from the WOPI hosts and the host they were loaded from, as upstream ships it: private networks, localhost and the `collabora__coolwsd_post_allow` hosts are no longer allowed as data sources. List other internal data sources in `collabora__coolwsd_lok_allow` before updating.
 * **role:fail2ban**: fail2ban bans through nftables (`nftables-multiport`, table `inet f2b-table`) instead of iptables chains, matching the nftables firewalls LFOps deploys; restarting fail2ban moves the active bans over. Scripts that read bans with `iptables` find them with `nft list table inet f2b-table`, or set `fail2ban__jail_default_banaction: 'iptables-multiport'` to keep the iptables chains.
 * **role:fail2ban**: On RedHat hosts with SELinux, the role installs the `lfops_fail2ban_ss_kill` policy module, which grants fail2ban the `net_admin` capability, so that the HTTP jails can close the connections of a banned client. The capability also lets fail2ban reconfigure network interfaces.
 * **role:at**: Only root may use `at`, `atq` and `atrm`, as the CIS Benchmarks require, and jobs queued before still run. List other users that need `at` in `at__allow_users__host_var` / `at__allow_users__group_var`.
