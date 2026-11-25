@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Breaking Changes
 
 * **role:fail2ban**: `fail2ban__jail_default_ignoreip` is replaced by `fail2ban__jail_default_ignoreip__host_var` / `__group_var`, which are merged with the addresses other roles add. Write each address as `- name: '192.0.2.1/32'`. The run aborts as long as the old variable is set.
-* **role:nextcloud**: Nextcloud logs to `/var/log/nextcloud/nextcloud.log` instead of `nextcloud.log` in the data directory, since fail2ban cannot read the data directory under SELinux. Adjust log shippers and monitoring that read the old file, and remove it once it is no longer needed.
+* **role:nextcloud**: Nextcloud logs to `/var/log/nextcloud/nextcloud.log` instead of `nextcloud.log` in the data directory. Adjust log shippers and monitoring that read the old file, and remove it once it is no longer needed.
 * **role:collabora**: From Collabora Online CODE 26.04.6 on, documents may only pull data (inserted graphics, `=WEBSERVICE()`, external cell references) from the WOPI hosts and the host they were loaded from, as upstream ships it: private networks, localhost and the `collabora__coolwsd_post_allow` hosts are no longer allowed as data sources. List other internal data sources in `collabora__coolwsd_lok_allow` before updating.
 * **role:apache_httpd**: The role only defines the log formats Apache ships (`agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`) and drops `debug`, `fail2ban`, `gelf`, `linuxfabrikio` and `matomo`. Apache still starts with a `CustomLog` that names one of them, but writes just that name instead of the request; switch such a log to `combined`, or define the format in the vHost's `raw`.
 * **role:matomo_import_logs**: Sites without `log_format_name` are imported as `ncsa_extended`, which reads the `combined` access log of the apache_httpd role, instead of `common_complete`. Set `log_format_name: 'common_complete'` for a log that starts with the vHost name.
@@ -97,7 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban on a Nextcloud host that clients reach directly, where it bans an IP for 8 hours after 5 failed Nextcloud logins within 10 minutes and never bans the reverse proxies listed in the Nextcloud setting `trusted_proxies`.
+* **playbook:setup_nextcloud**: `setup_nextcloud__skip_fail2ban: false` runs fail2ban with a Nextcloud login jail that never bans the `trusted_proxies`.
 * **role:fail2ban**: The `nextcloud` filter and the `z10-nextcloud` jail ban IPs with too many failed Nextcloud logins, two-factor challenges or untrusted host names, as in the Nextcloud hardening guide.
 * **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
