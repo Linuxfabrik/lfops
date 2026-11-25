@@ -374,6 +374,70 @@
       loop_control:
         label: '{{ item["item"]["label"] }}'
 
+    # The apache-dos filter counts every request per client, so it has to take the client from
+    # each LogFormat of the apache_httpd role, and from nothing else. Asked for the address it
+    # found, not for a match: matomo and vhost_common start with the vHost name, which a bare
+    # ^<HOST> resolves through DNS, and linuxfabrikio carries the X-Forwarded-For addresses the
+    # client controls. Formats that do not start with the client must not match at all.
+    - name: 'fail2ban-regex --out ip apache-dos against {{ item["label"] }}'
+      ansible.builtin.command:
+        argv:
+          - 'fail2ban-regex'
+          - '--out'
+          - 'ip'
+          - '{{ item["line"] }}'
+          - '/etc/fail2ban/filter.d/apache-dos.conf'
+      register: '__molecule__fail2ban_dos_regex_result'
+      changed_when: false
+      check_mode: false
+      loop:
+        - label: 'the combined format'
+          line: '198.51.100.50 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
+          ip: '198.51.100.50'
+        - label: 'the combined format with an IPv6 client'
+          line: '2001:db8::51 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
+          ip: '2001:db8::51'
+        - label: 'the fail2ban format'
+          line: '198.51.100.52 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 "curl/8"'
+          ip: '198.51.100.52'
+        - label: 'the matomo format'
+          line: 'www.example.com 198.51.100.53 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
+          ip: '198.51.100.53'
+        - label: 'the matomo format with an IPv6 client'
+          line: 'www.example.com 2001:db8::54 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
+          ip: '2001:db8::54'
+        - label: 'the vhost_common format'
+          line: 'www.example.com 198.51.100.55 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3'
+          ip: '198.51.100.55'
+        - label: 'the linuxfabrikio format with an X-Forwarded-For address'
+          line: '198.51.100.56 203.0.113.56 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8" 346 3157'
+          ip: '198.51.100.56'
+        - label: 'the linuxfabrikio format behind two proxies'
+          line: '198.51.100.57 203.0.113.57, 203.0.113.58 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8" 346 3157'
+          ip: '198.51.100.57'
+        - label: 'the linuxfabrikio format with a quoted X-Forwarded-For'
+          line: '198.51.100.58 "203.0.113.57, 203.0.113.58" - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8" 346 3157'
+          ip: '198.51.100.58'
+        - label: 'a line of the debug format'
+          line: '  Client: 198.51.100.59 (198.51.100.59)'
+          ip: ''
+        - label: 'a line of the gelf format'
+          line: '  "_remote_hostname": "198.51.100.59",'
+          ip: ''
+        - label: 'a CSV line'
+          line: '"2026-11-25T10:00:00.123456+0100";"www.example.com";"198.51.100.59";"198.51.100.59";"-";"-";"GET / HTTP/1.1";"200";"3";"300";"400";'
+          ip: ''
+      loop_control:
+        label: '{{ item["label"] }}'
+
+    - name: 'Assert the apache-dos filter takes the client address and only from client-first LogFormats'
+      ansible.builtin.assert:
+        that: 'item["stdout_lines"] == ([item["item"]["ip"]] if item["item"]["ip"] | length > 0 else [])'
+        fail_msg: '{{ item["item"]["label"] }}: expected {{ item["item"]["ip"] | d("no match", true) }}, got {{ item["stdout_lines"] }}'
+      loop: '{{ __molecule__fail2ban_dos_regex_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"]["label"] }}'
+
     # The filters of the Apache jails, fed the lines Apache 2.4 writes for the requests they are
     # meant for. Measured on Rocky 8, 9 and 10 (httpd 2.4.37, 2.4.62, 2.4.63, mod_security 2.9)
     # against real requests and rewritten with documentation addresses. A filter that no longer
