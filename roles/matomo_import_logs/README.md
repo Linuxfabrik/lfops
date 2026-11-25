@@ -92,9 +92,9 @@ Manual steps:
 
     * `log_format_name`:
 
-        * Optional. The import script's log format. `ncsa_extended` reads the `combined` LogFormat of the `apache_httpd` role, `common_complete` its `matomo` LogFormat. The role always passes `--idsite`, so the script takes the site and its URL from Matomo and needs no vHost name in the log; `combined` is the better choice, since every fail2ban filter reads it.
+        * Optional. The import script's log format. `ncsa_extended` reads the `combined` LogFormat, the default access log of the `apache_httpd` role. The role always passes `--idsite`, so the script takes the site and its URL from Matomo and needs no vHost name in the log.
         * Type: String.
-        * Default: `'common_complete'`
+        * Default: `'ncsa_extended'`
 
     * `recorders`:
 
