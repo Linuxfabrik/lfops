@@ -9,11 +9,13 @@
 # License: The Unlicense, see https://unlicense.org/.
 
 import argparse  # pylint: disable=C0413
+import calendar  # pylint: disable=C0413
 import fnmatch  # pylint: disable=C0413
 import json  # pylint: disable=C0413
 import logging  # pylint: disable=C0413
 import os  # pylint: disable=C0413
 import re  # pylint: disable=C0413
+import shutil  # pylint: disable=C0413
 import subprocess  # pylint: disable=C0413
 import sys  # pylint: disable=C0413
 import tempfile  # pylint: disable=C0413
@@ -21,7 +23,7 @@ import time  # pylint: disable=C0413
 from traceback import format_exc  # pylint: disable=C0413
 
 __author__ = 'Linuxfabrik GmbH, Zurich/Switzerland'
-__version__ = '2026111602'
+__version__ = '2026112401'
 
 DESCRIPTION = 'Do a massive parallel backup to a Swift storage backend with duplicity.'
 
@@ -36,7 +38,9 @@ EPILOG = """commands:
   restore PATH
           Restore PATH, a file or directory as it was on this host, into the --target
           directory, never over the live data. duba finds the backup that holds PATH
-          from the backup sources in the config file. For the options duba does not
+          from the backup sources in the config file. Before the restore, duba asks
+          duplicity which volumes it needs, shows the backup the state comes from and
+          aborts if the temp dir is too small for them. For the options duba does not
           offer, use `duba exec -- restore`.
 
 examples:
@@ -49,8 +53,19 @@ examples:
 COMMANDS = ['backup', 'exec', 'restore']
 
 # The size of a backup volume in MB. It is also the default of duplicity, which a restore
-# uses for its check of the temp dir, see warn_on_low_space().
+# uses for its check of the temp dir, see check_temp_space().
 VOLSIZE_MB = 200
+
+# A volume file is slightly larger than VOLSIZE_MB: 10.38 MB for --volsize 10, measured with
+# duplicity 3.2.2 on Rocky 9.
+VOLUME_OVERHEAD = 1.05
+
+# A volume in the list of `duplicity restore --dry-run`, e.g.
+# duplicity-inc.20260929T222204Z.to.20260930T222203Z.vol64.difftar.gpg. The last timestamp
+# is the time of the backup set, in UTC.
+VOLUME_REGEX = re.compile(
+    r'duplicity-(?:full|inc)\.(?:\d{8}T\d{6}Z\.to\.)?(?P<time>\d{8}T\d{6}Z)\.vol\d+\.difftar'
+)
 
 # The number of volumes a duplicity 3.x backup builds and uploads at the same time.
 BACKUP_CONCURRENCY = 2
@@ -123,8 +138,17 @@ def parse_args(argv):
 
     parser.add_argument(
         '--dry-run',
-        help='restore: Only show which backup holds PATH and the duplicity command.',
+        help='restore: Only show which backup holds PATH, the backup the state comes from,'
+             ' the temp space the restore needs and the duplicity command.',
         dest='DRY_RUN',
+        action='store_true',
+        default=False,
+    )
+
+    parser.add_argument(
+        '--ignore-space',
+        help='restore: Restore even if the temp dir has less free space than the estimate.',
+        dest='IGNORE_SPACE',
         action='store_true',
         default=False,
     )
@@ -139,7 +163,8 @@ def parse_args(argv):
     parser.add_argument(
         '--time',
         help='restore: Restore the state as of this time, in the time format of duplicity'
-             ' (e.g. 3D, 2026-10-01, 2026-10-01T12:00:00). Default: the latest backup',
+             ' (e.g. 3D, 2026-10-01, 2026-10-01T12:00:00; a time needs the seconds, a date'
+             ' means 00:00 local time). Default: the latest backup',
         dest='TIME',
     )
 
@@ -158,8 +183,8 @@ def parse_args(argv):
         args.PATH = positionals[0]
     elif positionals:
         parser.error(f'unknown command or extra argument: {" ".join(positionals)}')
-    elif args.DRY_RUN or args.TARGET or args.TIME:
-        parser.error('--dry-run, --target and --time are only allowed with restore')
+    elif args.DRY_RUN or args.IGNORE_SPACE or args.TARGET or args.TIME:
+        parser.error('--dry-run, --ignore-space, --target and --time are only allowed with restore')
     return args
 
 class Duba:
@@ -593,44 +618,118 @@ class Duba:
         return source, os.path.join(source.get('path'), entry), rest
 
 
-    def warn_on_low_space(self, path, target, env):
-        # Only warnings: the restore goes into its own directory, so running out of space
+    def warn_on_low_space(self, path, target):
+        # Only a warning: the restore goes into its own directory, so running out of space
         # does not harm the live data. The local copy, if there still is one, is the only size
         # estimate there is, since the duplicity metadata does not hold the file sizes.
-        if os.path.lexists(path):
-            size = 0
-            if os.path.isdir(path) and not os.path.islink(path):
-                for root, _, files in os.walk(path):
-                    for name in files:
-                        try:
-                            size += os.lstat(os.path.join(root, name)).st_size
-                        except OSError:
-                            pass
-            else:
-                size = os.lstat(path).st_size
-            stat = os.statvfs(target)
-            free = stat.f_bavail * stat.f_frsize
-            if free < size:
-                self.logger.warning(
-                    f'{target} has {free // 2**20} MB free, the local copy of {path} has'
-                    f' {size // 2**20} MB'
-                )
-        # duplicity uses the same temp dir (TMPDIR, else /tmp). On start, it aborts with exit
-        # code 35 if the temp dir has less than (concurrency + 2) volumes plus 30% of one
-        # free, (concurrency + 1) before duplicity 3.0.1. A restore runs without concurrency.
-        # Verified against the duplicity source, rel.0.8.23 to rel.3.2.1 (check_resources()).
-        volumes = 2 if self.duplicity_version >= (3, 0, 1) else 1
-        need_mb = int((volumes + 0.3) * VOLSIZE_MB)
-        tempdir = self.temp_dir(env)
-        free_mb = self.free_mb(tempdir)
-        if free_mb < need_mb:
+        if not os.path.lexists(path):
+            return
+        size = 0
+        if os.path.isdir(path) and not os.path.islink(path):
+            for root, _, files in os.walk(path):
+                for name in files:
+                    try:
+                        size += os.lstat(os.path.join(root, name)).st_size
+                    except OSError:
+                        pass
+        else:
+            size = os.lstat(path).st_size
+        stat = os.statvfs(target)
+        free = stat.f_bavail * stat.f_frsize
+        if free < size:
             self.logger.warning(
-                f'{tempdir} has {free_mb} MB free, duplicity needs {need_mb} MB there'
-                f' and will abort with exit code 35 (set TMPDIR to use another dir)'
+                f'{target} has {free // 2**20} MB free, the local copy of {path} has'
+                f' {size // 2**20} MB'
             )
 
 
-    def do_restore(self, path, target=None, restore_time=None, dry_run=False):
+    def plan_restore(self, cmd, env):
+        """Run `cmd`, a duplicity restore, with --dry-run and return the backup sets the
+           restore reads, as {time of the set: number of volumes}, or None if duplicity
+           cannot list them. Exits if duplicity fails, the restore would fail the same way.
+        """
+        # `restore --dry-run` lists the volumes since duplicity 2.0.0 (commit 790020b6)
+        if self.duplicity_version < (2, 0, 0):
+            self.logger.warning(
+                f"duplicity {'.'.join(map(str, self.duplicity_version))} does not list the"
+                f' volumes of a restore, so duba cannot tell the backup the state comes from'
+                f' nor check the temp space'
+            )
+            return None
+        # Even with --dry-run, duplicity creates the parent dirs of the local path, so it
+        # gets a throwaway one instead of the real target. Verified with duplicity 3.2.2 on
+        # Rocky 9.
+        scratch_dir = tempfile.mkdtemp(prefix='duba-dry-run-')
+        dry_run_cmd = cmd[:2] + ['--dry-run'] + cmd[2:-1] + [os.path.join(scratch_dir, 'x')]
+        try:
+            p = subprocess.run(
+                dry_run_cmd,
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+        except OSError as e:
+            self.logger.error(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd[0]}"')
+            sys.exit(205)
+        finally:
+            shutil.rmtree(scratch_dir, ignore_errors=True)
+        output = p.stdout.decode('utf-8', 'replace')
+        if p.returncode != 0:
+            print(output, end='', flush=True)
+            if 'Bad time string' in output:
+                self.logger.error(
+                    'A time needs the seconds, e.g. --time=2026-10-01T12:00:00'
+                )
+            if p.returncode == 35:
+                # check_resources(), see temp_space_mb()
+                self.logger.error(
+                    f'{self.temp_dir(env)} is too small for duplicity to start a restore.'
+                    f' Set TMPDIR to a dir with enough space'
+                )
+            self.logger.error(f"Exit code {p.returncode}: {' '.join(dry_run_cmd)}")
+            sys.exit(p.returncode)
+        backup_sets = {}
+        for match in VOLUME_REGEX.finditer(output):
+            backup_sets[match.group('time')] = backup_sets.get(match.group('time'), 0) + 1
+        if not backup_sets:
+            self.logger.warning(
+                'duplicity lists no volumes for the restore, so duba cannot tell the backup'
+                ' the state comes from nor check the temp space'
+            )
+            return None
+        return backup_sets
+
+
+    def temp_space_mb(self, backup_sets):
+        """Return the temp space in MB a restore from `backup_sets` needs at most.
+        """
+        # A restore reads all backup sets of the chain at the same time, the full and every
+        # incremental up to the restore time, and keeps one volume of each in the temp dir
+        # until it is read (collate_iters() in duplicity/patchdir.py,
+        # restore_get_enc_fileobj() in duplicity/dup_main.py). Volumes are VOLSIZE_MB at
+        # most, the last one of a set is usually smaller, so this is an upper bound.
+        # Independently, duplicity aborts with exit code 35 on start if the temp dir has
+        # less than 2 volumes plus 30% of one free, 1 before duplicity 3.0.1. Verified
+        # against the duplicity source, rel.0.8.23 to rel.3.2.1 (check_resources()).
+        start_volumes = 2 if self.duplicity_version >= (3, 0, 1) else 1
+        start_mb = int((start_volumes + 0.3) * VOLSIZE_MB)
+        if not backup_sets:
+            return start_mb
+        return max(start_mb, int(len(backup_sets) * VOLSIZE_MB * VOLUME_OVERHEAD))
+
+
+    def format_backup_time(self, stamp):
+        """Return the time of a backup set, '20260930T222203Z', in local time and in UTC.
+        """
+        epoch = calendar.timegm(time.strptime(stamp, '%Y%m%dT%H%M%SZ'))
+        local = time.strftime('%Y-%m-%d %H:%M:%S %Z', time.localtime(epoch))
+        utc = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(epoch))
+        return f'{local} ({utc})'
+
+
+    def do_restore(self, path, target=None, restore_time=None, dry_run=False,
+                   ignore_space=False):
         """Restore `path` from the backup that holds it into `target`, below which `path` is
            recreated. duplicity refuses to restore into a directory that is not empty.
         """
@@ -641,12 +740,10 @@ class Duba:
         # creates are for root only. The default target gets a random name, any local
         # user could create a predictable one below /var/tmp in advance.
         os.umask(0o077)
-        if not target:
-            if dry_run:
-                target = '/var/tmp/duba-restore-<random>'
-            else:
-                target = tempfile.mkdtemp(prefix='duba-restore-', dir='/var/tmp')
-        restore_path = os.path.join(os.path.abspath(target), path.lstrip('/'))
+        # the default target is created after the checks, so that an abort leaves nothing
+        restore_path = os.path.join(
+            os.path.abspath(target or '/var/tmp/duba-restore-<random>'), path.lstrip('/')
+        )
 
         cmd = ['duplicity', 'restore']
         cmd += self.archive_dir_options()
@@ -664,17 +761,54 @@ class Duba:
         cmd += [f"{self.config.get('backup_dest')}{backup_path}"]
         cmd += [restore_path]
 
+        env = self.set_env(self.config.get('env', {}))
+        backup_sets = self.plan_restore(cmd, env)
+        tempdir = self.temp_dir(env)
+        need_mb = self.temp_space_mb(backup_sets)
+        try:
+            free_mb = self.free_mb(tempdir)
+        except OSError as e:
+            # duplicity reports this itself
+            self.logger.warning(f'Cannot get the free space of {tempdir}: {e}')
+            free_mb = None
+
+        print(f"Source:          {source.get('path')}")
+        print(f"Backup URL:      {self.config.get('backup_dest')}{backup_path}")
+        print(f'Path to restore: {path_to_restore or "(the whole backup)"}')
+        print(f'Restore to:      {restore_path}')
+        if backup_sets:
+            # duplicity only reads the sets whose volumes cover the path, so the newest of
+            # them holds the restored state, even if later backups up to --time exist
+            backup_time = self.format_backup_time(max(backup_sets))
+            print(
+                f'From backup:     {backup_time}, the newest of {len(backup_sets)} backup'
+                f' set(s) read, {sum(backup_sets.values())} volume(s)'
+            )
+        print(
+            f'Temp space:      up to {need_mb} MB in {tempdir},'
+            f" {'free space unknown' if free_mb is None else f'{free_mb} MB free'}"
+        )
+        print(f"Command:         {' '.join(cmd)}", flush=True)
+
+        if free_mb is not None and free_mb < need_mb:
+            message = (
+                f'{tempdir} has {free_mb} MB free, the restore needs up to {need_mb} MB'
+                f' there. Set TMPDIR to a dir with enough space'
+            )
+            if dry_run or ignore_space:
+                self.logger.warning(message)
+            else:
+                self.logger.error(f'{message}, or use --ignore-space')
+                sys.exit(213)
         if dry_run:
-            print(f"Source:          {source.get('path')}")
-            print(f"Backup URL:      {self.config.get('backup_dest')}{backup_path}")
-            print(f'Path to restore: {path_to_restore or "(the whole backup)"}')
-            print(f'Restore to:      {restore_path}')
-            print(f"Command:         {' '.join(cmd)}")
             sys.exit(0)
 
+        if not target:
+            target = tempfile.mkdtemp(prefix='duba-restore-', dir='/var/tmp')
+            restore_path = os.path.join(target, path.lstrip('/'))
+            cmd[-1] = restore_path
         os.makedirs(os.path.dirname(restore_path), exist_ok=True)
-        env = self.set_env(self.config.get('env', {}))
-        self.warn_on_low_space(path, os.path.dirname(restore_path), env)
+        self.warn_on_low_space(path, os.path.dirname(restore_path))
         self.logger.info(f"Running: {' '.join(cmd)}")
         try:
             retc = subprocess.run(cmd, env=env).returncode
@@ -682,7 +816,12 @@ class Duba:
             self.logger.error(f'OS Error "{e.errno} {e.strerror}" calling command "{cmd[0]}"')
             sys.exit(205)
         if retc == 0:
-            self.logger.info(f'Restored {path} to {restore_path}')
+            if backup_sets:
+                self.logger.info(
+                    f'Restored {path} to {restore_path} from the backup of {backup_time}'
+                )
+            else:
+                self.logger.info(f'Restored {path} to {restore_path}')
         sys.exit(retc)
 
 
@@ -713,7 +852,7 @@ def main():
     elif args.COMMAND == 'exec':
         duba.do_exec(duplicity_args)
     elif args.COMMAND == 'restore':
-        duba.do_restore(args.PATH, args.TARGET, args.TIME, args.DRY_RUN)
+        duba.do_restore(args.PATH, args.TARGET, args.TIME, args.DRY_RUN, args.IGNORE_SPACE)
 
 
 if __name__ == '__main__':
