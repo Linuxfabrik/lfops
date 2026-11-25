@@ -651,12 +651,10 @@
     # The nextcloud filter ships with the role defaults as well. Its jail is wired in by the
     # setup_nextcloud playbook, which tests it against a running Nextcloud; here the filter is fed
     # log lines in the format of Nextcloud 35, one of each message the filter matches.
+    # A command string instead of argv: ansible-core before 2.19 turns a templated value that
+    # starts with `{` into a dict, so fail2ban-regex would get the Python repr of the line.
     - name: 'fail2ban-regex against a {{ item["label"] }}'
-      ansible.builtin.command:
-        argv:
-          - 'fail2ban-regex'
-          - '{{ item["line"] }}'
-          - '/etc/fail2ban/filter.d/nextcloud.conf'
+      ansible.builtin.command: 'fail2ban-regex {{ item["line"] | quote }} /etc/fail2ban/filter.d/nextcloud.conf'
       register: '__molecule__fail2ban_nextcloud_regex_result'
       changed_when: false
       check_mode: false
@@ -669,6 +667,9 @@
           matched: 1
         - label: 'failed two-factor challenge'
           line: '{"reqId":"arJoPXvkDJYTkOiNa2hqmQAAAJN","level":2,"time":"2026-09-22T13:40:00+02:00","remoteAddr":"198.51.100.2","user":"alice","app":"no app in context","method":"POST","url":"/index.php/login/challenge/totp","scriptName":"/index.php","message":"Two-factor challenge failed: alice (Remote IP: 198.51.100.2)","userAgent":"Mozilla/5.0","version":"35.0.0.10","data":[]}'
+          matched: 1
+        - label: 'request for a host name missing from trusted_domains'
+          line: '{"reqId":"arJoPXvkDJYTkOiNa2hqmQAAAJP","level":1,"time":"2026-09-22T13:44:00+02:00","remoteAddr":"198.51.100.3","user":"--","app":"core","method":"GET","url":"/","scriptName":"/index.php","message":"Trusted domain error. \"198.51.100.3\" tried to access using \"nextcloud.example.net\" as host.","userAgent":"curl/8.9.1","version":"35.0.0.10","data":{"app":"core"}}'
           matched: 1
         - label: 'unrelated warning'
           line: '{"reqId":"arJoPXvkDJYTkOiNa2hqmQAAAJO","level":2,"time":"2026-09-22T13:42:00+02:00","remoteAddr":"198.51.100.4","user":"admin","app":"PHP","method":"GET","url":"/index.php/core/preview?fileId=8","scriptName":"/index.php","message":"sem_get(): Failed for key 0x7ea: Permission denied","userAgent":"Mozilla/5.0","version":"35.0.0.10","data":{"app":"PHP"}}'
