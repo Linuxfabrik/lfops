@@ -280,6 +280,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:repo_epel**: On CentOS Stream 10, EPEL uses the repository built for CentOS Stream instead of the one for the newest RHEL minor release.
 * **role:fail2ban**: The `apache-404` and `wordpress-login` jails also catch clients behind several proxies, whose `linuxfabrikio` log lines they did not match.
 * **role:fail2ban**: The `apache-dos` jail counts requests per client also in `matomo` and `vhost_common` access logs, where it took the vHost name for the client, resolved it through DNS and banned the address of the vHost ([#720](https://github.com/Linuxfabrik/lfops/issues/720)).
 * **role:apache_httpd**: The error pages keep their layout behind a strict Content-Security-Policy and no longer load anything from Google Fonts or unpkg.com.
