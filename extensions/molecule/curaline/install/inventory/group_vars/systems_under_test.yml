@@ -1,5 +1,3 @@
-curaline__version: '6.2.1'
-
 # the credentials are not valid: the client keeps running and reports the denied login in its
 # health endpoint, which is all this scenario needs to see that it reads its configuration.
 curaline__client_id: 'linuxfabrik'

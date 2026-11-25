@@ -2,6 +2,6 @@
 # `molecule test --scenario-name curaline/install`.
 #
 # The shared config.yml already provisions libvirt/KVM VMs, so this
-# scenario needs no driver override: the role sets the SELinux file context that lets systemd
-# execute the client from /usr/lib, which only a VM with an enforcing SELinux proves, and the
-# Debian family needs systemd, which the Debian and Ubuntu container images do not ship.
+# scenario needs no driver override: whether systemd may execute the packaged client from
+# /usr/lib only a VM with an enforcing SELinux proves, and the client runs as a systemd
+# service, which the container images do not ship.

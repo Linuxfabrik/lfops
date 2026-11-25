@@ -1,7 +1,4 @@
 __curaline__config_dir: '/etc/swisscom-schweiz-ag/cdr-client'
-__curaline__install_dir: '/usr/lib/swisscom-schweiz-ag/cdr-client'
-# created by systemd (`StateDirectory=`) and set as $HOME of the client, see the unit
-__curaline__state_dir: '/var/lib/swisscom-schweiz-ag/cdr-client'
 
 # the connectors that are not removed. the ones without a `state` come first, since `rejectattr`
 # cannot test an attribute that is not there.

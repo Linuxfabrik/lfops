@@ -101,12 +101,6 @@ argument_specs:
         default: true
         description: 'Whether the client uploads and downloads files.'
 
-      curaline__group:
-        type: 'str'
-        required: false
-        default: 'swisscom-schweiz-ag-cdr-client'
-        description: 'Group of the service, created as a system group if it does not exist.'
-
       curaline__idp_endpoint:
         type: 'str'
         required: false
@@ -121,7 +115,7 @@ argument_specs:
       curaline__local_folder:
         type: 'str'
         required: false
-        default: '/data/cdr-inflight'
+        default: '/var/lib/swisscom-schweiz-ag/cdr-client'
         description: 'Folder for temporary downloads.'
 
       curaline__renew_credential:
@@ -163,14 +157,3 @@ argument_specs:
         required: false
         default: '70b434db-eccb-4280-95dc-1e59220aca55'
         description: 'The Entra ID tenant that issues the tokens.'
-
-      curaline__user:
-        type: 'str'
-        required: false
-        default: 'swisscom-schweiz-ag-cdr-client'
-        description: 'User of the service, created as a system user if it does not exist. An existing user is not modified.'
-
-      curaline__version:
-        type: 'str'
-        required: true
-        description: 'The version of the curaLINE client to install.'

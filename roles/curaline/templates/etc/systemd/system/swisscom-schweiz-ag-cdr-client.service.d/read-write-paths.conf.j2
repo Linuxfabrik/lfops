@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# 2026102901
+
+# the packaged unit runs the client with `ProtectSystem=strict`, so it may only write to its own
+# directories and to the folders of its connectors listed here
+[Service]
+{% if __curaline__folders | length > 0 %}
+ReadWritePaths="{{ __curaline__folders | join('" "') }}"
+{% endif %}

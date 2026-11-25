@@ -19,6 +19,10 @@
 
   roles:
 
+    - role: 'linuxfabrik.lfops.repo_linuxfabrik'
+      when:
+        - 'not curaline__skip_repo_linuxfabrik | d(false)'
+
     - role: 'linuxfabrik.lfops.curaline'
 
 

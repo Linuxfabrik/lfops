@@ -1,3 +1,0 @@
-__curaline__required_packages:
-  - 'policycoreutils-python-utils' # semanage
-  - 'tar'
