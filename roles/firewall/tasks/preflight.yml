@@ -72,3 +72,21 @@
   tags:
     - 'firewall'
     - 'firewall:deploy_fwb_sh'
+
+
+# The role stops and masks every other firewall. iptables.service and nftables.service only load
+# the ruleset they find on the host, and what the nftables packages ship filters nothing, so the
+# ruleset has to come from the inventory.
+- name: 'Assert that the inventory has a ruleset for {{ firewall__firewall }}'
+  ansible.builtin.assert:
+    that:
+      - 'lookup("ansible.builtin.vars", "firewall__" ~ firewall__firewall ~ "_ruleset", default="") | trim | length > 0'
+    quiet: true
+    fail_msg: >-
+      firewall__firewall is '{{ firewall__firewall }}', but firewall__{{ firewall__firewall }}_ruleset
+      is not set, so the host would run without the rules it needs. Set the variable to the
+      ruleset, or set firewall__firewall to the firewall this host uses.
+  when:
+    - 'firewall__firewall in ["iptables", "nftables"]'
+  tags:
+    - 'firewall'

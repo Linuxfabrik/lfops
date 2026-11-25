@@ -2,3 +2,14 @@
 # has to stop, disable and mask fwb.service, and the idempotence step proves that masking the
 # unit the role deployed itself does not report a change on every run.
 firewall__firewall: 'nftables'
+
+# The policy stays accept, so the VM remains reachable. The rule on a port nothing uses is what
+# verify.yml looks for in the kernel.
+firewall__nftables_ruleset: |-
+  flush ruleset
+  table inet lfops_molecule {
+      chain input {
+          type filter hook input priority filter; policy accept;
+          tcp dport 65000 counter drop
+      }
+  }
