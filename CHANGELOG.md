@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking Changes
 
+* **role:gitlab_ce**: `gitlab-dump.service` runs `gitlab-backup create STRATEGY=copy`, as the GitLab documentation recommends for a running instance, so the dump no longer fails with "file changed as we read it". GitLab copies each of its file stores (uploads, CI artifacts, LFS objects, the container registry, ...) to the backup path before archiving it, one after the other, so `gitlab_ce__rb_gitlab_rails_backup_path` needs free space for the largest of them on top of the archive. Grow the filesystem of the backup path if necessary.
 * **role:selinux**: `restorecon` only corrects the SELinux type of a file and leaves files whose type an admin customized alone, such as Podman volumes mounted with `:Z`, since `force` in `selinux__restorecons__host_var` / `selinux__restorecons__group_var` defaults to `false` instead of `true`. On large directory trees the task finishes much faster, and it reports a change only when it actually relabeled a file. Set `force: true` on a path whose files carry a customized type but have to get the type of its file context.
 * **role:collabora**: From Collabora Online CODE 26.04.6 on, documents may only pull data (inserted graphics, `=WEBSERVICE()`, external cell references) from the WOPI hosts and the host they were loaded from, as upstream ships it: private networks, localhost and the `collabora__coolwsd_post_allow` hosts are no longer allowed as data sources. List other internal data sources in `collabora__coolwsd_lok_allow` before updating.
 * **role:apache_httpd**: The role only defines the log formats Apache ships (`agent`, `combined`, `combinedio`, `common`, `referer`, `vhost_common`) and drops `debug`, `fail2ban`, `gelf`, `linuxfabrikio` and `matomo`. Apache still starts with a `CustomLog` that names one of them, but writes just that name instead of the request; switch such a log to `combined`, or define the format in the vHost's `raw`.
@@ -96,6 +97,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:fangfrisch**: `fangfrisch__urlhaus_auth_key` sets the abuse.ch Auth-Key and enables the URLhaus signatures.
+* **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:redis**: Add template for Redis 8.12.
 * **role:repo_rpmfusion**: Support RHEL 9 and 10. Hosts on which the role set up the EL 8 repositories switch to those of their own release.
 * **role:mariadb_server**: `table_open_cache_instances` is configurable with `mariadb_server__cnf_table_open_cache_instances__host_var` / `mariadb_server__cnf_table_open_cache_instances__group_var`.
@@ -280,6 +283,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+* **role:php**: On the Red Hat family, PHP modules from the inventory that are already installed as a dependency of another package are marked as user-installed, so `dnf autoremove` no longer removes them once that package is gone.
+* **role:sshd**: `sshd__sftp_subsystem` from the inventory takes effect, where the role always deployed its own default.
+* **role:fangfrisch**: Without `fangfrisch__urlhaus_auth_key`, Fangfrisch no longer tries to download the URLhaus signatures, which failed with `401 Unauthorized` on every refresh.
+* **role:wordpress, playbook:setup_wordpress**: Installs `php-mysqlnd` instead of `php-pecl-mysql`, the obsolete `mysql_*` extension that WordPress does not use, and removes `php-pecl-mysql` from existing hosts. If another application on the host still needs it, add `php-pecl-mysql` with `state: 'present'` to `php__modules__host_var`.
+* **role:icinga2_agent**: The run fails if the host cannot be added to the Icinga Director, for example because of a wrong login, instead of continuing as if it had been added.
+* **role:mount**: The role no longer resets the owner and mode of the root of a mounted filesystem to `root:root` and `0755` on every run, and no longer fails on an NFS export with `root_squash`. `owner` and `group` are only applied where a mount sets them, and reach the mounted filesystem in the first run.
+* **role:gitlab_ce**: `gitlab-dump.service` fails when the backup fails, so `systemctl --failed` and the monitoring notice it, instead of always reporting success.
+* **role:duplicity**: `duba` no longer removes old backups of a path whose backup failed in the same run.
+* **role:duplicity**: `duba` reports a missing or invalid `/etc/duba/duba.json` with an error message and exit code 201 or 203 instead of a Python traceback.
 * **role:repo_epel**: On CentOS Stream 10, EPEL uses the repository built for CentOS Stream instead of the one for the newest RHEL minor release.
 * **role:fail2ban**: The `apache-404` and `wordpress-login` jails also catch clients behind several proxies, whose `linuxfabrikio` log lines they did not match.
 * **role:fail2ban**: The `apache-dos` jail counts requests per client also in `matomo` and `vhost_common` access logs, where it took the vHost name for the client, resolved it through DNS and banned the address of the vHost ([#720](https://github.com/Linuxfabrik/lfops/issues/720)).

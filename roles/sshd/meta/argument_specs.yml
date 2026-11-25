@@ -1,3 +1,6 @@
+# sshd__sftp_subsystem is deliberately absent: its default in defaults/main.yml references
+# __sshd__sftp_subsystem from vars/<platform>.yml, which is not loaded yet when argument_specs
+# validation runs at role entry. It is documented in the README instead.
 argument_specs:
   main:
     options:
@@ -164,13 +167,6 @@ argument_specs:
           - 'reloaded'
         description: >-
           Runtime state of the sshd service.
-
-      sshd__sftp_subsystem:
-        type: 'str'
-        required: false
-        description: >-
-          Command used for the sftp subsystem. Defaults to the
-          platform-specific path in `vars/`.
 
       sshd__use_dns:
         type: 'bool'

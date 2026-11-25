@@ -1,7 +1,29 @@
-- name: 'Verify mount relabels a freshly created filesystem'
+- name: 'Verify mount relabels a freshly created filesystem and only sets the owner and mode it is given'
   hosts: 'systems_under_test'
   gather_facts: false
   tasks:
+
+    # Both paths have to be mount points, otherwise the checks below look at plain directories.
+    - name: 'findmnt --noheadings --output=TARGET /srv/lfops-molecule; findmnt ... /srv/lfops-molecule-owned'
+      ansible.builtin.command: 'findmnt --noheadings --output=TARGET {{ item }}'
+      loop:
+        - '/srv/lfops-molecule'
+        - '/srv/lfops-molecule-owned'
+      changed_when: false
+
+    - name: 'stat --format="%U %G %a" /srv/lfops-molecule /srv/lfops-molecule-owned'
+      ansible.builtin.command: 'stat --format="%U %G %a" /srv/lfops-molecule /srv/lfops-molecule-owned'
+      changed_when: false
+      register: '__molecule__owner_mode_result'
+
+    # The first mount sets no owner, group or mode, so it keeps what converge.yml gave the root
+    # of its filesystem after mounting. The second one gets what group_vars sets.
+    - name: 'Assert the owner, group and mode of the roots of the mounted filesystems'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__owner_mode_result["stdout_lines"][0] == "nobody root 1777"'
+          - '__molecule__owner_mode_result["stdout_lines"][1] == "nobody daemon 750"'
+        fail_msg: '{{ __molecule__owner_mode_result["stdout_lines"] }}'
 
     # What the relabelling is for: the mount point and what is created on it carry the context
     # the policy assigns to the path, not unlabeled_t, which confined services may not access.

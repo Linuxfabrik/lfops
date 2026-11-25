@@ -99,6 +99,32 @@
     ansible.builtin.debug:
       var: 'php__modules__combined_var'
 
+  # A module that is already installed as a dependency of another package keeps the reason
+  # "dependency", even if it is asked for by name later: the install below is a no-op for it
+  # (`dnf install` answers "Nothing to do"). As soon as the package that pulled it in goes away,
+  # for example php-pecl-mysql, which requires php-mysqlnd, `dnf autoremove` would take the
+  # module with it. So mark the modules from the inventory as user-installed, before anything
+  # is removed. Verified with dnf 4.7 on Rocky 8, dnf 4.14 on Rocky 9 and dnf 4.20 on Rocky 10.
+  - name: 'dnf --quiet repoquery --installed --queryformat "%{name} %{reason}" ...'
+    ansible.builtin.command:
+      argv: '{{ ["dnf", "--quiet", "repoquery", "--installed", "--queryformat", "%{name} %{reason}"] + __php__modules_present }}'
+    register: '__php__modules_reason_result'
+    changed_when: false
+    check_mode: false
+    when:
+      - 'ansible_facts["os_family"] == "RedHat"'
+      - '__php__modules_present | length > 0'
+
+  - name: 'dnf mark install ... # modules that are installed as a dependency only'
+    ansible.builtin.command:
+      argv: '{{ ["dnf", "mark", "install"] + __php__modules_dependency }}'
+    changed_when: true
+    vars:
+      __php__modules_dependency: '{{ __php__modules_reason_result["stdout_lines"] | d([])
+        | select("search", " dependency$") | map("regex_replace", " dependency$", "") | unique }}'
+    when:
+      - '__php__modules_dependency | length > 0'
+
   - name: 'Ensure PHP modules are absent'
     # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
@@ -108,12 +134,14 @@
   - name: 'Ensure PHP modules are present'
     # providing the packages as a list is much more faster than looping for each
     ansible.builtin.package:
-      name: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
-          + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
+      name: '{{ __php__modules_present }}'
       state: 'present'
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  vars:
+    __php__modules_present: '{{ (php__modules__combined_var | selectattr("state", "defined") | selectattr("state", "ne", "absent") | map(attribute="name"))
+      + (php__modules__combined_var | selectattr("state", "undefined") | map(attribute="name")) }}'
   tags:
     - 'php'
     - 'php:modules'
