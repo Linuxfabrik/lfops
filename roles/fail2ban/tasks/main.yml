@@ -1,5 +1,23 @@
 - block:
 
+  # Ansible ignores an unknown inventory variable without a word, so an inventory that still sets
+  # the replaced variable would silently lose its ignored addresses.
+  - name: 'Assert that fail2ban__jail_default_ignoreip is not set'
+    ansible.builtin.assert:
+      that:
+        - 'fail2ban__jail_default_ignoreip is not defined'
+      quiet: true
+      fail_msg: >-
+        fail2ban__jail_default_ignoreip is replaced by fail2ban__jail_default_ignoreip__host_var /
+        fail2ban__jail_default_ignoreip__group_var, which take a list of dictionaries with the
+        subkeys name and state. Move the addresses there, see the role README.
+
+  tags:
+    - 'always'
+
+
+- block:
+
   - name: 'Install fail2ban'
     ansible.builtin.package:
       name:

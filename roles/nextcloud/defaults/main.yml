@@ -548,7 +548,7 @@ nextcloud__collabora__coolwsd_storage_wopi__dependent_var:
 # the `trusted_proxies` entries, so an inventory that configures the proxy for Nextcloud
 # protects it from fail2ban as well.
 nextcloud__fail2ban__jail_default_ignoreip__dependent_var: '{{
-    (nextcloud__sysconfig__combined_var
+    ((nextcloud__sysconfig__combined_var
       | selectattr("key", "match", "trusted_proxies ")
       | selectattr("state", "undefined")
       | map(attribute="value")
@@ -558,7 +558,10 @@ nextcloud__fail2ban__jail_default_ignoreip__dependent_var: '{{
       | selectattr("state", "defined")
       | selectattr("state", "ne", "absent")
       | map(attribute="value")
-      | list)
+      | list))
+    | map("community.general.dict_kv", "name")
+    | map("combine", {"state": "present"})
+    | list
   }}'
 nextcloud__fail2ban__jails__dependent_var:
   - filename: 'z10-nextcloud'

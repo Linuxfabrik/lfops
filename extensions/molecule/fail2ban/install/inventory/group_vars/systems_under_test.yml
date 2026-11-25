@@ -22,6 +22,14 @@ fail2ban__jail_sshd_bantime: '3h'
 fail2ban__skip_sshd: true
 sshd__port: 2222
 
+# Addresses no jail bans. rocky10-vm removes the network again with state: 'absent' in
+# hosts.yml, which exercises the combine_lod merge and the state key.
+fail2ban__jail_default_ignoreip__group_var:
+  - name: '192.0.2.10/32'
+    state: 'present'
+  - name: '203.0.113.0/24'
+    state: 'present'
+
 # A filter and a jail defined entirely from the inventory, which exercises the raw template and
 # the combine_lod merge over the role defaults. Both read the journal instead of a log file, so
 # the jail loads on a host that has neither Apache nor a logging firewall - the two things the

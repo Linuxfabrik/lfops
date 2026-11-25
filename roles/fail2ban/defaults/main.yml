@@ -34,8 +34,17 @@ fail2ban__jail_default_action: |-
 # fail2ban-firewalld package sets in 00-firewalld.conf. Verified against fail2ban
 # 1.1.0-6.el9 on Rocky 9: `fail2ban-client get sshd actions` reports the banaction set here.
 fail2ban__jail_default_banaction: 'nftables-multiport'  # upstream default: iptables-multiport, firewallcmd-rich-rules on RHEL
-fail2ban__jail_default_ignoreip: []
+fail2ban__jail_default_ignoreip__combined_var: '{{ (
+      fail2ban__jail_default_ignoreip__role_var +
+      fail2ban__jail_default_ignoreip__dependent_var +
+      fail2ban__jail_default_ignoreip__group_var +
+      fail2ban__jail_default_ignoreip__host_var
+    ) | linuxfabrik.lfops.combine_lod
+  }}'
 fail2ban__jail_default_ignoreip__dependent_var: []
+fail2ban__jail_default_ignoreip__group_var: []
+fail2ban__jail_default_ignoreip__host_var: []
+fail2ban__jail_default_ignoreip__role_var: []
 fail2ban__jail_default_rocketchat_hook: ''
 fail2ban__jail_nextcloud_bantime: '8h'
 fail2ban__jail_nextcloud_findtime: '10m'

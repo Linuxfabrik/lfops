@@ -78,19 +78,26 @@ argument_specs:
         default: 'nftables-multiport'
         description: 'The default banaction, executed as defined in the default action.'
 
-      fail2ban__jail_default_ignoreip:
-        type: 'list'
-        elements: 'str'
-        required: false
-        default: []
-        description: 'IP addresses in CIDR notation that are ignored by all jails.'
-
       fail2ban__jail_default_ignoreip__dependent_var:
         type: 'list'
-        elements: 'str'
+        elements: 'dict'
         required: false
         default: []
         description: 'IP addresses in CIDR notation that are ignored by all jails. Dependent-role injection.'
+
+      fail2ban__jail_default_ignoreip__group_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'IP addresses in CIDR notation that are ignored by all jails. Group-level override.'
+
+      fail2ban__jail_default_ignoreip__host_var:
+        type: 'list'
+        elements: 'dict'
+        required: false
+        default: []
+        description: 'IP addresses in CIDR notation that are ignored by all jails. Host-level override.'
 
       fail2ban__jail_default_rocketchat_hook:
         type: 'str'

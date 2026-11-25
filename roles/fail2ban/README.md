@@ -168,11 +168,23 @@ Any [LFOps playbook](https://github.com/Linuxfabrik/lfops/blob/main/playbooks/RE
 * Default: `'nftables-multiport'`
 * Deviates from the upstream default `iptables-multiport` (`firewallcmd-rich-rules` with the `fail2ban-firewalld` package on RHEL): LFOps deploys nftables firewalls, and the bans then live in nftables as well instead of going through the iptables compatibility layer or firewalld.
 
-`fail2ban__jail_default_ignoreip`
+`fail2ban__jail_default_ignoreip__host_var` / `fail2ban__jail_default_ignoreip__group_var`
 
-* List of IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it). Other roles add to this list, for example the `nextcloud` role adds the reverse proxies from its `trusted_proxies`, so a jail never bans them.
-* Type: List of strings.
+* IP addresses (in CIDR notation) that will be ignored from all jails (assuming the jail does not overwrite it). Other roles add to this list, for example the `nextcloud` role adds the reverse proxies from its `trusted_proxies`, so a jail never bans them.
+* Type: List of dictionaries.
 * Default: `[]`
+* Subkeys:
+
+    * `name`:
+
+        * Mandatory. IP address or network in CIDR notation.
+        * Type: String.
+
+    * `state`:
+
+        * Optional. `present` or `absent`.
+        * Type: String.
+        * Default: `'present'`
 
 `fail2ban__jail_default_rocketchat_hook`
 
@@ -328,8 +340,9 @@ fail2ban__jail_default_action: |-
   %(banaction)s[name=%(__name__)s, bantime="%(bantime)s", port="%(port)s", protocol="%(protocol)s", chain="%(chain)s"]
   rocketchat[name=%(__name__)s, rocketchat-hook="%(rocketchat-hook)s"]
 fail2ban__jail_default_banaction: 'nftables-multiport'
-fail2ban__jail_default_ignoreip:
-  - '192.0.2.1/32' # ansible deployment host
+fail2ban__jail_default_ignoreip__host_var:
+  - name: '192.0.2.1/32' # ansible deployment host
+    state: 'present'
 fail2ban__jail_default_rocketchat_hook: ''
 fail2ban__jail_nextcloud_bantime: '8h'
 fail2ban__jail_nextcloud_findtime: '10m'

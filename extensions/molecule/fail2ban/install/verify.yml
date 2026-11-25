@@ -685,6 +685,22 @@
       loop_control:
         label: '{{ item["item"]["label"] }}'
 
+    # fail2ban prints a /32 network as the bare address.
+    - name: 'fail2ban-client get sshd ignoreip'
+      ansible.builtin.command: 'fail2ban-client get sshd ignoreip'
+      register: '__molecule__fail2ban_sshd_ignoreip_result'
+      changed_when: false
+      check_mode: false
+
+    - name: 'Assert the sshd jail ignores the addresses of the inventory, minus the absent one'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__fail2ban_sshd_ignoreip_result["stdout"] is search("- 192\\.0\\.2\\.10$", multiline=true)'
+          - >-
+            ("203.0.113.0/24" in __molecule__fail2ban_sshd_ignoreip_result["stdout"])
+            == (inventory_hostname != "rocky10-vm")
+        fail_msg: '{{ __molecule__fail2ban_sshd_ignoreip_result["stdout"] }}'
+
     # Proves a value from the inventory reaches the running jail, rather than the server falling
     # back to the 10m that jail.conf ships.
     - name: 'fail2ban-client get sshd bantime'
