@@ -114,7 +114,7 @@ These roles are not enabled by default; enable them via the playbook's skip vari
 
 `collabora__coolwsd_lok_allow`
 
-* Allowed hosts as an external data source inside edited files. All allowed post_allow.host and storage.wopi entries are also considered to be allowed as a data source. Used for example in: PostMessage Action_InsertGraphics, =WEBSERVICE() function, external reference in the cell.
+* Allowed hosts as an external data source inside edited files, used for example by inserted graphics (PostMessage Action_InsertGraphic), the =WEBSERVICE() function and external cell references. Each entry is a network in CIDR notation, which only matches URLs with an IP address as host, or a regular expression matched against the host of the URL. The WOPI hosts and the host a document was loaded from are always allowed; every other host is denied. From Collabora Online 26.04.6 on, the post_allow hosts and private networks are not allowed implicitly.
 * Type: List of strings.
 * Default: `[]`
 
