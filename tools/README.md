@@ -11,13 +11,13 @@
 * Tags: the roles a playbook runs (including imported playbooks, `import_role`, `include_role` and role dependencies), and for each role the tags documented in the "Tags" section of its README.
 * Inventories: the ones with hosts in the groups the playbook targets (`hosts:` of its plays). An inventory without such hosts is offered if another playbook runs the role there, with the role as tag. Selecting it switches to that playbook, for example from `monitoring_plugins` to `setup_basic --tags=monitoring_plugins`.
 * Limit: the hosts of the selected inventories in the groups the playbook targets, plus the groups these hosts are in. Typed text such as `060-t-*` is offered as a pattern of its own.
-* Confirm: the command, the number of hosts it targets and the first 10 of them. The limit is resolved like Ansible does, on the merged group structure of the selected inventories, for host and group names, globs, `&` and `!`. Other patterns (`~regex`, `@file`, `group[0:2]`, `host:port`, IPv6 addresses) show the number as unknown. It is an estimate: `when` conditions other than the skip variables of a role, `group_by` and `add_host` are not evaluated.
+* Confirm: one box each for the playbook, inventories, limit, tags, options and the targeted hosts, and below them the command with LIVE RUN or CHECK MODE. Each inventory shows its number of hosts, a limit entry that matches none of them (a typo, for example) says so. Warnings are in yellow, a run on no host in red. The command is never cut: on a short terminal, the host list shrinks first, then the boxes above the command scroll. The limit is resolved like Ansible does, on the merged group structure of the selected inventories, for host and group names, globs, `&` and `!`. Other patterns (`~regex`, `@file`, `group[0:2]`, `host:port`, IPv6 addresses) show the number as unknown. It is an estimate: `when` conditions other than the skip variables of a role, `group_by` and `add_host` are not evaluated.
 
 Every page shows the command as it stands with the selection of the page, the arguments the page sets in green, and the number of hosts it targets. Inventories below `$LF_GITLAB` are shown relative to it, as `--inventory=$LF_GITLAB/060/ans/hosts.yml`; the command the tool prints and runs has the full path. Arguments are quoted only where bash needs it, for example `'--limit=060-t-*'`.
 
 Playbooks, inventories, tags, limits and options used last are listed first. Ctrl-R lists the complete runs, used last first: choosing one fills in all steps and shows the confirm page, Esc then goes back through the steps with its values selected. Typing filters the list: entries containing the text come first, then the ones containing its letters in order (`setbas` finds `setup_basic`), then the ones with the text in their description.
 
-On the confirm page, `c` and `d` switch `--check` and `--diff` on and off, and `f` lists further options (`--verbose` and the ones used before) and takes typed text as an argument for ansible-navigator, for example `--extra-vars=lfops__reboot_now=true`. Typed text cannot contain spaces. Any argument the tool does not know itself starts switched on; an option and its value become one entry (`-e x=y` becomes `--extra-vars=x=y`, `-C` becomes `--check`):
+On the confirm page, `c` and `d` switch `--check` and `--diff` on and off, and `o` lists further options (`--verbose` and the ones used before) and takes typed text as an argument for ansible-navigator, for example `--extra-vars=lfops__reboot_now=true`. Typed text cannot contain spaces. Any argument the tool does not know itself starts switched on; an option and its value become one entry (`-e x=y` becomes `--extra-vars=x=y`, `-C` becomes `--check`):
 
 ```bash
 lfops --check --diff
@@ -53,7 +53,7 @@ The tool works under any name: a link `~/.local/bin/lfo` makes it `lfo`, and the
 * Enter to continue with the selected entries, or without a selection with the highlighted one. Enter on typed text adds it to the selection.
 * Esc to go back a step, the selection of the steps is kept. Choosing another playbook starts the later steps empty, choosing other inventories clears the limit.
 * Ctrl-R to choose a past run, Ctrl-C to quit.
-* On the confirm page: Enter to run, `c` for `--check`, `d` for `--diff`, `f` for further options.
+* On the confirm page: Enter to run, `c` for `--check`, `d` for `--diff`, `o` for further options, Up, Down, PgUp and PgDn to scroll the boxes if they do not fit.
 
 
 ### Options
