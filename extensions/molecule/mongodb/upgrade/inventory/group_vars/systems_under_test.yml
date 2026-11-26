@@ -10,7 +10,7 @@ mongodb__conf_replication_repl_set_name__group_var: 'rs01'
 # mongod refuses to start a replica set with authorization but without a keyfile.
 mongodb__keyfile_content: 'linuxfabriklinuxfabrik'
 
-# The ordinary run in converge.yml changes it from the default 100, so the restart handler restarts
+# prepare.yml installs with the default 100 and then changes it, so the restart handler restarts
 # the replica set member and waits for it.
 mongodb__conf_storage_journal_commit_interval_ms: 200
 

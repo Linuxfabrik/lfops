@@ -16,11 +16,45 @@
     repo_mongodb__version: '7.0'
 
 
+# An ordinary run with the commitIntervalMs from group_vars changes mongod.conf, so the restart
+# handler restarts the replica set member and waits for it.
+- name: 'Change the configuration of MongoDB 7.0'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mongodb'
+  vars:
+    mongodb__feature_compatibility_version: ''
+    repo_mongodb__version: '7.0'
+
+
 # A document written before the upgrade, which verify.yml expects to find afterwards.
-- name: 'Write a document and lower the FCV to 6.0'
+- name: 'Check the restart, write a document and lower the FCV to 6.0'
   hosts: 'systems_under_test'
   become: true
   tasks:
+
+    - name: 'mongosh --eval (commitIntervalMs and replica set state)'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=print(JSON.stringify({
+              commit_interval_ms: db.adminCommand({getCmdLineOpts: 1}).parsed.storage.journal.commitIntervalMs,
+              state: rs.status().myState,
+            }))'
+      register: '__molecule__mongodb_restart_result'
+      changed_when: false
+
+    # only a restart makes mongod read the changed configuration
+    - name: 'Assert that the handler restarted mongod and the member is primary again'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__mongodb_restart["commit_interval_ms"] == 200'
+          - '__molecule__mongodb_restart["state"] == 1' # PRIMARY
+        fail_msg: '{{ __molecule__mongodb_restart | to_json }}'
+      vars:
+        __molecule__mongodb_restart: '{{ __molecule__mongodb_restart_result["stdout"] | from_json }}'
 
     - name: 'mongosh --eval db.getSiblingDB("molecule").test.insertOne(...)'
       ansible.builtin.command:
@@ -61,7 +95,7 @@
         argv: '{{
             ["ansible-playbook"]
             + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
-            + ["--limit=" ~ ansible_limit | d("all"), "--tags=repo_mongodb,mongodb:upgrade", "--extra-vars=" ~ {"mongodb__conf_storage_journal_commit_interval_ms": 100} | to_json, "linuxfabrik.lfops.mongodb"]
+            + ["--limit=" ~ ansible_limit | d("all"), "--tags=repo_mongodb,mongodb:upgrade", "linuxfabrik.lfops.mongodb"]
           }}'
       environment:
         ANSIBLE_RETRY_FILES_ENABLED: 'false'
@@ -83,7 +117,7 @@
             + [
                 "--limit=rocky9-vm",
                 "--tags=repo_mongodb,mongodb:upgrade",
-                "--extra-vars=" ~ {"mongodb__conf_storage_journal_commit_interval_ms": 100, "repo_mongodb__version": "9.0"} | to_json,
+                "--extra-vars=" ~ {"repo_mongodb__version": "9.0"} | to_json,
                 "linuxfabrik.lfops.mongodb",
               ]
           }}'

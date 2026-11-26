@@ -2,8 +2,7 @@
 # look at both, with collapsed whitespace.
 # A playbook cannot select tags for itself, so this play runs the playbook under test as separate
 # ansible-playbook runs against the same inventory and limit: first the upgrade, as the README
-# describes it, keeping the commitIntervalMs of prepare.yml, then an ordinary run that raises the
-# FCV and changes the commitIntervalMs from group_vars, which restarts mongod through the handler. A run reports a change if
+# describes it, then an ordinary run that raises the FCV from group_vars. A run reports a change if
 # its recap does, so the idempotence step catches a second run that changes anything.
 - name: 'Converge mongodb playbook: upgrade, then raise the FCV'
   hosts: 'localhost'
@@ -19,7 +18,7 @@
             + [
                 "--limit=" ~ ansible_limit | d("all"),
                 "--tags=repo_mongodb,mongodb:upgrade",
-                "--extra-vars=" ~ {"mongodb__conf_storage_journal_commit_interval_ms": 100, "mongodb__feature_compatibility_version": ""} | to_json,
+                "--extra-vars=" ~ {"mongodb__feature_compatibility_version": ""} | to_json,
                 "linuxfabrik.lfops.mongodb",
               ]
           }}'

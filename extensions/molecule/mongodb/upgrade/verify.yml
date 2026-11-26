@@ -29,14 +29,13 @@
       register: '__molecule__mongodb_state_result'
       changed_when: false
 
-    - name: 'Assert that mongod runs 8.0 with FCV 8.0 as primary, restarted for the new configuration and kept its data'
+    - name: 'Assert that mongod runs 8.0 with FCV 8.0 as primary with its configuration and kept its data'
       ansible.builtin.assert:
         that:
           - '__molecule__mongodb_state["version"].startswith("8.0.")'
           - '__molecule__mongodb_state["fcv"] == "8.0"'
           - '__molecule__mongodb_state["documents"] == 1'
           - '__molecule__mongodb_state["state"] == 1' # PRIMARY
-          # only a restart makes mongod read the changed configuration
           - '__molecule__mongodb_state["commit_interval_ms"] == 200'
         fail_msg: '{{ __molecule__mongodb_state | to_json }}'
       vars:
