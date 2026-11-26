@@ -80,9 +80,12 @@
     - role: 'linuxfabrik.lfops.kernel_settings'
       kernel_settings__sysctl__dependent_var: "{{
           graylog_server__kernel_settings__sysctl__dependent_var +
-          graylog_datanode__kernel_settings__sysctl__dependent_var
+          graylog_datanode__kernel_settings__sysctl__dependent_var +
+          (mongodb__kernel_settings__sysctl__dependent_var | d([]))
         }}"
-      kernel_settings__transparent_hugepages__dependent_var: "{{ graylog_server__kernel_settings__transparent_hugepages__dependent_var }}"
+      kernel_settings__sysfs__dependent_var: '{{ mongodb__kernel_settings__sysfs__dependent_var | d([]) }}'
+      kernel_settings__transparent_hugepages__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages__dependent_var | d('') }}"
+      kernel_settings__transparent_hugepages_defrag__dependent_var: "{{ mongodb__kernel_settings__transparent_hugepages_defrag__dependent_var | d('') }}"
       when:
         - 'not setup_graylog_server__skip_kernel_settings | d(false)'
 
