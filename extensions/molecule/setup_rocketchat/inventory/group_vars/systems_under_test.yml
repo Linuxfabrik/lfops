@@ -1,0 +1,11 @@
+# MongoDB with a single-member replica set, as Rocket.Chat needs it. The member keeps the default
+# name `localhost:27017`, which the container cannot use, so Rocket.Chat only starts if it does
+# not discover the members by their names. host_vars/ enables authentication on one host.
+mongodb__conf_net_bind_ip:
+  - 'localhost'
+  # the container reaches the host as host.containers.internal, MongoDB sees the host's address
+  - '{{ ansible_facts["default_ipv4"]["address"] }}'
+
+repo_mongodb__version: '8.0'
+
+rocketchat__root_url: 'http://localhost:3000'

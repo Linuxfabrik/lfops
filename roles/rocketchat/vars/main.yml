@@ -1,0 +1,10 @@
+# The MongoDB user of Rocket.Chat, see rocketchat__mongodb__users__dependent_var.
+__rocketchat__mongodb_user:
+  username: '{{ rocketchat__mongodb_login["username"] }}'
+  password: '{{ rocketchat__mongodb_login["password"] }}'
+  database: 'rocketchat'
+  roles:
+    - db: 'rocketchat'
+      role: 'readWrite'
+    - db: 'rocketchat'
+      role: 'dbAdmin'

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# 2026112001
+
+[network]
+{% if podman_containers__firewall_driver | length > 0 %}
+# With the iptables driver, netavark calls whatever `iptables` points to. If that is
+# iptables-legacy, a rootless container needs the ip_tables kernel module, which a rootless user
+# may not load, so the container does not start unless something else loaded the module before.
+# The nftables driver works with any iptables backend, the kernel loads nf_tables on demand.
+# Verified with podman 5.8 / netavark 1.17 on Rocky 9 and podman 6.1 / netavark 2.1 on Rocky 10.
+firewall_driver = "{{ podman_containers__firewall_driver }}"
+{% endif %}

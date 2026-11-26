@@ -9,6 +9,25 @@
     retries: 3 # ride out a brief outage of the package repository
     delay: 10
 
+  - name: 'mkdir -p /etc/containers/containers.conf.d/'
+    ansible.builtin.file:
+      path: '/etc/containers/containers.conf.d/'
+      state: 'directory'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+
+  # Deployed before any container starts: netavark reads the firewall driver when it sets up the
+  # rules of a network.
+  - name: 'Deploy /etc/containers/containers.conf.d/z00-linuxfabrik.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/containers/containers.conf.d/z00-linuxfabrik.conf.j2'
+      dest: '/etc/containers/containers.conf.d/z00-linuxfabrik.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
   tags:
     - 'podman_containers'
 
@@ -53,13 +72,16 @@
   # `.volume` & `.network` quadlets always get a `-volume` or `-network` suffix during the conversion to `.service` files.
   # the name of `.container` quadlets is used as is for the `.service` files.
   # so for consistency, we always add a `-container` suffix to the `.container` quadlets, so that the unit is `-container.service`
+  # The unit directories below use an inline `if` instead of `ternary()`: a filter evaluates both
+  # branches, so the UID lookup failed for every rootful quadlet (no `user`).
 
   - name: 'Remove container units'
     ansible.builtin.file:
-      path: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
-        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1] ~ "/",
-        "/etc/containers/systemd"
-        ) }}/{{ item["name"] }}-container.container'
+      path: '{{
+        ("/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1])
+        if item["user"] | d("") | length > 0
+        else "/etc/containers/systemd"
+        }}/{{ item["name"] }}-container.container'
       state: 'absent'
     when:
       - 'item["state"] | d("started") == "absent"'
@@ -72,10 +94,11 @@
     ansible.builtin.template:
       backup: true
       src: 'etc/containers/systemd/container.j2'
-      dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
-        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
-        "/etc/containers/systemd"
-        ) }}/{{ item["name"] }}-container.container'
+      dest: '{{
+        ("/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1])
+        if item["user"] | d("") | length > 0
+        else "/etc/containers/systemd"
+        }}/{{ item["name"] }}-container.container'
       owner: '{{ item["user"] | d("root") }}'
       group: '{{ item["user"] | d("root") }}'
       mode: 0o600 # could contain secrets
@@ -96,10 +119,11 @@
 
   - name: 'Remove network units'
     ansible.builtin.file:
-      path: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
-        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
-        "/etc/containers/systemd"
-        ) }}/{{ item["name"] }}.network'
+      path: '{{
+        ("/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1])
+        if item["user"] | d("") | length > 0
+        else "/etc/containers/systemd"
+        }}/{{ item["name"] }}.network'
       state: 'absent'
     when:
       - 'item["state"] | d("started") == "absent"'
@@ -112,10 +136,11 @@
     ansible.builtin.template:
       backup: true
       src: 'etc/containers/systemd/network.j2'
-      dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
-        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
-        "/etc/containers/systemd"
-        ) }}/{{ item["name"] }}.network'
+      dest: '{{
+        ("/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1])
+        if item["user"] | d("") | length > 0
+        else "/etc/containers/systemd"
+        }}/{{ item["name"] }}.network'
       owner: '{{ item["user"] | d("root") }}'
       group: '{{ item["user"] | d("root") }}'
       mode: 0o600 # could contain secrets
@@ -135,10 +160,11 @@
 
   - name: 'Remove volume units'
     ansible.builtin.file:
-      path: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
-        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
-        "/etc/containers/systemd"
-        ) }}/{{ item["name"] }}.volume'
+      path: '{{
+        ("/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1])
+        if item["user"] | d("") | length > 0
+        else "/etc/containers/systemd"
+        }}/{{ item["name"] }}.volume'
       state: 'absent'
     when:
       - 'item["state"] | d("started") == "absent"'
@@ -151,10 +177,11 @@
     ansible.builtin.template:
       backup: true
       src: 'etc/containers/systemd/volume.j2'
-      dest: '{{ (item["user"] is defined and item["user"] | length > 0) | ternary(
-        "/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1],
-        "/etc/containers/systemd"
-        ) }}/{{ item["name"] }}.volume'
+      dest: '{{
+        ("/etc/containers/systemd/users/" ~ ansible_facts["getent_passwd"][item["user"]][1])
+        if item["user"] | d("") | length > 0
+        else "/etc/containers/systemd"
+        }}/{{ item["name"] }}.volume'
       owner: '{{ item["user"] | d("root") }}'
       group: '{{ item["user"] | d("root") }}'
       mode: 0o600 # could contain secrets
@@ -173,6 +200,24 @@
 - block:
   # Note about enabling / disabling units todo
   # also, we always do a `daemon_reload`. this is easier here than via a handler, as the daemon needs to be reloaded for the correct users.
+
+  # Otherwise the first module that runs as the user creates its remote_tmp and warns that it did
+  # so with a mode of 0700.
+  - name: 'mkdir -p ~/.ansible/tmp # user'
+    ansible.builtin.file:
+      path: '~{{ item }}/.ansible/tmp'
+      state: 'directory'
+      owner: '{{ item }}'
+      group: '{{ item }}'
+      mode: 0o700
+    loop: '{{
+          (podman_containers__containers__combined_var +
+          podman_containers__networks__combined_var +
+          podman_containers__volumes__combined_var)
+          | selectattr("user", "defined")
+          | map(attribute="user")
+          | unique
+      }}'
 
   # The user's service manager may already run (lingering) when Podman pulls in the user D-Bus
   # (dbus-user-session on Debian and Ubuntu), and then has no bus until it restarts, usually at

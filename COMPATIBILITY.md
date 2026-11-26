@@ -125,7 +125,7 @@ Which Ansible role is proven to run on which OS?
 | opensearch                            |        |        |   x    |   x    |    x    |           |           |           | OpenSearch 2.x not on RHEL 10                |
 | openvpn_server                        |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | php                                   |   x    |   x    |   x    |   x    |    x    |    (x)    |    (x)    |    (x)    |                                              |
-| podman_containers                     |        |        |  (x)   |   x    |   (x)   |           |           |           |                                              |
+| podman_containers                     |        |        |  (x)   |   x    |    x    |           |           |           |                                              |
 | policycoreutils                       |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | postfix                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     | Fedora 35                                    |
 | postgresql_server                     |        |        |   x    |   x    |    x    |           |           |           |                                              |
@@ -161,7 +161,7 @@ Which Ansible role is proven to run on which OS?
 | repo_remi                             |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_rpmfusion                        |        |        |   x    |   x    |    x    |           |           |           |                                              |
 | repo_sury                             |   x    |   x    |   -    |   -    |         |    (x)    |    (x)    |    (x)    |                                              |
-| rocketchat                            |        |        |   x    |  (x)   |   (x)   |           |           |           | Fedora 35                                    |
+| rocketchat                            |        |        |   x    |   x    |    x    |           |           |           | Fedora 35                                    |
 | rpm                                   |   -    |   -    |   x    |   x    |    x    |     -     |     -     |     -     |                                              |
 | rstudio_server                        |        |        |   x    |   x    |    x    |           |           |           | x86_64 only, RHEL 10 uses the RHEL 9 build   |
 | rsyslog                               |   x    |   x    |   x    |   x    |    x    |     x     |     x     |     x     |                                              |

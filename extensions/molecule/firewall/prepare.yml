@@ -3,6 +3,11 @@
   ansible.builtin.import_playbook: '../playbooks/vm-prepare.yml'
 
 
+# On RHEL 9, EPEL offers iptables-legacy as a provider of `iptables`.
+- name: 'Enable EPEL'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.repo_epel'
+
+
 # A Firewall Builder script as the role expects it at /etc/fwb.sh. The scenario has no Firewall
 # Builder repository to deploy one from, and the role aborts without it. The script only has to
 # answer the start and stop the unit calls.
@@ -28,3 +33,19 @@
   ansible.builtin.import_playbook: 'linuxfabrik.lfops.firewall'
   vars:
     firewall__firewall: 'fwbuilder'
+
+
+# What Podman and docker-ce do after the firewall role: require `iptables`. On RHEL 9 with EPEL,
+# dnf would satisfy that with iptables-legacy, unless the role installed iptables-nft before.
+- name: 'Install a package that requires iptables'
+  hosts: 'systems_under_test'
+
+  tasks:
+
+    - name: 'dnf install netavark'
+      ansible.builtin.package:
+        name: 'netavark'
+        state: 'present'
+      when:
+        - 'ansible_facts["os_family"] == "RedHat"'
+        - 'ansible_facts["distribution_major_version"] | int >= 9'

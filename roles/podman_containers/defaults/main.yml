@@ -20,6 +20,7 @@ podman_containers__containers__dependent_var: []
 podman_containers__containers__group_var: []
 podman_containers__containers__host_var: []
 podman_containers__containers__role_var: []
+podman_containers__firewall_driver: 'nftables'  # upstream default: ''
 podman_containers__networks__combined_var: '{{ (
       podman_containers__networks__role_var +
       podman_containers__networks__dependent_var +

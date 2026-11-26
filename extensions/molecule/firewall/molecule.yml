@@ -3,7 +3,8 @@
 #
 # It overrides the prepare step (see prepare.yml): the behaviour under test is a host switching
 # from one firewall to another, so prepare sets the host up with fwbuilder first and converge then
-# switches it to the firewall from group_vars.
+# switches it to the firewall from group_vars. On the Rocky VMs, prepare also enables EPEL and
+# installs netavark, which requires `iptables`, after the role ran with fwbuilder.
 provisioner:
   playbooks:
     prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'
