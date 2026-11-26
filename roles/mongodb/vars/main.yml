@@ -106,4 +106,4 @@ __mongodb__password_check_script: |-
 
 # Collected in __shared__end_of_play_messages and printed once at the end of the play, see
 # roles/shared/tasks/print-messages.yml, when the FCV lags behind the installed series.
-__mongodb__fcv_end_of_play_message: 'mongodb: featureCompatibilityVersion is {{ __mongodb__fcv["version"] | d("") }}, mongod runs {{ mongodb__installed_version | d("") }}. After the burn-in period, set mongodb__feature_compatibility_version to "{{ mongodb__installed_version | d("") }}". The next major upgrade needs it.'
+__mongodb__fcv_end_of_play_message: 'mongodb: featureCompatibilityVersion is {{ __mongodb__fcv["version"] | d("") }}, mongod runs {{ __mongodb__installed_version | d("") }}. After the burn-in period, set mongodb__feature_compatibility_version to "{{ __mongodb__installed_version | d("") }}". The next major upgrade needs it.'

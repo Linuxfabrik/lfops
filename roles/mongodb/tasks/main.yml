@@ -55,7 +55,7 @@
   - name: 'Get mongodb-org-server version'
     ansible.builtin.set_fact:
       # keep major.minor only, also if a package version ever carries a Debian revision (`8.0.4-1`)
-      mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+") }}'
+      __mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+") }}'
       __mongodb__installed_version_full: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+\.\d+") }}'
     tags:
       - 'mongodb:fcv'
@@ -122,13 +122,13 @@
     ansible.builtin.assert:
       that:
         - '__mongodb__candidate_version_full | length > 0'
-        - '__mongodb__candidate_version_full | regex_search("^\d+\.\d+") in __mongodb__upgrade_paths[mongodb__installed_version] | d([])'
+        - '__mongodb__candidate_version_full | regex_search("^\d+\.\d+") in __mongodb__upgrade_paths[__mongodb__installed_version] | d([])'
         - '__mongodb__candidate_version_full | regex_search("^\d+\.\d+") in __mongodb__supported_versions'
       quiet: true
       fail_msg: >-
         The repository offers mongodb-org-server {{ __mongodb__candidate_version_full | d("(none)", true) }},
-        but MongoDB {{ mongodb__installed_version }} can only be upgraded to
-        {{ __mongodb__upgrade_paths[mongodb__installed_version] | d([]) | join(", ") }}, one major release at a time.
+        but MongoDB {{ __mongodb__installed_version }} can only be upgraded to
+        {{ __mongodb__upgrade_paths[__mongodb__installed_version] | d([]) | join(", ") }}, one major release at a time.
         Set repo_mongodb__version accordingly and deploy the repository with the `repo_mongodb` tag.
 
   - name: 'Get the featureCompatibilityVersion'
@@ -143,7 +143,7 @@
     failed_when: false # reported by the next task, which can show the error without the password
     check_mode: false # run task even if `--check` is specified
     no_log: true # the stdin carries the password
-    when: '__mongodb__candidate_version_full | regex_search("^\d+\.\d+") != mongodb__installed_version'
+    when: '__mongodb__candidate_version_full | regex_search("^\d+\.\d+") != __mongodb__installed_version'
 
   - name: 'Assert that the featureCompatibilityVersion could be read'
     ansible.builtin.assert:
@@ -153,17 +153,17 @@
     when: '__mongodb__upgrade_fcv_result is not skipped'
 
   # mongod of the next series refuses to start on data files with an older FCV
-  - name: 'Assert that the featureCompatibilityVersion is {{ mongodb__installed_version }}'
+  - name: 'Assert that the featureCompatibilityVersion is {{ __mongodb__installed_version }}'
     ansible.builtin.assert:
       that:
-        - '(__mongodb__upgrade_fcv_result["stdout"] | from_json)["version"] == mongodb__installed_version'
+        - '(__mongodb__upgrade_fcv_result["stdout"] | from_json)["version"] == __mongodb__installed_version'
         - '(__mongodb__upgrade_fcv_result["stdout"] | from_json)["target_version"] | length == 0'
       quiet: true
       fail_msg: >-
         The featureCompatibilityVersion is {{ (__mongodb__upgrade_fcv_result["stdout"] | from_json)["version"] }}
         (target {{ (__mongodb__upgrade_fcv_result["stdout"] | from_json)["target_version"] | d("none", true) }}),
-        but has to be {{ mongodb__installed_version }} before upgrading to {{ __mongodb__candidate_version_full }}.
-        Set mongodb__feature_compatibility_version to "{{ mongodb__installed_version }}" and run the role first.
+        but has to be {{ __mongodb__installed_version }} before upgrading to {{ __mongodb__candidate_version_full }}.
+        Set mongodb__feature_compatibility_version to "{{ __mongodb__installed_version }}" and run the role first.
     when: '__mongodb__upgrade_fcv_result is not skipped'
 
   # decided once: a `when` on the block below is evaluated for each of its tasks, and the version
@@ -202,7 +202,7 @@
 
     - name: 'Get mongodb-org-server version'
       ansible.builtin.set_fact:
-        mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+") }}'
+        __mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+") }}'
         __mongodb__installed_version_full: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+\.\d+") }}'
 
     when:
@@ -220,14 +220,14 @@
   - name: 'Assert that a configuration template for the installed MongoDB version exists'
     ansible.builtin.assert:
       that:
-        - 'mongodb__installed_version in __mongodb__supported_versions'
+        - '__mongodb__installed_version in __mongodb__supported_versions'
       quiet: true
-      fail_msg: 'MongoDB {{ mongodb__installed_version }} is not supported by this role on {{ ansible_facts["os_family"] }}. Supported versions: {{ __mongodb__supported_versions | join(", ") }}.'
+      fail_msg: 'MongoDB {{ __mongodb__installed_version }} is not supported by this role on {{ ansible_facts["os_family"] }}. Supported versions: {{ __mongodb__supported_versions | join(", ") }}.'
 
   - name: 'Deploy /etc/mongod.conf'
     ansible.builtin.template:
       backup: true
-      src: 'etc/{{ ansible_facts["os_family"] }}-{{ mongodb__installed_version }}-mongod.conf.j2'
+      src: 'etc/{{ ansible_facts["os_family"] }}-{{ __mongodb__installed_version }}-mongod.conf.j2'
       dest: '/etc/mongod.conf'
       owner: 'root'
       group: 'root'
@@ -462,12 +462,12 @@
 # replica set, so only the primary sets and reports it.
 - block:
 
-  - name: 'Assert that mongodb__feature_compatibility_version is not newer than the installed MongoDB {{ mongodb__installed_version }}'
+  - name: 'Assert that mongodb__feature_compatibility_version is not newer than the installed MongoDB {{ __mongodb__installed_version }}'
     ansible.builtin.assert:
       that:
-        - 'mongodb__feature_compatibility_version is version(mongodb__installed_version, "<=")'
+        - 'mongodb__feature_compatibility_version is version(__mongodb__installed_version, "<=")'
       quiet: true
-      fail_msg: 'mongodb__feature_compatibility_version is "{{ mongodb__feature_compatibility_version }}", but MongoDB {{ mongodb__installed_version }} is installed. Upgrade first (tag `mongodb:upgrade`).'
+      fail_msg: 'mongodb__feature_compatibility_version is "{{ mongodb__feature_compatibility_version }}", but MongoDB {{ __mongodb__installed_version }} is installed. Upgrade first (tag `mongodb:upgrade`).'
     when: 'mongodb__feature_compatibility_version | string | length > 0'
 
   # In check mode, the script only reads the FCV, and the task reports the change it would make.
@@ -502,12 +502,12 @@
   - name: 'Report that the featureCompatibilityVersion lags behind the installed MongoDB'
     ansible.builtin.debug:
       msg: '{{ __mongodb__fcv_end_of_play_message }}'
-    when: '__mongodb__fcv["version"] != mongodb__installed_version'
+    when: '__mongodb__fcv["version"] != __mongodb__installed_version'
 
   - name: 'Collect the message for the end of the play'
     ansible.builtin.set_fact:
       __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__mongodb__fcv_end_of_play_message] }}'
-    when: '__mongodb__fcv["version"] != mongodb__installed_version'
+    when: '__mongodb__fcv["version"] != __mongodb__installed_version'
 
   when:
     - 'mongodb__is_writable_primary_result["transformed_output"]'
