@@ -1,2 +1,6 @@
-# Molecule scenario marker. The shared config.yml provisions libvirt/KVM VMs, which this scenario
-# needs: mongod and the mongodb-dump timer and service run under systemd.
+# Molecule scenario marker for the 'install' sub-scenario, run with
+# `molecule test --scenario-name mongodb/install`. The shared config.yml provisions libvirt/KVM
+# VMs, which this scenario needs: mongod and the mongodb-dump timer and service run under systemd.
+#
+# Covers an ordinary run of the mongodb playbook. The 'upgrade' sub-scenario covers the upgrade
+# to the next series with the `mongodb:upgrade` tag.

@@ -1,0 +1,19 @@
+mongodb__admin_user:
+  username: 'mongodb-admin'
+  password: 'linuxfabrik'
+
+mongodb__conf_security_authorization: true
+
+# A single-node replica set as on Rocket.Chat hosts, so the upgrade and the restart handler wait
+# for the replica set.
+mongodb__conf_replication_repl_set_name__group_var: 'rs01'
+# mongod refuses to start a replica set with authorization but without a keyfile.
+mongodb__keyfile_content: 'linuxfabriklinuxfabrik'
+
+# The ordinary run in converge.yml changes it from the default 100, so the restart handler restarts
+# the replica set member and waits for it.
+mongodb__conf_storage_journal_commit_interval_ms: 200
+
+# The state after the upgrade; prepare.yml installs 7.0 first.
+mongodb__feature_compatibility_version: '8.0'
+repo_mongodb__version: '8.0'
