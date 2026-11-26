@@ -61,83 +61,14 @@
       - 'mongodb:fcv'
       - 'mongodb:upgrade'
 
-  # the template name carries the OS family, so the supported versions are per family too
-  - name: 'Assert that a configuration template for the installed MongoDB version exists'
-    ansible.builtin.assert:
-      that:
-        - 'mongodb__installed_version in __mongodb__supported_versions'
-      quiet: true
-      fail_msg: 'MongoDB {{ mongodb__installed_version }} is not supported by this role on {{ ansible_facts["os_family"] }}. Supported versions: {{ __mongodb__supported_versions | join(", ") }}.'
-
-  - name: 'Deploy /etc/mongod.conf'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/{{ ansible_facts["os_family"] }}-{{ mongodb__installed_version }}-mongod.conf.j2'
-      dest: '/etc/mongod.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    notify: 'mongodb: systemctl restart mongod.service'
-
-  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
-    ansible.builtin.include_role:
-      name: 'shared'
-      tasks_from: 'remove-rpmnew-rpmsave.yml'
-    vars:
-      shared__remove_rpmnew_rpmsave_config_file: '/etc/mongod.conf'
-
-  - name: 'Deploy /etc/logrotate.d/mongod'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/logrotate.d/mongod.j2'
-      dest: '/etc/logrotate.d/mongod'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-
-  - name: 'Deploy keyfile to /etc/mongod.key'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/mongod.key.j2'
-      dest: '/etc/mongod.key'
-      owner: '{{ __mongodb__mongodb_user }}'
-      group: '{{ __mongodb__mongodb_user }}'
-      mode: 0o400 # contains secrets
-    when:
-      - 'mongodb__keyfile_content is defined and mongodb__keyfile_content | length > 0'
-
-  - name: 'mkdir -p /etc/systemd/system/mongod.service.d/'
-    ansible.builtin.file:
-      path: '/etc/systemd/system/mongod.service.d/'
-      owner: 'root'
-      group: 'root'
-      mode: 0o755
-      state: 'directory'
-
-  # mongod checks transparent hugepages once at startup, so it has to come up after TuneD has
-  # applied the profile (role: kernel_settings).
-  - name: 'Deploy /etc/systemd/system/mongod.service.d/z00-after-tuned.conf'
-    ansible.builtin.template:
-      backup: true
-      src: 'etc/systemd/system/mongod.service.d/z00-after-tuned.conf.j2'
-      dest: '/etc/systemd/system/mongod.service.d/z00-after-tuned.conf'
-      owner: 'root'
-      group: 'root'
-      mode: 0o644
-    register: '__mongodb__z00_after_tuned_result'
-
-  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
-    ansible.builtin.systemd:
-      daemon_reload: true
-    when: '__mongodb__z00_after_tuned_result is changed'
-
   tags:
     - 'mongodb'
 
 
 # Upgrades to the newest version the repository offers, see the `mongodb:upgrade` tag in the README.
 # The role installs with `state: present` otherwise, so a changed repo_mongodb__version alone does
-# not upgrade an existing installation.
+# not upgrade an existing installation. It only stops mongod and upgrades the packages; the blocks
+# after it also carry the tag, deploy the configuration for the new series and start mongod again.
 - block:
 
   - name: 'apt update # update the cache'
@@ -274,48 +205,6 @@
         mongodb__installed_version: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+") }}'
         __mongodb__installed_version_full: '{{ ansible_facts["packages"]["mongodb-org-server"][0]["version"] | regex_search("^\d+\.\d+\.\d+") }}'
 
-    - name: 'Deploy /etc/mongod.conf'
-      ansible.builtin.template:
-        backup: true
-        src: 'etc/{{ ansible_facts["os_family"] }}-{{ mongodb__installed_version }}-mongod.conf.j2'
-        dest: '/etc/mongod.conf'
-        owner: 'root'
-        group: 'root'
-        mode: 0o644
-
-    - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
-      ansible.builtin.include_role:
-        name: 'shared'
-        tasks_from: 'remove-rpmnew-rpmsave.yml'
-      vars:
-        shared__remove_rpmnew_rpmsave_config_file: '/etc/mongod.conf'
-
-    - name: 'systemctl start mongod.service'
-      ansible.builtin.systemd:
-        name: 'mongod.service'
-        state: 'started'
-
-    - name: 'Wait for port {{ mongodb__conf_net_port }} to become open on the host'
-      ansible.builtin.wait_for:
-        host: '{{ mongodb__conf_net_bind_ip[0] }}'
-        port: '{{ mongodb__conf_net_port }}'
-        delay: 5
-
-    # the member has to be primary again before the role can read or set the FCV on it
-    - name: 'Wait for the replicaset to stabilise'
-      community.mongodb.mongodb_status:
-        login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
-        login_port: '{{ mongodb__conf_net_port }}'
-        login_user: '{{ mongodb__admin_user["username"] | d(omit) }}'
-        login_password: '{{ mongodb__admin_user["password"] | d(omit) }}'
-        login_database: 'admin'
-        replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
-        poll: 5
-        interval: 10
-      vars:
-        ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
-      when: 'mongodb__conf_replication_repl_set_name__combined_var | length > 0'
-
     when:
       - '__mongodb__upgrade_needed | bool'
       - 'not ansible_check_mode'
@@ -323,6 +212,83 @@
   tags:
     - 'mongodb:upgrade'
     - 'never'
+
+
+- block:
+
+  # the template name carries the OS family, so the supported versions are per family too
+  - name: 'Assert that a configuration template for the installed MongoDB version exists'
+    ansible.builtin.assert:
+      that:
+        - 'mongodb__installed_version in __mongodb__supported_versions'
+      quiet: true
+      fail_msg: 'MongoDB {{ mongodb__installed_version }} is not supported by this role on {{ ansible_facts["os_family"] }}. Supported versions: {{ __mongodb__supported_versions | join(", ") }}.'
+
+  - name: 'Deploy /etc/mongod.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/{{ ansible_facts["os_family"] }}-{{ mongodb__installed_version }}-mongod.conf.j2'
+      dest: '/etc/mongod.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    notify: 'mongodb: systemctl restart mongod.service'
+
+  - name: 'Remove rpmnew / rpmsave (and Debian equivalents)'
+    ansible.builtin.include_role:
+      name: 'shared'
+      tasks_from: 'remove-rpmnew-rpmsave.yml'
+    vars:
+      shared__remove_rpmnew_rpmsave_config_file: '/etc/mongod.conf'
+
+  - name: 'Deploy /etc/logrotate.d/mongod'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/logrotate.d/mongod.j2'
+      dest: '/etc/logrotate.d/mongod'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+
+  - name: 'Deploy keyfile to /etc/mongod.key'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/mongod.key.j2'
+      dest: '/etc/mongod.key'
+      owner: '{{ __mongodb__mongodb_user }}'
+      group: '{{ __mongodb__mongodb_user }}'
+      mode: 0o400 # contains secrets
+    when:
+      - 'mongodb__keyfile_content is defined and mongodb__keyfile_content | length > 0'
+
+  - name: 'mkdir -p /etc/systemd/system/mongod.service.d/'
+    ansible.builtin.file:
+      path: '/etc/systemd/system/mongod.service.d/'
+      owner: 'root'
+      group: 'root'
+      mode: 0o755
+      state: 'directory'
+
+  # mongod checks transparent hugepages once at startup, so it has to come up after TuneD has
+  # applied the profile (role: kernel_settings).
+  - name: 'Deploy /etc/systemd/system/mongod.service.d/z00-after-tuned.conf'
+    ansible.builtin.template:
+      backup: true
+      src: 'etc/systemd/system/mongod.service.d/z00-after-tuned.conf.j2'
+      dest: '/etc/systemd/system/mongod.service.d/z00-after-tuned.conf'
+      owner: 'root'
+      group: 'root'
+      mode: 0o644
+    register: '__mongodb__z00_after_tuned_result'
+
+  - name: 'systemctl daemon-reload' # noqa no-handler would require flush_handlers here anyway
+    ansible.builtin.systemd:
+      daemon_reload: true
+    when: '__mongodb__z00_after_tuned_result is changed'
+
+  tags:
+    - 'mongodb'
+    - 'mongodb:upgrade'
 
 
 - block:
@@ -341,6 +307,7 @@
   tags:
     - 'mongodb'
     - 'mongodb:state'
+    - 'mongodb:upgrade'
 
 - block:
 
@@ -382,6 +349,7 @@
     - 'mongodb__conf_replication_repl_set_name__combined_var | length > 0'
   tags:
     - 'mongodb'
+    - 'mongodb:upgrade'
 
 
 - block:
