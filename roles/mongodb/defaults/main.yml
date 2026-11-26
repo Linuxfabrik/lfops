@@ -43,10 +43,24 @@ mongodb__users__role_var: []
 # -----------------------------------------------------------------------------
 
 # https://docs.mongodb.com/manual/administration/production-notes/
+# MongoDB 8.0 and newer are built with Google's TCMalloc, which needs transparent hugepages,
+# defrag `defer+madvise` and `khugepaged/max_ptes_none` 0; 7.0 warns if transparent hugepages are
+# `always` (src/mongo/db/startup_warnings_mongod.cpp, verified against 7.0.48, 8.0.38 and 9.0.8;
+# the 8.0.38 RPM reports `"allocator": "tcmalloc-google"` on Rocky 9). kernel_settings runs before
+# MongoDB is installed, so the series comes from repo_mongodb__version.
+__mongodb__tcmalloc_google: '{{
+    (repo_mongodb__version | d("") | string | length > 0)
+    and (repo_mongodb__version | d("0") is version("8.0", ">="))
+  }}'
 mongodb__kernel_settings__sysctl__dependent_var:
   - name: 'vm.swappiness'
     value: 1
-mongodb__kernel_settings__transparent_hugepages__dependent_var: 'never'
+mongodb__kernel_settings__sysfs__dependent_var: '{{
+    __mongodb__tcmalloc_google | bool
+    | ternary([{"name": "/sys/kernel/mm/transparent_hugepage/khugepaged/max_ptes_none", "value": 0}], [])
+  }}'
+mongodb__kernel_settings__transparent_hugepages__dependent_var: '{{ __mongodb__tcmalloc_google | bool | ternary("always", "never") }}'
+mongodb__kernel_settings__transparent_hugepages_defrag__dependent_var: '{{ __mongodb__tcmalloc_google | bool | ternary("defer+madvise", "") }}'
 
 mongodb__python_venv__venvs__dependent_var:
   - name: 'pymongo'

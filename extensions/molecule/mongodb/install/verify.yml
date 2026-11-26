@@ -59,6 +59,32 @@
       ansible.builtin.assert:
         that: '__molecule__mongodb_fcv_result["stdout"] == repo_mongodb__version'
 
+    # mongod checks the kernel once at startup and logs what it would like differently, with the
+    # ids 9068900 (transparent hugepages and their defrag), 8640302 (khugepaged/max_ptes_none) and
+    # 8386700 (vm.swappiness). Verified with 8.0.38 on Rocky 9.
+    - name: 'mongosh --eval db.adminCommand({getLog: "startupWarnings"})'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=print(JSON.stringify(db.adminCommand({getLog: "startupWarnings"}).log.map(l => JSON.parse(l))))'
+      register: '__molecule__mongodb_startup_warnings_result'
+      changed_when: false
+
+    - name: 'Assert that mongod has no startup warnings about the kernel settings'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_kernel_warnings | length == 0'
+        fail_msg: '{{ __molecule__mongodb_kernel_warnings | to_json }}'
+      vars:
+        __molecule__mongodb_kernel_warnings: '{{
+            __molecule__mongodb_startup_warnings_result["stdout"] | from_json
+            | selectattr("id", "in", [9068900, 8640302, 8386700])
+            | list
+          }}'
+
     # Authorization is enabled, so this also proves that the admin user exists.
     - name: 'mongosh --eval db.getSiblingDB("molecule").test.insertOne(...)'
       ansible.builtin.command:

@@ -10,14 +10,14 @@
   become: false
   tasks:
 
-    - name: 'ansible-playbook linuxfabrik.lfops.mongodb --tags repo_mongodb,mongodb:upgrade'
+    - name: 'ansible-playbook linuxfabrik.lfops.mongodb --tags repo_mongodb,kernel_settings,mongodb:upgrade'
       ansible.builtin.command:
         argv: '{{
             ["ansible-playbook"]
             + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
             + [
                 "--limit=" ~ ansible_limit | d("all"),
-                "--tags=repo_mongodb,mongodb:upgrade",
+                "--tags=repo_mongodb,kernel_settings,mongodb:upgrade",
                 "--extra-vars=" ~ {"mongodb__feature_compatibility_version": ""} | to_json,
                 "linuxfabrik.lfops.mongodb",
               ]
