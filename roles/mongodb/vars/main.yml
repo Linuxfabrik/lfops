@@ -41,8 +41,8 @@ __mongodb__fcv_login_credentials:
   username: '{{ mongodb__admin_user["username"] | d("") }}'
   password: '{{ mongodb__admin_user["password"] | d("") }}'
 
-# Reads the featureCompatibilityVersion (FCV), and sets it first if `target` is given and differs.
-# MongoDB refuses to raise the FCV without `confirm: true`, verified with 8.0.38 on Rocky 9. The
+# Reads the featureCompatibilityVersion (FCV), after setting it to `target` if given. MongoDB
+# refuses to raise the FCV without `confirm: true`, verified with 8.0.38 on Rocky 9. The
 # login comes as JSON on stdin, so the password stays off the command line. `targetVersion` is only
 # set while an FCV change is unfinished.
 __mongodb__fcv_script: |-
@@ -61,16 +61,13 @@ __mongodb__fcv_script: |-
       directConnection=True,
       serverSelectionTimeoutMS=10000,
   )
+  if login.get('target'):
+      client.admin.command(
+          {'setFeatureCompatibilityVersion': login['target'], 'confirm': True}
+      )
   query = {'getParameter': 1, 'featureCompatibilityVersion': 1}
   fcv = client.admin.command(query)['featureCompatibilityVersion']
-  changed = False
-  target = login.get('target', '')
-  if target and (fcv['version'] != target or 'targetVersion' in fcv):
-      client.admin.command({'setFeatureCompatibilityVersion': target, 'confirm': True})
-      fcv = client.admin.command(query)['featureCompatibilityVersion']
-      changed = True
   print(json.dumps({
-      'changed': changed,
       'target_version': fcv.get('targetVersion', ''),
       'version': fcv['version'],
   }))

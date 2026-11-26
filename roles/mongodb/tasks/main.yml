@@ -470,34 +470,58 @@
       fail_msg: 'mongodb__feature_compatibility_version is "{{ mongodb__feature_compatibility_version }}", but MongoDB {{ __mongodb__installed_version }} is installed. Upgrade first (tag `mongodb:upgrade`).'
     when: 'mongodb__feature_compatibility_version | string | length > 0'
 
-  # In check mode, the script only reads the FCV, and the task reports the change it would make.
-  - name: 'Get or set the featureCompatibilityVersion'
+  - name: 'Get the featureCompatibilityVersion'
     ansible.builtin.command:
       argv:
         - '/opt/python-venv/pymongo/bin/python3'
         - '-c'
         - '{{ __mongodb__fcv_script }}'
-      stdin: '{{ __mongodb__fcv_login | combine({"target": ansible_check_mode | ternary("", mongodb__feature_compatibility_version | string)}) | to_json }}'
-    register: '__mongodb__fcv_result'
-    changed_when: >-
-      __mongodb__fcv_result["rc"] == 0 and (__mongodb__fcv_result["stdout"] | from_json)["changed"]
-      or (ansible_check_mode
-          and __mongodb__fcv_result["rc"] == 0
-          and mongodb__feature_compatibility_version | string | length > 0
-          and (__mongodb__fcv_result["stdout"] | from_json)["version"] != mongodb__feature_compatibility_version | string)
+      stdin: '{{ __mongodb__fcv_login | to_json }}'
+    register: '__mongodb__fcv_get_result'
+    changed_when: false # read only, no target is given
     failed_when: false # reported by the next task, which can show the error without the password
-    check_mode: false # the script itself does not set the FCV in check mode, see the stdin
+    check_mode: false # run task even if `--check` is specified
     no_log: true # the stdin carries the password
 
-  - name: 'Assert that the featureCompatibilityVersion could be read or set'
+  - name: 'Assert that the featureCompatibilityVersion could be read'
     ansible.builtin.assert:
-      that: '__mongodb__fcv_result["rc"] == 0'
+      that: '__mongodb__fcv_get_result["rc"] == 0'
       quiet: true
-      fail_msg: '{{ __mongodb__fcv_result["stderr"] | d("") }}'
+      fail_msg: '{{ __mongodb__fcv_get_result["stderr"] | d("") }}'
 
   - name: 'Get the featureCompatibilityVersion from the result'
     ansible.builtin.set_fact:
-      __mongodb__fcv: '{{ __mongodb__fcv_result["stdout"] | from_json }}'
+      __mongodb__fcv: '{{ __mongodb__fcv_get_result["stdout"] | from_json }}'
+
+  # also finishes an FCV change that was interrupted, which leaves `targetVersion` behind
+  - name: 'Set the featureCompatibilityVersion to {{ mongodb__feature_compatibility_version }}'
+    ansible.builtin.command:
+      argv:
+        - '/opt/python-venv/pymongo/bin/python3'
+        - '-c'
+        - '{{ __mongodb__fcv_script }}'
+      stdin: '{{ __mongodb__fcv_login | combine({"target": mongodb__feature_compatibility_version | string}) | to_json }}'
+    register: '__mongodb__fcv_set_result'
+    changed_when: true # only runs if the FCV differs
+    failed_when: false # reported by the next task, which can show the error without the password
+    no_log: true # the stdin carries the password
+    when:
+      - 'mongodb__feature_compatibility_version | string | length > 0'
+      - >-
+        __mongodb__fcv["version"] != mongodb__feature_compatibility_version | string
+        or __mongodb__fcv["target_version"] | length > 0
+
+  - name: 'Assert that the featureCompatibilityVersion could be set'
+    ansible.builtin.assert:
+      that: '__mongodb__fcv_set_result["rc"] == 0'
+      quiet: true
+      fail_msg: '{{ __mongodb__fcv_set_result["stderr"] | d("") }}'
+    when: '__mongodb__fcv_set_result is not skipped'
+
+  - name: 'Get the featureCompatibilityVersion from the result'
+    ansible.builtin.set_fact:
+      __mongodb__fcv: '{{ __mongodb__fcv_set_result["stdout"] | from_json }}'
+    when: '__mongodb__fcv_set_result is not skipped'
 
   - name: 'Report that the featureCompatibilityVersion lags behind the installed MongoDB'
     ansible.builtin.debug:
