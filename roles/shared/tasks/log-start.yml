@@ -1,7 +1,9 @@
+# now() returns a naive datetime in the controller's local time, so a %z in its fmt stays empty;
+# astimezone() adds the controller's UTC offset. Verified with ansible-core 2.16 and 2.22.
 - name: 'Log START to /var/log/linuxfabrik-lfops.log'
   ansible.builtin.lineinfile:
     path: '/var/log/linuxfabrik-lfops.log'
-    line: '{{ now() }} - {{ ansible_play_name }}: START (Tags: {{ ansible_run_tags }}, Skip Tags: {{ ansible_skip_tags }})'
+    line: '{{ now().astimezone().isoformat(timespec="microseconds") }} - {{ ansible_play_name }}: START (Tags: {{ ansible_run_tags }}, Skip Tags: {{ ansible_skip_tags }})'
     create: true
     owner: 'root'
     group: 'root'

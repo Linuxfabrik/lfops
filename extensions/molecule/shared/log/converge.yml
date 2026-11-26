@@ -1,0 +1,14 @@
+- name: 'Converge the run log'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'Log START'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'log-start.yml'
+
+    - name: 'Log END'
+      ansible.builtin.include_role:
+        name: 'linuxfabrik.lfops.shared'
+        tasks_from: 'log-end.yml'

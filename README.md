@@ -640,8 +640,8 @@ Which Ansible role is proven to run on which OS? See [COMPATIBILITY.md](https://
 * All playbooks log every run to `/var/log/linuxfabrik-lfops.log` on the target host:
 
     ```
-    2024-05-23 11:15:26.604794 - Playbook linuxfabrik.lfops.apps: START
-    2024-05-23 11:15:32.877064 - Playbook linuxfabrik.lfops.apps: END
+    2024-05-23T11:15:26.604794+02:00 - Playbook linuxfabrik.lfops.apps: START
+    2024-05-23T11:15:32.877064+02:00 - Playbook linuxfabrik.lfops.apps: END
     ```
 
 

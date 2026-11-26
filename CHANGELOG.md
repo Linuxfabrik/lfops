@@ -191,6 +191,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+* **role:shared**: The timestamps in `/var/log/linuxfabrik-lfops.log` follow ISO 8601 and RFC 3339 and include the UTC offset of the Ansible controller, for example `2024-05-23T11:15:26.604794+02:00`.
 * **playbook:mongodb**: The playbook manages one host at a time, and after a restart of `mongod.service` waits until the replica set is healthy again, so a configuration change no longer restarts all members of a replica set at once.
 * **role:fail2ban**: `apache-404` and `apache-dos` also read `vhost_common` logs of vHosts with an IP address as ServerName.
 * **role:fail2ban**: A ban of an HTTP jail (`apache-*`, `php-url-fopen`, `wordpress-login`) also closes the connections the client holds, so a banned client neither goes on over an open HTTP/2 connection nor keeps Apache workers busy, and `apache-dos` bans repeat offenders longer each time.

@@ -1,0 +1,6 @@
+# Molecule scenario marker for the 'log' sub-scenario, run with
+# `molecule test --scenario-name shared/log`.
+#
+# log-start.yml and log-end.yml belong to the `shared` role, which has no playbook of its own, so
+# the scenario calls them directly instead of one of the many playbooks that frame their run with
+# them.

@@ -1,0 +1,23 @@
+- name: 'Verify the run log'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'slurp /var/log/linuxfabrik-lfops.log'
+      ansible.builtin.slurp:
+        src: '/var/log/linuxfabrik-lfops.log'
+      register: '__molecule__lfops_log_result'
+
+    # The timestamp comes from the controller, so it has to carry the controller's UTC offset to be
+    # unambiguous on a host in another timezone, in the form ISO 8601 and RFC 3339 share.
+    - name: 'Assert the START and END lines carry the UTC offset of the controller'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__lfops_log is search(__molecule__timestamp ~ " - Converge the run log: START \(Tags: ")'
+          - '__molecule__lfops_log is search(__molecule__timestamp ~ " - Converge the run log: END")'
+        fail_msg: 'no START and END line with the UTC offset {{ __molecule__offset }} in /var/log/linuxfabrik-lfops.log: {{ __molecule__lfops_log }}'
+      vars:
+        __molecule__lfops_log: '{{ __molecule__lfops_log_result["content"] | ansible.builtin.b64decode }}'
+        __molecule__offset: '{{ now().astimezone().isoformat()[-6:] }}'
+        __molecule__timestamp: '\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}{{ __molecule__offset | regex_escape }}'
