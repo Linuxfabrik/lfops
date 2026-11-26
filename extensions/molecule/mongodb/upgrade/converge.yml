@@ -1,0 +1,49 @@
+# The yaml stdout callback wraps long messages and prints failures to stderr, so the assertions
+# look at both, with collapsed whitespace.
+# A playbook cannot select tags for itself, so this play runs the playbook under test as separate
+# ansible-playbook runs against the same inventory and limit: first the upgrade, as the README
+# describes it, then an ordinary run that raises the FCV from group_vars. A run reports a change if
+# its recap does, so the idempotence step catches a second run that changes anything.
+- name: 'Converge mongodb playbook: upgrade, then raise the FCV'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'ansible-playbook linuxfabrik.lfops.mongodb --tags repo_mongodb,mongodb:upgrade'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + [
+                "--limit=" ~ ansible_limit | d("all"),
+                "--tags=repo_mongodb,mongodb:upgrade",
+                "--extra-vars=" ~ {"mongodb__feature_compatibility_version": ""} | to_json,
+                "linuxfabrik.lfops.mongodb",
+              ]
+          }}'
+      # a failing run would otherwise write its retry file next to the playbook, which is the
+      # repository checkout the collection is symlinked to
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      register: '__molecule__mongodb_upgrade_result'
+      changed_when: '__molecule__mongodb_upgrade_result["stdout"] is search("changed=[1-9]")'
+
+    # Only the run that upgrades leaves the FCV behind; in the idempotence run it is 8.0 already.
+    - name: 'Assert that the upgrade run reminded of the FCV' # noqa no-handler (checks the output of the task above)
+      ansible.builtin.assert:
+        that: '"featureCompatibilityVersion is 7.0, mongod runs 8.0." in (__molecule__mongodb_upgrade_result["stdout"] ~ __molecule__mongodb_upgrade_result["stderr"]) | regex_replace("\\s+", " ")'
+        fail_msg: '{{ __molecule__mongodb_upgrade_result["stdout_lines"][-30:] }}'
+      when: '__molecule__mongodb_upgrade_result is changed'
+
+    - name: 'ansible-playbook linuxfabrik.lfops.mongodb'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + ["--limit=" ~ ansible_limit | d("all"), "linuxfabrik.lfops.mongodb"]
+          }}'
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      register: '__molecule__mongodb_run_result'
+      changed_when: '__molecule__mongodb_run_result["stdout"] is search("changed=[1-9]")'

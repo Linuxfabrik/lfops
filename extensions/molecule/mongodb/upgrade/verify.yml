@@ -1,0 +1,42 @@
+- name: 'Verify the upgraded MongoDB'
+  hosts: 'systems_under_test'
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: 'Gather the service facts'
+      ansible.builtin.service_facts:  # yamllint disable-line rule:empty-values
+
+    - name: 'Assert that mongod.service is running'
+      ansible.builtin.assert:
+        that: 'ansible_facts["services"]["mongod.service"]["state"] == "running"'
+
+    - name: 'mongosh --eval (version, FCV and the document from before the upgrade)'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=print(JSON.stringify({
+              version: db.version(),
+              fcv: db.adminCommand({getParameter: 1, featureCompatibilityVersion: 1}).featureCompatibilityVersion.version,
+              documents: db.getSiblingDB("molecule").test.countDocuments({source: "before-upgrade"}),
+              state: rs.status().myState,
+              commit_interval_ms: db.adminCommand({getCmdLineOpts: 1}).parsed.storage.journal.commitIntervalMs,
+            }))'
+      register: '__molecule__mongodb_state_result'
+      changed_when: false
+
+    - name: 'Assert that mongod runs 8.0 with FCV 8.0 as primary with its configuration and kept its data'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__mongodb_state["version"].startswith("8.0.")'
+          - '__molecule__mongodb_state["fcv"] == "8.0"'
+          - '__molecule__mongodb_state["documents"] == 1'
+          - '__molecule__mongodb_state["state"] == 1' # PRIMARY
+          - '__molecule__mongodb_state["commit_interval_ms"] == 200'
+        fail_msg: '{{ __molecule__mongodb_state | to_json }}'
+      vars:
+        __molecule__mongodb_state: '{{ __molecule__mongodb_state_result["stdout"] | from_json }}'

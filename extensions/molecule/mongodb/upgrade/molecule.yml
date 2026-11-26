@@ -1,0 +1,10 @@
+# Molecule scenario marker for the 'upgrade' sub-scenario, run with
+# `molecule test --scenario-name mongodb/upgrade`.
+#
+# Covers the upgrade from 7.0 to 8.0 with the `mongodb:upgrade` tag and raising the FCV with
+# mongodb__feature_compatibility_version. It overrides the prepare step (see prepare.yml), which
+# installs 7.0 and checks that the role refuses to upgrade a host it must not upgrade. The
+# 'install' sub-scenario covers an ordinary run.
+provisioner:
+  playbooks:
+    prepare: '${MOLECULE_SCENARIO_DIRECTORY}/prepare.yml'

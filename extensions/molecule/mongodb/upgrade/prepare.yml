@@ -1,0 +1,168 @@
+# The yaml stdout callback wraps long messages and prints failures to stderr, so the assertions
+# look at both, with collapsed whitespace.
+
+# Wait for the systems under test and gather their facts, exactly as every other scenario does.
+- name: 'Prepare VMs for Ansible'
+  ansible.builtin.import_playbook: '../../playbooks/vm-prepare.yml'
+
+
+# The state converge starts from: MongoDB 7.0 with its own FCV. Play vars take precedence over the
+# group_vars that converge uses.
+- name: 'Set the host up with MongoDB 7.0'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mongodb'
+  vars:
+    mongodb__conf_storage_journal_commit_interval_ms: 100
+    mongodb__feature_compatibility_version: ''
+    repo_mongodb__version: '7.0'
+
+
+# An ordinary run with the commitIntervalMs from group_vars changes mongod.conf, so the restart
+# handler restarts the replica set member and waits for it.
+- name: 'Change the configuration of MongoDB 7.0'
+  ansible.builtin.import_playbook: 'linuxfabrik.lfops.mongodb'
+  vars:
+    mongodb__feature_compatibility_version: ''
+    repo_mongodb__version: '7.0'
+
+
+# A document written before the upgrade, which verify.yml expects to find afterwards.
+- name: 'Check the restart, write a document and lower the FCV to 6.0'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'mongosh --eval (commitIntervalMs and replica set state)'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=print(JSON.stringify({
+              commit_interval_ms: db.adminCommand({getCmdLineOpts: 1}).parsed.storage.journal.commitIntervalMs,
+              state: rs.status().myState,
+            }))'
+      register: '__molecule__mongodb_restart_result'
+      changed_when: false
+
+    # only a restart makes mongod read the changed configuration
+    - name: 'Assert that the handler restarted mongod and the member is primary again'
+      ansible.builtin.assert:
+        that:
+          - '__molecule__mongodb_restart["commit_interval_ms"] == 200'
+          - '__molecule__mongodb_restart["state"] == 1' # PRIMARY
+        fail_msg: '{{ __molecule__mongodb_restart | to_json }}'
+      vars:
+        __molecule__mongodb_restart: '{{ __molecule__mongodb_restart_result["stdout"] | from_json }}'
+
+    - name: 'mongosh --eval db.getSiblingDB("molecule").test.insertOne(...)'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=db.getSiblingDB("molecule").test.insertOne({source: "before-upgrade"})'
+      changed_when: true # inserts a document
+
+    # 7.0 accepts the FCV of the previous series, which 8.0 refuses to start with.
+    - name: 'mongosh --eval db.adminCommand({setFeatureCompatibilityVersion: "6.0", confirm: true})'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=db.adminCommand({setFeatureCompatibilityVersion: "6.0", confirm: true})'
+      changed_when: true # lowers the FCV
+
+
+# The refusals are checked here and not in converge.yml, because only the state before the upgrade
+# can trigger them, and converge runs a second time for the idempotence check. A playbook cannot
+# select tags for itself, so these plays run the playbook under test as a separate ansible-playbook
+# run against the same inventory and limit.
+- name: 'Check that the role refuses to upgrade'
+  hosts: 'localhost'
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: 'ansible-playbook linuxfabrik.lfops.mongodb --tags repo_mongodb,mongodb:upgrade (FCV 6.0)'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + ["--limit=" ~ ansible_limit | d("all"), "--tags=repo_mongodb,mongodb:upgrade", "linuxfabrik.lfops.mongodb"]
+          }}'
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      register: '__molecule__mongodb_upgrade_fcv_refused_result'
+      changed_when: false # the run is expected to abort before it changes anything
+      failed_when: '__molecule__mongodb_upgrade_fcv_refused_result["rc"] == 0'
+
+    - name: 'Assert that the run aborted because of the FCV'
+      ansible.builtin.assert:
+        that: '"but has to be 7.0 before upgrading to 8.0." in (__molecule__mongodb_upgrade_fcv_refused_result["stdout"] ~ __molecule__mongodb_upgrade_fcv_refused_result["stderr"]) | regex_replace("\\s+", " ")'
+        fail_msg: '{{ __molecule__mongodb_upgrade_fcv_refused_result["stdout_lines"][-30:] }}'
+
+    # MongoDB offers 9.0 for Rocky 9, but not for Debian 12.
+    - name: 'ansible-playbook linuxfabrik.lfops.mongodb --tags repo_mongodb,mongodb:upgrade (repo 9.0)'
+      ansible.builtin.command:
+        argv: '{{
+            ["ansible-playbook"]
+            + (ansible_inventory_sources | map("regex_replace", "^", "--inventory=") | list)
+            + [
+                "--limit=rocky9-vm",
+                "--tags=repo_mongodb,mongodb:upgrade",
+                "--extra-vars=" ~ {"repo_mongodb__version": "9.0"} | to_json,
+                "linuxfabrik.lfops.mongodb",
+              ]
+          }}'
+      environment:
+        ANSIBLE_RETRY_FILES_ENABLED: 'false'
+      register: '__molecule__mongodb_upgrade_skip_refused_result'
+      changed_when: false # the run is expected to abort before it changes MongoDB
+      failed_when: '__molecule__mongodb_upgrade_skip_refused_result["rc"] == 0'
+      when: '"rocky9-vm" in groups["systems_under_test"]'
+
+    - name: 'Assert that the run aborted because 9.0 skips 8.0'
+      ansible.builtin.assert:
+        that: '"can only be upgraded to 7.0, 8.0, one major release at a time" in (__molecule__mongodb_upgrade_skip_refused_result["stdout"] ~ __molecule__mongodb_upgrade_skip_refused_result["stderr"]) | regex_replace("\\s+", " ")'
+        fail_msg: '{{ __molecule__mongodb_upgrade_skip_refused_result["stdout_lines"][-30:] }}'
+      when: '"rocky9-vm" in groups["systems_under_test"]'
+
+
+- name: 'Restore the FCV and check that MongoDB was left alone'
+  hosts: 'systems_under_test'
+  become: true
+  tasks:
+
+    - name: 'mongosh --eval db.adminCommand({setFeatureCompatibilityVersion: "7.0", confirm: true})'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=db.adminCommand({setFeatureCompatibilityVersion: "7.0", confirm: true})'
+      changed_when: true # raises the FCV
+
+    - name: 'mongosh --eval db.version()'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=db.version()'
+      register: '__molecule__mongodb_version_result'
+      changed_when: false
+
+    - name: 'Assert that mongod still runs 7.0'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_version_result["stdout"].startswith("7.0.")'

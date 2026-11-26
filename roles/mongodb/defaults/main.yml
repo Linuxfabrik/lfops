@@ -22,6 +22,7 @@ mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
 mongodb__dump_on_calendar: '*-*-* 21:{{ 59 | random(start=0, seed=inventory_hostname) }}:00'
 mongodb__dump_only_if_hidden: false
 mongodb__dump_use_oplog: false
+mongodb__feature_compatibility_version: ''
 mongodb__repl_set_members:
   - 'localhost:27017'
 mongodb__repl_set_skip_init: false

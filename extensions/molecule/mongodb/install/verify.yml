@@ -41,6 +41,24 @@
       ansible.builtin.assert:
         that: '__molecule__mongodb_version_result["stdout"].startswith(repo_mongodb__version ~ ".")'
 
+    # A fresh installation starts with the FCV of its own series, so the role has nothing to set
+    # and nothing to remind of.
+    - name: 'mongosh --eval db.adminCommand({getParameter: 1, featureCompatibilityVersion: 1})'
+      ansible.builtin.command:
+        argv:
+          - 'mongosh'
+          - '--quiet'
+          - '--username=mongodb-admin'
+          - '--password=linuxfabrik'
+          - '--authenticationDatabase=admin'
+          - '--eval=print(db.adminCommand({getParameter: 1, featureCompatibilityVersion: 1}).featureCompatibilityVersion.version)'
+      register: '__molecule__mongodb_fcv_result'
+      changed_when: false
+
+    - name: 'Assert that the featureCompatibilityVersion is the series of repo_mongodb__version'
+      ansible.builtin.assert:
+        that: '__molecule__mongodb_fcv_result["stdout"] == repo_mongodb__version'
+
     # Authorization is enabled, so this also proves that the admin user exists.
     - name: 'mongosh --eval db.getSiblingDB("molecule").test.insertOne(...)'
       ansible.builtin.command:

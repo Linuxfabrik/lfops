@@ -22,13 +22,14 @@ This role is only compatible with the following MongoDB versions:
 * On a host with a TPM2 chip, the encrypted password is also bound to the Secure Boot state. After a firmware or Secure Boot update, the dump fails until the role runs again.
 * `mongodb-dump.service` fails if `mongodump` fails, so a broken dump shows up as a failed unit.
 * With `mongodb__dump_method_file_based`, `mongodb-dump.service` write-locks the instance (`db.fsyncLock()`) while it copies the data directory, and fails without copying anything if it cannot lock it. For this, the role grants `mongodb__dump_user` the MongoDB role `lfopsFsyncLock`, which only allows the `fsync` and `unlock` actions, in addition to the built-in `backup` role. Disabling the file-based method drops the role again.
+* The playbook `linuxfabrik.lfops.mongodb` manages one host at a time (`serial: 1`). After restarting `mongod.service`, the role waits until the replica set is healthy again before Ansible moves on to the next member, so a restart never takes more than one member down. The members follow the inventory order, not their role in the replica set, so restarting the primary triggers an election.
 
 
 ## Known Limitations
 
 * On Debian 13 and Ubuntu 26.04, MongoDB offers 9.0 only.
 * On Ubuntu 24.04, MongoDB offers 8.0 and 9.0 only.
-* The role does not upgrade an existing installation to another series. MongoDB upgrades one major release at a time: 9.0 only from 8.0, 7.0 has to go to 8.0 first.
+* The `mongodb:upgrade` tag does not order the members of a replica set by their role. Upgrade the primary last by running it with `--limit`, see [Upgrading MongoDB](#upgrading-mongodb).
 
 
 ## Dependent Roles
@@ -55,11 +56,26 @@ To setup a replica set from scratch:
 * Check the state of the cluster by using `mongosh --username mongodb-admin --password --eval 'rs.status()'` on any member. The output should contain all configured members.
 
 
+## Upgrading MongoDB
+
+MongoDB upgrades one major release at a time (7.0 to 8.0, then 8.0 to 9.0), and each step needs the featureCompatibilityVersion (FCV) of the installed series. The FCV decides which features and data formats are active. While it stays on the old series, the old binaries can still be installed again; after raising it, a downgrade needs MongoDB support. Read the [release notes](https://www.mongodb.com/docs/manual/release-notes/) of the target series before upgrading, they list incompatibilities with kernel or OpenSSL versions that the upgrade procedure does not mention.
+
+1. Make sure a recent dump exists: `systemctl start mongodb-dump.service`.
+2. Stop the applications using MongoDB.
+3. Set `repo_mongodb__version` to the next series, e.g. `'8.0'`.
+4. Run the playbook with `--tags repo_mongodb,mongodb:upgrade`. The role aborts before changing anything if the repository offers a series the installed one cannot be upgraded to, or if the FCV is not the installed series. Otherwise, it stops `mongod.service`, upgrades the `mongodb-org*` packages, deploys `/etc/mongod.conf` for the new series and starts `mongod.service` again.
+5. Start the applications again.
+6. After a burn-in period, set `mongodb__feature_compatibility_version` to the new series, e.g. `'8.0'`, and run the playbook with `--tags mongodb:fcv`. Until then, every run of the role reminds you at the end of the play.
+
+On a replica set with several members, upgrade one member per run with `--limit`: the secondaries first, then run `rs.stepDown()` on the primary and upgrade it last. Raise the FCV once all members run the new series.
+
+
 ## Tags
 
 `mongodb`
 
 * Installs and configures MongoDB.
+* Plus all of the tags below, except `mongodb:upgrade`.
 * Triggers: restart mongod.service.
 
 `mongodb:dump`
@@ -67,9 +83,20 @@ To setup a replica set from scratch:
 * Configures the database dumping (backups).
 * Triggers: none.
 
+`mongodb:fcv`
+
+* Sets the featureCompatibilityVersion to `mongodb__feature_compatibility_version`, on the primary only.
+* Reports at the end of the play if the featureCompatibilityVersion is older than the installed series.
+* Triggers: none.
+
 `mongodb:state`
 
 * Manages the state of the mongod service.
+* Triggers: none.
+
+`mongodb:upgrade`
+
+* Upgrades MongoDB to the newest version the repository offers, see [Upgrading MongoDB](#upgrading-mongodb). Only runs if explicitly requested, not with the `mongodb` tag.
 * Triggers: none.
 
 `mongodb:users`
@@ -232,6 +259,12 @@ mongodb__dump_user:
 * Type: Bool.
 * Default: `false`
 
+`mongodb__feature_compatibility_version`
+
+* The [featureCompatibilityVersion](https://www.mongodb.com/docs/manual/reference/command/setFeatureCompatibilityVersion/) to set on the primary, e.g. `'8.0'`. Raising it cannot be undone without MongoDB support, see [Upgrading MongoDB](#upgrading-mongodb). It cannot be newer than the installed series. Empty leaves it alone.
+* Type: String.
+* Default: `''`
+
 `mongodb__repl_set_skip_init`
 
 * Set this to skip the initiation of the replica set. Note: Set this on all secondaries when setting up a replica set across members.
@@ -312,6 +345,7 @@ mongodb__dump_method_mongodump_backup_dir: '/backup/mongodb-dump'
 mongodb__dump_on_calendar: ''
 mongodb__dump_only_if_hidden: false
 mongodb__dump_use_oplog: true
+mongodb__feature_compatibility_version: '8.0'
 mongodb__service_enabled: true
 mongodb__service_state: 'started'
 mongodb__repl_set_skip_init: false
