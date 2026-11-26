@@ -357,14 +357,14 @@
         - label: 'failed login to a WordPress in a sub-path'
           line: '198.51.100.4 - - [15/Sep/2026:10:00:03 +0200] "POST /blog/wp-login.php HTTP/1.1" 200 4321 "-" "Mozilla/5.0"'
           matched: 1
-        - label: 'failed login in the linuxfabrikio format'
-          line: '192.0.2.10 198.51.100.3 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
+        - label: 'failed login in the combinedio format'
+          line: '198.51.100.5 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
           matched: 1
-        - label: 'failed login in the linuxfabrikio format behind two proxies'
-          line: '192.0.2.11 198.51.100.3, 198.51.100.4 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
+        - label: 'failed login in the vhost_common format'
+          line: 'www.example.com 198.51.100.6 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321'
           matched: 1
-        - label: 'failed login in the linuxfabrikio format with a quoted X-Forwarded-For'
-          line: '192.0.2.12 "198.51.100.3, 198.51.100.4" - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321 "-" "curl/8" 700 5000'
+        - label: 'failed login in the vhost_common format with an IP address as ServerName'
+          line: '192.0.2.10 198.51.100.7 - - [15/Sep/2026:10:00:02 +0200] "POST /wp-login.php HTTP/1.1" 200 4321'
           matched: 1
         - label: 'successful login'
           line: '198.51.100.2 - - [15/Sep/2026:10:00:01 +0200] "POST /wp-login.php HTTP/1.1" 302 0 "-" "Mozilla/5.0"'
@@ -400,18 +400,12 @@
         - label: 'a 200 in the combined format'
           line: '198.51.100.71 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
           ip: ''
-        - label: 'a 404 in the matomo format'
+        - label: 'a 404 in the vhost_common format with Referer and User-Agent'
           line: 'www.example.com 198.51.100.72 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8"'
           ip: '198.51.100.72'
-        - label: 'a 404 in the linuxfabrikio format with an X-Forwarded-For address'
-          line: '198.51.100.73 203.0.113.73 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8" 346 3157'
+        - label: 'a 404 in the vhost_common format with an IP address as ServerName'
+          line: '192.0.2.73 198.51.100.73 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196'
           ip: '198.51.100.73'
-        - label: 'a 404 in the linuxfabrikio format behind two proxies'
-          line: '198.51.100.74 203.0.113.73, 203.0.113.74 - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8" 346 3157'
-          ip: '198.51.100.74'
-        - label: 'a 404 in the linuxfabrikio format with a quoted X-Forwarded-For'
-          line: '198.51.100.75 "203.0.113.73, 203.0.113.74" - - [25/Nov/2026:10:00:00 +0100] "GET /missing HTTP/1.1" 404 196 "-" "curl/8" 346 3157'
-          ip: '198.51.100.75'
       loop_control:
         label: '{{ item["label"] }}'
 
@@ -425,9 +419,8 @@
 
     # The apache-dos filter counts every request per client, so it has to take the client from
     # each LogFormat of the apache_httpd role, and from nothing else. Asked for the address it
-    # found, not for a match: matomo and vhost_common start with the vHost name, which a bare
-    # ^<HOST> resolves through DNS, and linuxfabrikio carries the X-Forwarded-For addresses the
-    # client controls. Formats that do not start with the client must not match at all.
+    # found, not for a match: vhost_common starts with the vHost name, which a bare ^<HOST>
+    # resolves through DNS. Formats that do not start with the client must not match at all.
     - name: 'fail2ban-regex --out ip apache-dos against {{ item["label"] }}'
       ansible.builtin.command:
         argv:
@@ -446,31 +439,28 @@
         - label: 'the combined format with an IPv6 client'
           line: '2001:db8::51 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
           ip: '2001:db8::51'
-        - label: 'the fail2ban format'
+        - label: 'a client-first format without the response size'
           line: '198.51.100.52 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 "curl/8"'
           ip: '198.51.100.52'
-        - label: 'the matomo format'
+        - label: 'the vhost_common format with Referer and User-Agent'
           line: 'www.example.com 198.51.100.53 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
           ip: '198.51.100.53'
-        - label: 'the matomo format with an IPv6 client'
+        - label: 'the vhost_common format with an IPv6 client'
           line: 'www.example.com 2001:db8::54 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8"'
           ip: '2001:db8::54'
         - label: 'the vhost_common format'
           line: 'www.example.com 198.51.100.55 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3'
           ip: '198.51.100.55'
-        - label: 'the linuxfabrikio format with an X-Forwarded-For address'
-          line: '198.51.100.56 203.0.113.56 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8" 346 3157'
+        - label: 'the vhost_common format with an IP address as ServerName'
+          line: '192.0.2.56 198.51.100.56 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3'
           ip: '198.51.100.56'
-        - label: 'the linuxfabrikio format behind two proxies'
-          line: '198.51.100.57 203.0.113.57, 203.0.113.58 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8" 346 3157'
+        - label: 'the vhost_common format with an IPv6 address as ServerName'
+          line: '2001:db8::56 198.51.100.57 - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3'
           ip: '198.51.100.57'
-        - label: 'the linuxfabrikio format with a quoted X-Forwarded-For'
-          line: '198.51.100.58 "203.0.113.57, 203.0.113.58" - - [25/Nov/2026:10:00:00 +0100] "GET / HTTP/1.1" 200 3 "-" "curl/8" 346 3157'
-          ip: '198.51.100.58'
-        - label: 'a line of the debug format'
+        - label: 'an indented line of a multi-line format'
           line: '  Client: 198.51.100.59 (198.51.100.59)'
           ip: ''
-        - label: 'a line of the gelf format'
+        - label: 'a line of a JSON format'
           line: '  "_remote_hostname": "198.51.100.59",'
           ip: ''
         - label: 'a CSV line'
