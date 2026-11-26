@@ -93,7 +93,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 * **role:postfix**: On RHEL 10 the role deploys the compatibility level the distribution ships (`3.8`) instead of the RHEL 8 / 9 value it applied everywhere. Postfix now matches TLS fingerprints with SHA-256 instead of MD5, evaluates the relay restrictions before the recipient restrictions, and uses the neutral wording in its postscreen log lines. Re-generate any peer fingerprint pinned as MD5 in a TLS policy table, and check log parsers keyed on the old postscreen wording. Set `postfix__compatibility_level: '2'` to restore the previous behaviour. RHEL 8, RHEL 9 and Debian are unaffected.
 * **role:login**: The default umask in `/etc/login.defs` is back to the `022` the distributions ship, instead of the `027` set since v7.0.0, so files that users create in a login session are readable by other local users again. Set `login__login_defs_umask: '027'` to keep the stricter value.
 * **playbook:crypto_policy, playbook:kernel_modules, playbook:selinux**: These playbooks run `postfix`, `mailto_root` and `schedule_reboot` before their own role, so that a change needing a reboot can request one. `mailto_root__from` and `mailto_root__to` are therefore mandatory for them; a host set up with `setup_basic` already has both. To keep a playbook as it was, set `<playbook>__skip_postfix`, `<playbook>__skip_mailto_root` and `<playbook>__skip_schedule_reboot` to `true`, for example `crypto_policy__skip_schedule_reboot: true`.
-* **role:fail2ban**: Removed `apache-404-matomo` filter and jail. The `apache-404` filter now matches all supported LogFormats including matomo and vhost_common. Remove `apache-404-matomo` entries from `fail2ban__filters__*_var` and `fail2ban__jails__*_var` in your inventory and use `apache-404` instead.
+* **role:fail2ban**: Removed `apache-404-matomo` filter and jail. The `apache-404` filter now matches all supported LogFormats including vhost_common. Remove `apache-404-matomo` entries from `fail2ban__filters__*_var` and `fail2ban__jails__*_var` in your inventory and use `apache-404` instead.
 * **role:fail2ban**: Rename `fail2ban__jail_apache_404_ignoreregex` to `fail2ban__filter_apache_404_ignoreregex` in your inventory. The regular expressions land in the `apache-404` and `apache-404-matomo` filters, which both jails share, so the old name pointed at a jail that never carried the setting. The value itself is unchanged.
 
 ### Added
@@ -190,6 +190,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+* **role:fail2ban**: `apache-404` and `apache-dos` also read `vhost_common` logs of vHosts with an IP address as ServerName.
 * **role:fail2ban**: A ban of an HTTP jail (`apache-*`, `php-url-fopen`, `wordpress-login`) also closes the connections the client holds, so a banned client neither goes on over an open HTTP/2 connection nor keeps Apache workers busy, and `apache-dos` bans repeat offenders longer each time.
 * **role:tools**: The Bash prompt is green on hosts in any group whose name contains `test`, such as `env_test`, and yellow for `stage`, where only groups named exactly `test` and `stage` counted.
 * **role:blocky**: The sample configuration serves the Prometheus metrics on `http://127.0.0.1:4000/metrics`, so blocky can be monitored out of the box. A configuration given in `blocky__config_yml` is not affected.
@@ -294,8 +295,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 * **role:duplicity**: `duba` no longer removes old backups of a path whose backup failed in the same run.
 * **role:duplicity**: `duba` reports a missing or invalid `/etc/duba/duba.json` with an error message and exit code 201 or 203 instead of a Python traceback.
 * **role:repo_epel**: On CentOS Stream 10, EPEL uses the repository built for CentOS Stream instead of the one for the newest RHEL minor release.
-* **role:fail2ban**: The `apache-404` and `wordpress-login` jails also catch clients behind several proxies, whose `linuxfabrikio` log lines they did not match.
-* **role:fail2ban**: The `apache-dos` jail counts requests per client also in `matomo` and `vhost_common` access logs, where it took the vHost name for the client, resolved it through DNS and banned the address of the vHost ([#720](https://github.com/Linuxfabrik/lfops/issues/720)).
+* **role:fail2ban**: The `apache-dos` jail counts requests per client also in `vhost_common` access logs, where it took the vHost name for the client, resolved it through DNS and banned the address of the vHost ([#720](https://github.com/Linuxfabrik/lfops/issues/720)).
 * **role:apache_httpd**: The error pages keep their layout behind a strict Content-Security-Policy and no longer load anything from Google Fonts or unpkg.com.
 * **playbook:docker**: The playbook no longer fails at the kernel_settings role on new hosts, since Docker no longer loads the `br_netfilter` kernel module by default. It no longer sets `net.bridge.bridge-nf-call-iptables` and `net.bridge.bridge-nf-call-ip6tables`; dockerd sets them itself when it needs the module (`icc=false`, or the userland proxy disabled).
 * **role:fail2ban**: Bans block the client on RHEL 10 hosts whose running kernel lacked `xt_multiport`, such as hosts fresh from a cloud image, where they had no effect until a reboot.

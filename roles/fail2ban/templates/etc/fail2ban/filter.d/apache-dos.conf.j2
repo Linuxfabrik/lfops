@@ -1,24 +1,18 @@
 # {{ ansible_managed }}
-# 2026112501
+# 2026112601
 
 # Fail2Ban filter that matches all requests (for any ressource) on Apache servers.
 #
 # Should be used with a low bantime and findtime, and high maxretry.
 # This effectively slows down the requests, for example a `ab -n 5000 http://ip-of-my-host/`.
 #
-# Assumes %v (canonical ServerName) is not an IP address in order to distinguish between matomo/vhost_common and linuxfabrikio.
-#
 # Tested with the following Apache LogFormats:
 #
 # LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
 # LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
 # LogFormat "%h %l %u %t \"%r\" %>s %b" common
-# LogFormat "%h %l %u %t \"%r\" %>s \"%{User-Agent}i\"" fail2ban
 #
-# LogFormat "%v %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" matomo
 # LogFormat "%v %h %l %u %t \"%r\" %>s %b" vhost_common
-#
-# LogFormat "%h %{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" linuxfabrikio
 
 [INCLUDES]
 
@@ -28,18 +22,13 @@ before = apache-common.conf
 
 [Definition]
 
-# Line 1: %h %l %u %t (combined, combinedio, common, fail2ban)
-# Line 2: %v %h %l %u %t (matomo, vhost_common)
-#         (?!\d+\.\d+\.\d+\.\d+\s) rejects IPv4 addresses
-#         [^\s:]+ rejects IPv6 addresses
-# Line 3: %h %{X-Forwarded-For}i %l %u %t (linuxfabrikio)
-#         X-Forwarded-For holds "-", one address or a list ("a, b"), quoted or not
-# A bare ^<HOST> would take the %v of matomo and vhost_common as the client, resolve it through
+# Line 1: %h %l %u %t (combined, combinedio, common)
+# Line 2: %v %h %l %u %t (vhost_common), also with an IP address as ServerName
+# A bare ^<HOST> would take the %v of vhost_common as the client, resolve it through
 # DNS and count every request of the vHost as one client. Verified with fail2ban 1.0.2 on Rocky 8
 # and 1.1.0 on Rocky 9 and 10.
 failregex = ^<HOST> \S+ \S+ \[
-            ^(?!\d+\.\d+\.\d+\.\d+\s)[^\s:]+ <HOST> \S+ \S+ \[
-            ^<ADDR> (?:"[^"]*"|\S+(?:, \S+)*) \S+ \S+ \[
+            ^\S+ <HOST> \S+ \S+ \[
 
 datepattern = ^[^\[]*\[({DATE})
               {^LN-BEG}
@@ -47,13 +36,9 @@ datepattern = ^[^\[]*\[({DATE})
 
 # DEV Notes:
 #
-# example log lines (combined, combinedio, common, fail2ban):
+# example log lines (combined, combinedio, common):
 # 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 "-" "Mozilla/5.0"
 # 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 "-" "Mozilla/5.0" 346 3157
 # 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910
-# 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 "Mozilla/5.0"
-# example log lines (matomo, vhost_common):
-# www.example.com 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 "-" "Mozilla/5.0"
+# example log lines (vhost_common):
 # www.example.com 10.80.32.156 - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910
-# example log lines (linuxfabrikio):
-# 10.80.32.156 - - - [27/Nov/2020:14:10:55 +0100] "GET / HTTP/1.0" 200 252910 "-" "Mozilla/5.0" 346 3157

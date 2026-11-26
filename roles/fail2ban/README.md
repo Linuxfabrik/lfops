@@ -6,11 +6,10 @@ Filters and jails are defined in the inventory (`fail2ban__filters__*_var` / `fa
 
 This role provides four additional filters:
 
-* apache-404: Matches HTTP 404 responses in Apache access logs (combined, combinedio, common, fail2ban, linuxfabrikio, matomo, vhost_common). Can be used to ban IPs causing excessive 404 errors.
-  **Important:** in order to capture the client ip for all formats, this filter requires the ServerName to be a domain instead of an ip address when using a LogFormat where the canonical ServerName `%v` precedes the client IP `%h` (matomo, vhost_common).
-* apache-dos: Matches all incoming requests in Apache access logs (combined, combinedio, common, fail2ban, linuxfabrikio, matomo, vhost_common; other formats do not match). Can be used to limit the number of allowed requests per client. Like apache-404, it needs a ServerName that is a domain for matomo and vhost_common.
+* apache-404: Matches HTTP 404 responses in Apache access logs (combined, combinedio, common, vhost_common). Can be used to ban IPs causing excessive 404 errors.
+* apache-dos: Matches all incoming requests in Apache access logs (combined, combinedio, common, vhost_common; other formats do not match). Can be used to limit the number of allowed requests per client.
 * portscan: Instantly blocks an IP if it accesses a non-permitted port. Only packets that open a connection count: a TCP SYN without ACK, PSH, RST or FIN, or any UDP packet. Reply traffic of a TCP connection the firewall no longer tracks, such as the late FIN of a half-closed connection, an RST or a mid-connection ACK, is ignored, and so are ICMP error messages, so a server that a local proxy talks to is not banned. TCP scans that send no plain SYN, such as FIN, NULL, Xmas, ACK and SYN/FIN scans, are therefore not banned either; they find no open port on a stateful firewall. A late UDP reply, for example a DNS answer that arrives after the firewall has forgotten the query, is still banned, since the kernel log cannot tell it apart from a UDP scan.
-* wordpress-login: Matches failed WordPress logins in Apache access logs (combined, common, linuxfabrikio, matomo, vhost_common), also for WordPress in a sub-path such as `/blog`, which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
+* wordpress-login: Matches failed WordPress logins in Apache access logs (combined, combinedio, common, vhost_common), also for WordPress in a sub-path such as `/blog`, which WordPress answers with the login form again (HTTP 200) instead of a redirect. The `z10-wordpress-login` jail bans IPs that fail too often. It bans the address Apache logs as the client, so behind a reverse proxy it belongs on the proxy, where that is the visitor's address; on the WordPress host it would ban the proxy.
 
 
 *Available since LFOps `2.0.0`.*
@@ -56,10 +55,10 @@ On the Red Hat family, the playbook deploys the Linuxfabrik repository, which se
 ## Known Limitations
 
 * The Apache jails are enabled when fail2ban is deployed after Apache. On a host that gets Apache later, run the fail2ban playbook again.
-* `apache-badbots` only matches access log lines that end with the user agent, as in the `combined` format, not the `linuxfabrikio` format of the apache_httpd role.
+* `apache-badbots` only matches access log lines that end with the user agent, as in the `combined` format, not the `combinedio` format.
 * `apache-modsecurity` bans every client ModSecurity denies twice within 10 minutes, so a false positive of the Core Rule Set becomes a ban.
 * `apache-overflows` only recognizes path traversal attempts. Apache 2.4 answers overlong request lines, invalid methods and invalid characters in the URI with a `400` without an error log line the filter could match.
-* `php-url-fopen` only matches access logs that start with the client address (`combined`, `common`), not the `matomo` and `vhost_common` formats, which start with the server name.
+* `php-url-fopen` only matches access logs that start with the client address (`combined`, `common`), not the `vhost_common` format, which starts with the server name.
 
 
 ## Dependent Roles
