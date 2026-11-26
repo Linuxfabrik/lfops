@@ -98,6 +98,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:mongodb**: Upgrade MongoDB to the next series with the `mongodb:upgrade` tag, which refuses to skip a release or to upgrade while the featureCompatibilityVersion is not that of the installed series. Raise the featureCompatibilityVersion with `mongodb__feature_compatibility_version`; the role reminds you at the end of the play while it lags behind the installed series.
 * **role:fangfrisch**: `fangfrisch__urlhaus_auth_key` sets the abuse.ch Auth-Key and enables the URLhaus signatures.
 * **role:mount**: The `mode` subkey of `mount__mounts__*_var` sets the mode of the root of a mounted filesystem.
 * **role:redis**: Add template for Redis 8.12.
@@ -190,6 +191,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+* **playbook:mongodb**: The playbook manages one host at a time, and after a restart of `mongod.service` waits until the replica set is healthy again, so a configuration change no longer restarts all members of a replica set at once.
 * **role:fail2ban**: `apache-404` and `apache-dos` also read `vhost_common` logs of vHosts with an IP address as ServerName.
 * **role:fail2ban**: A ban of an HTTP jail (`apache-*`, `php-url-fopen`, `wordpress-login`) also closes the connections the client holds, so a banned client neither goes on over an open HTTP/2 connection nor keeps Apache workers busy, and `apache-dos` bans repeat offenders longer each time.
 * **role:tools**: The Bash prompt is green on hosts in any group whose name contains `test`, such as `env_test`, and yellow for `stage`, where only groups named exactly `test` and `stage` counted.

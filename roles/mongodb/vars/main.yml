@@ -16,6 +16,65 @@ __mongodb__supported_versions: '{{
     | linuxfabrik.lfops.platform_select(ansible_facts)
   }}'
 
+# The series a host may upgrade to from its installed series with the `mongodb:upgrade` tag. MongoDB
+# upgrades one major release at a time and needs the featureCompatibilityVersion of the installed
+# series before each step: 7.0 only goes to 8.0, 8.0 to 8.3 or 9.0, see
+# https://www.mongodb.com/docs/manual/release-notes/8.0-upgrade-replica-set/ and
+# https://www.mongodb.com/docs/manual/release-notes/9.0-upgrade-from-8.0-replica-set/. The role
+# ships no 8.3 template, so 8.0 lists 9.0 only. The own series is listed for patch releases.
+__mongodb__upgrade_paths:
+  '7.0':
+    - '7.0'
+    - '8.0'
+  '8.0':
+    - '8.0'
+    - '9.0'
+  '9.0':
+    - '9.0'
+
+# The login for __mongodb__fcv_script, as the admin user when authorization is enabled.
+__mongodb__fcv_login: '{{
+    {"host": mongodb__conf_net_bind_ip[0], "port": mongodb__conf_net_port}
+    | combine(__mongodb__fcv_login_credentials if mongodb__conf_security_authorization | bool else {})
+  }}'
+__mongodb__fcv_login_credentials:
+  username: '{{ mongodb__admin_user["username"] | d("") }}'
+  password: '{{ mongodb__admin_user["password"] | d("") }}'
+
+# Reads the featureCompatibilityVersion (FCV), and sets it first if `target` is given and differs.
+# MongoDB refuses to raise the FCV without `confirm: true`, verified with 8.0.38 on Rocky 9. The
+# login comes as JSON on stdin, so the password stays off the command line. `targetVersion` is only
+# set while an FCV change is unfinished.
+__mongodb__fcv_script: |-
+  import json
+  import sys
+
+  import pymongo
+
+  login = json.load(sys.stdin)
+  client = pymongo.MongoClient(
+      host=login['host'],
+      port=int(login['port']),
+      username=login.get('username'),
+      password=login.get('password'),
+      authSource='admin',
+      directConnection=True,
+      serverSelectionTimeoutMS=10000,
+  )
+  query = {'getParameter': 1, 'featureCompatibilityVersion': 1}
+  fcv = client.admin.command(query)['featureCompatibilityVersion']
+  changed = False
+  target = login.get('target', '')
+  if target and (fcv['version'] != target or 'targetVersion' in fcv):
+      client.admin.command({'setFeatureCompatibilityVersion': target, 'confirm': True})
+      fcv = client.admin.command(query)['featureCompatibilityVersion']
+      changed = True
+  print(json.dumps({
+      'changed': changed,
+      'target_version': fcv.get('targetVersion', ''),
+      'version': fcv['version'],
+  }))
+
 # Checks whether a user can log in with the password from the inventory. community.mongodb's
 # mongodb_user only knows `update_password: always`, which reports a change on every run, and
 # `on_create`, which never applies a changed password, so the role probes first and only sets the
@@ -46,6 +105,5 @@ __mongodb__password_check_script: |-
       raise
 
 # Collected in __shared__end_of_play_messages and printed once at the end of the play, see
-# roles/shared/tasks/print-messages.yml. Kept in one place because the role both prints it inline
-# and appends it there.
-__mongodb__end_of_play_message: 'mongodb: The variable "mongodb__repl_set_name" is set! Please restart your MongoDB instances manually...'
+# roles/shared/tasks/print-messages.yml, when the FCV lags behind the installed series.
+__mongodb__fcv_end_of_play_message: 'mongodb: featureCompatibilityVersion is {{ __mongodb__fcv["version"] | d("") }}, mongod runs {{ mongodb__installed_version | d("") }}. After the burn-in period, set mongodb__feature_compatibility_version to "{{ mongodb__installed_version | d("") }}". The next major upgrade needs it.'

@@ -8,34 +8,28 @@
   ansible.builtin.systemd:
     name: 'mongod.service'
     state: 'restarted'
+  notify: 'mongodb: wait for the replicaset to stabilise'
   when:
     - 'not (lfops__skip_restart_handlers | d(false) | bool)'
     - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
     - 'mongodb__service_state != "stopped"'
-    - 'mongodb__repl_set_name is not defined'
 
-- name: 'mongodb: manually execute systemctl restart mongod.service'
-  ansible.builtin.debug:
-    msg: '{{ __mongodb__end_of_play_message }}'
-  listen: 'mongodb: systemctl restart mongod.service'
+# The playbook manages one host at a time (`serial: 1`), so waiting here keeps a replica set from
+# losing more than one member to a restart.
+- name: 'mongodb: wait for the replicaset to stabilise'
+  community.mongodb.mongodb_status:
+    login_host: '{{ mongodb__conf_net_bind_ip[0] }}'
+    login_port: '{{ mongodb__conf_net_port }}'
+    login_user: '{{ mongodb__admin_user["username"] | d(omit) }}'
+    login_password: '{{ mongodb__admin_user["password"] | d(omit) }}'
+    login_database: 'admin'
+    replica_set: '{{ mongodb__conf_replication_repl_set_name__combined_var }}'
+    poll: 5
+    interval: 10
+  vars:
+    ansible_python_interpreter: '/opt/python-venv/pymongo/bin/python3'
   when:
-    - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
-    - 'mongodb__service_state != "stopped"'
-    - 'mongodb__repl_set_name is defined and mongodb__repl_set_name | length > 0'
-
-# printed again as one block above the PLAY RECAP, see roles/shared/tasks/print-messages.yml. The
-# inline message above stays for plays outside this collection, which do not import the printer in
-# their post_tasks. A separate handler task rather than an include of a shared task file, because
-# ansible-core refuses include_role as a handler ("Using 'ansible.builtin.include_role' as a
-# handler is not supported"). Verified against ansible-core 2.16.
-- name: 'mongodb: collect the message for the end of the play'
-  ansible.builtin.set_fact:
-    __shared__end_of_play_messages: '{{ __shared__end_of_play_messages | d([]) + [__mongodb__end_of_play_message] }}'
-  listen: 'mongodb: systemctl restart mongod.service'
-  when:
-    - '__mongodb__service_state_result is not defined or __mongodb__service_state_result is not changed'
-    - 'mongodb__service_state != "stopped"'
-    - 'mongodb__repl_set_name is defined and mongodb__repl_set_name | length > 0'
+    - 'mongodb__conf_replication_repl_set_name__combined_var | length > 0'
 
 - name: 'mongodb: systemctl daemon-reload'
   ansible.builtin.systemd:
