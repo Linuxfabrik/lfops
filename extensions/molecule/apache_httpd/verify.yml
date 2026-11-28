@@ -16,9 +16,11 @@
 # And the logs of the raw and redirect templates: by the lines a request leaves in them.
 # And the guard against the HTML view of the PHP-FPM status page: by the status code of requests
 # for it.
+# And the bot variables of httpd.conf: by the status a location that requires their absence answers
+# to the User-Agents of a browser, a link preview and an AI crawler.
 # And the error pages: by the page Apache sends for a missing file, which must not pull anything
 # from another host, since a Content-Security-Policy of the proxied application blocks that.
-- name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, the Core Rule Set, PHP and the forwarded client where it is configured to'
+- name: 'Verify apache_httpd serves HTTP/2, basic auth, compression, bot blocking, the Core Rule Set, PHP and the forwarded client where it is configured to'
   hosts: 'systems_under_test'
   gather_facts: true
   become: true
@@ -30,6 +32,21 @@
     __molecule__served_vhosts: '{{ (apache_httpd__vhosts__group_var | rejectattr("state", "defined") | list
         + (apache_httpd__vhosts__group_var | selectattr("state", "defined") | rejectattr("state", "eq", "absent") | list))
         | selectattr("virtualhost_port", "eq", 443) | list }}'
+    # the status each location of __molecule__bot_variables has to answer per User-Agent
+    __molecule__bot_user_agents:
+      - is_a_bad_bot: '200'
+        is_a_bot: '200'
+        user_agent: 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'
+      - is_a_bad_bot: '200'
+        is_a_bot: '403'
+        user_agent: 'Twitterbot/1.0'
+      - is_a_bad_bot: '403'
+        is_a_bot: '403'
+        user_agent: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)'
+    # the locations of the first vHost named after the bot variables of httpd.conf, see group_vars
+    __molecule__bot_variables:
+      - 'is_a_bad_bot'
+      - 'is_a_bot'
     __molecule__log_dir: '{{ (ansible_facts["os_family"] == "Debian") | ternary("/var/log/apache2", "/var/log/httpd") }}'
   tasks:
 
@@ -316,6 +333,55 @@
       loop: '{{ __molecule__apache_httpd_curl_anonymous_result["results"] | zip(__molecule__apache_httpd_curl_login_result["results"]) | list }}'
       loop_control:
         label: '{{ item[0]["item"]["path"] }}'
+
+    # httpd.conf marks a link preview as is_a_bot only, and an AI crawler as is_a_bot and
+    # is_a_bad_bot. The first vHost carries a location per variable that requires its absence (see
+    # group_vars), so each User-Agent has to be let in or turned away there as the matrix below
+    # says. A browser has to pass both, otherwise the variables would block every visitor.
+    - name: 'mkdir -p /var/www/html/<vhost>/<bot variable>'
+      ansible.builtin.file:
+        path: '/var/www/html/{{ __molecule__auth_server_name }}/{{ item }}'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: 0o755
+        setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
+      loop: '{{ __molecule__bot_variables }}'
+
+    - name: 'Deploy an index.html into every location named after a bot variable'
+      ansible.builtin.copy:
+        content: "ok\n"
+        dest: '/var/www/html/{{ __molecule__auth_server_name }}/{{ item }}/index.html'
+        owner: 'root'
+        group: 'root'
+        mode: 0o644
+        setype: '{{ (ansible_facts["selinux"]["status"] | d("disabled") != "disabled") | ternary("httpd_sys_content_t", omit) }}'
+      loop: '{{ __molecule__bot_variables }}'
+
+    - name: 'curl --user-agent <user agent> https://<vhost>/<bot variable>/' # noqa command-instead-of-module (ansible.builtin.uri cannot pin the name to 127.0.0.1 the way --resolve does)
+      ansible.builtin.command: >-
+        curl --silent --insecure
+        --user-agent {{ item[0]["user_agent"] | quote }}
+        --resolve {{ __molecule__auth_server_name }}:443:127.0.0.1
+        --output /dev/null
+        --write-out '%{http_code}'
+        https://{{ __molecule__auth_server_name }}/{{ item[1] }}/
+      register: '__molecule__apache_httpd_curl_bot_result'
+      changed_when: false
+      loop: '{{ __molecule__bot_user_agents | product(__molecule__bot_variables) | list }}'
+      loop_control:
+        label: '{{ item[0]["user_agent"] }} -> /{{ item[1] }}/'
+
+    - name: 'Assert every User-Agent is let in or turned away as its bot variables say'
+      ansible.builtin.assert:
+        that:
+          - 'item["stdout"] == item["item"][0][item["item"][1]]'
+        fail_msg: >-
+          {{ item["item"][0]["user_agent"] }}: /{{ item["item"][1] }}/ answered {{ item["stdout"] }},
+          expected {{ item["item"][0][item["item"][1]] }}
+      loop: '{{ __molecule__apache_httpd_curl_bot_result["results"] }}'
+      loop_control:
+        label: '{{ item["item"][0]["user_agent"] }} -> /{{ item["item"][1] }}/'
 
     # text/markdown is in the DEFLATE list of the deflate conf, and the scenario loads mod_deflate
     # and mod_filter (see group_vars), so a client offering gzip has to get such a response

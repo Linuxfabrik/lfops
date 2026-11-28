@@ -45,6 +45,20 @@ The OWASP ModSecurity Core Rule Set (CRS) is downloaded on the Ansible controlle
 
 A vHost that references a certificate file that does not exist yet keeps Apache from starting. For every entry in `apache_httpd__placeholder_certificates__*_var` whose certificate is missing, the role therefore creates a self-signed placeholder (`<name>.crt`, `<name>-chain.crt`, `<name>-fullchain.crt` and `<name>.key`, valid for 365 days) before it deploys the vHosts. An existing file is never touched. The playbooks that run `acme_sh` together with this role fill the list with the certificates of `acme_sh__certificates`, and `acme_sh` replaces the placeholders once the certificates are issued.
 
+`httpd.conf` marks requests from bots by their User-Agent, but blocks none of them. `is_a_bot` is set for every bot the role knows, including search engines, link previews (Twitterbot) and archives (ia_archiver). `is_a_bad_bot` is set for the subset that brings a site no visitors: SEO and backlink tools (AhrefsBot, SemrushBot, ...), AI crawlers (GPTBot, ClaudeBot, Bytespider, ...) and data scrapers. A vHost blocks them with a 403 in its `raw` variable, and can add bots of its own with `BrowserMatchNoCase`:
+
+```apache
+BrowserMatchNoCase (Baiduspider|Yandex) is_a_bad_bot
+<Location />
+    <RequireAll>
+        Require all granted
+        Require not env is_a_bad_bot
+    </RequireAll>
+</Location>
+```
+
+The User-Agent is set by the client, so this keeps away the bots that announce themselves, not a scraper that poses as a browser.
+
 This role does NOT:
 
 * change the owner of what lies below the document root. Apache only reads it by default, and what an application has to write is handed to the web server user by the role that installs the application (`nextcloud`, `wordpress`, `grav`, `moodle`, ...). Content placed by hand below a vHost that has to be writable needs its owner set by hand, for the writable directories only.
