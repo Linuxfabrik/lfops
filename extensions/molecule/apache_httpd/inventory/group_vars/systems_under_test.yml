@@ -116,6 +116,21 @@ apache_httpd__vhosts__group_var:
           Require valid-user
       </Location>
 
+      # setenvif_module: one location per bot variable that httpd.conf sets, named after it.
+      # verify.yml sends the User-Agent of a browser, of a link preview and of an AI crawler to both.
+      <Location "/is_a_bot/">
+          <RequireAll>
+              Require all granted
+              Require not env is_a_bot
+          </RequireAll>
+      </Location>
+      <Location "/is_a_bad_bot/">
+          <RequireAll>
+              Require all granted
+              Require not env is_a_bad_bot
+          </RequireAll>
+      </Location>
+
   - comment: |-
       Overrides the server-wide protocol preference, so it has to stay on HTTP/1.1.
     template: 'app'

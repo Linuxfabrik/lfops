@@ -1,5 +1,5 @@
 # {{ ansible_managed }}
-# 2026112401
+# 2026112701
 
 # This is the main Apache server configuration file. It contains the
 # configuration directives that give the server its instructions.
@@ -120,28 +120,50 @@ CustomLog {{ apache_httpd__mod_log_config_custom_log }}
 </Files>
 
 
-# Set environment variable if user agent is a bot
-# setenvif_module
-BrowserMatchNoCase (AhrefsBot|aiHitBot|AndersPinkBot) is_a_bot
-BrowserMatchNoCase (Baiduspider|BLEXBot) is_a_bot
-BrowserMatchNoCase (CCBot|Cliqzbot) is_a_bot
-BrowserMatchNoCase (DeuSu|DotBot) is_a_bot
+# Set environment variables for the user agents of bots (setenvif_module). Nothing is blocked
+# here, a vHost decides with `Require not env is_a_bot` or `Require not env is_a_bad_bot`.
+# * is_a_bot: every bot below, including search engines, link previews and archives.
+# * is_a_bad_bot: SEO tools, AI crawlers and data scrapers, which bring a site no visitors.
+# The patterns match anywhere in the User-Agent, case-insensitively.
+
+# is_a_bot only
+BrowserMatchNoCase (AndersPinkBot|Baiduspider) is_a_bot
+BrowserMatchNoCase (Centurybot|Cliqzbot) is_a_bot
+BrowserMatchNoCase (DeuSu) is_a_bot
 BrowserMatchNoCase (enolystBot|Exabot|Ezooms) is_a_bot
 BrowserMatchNoCase (FlipboardProxy) is_a_bot
 BrowserMatchNoCase (ia_archiver|ImplisenseBot) is_a_bot
 BrowserMatchNoCase (JobboerseBot) is_a_bot
 # BrowserMatchNoCase (KHTML) is_a_bot  # for testing against Chrome Browser
 BrowserMatchNoCase (libwww)-perl is_a_bot
-BrowserMatchNoCase (Mediatoolkitbot|MegaIndex|MetaURI|MJ12bot) is_a_bot
+BrowserMatchNoCase (Mediatoolkitbot|MetaURI) is_a_bot
 BrowserMatchNoCase (Nimbostratus)-Bot is_a_bot
-BrowserMatchNoCase (oBot|OutclicksBot) is_a_bot
-BrowserMatchNoCase (PaperLiBot|pmoz\.info) is_a_bot
+BrowserMatchNoCase (oBot|OutclicksBot|OWLer) is_a_bot
+BrowserMatchNoCase (PaperLiBot|PetalBot|pmoz\.info) is_a_bot
 BrowserMatchNoCase (Qwantify) is_a_bot
-BrowserMatchNoCase (SemrushBot|SEOkicks|SerendeputyBot|SeznamBot|spbot|spuhex) is_a_bot
-BrowserMatchNoCase (TigerBot|TMMBot|Twitterbot) is_a_bot
+BrowserMatchNoCase (SerendeputyBot|SeznamBot|Sogou|spuhex) is_a_bot
+BrowserMatchNoCase (TigerBot|TinEye|TMMBot|Twitterbot) is_a_bot
 BrowserMatchNoCase (Uptimebot) is_a_bot
 BrowserMatchNoCase (wiederfreibot) is_a_bot
 BrowserMatchNoCase (yacybot|Yandex) is_a_bot
+
+# is_a_bot and is_a_bad_bot: AI crawlers, for training data and AI answers
+BrowserMatchNoCase (Amazonbot|Amzn-SearchBot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (Bytespider|CCBot|ClaudeBot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (ExaSearchBot|GPTBot|ImagesiftBot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (meta-externalagent|meta-webindexer) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (OAI-SearchBot|PerplexityBot|RariQ-TrainingData) is_a_bot is_a_bad_bot
+
+# is_a_bot and is_a_bad_bot: data scrapers, media monitoring (YaK is the agent of
+# linkfluence) and scanners
+BrowserMatchNoCase (aiHitBot|AliyunSecBot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (linkfluence|YaK/) is_a_bot is_a_bad_bot
+
+# is_a_bot and is_a_bad_bot: SEO and backlink tools
+BrowserMatchNoCase (AhrefsBot|Barkrowler|BLEXBot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (DataForSeoBot|DotBot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (MegaIndex|MJ12bot) is_a_bot is_a_bad_bot
+BrowserMatchNoCase (SemrushBot|SEOkicks|SERankingBacklinksBot|spbot) is_a_bot is_a_bad_bot
 
 
 IncludeOptional {{ __apache_httpd__config_prefix }}conf-enabled/*.conf

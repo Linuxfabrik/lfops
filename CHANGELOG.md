@@ -101,6 +101,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+* **role:apache_httpd**: `Require not env is_a_bad_bot` keeps SEO tools, AI crawlers and data scrapers out of a vHost, but lets search engines in.
 * **role:rocketchat**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:podman_containers**: Add `meta/argument_specs.yml` declaring the user-facing variables, so role-entry validation catches type mismatches and invalid values before any task runs.
 * **role:mongodb**: Upgrade MongoDB to the next series with the `mongodb:upgrade` tag, which refuses to skip a release or to upgrade while the featureCompatibilityVersion is not that of the installed series. Raise the featureCompatibilityVersion with `mongodb__feature_compatibility_version`; the role reminds you at the end of the play while it lags behind the installed series.
@@ -196,6 +197,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+* **role:apache_httpd**: A vHost that requires `not env is_a_bot` also turns away further SEO tools, AI crawlers such as GPTBot and ClaudeBot, and search engines such as PetalBot and Sogou.
 * **role:shared**: The timestamps in `/var/log/linuxfabrik-lfops.log` follow ISO 8601 and RFC 3339 and include the UTC offset of the Ansible controller, for example `2024-05-23T11:15:26.604794+02:00`.
 * **playbook:mongodb**: The playbook manages one host at a time, and after a restart of `mongod.service` waits until the replica set is healthy again, so a configuration change no longer restarts all members of a replica set at once.
 * **role:fail2ban**: `apache-404` and `apache-dos` also read `vhost_common` logs of vHosts with an IP address as ServerName.
